@@ -1,4 +1,8 @@
+import base64
+import os
+from cda.integration import render_cda
 import collections
+from integration_framework.views import get_cda_data
 from utils.response import status_response
 from hospitals.models import Hospitals
 import operator
@@ -11,6 +15,7 @@ import pytz
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import HttpRequest
@@ -26,6 +31,7 @@ from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import (
+    DirectionDocument,
     Napravleniya,
     Issledovaniya,
     NumberGenerator,
@@ -50,7 +56,7 @@ from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import current_year, strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
-from results.views import result_normal
+from results.views import result_normal, result_print
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
@@ -1993,7 +1999,7 @@ def last_fraction_result(request):
 
 @login_required
 def last_field_result(request):
-    request_data = json.loads(request.body)
+    request_data = {"fieldPk": "null", **json.loads(request.body)}
     client_pk = request_data["clientPk"]
     logical_or, logical_and, logical_group_or = False, False, False
     field_is_link, field_is_aggregate_operation, field_is_aggregate_proto_description = False, False, False
@@ -2835,3 +2841,100 @@ def free_number(request):
             gen.save(update_fields=['free_numbers'])
 
         return status_response(True)
+
+
+@login_required
+def eds_required_signatures(request):
+    data = json.loads(request.body)
+    pk = data['pk']
+    direction: Napravleniya = Napravleniya.objects.get(pk=pk)
+
+    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+        return status_response(False, 'Направление не в вашу организацию!')
+
+    if not direction.is_all_confirm():
+        return status_response(False, 'Направление должно быть подтверждено!')
+
+    return JsonResponse(direction.required_signatures())
+
+
+@login_required
+def eds_documents(request):
+    data = json.loads(request.body)
+    pk = data['pk']
+    direction: Napravleniya = Napravleniya.objects.get(pk=pk)
+
+    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+        return status_response(False, 'Направление не в вашу организацию!')
+
+    if not direction.is_all_confirm():
+        return status_response(False, 'Направление должно быть подтверждено!')
+
+    required_signatures = direction.required_signatures()
+
+    documents = []
+
+    has_types = {}
+    last_time_confirm = direction.last_time_confirm()
+    d: DirectionDocument
+    for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm, is_archive=False):
+        has_types[d.file_type.lower()] = True
+
+    for t in [x for x in required_signatures['docTypes'] if x.lower() not in has_types]:
+        DirectionDocument.objects.create(direction=direction, last_confirmed_at=last_time_confirm, file_type=t.lower())
+
+    DirectionDocument.objects.filter(direction=direction, is_archive=False).exclude(last_confirmed_at=direction.last_time_confirm()).update(is_archive=True)
+
+    cda_eds_data = get_cda_data(pk)
+
+    for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=direction.last_time_confirm()):
+        if not d.file:
+            file = None
+            filename = None
+            if d.file_type.lower() != d.file_type:
+                d.file_type = d.file_type.lower()
+                d.save()
+
+            if d.file_type == DirectionDocument.PDF:
+                request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+                req = {
+                    'GET': {
+                        "pk": f'[{pk}]',
+                        "split": '1',
+                        "leftnone": '0',
+                        "inline": '1',
+                        "protocol_plain_text": '1',
+                    },
+                    'user': request.user,
+                    'plain_response': True,
+                }
+                filename = f'{pk}-{last_time_confirm}.pdf'
+                file = ContentFile(result_print(request_tuple(**req)), filename)
+            elif d.file_type == DirectionDocument.CDA:
+                cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)
+                filename = f"{pk}–{last_time_confirm}.cda.xml"
+                file = ContentFile(cda_xml.encode('utf-8'), filename)
+            if file:
+                d.file.save(filename, file)
+
+        signatures = []
+
+        file_content = None
+
+        if d.file:
+            if d.file_type == DirectionDocument.PDF:
+                file_content = base64.b64encode(d.file.read()).decode('utf-8')
+            elif d.file_type == DirectionDocument.CDA:
+                file_content = d.file.read().decode('utf-8')
+
+        document = {
+            "pk": d.pk,
+            "type": d.file_type.upper(),
+            "fileName": os.path.basename(d.file.name) if d.file else None,
+            "fileContent": file_content,
+            "signatures": signatures,
+        }
+
+        documents.append(document)
+
+    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title()})

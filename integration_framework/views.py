@@ -1089,6 +1089,24 @@ def eds_get_user_data(request):
     )
 
 
+def get_cda_data(pk):
+    n: Napravleniya = Napravleniya.objects.get(pk=pk)
+    card = n.client
+    ind = n.client.individual
+
+    return {
+        "title": n.get_eds_title(),
+        "patient": {
+            'pk': card.number,
+            'family': ind.family,
+            'name': ind.name,
+            'patronymic': ind.patronymic,
+            'gender': ind.sex.lower(),
+            'birthdate': ind.birthday.strftime("%Y%m%d"),
+        },
+    }
+
+
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
@@ -1103,24 +1121,7 @@ def eds_get_cda_data(request):
 
     pk = body.get("pk")
 
-    n = Napravleniya.objects.get(pk=pk)
-    i: directions.Issledovaniya = n.issledovaniya_set.all()[0]
-    card = n.client
-    ind = n.client.individual
-
-    return Response(
-        {
-            "title": i.research.title,
-            "patient": {
-                'pk': card.number,
-                'family': ind.family,
-                'name': ind.name,
-                'patronymic': ind.patronymic,
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
-            },
-        }
-    )
+    return Response(get_cda_data(pk))
 
 
 @api_view(['POST'])

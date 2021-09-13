@@ -3144,6 +3144,11 @@ crypto-browserify@^3.11.0:
     randombytes "^2.0.0"
     randomfill "^1.0.3"
 
+crypto-pro@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/crypto-pro/-/crypto-pro-2.2.0.tgz#784119d1d3f5161a54eae5e0c80bd0fcb78bdfb1"
+  integrity sha512-OUOmAMtzWXO3wuY6WBPv7QdkamI4WABjkRD/8OFoDyx2S9bsbZzukktFlPIgz0nvVUS7UTXACQeO0q56bh+whA==
+
 css-color-names@0.0.4, css-color-names@^0.0.4:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/css-color-names/-/css-color-names-0.0.4.tgz#808adc2e79cf84738069b646cb20ec27beb629e0"

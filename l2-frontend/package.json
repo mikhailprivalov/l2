@@ -26,6 +26,7 @@
     "bootflat": "^2.0.4",
     "bootstrap3": "^3.3.5",
     "core-js": "^3.17.1",
+    "crypto-pro": "^2.2.0",
     "debounce": "^1.2.1",
     "es-cookie": "^1.3.2",
     "inputmask": "^5.0.6",

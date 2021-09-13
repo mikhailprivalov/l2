@@ -1,5 +1,7 @@
 import calendar
+from cda.integration import get_required_signatures
 import datetime
+import os
 import re
 import time
 import unicodedata
@@ -412,6 +414,24 @@ class Napravleniya(models.Model):
     qr_check_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для проверки результата по QR внешним сервисом')
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
+
+    def get_eds_title(self):
+        iss = Issledovaniya.objects.filter(napravleniye=self)
+
+        for i in iss:
+            research: directory.Researches = i.research
+            if research.desc:
+                return research.title
+
+        return 'Лабораторное исследование'
+
+    def required_signatures(self):
+        data = get_required_signatures(self.get_eds_title())
+
+        return {
+            "docTypes": ['PDF', 'CDA'] if data.get('needCda') else ['PDF'],
+            "signsRequired": data.get('signsRequired') or ['Врач'],
+        }
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
@@ -1130,6 +1150,9 @@ class Napravleniya(models.Model):
         """
         return all([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
+    def last_time_confirm(self):
+        return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
+
     def is_has_deff(self):
         """
         Есть ли отложенные исследования
@@ -1220,6 +1243,50 @@ class Napravleniya(models.Model):
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
+
+
+def get_direction_file_path(instance: 'DirectionDocument', filename):
+    return os.path.join('directions', str(instance.direction.get_hospital_tfoms_id()), str(instance.direction.pk), filename)
+
+
+class DirectionDocument(models.Model):
+    PDF = 'pdf'
+    CDA = 'cda'
+    FILE_TYPES = (
+        (PDF, PDF),
+        (CDA, CDA),
+    )
+
+    direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направление")
+    file_type = models.CharField(max_length=3, db_index=True, verbose_name="Тип файла")
+    file = models.FileField(upload_to=get_direction_file_path, blank=True, null=True, default=None, verbose_name="Файл документа")
+    is_archive = models.BooleanField(db_index=True, verbose_name="Архивный документ", blank=True, default=False)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
+    last_confirmed_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата и время подтверждения протокола')
+
+    def __str__(self) -> str:
+        return f"{self.direction} — {self.file_type} – {self.last_confirmed_at}"
+
+    class Meta:
+        unique_together = ('direction', 'file_type', 'last_confirmed_at')
+        verbose_name = 'Документ направления'
+        verbose_name_plural = 'Документы направлений'
+
+
+class DocumentSign(models.Model):
+    document = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Документ")
+    executor = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Исполнитель подписи', on_delete=models.CASCADE)
+    signed_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время подписи")
+    sign_type = models.CharField(max_length=16, db_index=True, verbose_name='Тип подписи')
+    sign_value = models.TextField(verbose_name="Значение подписи")
+
+    def __str__(self) -> str:
+        return f"{self.document} — {self.type} – {self.executor}"
+
+    class Meta:
+        unique_together = ('document', 'executor', 'sign_type')
+        verbose_name = 'Подпись документа направления'
+        verbose_name_plural = 'Подписи документов направлений'
 
 
 class PersonContract(models.Model):

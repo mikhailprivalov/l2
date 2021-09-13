@@ -56,6 +56,10 @@ class SettingManager:
         return SettingManager.get("eds_base_url", default='http://empty', default_type='s')
 
     @staticmethod
+    def get_cda_base_url():
+        return SettingManager.get("cda_base_url", default='empty', default_type='s')
+
+    @staticmethod
     def get_medbook_auto_start():
         return SettingManager.get("medbook_auto_start", default='100000', default_type='i')
 
