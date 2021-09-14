@@ -11,9 +11,30 @@ export interface EvaluationMonitoringField {
     value_text: string,
 }
   
-export interface EvaluationMonitoringGroup {
+export interface IEvaluationMonitoringGroup {
+    title: string,
+    fields: EvaluationMonitoringField[],
+    grade: EvaluationMonitoringGrade,
+}
+
+export class EvaluationMonitoringGroup {
     title: string,
     fields: EvaluationMonitoringField[],
     editing: boolean,
     grade: EvaluationMonitoringGrade,
+	
+	constructor(group: IEvaluationMonitoringGroup) {
+		this.title = group.title;
+		this.fields = group.fields;
+		this.editing = false;
+		this.grade = group.grade;
+	}
+	
+	public edit() {
+		this.editing = true;
+	}
+	
+	public cancel_edit() {
+		this.editing = false;
+	}
 }
