@@ -225,12 +225,12 @@ export default class ExtraNotification extends Vue {
   }
 
   edit(group: EvaluationMonitoringGroup) {
-    group.editing = true;
+    group['editing'] = true;
     this.$forceUpdate();
   }
 
   cancel_edit(group: EvaluationMonitoringGroup) {
-    group.editing = false;
+    group['editing'] = false;
     this.$forceUpdate();
   }
 
