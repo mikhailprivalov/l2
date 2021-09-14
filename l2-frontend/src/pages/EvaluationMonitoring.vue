@@ -81,11 +81,11 @@
             <td v-if="(can_view_field(r) && canEdit) || !canEdit"> {{ r.grade.comment }} </td>
 
             <th v-if="can_view_field(r) && canEdit">
-              <button class="btn btn-blue-nb" @click="edit(r)">Изменить</button>
+              <button class="btn btn-blue-nb" @click="r.edit()">Изменить</button>
             </th>
 
             <td v-if="!can_view_field(r) && canEdit" colspan="4" class="text-center">
-              <evaluation-monitoring-fast-editor :data="r" @sendData="load($event)" @cancelEdit="cancel_edit(r)"/>
+              <evaluation-monitoring-fast-editor :data="r" @sendData="load($event)" @cancelEdit="r.cancel_edit()"/>
             </td>
 
           </tr>
@@ -109,7 +109,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import EvaluationMonitoringFastEditor from '@/ui-cards/EvaluationMonitoringFastEditor.vue';
-import { EvaluationMonitoringGroup } from '@/types/evaluationMonitoring';
+import { IEvaluationMonitoringGroup, EvaluationMonitoringGroup } from '@/types/evaluationMonitoring';
 import TreeSelectField from '@/fields/TreeSelectField.vue';
 
 interface Params {
@@ -224,16 +224,6 @@ export default class ExtraNotification extends Vue {
     return this.canEdit ? this.hospitals : this.hospitals.filter(h => h.id === this.$store.getters.user_data.hospital);
   }
 
-  edit(group: EvaluationMonitoringGroup) {
-    group['editing'] = true;
-    this.$forceUpdate();
-  }
-
-  cancel_edit(group: EvaluationMonitoringGroup) {
-    group['editing'] = false;
-    this.$forceUpdate();
-  }
-
   can_view_field(group: EvaluationMonitoringGroup) {
     return group.grade.grade !== null && !group.editing;
   }
@@ -241,10 +231,9 @@ export default class ExtraNotification extends Vue {
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await this.$api('evaluation_monitoring/load', this.params);
-    this.rows = data.rows.map((el: EvaluationMonitoringGroup) => {
+    this.rows = data.rows.map((el: IEvaluationMonitoringGroup) => {
       const group = { ...el };
-      group.editing = false;
-      return group;
+      return new EvaluationMonitoringGroup(group);
     });
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
