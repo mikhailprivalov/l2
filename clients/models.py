@@ -1045,7 +1045,7 @@ class Card(models.Model):
         ind_data['passport_issued'] = (
             "______________________________________________________________" if not ind_documents['passport']['issued'] and not full_empty else ind_documents['passport']['issued']
         )
-
+        ind_data['passport_issued_orig'] = ind_documents['passport']['issued']
         # document "св-во о рождении"
         ind_data['bc_num'] = ind_documents['bc']['num']
         ind_data['bc_serial'] = ind_documents['bc']['serial']
