@@ -131,7 +131,7 @@ const router = new Router({
       component: () => import('@/pages/EvaluationMonitoring.vue'),
       meta: {
         title: 'Мониторинг показателей эффективности',
-        groups: ['Просмотр мониторингов'],
+        groups: ['Просмотр мониторингов', 'Заполнение мониторингов'],
         module: 'l2_monitorings',
       },
     },
