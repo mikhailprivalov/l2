@@ -135,7 +135,7 @@ def menu(request):
                     "url": "/ui/monitoring/evaluation-monitoring",
                     "title": "Мониторинг показателей эффективности",
                     "nt": False,
-                    "access": ["Заполнение мониторингов"],
+                    "access": ["Просмотр мониторингов", "Заполнение мониторингов"],
                     "module": "l2_monitorings",
                 },
                 # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
