@@ -3,7 +3,7 @@ export interface EvaluationMonitoringGrade {
   comment: string | null,
   grader: string | null,
 }
-  
+
 export interface EvaluationMonitoringField {
   result_id: number,
   field_id: number,
