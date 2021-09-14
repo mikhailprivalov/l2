@@ -83,7 +83,7 @@ export default class ExtraNotificationFastEditor extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
 
     const {
-      ok, message, value,
+      ok, message,
     } = await this.$api('evaluation_monitoring/add_result', {
           result_id: this.data.fields[0].result_id,
           grade: this.grade,
