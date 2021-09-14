@@ -84,7 +84,7 @@
               <button class="btn btn-blue-nb" @click="edit(r)">Изменить</button>
             </th>
 
-            <td v-if="!can_view_field(r) & canEdit" colspan="4" class="text-center">
+            <td v-if="!can_view_field(r) && canEdit" colspan="4" class="text-center">
               <evaluation-monitoring-fast-editor :data="r" @sendData="load($event)" @cancelEdit="cancel_edit(r)"/>
             </td>
 
@@ -109,7 +109,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import EvaluationMonitoringFastEditor from '@/ui-cards/EvaluationMonitoringFastEditor.vue';
-import { EvaluationMonitoringGroup, EvaluationMonitoringField, EvaluationMonitoringGrade } from '@/types/evaluationMonitoring';
+import { EvaluationMonitoringGroup, EvaluationMonitoringField } from '@/types/evaluationMonitoring';
 import TreeSelectField from '@/fields/TreeSelectField.vue';
 
 interface Params {
