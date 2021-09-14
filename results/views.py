@@ -129,7 +129,7 @@ def result_print(request):
         title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])),
         invariant=1,
     )
-    temp_iss = Issledovaniya.objects.get(napravleniye_id=pk[0])
+    temp_iss = Issledovaniya.objects.filter(napravleniye_id=pk[0]).first()
     left_padding = 15
     right_padding = 5
     top_padding = 5
