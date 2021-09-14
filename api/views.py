@@ -844,8 +844,50 @@ def get_reset_time_vars(n):
 def mkb10(request):
     kw = request.GET.get("keyword", "").split(' ')[0]
     data = []
-    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw).order_by("code").distinct()[:11]:
+    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw, hide=False).order_by("code").distinct()[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
+    return JsonResponse({"data": data})
+
+
+def mkb10_dict(request):
+    q = request.GET["query"].strip()
+    short = request.GET.get("short") == '1'
+
+    if not q:
+        return JsonResponse({"data": []})
+
+    if q == '-':
+        return JsonResponse({"data": [{"code": '-', "title": '', "id": '-'}]})
+
+    d = request.GET.get("dictionary", "mkb10.4")
+    parts = q.split(' ', 1)
+    code = parts[0].upper()
+    if len(parts) == 2:
+        title = parts[1]
+    else:
+        title = None
+
+    dq = directions.Diagnoses.objects.filter(d_type=d, hide=False)
+
+    if title:
+        dq = dq.filter(code__iexact=code, title__istartswith=title)
+    else:
+        dq = dq.filter(code__istartswith=code)
+
+    if short:
+        dq = dq.order_by('code').distinct('code')[:11]
+    elif title:
+        dq = dq.order_by("title").distinct("title", "code")
+    else:
+        dq = dq.order_by("code").distinct("title", "code")[:50]
+
+    data = []
+    for d in dq:
+        data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
+
+    if not data or (short and len(data) < 11 and code not in [x["code"] for x in data]):
+        data.append({"code": code, "title": title or "", "id": code})
+
     return JsonResponse({"data": data})
 
 
@@ -872,7 +914,7 @@ def key_value(request):
 def vich_code(request):
     kw = request.GET.get("keyword", "")
     data = []
-    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="vc").order_by("code")[:11]:
+    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="vc", hide=False).order_by("code")[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": {"-": ""}.get(d.title, d.title)})
     return JsonResponse({"data": data})
 

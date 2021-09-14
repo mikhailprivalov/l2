@@ -10,7 +10,7 @@
       >
         <span>&times;</span>
       </button>
-      <m-k-b-field v-model="diagnos" v-if="!hide_diagnosis" />
+      <MKBFieldTreeselect :key="`DIAGNOSIS_DIRECTIONS_${card_pk}`" v-model="diagnos" v-if="!hide_diagnosis" short />
       <div class="vich-code" v-if="need_vich_code && !hide_diagnosis">
         <TypeAhead
           src="/api/vich_code?keyword=:keyword"
@@ -415,7 +415,7 @@ import * as actions from '../store/action-types';
 import ResearchDisplay from './ResearchDisplay.vue';
 import Modal from './Modal.vue';
 import 'vue-select/dist/vue-select.css';
-import MKBField from '../fields/MKBField.vue';
+import MKBFieldTreeselect from '../fields/MKBFieldTreeselect.vue';
 import SelectFieldTitled from '../fields/SelectFieldTitled.vue';
 import SelectedResearchesParams from './SelectedResearchesParams.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -428,7 +428,7 @@ export default {
     Modal,
     vSelect,
     TypeAhead,
-    MKBField,
+    MKBFieldTreeselect,
     SelectedResearchesParams,
     Treeselect,
   },
@@ -1229,6 +1229,7 @@ export default {
   width: 35px;
   text-align: center;
   border-radius: 0;
+  z-index: 1;
 }
 
 .top-inner {
@@ -1249,13 +1250,16 @@ export default {
   left: 0;
 }
 
-.top-picker ::v-deep .form-control {
-  border-radius: 0 !important;
-  border: none;
-  border-bottom: 1px solid #aab2bd;
+.top-picker ::v-deep {
+  .form-control,
+  .vue-treeselect {
+    border-radius: 0 !important;
+    border: none;
+    border-bottom: 1px solid #aab2bd;
 
-  &:first-child {
-    width: 180px;
+    &:first-child {
+      width: 180px;
+    }
   }
 }
 
