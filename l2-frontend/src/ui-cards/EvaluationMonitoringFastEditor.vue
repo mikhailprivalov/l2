@@ -1,21 +1,21 @@
 <template>
   <div v-frag>
     <div class="input-group">
-      <input 
-        type="number" 
-        class="form-control" 
-        @keypress.enter="save" 
-        v-model="grade" 
-        laceholder="Оценка" 
-        style="width: 15%;" 
+      <input
+        type="number"
+        class="form-control"
+        @keypress.enter="save"
+        v-model="grade"
+        laceholder="Оценка"
+        style="width: 15%;"
         min="0"
        />
-      <input 
-        type="text" 
-        class="form-control" 
-        @keypress.enter="save" 
-        v-model="comment" 
-        placeholder="Комментарий" 
+      <input
+        type="text"
+        class="form-control"
+        @keypress.enter="save"
+        v-model="comment"
+        placeholder="Комментарий"
         style="width: 85%;"
        />
       <span class="input-group-btn">
@@ -77,7 +77,7 @@ export default class ExtraNotificationFastEditor extends Vue {
   $dialog: any;
 
   async save() {
-    if (!RegExp("^(\\d+|\\d+\\.\\d+|\\d+\\,\\d+)$").test(String(this.grade))) {
+    if (!RegExp('^(\\d+|\\d+\\.\\d+|\\d+\\,\\d+)$').test(String(this.grade))) {
       this.$root.$emit('msg', 'error', 'Введите положительное число или ноль в поле оценки');
       return;
     }
@@ -95,7 +95,7 @@ export default class ExtraNotificationFastEditor extends Vue {
     this.$emit('sendData', this.data);
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loading = false;
-    if(ok) {
+    if (ok) {
       this.$root.$emit('msg', 'ok', message);
     } else {
       this.$root.$emit('msg', 'error', message);
