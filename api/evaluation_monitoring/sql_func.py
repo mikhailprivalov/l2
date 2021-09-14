@@ -34,7 +34,12 @@ def sql_load(
             LEFT JOIN users_doctorprofile
             ON users_doctorprofile.id = directions_curatorgrade.curator_id
             WHERE            
-                directions_monitoringresult.period_param_quarter = %(quarter)s AND
+                CASE 
+                    WHEN %(quarter)s IS NULL THEN
+                        directions_monitoringresult.period_param_quarter IS NULL
+                    ELSE
+                        directions_monitoringresult.period_param_quarter = %(quarter)s
+                END AND
                 directions_monitoringresult.hospital_id = %(hospital_pk)s AND
                 array_position(%(research_pk)s, directions_monitoringresult.research_id) IS NOT NULL AND
                 directions_monitoringresult.period_param_year = %(year)s 
