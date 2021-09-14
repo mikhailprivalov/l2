@@ -243,7 +243,7 @@ export default class ExtraNotification extends Vue {
     const data = await this.$api('evaluation_monitoring/load', this.params);
     this.rows = data.rows.map((el: EvaluationMonitoringGroup) => { 
       const group = {...el}; 
-      group.['editing'] = false; 
+      group.editing = false; 
       return group; 
     });
     await this.$store.dispatch(actions.DEC_LOADING);
