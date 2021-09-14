@@ -67,7 +67,10 @@ def load(request):
             'value_aggregate': int(i.value_aggregate) if i.value_aggregate is not None else None,
             'value_text': i.value_text if i.value_aggregate is None else None,
         })
-
+        
+    if(group_object['title']):
+        results.append(group_object)
+        
     return JsonResponse({'rows': results})
 
 
