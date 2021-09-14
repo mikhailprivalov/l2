@@ -83,7 +83,7 @@ export default class ExtraNotificationFastEditor extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
 
     const {
-      ok, message, value, slaveConfirm,
+      ok, message, value,
     } = await this.$api('evaluation_monitoring/add_result', {
           result_id: this.data.fields[0].result_id,
           grade: this.grade,
@@ -92,7 +92,11 @@ export default class ExtraNotificationFastEditor extends Vue {
     this.$emit('sendData', this.data);
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loading = false;
-    this.$root.$emit('msg', 'ok', 'Сохранено');
+    if(ok) {
+      this.$root.$emit('msg', 'ok', message);
+    } else {
+      this.$root.$emit('msg', 'error', message);
+    }  
   }
 
   close() {
