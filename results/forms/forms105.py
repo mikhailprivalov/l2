@@ -261,7 +261,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Мед. св-во о смерти 106/у
     text = []
-    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"])
+    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"],
+                      fields)
     text.append(Spacer(1, 1.7 * mm))
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields['fio'])
 
@@ -327,7 +328,7 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text = []
 
     text = title_med_organization(text, fields['org'])
-    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"])
+    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"], fields)
     text.append(Spacer(1, 1.7 * mm))
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields["fio"])
 
@@ -416,7 +417,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
 
 
 # общие функции
-def title_data(text, serial, number, date_issue, type_document):
+def title_data(text, serial, number, date_issue, type_document, data_fields):
     text.append(Paragraph("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph("К УЧЕТНОЙ ФОРМЕ № 106/У", styleCentreBold))
@@ -436,6 +437,9 @@ def title_data(text, serial, number, date_issue, type_document):
     elif type_death_document["code"] == '2':
         instead_final = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
+    if data_fields.get("Серия предшествующего", None):
+        text.append(Paragraph("ранее выданное свидетельство", styleCentre))
+        text.append(Paragraph(f"серия {data_fields['Серия предшествующего']} No {data_fields['Номер предшествующего']} от {data_fields['Дата выдачи предшествующего']} г.", styleCentre))
     return text
 
 
@@ -882,7 +886,7 @@ def family_status(text, params):
     elif params["code"] == '5':
         not_brak = f"{op_bold_tag}<u>{not_brak}</u>{cl_bold_tag}"
     opinion = gen_opinion(['15.*Семейное положение:', brak, '1', not_brak, '2', not_known, '3'])
-    col_width = (38 * mm, 56 * mm, 6 * mm, 60 * mm, 6 * mm, 18 * mm, 6 * mm,)
+    col_width = (38 * mm, 60 * mm, 6 * mm, 60 * mm, 6 * mm, 18 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1344,7 +1348,7 @@ def death_happaned(text, params):
 
     opinion = gen_opinion(['18. Смерть произошла:', ill, '1', unfortunate_not_work, '2', unfortunate_work, '3'])
 
-    col_width = (34 * mm, 23 * mm, 6 * mm, 74 * mm, 6 * mm, 43 * mm, 6 * mm,)
+    col_width = (34 * mm, 24 * mm, 6 * mm, 74 * mm, 6 * mm, 43 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1423,7 +1427,7 @@ def who_set_death(text, params):
     elif param_who_set["code"] == "5" or param_who_set["code"] == "7":
         expert = f"{op_bold_tag}<u>{expert}</u>{cl_bold_tag}"
     opinion = gen_opinion([doc_anatomy, '4', expert, '5'])
-    col_width = (45 * mm, 6 * mm, 50 * mm, 6 * mm,)
+    col_width = (50 * mm, 6 * mm, 50 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
