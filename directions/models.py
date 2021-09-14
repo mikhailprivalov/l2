@@ -460,6 +460,13 @@ class Napravleniya(models.Model):
             return hosp.ogrn
         return SettingManager.get("org_ogrn")
 
+    @property
+    def hospital_n3id(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.n3_id
+        return None
+
     def get_ogrn_org_initiator(self):
         return self.ogrn_org_initiator or self.hospital_ogrn or ""
 
