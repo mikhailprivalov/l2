@@ -109,7 +109,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import EvaluationMonitoringFastEditor from '@/ui-cards/EvaluationMonitoringFastEditor.vue';
-import { EvaluationMonitoringGroup, EvaluationMonitoringField } from '@/types/evaluationMonitoring';
+import { EvaluationMonitoringGroup } from '@/types/evaluationMonitoring';
 import TreeSelectField from '@/fields/TreeSelectField.vue';
 
 interface Params {
@@ -241,10 +241,10 @@ export default class ExtraNotification extends Vue {
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await this.$api('evaluation_monitoring/load', this.params);
-    this.rows = data.rows.map((el: EvaluationMonitoringGroup) => { 
-      const group = {...el}; 
-      group.editing = false; 
-      return group; 
+    this.rows = data.rows.map((el: EvaluationMonitoringGroup) => {
+      const group = { ...el };
+      group.editing = false;
+      return group;
     });
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
