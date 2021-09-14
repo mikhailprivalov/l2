@@ -3,7 +3,7 @@ export interface EvaluationMonitoringGrade {
   comment: string | null,
   grader: string | null,
 }
-
+  
 export interface EvaluationMonitoringField {
   result_id: number,
   field_id: number,
@@ -19,8 +19,11 @@ export interface IEvaluationMonitoringGroup {
 
 export class EvaluationMonitoringGroup {
   title: string;
+
   fields: EvaluationMonitoringField[];
+
   editing: boolean;
+
   grade: EvaluationMonitoringGrade;
 
   constructor(group: IEvaluationMonitoringGroup) {
@@ -28,16 +31,16 @@ export class EvaluationMonitoringGroup {
     this.fields = group.fields;
     this.editing = false;
     this.grade = group.grade;
-	}
-	
+  }
+
   public edit() {
     this.editing = true;
-	}
-	
+  }
+
   public cancel_edit() {
     this.editing = false;
-	}
-	
+  }
+
   public can_view_field() {
     return this.grade.grade !== null && !this.editing;
   }
