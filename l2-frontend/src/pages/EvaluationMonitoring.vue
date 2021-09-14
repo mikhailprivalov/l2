@@ -74,17 +74,17 @@
 
             <td> {{ r.fields[1].value_aggregate }} </td>
 
-            <td v-if="(can_view_field(r) && canEdit) || !canEdit"> {{ r.grade.grader }} </td>
+            <td v-if="(r.can_view_field() && canEdit) || !canEdit"> {{ r.grade.grader }} </td>
 
-            <td v-if="(can_view_field(r) && canEdit) || !canEdit"> {{ r.grade.grade}} </td>
+            <td v-if="(r.can_view_field() && canEdit) || !canEdit"> {{ r.grade.grade}} </td>
 
-            <td v-if="(can_view_field(r) && canEdit) || !canEdit"> {{ r.grade.comment }} </td>
+            <td v-if="(r.can_view_field() && canEdit) || !canEdit"> {{ r.grade.comment }} </td>
 
-            <th v-if="can_view_field(r) && canEdit">
+            <th v-if="r.can_view_field() && canEdit">
               <button class="btn btn-blue-nb" @click="r.edit()">Изменить</button>
             </th>
 
-            <td v-if="!can_view_field(r) && canEdit" colspan="4" class="text-center">
+            <td v-if="!r.can_view_field() && canEdit" colspan="4" class="text-center">
               <evaluation-monitoring-fast-editor :data="r" @sendData="load($event)" @cancelEdit="r.cancel_edit()"/>
             </td>
 
@@ -222,10 +222,6 @@ export default class ExtraNotification extends Vue {
 
   get visibleHospitals() {
     return this.canEdit ? this.hospitals : this.hospitals.filter(h => h.id === this.$store.getters.user_data.hospital);
-  }
-
-  can_view_field(group: EvaluationMonitoringGroup) {
-    return group.grade.grade !== null && !group.editing;
   }
 
   async load() {
