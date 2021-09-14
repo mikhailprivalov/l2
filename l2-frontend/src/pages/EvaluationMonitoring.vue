@@ -148,15 +148,15 @@ const EMPTY_ROWS: EvaluationMonitoringGroup[] = [];
         },
         {
           id: 2,
-          label: ,2 квартал',
+          label: '2 квартал',
         },
         {
           id: 3,
-          label: ,3 квартал',
+          label: '3 квартал',
         },
         {
           id: 4,
-          label: ,4 квартал',
+          label: '4 квартал',
         },
       ],
     };
