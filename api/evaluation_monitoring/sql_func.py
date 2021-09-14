@@ -43,7 +43,7 @@ def sql_load(
                 directions_monitoringresult.hospital_id = %(hospital_pk)s AND
                 array_position(%(research_pk)s, directions_monitoringresult.research_id) IS NOT NULL AND
                 directions_monitoringresult.period_param_year = %(year)s AND 
-	            directions_monitoringresult.type_period = %(type_period)s
+                directions_monitoringresult.type_period = %(type_period)s
             ORDER BY group_order, field_order
             """,
             params={
