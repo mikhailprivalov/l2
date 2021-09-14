@@ -104,7 +104,5 @@ def add_result(request):
         {
             'ok': True,
             'message': 'Ok',
-            'value': '',
-            'slaveConfirm': '',
         }
     )
