@@ -55,7 +55,7 @@ def load(request):
                 'fields': [],
                 'grade': {
                     'grade': grade['grade'],
-                    'comment':  grade['comment'],
+                    'comment': grade['comment'],
                     'grader': i.curator_fio,
                 }
             }
