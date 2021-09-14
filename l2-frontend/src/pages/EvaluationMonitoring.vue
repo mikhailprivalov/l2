@@ -53,7 +53,7 @@
           <col style="width: 80px" />
           <col style="width: 100px" />
           <col style="width: 200px" />
-          <col style="width: 100px" />
+          <col v-if="canEdit" style="width: 100px" />
         </colgroup>
         <thead>
           <tr v-if="rows.length !== 0">
@@ -63,7 +63,7 @@
             <th>Куратор</th>
             <th>Оценка куратора</th>
             <th>Коментарий куратора</th>
-            <th>Изменить</th>
+            <th v-if="canEdit">Изменить</th>
           </tr>
         </thead>
         <tbody>
@@ -74,17 +74,17 @@
             
             <td> {{ r.fields[1].value_aggregate }} </td>
 
-            <td v-if="can_view_field(r)"> {{ r.grade.grader }} </td>
+            <td v-if="(can_view_field(r) & canEdit) || !canEdit"> {{ r.grade.grader }} </td>
 
-            <td v-if="can_view_field(r)"> {{ r.grade.grade}} </td>
+            <td v-if="(can_view_field(r) & canEdit) || !canEdit"> {{ r.grade.grade}} </td>
 
-            <td v-if="can_view_field(r)"> {{ r.grade.comment }} </td>
+            <td v-if="(can_view_field(r) & canEdit) || !canEdit"> {{ r.grade.comment }} </td>
 
-            <th v-if="can_view_field(r)">
+            <th v-if="can_view_field(r) & canEdit">
               <button class="btn btn-blue-nb" @click="edit(r)">Изменить</button>
             </th>
 
-            <td v-else colspan="4" class="text-center">
+            <td v-if="!can_view_field(r) & canEdit" colspan="4" class="text-center">
               <evaluation-monitoring-fast-editor :data="r" @sendData="load($event)" @cancelEdit="cancel_edit(r)"/>
             </td>
 
