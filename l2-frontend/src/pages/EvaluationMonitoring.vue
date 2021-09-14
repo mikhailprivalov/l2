@@ -74,13 +74,13 @@
             
             <td> {{ r.fields[1].value_aggregate }} </td>
 
-            <td v-if="(can_view_field(r) & canEdit) || !canEdit"> {{ r.grade.grader }} </td>
+            <td v-if="(can_view_field(r) && canEdit) || !canEdit"> {{ r.grade.grader }} </td>
 
-            <td v-if="(can_view_field(r) & canEdit) || !canEdit"> {{ r.grade.grade}} </td>
+            <td v-if="(can_view_field(r) && canEdit) || !canEdit"> {{ r.grade.grade}} </td>
 
-            <td v-if="(can_view_field(r) & canEdit) || !canEdit"> {{ r.grade.comment }} </td>
+            <td v-if="(can_view_field(r) && canEdit) || !canEdit"> {{ r.grade.comment }} </td>
 
-            <th v-if="can_view_field(r) & canEdit">
+            <th v-if="can_view_field(r) && canEdit">
               <button class="btn btn-blue-nb" @click="edit(r)">Изменить</button>
             </th>
 
