@@ -70,7 +70,7 @@
           <tr v-for="r in rows" v-bind:key="r.editing">
             <td> {{ r.title }} </td>
 
-            <td> {{ get_text_or_aggregate(r.fields[0]) }} </td>
+            <td> {{ r.fields[0].value_text === '' ? r.fields[0].value_aggregate : r.fields[0].value_text }} </td>
 
             <td> {{ r.fields[1].value_aggregate }} </td>
 
@@ -234,10 +234,6 @@ export default class ExtraNotification extends Vue {
     this.$forceUpdate();
   }
 
-  get_text_or_aggregate(field: EvaluationMonitoringField) {
-    return field.value_text === '' ? field.value_aggregate : field.value_text;
-  }
-
   can_view_field(group: EvaluationMonitoringGroup) {
     return group.grade.grade !== null && !group.editing;
   }
@@ -245,7 +241,11 @@ export default class ExtraNotification extends Vue {
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await this.$api('evaluation_monitoring/load', this.params);
-    this.rows = data.rows.map((el: EvaluationMonitoringGroup) => {el.editing = false; return el });
+    this.rows = data.rows.map((el: EvaluationMonitoringGroup) => { 
+      const group = {...el}; 
+      group.['editing'] = false; 
+      return group; 
+    });
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
   }
