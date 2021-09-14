@@ -1,5 +1,6 @@
 import datetime
 import logging
+from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
 import re
@@ -49,11 +50,14 @@ def next_result_direction(request):
     next_n = int(request.GET.get("nextN", 1))
     type_researches = request.GET.get("research", '*')
     d_start = f'{after_date}'
-    is_research = -1
+    is_research = 1
     researches = [-999]
-    if type_researches != '*':
+    if type_researches == 'lab':
+        researches = [x.pk for x in Researches.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY)]
+    elif type_researches != '*':
         researches = [int(i) for i in type_researches.split(',')]
-        is_research = 1
+    else:
+        is_research = -1
     dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
     next_time = None
@@ -157,8 +161,7 @@ def direction_data(request):
                 "patronymic": individual.patronymic,
                 "birthday": individual.birthday,
                 "sex": individual.sex,
-                "card": {"base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title}, "pk": card.pk, "number": card.number,
-                         "n3Id": card.n3_id},
+                "card": {"base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title}, "pk": card.pk, "number": card.number, "n3Id": card.n3_id},
             },
             "issledovaniya": [x.pk for x in iss],
             "timeConfirmation": iss[iss_index].time_confirmation,
@@ -213,6 +216,8 @@ def issledovaniye_data(request):
                     refs = [f'от {refs_list[0]}']
                 elif refs_list[0] == refs_list[1]:
                     refs = [refs.const_orig]
+                else:
+                    refs = refs_list
         else:
             refs = [r.calc_normal(only_ref=True) or '']
 
@@ -228,6 +233,19 @@ def issledovaniye_data(request):
 
     time_confirmation = i.time_confirmation_local
 
+    doctor_data = {}
+
+    if i.doc_confirmation:
+        doctor_data = {
+            "snils": i.doc_confirmation.snils,
+            "n3Id": i.doc_confirmation.n3_id,
+            "spec": i.doc_confirmation.specialities.n3_id if i.doc_confirmation.specialities else None,
+            "role": i.doc_confirmation.position.n3_id if i.doc_confirmation.position else None,
+            "family": i.doc_confirmation.family,
+            "name": i.doc_confirmation.name,
+            "patronymic": i.doc_confirmation.patronymic,
+        }
+
     return Response(
         {
             "ok": True,
@@ -238,9 +256,7 @@ def issledovaniye_data(request):
             "dateTimeReceive": format_time_if_is_not_none(sample.time_recive_local) if sample else None,
             "dateTimeConfirm": format_time_if_is_not_none(time_confirmation),
             "docConfirm": i.doc_confirmation_fio,
-            "doctorData": {"snils": i.doc_confirmation.snils, "n3Id": i.doc_confirmation.n3_id, "spec": i.doc_confirmation.specialities.n3_id,
-                           "role": i.doc_confirmation.position.n3_id, "family": i.doc_confirmation.family, "name": i.doc_confirmation.name,
-                           "patronymic": i.doc_confirmation.patronymic},
+            "doctorData": doctor_data,
             "results": results_data,
             "code": i.research.code,
             "comments": i.lab_comment,
@@ -326,7 +342,7 @@ def issledovaniye_data_multi(request):
     )
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def make_log(request):
     key = request.GET.get("key")
     keys = request.GET.get("keys", key).split(",")
