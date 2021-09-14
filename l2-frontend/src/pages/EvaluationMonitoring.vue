@@ -71,7 +71,7 @@
             <td> {{ r.title }} </td>
 
             <td> {{ get_text_or_aggregate(r.fields[0]) }} </td>
-            
+
             <td> {{ r.fields[1].value_aggregate }} </td>
 
             <td v-if="(can_view_field(r) && canEdit) || !canEdit"> {{ r.grade.grader }} </td>
@@ -140,23 +140,23 @@ const EMPTY_ROWS: EvaluationMonitoringGroup[] = [];
       periods: [
         {
           id: -1,
-          label: "Год"
+          label: 'Год',
         },
         {
           id: 1,
-          label: "1 квартал"
+          label: '1 квартал',
         },
         {
           id: 2,
-          label: "2 квартал"
+          label: ,2 квартал',
         },
         {
           id: 3,
-          label: "3 квартал"
+          label: ,3 квартал',
         },
         {
           id: 4,
-          label: "4 квартал"
+          label: ,4 квартал',
         },
       ],
     };
@@ -235,22 +235,19 @@ export default class ExtraNotification extends Vue {
   }
 
   get_text_or_aggregate(field: EvaluationMonitoringField) {
-    return field.value_text === "" ? field.value_aggregate : field.value_text;
+    return field.value_text === '' ? field.value_aggregate : field.value_text;
   }
 
   can_view_field(group: EvaluationMonitoringGroup) {
     return group.grade.grade !== null && !group.editing;
   }
 
-  async load(arg) {
+  async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await this.$api('evaluation_monitoring/load', this.params);
-    this.rows = data.rows.map((el: EvaluationMonitoringGroup) => {el.editing = false; return el;});
+    this.rows = data.rows.map((el: EvaluationMonitoringGroup) => {el.editing = false; return el });
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
-  }
-
-  covid() {
   }
 }
 </script>
