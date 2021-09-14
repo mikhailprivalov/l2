@@ -5,11 +5,9 @@ from django.http import JsonResponse
 
 from .sql_func import sql_load
 from hospitals.models import Hospitals
-from directions.models import MonitoringResult, Issledovaniya, Napravleniya, CuratorGrade
-from directory.models import ParaclinicInputField, Researches
+from directions.models import MonitoringResult, CuratorGrade
 from users.models import DoctorProfile
 from laboratory.settings import EVALUATION_MONITORING_QUARTERLY_DIRECTIONS, EVALUATION_MONITORING_YEAR_DIRECTIONS
-
 
 
 @login_required
@@ -110,5 +108,3 @@ def add_result(request):
             'slaveConfirm': '',
         }
     )
-
-
