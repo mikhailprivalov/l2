@@ -366,6 +366,8 @@ def make_log(request):
     pks_to_resend_n3_false = [x for x in keys if x] if t in (60000, 60001, 60002, 60003) else []
     pks_to_resend_l2_false = [x for x in keys if x] if t in (60004, 60005) else []
 
+    pks_to_set_odli_id = [x for x in keys if x] if t in (60007,) else []
+
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
@@ -375,6 +377,16 @@ def make_log(request):
 
         for k in pks_to_resend_l2_false:
             Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_odli_id:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+            if str(k) in body:
+                pass
+                # пока не будет работать, потому что 1 бандл != 1 напр
+                # d = directions.Napravleniya.objects.get(pk=k)
+                # d.n3_odli_id = body[str(k)]
+                # d.save(update_fields=['n3_odli_id'])
 
     return Response({"ok": True})
 
