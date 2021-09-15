@@ -583,7 +583,7 @@ def directions_results(request):
 
                         result["results"][kint]["fractions"][pk]["result"] = "отложен"  # Значение
                         result["results"][kint]["fractions"][pk]["title"] = fr.title  # Название фракции
-                        result["results"][kint]["fractions"][pk]["units"] = fr.units  # Еденицы измерения
+                        result["results"][kint]["fractions"][pk]["units"] = fr.get_unit_str()  # Еденицы измерения
                         ref_m = {"": ""}  # fr.ref_m
                         ref_f = {"": ""}  # fr.ref_f
                         if not isinstance(ref_m, str):

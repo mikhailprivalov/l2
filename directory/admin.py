@@ -92,6 +92,7 @@ class RefFractions(admin.ModelAdmin):
     )
     list_filter = ('research__podrazdeleniye',)
     search_fields = ('title',)
+    autocomplete_fields = ('unit', 'research')
 
     def podr(self, obj):
         return obj.research.podrazdeleniye

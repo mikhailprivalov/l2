@@ -642,7 +642,7 @@ class MaterialVariants(models.Model):
 
 class Unit(models.Model):
     title = models.CharField(max_length=255, verbose_name='Название единицы измерения')
-    short_title = models.CharField(max_length=255, verbose_name='Краткое название единицы измерения')
+    short_title = models.CharField(max_length=255, db_index=True, verbose_name='Краткое название единицы измерения')
     code = models.CharField(max_length=4, db_index=True, verbose_name='Код')
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
 
@@ -678,6 +678,23 @@ class Fractions(models.Model):
     print_title = models.BooleanField(default=False, blank=True, verbose_name='Печатать название(Группировка)', db_index=True)
     readonly_title = models.BooleanField(default=False, blank=True, verbose_name='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+
+    def get_unit(self):
+        if self.unit:
+            return self.unit
+        if self.units:
+            u = Unit.objects.filter(short_title=self.units).fitst()
+            if u:
+                self.unit = u
+                self.save(update_fields=['unit'])
+                return u
+        return None
+
+    def get_unit_str(self):
+        u = self.get_unit()
+        if u:
+            return u.short_title
+        return self.units
 
     def get_fsli_code(self):
         return (self.fsli or '').strip()
