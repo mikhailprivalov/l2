@@ -412,6 +412,7 @@ class Napravleniya(models.Model):
     qr_check_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для проверки результата по QR внешним сервисом')
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
+    n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
@@ -459,6 +460,13 @@ class Napravleniya(models.Model):
         if hosp:
             return hosp.ogrn
         return SettingManager.get("org_ogrn")
+
+    @property
+    def hospital_n3id(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.n3_id
+        return None
 
     def get_ogrn_org_initiator(self):
         return self.ogrn_org_initiator or self.hospital_ogrn or ""

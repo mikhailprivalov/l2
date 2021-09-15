@@ -1,5 +1,6 @@
 import datetime
 import logging
+from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
 import re
@@ -49,11 +50,14 @@ def next_result_direction(request):
     next_n = int(request.GET.get("nextN", 1))
     type_researches = request.GET.get("research", '*')
     d_start = f'{after_date}'
-    is_research = -1
+    is_research = 1
     researches = [-999]
-    if type_researches != '*':
+    if type_researches == 'lab':
+        researches = [x.pk for x in Researches.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY)]
+    elif type_researches != '*':
         researches = [int(i) for i in type_researches.split(',')]
-        is_research = 1
+    else:
+        is_research = -1
     dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
     next_time = None
@@ -157,7 +161,13 @@ def direction_data(request):
                 "patronymic": individual.patronymic,
                 "birthday": individual.birthday,
                 "sex": individual.sex,
-                "card": {"base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title}, "pk": card.pk, "number": card.number},
+                "card": {
+                    "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
+                    "pk": card.pk,
+                    "number": card.number,
+                    "n3Id": card.n3_id,
+                    "numberWithType": card.number_with_type(),
+                },
             },
             "issledovaniya": [x.pk for x in iss],
             "timeConfirmation": iss[iss_index].time_confirmation,
@@ -172,6 +182,7 @@ def direction_data(request):
             "ogrnInitiator": direction.get_ogrn_org_initiator(),
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
+            "hospitalN3Id": direction.hospital_n3id,
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
         }
@@ -212,8 +223,12 @@ def issledovaniye_data(request):
                     refs = [f'от {refs_list[0]}']
                 elif refs_list[0] == refs_list[1]:
                     refs = [refs.const_orig]
+                else:
+                    refs = refs_list
         else:
             refs = [r.calc_normal(only_ref=True) or '']
+
+        norm = r.calc_normal()
 
         results_data.append(
             {
@@ -222,10 +237,25 @@ def issledovaniye_data(request):
                 "value": r.value.replace(',', '.'),
                 "units": r.get_units(),
                 "ref": refs,
+                "interpretation": 'N' if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else 'A',
             }
         )
 
     time_confirmation = i.time_confirmation_local
+
+    doctor_data = {}
+
+    if i.doc_confirmation:
+        doctor_data = {
+            "pk": i.doc_confirmation_id,
+            "snils": i.doc_confirmation.snils,
+            "n3Id": i.doc_confirmation.n3_id,
+            "spec": i.doc_confirmation.specialities.n3_id if i.doc_confirmation.specialities else None,
+            "role": i.doc_confirmation.position.n3_id if i.doc_confirmation.position else None,
+            "family": i.doc_confirmation.family,
+            "name": i.doc_confirmation.name,
+            "patronymic": i.doc_confirmation.patronymic,
+        }
 
     return Response(
         {
@@ -237,6 +267,7 @@ def issledovaniye_data(request):
             "dateTimeReceive": format_time_if_is_not_none(sample.time_recive_local) if sample else None,
             "dateTimeConfirm": format_time_if_is_not_none(time_confirmation),
             "docConfirm": i.doc_confirmation_fio,
+            "doctorData": doctor_data,
             "results": results_data,
             "code": i.research.code,
             "comments": i.lab_comment,
@@ -322,7 +353,7 @@ def issledovaniye_data_multi(request):
     )
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def make_log(request):
     key = request.GET.get("key")
     keys = request.GET.get("keys", key).split(",")
@@ -335,6 +366,9 @@ def make_log(request):
     pks_to_resend_n3_false = [x for x in keys if x] if t in (60000, 60001, 60002, 60003) else []
     pks_to_resend_l2_false = [x for x in keys if x] if t in (60004, 60005) else []
 
+    pks_to_set_odli_id = [x for x in keys if x] if t in (60007,) else []
+    pks_to_set_odli_id_fail = [x for x in keys if x] if t in (60008,) else []
+
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
@@ -344,6 +378,17 @@ def make_log(request):
 
         for k in pks_to_resend_l2_false:
             Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_odli_id_fail:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_odli_id:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+            if str(k) in body and isinstance(body[k], dict) and body[str(k)]['id']:
+                d = directions.Napravleniya.objects.get(pk=k)
+                d.n3_odli_id = body[str(k)]['id']
+                d.save(update_fields=['n3_odli_id'])
 
     return Response({"ok": True})
 
