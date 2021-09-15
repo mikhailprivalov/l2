@@ -230,6 +230,8 @@ def issledovaniye_data(request):
 
         norm = r.calc_normal()
 
+        # u = r.fraction.get_unit()
+
         results_data.append(
             {
                 "pk": r.pk,

@@ -2,7 +2,7 @@ import json
 
 from django.db import transaction 
 from django.core.management import BaseCommand
-from directory.models import Unit
+from directory.models import Fractions, Unit
 
 
 class Command(BaseCommand):
@@ -36,4 +36,22 @@ class Command(BaseCommand):
                         u.short_title = i['SHORTNAME']
                         u.save()
                         self.stdout.write(f"{n}/{len(items)} Обновлено: {str(u)}")
+
+                self.stdout.write("\nОбновление устаревших фракций")
+                fs = Fractions.objects.filter(unit__isnull=True, research__hide=False).exclude(units='')
+                c = fs.count()
+                self.stdout.write(f"Фракций с устаревшими единицами измерения: {c}")
+
+                n = 0
+                for f in fs:
+                    n += 1
+                    self.stdout.write(f"{n}/{c} {f.research.get_title()} — {f.title}")
+                    self.stdout.write(f"{n}/{c} устаревшее значение: {f.units}")
+                    u = f.get_unit()
+
+                    if u:
+                        self.stdout.write(f"{n}/{c} найденное: {u}")
+                    else:
+                        self.stdout.write(f"{n}/{c} значение для замены не найдено!")
+
 

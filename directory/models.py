@@ -683,7 +683,7 @@ class Fractions(models.Model):
         if self.unit:
             return self.unit
         if self.units:
-            u = Unit.objects.filter(short_title=self.units).fitst()
+            u = Unit.objects.filter(short_title=self.units).first()
             if u:
                 self.unit = u
                 self.save(update_fields=['unit'])
