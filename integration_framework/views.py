@@ -228,6 +228,8 @@ def issledovaniye_data(request):
         else:
             refs = [r.calc_normal(only_ref=True) or '']
 
+        norm = r.calc_normal()
+
         results_data.append(
             {
                 "pk": r.pk,
@@ -235,6 +237,7 @@ def issledovaniye_data(request):
                 "value": r.value.replace(',', '.'),
                 "units": r.get_units(),
                 "ref": refs,
+                "interpretation": 'N' if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else 'A',
             }
         )
 
@@ -244,6 +247,7 @@ def issledovaniye_data(request):
 
     if i.doc_confirmation:
         doctor_data = {
+            "pk": i.doc_confirmation_id,
             "snils": i.doc_confirmation.snils,
             "n3Id": i.doc_confirmation.n3_id,
             "spec": i.doc_confirmation.specialities.n3_id if i.doc_confirmation.specialities else None,
