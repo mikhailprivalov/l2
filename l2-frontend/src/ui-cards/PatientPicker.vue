@@ -436,7 +436,7 @@ import Modal from './Modal.vue';
 import * as actions from '../store/action-types';
 import patientsPoint from '../api/patients-point';
 import Vaccine from '../modals/Vaccine.vue';
-import AmbulatoryData from '@/modals/AmbulatoryData.vue';
+import AmbulatoryData from '../modals/AmbulatoryData.vue';
 
 const tfoms_re = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
