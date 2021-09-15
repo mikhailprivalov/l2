@@ -249,7 +249,7 @@
                     type="button"
                     @click="open_ambulatory_data"
                     v-tippy="{ placement: 'bottom' }"
-                    title="Свободные записи о пациенте"
+                    title="Произвольные записи о пациенте"
                     v-if="is_l2_cards && selected_card.pk"
                   >
                     <i class="fa fa-user"></i>
