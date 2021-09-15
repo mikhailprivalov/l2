@@ -385,12 +385,10 @@ def make_log(request):
         for k in pks_to_set_odli_id:
             Log.log(key=k, type=t, body=body.get(k, {}))
 
-            if str(k) in body:
-                pass
-                # пока не будет работать, потому что 1 бандл != 1 напр
-                # d = directions.Napravleniya.objects.get(pk=k)
-                # d.n3_odli_id = body[str(k)]
-                # d.save(update_fields=['n3_odli_id'])
+            if str(k) in body and isinstance(body[k], dict) and body[str(k)]['id']:
+                d = directions.Napravleniya.objects.get(pk=k)
+                d.n3_odli_id = body[str(k)]['id']
+                d.save(update_fields=['n3_odli_id'])
 
     return Response({"ok": True})
 
