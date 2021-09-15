@@ -247,6 +247,16 @@
                   <button
                     class="btn last btn-blue-nb nbr"
                     type="button"
+                    @click="open_ambulatory_data"
+                    v-tippy="{ placement: 'bottom' }"
+                    title="Краткие данные"
+                    v-if="selected_card.pk && l2_vaccine"
+                  >
+                    <i class="fa fa-user"></i>
+                  </button>
+                  <button
+                    class="btn last btn-blue-nb nbr"
+                    type="button"
                     v-tippy="{ placement: 'bottom', arrow: true }"
                     title="Анамнез жизни"
                     @click="open_anamnesis()"
@@ -368,6 +378,7 @@
     <d-reg :card_pk="selected_card.pk" :card_data="selected_card" v-if="dreg" :selected-researches="selectedResearches" />
     <vaccine :card_pk="selected_card.pk" :card_data="selected_card" v-if="vaccine" />
     <benefit :card_pk="selected_card.pk" :card_data="selected_card" v-if="benefit" :readonly="false" />
+    <ambulatory-data :card_pk="selected_card.pk" :card_data="selected_card" v-if="ambulatory_data && selected_card.pk" />
     <modal
       v-if="anamnesis"
       ref="modalAnamnesis"
@@ -425,6 +436,7 @@ import Modal from './Modal.vue';
 import * as actions from '../store/action-types';
 import patientsPoint from '../api/patients-point';
 import Vaccine from '../modals/Vaccine.vue';
+import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 
 const tfoms_re = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
@@ -437,6 +449,7 @@ export default {
     L2CardCreate,
     DReg,
     Benefit,
+    AmbulatoryData,
   },
   props: {
     directive_from_need: {
@@ -486,6 +499,7 @@ export default {
       inc_rmis: false,
       inc_tfoms: false,
       anamnesis: false,
+      ambulatory_data: false,
       anamnesis_data: {},
       an_state: {
         tab: 'text',
@@ -547,6 +561,9 @@ export default {
     });
     this.$root.$on('hide_vaccine', () => {
       this.vaccine = false;
+    });
+    this.$root.$on('hide_ambulatory_data', () => {
+      this.ambulatory_data = false;
     });
   },
   mounted() {
@@ -879,6 +896,9 @@ export default {
     },
     open_benefit() {
       this.benefit = true;
+    },
+    open_ambulatory_data() {
+      this.ambulatory_data = true;
     },
     open_editor(isnew) {
       if (isnew) {
