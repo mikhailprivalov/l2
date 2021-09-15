@@ -657,8 +657,8 @@ class Fractions(models.Model):
 
     title = models.CharField(max_length=255, verbose_name='Название фракции')
     research = models.ForeignKey(Researches, db_index=True, verbose_name='Исследование, к которому относится фракция', on_delete=models.CASCADE)
-    units = models.CharField(max_length=255, verbose_name='Еденицы измерения (DEPRECATED)', blank=True, default='')
-    unit = models.ForeignKey(Unit, verbose_name='Еденицы измерения', blank=True, default=None, null=True, on_delete=models.SET_NULL)
+    units = models.CharField(max_length=255, verbose_name='Единицы измерения (DEPRECATED)', blank=True, default='')
+    unit = models.ForeignKey(Unit, verbose_name='Единицы измерения', blank=True, default=None, null=True, on_delete=models.SET_NULL)
     default_ref = models.ForeignKey(References, verbose_name='Референс по-умолчанию', blank=True, null=True, default=None, on_delete=models.SET_NULL)
     ref_m = JSONField(verbose_name='Референсы (М)', blank=True, default="{}")
     ref_f = JSONField(verbose_name='Референсы (Ж)', blank=True, default="{}")
