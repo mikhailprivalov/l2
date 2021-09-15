@@ -367,6 +367,7 @@ def make_log(request):
     pks_to_resend_l2_false = [x for x in keys if x] if t in (60004, 60005) else []
 
     pks_to_set_odli_id = [x for x in keys if x] if t in (60007,) else []
+    pks_to_set_odli_id_fail = [x for x in keys if x] if t in (60008,) else []
 
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
@@ -376,6 +377,9 @@ def make_log(request):
             Log.log(key=k, type=t, body=body.get(k, {}))
 
         for k in pks_to_resend_l2_false:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_odli_id_fail:
             Log.log(key=k, type=t, body=body.get(k, {}))
 
         for k in pks_to_set_odli_id:
