@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DoctorProfile, AssignmentTemplates, AssignmentResearches, Speciality
+from .models import DoctorProfile, AssignmentTemplates, AssignmentResearches, Speciality, Position
 
 
 class DocAdmin(admin.ModelAdmin):
@@ -16,3 +16,4 @@ admin.site.register(DoctorProfile, DocAdmin)  # Активация редакт�
 admin.site.register(AssignmentTemplates)
 admin.site.register(AssignmentResearches)
 admin.site.register(Speciality)
+admin.site.register(Position)
