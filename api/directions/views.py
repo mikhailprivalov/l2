@@ -1,5 +1,4 @@
 import collections
-from django.contrib.auth.models import Group
 
 from utils.response import status_response
 from hospitals.models import Hospitals
