@@ -1,4 +1,6 @@
 import collections
+from django.contrib.auth.models import Group
+
 from utils.response import status_response
 from hospitals.models import Hospitals
 import operator
@@ -997,7 +999,9 @@ def directions_paraclinic_form(request):
     add_fr = {}
     f = False
     g = [str(x) for x in request.user.groups.all()]
-    if not request.user.is_superuser:
+    without_limit_paraclinic = Group.objects.get(name="Параклиника без ограничений")
+    is_without_limit_paraclinic = without_limit_paraclinic in request.user.groups.all()
+    if not request.user.is_superuser and not is_without_limit_paraclinic :
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
     if by_issledovaniye:
