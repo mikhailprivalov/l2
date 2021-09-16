@@ -31,9 +31,7 @@ def directory_researches(request):
             if not research["preparation"]:
                 research["preparation"] = "Не требуется"
             research_obj.preparation = research["preparation"]
-            if not research["quota_oms"] or research["quota_oms"] < 0:
-                research["quota_oms"] = -1
-            research_obj.quota_oms = research["quota_oms"]
+            research_obj.code = research["nmu"]
             research_obj.save()
             if research["id"] == -1:
                 pass
@@ -236,7 +234,7 @@ def directory_research(request):
         research = Researches.objects.get(pk=id)
         return_result["title"] = research.title
         return_result["lab"] = research.podrazdeleniye.get_title()
-        return_result["quota"] = research.quota_oms
+        return_result["nmu"] = research.code
         return_result["preparation"] = research.preparation
         return_result["edit_mode"] = research.edit_mode
         return_result["readonly"] = bool(directions.Issledovaniya.objects.filter(research=research).exists())
