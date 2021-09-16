@@ -1001,7 +1001,7 @@ def directions_paraclinic_form(request):
     g = [str(x) for x in request.user.groups.all()]
     without_limit_paraclinic = Group.objects.get(name="Параклиника без ограничений")
     is_without_limit_paraclinic = without_limit_paraclinic in request.user.groups.all()
-    if not request.user.is_superuser and not is_without_limit_paraclinic :
+    if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
     if by_issledovaniye:
