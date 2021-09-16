@@ -12,7 +12,7 @@ from django.utils import dateformat, timezone
 
 from appconf.manager import SettingManager
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
-from directory.models import Fractions, Researches
+from directory.models import Fractions, Researches, Unit
 from laboratory.decorators import group_required
 from laboratory.utils import strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
@@ -48,15 +48,32 @@ def fractions(request):
 
 
 @login_required
+def units(request):
+    rows = Unit.objects.filter(hide=False).order_by('title').values('pk', 'code', 'title', 'short_title')
+    rows = [{'id': x['pk'], 'label': f"{x['short_title']} — {x['title']} – {x['code']}"} for x in rows]
+    return JsonResponse(
+        {
+            "rows": rows,
+        }
+    )
+
+
+@login_required
 def save_fsli(request):
     request_data = json.loads(request.body)
     fractions = request_data['fractions']
     for fd in fractions:
         f = Fractions.objects.get(pk=fd['pk'])
         nf = fd['fsli'].strip() or None
-        if f != f.get_fsli_code():
+        nu = fd.get('unit')
+        if nf != f.get_fsli_code():
             f.fsli = nf
             f.save(update_fields=['fsli'])
+
+        if nu != f.unit_id:
+            f.unit_id = nu
+            f.save(update_fields=['unit'])
+
     return JsonResponse({"ok": True})
 
 
