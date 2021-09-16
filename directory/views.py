@@ -31,9 +31,7 @@ def directory_researches(request):
             if not research["preparation"]:
                 research["preparation"] = "Не требуется"
             research_obj.preparation = research["preparation"]
-            if not research["quota_oms"] or research["quota_oms"] < 0:
-                research["quota_oms"] = -1
-            research_obj.quota_oms = research["quota_oms"]
+            research_obj.code = research["nmu"]
             research_obj.save()
             if research["id"] == -1:
                 pass
@@ -236,7 +234,7 @@ def directory_research(request):
         research = Researches.objects.get(pk=id)
         return_result["title"] = research.title
         return_result["lab"] = research.podrazdeleniye.get_title()
-        return_result["quota"] = research.quota_oms
+        return_result["nmu"] = research.code
         return_result["preparation"] = research.preparation
         return_result["edit_mode"] = research.edit_mode
         return_result["readonly"] = bool(directions.Issledovaniya.objects.filter(research=research).exists())
@@ -266,10 +264,12 @@ def directory_research(request):
                 ref_m = json.loads(ref_m)
             if isinstance(ref_f, str):
                 ref_f = json.loads(ref_f)
+            u = fraction.get_unit()
             return_result["fractiontubes"]["tube-" + str(fraction.relation_id)]["fractions"].append(
                 {
                     "title": fraction.title,
                     "units": fraction.units,
+                    "unit": u.pk if u else None,
                     "ref_m": ref_m,
                     "ref_f": ref_f,
                     "pk": fraction.pk,
@@ -280,11 +280,6 @@ def directory_research(request):
             )
         for key in return_result["fractiontubes"].keys():
             return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"], key=lambda k: k['num'])
-        '''
-        sel: id,
-        color: color,
-        title: title,
-        '''
     return JsonResponse(return_result)
 
 

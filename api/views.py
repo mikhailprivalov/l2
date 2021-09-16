@@ -896,10 +896,13 @@ def rmis_confirm_list(request):
 @csrf_exempt
 def flg(request):
     ok = False
-    dpk = request.POST["directionId"]
+    dpk = int(request.POST["directionId"])
     content = request.POST["content"]
     date = try_strptime(request.POST["date"])
     doc_f = request.POST["doc"].lower()
+    if dpk >= 4600000000000:
+        dpk -= 4600000000000
+        dpk //= 10
     ds = directions.Napravleniya.objects.filter(pk=dpk)
     if ds.exists():
         d = ds[0]
@@ -937,7 +940,7 @@ def flg(request):
                     i.napravleniye.visit_who_mark = doc
                     i.napravleniye.visit_date = date
                     i.napravleniye.save()
-
+    slog.Log(key=dpk, type=13, body=json.dumps({"content": content, "doc_f": doc_f}), user=None).save()
     return JsonResponse({"ok": ok})
 
 

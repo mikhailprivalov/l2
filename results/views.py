@@ -130,7 +130,7 @@ def result_print(request):
         title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])),
         invariant=1,
     )
-    temp_iss = Issledovaniya.objects.get(napravleniye_id=pk[0])
+    temp_iss = Issledovaniya.objects.filter(napravleniye_id=pk[0]).first()
     left_padding = 15
     right_padding = 5
     top_padding = 5
@@ -1238,7 +1238,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             ]
             result = "не завершено"
             ref = {"": ""}
-            f_units = fractions[0].units
+            f_units = fractions[0].get_unit_str()
             if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                 r = Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).order_by("-pk")[0]
                 ref = r.get_ref()
@@ -1305,7 +1305,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 tmp = [Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;<font face="FreeSans" size="7">' + f.title + "</font>", styleSheet["BodyText"])]
                 result = "не завершено"
                 ref = {"": ""}
-                f_units = f.units
+                f_units = f.get_unit_str()
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                     ref = r.get_ref()

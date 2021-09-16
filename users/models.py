@@ -17,6 +17,7 @@ class Speciality(models.Model):
     hide = models.BooleanField(help_text='Скрытие')
     spec_type = models.SmallIntegerField(choices=SPEC_TYPES, help_text='Тип специальности', default=0)
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -33,6 +34,20 @@ def add_dots_if_not_digit(w: str, dots):
     if not w.isdigit() and len(w) > 0:
         w = w[0] + ("." if dots else "")
     return w
+
+
+class Position(models.Model):
+    title = models.CharField(max_length=255, help_text='Название')
+    hide = models.BooleanField(help_text='Скрытие')
+    rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Должность'
+        verbose_name_plural = 'Должность'
 
 
 class DoctorProfile(models.Model):
@@ -71,6 +86,9 @@ class DoctorProfile(models.Model):
     eds_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для L2 EDS')
     white_list_monitoring = models.ManyToManyField('directory.Researches', related_name='white_list_monitoring', blank=True, help_text='Доступные для просмотра мониторинги')
     black_list_monitoring = models.ManyToManyField('directory.Researches', related_name='black_list_monitoring', blank=True, help_text='Запрещены для просмотра мониторинги')
+    position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
+    snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="")
+    n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
     def get_eds_token(self):
         if not self.eds_token:

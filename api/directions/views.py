@@ -2,6 +2,7 @@ import base64
 import os
 from cda.integration import render_cda
 import collections
+
 from integration_framework.views import get_cda_data
 from utils.response import status_response
 from hospitals.models import Hospitals
@@ -589,7 +590,7 @@ def directions_results(request):
 
                         result["results"][kint]["fractions"][pk]["result"] = "отложен"  # Значение
                         result["results"][kint]["fractions"][pk]["title"] = fr.title  # Название фракции
-                        result["results"][kint]["fractions"][pk]["units"] = fr.units  # Еденицы измерения
+                        result["results"][kint]["fractions"][pk]["units"] = fr.get_unit_str()  # Еденицы измерения
                         ref_m = {"": ""}  # fr.ref_m
                         ref_f = {"": ""}  # fr.ref_f
                         if not isinstance(ref_m, str):
@@ -1003,7 +1004,8 @@ def directions_paraclinic_form(request):
     add_fr = {}
     f = False
     g = [str(x) for x in request.user.groups.all()]
-    if not request.user.is_superuser:
+    is_without_limit_paraclinic = "Параклиника без ограничений" in g
+    if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
     if by_issledovaniye:
@@ -1595,6 +1597,12 @@ def directions_paraclinic_result(request):
                     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]
                 f_result.value = field["value"]
                 f_result.field_type = f.field_type
+                if f.field_type in [27, 28, 29]:
+                    try:
+                        val = json.loads(field["value"])
+                    except:
+                        val = {}
+                    f_result.value_json = val
                 f_result.save()
                 if iss.research.is_monitoring:
                     if not MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye, field_id=field["pk"]).exists():

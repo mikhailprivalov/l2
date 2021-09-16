@@ -92,7 +92,6 @@
                 :just_search="true"
                 :hidetemplates="true"
                 :oneselect="true"
-                :filter_types="[2]"
               />
             </div>
           </div>

@@ -565,6 +565,118 @@ def statistic_research_data(ws1, researches):
     return ws1
 
 
+def statistic_research_death_base(ws1, d1, d2, research_titile):
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=1).value = 'Услуга:'
+    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+
+    columns = [
+        ('Серия', 13),
+        ('Номер', 15),
+        ('Вид МСС', 17),
+        ('Медицинская организация выдавшая свидететельство', 18),
+        ('Прикрепление пациента', 18),
+        ('Участок', 10),
+        ('Дата смерти', 11),
+        ('Дата рождения', 11),
+        ('ФИО умершего пациента', 25),
+        ('Пол (м/ж)', 6),
+        ('Возраст на дату смерти', 6),
+        ('а) болезнь или состояние, непосредст-венно приведшее к смерти', 17),
+        ('а) период', 10),
+        ('а) Код по МКБ- 10', 9),
+
+        ('б) патологи-ческое состояние, которое привело к болезни или состоянию, непосредст-венно приведшее к смерти', 17),
+        ('б) период', 10),
+        ('б) Код по МКБ- 10', 9),
+
+        ('в) перво-начальная причина смерти', 17),
+        ('в) период', 10),
+        ('в) Код по МКБ- 10', 9),
+
+        ('г) внешняя причина при травмах и отравлениях', 17),
+        ('г) период', 10),
+        ('г) Код по МКБ- 10', 9),
+        ('II.Прочие важные состояния способствовавшие смерти', 15),
+        ('класс заболевания первоначальной причины смерти', 15),
+        ('Место смерти (1/0)', 15),
+        ('Название стационара', 15),
+        ('ДТП (1/0)', 12),
+        ('Материнская смертность (1/0)', 15),
+        ('ФИО выдавшего свидетельства', 20),
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=4, column=idx).style = style_border
+
+    return ws1
+
+
+def statistic_research_death_data(ws1, researches):
+    """
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 4
+
+    for i in researches:
+        r += 1
+        ws1.cell(row=r, column=1).value = i["Серия"]
+        ws1.cell(row=r, column=2).value = i["Номер"]
+        ws1.cell(row=r, column=3).value = i["Вид медицинского свидетельства о смерти"]
+        ws1.cell(row=r, column=4).value = "ГИМДКБ"
+        ws1.cell(row=r, column=5).value = "Прикрепление пациента"
+        ws1.cell(row=r, column=6).value = "Участок"
+        ws1.cell(row=r, column=7).value = i["Дата смерти"]
+        ws1.cell(row=r, column=8).value = i["Дата рождения"]
+        ws1.cell(row=r, column=9).value = "ФИО умершего пациента"
+        ws1.cell(row=r, column=10).value = "возраст"
+        ws1.cell(row=r, column=11).value = "пол"
+        ws1.cell(row=r, column=12).value = i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][2]
+        ws1.cell(row=r, column=13).value = f'{i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][0]} ' \
+                                           f'{i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][1]}'
+
+        ws1.cell(row=r, column=14).value = ""
+
+        ws1.cell(row=r, column=15).value = ""
+        ws1.cell(row=r, column=16).value = ""
+        ws1.cell(row=r, column=17).value = ""
+
+        ws1.cell(row=r, column=18).value = ""
+        ws1.cell(row=r, column=19).value = ""
+        ws1.cell(row=r, column=20).value = ""
+
+        ws1.cell(row=r, column=21).value = ""
+        ws1.cell(row=r, column=22).value = ""
+        ws1.cell(row=r, column=23).value = ""
+        ws1.cell(row=r, column=24).value = "II"
+        ws1.cell(row=r, column=25).value = ""
+        ws1.cell(row=r, column=26).value = i["Место смерти"]
+        ws1.cell(row=r, column=27).value = ""
+        ws1.cell(row=r, column=28).value = ""
+        ws1.cell(row=r, column=29).value = ""
+        ws1.cell(row=r, column=30).value = i["Заполнил"]
+
+        rows = ws1[f'A{r}:AD{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    return ws1
+
+
 def statistic_message_ticket_base(ws1, d1, d2, style_border):
     ws1.cell(row=1, column=1).value = 'Обращения'
     ws1.cell(row=2, column=1).value = 'Период:'
