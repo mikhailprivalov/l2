@@ -209,14 +209,34 @@ class IstochnikiFinansirovaniya(models.Model):
     Таблица источников финансирования
     """
 
-    title = models.CharField(max_length=511, help_text='Название')
-    active_status = models.BooleanField(default=True, help_text='Статус активности')
-    base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие", db_index=True)
-    rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС", db_index=True)
-    default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
-    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE)
-    order_weight = models.SmallIntegerField(default=0)
+    title = models.CharField(max_length=511, verbose_name='Название')
+    active_status = models.BooleanField(default=True, verbose_name='Статус активности')
+    base = models.ForeignKey(Clients.CardBase, verbose_name='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, verbose_name="Скрытие", db_index=True)
+    rmis_auto_send = models.BooleanField(default=True, blank=True, verbose_name="Автоматическая отправка в РМИС", db_index=True)
+    default_diagnos = models.CharField(max_length=36, verbose_name="Диагноз по умолчанию", default="", blank=True)
+    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE, verbose_name="Договоры")
+    order_weight = models.SmallIntegerField(default=0, verbose_name="Сортировка")
+    n3_code = models.CharField(max_length=2, default="", blank=True, verbose_name="Код источника финансирования для N3")
+
+    def get_n3_code(self):
+        codes = {
+            'омс': '1',
+            'бюджет': '2',
+            'платные услуги': '3',
+            'платно': '3',
+            'дмс': '4',
+            'собственные средства': '5',
+            'другое': '6',
+        }
+        if not self.n3_code:
+            lower_title = self.title.lower()
+
+            if lower_title in codes:
+                self.n3_code = codes[lower_title]
+                self.save()
+
+        return self.n3_code or codes['другое']
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
