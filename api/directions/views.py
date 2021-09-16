@@ -1,4 +1,5 @@
 import collections
+
 from utils.response import status_response
 from hospitals.models import Hospitals
 import operator
@@ -997,7 +998,8 @@ def directions_paraclinic_form(request):
     add_fr = {}
     f = False
     g = [str(x) for x in request.user.groups.all()]
-    if not request.user.is_superuser:
+    is_without_limit_paraclinic = "Параклиника без ограничений" in g
+    if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
     if by_issledovaniye:
