@@ -29,11 +29,13 @@ def fractions(request):
     research = Researches.objects.get(pk=pk)
     fractions_list = []
     for f in Fractions.objects.filter(research=research).order_by("sort_weight"):
+        u = f.get_unit()
         fractions_list.append(
             {
                 "pk": f.pk,
                 "title": f.title,
                 "units": f.units,
+                "unit": u.pk if u else None,
                 "fsli": f.get_fsli_code(),
             }
         )
@@ -431,7 +433,7 @@ def form(request):
             "fraction": {
                 "pk": f.pk,
                 "title": f.title,
-                "units": f.units,
+                "units": f.get_unit_str(),
                 "render_type": f.render_type,
                 "options": f.options,
                 "formula": f.formula,

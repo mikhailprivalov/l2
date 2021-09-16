@@ -6,6 +6,7 @@ from requests import Session
 from zeep import Client
 from zeep.transports import Transport
 from laboratory.settings import BASE_DIR
+from utils.nsi_directories import NSI
 
 
 NSI_DIRECTORIES_TO_SAVE = {
@@ -35,6 +36,7 @@ class Command(BaseCommand):
         client = Client('https://nsi.rosminzdrav.ru/wsdl/SOAP-server.v2.php?wsdl', transport=transport)
         directories_project_file_path = os.path.join('utils', 'nsi_directories.py')
         directories_file_path = os.path.join(BASE_DIR, directories_project_file_path)
+        STATIC_DIRECTORIES = {x: NSI[x] for x in NSI if x not in NSI_DIRECTORIES_TO_SAVE}
         with open(directories_file_path, 'w') as f:
             f.write("NSI = {\n")
             for oid in NSI_DIRECTORIES_TO_SAVE:
@@ -75,6 +77,14 @@ class Command(BaseCommand):
                                 title = p['value'].replace('\xa0', ' ')
                         if code and title:
                             f.write(f"            '{code}': '{title}',\n")
+                f.write("        },\n")
+                f.write("    },\n")
+            for oid in STATIC_DIRECTORIES:
+                f.write(f"    '{oid}': {{\n")
+                f.write(f"        'title': '{STATIC_DIRECTORIES[oid]['title']}',\n")
+                f.write("        'values': {\n")
+                for code in STATIC_DIRECTORIES[oid]['values']:
+                    f.write(f"            '{code}': '{STATIC_DIRECTORIES[oid]['values'][code]}',\n")
                 f.write("        },\n")
                 f.write("    },\n")
             f.write("}\n")

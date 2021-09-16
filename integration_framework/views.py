@@ -230,12 +230,15 @@ def issledovaniye_data(request):
 
         norm = r.calc_normal()
 
+        u = r.fraction.get_unit()
+
         results_data.append(
             {
                 "pk": r.pk,
                 "fsli": r.fraction.get_fsli_code(),
                 "value": r.value.replace(',', '.'),
                 "units": r.get_units(),
+                "unitCode": u.code if u else None,
                 "ref": refs,
                 "interpretation": 'N' if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else 'A',
             }
