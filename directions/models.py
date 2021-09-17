@@ -209,14 +209,34 @@ class IstochnikiFinansirovaniya(models.Model):
     Таблица источников финансирования
     """
 
-    title = models.CharField(max_length=511, help_text='Название')
-    active_status = models.BooleanField(default=True, help_text='Статус активности')
-    base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие", db_index=True)
-    rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС", db_index=True)
-    default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
-    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE)
-    order_weight = models.SmallIntegerField(default=0)
+    title = models.CharField(max_length=511, verbose_name='Название')
+    active_status = models.BooleanField(default=True, verbose_name='Статус активности')
+    base = models.ForeignKey(Clients.CardBase, verbose_name='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, verbose_name="Скрытие", db_index=True)
+    rmis_auto_send = models.BooleanField(default=True, blank=True, verbose_name="Автоматическая отправка в РМИС", db_index=True)
+    default_diagnos = models.CharField(max_length=36, verbose_name="Диагноз по умолчанию", default="", blank=True)
+    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE, verbose_name="Договоры")
+    order_weight = models.SmallIntegerField(default=0, verbose_name="Сортировка")
+    n3_code = models.CharField(max_length=2, default="", blank=True, verbose_name="Код источника финансирования для N3")
+
+    def get_n3_code(self):
+        codes = {
+            'омс': '1',
+            'бюджет': '2',
+            'платные услуги': '3',
+            'платно': '3',
+            'дмс': '4',
+            'собственные средства': '5',
+            'другое': '6',
+        }
+        if not self.n3_code:
+            lower_title = self.title.lower()
+
+            if lower_title in codes:
+                self.n3_code = codes[lower_title]
+                self.save()
+
+        return self.n3_code or codes['другое']
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
@@ -413,6 +433,7 @@ class Napravleniya(models.Model):
     qr_check_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для проверки результата по QR внешним сервисом')
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
+    n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
@@ -460,6 +481,13 @@ class Napravleniya(models.Model):
         if hosp:
             return hosp.ogrn
         return SettingManager.get("org_ogrn")
+
+    @property
+    def hospital_n3id(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.n3_id
+        return None
 
     def get_ogrn_org_initiator(self):
         return self.ogrn_org_initiator or self.hospital_ogrn or ""
@@ -1878,10 +1906,12 @@ class Result(models.Model):
         return "%s | %s | %s" % (self.pk, self.fraction, self.ref_m is not None and self.ref_f is not None)
 
     def get_units(self, needsave=True):
-        if not self.units and self.fraction.units and self.fraction.units != "":
-            self.units = self.fraction.units
-            if needsave:
-                self.save()
+        if not self.units:
+            u = self.fraction.get_unit_str()
+            if u:
+                self.units = u
+                if needsave:
+                    self.save()
         return self.units or ""
 
     def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False, needsave=True):

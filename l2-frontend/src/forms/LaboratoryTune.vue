@@ -1,43 +1,63 @@
 <template>
   <div class="root">
-    <h4>{{title}} – коды ФСЛИ</h4>
+    <h4>{{ title }} – коды ФСЛИ</h4>
 
     <table class="table table-bordered table-condensed">
       <colgroup>
         <col width="280" />
+        <col width="100" />
         <col />
       </colgroup>
       <thead>
         <tr>
           <th>Название теста (фракции)</th>
           <th>Код ФСЛИ</th>
+          <th>Единицы измерения</th>
         </tr>
       </thead>
       <tbody>
-      <tr v-for="f in fractions" :key="`${f.pk}_${f.title}`">
-        <td>
-          {{f.title}}{{f.units ?  ', ' + f.units : ''}}
-        </td>
-        <td class="cl-td">
-          <TypeAhead :delayTime="150" :getResponse="resp => [...resp.data.data]"
-                     NoResultText="Не найдено"
-                     placeholder="Код ФСЛИ"
-                     SearchingText="Поиск..."
-                     :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
-                     :limit="14" :minChars="1"
-                     :render="items => (
-                       items.map(i => (
-                         // eslint-disable-next-line max-len
-                         `${i.code_fsli} – ${i.title} – ${i.sample}${i.synonym ? ' – ' + i.synonym : ''}${i.nmu ? ' – ' + i.nmu : ''}`
-                       ))
-                     )"
-                     :onHit="onHit(f)"
-                     :selectFirst="true"
-                     maxlength="128"
-                     src="/api/autocomplete?value=:keyword&type=fsli&limit=14" v-model="f.fsli"
-          />
-        </td>
-      </tr>
+        <tr v-for="f in fractions" :key="`${f.pk}_${f.title}`">
+          <td>{{ f.title }}{{ f.units && !f.unit ? ', ' + f.units : '' }}</td>
+          <td class="cl-td">
+            <TypeAhead
+              :delayTime="150"
+              :getResponse="resp => [...resp.data.data]"
+              NoResultText="Не найдено"
+              placeholder="Код ФСЛИ"
+              SearchingText="Поиск..."
+              :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
+              :limit="14"
+              :minChars="1"
+              :render="
+                items =>
+                  items.map(
+                    i =>
+                      // eslint-disable-next-line max-len
+                      `${i.code_fsli} – ${i.title} – ${i.sample}${i.synonym ? ' – ' + i.synonym : ''}${
+                        i.nmu ? ' – ' + i.nmu : ''
+                      }`,
+                  )
+              "
+              :onHit="onHit(f)"
+              :selectFirst="true"
+              maxlength="128"
+              src="/api/autocomplete?value=:keyword&type=fsli&limit=14"
+              v-model="f.fsli"
+            />
+          </td>
+          <td class="cl-td">
+            <Treeselect
+              class="treeselect-noborder"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="unitOptions"
+              placeholder="не выбрано"
+              v-model="f.unit"
+              :append-to-body="true"
+              :clearable="true"
+            />
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -49,11 +69,13 @@
 
 <script lang="ts">
 import TypeAhead from 'vue2-typeahead';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '../store/action-types';
 import laboratory_point from '../api/laboratory-point';
 
 export default {
-  components: { TypeAhead },
+  components: { TypeAhead, Treeselect },
   props: {
     pk: {
       type: String,
@@ -64,6 +86,7 @@ export default {
     return {
       fractions: [],
       title: '',
+      unitOptions: [],
     };
   },
   mounted() {
@@ -72,7 +95,12 @@ export default {
   methods: {
     async loadData() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { fractions, title } = await laboratory_point.getFractions(this, 'pk');
+      const [{ fractions, title }, { rows }] = await Promise.all([
+        laboratory_point.getFractions(this, 'pk'),
+        this.$api('/laboratory/units'),
+      ]);
+
+      this.unitOptions = rows;
       this.fractions = fractions;
       this.title = title;
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -84,7 +112,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     onHit(f) {
-      return (item) => {
+      return item => {
         // eslint-disable-next-line no-param-reassign
         f.fsli = item.split('–')[0].trim();
       };
@@ -94,9 +122,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .root {
-    max-width: 650px;
+.root {
+  max-width: 1000px;
 
+  td:not(.x-cell) {
     ::v-deep ul {
       width: auto;
       font-size: 13px;
@@ -105,8 +134,8 @@ export default {
     ::v-deep ul li {
       overflow: hidden;
       text-overflow: ellipsis;
-      padding: 2px .25rem;
-      margin: 0 .2rem;
+      padding: 2px 0.25rem;
+      margin: 0 0.2rem;
 
       a {
         padding: 2px 10px;
@@ -126,4 +155,5 @@ export default {
       width: 100%;
     }
   }
+}
 </style>

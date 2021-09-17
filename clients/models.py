@@ -945,6 +945,7 @@ class Card(models.Model):
     medbook_type = models.CharField(max_length=6, choices=MEDBOOK_TYPES, blank=True, default=MEDBOOK_TYPES[0][0], help_text="Тип номера мед.книжки")
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
     @property
     def main_address_full(self):
@@ -1044,7 +1045,7 @@ class Card(models.Model):
         ind_data['passport_issued'] = (
             "______________________________________________________________" if not ind_documents['passport']['issued'] and not full_empty else ind_documents['passport']['issued']
         )
-
+        ind_data['passport_issued_orig'] = ind_documents['passport']['issued']
         # document "св-во о рождении"
         ind_data['bc_num'] = ind_documents['bc']['num']
         ind_data['bc_serial'] = ind_documents['bc']['serial']
