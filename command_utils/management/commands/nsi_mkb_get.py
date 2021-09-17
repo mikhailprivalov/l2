@@ -9,9 +9,19 @@ from django.db import transaction
 
 
 NSI_MKB10_DIRECTORIES = {
-    "1.2.643.5.1.13.13.11.1489": "Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3)",
-    "1.2.643.5.1.13.13.99.2.692": "Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3, "
-                                  "внешние причины заболеваемости и смертности)",
+    "mkb10.4": {
+        "oid": "1.2.643.5.1.13.13.11.1005",
+        "title": "Международная статистическая классификация болезней и проблем, связанных со здоровьем (10-й пересмотр)",
+    },
+    "mkb10.5": {
+        "oid": "1.2.643.5.1.13.13.11.1489",
+        "title": "Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3)",
+    },
+    "mkb10.6": {
+        "oid": "1.2.643.5.1.13.13.99.2.692",
+        "title": "лфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3, "
+        "внешние причины заболеваемости и смертности)",
+    },
 }
 
 
@@ -29,13 +39,14 @@ class Command(BaseCommand):
         client = Client('https://nsi.rosminzdrav.ru/wsdl/SOAP-server.v2.php?wsdl', transport=transport)
         version_data, mkb_code, nsi_code, title = '', '', '', ''
         data_parts = 0
-        for k, v in NSI_MKB10_DIRECTORIES.items():
+        for diag_key in NSI_MKB10_DIRECTORIES:
+            k = NSI_MKB10_DIRECTORIES[diag_key]['oid']
+            v = NSI_MKB10_DIRECTORIES[diag_key]['title']
+            if fp and fp != diag_key:
+                print('Пропуск справочника', diag_key)  # noqa: T001
+                print(v)  # noqa: T001
+                continue
             with transaction.atomic():
-                diag_key = 'mkb10-death' if k == '1.2.643.5.1.13.13.99.2.692' else 'mkb10.4'
-                if fp and fp != diag_key:
-                    print('Пропуск справочника', diag_key)  # noqa: T001
-                    print(v)  # noqa: T001
-                    continue
                 print('Получение справочника', diag_key)  # noqa: T001
                 print(v)  # noqa: T001
                 Diagnoses.objects.filter(d_type=diag_key).update(hide=True)
@@ -56,14 +67,23 @@ class Command(BaseCommand):
                     n = 0
                     for data in diagnoses:
                         n += 1
-                        nsi_code, title, mkb_code = "", "", ""
+                        nsi_code, title, mkb_code, actual = "", "", "", "1"
                         for p in data:
                             if p['column'] == 'ID':
                                 nsi_code = p['value']
-                            if p['column'] == 'S_NAME':
+                            if p['column'] == 'S_NAME' and not title:
                                 title = p['value']
-                            if p['column'] == 'ICD-10':
+                            if p['column'] == 'MKB_NAME' and not title:
+                                title = p['value']
+                            if p['column'] == 'ICD-10' and not mkb_code:
                                 mkb_code = p['value']
+                            if p['column'] == 'MKB_CODE' and not mkb_code:
+                                mkb_code = p['value']
+                            if p['column'] == 'ACTUAL':
+                                actual = p['value']
+                        if actual != '1' or '.' not in mkb_code:
+                            print(f'пропуск {mkb_code} — actual={actual}')  # noqa: T001
+                            continue
                         diag = Diagnoses.objects.filter(code=mkb_code, d_type=diag_key, title=title).first()
                         n_str = f"({i + 1}/{data_parts}) ({n}/{len(diagnoses)}): {diag_key}-{mkb_code}-{title}-{nsi_code}"
                         if diag:
