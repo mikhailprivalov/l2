@@ -1573,6 +1573,8 @@ class Issledovaniya(models.Model):
             return "Сброс подтверждения выписки" in groups
         if forbidden_edit_dir(self.napravleniye_id):
             return False
+        if self.napravleniye and self.napravleniye.eds_total_signed:
+            return "Сброс подтверждений результатов" in groups
         ctp = int(0 if not self.time_confirmation else int(time.mktime(timezone.localtime(self.time_confirmation).timetuple())))
         ctime = int(time.time())
         current_doc_confirmation = self.doc_confirmation
