@@ -46,4 +46,5 @@ urlpatterns = [
     path('free-number', views.free_number),
     path('eds/required-signatures', views.eds_required_signatures),
     path('eds/documents', views.eds_documents),
+    path('eds/add-sign', views.eds_add_sign),
 ]

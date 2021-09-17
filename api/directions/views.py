@@ -2864,7 +2864,31 @@ def eds_required_signatures(request):
     if not direction.is_all_confirm():
         return status_response(False, 'Направление должно быть подтверждено!')
 
-    return JsonResponse(direction.required_signatures())
+    rs = direction.required_signatures(fast=True, need_save=True)
+
+    result = {
+        'documents': []
+    }
+
+    for r in rs['docTypes']:
+        dd: DirectionDocument = DirectionDocument.objects.filter(direction=direction, is_archive=False, last_confirmed_at=direction.last_time_confirm(), file_type=r.lower()).first()
+
+        has_signatures = []
+        empty_signatures = rs['signsRequired']
+        if dd:
+            for s in DocumentSign.objects.filter(document=dd):
+                has_signatures.append(s.sign_type)
+
+                empty_signatures = [x for x in empty_signatures if x != s.sign_type]
+        status = len(empty_signatures) == 0
+        result['documents'].append({
+            'type': r,
+            'status': status,
+            'has': has_signatures,
+            'empty': empty_signatures,
+        })
+
+    return JsonResponse(result)
 
 
 @login_required
@@ -2879,7 +2903,7 @@ def eds_documents(request):
     if not direction.is_all_confirm():
         return status_response(False, 'Направление должно быть подтверждено!')
 
-    required_signatures = direction.required_signatures()
+    required_signatures = direction.required_signatures(need_save=True)
 
     documents = []
 
@@ -2960,3 +2984,43 @@ def eds_documents(request):
         documents.append(document)
 
     return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title()})
+
+
+@login_required
+def eds_add_sign(request):
+    data = json.loads(request.body)
+    pk = data['pk']
+    sign = data['sign']
+    sign_type = data['mode']
+    direction_document: DirectionDocument = DirectionDocument.objects.get(pk=pk)
+    direction: Napravleniya = direction_document.direction
+
+    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+        return status_response(False, 'Направление не в вашу организацию!')
+
+    if not direction.is_all_confirm():
+        return status_response(False, 'Направление должно быть подтверждено!')
+
+    if not sign:
+        return status_response(False, 'Некорректная подпись!')
+
+    user_roles = request.user.doctorprofile.get_eds_allowed_sign()
+
+    if sign_type not in user_roles:
+        return status_response(False, 'У пользователя нет такой роли!')
+
+    required_signatures = direction.required_signatures(need_save=True)
+
+    if sign_type not in required_signatures['signsRequired']:
+        return status_response(False, 'Некорректная роль!')
+
+    last_time_confirm = direction.last_time_confirm()
+    if direction_document.last_confirmed_at != last_time_confirm:
+        return status_response(False, 'Документ был обновлён. Обновите страницу!')
+
+    if DocumentSign.objects.filter(document=direction_document, sign_type=sign_type).exists():
+        return status_response(False, 'Документ уже был подписан с такой ролью')
+
+    DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign)
+
+    return status_response(True)

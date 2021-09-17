@@ -1,6 +1,16 @@
 <template>
-  <div class="eds-document">
+  <div class="eds-document" :class="ok && 'eds-document-ok'">
     <div class="doc-header">Документ {{ d.type }}</div>
+
+    <div class="sign-block" v-if="emptyNotAllowedSignatures.length > 0">
+      <div class="block-header">Недоступные роли для подписи:</div>
+
+      <ul>
+        <li v-for="s in emptyNotAllowedSignatures" :key="s">
+          {{ s }}
+        </li>
+      </ul>
+    </div>
 
     <div class="sign-block" v-if="emptyAllowedSignatures.length > 0 && thumbprint">
       <div class="input-group">
@@ -18,8 +28,27 @@
       </div>
     </div>
 
+    <div class="has-signs" v-if="hasSigns">
+      <div class="block-header">Добавленные подписи:</div>
+      <ul>
+        <li v-for="s in signs" :key="s.type">
+          <a
+            :href="fileHref(s.signValue, 'text/plain')"
+            :download="signFileName(s)"
+            class="a-under"
+            title="Скачать файл подписи"
+            v-tippy
+          >
+            <i class="fa fa-download"></i>
+          </a>
+          <strong>{{ s.type }}</strong
+          >, {{ s.executor }}, {{ s.signedAt }}
+        </li>
+      </ul>
+    </div>
+
     <div>
-      <a class="btn btn-default" :href="fileHref" :download="d.fileName" v-if="d.fileContent">
+      <a class="btn btn-default" :href="docHref" :download="d.fileName" v-if="d.fileContent">
         <i class="fa fa-download"></i> Загрузить {{ d.fileName }}
       </a>
     </div>
@@ -32,7 +61,7 @@ import { createDetachedSignature, createHash } from 'crypto-pro';
 import * as actions from '@/store/action-types';
 
 export default {
-  name: 'EDSSigner',
+  name: 'EDSDocument',
   props: {
     d: {
       type: Object,
@@ -53,18 +82,8 @@ export default {
     };
   },
   computed: {
-    fileHref() {
-      let body = this.d.fileContent || '';
-      if (!body) {
-        return null;
-      }
-      const isString = typeof body === typeof '';
-      body = isString ? body : new Uint8Array(body);
-      const t = this.d.type === 'PDF' ? 'application/pdf;base64' : 'data:text/xml';
-      const dataStr = isString
-        ? encodeURIComponent(body)
-        : btoa(body.reduce((data, byte) => data + String.fromCharCode(byte), ''));
-      return `data:${t},${dataStr}`;
+    docHref() {
+      return this.fileHref(this.d.fileContent, this.d.type === 'PDF' ? 'application/pdf;base64' : 'data:text/xml');
     },
     eds_allowed_sign() {
       return this.$store.getters.user_data.eds_allowed_sign || [];
@@ -77,6 +96,20 @@ export default {
     },
     emptyNotAllowedSignatures() {
       return this.emptySignatures.filter(s => !this.eds_allowed_sign.includes(s));
+    },
+    signs() {
+      return Object.keys(this.d.signatures)
+        .filter(s => this.d.signatures[s])
+        .map(s => ({
+          ...this.d.signatures[s],
+          type: s,
+        }));
+    },
+    hasSigns() {
+      return Object.keys(this.signs).length > 0;
+    },
+    ok() {
+      return this.emptySignatures.length === 0;
     },
   },
   watch: {
@@ -98,11 +131,29 @@ export default {
     },
   },
   methods: {
+    fileHref(fileContent, type) {
+      let body = fileContent || '';
+      if (!body) {
+        return null;
+      }
+      const isString = typeof body === typeof '';
+      body = isString ? body : new Uint8Array(body);
+      const dataStr = isString
+        ? encodeURIComponent(body)
+        : btoa(body.reduce((data, byte) => data + String.fromCharCode(byte), ''));
+      return `data:${type},${dataStr}`;
+    },
+    signFileName(sign) {
+      return `${this.d.fileName}-${sign.type}.sgn`;
+    },
     async addSign() {
       await this.$store.dispatch(actions.INC_LOADING);
       try {
-        const isString = typeof this.d.data === typeof '';
-        const body = this.d.fileContent;
+        let body = this.d.fileContent;
+        if (this.d.type === 'PDF') {
+          body = Uint8Array.from(atob(body), c => c.charCodeAt(0));
+        }
+        const isString = typeof body === typeof '';
 
         const bodyEncoded = isString ? body : new Uint8Array(body);
 
@@ -136,14 +187,41 @@ export default {
   padding: 5px;
   border: 1px solid #bbb;
   border-radius: 4px;
+
+  &-ok {
+    border-color: #049372;
+    background: linear-gradient(to bottom, #04937212 0%, #04937230 100%);
+  }
 }
 
 .doc-header {
   font-weight: bold;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #bbb;
 }
 
 .sign-block {
   margin: 10px 0;
   max-width: 500px;
+
+  & + & {
+    margin-top: 0;
+  }
+}
+
+.has-signs {
+  margin: 10px 0;
+
+  &-header {
+    font-weight: bold;
+  }
+}
+
+.sign-block + .has-signs {
+  margin-top: 0;
+}
+
+.block-header {
+  font-weight: bold;
 }
 </style>

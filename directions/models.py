@@ -435,6 +435,15 @@ class Napravleniya(models.Model):
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
     n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
+    eds_required_documents = ArrayField(
+        models.CharField(max_length=3),
+        verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True
+    )
+    eds_required_signature_types = ArrayField(
+        models.CharField(max_length=32),
+        verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True
+    )
+    eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -446,13 +455,34 @@ class Napravleniya(models.Model):
 
         return 'Лабораторное исследование'
 
-    def required_signatures(self):
+    def required_signatures(self, fast=False, need_save=False):
+        if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):
+            return {
+                "docTypes": self.eds_required_documents,
+                "signsRequired": self.eds_required_signature_types,
+            }
+
         data = get_required_signatures(self.get_eds_title())
 
-        return {
+        result = {
             "docTypes": ['PDF', 'CDA'] if data.get('needCda') else ['PDF'],
             "signsRequired": data.get('signsRequired') or ['Врач', 'Медицинская организация'],
         }
+
+        if need_save:
+            updated = []
+            if any([x not in self.eds_required_documents for x in result['docTypes']]) or len(self.eds_required_documents) != len(result['docTypes']):
+                self.eds_required_documents = result['docTypes']
+                updated.append('eds_required_documents')
+
+            if any([x not in self.eds_required_signature_types for x in result['signsRequired']]) or len(self.eds_required_signature_types) != len(result['signsRequired']):
+                self.eds_required_signature_types = result['signsRequired']
+                updated.append('eds_required_signature_types')
+
+            if updated:
+                self.save(update_fields=updated)
+
+        return result
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):

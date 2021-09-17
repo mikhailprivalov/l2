@@ -3,7 +3,20 @@
     <button class="btn btn-blue-nb nbr" @click="modal_opened = true" v-if="visible">
       ЭЦП
     </button>
-    <div class="eds-status" v-for="t in requiredEDSDocTypes" :key="t"><i class="fa fa-certificate"></i> {{ t }}</div>
+
+    <div
+      class="eds-status"
+      :class="d.status && 'eds-status-ok'"
+      v-for="d in requiredDocuments"
+      :key="d.type"
+      :title="
+        `Есть подписи: ${d.has.join('; ') || 'пусто'}` + (d.empty.length > 0 ? `; Нужны подписи: ${d.empty.join('; ')}` : '')
+      "
+      v-tippy
+    >
+      <i class="fa fa-certificate"></i> {{ d.type }}
+    </div>
+
     <MountingPortal mountTo="#portal-place-modal" :name="`EDSDirection_modal_${directionPk}`" append>
       <transition name="fade">
         <modal
@@ -58,9 +71,7 @@ export default {
   data() {
     return {
       modal_opened: false,
-      direction: {},
-      requiredSignatures: [],
-      requiredEDSDocTypes: [],
+      requiredDocuments: [],
     };
   },
   methods: {
@@ -73,11 +84,10 @@ export default {
     },
     async loadStatus() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const requiredResult = await this.$api('/directions/eds/required-signatures', {
+      const { documents } = await this.$api('/directions/eds/required-signatures', {
         pk: this.directionPk,
       });
-      this.requiredSignatures = requiredResult.signsRequired;
-      this.requiredEDSDocTypes = requiredResult.docTypes;
+      this.requiredDocuments = documents;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
