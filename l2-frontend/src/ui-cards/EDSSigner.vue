@@ -24,14 +24,7 @@
       </div>
     </div>
 
-    <div class="eds-document" v-for="d in documents" :key="d.type">
-      <div class="doc-header">Документ {{ d.type }}</div>
-      <div>
-        <a class="btn btn-default" :href="fileHref(d)" :download="d.fileName" v-if="d.fileContent">
-          <i class="fa fa-download"></i> Загрузить {{ d.fileName }}
-        </a>
-      </div>
-    </div>
+    <EDSDocument v-for="d in documents" :key="d.type" :d="d" :thumbprint="selectedCertificate" :direction="directionPk" />
   </div>
 </template>
 
@@ -40,9 +33,13 @@ import { getSystemInfo, getUserCertificates } from 'crypto-pro';
 import moment from 'moment';
 
 import * as actions from '@/store/action-types';
+import EDSDocument from './EDSDocument.vue';
 
 export default {
   name: 'EDSSigner',
+  components: {
+    EDSDocument,
+  },
   props: {
     directionPk: {
       type: Number,
@@ -84,21 +81,13 @@ export default {
   },
   mounted() {
     this.init();
+    this.$root.$on('eds:reload-document', direction => {
+      if (this.directionPk === direction) {
+        this.loadStatus();
+      }
+    });
   },
   methods: {
-    fileHref(document) {
-      let body = document.fileContent || '';
-      if (!body) {
-        return null;
-      }
-      const isString = typeof body === typeof '';
-      body = isString ? body : new Uint8Array(body);
-      const t = document.type === 'PDF' ? 'application/pdf;base64' : 'data:text/xml';
-      const dataStr = isString
-        ? encodeURIComponent(body)
-        : btoa(body.reduce((data, byte) => data + String.fromCharCode(byte), ''));
-      return `data:${t},${dataStr}`;
-    },
     async loadStatus() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { documents } = await this.$api('/directions/eds/documents', {
@@ -171,16 +160,5 @@ export default {
   border-radius: 4px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
   background: #fff;
-}
-
-.eds-document {
-  margin: 0 0 10px 0;
-  padding: 5px;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-}
-
-.doc-header {
-  font-weight: bold;
 }
 </style>

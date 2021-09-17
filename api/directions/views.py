@@ -33,6 +33,7 @@ from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import (
     DirectionDocument,
+    DocumentSign,
     Napravleniya,
     Issledovaniya,
     NumberGenerator,
@@ -2925,7 +2926,20 @@ def eds_documents(request):
             if file:
                 d.file.save(filename, file)
 
-        signatures = []
+        signatures = {}
+        has_signatures = DocumentSign.objects.filter(document=d)
+
+        sgn: DocumentSign
+        for sgn in has_signatures:
+            signatures[sgn.sign_type] = {
+                'pk': sgn.pk,
+                'executor': str(sgn.executor),
+                'signedAt': strfdatetime(sgn.signed_at),
+                'signValue': sgn.sign_value,
+            }
+
+        for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
+            signatures[s] = None
 
         file_content = None
 

@@ -187,7 +187,7 @@ export default {
         },
       ).then(r => r.data);
 
-      this.requiredSignatures = requiredResult.signsRequired || ['Врач'];
+      this.requiredSignatures = requiredResult.signsRequired || ['Врач', 'Медицинская организация'];
       this.requiredEDSDocTypes = requiredResult.needCda ? ['PDF', 'CDA'] : ['PDF'];
 
       this.edsStatus = (

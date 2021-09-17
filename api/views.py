@@ -585,8 +585,8 @@ def current_user_info(request):
             ret["eds_allowed_sign"] = []
             if 'Врач консультаций' in ret["groups"] or 'Заведующий отделением' in ret["groups"]:
                 ret["eds_allowed_sign"].append('Врач')
-            if 'Заведующий отделением' in ret["groups"] or 'Admin' in ret["groups"]:
-                ret["eds_allowed_sign"].append('Заведующий отделением')
+            if 'ЭЦП Медицинской организации' in ret["groups"] or 'Admin' in ret["groups"]:
+                ret["eds_allowed_sign"].append('Медицинская организация')
 
             try:
                 connections.close_all()

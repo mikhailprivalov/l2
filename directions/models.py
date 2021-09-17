@@ -451,7 +451,7 @@ class Napravleniya(models.Model):
 
         return {
             "docTypes": ['PDF', 'CDA'] if data.get('needCda') else ['PDF'],
-            "signsRequired": data.get('signsRequired') or ['Врач'],
+            "signsRequired": data.get('signsRequired') or ['Врач', 'Медицинская организация'],
         }
 
     def get_doc_podrazdeleniye_title(self):
@@ -1302,10 +1302,10 @@ class DirectionDocument(models.Model):
 
 
 class DocumentSign(models.Model):
-    document = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Документ")
+    document = models.ForeignKey(DirectionDocument, on_delete=models.CASCADE, db_index=True, verbose_name="Документ")
     executor = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Исполнитель подписи', on_delete=models.CASCADE)
     signed_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время подписи")
-    sign_type = models.CharField(max_length=16, db_index=True, verbose_name='Тип подписи')
+    sign_type = models.CharField(max_length=32, db_index=True, verbose_name='Тип подписи')
     sign_value = models.TextField(verbose_name="Значение подписи")
 
     def __str__(self) -> str:
