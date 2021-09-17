@@ -132,10 +132,11 @@ export default {
   align-self: stretch;
   padding: 5px;
   white-space: nowrap;
-  color: red;
+  color: #932a04;
+  text-shadow: 0 0 7px #fff;
 
   &-ok {
-    color: green;
+    color: #049372;
   }
 }
 </style>
