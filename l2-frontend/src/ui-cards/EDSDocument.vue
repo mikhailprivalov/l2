@@ -147,6 +147,13 @@ export default {
       return `${this.d.fileName}-${sign.type}.sgn`;
     },
     async addSign() {
+      try {
+        await this.$dialog.confirm(
+          `Подтвердите подпись документа №${this.direction} — ${this.d.type} как "${this.selectedSignatureMode}"`,
+        );
+      } catch (e) {
+        return;
+      }
       await this.$store.dispatch(actions.INC_LOADING);
       try {
         let body = this.d.fileContent;
