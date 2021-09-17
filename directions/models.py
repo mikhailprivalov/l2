@@ -484,6 +484,33 @@ class Napravleniya(models.Model):
 
         return result
 
+    def get_eds_total_signed(self, forced=False):
+        if self.eds_total_signed and not forced:
+            return True
+        rs = self.required_signatures(fast=True, need_save=True)
+
+        status = len(rs['docTypes']) > 0 and len(rs['signsRequired']) > 0
+
+        for r in rs['docTypes']:
+            dd: DirectionDocument = DirectionDocument.objects.filter(direction=self, is_archive=False, last_confirmed_at=self.last_time_confirm(), file_type=r.lower()).first()
+
+            has_signatures = []
+            empty_signatures = rs['signsRequired']
+            if dd:
+                for s in DocumentSign.objects.filter(document=dd):
+                    has_signatures.append(s.sign_type)
+
+                    empty_signatures = [x for x in empty_signatures if x != s.sign_type]
+            if len(empty_signatures) != 0:
+                status = False
+                break
+
+        if status != self.eds_total_signed:
+            self.eds_total_signed = status
+            self.save(update_fields=['eds_total_signed'])
+
+        return status
+
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
             parts = [

@@ -3023,4 +3023,6 @@ def eds_add_sign(request):
 
     DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign)
 
+    direction.get_eds_total_signed(forced=True)
+
     return status_response(True)
