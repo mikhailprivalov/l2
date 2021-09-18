@@ -1089,9 +1089,9 @@ def laborants(request):
 def load_docprofile_by_group(request):
     request_data = json.loads(request.body)
     if request_data['group'] == '*':
-        users = users_all()
+        users = users_all(request.user.doctorprofile.get_hospital_id())
     else:
-        users = users_by_group(request_data['group'])
+        users = users_by_group(request_data['group'], request.user.doctorprofile.get_hospital_id())
     users_grouped = {}
     for row in users:
         if row[2] not in users_grouped:
@@ -1445,7 +1445,7 @@ def actual_districts(request):
     rows = District.objects.all().order_by('-sort_weight', '-id').values('pk', 'title', 'is_ginekolog')
     rows = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["title"] if not x['is_ginekolog'] else "Гинекология: {}".format(x['title'])} for x in rows]]
 
-    users = users_by_group(['Лечащий врач'])
+    users = users_by_group(['Лечащий врач'], request.user.doctorprofile.get_hospital_id())
     users = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{'id': row[0], 'label': row[1]} for row in users]]
 
     purposes = DoctorCall.PURPOSES
