@@ -227,12 +227,22 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
     return rows
 
 
-# def get_diagnoses(d_type, diag_title, diag_mkb):
-#     with connection.cursor() as cursor:
-#         cursor.execute(
-#         """
-#         """,
-#             params={"d_type": d_type, "diag_title": diag_title, "diag_mkb": diag_mkb},
-#         )
-#         rows = namedtuplefetchall(cursor)
-#     return rows
+def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1"):
+    with connection.cursor() as cursor:
+        cursor.execute(
+        """
+        SELECT * FROM public.directions_diagnoses
+            WHERE d_type=%(d_type)s and 
+              CASE
+                WHEN %(diag_title)s != '-1' AND %(diag_mkb)s != '-1' THEN 
+                  code ~* %(diag_mkb)s and title ~* %(diag_title)s
+                WHEN %(diag_title)s != '-1' AND %(diag_mkb)s = '-1' THEN 
+                  title ~* %(diag_title)s
+                WHEN %(diag_title)s = '-1' AND %(diag_mkb)s != '-1' THEN 
+                  code ~* %(diag_mkb)s
+              END
+        """,
+            params={"d_type": d_type, "diag_title": diag_title, "diag_mkb": diag_mkb},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

@@ -60,7 +60,7 @@ from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid, short_fio_dots
-from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year
+from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year, get_diagnoses
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
