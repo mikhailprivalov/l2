@@ -622,6 +622,15 @@ class Napravleniya(models.Model):
             r.append({"pk": i.research_id, "title": i.research.title, "text": i.research.instructions})
         return r
 
+    def get_executors(self):
+        executors = {}
+
+        i: Issledovaniya
+        for i in self.issledovaniya_set.all():
+            if i.doc_confirmation_id not in executors:
+                executors[i.doc_confirmation_id] = i.doc_confirmation_fio
+        return executors
+
     @property
     def fin_title(self):
         return self.istochnik_f.title if self.istochnik_f else ''

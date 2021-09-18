@@ -1,6 +1,16 @@
 <template>
   <div class="eds-document" :class="ok && 'eds-document-ok'">
-    <div class="doc-header">Документ {{ d.type }}</div>
+    <div class="doc-header">Вложение {{ d.type }}</div>
+
+    <div class="sign-block" v-if="!isDocAllowedSign">
+      <div class="block-header">Подпись врача может добавить только:</div>
+
+      <ul>
+        <li v-for="(v, k) in executors" :key="k">
+          {{ v }}
+        </li>
+      </ul>
+    </div>
 
     <div class="sign-block" v-if="emptyNotAllowedSignatures.length > 0">
       <div class="block-header">Недоступные роли для подписи:</div>
@@ -21,7 +31,7 @@
           </option>
         </select>
         <span class="input-group-btn">
-          <button type="button" class="btn btn-default btn-primary-nb" @click="addSign">
+          <button type="button" class="btn btn-default btn-primary-nb" @click="addSign()">
             Подписать
           </button>
         </span>
@@ -67,6 +77,10 @@ export default {
       type: Object,
       required: true,
     },
+    executors: {
+      type: Object,
+      required: true,
+    },
     thumbprint: {
       type: String,
       required: false,
@@ -86,7 +100,10 @@ export default {
       return this.fileHref(this.d.fileContent, this.d.type === 'PDF' ? 'application/pdf;base64' : 'data:text/xml');
     },
     eds_allowed_sign() {
-      return this.$store.getters.user_data.eds_allowed_sign || [];
+      return (this.$store.getters.user_data.eds_allowed_sign || []).filter(s => s !== 'Врач' || this.isDocAllowedSign);
+    },
+    isDocAllowedSign() {
+      return Boolean(this.executors[this.$store.getters.user_data.doc_pk]);
     },
     emptySignatures() {
       return Object.keys(this.d.signatures).filter(s => !this.d.signatures[s]);
@@ -95,7 +112,7 @@ export default {
       return this.emptySignatures.filter(s => this.eds_allowed_sign.includes(s));
     },
     emptyNotAllowedSignatures() {
-      return this.emptySignatures.filter(s => !this.eds_allowed_sign.includes(s));
+      return this.emptySignatures.filter(s => !this.emptyAllowedSignatures.includes(s));
     },
     signs() {
       return Object.keys(this.d.signatures)
@@ -130,6 +147,14 @@ export default {
       },
     },
   },
+  mounted() {
+    this.$root.$on('eds:fast-sign', (pk, type) => {
+      if (pk === this.d.pk && this.emptyAllowedSignatures.includes(type)) {
+        this.selectedSignatureMode = type;
+        this.addSign(true);
+      }
+    });
+  },
   methods: {
     fileHref(fileContent, type) {
       let body = fileContent || '';
@@ -146,13 +171,15 @@ export default {
     signFileName(sign) {
       return `${this.d.fileName}-${sign.type}.sgn`;
     },
-    async addSign() {
-      try {
-        await this.$dialog.confirm(
-          `Подтвердите подпись документа №${this.direction} — ${this.d.type} как "${this.selectedSignatureMode}"`,
-        );
-      } catch (e) {
-        return;
+    async addSign(fast = false) {
+      if (!fast) {
+        try {
+          await this.$dialog.confirm(
+            `Подтвердите подпись вложения документа №${this.direction} — ${this.d.type} как "${this.selectedSignatureMode}"`,
+          );
+        } catch (e) {
+          return;
+        }
       }
       await this.$store.dispatch(actions.INC_LOADING);
       try {
@@ -174,7 +201,11 @@ export default {
 
         if (ok) {
           this.$root.$emit('eds:reload-document', this.direction);
-          this.$root.$emit('msg', 'ok', 'Подпись успешно добавлена');
+          this.$root.$emit(
+            'msg',
+            'ok',
+            `Подпись успешно добавлена: ${this.direction}, ${this.d.type}, ${this.selectedSignatureMode}`,
+          );
         } else {
           this.$root.$emit('msg', 'error', message);
         }

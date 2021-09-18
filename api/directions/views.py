@@ -2983,7 +2983,7 @@ def eds_documents(request):
 
         documents.append(document)
 
-    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title()})
+    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title(), "executors": direction.get_executors()})
 
 
 @login_required
@@ -3020,6 +3020,11 @@ def eds_add_sign(request):
 
     if DocumentSign.objects.filter(document=direction_document, sign_type=sign_type).exists():
         return status_response(False, 'Документ уже был подписан с такой ролью')
+
+    executors = direction.get_executors()
+
+    if sign_type == 'Врач' and request.user.doctorprofile.pk not in executors:
+        return status_response(False, 'Подтвердить может только исполнитель')
 
     DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign)
 

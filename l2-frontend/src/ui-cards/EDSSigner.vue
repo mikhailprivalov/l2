@@ -24,7 +24,30 @@
       </div>
     </div>
 
-    <EDSDocument v-for="d in documents" :key="d.type" :d="d" :thumbprint="selectedCertificate" :direction="directionPk" />
+    <EDSDocument
+      v-for="d in documents"
+      :key="d.type"
+      :d="d"
+      :thumbprint="selectedCertificate"
+      :direction="directionPk"
+      :executors="executors"
+    />
+
+    <div class="sign-block" v-if="commonRoles.length > 0 && selectedCertificate && selectedSignatureMode">
+      <div class="input-group">
+        <span class="input-group-addon">Роль подписи для всех вложений</span>
+        <select class="form-control" v-model="selectedSignatureMode">
+          <option v-for="s in commonRoles" :key="s" :value="s">
+            {{ s }}
+          </option>
+        </select>
+        <span class="input-group-btn">
+          <button type="button" class="btn btn-default btn-primary-nb" @click="addSign">
+            Подписать все вложения
+          </button>
+        </span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -56,6 +79,8 @@ export default {
       checked: false,
       hasCP: false,
       documents: [],
+      executors: {},
+      selectedSignatureMode: null,
     };
   },
   computed: {
@@ -75,8 +100,23 @@ export default {
         validTo: moment(cert.validTo).format('DD.MM.YYYY HH:mm'),
       };
     },
-    allowedSign() {
-      return this.$store.getters.user_data.eds_allowed_sign;
+    isDocAllowedSign() {
+      return Boolean(this.executors[this.$store.getters.user_data.doc_pk]);
+    },
+    eds_allowed_sign() {
+      return (this.$store.getters.user_data.eds_allowed_sign || []).filter(s => s !== 'Врач' || this.isDocAllowedSign);
+    },
+    commonRoles() {
+      const r = {};
+      for (const d of this.documents) {
+        for (const s of Object.keys(d.signatures)) {
+          if (!d.signatures[s]) {
+            r[s] = true;
+          }
+        }
+      }
+
+      return Object.keys(r);
     },
   },
   mounted() {
@@ -87,14 +127,46 @@ export default {
       }
     });
   },
+  watch: {
+    commonRoles: {
+      immediate: true,
+      handler() {
+        if (this.commonRoles.length === 0) {
+          this.selectedSignatureMode = null;
+          return;
+        }
+
+        if (this.commonRoles.includes(this.selectedSignatureMode)) {
+          return;
+        }
+
+        // eslint-disable-next-line prefer-destructuring
+        this.selectedSignatureMode = this.commonRoles[0];
+      },
+    },
+  },
   methods: {
     async loadStatus() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { documents } = await this.$api('/directions/eds/documents', {
+      const { documents, executors } = await this.$api('/directions/eds/documents', {
         pk: this.directionPk,
       });
       this.documents = documents;
+      this.executors = executors;
       await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async addSign() {
+      try {
+        await this.$dialog.confirm(
+          `Подтвердите подпись всех вложений в документ №${this.directionPk} как "${this.selectedSignatureMode}"`,
+        );
+      } catch (e) {
+        return;
+      }
+
+      for (const d of this.documents) {
+        this.$root.$emit('eds:fast-sign', d.pk, this.selectedSignatureMode);
+      }
     },
     async getEDSStatus() {
       try {
@@ -126,7 +198,6 @@ export default {
       await Promise.all([this.loadStatus(), this.getEDSStatus()]);
     },
   },
-  watch: {},
 };
 </script>
 
