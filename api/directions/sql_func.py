@@ -225,3 +225,14 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+# def get_diagnoses(d_type, diag_title, diag_mkb):
+#     with connection.cursor() as cursor:
+#         cursor.execute(
+#         """
+#         """,
+#             params={"d_type": d_type, "diag_title": diag_title, "diag_mkb": diag_mkb},
+#         )
+#         rows = namedtuplefetchall(cursor)
+#     return rows
