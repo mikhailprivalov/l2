@@ -111,7 +111,7 @@ def get_field_result(client_id, field_id, count=1):
     return row
 
 
-def users_by_group(title_groups):
+def users_by_group(title_groups, hosp_id):
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -129,23 +129,23 @@ def users_by_group(title_groups):
           SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
             
         t_users AS (
-          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id
           FROM users_doctorprofile
           LEFT JOIN
           t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
-          WHERE user_id in (SELECT user_id FROM t_users_id))
-            
+          WHERE user_id in (SELECT user_id FROM t_users_id) and hospital_id = %(hosp_id)s) 
+    
         SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title FROM t_users
         ORDER BY podrazdeleniye_id                    
         """,
-            params={'title_groups': title_groups},
+            params={'title_groups': title_groups, "hosp_id": hosp_id},
         )
 
         row = cursor.fetchall()
     return row
 
 
-def users_all():
+def users_all(hosp_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -157,15 +157,16 @@ def users_all():
           SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
             
         t_users AS (
-          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id
           FROM users_doctorprofile
           LEFT JOIN
           t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
-          WHERE user_id in (SELECT user_id FROM t_users_id))
-            
+          WHERE user_id in (SELECT user_id FROM t_users_id) and hospital_id = %(hosp_id)s)            
         SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title FROM t_users
         ORDER BY podrazdeleniye_id                    
-        """)
+        """,
+            params={"hosp_id": hosp_id},
+        )
 
         row = cursor.fetchall()
     return row
