@@ -22,10 +22,6 @@ if not settings.DEBUG:
     handler500 = mainmenu.views.v500
 
 
-def trigger_error(request):
-    return 1 / 0
-
-
 urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
     path('', home, name='home'),
@@ -57,7 +53,6 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), {'next_page': '/'}),
     path('if/', include('integration_framework.urls')),
     path('medical_certificates/', include('medical_certificates.urls')),
-    path('sentry-debug/', trigger_error),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if 'silk' in settings.INSTALLED_APPS:
