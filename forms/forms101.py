@@ -794,7 +794,7 @@ def form_06(request_data):
 
     objs = [
         Paragraph(
-            "COГЛАСИЕНА<br/> ОКАЗАНИЕ МЕДИЦИНСКОЙ ПОМОЩИ В АМБУЛАТОРНЫЙ<br/> УСЛОВИЯХ И СОБЛЮДЕНИЕ РЕЖИМА ИЗОЛЯЦИИ ПРИ ЛЕЧЕНИИ<br/>"
+            "COГЛАСИЕ НА<br/> ОКАЗАНИЕ МЕДИЦИНСКОЙ ПОМОЩИ В АМБУЛАТОРНЫЙ<br/> УСЛОВИЯХ И СОБЛЮДЕНИЕ РЕЖИМА ИЗОЛЯЦИИ ПРИ ЛЕЧЕНИИ<br/>"
             "НОВОЙ КОРОНАВИРУСНОЙ ИНФЕКЦИИ (COVID-19) В ПЕРИОД<br/>ПОДЪЕМА ЗАБОЛЕВАЕМОСТИ в 2020 - 2021 ГОДУ",
             styleCenterBold,
         )
@@ -1725,7 +1725,7 @@ def form_10(request_data):
     row_height[1] = None
     row_height[0] = None
 
-    tbl = Table(opinion, colWidths=(40 * mm, 30 * mm, 75 * mm), rowHeights=row_height)
+    tbl = Table(opinion, colWidths=(50 * mm, 50 * mm, 90 * mm), rowHeights=row_height)
 
     tbl.setStyle(
         TableStyle(
@@ -2520,7 +2520,7 @@ def form_10(request_data):
     for i in opinion:
         row_height.append(None)
 
-    tbl = Table(opinion, colWidths=(60 * mm, 10 * mm, 20 * mm, 20 * mm, 25 * mm, 30 * mm, 30 * mm,), rowHeights=row_height)
+    tbl = Table(opinion, colWidths=(55 * mm, 10 * mm, 20 * mm, 20 * mm, 25 * mm, 30 * mm, 30 * mm,), rowHeights=row_height)
 
     table_style = [
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
@@ -3025,6 +3025,157 @@ def form_12(request_data):
 
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+def form_13(request_data):
+    """
+    Добровольное согласие на проведение профилактических осмотров, диспансеризации/ углубленной диспансеризации.
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    person_data = ind_card.get_data_individual()
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Диспансеризация согласие")
+    )
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 10.5
+    style.leading = 10
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 10
+
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    styleSign.alignment = TA_JUSTIFY
+    styleSign.leading = 13
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.firstLineIndent = 0
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 9
+    styleCenter.leading = 10
+    styleCenter.spaceAfter = 0 * mm
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.firstLineIndent = 0
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 13
+    styleCenterBold.face = 'PTAstraSerifBold'
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    objs = [
+        Paragraph(
+            "COГЛАСИЕ НА<br/> ПРОВЕДЕНИЕ ПРОФИЛАКТИЧЕСКИХ ОСМОТРОВ,<br/> ДИСПАНСЕРИЗАЦИИ/ УГЛУБЛЕННОЙ ДИСПАНСЕРИЗАЦИИ.",
+            styleCenterBold,
+        )
+    ]
+
+    objs.append(Spacer(1, 3 * mm))
+    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('Я, {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), styleSign))
+
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+
+    objs.append(Paragraph('Зарегистрированный(ая) по адресу: {}'.format(person_data['main_address']), styleSign))
+    objs.append(Paragraph('Проживающий(ая) по адресу: {}'.format(person_data['fact_address']), styleSign))
+    objs.append(Spacer(1, 3 * mm))
+    
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+
+    objs.append(
+        Paragraph(
+            'даю информированное добровольное согласие на проведение профилактического осмотра, '
+            'диспансеризации, углубленной диспансеризации утвержденный  приказом  МИНИСТЕРСТВО '
+            'ЗДРАВООХРАНЕНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ от 27 апреля 2021 г. N 404н «ОБ УТВЕРЖДЕНИИ ПОРЯДКА '
+            'ПРОВЕДЕНИЯ ПРОФИЛАКТИЧЕСКОГО МЕДИЦИНСКОГО ОСМОТРА И ДИСПАНСЕРИЗАЦИИ ОПРЕДЕЛЕННЫХ ГРУПП '
+            'ВЗРОСЛОГО НАСЕЛЕНИЯ», приказом Министерства здравоохранения России №698н от 01.07.2021 '
+            '«Об утверждении порядка направления граждан на прохождение углубленной диспансеризации, '
+            'включая категорию граждан, проходящих углубленную диспансеризацию в первоочередном порядке» в '
+            '"<u>{}</u>"'.format(hospital_name),
+            styleSign,
+        )
+    )
+    
+    objs.append(
+        Paragraph(
+            'Медицинским работником _______________________________________________________________________',
+            style,
+        )
+    )
+    objs.append(Paragraph('(должность, Ф.И.О. медицинского работника)', styleCenter))
+
+    objs.append(
+        Paragraph(
+            'в доступной для меня форме разъяснены цели, методы проведения профилактического осмотра, '
+            'диспансеризации/углубленной диспансеризации. ', styleSign,
+        )
+    )
+    
+    space_symbol = '&nbsp;'
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('{}'.format(person_data['fio']), styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_patient_agent), styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('{}'.format(space_symbol), styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 10 * mm))
+    objs.append(Paragraph('{} г.'.format(date_now), style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph('(дата оформления)', styleBottom))
 
     def first_pages(canvas, document):
         canvas.saveState()
