@@ -1,4 +1,5 @@
 import collections
+
 from utils.response import status_response
 from hospitals.models import Hospitals
 import operator
@@ -583,7 +584,7 @@ def directions_results(request):
 
                         result["results"][kint]["fractions"][pk]["result"] = "отложен"  # Значение
                         result["results"][kint]["fractions"][pk]["title"] = fr.title  # Название фракции
-                        result["results"][kint]["fractions"][pk]["units"] = fr.units  # Еденицы измерения
+                        result["results"][kint]["fractions"][pk]["units"] = fr.get_unit_str()  # Еденицы измерения
                         ref_m = {"": ""}  # fr.ref_m
                         ref_f = {"": ""}  # fr.ref_f
                         if not isinstance(ref_m, str):
@@ -997,7 +998,8 @@ def directions_paraclinic_form(request):
     add_fr = {}
     f = False
     g = [str(x) for x in request.user.groups.all()]
-    if not request.user.is_superuser:
+    is_without_limit_paraclinic = "Параклиника без ограничений" in g
+    if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
     if by_issledovaniye:
