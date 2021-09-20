@@ -1385,7 +1385,7 @@ class DocumentSign(models.Model):
     sign_value = models.TextField(verbose_name="Значение подписи")
 
     def __str__(self) -> str:
-        return f"{self.document} — {self.type} – {self.executor}"
+        return f"{self.document} — {self.sign_type} – {self.executor}"
 
     class Meta:
         unique_together = ('document', 'executor', 'sign_type')
