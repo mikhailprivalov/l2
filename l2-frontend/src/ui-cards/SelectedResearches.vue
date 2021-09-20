@@ -1253,7 +1253,6 @@ export default {
   border-radius: 0 !important;
   border: none;
   border-bottom: 1px solid #aab2bd;
-
   &:first-child {
     width: 180px;
   }

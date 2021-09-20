@@ -286,6 +286,7 @@ class Diagnoses(models.Model):
     m_type = models.IntegerField(choices=M, db_index=True)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     nsi_id = models.CharField(max_length=128, blank=True, default=None, null=True)
+    hide = models.BooleanField(default=False, blank=True, db_index=True)
 
     def __str__(self):
         return "{} {}".format(self.code, self.title)

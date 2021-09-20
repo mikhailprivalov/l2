@@ -186,6 +186,21 @@
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 31">
                 <TfomsAttachmentField v-model="field.value" :disabled="confirmed" :client-pk="patient.card_pk" />
               </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 32">
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.6"
+                />
+              </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 33">
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.5"
+                />
+
+              </div>
               <div
                 :title="field.helper"
                 class="field-helper"
@@ -242,6 +257,7 @@ export default {
     DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults.vue'),
     PermanentDirectoryField: () => import('../fields/PermanentDirectoryField.vue'),
     AddressFiasField: () => import('../fields/AddressFiasField.vue'),
+    MKBFieldTreeselect: () => import('../fields/MKBFieldTreeselect.vue'),
     TextFieldWithTemplates: () => import('../fields/TextFieldWithTemplates.vue'),
     NumberGeneratorField: () => import('../fields/NumberGeneratorField.vue'),
     TfomsAttachmentField: () => import('../fields/TfomsAttachmentField.vue'),

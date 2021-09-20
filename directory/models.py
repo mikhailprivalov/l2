@@ -449,7 +449,7 @@ class ParaclinicInputField(models.Model):
     TYPES = (
         (0, 'Text'),
         (1, 'Date'),
-        (2, 'MKB'),
+        (2, 'MKB-1.2.643.5.1.13.13.11.1005'),
         (3, 'Calc'),
         (4, 'purpose'),
         (5, 'first_time'),
@@ -478,6 +478,9 @@ class ParaclinicInputField(models.Model):
         (28, 'NSI directory'),
         (29, 'FIAS address'),
         (30, 'Генератор номера документа'),
+        (31, 'Прикрепление: МО-участок'),
+        (32, 'МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)'),
+        (33, 'МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
