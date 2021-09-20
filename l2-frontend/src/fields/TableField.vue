@@ -60,6 +60,18 @@
               :short="false"
               v-model="r[i]"
             />
+            <MKBFieldTreeselect
+              v-else-if="settings[i].type === 33"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              v-model="r[i]"
+              dictionary="mkb10.5"
+            />
+            <MKBFieldTreeselect
+              v-else-if="settings[i].type === 32"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              v-model="r[i]"
+              dictionary="mkb10.6"
+            />
             <SearchFieldValueField
               v-else-if="settings[i].type === 23"
               :readonly="false"
@@ -94,6 +106,7 @@ import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
 import DateFieldWithNow from '@/fields/DateFieldWithNow.vue';
 import MKBFieldForm from '@/fields/MKBFieldForm.vue';
+import MKBFieldTreeselect from '@/fields/MKBFieldTreeselect.vue';
 import SearchFieldValueField from '@/fields/SearchFieldValueField.vue';
 
 const DEFAULT_SETTINGS = () => ({
@@ -112,6 +125,7 @@ export default {
     SelectField,
     MKBFieldForm,
     SearchFieldValueField,
+    MKBFieldTreeselect,
   },
   props: {
     value: {

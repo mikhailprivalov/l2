@@ -2,7 +2,7 @@
   <Treeselect
     :multiple="false"
     :disable-branch-nodes="true"
-    class="treeselect-wide treeselect-noborder treeselect-34px"
+    class="treeselect-wide treeselect-34px"
     :async="true"
     :append-to-body="true"
     :clearable="true"
