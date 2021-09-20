@@ -178,7 +178,7 @@ export default {
     defaultOptions() {
       if (this.content) {
         // eslint-disable-next-line prefer-const
-        let [s1, ...s2] = (this.value || null).split(' ');
+        let [s1, ...s2] = (this.value || '').split(' ');
         s2 = s2.join(' ') || '';
 
         return [
