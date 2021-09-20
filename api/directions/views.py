@@ -1,5 +1,7 @@
 import base64
 import os
+
+from django.core.paginator import Paginator
 from cda.integration import render_cda
 import collections
 
@@ -1893,7 +1895,9 @@ def directions_paraclinic_confirm_reset(request):
                 i.save()
             if iss.napravleniye:
                 iss.napravleniye.need_resend_amd = False
-                iss.napravleniye.save()
+                iss.napravleniye.eds_total_signed = False
+                iss.napravleniye.eds_total_signed_at = None
+                iss.napravleniye.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd'])
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
@@ -2050,6 +2054,7 @@ def last_field_result(request):
             return status_response(False, 'Пациент не найден в базе ТФОМС', {'value': '000000 — не найдено'})
         idt = tfoms_data['idt']
         from tfoms.integration import get_attachment_by_idt
+
         attachment_data = get_attachment_by_idt(idt)
         if not attachment_data or not isinstance(attachment_data, dict) or not attachment_data.get('unit_code') or not attachment_data.get('area_name'):
             return status_response(False, 'Не найдено прикрепление пациента по базе ТФОМС', {'value': '000000 — не найдено'})
@@ -2866,12 +2871,11 @@ def eds_required_signatures(request):
 
     rs = direction.required_signatures(fast=True, need_save=True)
 
-    result = {
-        'documents': []
-    }
+    result = {'documents': []}
+    ltc = direction.last_time_confirm()
 
     for r in rs['docTypes']:
-        dd: DirectionDocument = DirectionDocument.objects.filter(direction=direction, is_archive=False, last_confirmed_at=direction.last_time_confirm(), file_type=r.lower()).first()
+        dd: DirectionDocument = DirectionDocument.objects.filter(direction=direction, is_archive=False, last_confirmed_at=ltc, file_type=r.lower()).first()
 
         has_signatures = []
         empty_signatures = rs['signsRequired']
@@ -2881,12 +2885,14 @@ def eds_required_signatures(request):
 
                 empty_signatures = [x for x in empty_signatures if x != s.sign_type]
         status = len(empty_signatures) == 0
-        result['documents'].append({
-            'type': r,
-            'status': status,
-            'has': has_signatures,
-            'empty': empty_signatures,
-        })
+        result['documents'].append(
+            {
+                'type': r,
+                'status': status,
+                'has': has_signatures,
+                'empty': empty_signatures,
+            }
+        )
 
     return JsonResponse(result)
 
@@ -2916,11 +2922,11 @@ def eds_documents(request):
     for t in [x for x in required_signatures['docTypes'] if x.lower() not in has_types]:
         DirectionDocument.objects.create(direction=direction, last_confirmed_at=last_time_confirm, file_type=t.lower())
 
-    DirectionDocument.objects.filter(direction=direction, is_archive=False).exclude(last_confirmed_at=direction.last_time_confirm()).update(is_archive=True)
+    DirectionDocument.objects.filter(direction=direction, is_archive=False).exclude(last_confirmed_at=last_time_confirm).update(is_archive=True)
 
     cda_eds_data = get_cda_data(pk)
 
-    for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=direction.last_time_confirm()):
+    for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
         if not d.file:
             file = None
             filename = None
@@ -3031,3 +3037,87 @@ def eds_add_sign(request):
     direction.get_eds_total_signed(forced=True)
 
     return status_response(True)
+
+
+@login_required
+def eds_to_sign(request):
+    data = json.loads(request.body)
+    page = max(int(data["page"]), 1)
+    filters = data['filters']
+    mode = filters['mode']
+    department = filters['department']
+    status = filters['status']
+    number = filters['number']
+
+    rows = []
+
+    d_qs = Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(issledovaniya__time_confirmation__isnull=True)
+    if number:
+        d_qs = d_qs.filter(pk=number if number.isdigit() else -1)
+    else:
+        date = filters['date']
+        day1 = try_strptime(
+            date,
+            formats=(
+                '%Y-%m-%d',
+                '%d.%m.%Y',
+            ),
+        )
+        day2 = day1 + timedelta(days=1)
+        d_qs = d_qs.filter(issledovaniya__time_confirmation__range=(day1, day2))
+        if mode == 'mo':
+            d_qs = d_qs.filter(eds_required_signature_types__contains=['Медицинская организация'], issledovaniya__doc_confirmation__podrazdeleniye_id=department)
+        elif mode == 'my':
+            d_qs = d_qs.filter(eds_required_signature_types__contains=['Врач'], issledovaniya__doc_confirmation=request.user.doctorprofile)
+
+        if status == 'ok-full':
+            d_qs = d_qs.filter(eds_total_signed=True)
+        elif status == 'ok-role':
+            d_qs = d_qs.filter(eds_total_signed=False)
+            if mode == 'mo':
+                d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Медицинская организация', directiondocument__is_archive=False)
+            elif mode == 'my':
+                d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
+        else:
+            # TODO: тут нужен фильтр, что получены все необходимые подписи, кроме Медицинская организация, если mode == 'mo'
+            d_qs = d_qs.filter(eds_total_signed=False)
+
+    d: Napravleniya
+    p = Paginator(d_qs, SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
+    for d in p.page(page).object_list:
+        documents = []
+        ltc = d.last_time_confirm()
+        ldc = d.last_doc_confirm()
+        signs_required = d.eds_required_signature_types
+
+        for r in d.eds_required_documents:
+            dd: DirectionDocument = DirectionDocument.objects.filter(direction=d, is_archive=False, last_confirmed_at=ltc, file_type=r.lower()).first()
+            has_signatures = []
+            empty_signatures = signs_required
+            if dd:
+                for s in DocumentSign.objects.filter(document=dd):
+                    has_signatures.append(s.sign_type)
+
+                    empty_signatures = [x for x in empty_signatures if x != s.sign_type]
+            status = len(empty_signatures) == 0
+            documents.append(
+                {
+                    'pk': dd.pk if dd else None,
+                    'type': r,
+                    'status': status,
+                    'has': has_signatures,
+                    'empty': empty_signatures,
+                }
+            )
+        rows.append(
+            {
+                'pk': d.pk,
+                'totallySigned': d.eds_total_signed,
+                'confirmedAt': strfdatetime(ltc),
+                'docConfirmation': ldc,
+                'documents': documents,
+                'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
+            }
+        )
+
+    return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count})

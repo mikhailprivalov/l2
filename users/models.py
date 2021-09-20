@@ -91,7 +91,8 @@ class DoctorProfile(models.Model):
 
     def get_eds_allowed_sign(self):
         ret = []
-        if self.has_group('Врач консультаций') or self.has_group('Врач-лаборант'):
+        doc_groups = ("Врач параклиники", "Врач консультаций", 'Врач-лаборант')
+        if any([self.has_group(x) for x in doc_groups]):
             ret.append('Врач')
         if self.has_group('ЭЦП Медицинской организации'):
             ret.append('Медицинская организация')

@@ -47,4 +47,5 @@ urlpatterns = [
     path('eds/required-signatures', views.eds_required_signatures),
     path('eds/documents', views.eds_documents),
     path('eds/add-sign', views.eds_add_sign),
+    path('eds/to-sign', views.eds_to_sign),
 ]

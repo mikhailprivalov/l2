@@ -444,6 +444,7 @@ class Napravleniya(models.Model):
         verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True
     )
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
+    eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -507,7 +508,11 @@ class Napravleniya(models.Model):
 
         if status != self.eds_total_signed:
             self.eds_total_signed = status
-            self.save(update_fields=['eds_total_signed'])
+            if status:
+                self.eds_total_signed_at = timezone.now()
+            else:
+                self.eds_total_signed_at = None
+            self.save(update_fields=['eds_total_signed', 'eds_total_signed_at'])
 
         return status
 
@@ -1246,6 +1251,11 @@ class Napravleniya(models.Model):
 
     def last_time_confirm(self):
         return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
+
+    def last_doc_confirm(self):
+        iss = Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').first()
+
+        return str(iss.doc_confirmation) if iss else None
 
     def is_has_deff(self):
         """

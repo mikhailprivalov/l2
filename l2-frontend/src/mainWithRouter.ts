@@ -166,6 +166,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/eds',
+      name: 'eds',
+      component: () => import('@/pages/EDS.vue'),
+      meta: {
+        title: 'Подпись документов',
+        groups: ['Подпись документов', 'Врач параклиники', 'Врач консультаций', 'Врач-лаборант', 'ЭЦП Медицинской организации'],
+        module: 'l2_eds',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

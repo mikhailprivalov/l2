@@ -1,7 +1,10 @@
 <template>
   <div v-frag>
     <button class="btn btn-blue-nb nbr" @click="modal_opened = true" v-if="visible">
-      ЭЦП
+      <i v-if="documentsPrefetched" class="fa fa-eye"></i>
+      <template v-else>
+        ЭЦП
+      </template>
     </button>
 
     <div
@@ -67,9 +70,14 @@ export default {
       type: Number,
       required: true,
     },
+    documentsPrefetched: {
+      type: Array,
+      required: false,
+    },
   },
   data() {
     return {
+      inited: false,
       modal_opened: false,
       requiredDocuments: [],
     };
@@ -83,6 +91,12 @@ export default {
       this.loadStatus();
     },
     async loadStatus() {
+      if (this.documentsPrefetched && !this.inited) {
+        this.inited = true;
+        this.requiredDocuments = this.documentsPrefetched;
+        return;
+      }
+      this.inited = true;
       await this.$store.dispatch(actions.INC_LOADING);
       const { documents } = await this.$api('/directions/eds/required-signatures', {
         pk: this.directionPk,
