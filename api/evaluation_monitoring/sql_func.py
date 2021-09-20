@@ -3,7 +3,7 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
-def sql_load(
+def grades_sql_load(
     hospital_pk=None,
     research_pk=None,
     type_period=None,
