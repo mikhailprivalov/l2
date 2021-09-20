@@ -382,7 +382,7 @@ def patients_search_card(request):
                                 "pk": -10,
                                 "type_title": "Номер мед.книжки",
                                 "document_type_id": -10,
-                                "serial": "",
+                                "serial": row.medbook_prefix,
                                 "number": str(row.medbook_number),
                                 "is_active": True,
                                 "date_start": None,
@@ -394,7 +394,7 @@ def patients_search_card(request):
                         ] if row.medbook_number else []
                     )
                 ],
-                "medbookNumber": row.medbook_number,
+                "medbookNumber": f"{row.medbook_prefix} {row.medbook_number}".strip(),
                 "status_disp": status_disp,
                 "disp_data": disp_data,
             }
@@ -523,6 +523,7 @@ def patients_get_card_data(request, card_id):
             "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()],
             "number_poli": card.number_poliklinika,
             "harmful": card.harmful_factor,
+            "medbookPrefix": card.medbook_prefix,
             "medbookNumber": card.medbook_number,
             "medbookNumberCustom": card.medbook_number if card.medbook_type == 'custom' else '',
             "medbookNumberCustomOriginal": card.medbook_number if card.medbook_type == 'custom' else '',
@@ -615,6 +616,7 @@ def patients_card_save(request):
     c.phone = request_data["phone"]
     c.harmful_factor = request_data.get("harmful", "")
     medbook_type = request_data.get("medbookType", "")
+    medbook_prefix = str(request_data.get("medbookPrefix", "")).strip()
     medbook_number = str(request_data.get("medbookNumber", "-1"))
     medbook_number_custom = str(request_data.get("medbookNumberCustom", "-1"))
     medbook_number = medbook_number if medbook_type != 'custom' else medbook_number_custom
@@ -626,15 +628,17 @@ def patients_card_save(request):
         try:
             with transaction.atomic():
                 base = CardBase.objects.select_for_update().get(pk=request_data["base_pk"], internal_type=True)
-                if medbook_type == 'custom' and medbook_number_int is not None and c.medbook_number != medbook_number_int:
+                if medbook_type == 'custom' and medbook_number_int is not None and (c.medbook_number != medbook_number_int or c.medbook_prefix != medbook_prefix):
                     medbook_auto_start = SettingManager.get_medbook_auto_start()
                     if medbook_number_int <= 1 or medbook_auto_start <= medbook_number_int:
                         raise Exception("Некорректный номер мед.книжки")
-                    if Card.objects.filter(medbook_number=medbook_number, base=base).exclude(pk=c.pk).exists():
-                        raise Exception(f"Номер {medbook_number} уже есть у другого пациента")
+                    if Card.objects.filter(medbook_number=medbook_number, base=base, medbook_prefix=medbook_prefix).exclude(pk=c.pk).exists():
+                        raise Exception(f"Номер {medbook_prefix} {medbook_number} уже есть у другого пациента")
+                    c.medbook_prefix = medbook_prefix
                     c.medbook_number = medbook_number_int
                     c.medbook_type = medbook_type
                 elif (c.medbook_type != 'auto' or c.medbook_number == '') and medbook_type == 'auto':
+                    c.medbook_prefix = ''
                     c.medbook_number = Card.next_medbook_n()
                     c.medbook_type = medbook_type
         except Exception as e:
