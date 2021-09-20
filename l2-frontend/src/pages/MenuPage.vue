@@ -23,7 +23,7 @@
         </li>
         <li class="list-group-item" v-if="user_data.specialities && user_data.specialities.length > 0">
           Специальности:
-          <div class="row dash-buttons groups-btns" v-for="s in specialities" :key="s">
+          <div class="row dash-buttons groups-btns" v-for="s in user_data.specialities" :key="s">
             <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5">
               <div class="label label-default bw100 btn-ell" :title="s">{{ s }}</div>
             </div>

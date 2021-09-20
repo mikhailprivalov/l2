@@ -3144,6 +3144,11 @@ crypto-browserify@^3.11.0:
     randombytes "^2.0.0"
     randomfill "^1.0.3"
 
+crypto-pro@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/crypto-pro/-/crypto-pro-2.2.0.tgz#784119d1d3f5161a54eae5e0c80bd0fcb78bdfb1"
+  integrity sha512-OUOmAMtzWXO3wuY6WBPv7QdkamI4WABjkRD/8OFoDyx2S9bsbZzukktFlPIgz0nvVUS7UTXACQeO0q56bh+whA==
+
 css-color-names@0.0.4, css-color-names@^0.0.4:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/css-color-names/-/css-color-names-0.0.4.tgz#808adc2e79cf84738069b646cb20ec27beb629e0"
@@ -9552,6 +9557,11 @@ vue-select@^3.13.0:
   version "3.13.0"
   resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-3.13.0.tgz#78d519984139156adcbf56af260fb6c2a69093a6"
   integrity sha512-+PcWtfA1i3WVtkVwBPQknnOZL6QWSD2XiAVbSn0xAQvjOrmGAg7z+o9HkezXhtGdEstloJOdM8SujrUVyphKqg==
+
+vue-simple-progress@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/vue-simple-progress/-/vue-simple-progress-1.1.1.tgz#5159be55ce6708a98635a6280bf354fece9e7d89"
+  integrity sha512-ltLWYBA5eVQHWyt1NwZeGeK0VQC69JVh1oqUdro0po7r8Hc8SEMEyEfuwyCO4s27h5I3jbD99BKKkyPSQZgoZA==
 
 vue-style-loader@^4.1.0, vue-style-loader@^4.1.2:
   version "4.1.3"

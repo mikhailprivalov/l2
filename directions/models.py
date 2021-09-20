@@ -1,5 +1,7 @@
 import calendar
+from cda.integration import get_required_signatures
 import datetime
+import os
 import re
 import time
 import unicodedata
@@ -433,6 +435,86 @@ class Napravleniya(models.Model):
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
     n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
+    eds_required_documents = ArrayField(
+        models.CharField(max_length=3),
+        verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True
+    )
+    eds_required_signature_types = ArrayField(
+        models.CharField(max_length=32),
+        verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True
+    )
+    eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
+    eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
+
+    def get_eds_title(self):
+        iss = Issledovaniya.objects.filter(napravleniye=self)
+
+        for i in iss:
+            research: directory.Researches = i.research
+            if research.desc:
+                return research.title
+
+        return 'Лабораторное исследование'
+
+    def required_signatures(self, fast=False, need_save=False):
+        if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):
+            return {
+                "docTypes": self.eds_required_documents,
+                "signsRequired": self.eds_required_signature_types,
+            }
+
+        data = get_required_signatures(self.get_eds_title())
+
+        result = {
+            "docTypes": ['PDF', 'CDA'] if data.get('needCda') else ['PDF'],
+            "signsRequired": data.get('signsRequired') or ['Врач', 'Медицинская организация'],
+        }
+
+        if need_save:
+            updated = []
+            if any([x not in self.eds_required_documents for x in result['docTypes']]) or len(self.eds_required_documents) != len(result['docTypes']):
+                self.eds_required_documents = result['docTypes']
+                updated.append('eds_required_documents')
+
+            if any([x not in self.eds_required_signature_types for x in result['signsRequired']]) or len(self.eds_required_signature_types) != len(result['signsRequired']):
+                self.eds_required_signature_types = result['signsRequired']
+                updated.append('eds_required_signature_types')
+
+            if updated:
+                self.save(update_fields=updated)
+
+        return result
+
+    def get_eds_total_signed(self, forced=False):
+        if self.eds_total_signed and not forced:
+            return True
+        rs = self.required_signatures(fast=True, need_save=True)
+
+        status = len(rs['docTypes']) > 0 and len(rs['signsRequired']) > 0
+
+        for r in rs['docTypes']:
+            dd: DirectionDocument = DirectionDocument.objects.filter(direction=self, is_archive=False, last_confirmed_at=self.last_time_confirm(), file_type=r.lower()).first()
+
+            has_signatures = []
+            empty_signatures = rs['signsRequired']
+            if dd:
+                for s in DocumentSign.objects.filter(document=dd):
+                    has_signatures.append(s.sign_type)
+
+                    empty_signatures = [x for x in empty_signatures if x != s.sign_type]
+            if len(empty_signatures) != 0:
+                status = False
+                break
+
+        if status != self.eds_total_signed:
+            self.eds_total_signed = status
+            if status:
+                self.eds_total_signed_at = timezone.now()
+            else:
+                self.eds_total_signed_at = None
+            self.save(update_fields=['eds_total_signed', 'eds_total_signed_at'])
+
+        return status
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
@@ -544,6 +626,15 @@ class Napravleniya(models.Model):
         for i in Issledovaniya.objects.filter(napravleniye=self).exclude(research__instructions=""):
             r.append({"pk": i.research_id, "title": i.research.title, "text": i.research.instructions})
         return r
+
+    def get_executors(self):
+        executors = {}
+
+        i: Issledovaniya
+        for i in self.issledovaniya_set.all():
+            if i.doc_confirmation_id not in executors:
+                executors[i.doc_confirmation_id] = i.doc_confirmation_fio
+        return executors
 
     @property
     def fin_title(self):
@@ -1158,6 +1249,14 @@ class Napravleniya(models.Model):
         """
         return all([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
+    def last_time_confirm(self):
+        return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
+
+    def last_doc_confirm(self):
+        iss = Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').first()
+
+        return str(iss.doc_confirmation) if iss else None
+
     def is_has_deff(self):
         """
         Есть ли отложенные исследования
@@ -1248,6 +1347,50 @@ class Napravleniya(models.Model):
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
+
+
+def get_direction_file_path(instance: 'DirectionDocument', filename):
+    return os.path.join('directions', str(instance.direction.get_hospital_tfoms_id()), str(instance.direction.pk), filename)
+
+
+class DirectionDocument(models.Model):
+    PDF = 'pdf'
+    CDA = 'cda'
+    FILE_TYPES = (
+        (PDF, PDF),
+        (CDA, CDA),
+    )
+
+    direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направление")
+    file_type = models.CharField(max_length=3, db_index=True, verbose_name="Тип файла")
+    file = models.FileField(upload_to=get_direction_file_path, blank=True, null=True, default=None, verbose_name="Файл документа")
+    is_archive = models.BooleanField(db_index=True, verbose_name="Архивный документ", blank=True, default=False)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
+    last_confirmed_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата и время подтверждения протокола')
+
+    def __str__(self) -> str:
+        return f"{self.direction} — {self.file_type} – {self.last_confirmed_at}"
+
+    class Meta:
+        unique_together = ('direction', 'file_type', 'last_confirmed_at')
+        verbose_name = 'Документ направления'
+        verbose_name_plural = 'Документы направлений'
+
+
+class DocumentSign(models.Model):
+    document = models.ForeignKey(DirectionDocument, on_delete=models.CASCADE, db_index=True, verbose_name="Документ")
+    executor = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Исполнитель подписи', on_delete=models.CASCADE)
+    signed_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время подписи")
+    sign_type = models.CharField(max_length=32, db_index=True, verbose_name='Тип подписи')
+    sign_value = models.TextField(verbose_name="Значение подписи")
+
+    def __str__(self) -> str:
+        return f"{self.document} — {self.sign_type} – {self.executor}"
+
+    class Meta:
+        unique_together = ('document', 'executor', 'sign_type')
+        verbose_name = 'Подпись документа направления'
+        verbose_name_plural = 'Подписи документов направлений'
 
 
 class PersonContract(models.Model):
@@ -1449,6 +1592,8 @@ class Issledovaniya(models.Model):
             return "Сброс подтверждения выписки" in groups
         if forbidden_edit_dir(self.napravleniye_id):
             return False
+        if self.napravleniye and self.napravleniye.eds_total_signed:
+            return "Сброс подтверждений результатов" in groups
         ctp = int(0 if not self.time_confirmation else int(time.mktime(timezone.localtime(self.time_confirmation).timetuple())))
         ctime = int(time.time())
         current_doc_confirmation = self.doc_confirmation

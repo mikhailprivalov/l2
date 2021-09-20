@@ -1,3 +1,4 @@
+import base64
 import datetime
 import logging
 from podrazdeleniya.models import Podrazdeleniya
@@ -34,7 +35,7 @@ from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
-from directions.models import Napravleniya
+from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 
@@ -45,6 +46,7 @@ logger = logging.getLogger("IF")
 def next_result_direction(request):
     from_pk = request.GET.get("fromPk")
     after_date = request.GET.get("afterDate")
+    only_signed = request.GET.get("onlySigned")
     if after_date == '0':
         after_date = AFTER_DATE
     next_n = int(request.GET.get("nextN", 1))
@@ -58,7 +60,12 @@ def next_result_direction(request):
         researches = [int(i) for i in type_researches.split(',')]
     else:
         is_research = -1
-    dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
+    if only_signed == '1':
+        # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
+        # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
+        dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
+    else:
+        dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
     next_time = None
     naprs = [d[0] for d in dirs]
@@ -136,7 +143,7 @@ def result_amd_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
-    direction = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
+    direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
     individual = card.individual
 
@@ -148,6 +155,25 @@ def direction_data(request):
         return Response({"ok": False})
 
     iss_index = random.randrange(len(iss))
+
+    signed_documents = []
+
+    if direction.eds_total_signed:
+        last_time_confirm = direction.last_time_confirm()
+        for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
+            document = {
+                'type': d.file_type.upper(),
+                'content': base64.b64encode(d.file.read()).decode('utf-8'),
+                'signatures': [],
+            }
+
+            for s in DocumentSign.objects.filter(document=d):
+                document['signatures'].append({
+                    "content": base64.b64encode(s.sign_value.encode('utf-8')).decode('utf-8'),
+                    "type": s.sign_type,
+                })
+
+            signed_documents.append(document)
 
     return Response(
         {
@@ -184,6 +210,9 @@ def direction_data(request):
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
             "hospitalN3Id": direction.hospital_n3id,
+            "signed": direction.eds_total_signed,
+            "totalSignedAt": direction.eds_total_signed_at,
+            "signedDocuments": signed_documents,
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
         }
@@ -1138,6 +1167,24 @@ def eds_get_user_data(request):
     )
 
 
+def get_cda_data(pk):
+    n: Napravleniya = Napravleniya.objects.get(pk=pk)
+    card = n.client
+    ind = n.client.individual
+
+    return {
+        "title": n.get_eds_title(),
+        "patient": {
+            'pk': card.number,
+            'family': ind.family,
+            'name': ind.name,
+            'patronymic': ind.patronymic,
+            'gender': ind.sex.lower(),
+            'birthdate': ind.birthday.strftime("%Y%m%d"),
+        },
+    }
+
+
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
@@ -1152,24 +1199,7 @@ def eds_get_cda_data(request):
 
     pk = body.get("pk")
 
-    n = Napravleniya.objects.get(pk=pk)
-    i: directions.Issledovaniya = n.issledovaniya_set.all()[0]
-    card = n.client
-    ind = n.client.individual
-
-    return Response(
-        {
-            "title": i.research.title,
-            "patient": {
-                'pk': card.number,
-                'family': ind.family,
-                'name': ind.name,
-                'patronymic': ind.patronymic,
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
-            },
-        }
-    )
+    return Response(get_cda_data(pk))
 
 
 @api_view(['POST'])

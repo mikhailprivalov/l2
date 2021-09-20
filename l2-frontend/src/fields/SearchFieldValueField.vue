@@ -96,7 +96,7 @@ export default {
   },
   computed: {
     isStaticLink() {
-      return this.fpk.startsWith('%');
+      return this.fpk?.startsWith('%');
     },
     fpk() {
       return this.fpkInitial || this.fieldPk;

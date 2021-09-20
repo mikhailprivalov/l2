@@ -97,7 +97,8 @@ def save(form, filename: str):
 @logged_in_or_token
 def result_print(request):
     """Печать результатов"""
-    inline = request.GET.get("inline", "1") == "1"
+    plain_response = True if hasattr(request, 'plain_response') and request.plain_response else False
+    inline = request.GET.get("inline", "1") == "1" or plain_response
     response = HttpResponse(content_type='application/pdf')
 
     if inline:
@@ -931,8 +932,9 @@ def result_print(request):
             for iss in direction.issledovaniya_set.all().order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
                 if not hosp and not is_gistology and not has_own_form_result:
-                    fwb.append(InteractiveTextField())
-                    fwb.append(Spacer(1, 2 * mm))
+                    if not plain_response:
+                        fwb.append(InteractiveTextField())
+                        fwb.append(Spacer(1, 2 * mm))
                     if (
                         iss.research.is_doc_refferal
                         or iss.research.is_microbiology
@@ -1107,6 +1109,8 @@ def result_print(request):
 
     pdf = buffer.getvalue()
     buffer.close()
+    if plain_response:
+        return pdf
     response.write(pdf)
     k = str(request.GET["pk"])
     slog.Log(

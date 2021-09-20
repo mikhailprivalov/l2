@@ -623,6 +623,11 @@ def reset_confirm(request):
             if iss.napravleniye:
                 iss.napravleniye.need_resend_amd = False
                 iss.napravleniye.save()
+            if iss.napravleniye:
+                iss.napravleniye.need_resend_amd = False
+                iss.napravleniye.eds_total_signed = False
+                iss.napravleniye.eds_total_signed_at = None
+                iss.napravleniye.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd'])
             result = {"ok": True}
             Log.log(str(pk), 24, body=predoc, user=request.user.doctorprofile)
         else:
