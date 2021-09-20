@@ -24,6 +24,8 @@ from .models import (
     MonitoringSumFieldByDay,
     MonitoringSumFieldTotal,
     NumberGenerator,
+    DirectionDocument,
+    DocumentSign,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -39,6 +41,23 @@ class NapravleniyaAdmin(admin.ModelAdmin):
         'parent_slave_hosp',
     )
     search_fields = ('pk', 'client')
+
+
+@admin.register(DirectionDocument)
+class DirectionDocumentAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
+        'direction',
+    )
+    search_fields = ('direction',)
+
+
+@admin.register(DocumentSign)
+class DocumentSignAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
+        'document',
+        'executor',
+    )
+    search_fields = ('document', 'executor',)
 
 
 @admin.register(Issledovaniya)

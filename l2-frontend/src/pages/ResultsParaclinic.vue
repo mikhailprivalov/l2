@@ -733,7 +733,11 @@
                 Отправить в АМД
               </button>
             </template>
-            <EDSButton :key="`${data.direction.pk}_${row.confirmed}`" :iss-data="row" :direction-data="data" />
+            <EDSDirection
+              :key="`${data.direction.pk}_${row.confirmed}`"
+              :direction-pk="data.direction.pk"
+              :all_confirmed="data.direction.all_confirmed"
+            />
             <div class="status-list" v-if="!r(row) && !row.confirmed">
               <div class="status status-none">Не верно:</div>
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
@@ -921,7 +925,7 @@ import { cleanCaches } from '@/utils';
 import { enter_field, leave_field } from '@/forms/utils';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
-import EDSButton from '@/ui-cards/EDSButton.vue';
+import EDSDirection from '@/ui-cards/EDSDirection.vue';
 import patientsPoint from '../api/patients-point';
 import * as actions from '../store/action-types';
 import directionsPoint from '../api/directions-point';
@@ -951,7 +955,7 @@ import FastTemplates from '../forms/FastTemplates.vue';
 export default {
   name: 'results-paraclinic',
   components: {
-    EDSButton,
+    EDSDirection,
     FastTemplates,
     BacMicroForm,
     DescriptiveForm,

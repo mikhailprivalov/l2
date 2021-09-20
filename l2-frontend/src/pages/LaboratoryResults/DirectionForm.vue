@@ -2,9 +2,12 @@
   <div v-frag>
     <div class="top-buttons">
       <template v-if="loaded">
-        <button class="btn btn-blue-nb" :disabled="allConfirmed || !allSaved" @click="confirmAll">
+        <button class="btn btn-blue-nb" :disabled="!allSaved" @click="confirmAll" v-if="!allConfirmed">
           Подтвердить всё
         </button>
+        <div v-else class="eds-wrapper">
+          <EDSDirection :key="`eds-${direction.pk}`" :direction-pk="direction.pk" :all_confirmed="true" />
+        </div>
 
         <button class="btn btn-blue-nb btn-right" @click="reload()" title="Перезагрузить данные" v-tippy>
           <i class="fa fa-refresh"></i>
@@ -127,6 +130,9 @@ import * as actions from '@/store/action-types';
 
 export default {
   name: 'DirectionForm',
+  components: {
+    EDSDirection: () => import('@/ui-cards/EDSDirection.vue'),
+  },
   props: {
     laboratory: {},
   },
@@ -427,5 +433,14 @@ table {
   padding: 20px;
   color: #7a7a7a;
   text-align: left;
+}
+
+.eds-wrapper {
+  display: flex;
+  flex-direction: row;
+  max-width: 175px;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 </style>
