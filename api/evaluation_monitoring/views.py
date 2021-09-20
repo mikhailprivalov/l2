@@ -3,7 +3,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from .sql_func import sql_load
+from .sql_func import grades_sql_load
 from hospitals.models import Hospitals
 from directions.models import MonitoringResult, CuratorGrade
 from users.models import DoctorProfile
@@ -22,7 +22,7 @@ def load(request):
     quarter = int(request_data['quarter']) if request_data['quarter'] != -1 else None
     type_period = 'PERIOD_QURTER' if quarter != -1 else 'PERIOD_YEAR'
     year = int(request_data['year'])
-    sql_result = sql_load(
+    sql_result = grades_sql_load(
         hospital_pk=hospital_pk,
         research_pk=EVALUATION_MONITORING_QUARTERLY_DIRECTIONS if request_data['quarter'] != -1 else EVALUATION_MONITORING_YEAR_DIRECTIONS,
         type_period=type_period,
