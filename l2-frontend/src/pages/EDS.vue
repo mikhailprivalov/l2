@@ -121,7 +121,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.pk" :class="r.totallySigned && 'tr-ok'">
+          <tr v-for="r in rows" :key="r.pk" :class="totallySigned(r) && 'tr-ok'">
             <td>
               {{ r.pk }}
             </td>
@@ -133,9 +133,12 @@
               <div>
                 <EDSDirection :direction-pk="r.pk" :all_confirmed="true" :documents-prefetched="r.documents" />
               </div>
+              <div v-if="totallySigned(r)" class="uploading-status" :class="r.n3number ? 'm-ok' : 'm-error'">
+                {{ r.n3number ? 'выгружено в N3' : 'не выгружено в N3' }}
+              </div>
             </td>
             <td class="x-cell">
-              <label v-if="!r.totallySigned">
+              <label v-if="!totallySigned(r)">
                 <input type="checkbox" v-model="r.checked" />
               </label>
             </td>
@@ -194,6 +197,7 @@
             text-align="left"
             :font-size="14"
             text-fg-color="#fff"
+            bar-color="#049372"
           />
 
           <button type="button" class="btn btn-default btn-primary-nb" @click="load(page)" :disabled="signingProcess.progress">
@@ -242,7 +246,7 @@ import EDSDirection from '@/ui-cards/EDSDirection.vue';
 
 const MODES = [
   { id: 'mo', label: 'Подписи медицинской организации' },
-  { id: 'my', label: 'Мои подписи' },
+  { id: 'my', label: 'Мои документы' },
 ];
 
 const STATUSES = [
@@ -405,23 +409,26 @@ export default class EDS extends Vue {
   }
 
   get deps() {
-    return this.users.map(d => ({ id: Number(d.id.split('-')[1]) || -1, label: d.label }));
+    return [
+      ...this.users.map(d => ({ id: Number(d.id.split('-')[1]) || -1, label: d.label })),
+      { id: -1, label: 'Все отделения' },
+    ];
   }
 
   get globalCheckStatus() {
-    return this.rows.every(r => r.checked && !r.totallySigned);
+    return this.rows.every(r => r.checked && this.totallySigned(r));
   }
 
   get hasAnyChecked() {
-    return this.rows.some(r => r.checked && !r.totallySigned);
+    return this.rows.some(r => r.checked && !this.totallySigned(r));
   }
 
   get rowsChecked() {
-    return this.rows.filter(r => r.checked && !r.totallySigned);
+    return this.rows.filter(r => r.checked && !this.totallySigned(r));
   }
 
   get hasToCheck() {
-    return this.hasCP && this.checked && this.selectedCertificate && this.rows.some(r => !r.totallySigned);
+    return this.hasCP && this.checked && this.selectedCertificate && this.rows.some(r => !this.totallySigned(r));
   }
 
   get signP() {
@@ -492,7 +499,16 @@ export default class EDS extends Vue {
 
   toggleGlobalCheck() {
     const newStatus = !this.globalCheckStatus;
-    this.rows = this.rows.map(r => ({ ...r, checked: newStatus && !r.totallySigned }));
+    this.rows = this.rows.map(r => ({ ...r, checked: newStatus && !this.totallySigned(r) }));
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  totallySigned(r) {
+    if (r.totallySigned) {
+      return true;
+    }
+
+    return r.documents.every(x => x.empty.length === 0);
   }
 
   async listSign() {
@@ -541,18 +557,19 @@ export default class EDS extends Vue {
             const sign = await createDetachedSignature(this.selectedCertificate, m);
 
             this.signingProcess.currentOperation = `${docTitle} отправка подписи`;
-            const { ok, message } = await this.$api('/directions/eds/add-sign', {
-              pk: d.pk,
-              sign,
-              mode: this.selectedSignatureMode,
-            });
+            // const { ok, message } = await this.$api('/directions/eds/add-sign', {
+            //   pk: d.pk,
+            //   sign,
+            //   mode: this.selectedSignatureMode,
+            // });
 
-            if (ok) {
-              this.$root.$emit('msg', 'ok', `Подпись успешно добавлена: ${r.pk}, ${d.type}, ${this.selectedSignatureMode}`, 1500);
-              docToLog.status = true;
-            } else {
-              this.$root.$emit('msg', 'error', message);
-            }
+            // if (ok) {
+            //   const msg = `Подпись успешно добавлена: ${r.pk}, ${d.type}, ${this.selectedSignatureMode}`;
+            //   this.$root.$emit('msg', 'ok', msg, 1500);
+            //   docToLog.status = true;
+            // } else {
+            //   this.$root.$emit('msg', 'error', message);
+            // }
           } catch (e) {
             console.error(e);
             this.$root.$emit('msg', 'error', 'Ошибка создания подписи!');
@@ -676,7 +693,7 @@ export default class EDS extends Vue {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(1px);
     z-index: 100000;
   }
@@ -708,6 +725,12 @@ export default class EDS extends Vue {
     font-size: 20px;
     font-weight: bold;
   }
+}
+
+.uploading-status {
+  margin-left: 0 !important;
+  text-align: center;
+  display: block !important;
 }
 </style>
 

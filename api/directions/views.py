@@ -3066,7 +3066,11 @@ def eds_to_sign(request):
         day2 = day1 + timedelta(days=1)
         d_qs = d_qs.filter(issledovaniya__time_confirmation__range=(day1, day2))
         if mode == 'mo':
-            d_qs = d_qs.filter(eds_required_signature_types__contains=['Медицинская организация'], issledovaniya__doc_confirmation__podrazdeleniye_id=department)
+            d_qs = d_qs.filter(eds_required_signature_types__contains=['Медицинская организация'])
+            if department == -1:
+                d_qs = d_qs.filter(issledovaniya__doc_confirmation__hospital=request.user.doctorprofile.get_hospital())
+            else:
+                d_qs = d_qs.filter(issledovaniya__doc_confirmation__podrazdeleniye_id=department)
         elif mode == 'my':
             d_qs = d_qs.filter(eds_required_signature_types__contains=['Врач'], issledovaniya__doc_confirmation=request.user.doctorprofile)
 
@@ -3118,6 +3122,7 @@ def eds_to_sign(request):
                 'docConfirmation': ldc,
                 'documents': documents,
                 'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
+                'n3number': d.n3_odli_id,
             }
         )
 

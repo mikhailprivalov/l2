@@ -12,7 +12,10 @@ logger = logging.getLogger(__name__)
 def get_url(path, query=None):
     if query is None:
         query = {}
-    return urljoin(SettingManager.get_cda_base_url(), path) + ('?{}'.format(urlencode(query)) if query else '')
+    base = SettingManager.get_cda_base_url()
+    if not base or base == 'empty':
+        return {}
+    return urljoin(base, path) + ('?{}'.format(urlencode(query)) if query else '')
 
 
 def make_request(path, query=None, as_json=True, **kwargs):
