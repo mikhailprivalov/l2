@@ -47,7 +47,7 @@ export default (instance: Vue): void => {
     instance.$toast(message, {
       type: t,
       position: POSITION.BOTTOM_RIGHT,
-      timeout: timeout || 7000,
+      timeout: timeout || 6000,
       closeOnClick: false,
       pauseOnHover: true,
       icon: true,
