@@ -66,7 +66,7 @@ export default {
   },
   methods: {
     hide_modal() {
-      this.$root.$emit('hide_pe');
+      this.$root.$emit('hide_mkb_modal');
       if (this.$refs.modal) {
         this.$refs.modal.$el.style.display = 'none';
       }
