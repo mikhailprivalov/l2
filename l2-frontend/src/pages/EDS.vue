@@ -192,7 +192,7 @@
             bar-transition="all 0.1s linear"
             text-position="bottom"
             text-align="left"
-            font-size="14"
+            :font-size="14"
             text-fg-color="#fff"
           />
 

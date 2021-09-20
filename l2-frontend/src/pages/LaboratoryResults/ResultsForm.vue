@@ -72,6 +72,7 @@
                   v-if="!confirmed"
                   :title="`Очистить ${r.fraction.title}`"
                   v-tippy
+                  tabindex="-1"
                 >
                   <i class="fa fa-times"></i>
                 </button>

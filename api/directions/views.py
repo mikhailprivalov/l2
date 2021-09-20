@@ -3080,10 +3080,11 @@ def eds_to_sign(request):
                 d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
         else:
             # TODO: тут нужен фильтр, что получены все необходимые подписи, кроме Медицинская организация, если mode == 'mo'
+            # TODO: тут нужен фильтр, что не получена подпись Врач, если mode == 'my'
             d_qs = d_qs.filter(eds_total_signed=False)
 
     d: Napravleniya
-    p = Paginator(d_qs, SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
+    p = Paginator(d_qs.order_by('pk', 'issledovaniya__time_confirmation').distinct('pk'), SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
     for d in p.page(page).object_list:
         documents = []
         ltc = d.last_time_confirm()
