@@ -205,6 +205,7 @@ export default {
             'msg',
             'ok',
             `Подпись успешно добавлена: ${this.direction}, ${this.d.type}, ${this.selectedSignatureMode}`,
+            2000,
           );
         } else {
           this.$root.$emit('msg', 'error', message);
