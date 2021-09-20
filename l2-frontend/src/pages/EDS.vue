@@ -557,19 +557,19 @@ export default class EDS extends Vue {
             const sign = await createDetachedSignature(this.selectedCertificate, m);
 
             this.signingProcess.currentOperation = `${docTitle} отправка подписи`;
-            // const { ok, message } = await this.$api('/directions/eds/add-sign', {
-            //   pk: d.pk,
-            //   sign,
-            //   mode: this.selectedSignatureMode,
-            // });
+            const { ok, message } = await this.$api('/directions/eds/add-sign', {
+              pk: d.pk,
+              sign,
+              mode: this.selectedSignatureMode,
+            });
 
-            // if (ok) {
-            //   const msg = `Подпись успешно добавлена: ${r.pk}, ${d.type}, ${this.selectedSignatureMode}`;
-            //   this.$root.$emit('msg', 'ok', msg, 1500);
-            //   docToLog.status = true;
-            // } else {
-            //   this.$root.$emit('msg', 'error', message);
-            // }
+            if (ok) {
+              const msg = `Подпись успешно добавлена: ${r.pk}, ${d.type}, ${this.selectedSignatureMode}`;
+              this.$root.$emit('msg', 'ok', msg, 1500);
+              docToLog.status = true;
+            } else {
+              this.$root.$emit('msg', 'error', message);
+            }
           } catch (e) {
             console.error(e);
             this.$root.$emit('msg', 'error', 'Ошибка создания подписи!');
