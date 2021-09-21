@@ -84,7 +84,7 @@ class Command(BaseCommand):
                         actual=cells[actual],
                         test_group=cells[test_group],
                         code_nmu=cells[code_nmu],
-                        ordering=cells[sort_num],
+                        ordering=cells[sort_num] or -1,
                         active=active,
                     ).save()
                     print('сохранено', cells[code_fsli])  # noqa: T001
