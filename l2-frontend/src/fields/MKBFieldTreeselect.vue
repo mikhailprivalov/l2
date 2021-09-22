@@ -137,23 +137,40 @@ export default {
   },
   data() {
     return {
-      content: this.value || null,
+      content: '',
+      detailsData: {},
     };
   },
   watch: {
-    value() {
-      console.log('this.value', this.value);
-      this.content = this.value || null;
+    value: {
+      immediate: true,
+      handler() {
+        let data: any = {};
+        try {
+          data = JSON.parse(this.value);
+          this.content = `${data.code} ${data.title}`;
+        } catch (e) {
+          if (this.value && !this.value.includes('{')) {
+            this.content = this.value;
+          }
+        }
+        this.detailsData = data;
+      },
+    },
+    detailsData: {
+      deep: true,
+      handler() {
+        this.emit();
+      },
     },
     content() {
       this.content = fixLayout(this.content);
-      console.log('this.content', this.content);
-      this.emit();
     },
   },
   methods: {
     emit() {
-      this.$emit('input', this.content || '');
+      const v = JSON.stringify(this.detailsData);
+      this.$emit('modified', v || '');
     },
     async loadOptions({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
@@ -171,6 +188,7 @@ export default {
         this.content = node.code;
       } else {
         this.content = node.label;
+        this.detailsData = { code: node.code, title: node.title, id: node.id };
       }
     },
   },

@@ -64,12 +64,14 @@
               v-else-if="settings[i].type === 33"
               :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-model="r[i]"
+              @modified="changeCell(j, i, $event)"
               dictionary="mkb10.5"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 32"
               :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-model="r[i]"
+              @modified="changeCell(j, i, $event)"
               dictionary="mkb10.6"
             />
             <SearchFieldValueField
@@ -225,6 +227,10 @@ export default {
     event: 'modified',
   },
   methods: {
+    changeCell(j, i, v) {
+      this.rows[j][i] = v;
+      this.rows = [...this.rows];
+    },
     changeValue(newVal) {
       this.$emit('modified', newVal);
       setTimeout(() => {
