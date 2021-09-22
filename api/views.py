@@ -878,9 +878,6 @@ def mkb10_dict(request):
     for d in diag_query:
         data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
 
-    if not data or (short and len(data) < 11 and code not in [x["code"] for x in data]):
-        data.append({"code": code, "title": diag_title or "", "id": code})
-
     return JsonResponse({"data": data})
 
 
