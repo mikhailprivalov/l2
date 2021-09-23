@@ -199,7 +199,13 @@
                   :disabled="confirmed"
                   dictionary="mkb10.5"
                 />
-
+              </div>
+             <div class="field-value field-value-address mkb" v-else-if="field.field_type === 34">
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.4"
+                />
               </div>
               <div
                 :title="field.helper"

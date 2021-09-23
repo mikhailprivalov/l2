@@ -61,6 +61,13 @@
               v-model="r[i]"
             />
             <MKBFieldTreeselect
+              v-else-if="settings[i].type === 34"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              v-model="r[i]"
+              @modified="changeCell(j, i, $event)"
+              dictionary="mkb10.4"
+            />
+            <MKBFieldTreeselect
               v-else-if="settings[i].type === 33"
               :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-model="r[i]"
