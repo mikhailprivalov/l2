@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 from django.core.management import BaseCommand
 from appconf.manager import SettingManager
 from directions.models import Diagnoses
@@ -19,10 +21,15 @@ NSI_MKB10_DIRECTORIES = {
     },
     "mkb10.6": {
         "oid": "1.2.643.5.1.13.13.99.2.692",
-        "title": "лфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3, "
+        "title": "Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3, "
         "внешние причины заболеваемости и смертности)",
     },
 }
+
+
+def fetch(url):
+    page = requests.get(url)
+    return page.json()['list']
 
 
 class Command(BaseCommand):
@@ -49,6 +56,7 @@ class Command(BaseCommand):
             with transaction.atomic():
                 print('Получение справочника', diag_key)  # noqa: T001
                 print(v)  # noqa: T001
+                is_empty = not Diagnoses.objects.filter(d_type=diag_key).exists()
                 Diagnoses.objects.filter(d_type=diag_key).update(hide=True)
                 data = client.service.getVersionList(userKey5=nsi_key, refbookCode4=k)
                 version_data = data['item'][-1]['children']['item']
@@ -60,9 +68,13 @@ class Command(BaseCommand):
                 for i in data['item']:
                     if i['key'] == "partsAmount":
                         data_parts = int(i['value']) + 1
-                for i in range(1, data_parts):
-                    response = requests.get(f'https://nsi.rosminzdrav.ru:443/port/rest/data?userKey={nsi_key}&identifier={k}&page={i}&size=500')
-                    diagnoses = response.json()['list']
+
+                bulk_create = []
+                pool = ThreadPoolExecutor(max_workers=20)
+                urls = [f'https://nsi.rosminzdrav.ru:443/port/rest/data?userKey={nsi_key}&identifier={k}&page={i}&size=500' for i in range(1, data_parts)]
+                i = -1
+                for diagnoses in pool.map(fetch, urls):
+                    i += 1
                     n = 0
                     for data in diagnoses:
                         n += 1
@@ -83,14 +95,30 @@ class Command(BaseCommand):
                         if actual != '1' or '.' not in mkb_code:
                             print(f'пропуск {mkb_code} — actual={actual}')  # noqa: T001
                             continue
-                        _, created = Diagnoses.objects.update_or_create(
-                            code=mkb_code, d_type=diag_key, title=title,
-                            defaults={'nsi_id': nsi_code, 'hide': False, 'm_type': 2}
-                        )
 
                         n_str = f"({i + 1}/{data_parts}) ({n}/{len(diagnoses)}): {diag_key}-{mkb_code}-{title}-{nsi_code}"
-                        if not created:
-                            print(f"обновлено {n_str}")  # noqa: T001
+                        if is_empty:
+                            bulk_create.append(
+                                Diagnoses(
+                                    code=mkb_code, d_type=diag_key, title=title, nsi_id=nsi_code, hide=False, m_type=2 
+                                )
+                            )
+                            print(f"добавлено в очередь создания {n_str}")  # noqa: T001
                         else:
-                            print(f"создано {n_str}")  # noqa: T001
+                            _, created = Diagnoses.objects.update_or_create(
+                                code=mkb_code, d_type=diag_key, title=title,
+                                defaults={'nsi_id': nsi_code, 'hide': False, 'm_type': 2}
+                            )
+                            if not created:
+                                print(f"обновлено {n_str}")  # noqa: T001
+                            else:
+                                print(f"создано {n_str}")  # noqa: T001
+                    if len(bulk_create) >= 19500:
+                        print(f"пакетное создание записей {len(bulk_create)} шт")  # noqa: T001
+                        Diagnoses.objects.bulk_create(bulk_create, 8000)
+                        bulk_create = []
+
+                if bulk_create:
+                    print(f"пакетное создание записей {len(bulk_create)} шт")  # noqa: T001
+                    Diagnoses.objects.bulk_create(bulk_create)
             print(f'Скрытых значений {diag_key}:', Diagnoses.objects.filter(d_type=diag_key, hide=True).count())  # noqa: T001
