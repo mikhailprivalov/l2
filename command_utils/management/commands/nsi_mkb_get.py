@@ -61,7 +61,6 @@ class Command(BaseCommand):
                     if i['key'] == "partsAmount":
                         data_parts = int(i['value']) + 1
                 for i in range(1, data_parts):
-                    diag = None
                     response = requests.get(f'https://nsi.rosminzdrav.ru:443/port/rest/data?userKey={nsi_key}&identifier={k}&page={i}&size=500')
                     diagnoses = response.json()['list']
                     n = 0
@@ -84,20 +83,14 @@ class Command(BaseCommand):
                         if actual != '1' or '.' not in mkb_code:
                             print(f'пропуск {mkb_code} — actual={actual}')  # noqa: T001
                             continue
-                        diag = Diagnoses.objects.filter(code=mkb_code, d_type=diag_key, title=title).first()
+                        _, created = Diagnoses.objects.update_or_create(
+                            code=mkb_code, d_type=diag_key, title=title,
+                            defaults={'nsi_id': nsi_code, 'hide': False, 'm_type': 2}
+                        )
+
                         n_str = f"({i + 1}/{data_parts}) ({n}/{len(diagnoses)}): {diag_key}-{mkb_code}-{title}-{nsi_code}"
-                        if diag:
-                            updates = ['hide']
-                            diag.hide = False
-                            if diag.nsi_id != nsi_code:
-                                diag.nsi_id = nsi_code
-                                updates.append('nsi_id')
-                            diag.save(update_fields=updates)
-                            if updates:
-                                print(f"обновлено {n_str}")  # noqa: T001
-                            else:
-                                print(f"корректно {n_str}")  # noqa: T001
+                        if not created:
+                            print(f"обновлено {n_str}")  # noqa: T001
                         else:
-                            Diagnoses(code=mkb_code, title=title, m_type=2, d_type=diag_key, nsi_id=nsi_code).save()
                             print(f"создано {n_str}")  # noqa: T001
             print(f'Скрытых значений {diag_key}:', Diagnoses.objects.filter(d_type=diag_key, hide=True).count())  # noqa: T001
