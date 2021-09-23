@@ -1240,7 +1240,6 @@ def diagnos_tbl(data):
     description_diag = data["result"][2]
     if len(description_diag) > 1:
         description_diag_json = json.loads(description_diag)
-        print(type(description_diag_json), description_diag_json)
     decription = ''
     mkb10 = {0: "", 1: "", 2: "", 3: "", 4: ""}
     period = ""

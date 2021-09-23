@@ -846,8 +846,6 @@ def mkb10(request):
 
 def mkb10_dict(request):
     q = request.GET["query"].strip()
-    short = request.GET.get("short") == '1'
-
     if not q:
         return JsonResponse({"data": []})
 
