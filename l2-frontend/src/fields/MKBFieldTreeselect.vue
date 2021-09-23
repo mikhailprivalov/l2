@@ -16,9 +16,9 @@
     noResultsText="Не найдено"
     searchPromptText="Начните писать для поиска"
     :cache-options="false"
-    :default-options="defaultOptions"
     openDirection="top"
     :openOnFocus="true"
+    @input="input"
   >
     <div slot="value-label" slot-scope="{ node }">{{ node.raw.label || node.raw.id }}</div>
   </Treeselect>
@@ -115,10 +115,6 @@ const fixLayout = s => {
 export default {
   props: {
     value: String,
-    short: {
-      type: Boolean,
-      default: false,
-    },
     json: {
       type: Boolean,
       default: false,
@@ -169,14 +165,12 @@ export default {
   },
   methods: {
     emit() {
-      const v = JSON.stringify(this.detailsData);
+      const v = Object.keys(this.detailsData).length > 0 ? JSON.stringify(this.detailsData) : '';
       this.$emit('modified', v || '');
     },
     async loadOptions({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
-        const { data } = await this.$api(
-          `/mkb10-dict?query=${fixLayout(searchQuery)}&dictionary=${this.dictionary}&short=${this.short ? 1 : 0}`,
-        );
+        const { data } = await this.$api(`/mkb10-dict?query=${fixLayout(searchQuery)}&dictionary=${this.dictionary}&short=0`);
         callback(
           null,
           data.map(d => ({ ...d, label: `${d.code} ${d.title}` })),
@@ -184,31 +178,14 @@ export default {
       }
     },
     selectValue(node) {
-      if (this.short) {
-        this.content = node.code;
-      } else {
-        this.content = node.label;
-        this.detailsData = { code: node.code, title: node.title, id: node.id };
-      }
+      this.content = node.label;
+      this.detailsData = { code: node.code, title: node.title, id: node.id };
     },
-  },
-  computed: {
-    defaultOptions() {
-      if (this.content) {
-        // eslint-disable-next-line prefer-const
-        let [s1, ...s2] = (this.value || '').split(' ');
-        s2 = s2.join(' ') || '';
-
-        return [
-          {
-            id: s1,
-            label: [s1, s2].filter(Boolean).join(' '),
-            code: s1,
-            title: s2,
-          },
-        ];
+    input(v) {
+      if (!v) {
+        this.content = '';
+        this.detailsData = {};
       }
-      return [];
     },
   },
 };
