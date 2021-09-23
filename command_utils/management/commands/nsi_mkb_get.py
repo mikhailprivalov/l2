@@ -92,7 +92,7 @@ class Command(BaseCommand):
                                 mkb_code = p['value']
                             if p['column'] == 'ACTUAL':
                                 actual = p['value']
-                        if actual != '1' or '.' not in mkb_code:
+                        if actual != '1' or not mkb_code or '.' not in mkb_code:
                             print(f'пропуск {mkb_code} — actual={actual}')  # noqa: T001
                             continue
 
