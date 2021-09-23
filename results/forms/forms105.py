@@ -1401,7 +1401,7 @@ def who_set_death(text, params):
 
     opinion = gen_opinion(['20. Причины смерти установлены:', only_doc_death, '1', doc_work, '2', paramedic, '3'])
 
-    col_width = (49 * mm, 54 * mm, 6 * mm, 27 * mm, 6 * mm, 40 * mm, 6 * mm,)
+    col_width = (49 * mm, 58 * mm, 6 * mm, 27 * mm, 6 * mm, 40 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1477,7 +1477,7 @@ def doctor_fio(text, params):
         write_medical_dicument = f"{op_bold_tag}<u>{write_medical_dicument}</u>{cl_bold_tag}"
     opinion = gen_opinion(['удостоверяю, что на основании:', see_body, '1', write_medical_dicument, '2'])
 
-    col_width = (53 * mm, 24 * mm, 6 * mm, 58 * mm, 6 * mm,)
+    col_width = (53 * mm, 26 * mm, 6 * mm, 58 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
