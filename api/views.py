@@ -44,7 +44,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all
+from .sql_func import users_by_group, users_all, get_diagnoses
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -846,8 +846,6 @@ def mkb10(request):
 
 def mkb10_dict(request):
     q = request.GET["query"].strip()
-    short = request.GET.get("short") == '1'
-
     if not q:
         return JsonResponse({"data": []})
 
@@ -856,32 +854,27 @@ def mkb10_dict(request):
 
     d = request.GET.get("dictionary", "mkb10.4")
     parts = q.split(' ', 1)
-    code = parts[0].upper()
+    code = "-1"
+    diag_title = "-1"
     if len(parts) == 2:
-        title = parts[1]
+        if re.search(r'^[a-zA-Z0-9]', parts[0]):
+            code = parts[0]
+            diag_title = f"{parts[1]}"
+        else:
+            diag_title = f"{parts[0]} {parts[1]}"
     else:
-        title = None
+        if re.search(r'^[a-zA-Z0-9]', parts[0]):
+            code = parts[0]
+        else:
+            diag_title = parts[0]
 
-    dq = directions.Diagnoses.objects.filter(d_type=d, hide=False)
-
-    if title:
-        dq = dq.filter(code__iexact=code, title__istartswith=title)
-    else:
-        dq = dq.filter(code__istartswith=code)
-
-    if short:
-        dq = dq.order_by('code').distinct('code')[:11]
-    elif title:
-        dq = dq.order_by("title").distinct("title", "code")
-    else:
-        dq = dq.order_by("code").distinct("title", "code")[:50]
+    if diag_title != "-1":
+        diag_title = f"{diag_title}."
+    diag_query = get_diagnoses(d_type=d, diag_title=f"{diag_title}", diag_mkb=code)
 
     data = []
-    for d in dq:
+    for d in diag_query:
         data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
-
-    if not data or (short and len(data) < 11 and code not in [x["code"] for x in data]):
-        data.append({"code": code, "title": title or "", "id": code})
 
     return JsonResponse({"data": data})
 

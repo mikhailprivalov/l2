@@ -1096,7 +1096,6 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     tbl = about_diagnos("(болезнь или состояние, непосредственно приведшее к смерти)")
     text.append(Spacer(1, 0.1 * mm))
     text.append(tbl)
-
     tbl = diagnos_tbl({"para": "", "item": "б)", "result": params["б"]["rows"][0]})
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
@@ -1112,7 +1111,6 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     tbl = about_diagnos("(первоначальная причина смерти указывается последней)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
-
     tbl = diagnos_tbl({"para": "", "item": "г)", "result": params["г"]["rows"][0]})
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
@@ -1239,19 +1237,16 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
 
 
 def diagnos_tbl(data):
-    description_diag = data["result"][2].split(' ')
+    description_diag = data["result"][2]
+    if len(description_diag) > 1:
+        description_diag_json = json.loads(description_diag)
     decription = ''
     mkb10 = {0: "", 1: "", 2: "", 3: "", 4: ""}
     period = ""
     top_padd = 0 * mm
     if len(description_diag) > 1:
-        decription = deepcopy(description_diag)
-        mkb10_data = list(decription.pop(0))
-        count = 0
-        for i in mkb10_data:
-            mkb10[count] = i
-            count += 1
-        decription = ' '.join(decription)
+        decription = description_diag_json["title"]
+        mkb10 = list(description_diag_json["code"])
         if len(list(decription)) > 72:
             top_padd = -2 * mm
         period = f'{data["result"][0]} {data["result"][1]}'
@@ -1406,7 +1401,7 @@ def who_set_death(text, params):
 
     opinion = gen_opinion(['20. Причины смерти установлены:', only_doc_death, '1', doc_work, '2', paramedic, '3'])
 
-    col_width = (49 * mm, 54 * mm, 6 * mm, 27 * mm, 6 * mm, 40 * mm, 6 * mm,)
+    col_width = (49 * mm, 58 * mm, 6 * mm, 27 * mm, 6 * mm, 40 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1482,7 +1477,7 @@ def doctor_fio(text, params):
         write_medical_dicument = f"{op_bold_tag}<u>{write_medical_dicument}</u>{cl_bold_tag}"
     opinion = gen_opinion(['удостоверяю, что на основании:', see_body, '1', write_medical_dicument, '2'])
 
-    col_width = (53 * mm, 24 * mm, 6 * mm, 58 * mm, 6 * mm,)
+    col_width = (53 * mm, 26 * mm, 6 * mm, 58 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
