@@ -7,7 +7,7 @@ from django.core.cache import cache
 
 from appconf.manager import SettingManager
 from rmis_integration.client import get_md5
-
+from laboratory.settings import FIAS_PROXY
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def suggest(query, resource='address', count=5, detalized=False):
         url = BASE_URL.format(resource)
         headers = {"Authorization": "Token {}".format(k), "Content-Type": "application/json"}
         data = {"query": query, "count": count, "locations_boost": [{"kladr_id": SettingManager.get("dadata_kladr_prior_city", default='38', default_type='s')}]}
-        result = requests.post(url, data=json.dumps(data), headers=headers).json()
+        result = requests.post(url, data=json.dumps(data), headers=headers, proxies=FIAS_PROXY).json()
         result = result.get('suggestions', [])
         if not detalized:
             result = [x.get('value', '') for x in result]
@@ -46,7 +46,7 @@ def kladrapi_request(data: dict):
         result = cache.get(key)
 
         if not result:
-            result = requests.get(kladrapi_url, params=data).json()
+            result = requests.get(kladrapi_url, params=data, proxies=FIAS_PROXY).json()
             if not result or not isinstance(result, dict) or 'result' not in result:
                 return {}
             cache.set(key, pickle.dumps(result, protocol=4), 24 * 3600)

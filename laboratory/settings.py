@@ -214,6 +214,7 @@ DOC_CALL_SYNC_WAIT_LONG_TIME_SECS = 300
 RATELIMIT_VIEW = 'mainmenu.views.ratelimited'
 
 RMIS_PROXY = None
+FIAS_PROXY = None
 AFTER_DATE = None
 AFTER_DATE_HOLTER = None
 
