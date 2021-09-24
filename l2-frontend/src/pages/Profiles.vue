@@ -1,24 +1,27 @@
 <template>
   <div class="root">
     <div class="left">
-      <treeselect :multiple="false" :disable-branch-nodes="true"
-                  :options="can_edit_any_organization ? hospitals : own_hospital"
-                  placeholder="Больница не выбрана" v-model="selected_hospital"
-                  :append-to-body="true"
-                  :disabled="open_pk !== -2"
-                  :clearable="false" />
-      <input class="form-control" placeholder="Фильтр" v-model="filter" style="margin-top: 5px;"/>
+      <treeselect
+        :multiple="false"
+        :disable-branch-nodes="true"
+        :options="can_edit_any_organization ? hospitals : own_hospital"
+        placeholder="Больница не выбрана"
+        v-model="selected_hospital"
+        :append-to-body="true"
+        :disabled="open_pk !== -2"
+        :clearable="false"
+      />
+      <input class="form-control" placeholder="Фильтр" v-model="filter" style="margin-top: 5px;" />
       <div class="left-wrapper">
         <ul>
           <li v-for="d in departmentFiltered" :key="d.pk">
-            <strong>{{d.title}}</strong>
+            <strong>{{ d.title }}</strong>
             <ul>
-              <li :class="{selected: x.pk === open_pk}" v-for="x in d.users" :key="x.pk">
-                <a @click.prevent="open(x.pk)" class="user-link" href="#">{{x.username}} – {{x.fio}}</a>
+              <li :class="{ selected: x.pk === open_pk }" v-for="x in d.users" :key="x.pk">
+                <a @click.prevent="open(x.pk)" class="user-link" href="#">{{ x.username }} – {{ x.fio }}</a>
               </li>
-              <li :class="{selected: open_pk === -1 && user.department === d.pk}">
-                <a @click.prevent="open(-1, d.pk)" href="#">
-                  <i class="fa fa-plus"></i> добавить пользователя</a>
+              <li :class="{ selected: open_pk === -1 && user.department === d.pk }">
+                <a @click.prevent="open(-1, d.pk)" href="#"> <i class="fa fa-plus"></i> добавить пользователя</a>
               </li>
             </ul>
           </li>
@@ -31,24 +34,31 @@
           <div class="row">
             <div class="col-xs-6" style="padding-right: 0">
               <div class="input-group">
-                <input class="form-control wbr" type="text" v-model="user.family" placeholder="Фамилия"/>
+                <input class="form-control wbr" type="text" v-model="user.family" placeholder="Фамилия" />
                 <span class="input-group-btn" style="width:0"></span>
-                <input class="form-control wbr" type="text" v-model="user.name" placeholder="Имя"/>
+                <input class="form-control wbr" type="text" v-model="user.name" placeholder="Имя" />
                 <span class="input-group-btn" style="width:0"></span>
-                <input class="form-control" style="margin-right: -1px;" type="text" v-model="user.patronymic"
-                       placeholder="Отчество"/>
+                <input
+                  class="form-control"
+                  style="margin-right: -1px;"
+                  type="text"
+                  v-model="user.patronymic"
+                  placeholder="Отчество"
+                />
               </div>
             </div>
             <div class="col-xs-6" style="padding-left: 0">
               <div class="input-group" style="margin-right: -1px;">
                 <span class="input-group-addon">Имя пользователя</span>
-                <input class="form-control" type="text" v-model="user.username"/>
+                <input class="form-control" type="text" v-model="user.username" />
                 <div class="input-group-btn">
-                  <button @click="gen_username"
-                          class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
-                          title="Генерация имени пользователя на основе ФИО"
-                          type="button"
-                          v-tippy="{ placement : 'bottom', arrow: true }">
+                  <button
+                    @click="gen_username"
+                    class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
+                    title="Генерация имени пользователя на основе ФИО"
+                    type="button"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
+                  >
                     <i class="fa fa-dot-circle-o"></i>
                   </button>
                 </div>
@@ -59,28 +69,35 @@
             <div class="col-xs-6" style="padding-right: 0">
               <div class="input-group">
                 <span class="input-group-addon">Пароль</span>
-                <input :placeholder="'Минимальная длина пароля – 6 символов. '
-                   + (open_pk === -1 ? '' : 'Для смены пароля введите новый')"
-                       class="form-control"
-                       type="text"
-                       v-model="user.password"/>
+                <input
+                  :placeholder="
+                    'Минимальная длина пароля – 6 символов. ' + (open_pk === -1 ? '' : 'Для смены пароля введите новый')
+                  "
+                  class="form-control"
+                  type="text"
+                  v-model="user.password"
+                />
                 <div class="input-group-btn">
-                  <button @click="gen_passwd"
-                          class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
-                          title="Генерация пароля"
-                          type="button"
-                          v-tippy="{ placement : 'bottom', arrow: true }">
+                  <button
+                    @click="gen_passwd"
+                    class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
+                    title="Генерация пароля"
+                    type="button"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
+                  >
                     <i class="fa fa-dot-circle-o"></i>
                   </button>
                 </div>
                 <div class="input-group-btn" v-if="user.doc_pk > -1">
-                  <a :href="`/barcodes/login?pk=${user.doc_pk}`"
-                     target="_blank"
-                     class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
-                     title="Штрих-код для входа"
-                     type="button"
-                     style="border-radius: 0"
-                     v-tippy="{ placement : 'bottom', arrow: true }">
+                  <a
+                    :href="`/barcodes/login?pk=${user.doc_pk}`"
+                    target="_blank"
+                    class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
+                    title="Штрих-код для входа"
+                    type="button"
+                    style="border-radius: 0"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
+                  >
                     <i class="fa fa-barcode"></i>
                   </a>
                 </div>
@@ -91,7 +108,7 @@
                 <span class="input-group-addon">Подразделение</span>
                 <select class="form-control" v-model="user.department">
                   <option :value="d.pk" v-for="d in departments" :key="d.pk">
-                    {{d.title}}
+                    {{ d.title }}
                   </option>
                 </select>
               </div>
@@ -103,19 +120,19 @@
             <div class="col-xs-4" style="padding-right: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС логин</span>
-                <input class="form-control" v-model="user.rmis_login"/>
+                <input class="form-control" v-model="user.rmis_login" />
               </div>
             </div>
             <div class="col-xs-4" style="padding-left: 0; padding-right: 0;">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС пароль</span>
-                <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password"/>
+                <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password" />
               </div>
             </div>
             <div class="col-xs-4" style="padding-left: 0;">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">ID ресурса РМИС</span>
-                <input class="form-control" v-model="user.rmis_resource_id"/>
+                <input class="form-control" v-model="user.rmis_resource_id" />
               </div>
             </div>
           </div>
@@ -123,19 +140,19 @@
             <div class="col-xs-4" style="padding-right: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС location</span>
-                <input class="form-control" v-model="user.rmis_location"/>
+                <input class="form-control" v-model="user.rmis_location" />
               </div>
             </div>
             <div class="col-xs-4" style="padding-left: 0; padding-right: 0;">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС employee</span>
-                <input class="form-control" v-model="user.rmis_employee_id"/>
+                <input class="form-control" v-model="user.rmis_employee_id" />
               </div>
             </div>
             <div class="col-xs-4" style="padding-left: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС service</span>
-                <input class="form-control" v-model="user.rmis_service_id_time_table"/>
+                <input class="form-control" v-model="user.rmis_service_id_time_table" />
               </div>
             </div>
           </div>
@@ -143,7 +160,7 @@
             <div class="col-xs-6" style="padding-right: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">Код врача</span>
-                <input class="form-control" v-model="user.personal_code"/>
+                <input class="form-control" v-model="user.personal_code" />
               </div>
             </div>
             <div class="col-xs-6" style="padding-left: 0">
@@ -151,7 +168,30 @@
                 <span class="input-group-addon">Специальность</span>
                 <select class="form-control" v-model="user.speciality">
                   <option :value="d.pk" v-for="d in specialities" :key="d.pk">
-                    {{d.title}}
+                    {{ d.title }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-6" style="padding-right: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">СНИЛС</span>
+                <input
+                  class="form-control"
+                  v-model.trim="user.snils"
+                  :class="!snilsValid && 'has-error-field'"
+                  placeholder="СНИЛС в формате 12345678912"
+                />
+              </div>
+            </div>
+            <div class="col-xs-6" style="padding-left: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">Должность</span>
+                <select class="form-control" v-model="user.position">
+                  <option :value="d.pk" v-for="d in positions" :key="d.pk">
+                    {{ d.title }}
                   </option>
                 </select>
               </div>
@@ -165,27 +205,22 @@
           </div>
           <div class="more-title">Запрет на создание направлений с назначениями:</div>
           <div class="row" style="margin-right: 0">
-            <div class="col-xs-6"
-                 style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
-              <researches-picker :hidetemplates="true"
-                                 :just_search="true" v-model="user.restricted_to_direct"/>
+            <div class="col-xs-6" style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
+              <researches-picker :hidetemplates="true" :just_search="true" v-model="user.restricted_to_direct" />
             </div>
             <div class="col-xs-6" style="height: 300px;padding-left: 0;padding-right: 0;">
-              <selected-researches :researches="user.restricted_to_direct" :simple="true"/>
+              <selected-researches :researches="user.restricted_to_direct" :simple="true" />
             </div>
           </div>
           <div class="more-title" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">
             Услуги, оказываемые пользователем:
           </div>
           <div class="row" style="margin-right: 0" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">
-            <div class="col-xs-6"
-                 style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
-              <researches-picker :hidetemplates="true"
-                                 :filter_types="[2]"
-                                 :just_search="true" v-model="user.users_services"/>
+            <div class="col-xs-6" style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
+              <researches-picker :hidetemplates="true" :filter_types="[2]" :just_search="true" v-model="user.users_services" />
             </div>
             <div class="col-xs-6" style="height: 300px;padding-left: 0;padding-right: 0;">
-              <selected-researches :researches="user.users_services" :simple="true"/>
+              <selected-researches :researches="user.users_services" :simple="true" />
             </div>
           </div>
         </div>
@@ -207,27 +242,57 @@ import usersPoint from '../api/user-point';
 import * as actions from '../store/action-types';
 import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '../ui-cards/SelectedResearches.vue';
+import { validateSnils } from '@/utils';
 
 const toTranslit = function (text) {
-  return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,
-    (all, ch, space, words) => {
-      if (space || words) {
-        return space ? '-' : '';
-      }
-      const code = ch.charCodeAt(0);
-      let index;
-      if (code === 1025 || code === 1105) {
-        index = 0;
-      } else {
-        index = code > 1071 ? code - 1071 : code - 1039;
-      }
-      const t = ['yo', 'a', 'b', 'v', 'g', 'd', 'e', 'zh',
-        'z', 'i', 'y', 'k', 'l', 'm', 'n', 'o', 'p',
-        'r', 's', 't', 'u', 'f', 'h', 'c', 'ch', 'sh',
-        'shch', '', 'y', '', 'e', 'yu', 'ya',
-      ];
-      return t[index];
-    });
+  return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi, (all, ch, space, words) => {
+    if (space || words) {
+      return space ? '-' : '';
+    }
+    const code = ch.charCodeAt(0);
+    let index;
+    if (code === 1025 || code === 1105) {
+      index = 0;
+    } else {
+      index = code > 1071 ? code - 1071 : code - 1039;
+    }
+    const t = [
+      'yo',
+      'a',
+      'b',
+      'v',
+      'g',
+      'd',
+      'e',
+      'zh',
+      'z',
+      'i',
+      'y',
+      'k',
+      'l',
+      'm',
+      'n',
+      'o',
+      'p',
+      'r',
+      's',
+      't',
+      'u',
+      'f',
+      'h',
+      'c',
+      'ch',
+      'sh',
+      'shch',
+      '',
+      'y',
+      '',
+      'e',
+      'yu',
+      'ya',
+    ];
+    return t[index];
+  });
 };
 
 function str_rand(l = 8, v = 1) {
@@ -249,6 +314,7 @@ export default {
       filter: '',
       departments: [],
       specialities: [],
+      positions: [],
       user: {
         username: '',
         rmis_location: '',
@@ -269,24 +335,39 @@ export default {
   },
   watch: {
     'user.family': function () {
-      this.user.family = this.user.family.replace(/\s\s+/g, ' ').split(' ')
-        .map((s) => s.split('-').map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+      this.user.family = this.user.family
+        .replace(/\s\s+/g, ' ')
+        .split(' ')
+        .map(s => s
+          .split('-')
+          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .join('-'))
         .join(' ');
       if (this.open_pk === -1) {
         this.deb_gu();
       }
     },
     'user.name': function () {
-      this.user.name = this.user.name.replace(/\s\s+/g, ' ').split(' ')
-        .map((s) => s.split('-').map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+      this.user.name = this.user.name
+        .replace(/\s\s+/g, ' ')
+        .split(' ')
+        .map(s => s
+          .split('-')
+          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .join('-'))
         .join(' ');
       if (this.open_pk === -1) {
         this.deb_gu();
       }
     },
     'user.patronymic': function () {
-      this.user.patronymic = this.user.patronymic.replace(/\s\s+/g, ' ').split(' ')
-        .map((s) => s.split('-').map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+      this.user.patronymic = this.user.patronymic
+        .replace(/\s\s+/g, ' ')
+        .split(' ')
+        .map(s => s
+          .split('-')
+          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .join('-'))
         .join(' ');
       if (this.open_pk === -1) {
         this.deb_gu();
@@ -335,9 +416,10 @@ export default {
       if (!prev_clr) {
         this.departments = [];
       }
-      const { departments, specialities } = await usersPoint.loadUsers(this, 'selected_hospital');
+      const { departments, specialities, positions } = await usersPoint.loadUsers(this, 'selected_hospital');
       this.departments = departments;
       this.specialities = specialities;
+      this.positions = positions;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async open(pk, dep = null) {
@@ -363,8 +445,11 @@ export default {
         hospital_pk: this.selected_hospital,
       });
       if (ok) {
-        this.$root.$emit('msg', 'ok',
-          `Пользователь сохранён\n${this.user.family} ${this.user.name} ${this.user.patronymic} – ${this.user.username}`);
+        this.$root.$emit(
+          'msg',
+          'ok',
+          `Пользователь сохранён\n${this.user.family} ${this.user.name} ${this.user.patronymic} – ${this.user.username}`,
+        );
         this.open_pk = npk;
         this.load_users(true);
       } else {
@@ -390,23 +475,28 @@ export default {
     },
   },
   computed: {
+    snilsValid() {
+      return (
+        !this.user.snils || (!this.user.snils.includes('-') && !this.user.snils.includes(' ') && validateSnils(this.user.snils))
+      );
+    },
     departmentFiltered() {
       const r = [];
       for (const x of this.departments) {
         r.push({
           ...x,
-          users: x.users.filter((y) => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
-              || y.username.toLowerCase().startsWith(this.filter.toLowerCase())),
+          users: x.users.filter(
+            y => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
+              || y.username.toLowerCase().startsWith(this.filter.toLowerCase()),
+          ),
         });
       }
       return r.filter(d => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
     },
     valid() {
-      const p = (
-        (this.open_pk > -1 && (this.user.password.length === 0 || this.user.password.length >= 3))
-        || (this.open_pk === -1 && this.user.password.length >= 3)
-      );
-      return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '';
+      const p = (this.open_pk > -1 && (this.user.password.length === 0 || this.user.password.length >= 3))
+        || (this.open_pk === -1 && this.user.password.length >= 3);
+      return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '' && this.snilsValid;
     },
     ...mapGetters({
       modules: 'modules',
@@ -427,158 +517,161 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .root {
-    height: calc(100% - 36px);
-    display: flex;
+.root {
+  height: calc(100% - 36px);
+  display: flex;
+}
+
+.left,
+.right {
+  height: 100%;
+}
+
+.left {
+  background: #fff;
+  border-right: 1px solid #646d78;
+  padding-top: 5px;
+  padding-left: 2px;
+  padding-right: 5px;
+  width: 320px;
+
+  input {
+    border-radius: 0;
+    width: 100%;
+  }
+}
+
+.left-wrapper {
+  height: calc(100% - 73px);
+  padding-top: 5px;
+  overflow-y: auto;
+}
+
+.right {
+  width: calc(100% - 321px);
+  overflow: hidden;
+  position: relative;
+
+  .input-group-addon,
+  input,
+  select {
+    border-radius: 0;
+    border-top: none;
+    border-right: none;
+    border-left: none;
   }
 
-  .left, .right {
-    height: 100%;
+  .input-group-addon {
+    width: 155px;
+    text-align: left;
+  }
+}
+
+.right-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 34px;
+}
+
+.right-bottom {
+  position: absolute;
+  background-color: #eaeaea;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  display: flex;
+
+  button {
+    border-radius: 0;
+  }
+}
+
+.user-link {
+  color: #000;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.main-data {
+  .input-group {
+    width: 100%;
   }
 
-  .left {
-    background: #fff;
-    border-right: 1px solid #646d78;
-    padding-top: 5px;
-    padding-left: 2px;
-    padding-right: 5px;
-    width: 320px;
-
-    input {
-      border-radius: 0;
-      width: 100%;
-    }
+  button {
+    border-radius: 0;
+    width: 50px;
+    margin-right: -1px;
   }
+}
 
-  .left-wrapper {
-    height: calc(100% - 73px);
-    padding-top: 5px;
-    overflow-y: auto;
-  }
+ul {
+  padding-left: 20px;
+}
 
-  .right {
-    width: calc(100% - 321px);
-    overflow: hidden;
-    position: relative;
+li > ul > li {
+  list-style: none;
 
-    .input-group-addon, input, select {
-      border-radius: 0;
-      border-top: none;
-      border-right: none;
-      border-left: none;
-    }
-
-    .input-group-addon {
-      width: 155px;
-      text-align: left;
-    }
-  }
-
-  .right-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 34px;
-  }
-
-  .right-bottom {
-    position: absolute;
-    background-color: #eaeaea;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 34px;
-    display: flex;
-
-    button {
-      border-radius: 0;
-    }
-  }
-
-  .user-link {
+  &::before {
     color: #000;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
+    content: '\2022';
+    font-size: 18px;
+    line-height: 12px;
+    padding-right: 8px;
+    position: relative;
+    top: 0;
   }
 
-  .main-data {
-    .input-group {
-      width: 100%;
-    }
-
-    button {
-      border-radius: 0;
-      width: 50px;
-      margin-right: -1px;
-    }
+  &.selected::before {
+    color: #26816a;
+    text-shadow: 0 0 4px rgba(#26816a, 0.9);
   }
+}
 
-  ul {
-    padding-left: 20px;
-  }
+li.selected {
+  a {
+    font-weight: bold;
 
-  li > ul > li {
-    list-style: none;
+    &.user-link {
+      text-shadow: 0 0 4px rgba(#26816a, 0.5);
+    }
 
     &::before {
-      color: #000;
-      content: "\2022";
-      font-size: 18px;
-      line-height: 12px;
-      padding-right: 8px;
-      position: relative;
-      top: 0;
-    }
-
-    &.selected::before {
+      content: '[';
       color: #26816a;
-      text-shadow: 0 0 4px rgba(#26816a, .9);
-    }
-  }
-
-  li.selected {
-    a {
-      font-weight: bold;
-
-      &.user-link {
-        text-shadow: 0 0 4px rgba(#26816a, .5);
-      }
-
-      &::before {
-        content: "[";
-        color: #26816a;
-      }
-
-      &::after {
-        content: "]";
-        color: #26816a;
-      }
-    }
-  }
-
-  .more {
-    &-data {
-      height: calc(100% - 68px);
-      overflow-y: auto;
-      overflow-x: hidden;
     }
 
-    &-title {
-      background: #eaeaea;
-      padding: 5px;
-      width: 100%;
+    &::after {
+      content: ']';
+      color: #26816a;
     }
   }
+}
 
-  .rinp {
-    width: 30%;
+.more {
+  &-data {
+    height: calc(100% - 68px);
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
-  .form-control.wbr {
-    border-right: 1px solid #646d78;
+  &-title {
+    background: #eaeaea;
+    padding: 5px;
+    width: 100%;
   }
+}
+
+.rinp {
+  width: 30%;
+}
+
+.form-control.wbr {
+  border-right: 1px solid #646d78;
+}
 </style>

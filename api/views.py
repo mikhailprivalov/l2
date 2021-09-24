@@ -1153,12 +1153,21 @@ def users_view(request):
                 otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
             data.append(otd)
 
-    spec = users.Speciality.objects.all().order_by("title")
-    spec_data = []
+    spec = users.Speciality.objects.filter(hide=False).order_by("title")
+    spec_data = [
+        {"pk": -1, "title": "Не выбрано"}
+    ]
     for s in spec:
         spec_data.append({"pk": s.pk, "title": s.title})
 
-    return JsonResponse({"departments": data, "specialities": spec_data})
+    positions_qs = users.Position.objects.filter(hide=False).order_by("title")
+    positions = [
+        {"pk": -1, "title": "Не выбрано"}
+    ]
+    for s in positions_qs:
+        positions.append({"pk": s.pk, "title": s.title})
+
+    return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions})
 
 
 @login_required
@@ -1186,9 +1195,11 @@ def user_view(request):
             "doc_code": -1,
             "rmis_employee_id": '',
             "rmis_service_id_time_table": '',
+            "snils": '',
+            "position": -1,
         }
     else:
-        doc = users.DoctorProfile.objects.get(pk=pk)
+        doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
         fio_parts = doc.get_fio_parts()
         data = {
             "family": fio_parts[0],
@@ -1207,9 +1218,12 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
-            "speciality": doc.specialities_id,
+            "speciality": doc.specialities_id or -1,
             "rmis_employee_id": doc.rmis_employee_id,
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
+            "rmis_service_id_time_table": doc.rmis_service_id_time_table,
+            "snils": doc.snils,
+            "position": doc.position_id or -1,
         }
 
     return JsonResponse({"user": data})
@@ -1231,6 +1245,10 @@ def user_save_view(request):
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
+    snils = ud.get("snils").strip() or ''
+    position = ud.get("position", -1)
+    if position == -1:
+        position = None
     user_hospital_pk = request.user.doctorprofile.get_hospital_id()
     hospital_pk = request_data.get('hospital_pk', user_hospital_pk)
 
@@ -1282,8 +1300,11 @@ def user_save_view(request):
             for r in ud["users_services"]:
                 doc.users_services.add(DResearches.objects.get(pk=r))
 
+            spec = ud.get('speciality', None)
+            if spec == -1:
+                spec = None
             doc.podrazdeleniye_id = ud['department']
-            doc.specialities_id = ud.get('speciality', None)
+            doc.specialities_id = spec
             doc.family = ud["family"]
             doc.name = ud["name"]
             doc.patronymic = ud["patronymic"]
@@ -1294,6 +1315,8 @@ def user_save_view(request):
             doc.personal_code = personal_code
             doc.rmis_resource_id = rmis_resource_id
             doc.hospital_id = hospital_pk
+            doc.snils = snils
+            doc.position_id = position
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
