@@ -1221,7 +1221,6 @@ def user_view(request):
             "speciality": doc.specialities_id or -1,
             "rmis_employee_id": doc.rmis_employee_id,
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
-            "rmis_service_id_time_table": doc.rmis_service_id_time_table,
             "snils": doc.snils,
             "position": doc.position_id or -1,
         }
