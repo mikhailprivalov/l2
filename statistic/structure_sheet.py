@@ -1,3 +1,4 @@
+import json
 from collections import OrderedDict
 
 import openpyxl
@@ -632,10 +633,31 @@ def statistic_research_death_data(ws1, researches):
     r = 4
 
     for i in researches:
+
+        try:
+            type_doc_death = i["Вид медицинского свидетельства о смерти"]["title"]
+        except:
+            type_doc_death = i["Вид медицинского свидетельства о смерти"]
+
+        diag_details = None
+        try:
+            i["а) Болезнь или состояние, непосредственно приведшее к смерти"].keys()
+            diag_data = i["а) Болезнь или состояние, непосредственно приведшее к смерти"]
+        except:
+            diag_data = json.loads(i["а) Болезнь или состояние, непосредственно приведшее к смерти"])
+        try:
+            diag_details = json.loads(diag_data["rows"][0][2])
+            is_dict = True
+        except:
+            is_dict = False
+        if not is_dict:
+            continue
+
         r += 1
         ws1.cell(row=r, column=1).value = i["Серия"]
         ws1.cell(row=r, column=2).value = i["Номер"]
-        ws1.cell(row=r, column=3).value = i["Вид медицинского свидетельства о смерти"]
+
+        ws1.cell(row=r, column=3).value = type_doc_death
         ws1.cell(row=r, column=4).value = "ГИМДКБ"
         ws1.cell(row=r, column=5).value = "Прикрепление пациента"
         ws1.cell(row=r, column=6).value = "Участок"
@@ -644,9 +666,8 @@ def statistic_research_death_data(ws1, researches):
         ws1.cell(row=r, column=9).value = "ФИО умершего пациента"
         ws1.cell(row=r, column=10).value = "возраст"
         ws1.cell(row=r, column=11).value = "пол"
-        ws1.cell(row=r, column=12).value = i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][2]
-        ws1.cell(row=r, column=13).value = f'{i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][0]} ' \
-                                           f'{i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][1]}'
+        ws1.cell(row=r, column=12).value = diag_details["code"]
+        ws1.cell(row=r, column=13).value = f'{diag_details["code"]} {diag_details["title"]} '
 
         ws1.cell(row=r, column=14).value = ""
 
