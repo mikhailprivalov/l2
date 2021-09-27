@@ -7,6 +7,9 @@ from openpyxl.utils.cell import get_column_letter
 
 from directions.models import IstochnikiFinansirovaniya
 from doctor_call.models import DoctorCall
+from utils.dates import normalize_dash_date
+from dateutil.parser import parse as du_parse
+from dateutil.relativedelta import relativedelta
 
 month_dict = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август', 9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
 
@@ -658,18 +661,21 @@ def statistic_research_death_data(ws1, researches):
         ws1.cell(row=r, column=2).value = i["Номер"]
 
         ws1.cell(row=r, column=3).value = type_doc_death
-        ws1.cell(row=r, column=4).value = "ГИМДКБ"
+        ws1.cell(row=r, column=4).value = i["hosp_title"]
         ws1.cell(row=r, column=5).value = "Прикрепление пациента"
         ws1.cell(row=r, column=6).value = "Участок"
-        ws1.cell(row=r, column=7).value = i["Дата смерти"]
+        ws1.cell(row=r, column=7).value = normalize_dash_date(i["Дата смерти"])
         ws1.cell(row=r, column=8).value = i["Дата рождения"]
-        ws1.cell(row=r, column=9).value = "ФИО умершего пациента"
-        ws1.cell(row=r, column=10).value = "возраст"
-        ws1.cell(row=r, column=11).value = "пол"
-        ws1.cell(row=r, column=12).value = diag_details["code"]
-        ws1.cell(row=r, column=13).value = f'{diag_details["code"]} {diag_details["title"]} '
+        ws1.cell(row=r, column=9).value = i["fio_patient"]
+        ws1.cell(row=r, column=10).value = i["sex"]
+        d1 = du_parse(i["Дата смерти"])
+        d2 = du_parse(i["Дата рождения"])
+        delta = relativedelta(d1, d2)
+        ws1.cell(row=r, column=11).value = delta.years
+        ws1.cell(row=r, column=12).value = f'{diag_details["code"]} {diag_details["title"]} '
+        ws1.cell(row=r, column=13).value = ""
 
-        ws1.cell(row=r, column=14).value = ""
+        ws1.cell(row=r, column=14).value = diag_details["code"]
 
         ws1.cell(row=r, column=15).value = ""
         ws1.cell(row=r, column=16).value = ""

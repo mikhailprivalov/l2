@@ -268,7 +268,11 @@ def statistics_death_research(research_id: object, d_s: object, d_e: object) -> 
                 directions_paraclinicresult.value_json::json as json_value,
                 value_json::jsonb #>> '{rows, 0, 2}' as diag,
                 concat(value_json::jsonb #>> '{title}', value_json::jsonb #>> '{rows, 0, 2}') as result,
-                directions_issledovaniya.napravleniye_id
+                directions_issledovaniya.napravleniye_id,
+                directions_napravleniya.client_id,
+                concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as fio_patient,
+                clients_individual.sex,
+                hospitals_hospitals.title as hosp_title
                 FROM public.directions_paraclinicresult
                 LEFT JOIN directions_issledovaniya
                 ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
@@ -276,6 +280,9 @@ def statistics_death_research(research_id: object, d_s: object, d_e: object) -> 
                 ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
                 LEFT JOIN directions_napravleniya
                 ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
+                LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
+                LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
                 where issledovaniye_id in (
                 SELECT id FROM public.directions_issledovaniya
                 where research_id = %(death_research_id)s and time_confirmation is not Null)
