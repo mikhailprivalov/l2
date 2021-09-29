@@ -683,9 +683,9 @@ def sql_pass_pap_fraction_result_value(start_time_confirm, end_time_confirm, lis
                 directions_result.fraction_id in %(fraction_id)s
                 AND 
                     CASE WHEN %(count_param)s > 1 THEN
-                      directions_result.value ILIKE %(value_result1)s or  directions_result.value ILIKE %(value_result2)s
+                      directions_result.value ~ %(value_result1)s or directions_result.value ~ %(value_result2)s
                     ELSE
-                      directions_result.value ILIKE %(value_result1)s
+                      directions_result.value ~ %(value_result1)s
                     END
                 ORDER BY directions_napravleniya.client_id, 
                 directions_issledovaniya.research_id, 
