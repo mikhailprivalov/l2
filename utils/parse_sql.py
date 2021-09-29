@@ -1,7 +1,5 @@
 from copy import deepcopy
 
-from hospitals.models import Hospitals
-
 
 def death_form_result_parse(data):
     tmp_data = {}
