@@ -1,6 +1,6 @@
 import uuid
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import models
 
 from appconf.manager import SettingManager
@@ -206,3 +206,16 @@ class AssignmentResearches(models.Model):
     class Meta:
         verbose_name = 'Исследование для шаблона назначений'
         verbose_name_plural = 'Исследования для шаблонов назначений'
+
+
+class AvailableResearchByGroup(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    research = models.ForeignKey('directory.Researches', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.group) + "  | " + str(self.research)
+
+    class Meta:
+        unique_together = ('group', 'research')
+        verbose_name = 'Услуга для групп'
+        verbose_name_plural = 'Услуги для групп'
