@@ -12,6 +12,6 @@ class Command(BaseCommand):
         r = Researches.objects.get(pk=research_pk)
         us = users.DoctorProfile.objects.all()
 
-        for u in us:
-            u.restricted_to_direct.add(r)
-            u.save()
+        for doc in us:
+            doc.restricted_to_direct.add(r)
+            doc.save()
