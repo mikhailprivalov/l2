@@ -110,7 +110,7 @@ def get_plan_operations_by_params(request):
 
 @login_required
 def get_departments_can_operate(request):
-    users = users_by_group(['Оперирует'])
+    users = users_by_group(['Оперирует'], request.user.doctorprofile.get_hospital_id())
 
     departments = {}
 

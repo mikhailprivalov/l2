@@ -14,7 +14,7 @@ import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
-from django.db import connections
+from django.db import connections, transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
@@ -29,7 +29,7 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
 from context_processors.utils import menu
-from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
+from directory.models import Fractions, ParaclinicInputField, ParaclinicUserInputTemplateField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
 from hospitals.models import Hospitals
@@ -44,7 +44,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all
+from .sql_func import users_by_group, users_all, get_diagnoses
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -581,12 +581,7 @@ def current_user_info(request):
             ret["groups"] = list(user.groups.values_list('name', flat=True))
             if user.is_superuser:
                 ret["groups"].append("Admin")
-            ret["eds_token"] = doctorprofile.get_eds_token()
-            ret["eds_allowed_sign"] = []
-            if 'Врач консультаций' in ret["groups"] or 'Заведующий отделением' in ret["groups"]:
-                ret["eds_allowed_sign"].append('Врач')
-            if 'Заведующий отделением' in ret["groups"] or 'Admin' in ret["groups"]:
-                ret["eds_allowed_sign"].append('Заведующий отделением')
+            ret["eds_allowed_sign"] = doctorprofile.get_eds_allowed_sign() if ret['modules'].get('l2_eds') else []
 
             try:
                 connections.close_all()
@@ -844,8 +839,43 @@ def get_reset_time_vars(n):
 def mkb10(request):
     kw = request.GET.get("keyword", "").split(' ')[0]
     data = []
-    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw).order_by("code").distinct()[:11]:
+    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw, hide=False).order_by("code").distinct()[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
+    return JsonResponse({"data": data})
+
+
+def mkb10_dict(request):
+    q = request.GET["query"].strip()
+    if not q:
+        return JsonResponse({"data": []})
+
+    if q == '-':
+        return JsonResponse({"data": [{"code": '-', "title": '', "id": '-'}]})
+
+    d = request.GET.get("dictionary", "mkb10.4")
+    parts = q.split(' ', 1)
+    code = "-1"
+    diag_title = "-1"
+    if len(parts) == 2:
+        if re.search(r'^[a-zA-Z0-9]', parts[0]):
+            code = parts[0]
+            diag_title = f"{parts[1]}"
+        else:
+            diag_title = f"{parts[0]} {parts[1]}"
+    else:
+        if re.search(r'^[a-zA-Z0-9]', parts[0]):
+            code = parts[0]
+        else:
+            diag_title = parts[0]
+
+    if diag_title != "-1":
+        diag_title = f"{diag_title}."
+    diag_query = get_diagnoses(d_type=d, diag_title=f"{diag_title}", diag_mkb=code)
+
+    data = []
+    for d in diag_query:
+        data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
+
     return JsonResponse({"data": data})
 
 
@@ -872,7 +902,7 @@ def key_value(request):
 def vich_code(request):
     kw = request.GET.get("keyword", "")
     data = []
-    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="vc").order_by("code")[:11]:
+    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="vc", hide=False).order_by("code")[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": {"-": ""}.get(d.title, d.title)})
     return JsonResponse({"data": data})
 
@@ -896,10 +926,13 @@ def rmis_confirm_list(request):
 @csrf_exempt
 def flg(request):
     ok = False
-    dpk = request.POST["directionId"]
+    dpk = int(request.POST["directionId"])
     content = request.POST["content"]
     date = try_strptime(request.POST["date"])
     doc_f = request.POST["doc"].lower()
+    if dpk >= 4600000000000:
+        dpk -= 4600000000000
+        dpk //= 10
     ds = directions.Napravleniya.objects.filter(pk=dpk)
     if ds.exists():
         d = ds[0]
@@ -937,7 +970,7 @@ def flg(request):
                     i.napravleniye.visit_who_mark = doc
                     i.napravleniye.visit_date = date
                     i.napravleniye.save()
-
+    slog.Log(key=dpk, type=13, body=json.dumps({"content": content, "doc_f": doc_f}), user=None).save()
     return JsonResponse({"ok": ok})
 
 
@@ -1086,9 +1119,9 @@ def laborants(request):
 def load_docprofile_by_group(request):
     request_data = json.loads(request.body)
     if request_data['group'] == '*':
-        users = users_all()
+        users = users_all(request.user.doctorprofile.get_hospital_id())
     else:
-        users = users_by_group(request_data['group'])
+        users = users_by_group(request_data['group'], request.user.doctorprofile.get_hospital_id())
     users_grouped = {}
     for row in users:
         if row[2] not in users_grouped:
@@ -1120,12 +1153,21 @@ def users_view(request):
                 otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
             data.append(otd)
 
-    spec = users.Speciality.objects.all().order_by("title")
-    spec_data = []
+    spec = users.Speciality.objects.filter(hide=False).order_by("title")
+    spec_data = [
+        {"pk": -1, "title": "Не выбрано"}
+    ]
     for s in spec:
         spec_data.append({"pk": s.pk, "title": s.title})
 
-    return JsonResponse({"departments": data, "specialities": spec_data})
+    positions_qs = users.Position.objects.filter(hide=False).order_by("title")
+    positions = [
+        {"pk": -1, "title": "Не выбрано"}
+    ]
+    for s in positions_qs:
+        positions.append({"pk": s.pk, "title": s.title})
+
+    return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions})
 
 
 @login_required
@@ -1153,9 +1195,11 @@ def user_view(request):
             "doc_code": -1,
             "rmis_employee_id": '',
             "rmis_service_id_time_table": '',
+            "snils": '',
+            "position": -1,
         }
     else:
-        doc = users.DoctorProfile.objects.get(pk=pk)
+        doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
         fio_parts = doc.get_fio_parts()
         data = {
             "family": fio_parts[0],
@@ -1174,9 +1218,11 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
-            "speciality": doc.specialities_id,
+            "speciality": doc.specialities_id or -1,
             "rmis_employee_id": doc.rmis_employee_id,
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
+            "snils": doc.snils,
+            "position": doc.position_id or -1,
         }
 
     return JsonResponse({"user": data})
@@ -1198,6 +1244,10 @@ def user_save_view(request):
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
+    snils = ud.get("snils").strip() or ''
+    position = ud.get("position", -1)
+    if position == -1:
+        position = None
     user_hospital_pk = request.user.doctorprofile.get_hospital_id()
     hospital_pk = request_data.get('hospital_pk', user_hospital_pk)
 
@@ -1249,8 +1299,11 @@ def user_save_view(request):
             for r in ud["users_services"]:
                 doc.users_services.add(DResearches.objects.get(pk=r))
 
+            spec = ud.get('speciality', None)
+            if spec == -1:
+                spec = None
             doc.podrazdeleniye_id = ud['department']
-            doc.specialities_id = ud.get('speciality', None)
+            doc.specialities_id = spec
             doc.family = ud["family"]
             doc.name = ud["name"]
             doc.patronymic = ud["patronymic"]
@@ -1261,6 +1314,8 @@ def user_save_view(request):
             doc.personal_code = personal_code
             doc.rmis_resource_id = rmis_resource_id
             doc.hospital_id = hospital_pk
+            doc.snils = snils
+            doc.position_id = position
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
@@ -1442,7 +1497,7 @@ def actual_districts(request):
     rows = District.objects.all().order_by('-sort_weight', '-id').values('pk', 'title', 'is_ginekolog')
     rows = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["title"] if not x['is_ginekolog'] else "Гинекология: {}".format(x['title'])} for x in rows]]
 
-    users = users_by_group(['Лечащий врач'])
+    users = users_by_group(['Лечащий врач'], request.user.doctorprofile.get_hospital_id())
     users = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{'id': row[0], 'label': row[1]} for row in users]]
 
     purposes = DoctorCall.PURPOSES
@@ -1601,3 +1656,262 @@ def companies(request):
     rows = [{'id': x.pk, 'label': x.short_title or x.title} for x in Company.objects.filter(active_status=True).order_by('short_title')]
 
     return JsonResponse({'rows': rows})
+
+
+@login_required
+def input_templates_add(request):
+    data = json.loads(request.body)
+    pk = data["pk"]
+    value = str(data["value"]).strip()
+    value_lower = value.lower()
+    doc = request.user.doctorprofile
+    if ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value=value).exists():
+        t = ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value=value)[0]
+        if t.value_lower != value_lower:
+            t.value_lower = value_lower
+            t.save()
+        return JsonResponse({"ok": False})
+
+    t = ParaclinicUserInputTemplateField.objects.create(field_id=pk, doc=doc, value=value, value_lower=value_lower)
+
+    return JsonResponse({"ok": True, "pk": t.pk})
+
+
+@login_required
+def input_templates_get(request):
+    data = json.loads(request.body)
+    pk = data["pk"]
+    doc = request.user.doctorprofile
+    rows = [{"pk": x.pk, "value": x.value} for x in ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc).order_by("pk")]
+
+    return JsonResponse({"rows": rows})
+
+
+@login_required
+def input_templates_delete(request):
+    data = json.loads(request.body)
+    pk = data["pk"]
+    doc = request.user.doctorprofile
+
+    ParaclinicUserInputTemplateField.objects.filter(pk=pk, doc=doc).delete()
+
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def input_templates_suggests(request):
+    data = json.loads(request.body)
+    pk = data["pk"]
+    value = str(data["value"]).strip().lower()
+    doc = request.user.doctorprofile
+    rows = list(
+        ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value_lower__startswith=value)
+        .exclude(value_lower=value)
+        .order_by('value_lower')
+        .values_list('value', flat=True)[:4]
+    )
+
+    return JsonResponse({"rows": rows, "value": data["value"]})
+
+
+@login_required
+def construct_menu_data(request):
+    groups = [str(x) for x in request.user.groups.all()]
+    pages = [
+        {"url": "/construct/tubes", "title": "Ёмкости для биоматериала", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
+        {"url": "/construct/researches", "title": "Лабораторные исследования", "access": ["Конструктор: Лабораторные исследования"], "module": None},
+        {
+            "url": "/construct/researches-paraclinic",
+            "title": "Описательные исследования и консультации",
+            "access": ["Конструктор: Параклинические (описательные) исследования"],
+            "module": "paraclinic_module",
+        },
+        {"url": "/construct/directions_group", "title": "Группировка исследований по направлениям", "access": ["Конструктор: Группировка исследований по направлениям"], "module": None},
+        {"url": "/construct/uets", "title": "Настройка УЕТов", "access": ["Конструктор: Настройка УЕТов"], "module": None},
+        {"url": "/construct/templates", "title": "Настройка шаблонов", "access": ["Конструктор: Настройка шаблонов"], "module": None},
+        {"url": "/construct/bacteria", "title": "Бактерии и антибиотики", "access": ["Конструктор: Бактерии и антибиотики"], "module": None},
+        {"url": "/construct/dplan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
+        {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
+        {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
+    ]
+
+    from context_processors.utils import make_menu
+
+    menu = make_menu(pages, groups, request.user.is_superuser)
+
+    return JsonResponse(
+        {
+            "menu": menu,
+        }
+    )
+
+
+@login_required
+def current_org(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    org = {
+        "pk": hospital.pk,
+        "title": hospital.title,
+        "shortTitle": hospital.short_title,
+        "address": hospital.address,
+        "phones": hospital.phones,
+        "ogrn": hospital.ogrn,
+        "www": hospital.www,
+        "email": hospital.email,
+        "licenseData": hospital.license_data,
+        "currentManager": hospital.current_manager,
+        "okpo": hospital.okpo,
+    }
+    return JsonResponse({"org": org})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def current_org_update(request):
+    parse_params = {
+        'title': str,
+        'shortTitle': str,
+        'address': str,
+        'phones': str,
+        'ogrn': str,
+        'currentManager': str,
+        'licenseData': str,
+        'www': str,
+        'email': str,
+        'okpo': str
+    }
+
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+
+    title: str = data[0].strip()
+    short_title: str = data[1].strip()
+    address: str = data[2].strip()
+    phones: str = data[3].strip()
+    ogrn: str = data[4].strip()
+    current_manager: str = data[5].strip()
+    license_data: str = data[6].strip()
+    www: str = data[7].strip()
+    email: str = data[8].strip()
+    okpo: str = data[9].strip()
+
+    if not title:
+        return status_response(False, 'Название не может быть пустым')
+
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    old_data = {
+        "title": hospital.title,
+        "short_title": hospital.short_title,
+        "address": hospital.address,
+        "phones": hospital.phones,
+        "ogrn": hospital.ogrn,
+        "current_manager": hospital.current_manager,
+        "license_data": hospital.license_data,
+        "www": hospital.www,
+        "email": hospital.email,
+        "okpo": hospital.okpo,
+    }
+
+    new_data = {
+        "title": title,
+        "short_title": short_title,
+        "address": address,
+        "phones": phones,
+        "ogrn": ogrn,
+        "current_manager": current_manager,
+        "license_data": license_data,
+        "www": www,
+        "email": email,
+        "okpo": okpo,
+    }
+
+    hospital.title = title
+    hospital.short_title = short_title
+    hospital.address = address
+    hospital.phones = phones
+    hospital.ogrn = ogrn
+    hospital.current_manager = current_manager
+    hospital.license_data = license_data
+    hospital.www = www
+    hospital.email = email
+    hospital.okpo = okpo
+    hospital.save()
+
+    Log.log(
+        hospital.pk,
+        110000,
+        request.user.doctorprofile,
+        {
+            "oldData": old_data,
+            "newData": new_data,
+        },
+    )
+
+    return status_response(True)
+
+
+@login_required
+def org_generators(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    rows = []
+
+    g: directions.NumberGenerator
+    for g in directions.NumberGenerator.objects.filter(hospital=hospital).order_by('pk'):
+        rows.append(
+            {
+                "pk": g.pk,
+                "key": g.key,
+                "keyDisplay": g.get_key_display(),
+                "year": g.year,
+                "isActive": g.is_active,
+                "start": g.start,
+                "end": g.end,
+                "last": g.last,
+                "prependLength": g.prepend_length,
+            }
+        )
+
+    return JsonResponse({"rows": rows})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def org_generators_add(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    parse_params = {
+        'key': str,
+        'year': int,
+        'start': int,
+        'end': int,
+        'prependLength': int,
+    }
+
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+
+    key: str = data[0]
+    year: int = data[1]
+    start: int = data[2]
+    end: int = data[3]
+    prepend_length: int = data[4]
+
+    with transaction.atomic():
+        directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
+        directions.NumberGenerator.objects.create(hospital=hospital, key=key, year=year, start=start, end=end, prepend_length=prepend_length, is_active=True)
+
+        Log.log(
+            hospital.pk,
+            110000,
+            request.user.doctorprofile,
+            {
+                "key": key,
+                "year": year,
+                "start": start,
+                "end": end,
+                "prepend_length": prepend_length,
+            },
+        )
+
+    return status_response(True)

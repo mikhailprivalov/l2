@@ -96,8 +96,9 @@ def save(form, filename: str):
 
 @logged_in_or_token
 def result_print(request):
-    """ Печать результатов """
-    inline = request.GET.get("inline", "1") == "1"
+    """Печать результатов"""
+    plain_response = True if hasattr(request, 'plain_response') and request.plain_response else False
+    inline = request.GET.get("inline", "1") == "1" or plain_response
     response = HttpResponse(content_type='application/pdf')
 
     if inline:
@@ -127,11 +128,32 @@ def result_print(request):
         allowSplitting=1,
         _pageBreakQuick=1,
         title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])),
-        invariant=1
+        invariant=1,
     )
+    temp_iss = Issledovaniya.objects.filter(napravleniye_id=pk[0]).first()
+    left_padding = 15
+    right_padding = 5
+    top_padding = 5
+    bottom_padding = 18
+    if temp_iss.research.paddings_size:
+        data_padding = temp_iss.research.paddings_size.split('|')
+        left_padding = float(data_padding[0])
+        top_padding = float(data_padding[1])
+        right_padding = float(data_padding[2])
+        bottom_padding = float(data_padding[3])
     p_frame = Frame(
-        0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=18 * mm, id='portrait_frame', showBoundary=0
+        0 * mm,
+        0 * mm,
+        210 * mm,
+        297 * mm,
+        leftPadding=(27 if leftnone else left_padding) * mm,
+        rightPadding=right_padding * mm,
+        topPadding=top_padding * mm,
+        bottomPadding=bottom_padding * mm,
+        id='portrait_frame',
+        showBoundary=0,
     )
+
     l_frame = Frame(
         0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm, bottomPadding=18 * mm, id='landscape_frame', showBoundary=0
     )
@@ -910,8 +932,9 @@ def result_print(request):
             for iss in direction.issledovaniya_set.all().order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
                 if not hosp and not is_gistology and not has_own_form_result:
-                    fwb.append(InteractiveTextField())
-                    fwb.append(Spacer(1, 2 * mm))
+                    if not plain_response:
+                        fwb.append(InteractiveTextField())
+                        fwb.append(Spacer(1, 2 * mm))
                     if (
                         iss.research.is_doc_refferal
                         or iss.research.is_microbiology
@@ -1086,6 +1109,8 @@ def result_print(request):
 
     pdf = buffer.getvalue()
     buffer.close()
+    if plain_response:
+        return pdf
     response.write(pdf)
     k = str(request.GET["pk"])
     slog.Log(
@@ -1213,7 +1238,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             ]
             result = "не завершено"
             ref = {"": ""}
-            f_units = fractions[0].units
+            f_units = fractions[0].get_unit_str()
             if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                 r = Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).order_by("-pk")[0]
                 ref = r.get_ref()
@@ -1280,7 +1305,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 tmp = [Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;<font face="FreeSans" size="7">' + f.title + "</font>", styleSheet["BodyText"])]
                 result = "не завершено"
                 ref = {"": ""}
-                f_units = f.units
+                f_units = f.get_unit_str()
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                     ref = r.get_ref()
@@ -1500,7 +1525,7 @@ def result_journal_table_print(request):
 
 @login_required
 def result_journal_print(request):
-    """ Печать журнала подтверждений """
+    """Печать журнала подтверждений"""
     pw, ph = A4
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="journal.pdf"'
@@ -1749,7 +1774,7 @@ def get_r(ref) -> str:
 @csrf_exempt
 @login_required
 def result_get(request):
-    """ Получение результатов для исследования """
+    """Получение результатов для исследования"""
     result = {"results": {}, "norms": {}, "refs": {}, "comment": ""}
     if request.method == "GET":
         issledovaniye = Issledovaniya.objects.get(pk=int(request.GET["iss_id"]))
@@ -1804,7 +1829,7 @@ def get_day_results(request):
 @csrf_exempt
 @login_required
 def result_filter(request):
-    """ Фильтрация списка исследований """
+    """Фильтрация списка исследований"""
     result = {"ok": False}
     if request.method == "POST":
         research_pk = request.POST["research"]  # ID исследования

@@ -29,22 +29,36 @@
                 mouseleave: leave_field(field.values_to_input.length > 0),
               }"
               class="field"
+              :key="`field-${field.pk}`"
             >
               <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
                 {{ field.title }}
               </div>
-              <longpress
-                :confirm-time="0"
-                :duration="400"
-                :on-confirm="clear_val"
-                :value="field"
-                action-text="×"
-                class="btn btn-default btn-field"
-                pressing-text="×"
-                v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27, 28].includes(field.field_type)"
-              >
-                ×
-              </longpress>
+              <LPress
+                v-if="
+                  !confirmed &&
+                    !{
+                      3: 1,
+                      10: 1,
+                      12: 1,
+                      15: 1,
+                      16: 1,
+                      17: 1,
+                      18: 1,
+                      19: 1,
+                      21: 1,
+                      24: 1,
+                      25: 1,
+                      26: 1,
+                      27: 1,
+                      28: 1,
+                      30: 1,
+                    }[field.field_type]
+                "
+                :pk="field.pk"
+                :on-confirm="clear_val_by_pk"
+              />
+              <InputTemplates :field="field" :group="group" v-if="!confirmed && [0].includes(field.field_type)" />
               <FastTemplates
                 :update_value="updateValue(field)"
                 :value="field.value"
@@ -53,15 +67,8 @@
                 :field_type="field.field_type"
                 :field_title="field.title"
               />
-              <div class="field-value" v-if="field.field_type === 0">
-                <textarea
-                  :readonly="confirmed"
-                  :rows="field.lines"
-                  class="form-control"
-                  v-if="field.lines > 1"
-                  v-model="field.value"
-                ></textarea>
-                <input :readonly="confirmed" class="form-control" v-else v-model="field.value" />
+              <div class="field-value field-value-with-templates" v-if="field.field_type === 0">
+                <TextFieldWithTemplates v-model="field.value" :confirmed="confirmed" :field-pk="field.pk" :lines="field.lines" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 1">
                 <input :readonly="confirmed" class="form-control" style="width: 160px" type="date" v-model="field.value" />
@@ -140,7 +147,15 @@
                 <DocReferralPreviousResults v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 27">
-                <TableField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+                <TableField
+                  :variants="field.values_to_input"
+                  :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
+                  :field-pk="field.pk"
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :card_pk="patient.card_pk"
+                  :iss_pk="pk"
+                />
               </div>
               <div class="field-value" v-else-if="field.field_type === 28">
                 <PermanentDirectoryField
@@ -156,6 +171,40 @@
                   :disabled="confirmed"
                   :client-pk="patient.card_pk"
                   :edit-title="`${group.title} ${field.title}`.trim()"
+                  :strict="false"
+                />
+              </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 30">
+                <NumberGeneratorField
+                  v-model="field.value"
+                  :number-key="field.default_value"
+                  :disabled="confirmed"
+                  :iss-pk="pk"
+                  :field-pk="field.pk"
+                />
+              </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 31">
+                <TfomsAttachmentField v-model="field.value" :disabled="confirmed" :client-pk="patient.card_pk" />
+              </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 32">
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.6"
+                />
+              </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 33">
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.5"
+                />
+              </div>
+             <div class="field-value field-value-address mkb" v-else-if="field.field_type === 34">
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.4"
                 />
               </div>
               <div
@@ -180,20 +229,21 @@
 </template>
 
 <script lang="ts">
-// @ts-ignore
-import Longpress from 'vue-longpress';
+import LPress from '@/ui-cards/LPress.vue';
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
 import FastTemplates from './FastTemplates.vue';
+import InputTemplates from './InputTemplates.vue';
 import { enter_field, leave_field } from './utils';
 
 export default {
   name: 'DescriptiveForm',
   components: {
     FastTemplates,
+    InputTemplates,
     VisibilityGroupWrapper,
     VisibilityFieldWrapper,
-    Longpress,
+    LPress,
     TextareaAutocomplete: () => import('../fields/TextareaAutocomplete.vue'),
     NumberRangeField: () => import('../fields/NumberRangeField.vue'),
     NumberField: () => import('../fields/NumberField.vue'),
@@ -213,6 +263,10 @@ export default {
     DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults.vue'),
     PermanentDirectoryField: () => import('../fields/PermanentDirectoryField.vue'),
     AddressFiasField: () => import('../fields/AddressFiasField.vue'),
+    MKBFieldTreeselect: () => import('../fields/MKBFieldTreeselect.vue'),
+    TextFieldWithTemplates: () => import('../fields/TextFieldWithTemplates.vue'),
+    NumberGeneratorField: () => import('../fields/NumberGeneratorField.vue'),
+    TfomsAttachmentField: () => import('../fields/TfomsAttachmentField.vue'),
   },
   props: {
     research: {
@@ -247,6 +301,7 @@ export default {
       prev_scroll: 0,
       prev_scrollHeightTop: 0,
       versionTickTimer: null,
+      tableFieldsErrors: {},
     };
   },
   watch: {
@@ -259,6 +314,13 @@ export default {
   },
   mounted() {
     this.versionTickTimer = setInterval(() => this.inc_version(), 2000);
+
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
+    });
   },
   beforeDestroy() {
     clearInterval(this.versionTickTimer);
@@ -272,7 +334,14 @@ export default {
 
       for (const g of this.research.groups) {
         for (const f of g.fields) {
-          if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
+          if (
+            (f.required
+              && (f.value === ''
+                || f.value === '- Не выбрано'
+                || !f.value
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+            || this.tableFieldsErrors[f.pk]
+          ) {
             l.push(f.pk);
           }
         }
@@ -300,6 +369,12 @@ export default {
       } else {
         // eslint-disable-next-line no-param-reassign
         field.value = '';
+      }
+    },
+    clear_val_by_pk(pk) {
+      const field = this.research.groups.reduce((a, b) => a.concat(b.fields), []).find(f => f.pk === pk);
+      if (field) {
+        this.clear_val(field);
       }
     },
     enter_field(...args) {

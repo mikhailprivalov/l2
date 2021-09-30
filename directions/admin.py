@@ -23,6 +23,9 @@ from .models import (
     DashboardChartFields,
     MonitoringSumFieldByDay,
     MonitoringSumFieldTotal,
+    NumberGenerator,
+    DirectionDocument,
+    DocumentSign,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -40,6 +43,23 @@ class NapravleniyaAdmin(admin.ModelAdmin):
     search_fields = ('pk', 'client')
 
 
+@admin.register(DirectionDocument)
+class DirectionDocumentAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
+        'direction',
+    )
+    search_fields = ('direction',)
+
+
+@admin.register(DocumentSign)
+class DocumentSignAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
+        'document',
+        'executor',
+    )
+    search_fields = ('document', 'executor',)
+
+
 @admin.register(Issledovaniya)
 class IssAdmin(admin.ModelAdmin):
     autocomplete_fields = (
@@ -51,6 +71,23 @@ class IssAdmin(admin.ModelAdmin):
         'tubes',
     )
     search_fields = ('napravleniye__pk',)
+
+
+@admin.register(NumberGenerator)
+class NumberGeneratorAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
+        'hospital',
+    )
+    search_fields = ('hospital', 'year', 'key')
+    list_display = (
+        'hospital',
+        'key',
+        'year',
+        'is_active',
+        'start',
+        'end',
+        'last',
+    )
 
 
 class ResTypeJob(admin.ModelAdmin):

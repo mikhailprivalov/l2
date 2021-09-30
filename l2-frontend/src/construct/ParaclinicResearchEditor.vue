@@ -254,6 +254,13 @@
                     <strong>Формула:</strong>
                     <input v-model="row.default" class="form-control" />
                   </div>
+                  <div v-else-if="row.field_type === 30">
+                    <strong>Тип номера:</strong>
+                    <select v-model="row.default" class="form-control">
+                      <option value="">не выбрано</option>
+                      <option value="deathFormNumber">Номер свидетельства о смерти</option>
+                    </select>
+                  </div>
                   <div v-else-if="row.field_type === 11">
                     <strong>ID фракции:</strong>
                     <input v-model="row.default" class="form-control" />
@@ -393,7 +400,9 @@
                     <select v-model.number="row.field_type" class="form-control">
                       <option value="0">Строка</option>
                       <option value="1">Дата</option>
-                      <option value="2">Диагноз по МКБ</option>
+                      <option value="2">Диагноз по МКБ (1.2.643.5.1.13.13.11.1005)</option>
+                      <option value="32">МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)</option>
+                      <option value="33">МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)</option>
                       <option value="3">Расчётное</option>
                       <option value="10">Справочник</option>
                       <option value="11">Фракция</option>
@@ -415,6 +424,10 @@
                       <option value="27">Таблица</option>
                       <option value="28">НСИ-справочник</option>
                       <option value="29">Адрес по ФИАС</option>
+                      <option value="30" v-if="number_generator_field_enabled">Генератор номера документа</option>
+                      <option value="31" v-if="tfoms_attachment_field_enabled">
+                        Сведения о прикреплении застрахованного лица (ТФОМС)
+                      </option>
                     </select>
                   </label>
                 </div>
@@ -532,7 +545,7 @@ export default {
       default: () => ({}),
     },
     period_types: {
-      type: Object,
+      type: Array,
       required: false,
       default: () => [],
     },
@@ -662,6 +675,12 @@ export default {
     },
     rich_text_enabled() {
       return this.$store.getters.modules.descriptive_rich_text;
+    },
+    number_generator_field_enabled() {
+      return this.$store.getters.modules.number_generator_field;
+    },
+    tfoms_attachment_field_enabled() {
+      return this.$store.getters.modules.tfoms_attachment_field;
     },
   },
   methods: {
@@ -1034,6 +1053,7 @@ export default {
 .content-editor {
   padding: 5px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .ed-group {

@@ -42,4 +42,10 @@ urlpatterns = [
     path('tubes-register-get', views.tubes_register_get),
     path('tubes-for-confirm', views.tubes_for_confirm),
     path('tubes-get-history', views.tubes_get_history),
+    path('gen-number', views.gen_number),
+    path('free-number', views.free_number),
+    path('eds/required-signatures', views.eds_required_signatures),
+    path('eds/documents', views.eds_documents),
+    path('eds/add-sign', views.eds_add_sign),
+    path('eds/to-sign', views.eds_to_sign),
 ]

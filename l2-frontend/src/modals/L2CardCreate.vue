@@ -75,7 +75,7 @@
           </div>
           <div class="form-row">
             <div class="row-t">Дата рождения</div>
-            <input class="form-control" type="date" v-model="card.birthday" />
+            <input class="form-control" type="date" v-model="card.birthday" autocomplete="off" />
           </div>
           <div class="form-row">
             <div class="row-t">Пол</div>
@@ -187,6 +187,19 @@
                 :receive-copy="true"
                 edit-title="Адрес проживания"
               >
+                <template v-slot:input-group-append>
+                  <button
+                    title="Скопировать из адреса регистрации"
+                    class="btn btn-blue-nb nbr btn-address"
+                    type="button"
+                    v-tippy
+                    tabindex="-1"
+                    @click="$root.$emit('address-copy-fast', card.main_address_full)"
+                    v-if="card.main_address_full"
+                  >
+                    <i class="fa fa-paste"></i>
+                  </button>
+                </template>
                 <template v-slot:extended-edit>
                   <AddressFiasField
                     :disabled="true"
@@ -480,7 +493,8 @@
           </div>
           <div class="col-xs-6" style="padding-left: 0">
             <div class="form-row sm-f" style="height: 28px;">
-              <div class="input-group" style="flex: 1 100%;" v-if="card.medbookType === 'custom'">
+              <div class="input-group input-group-custom" v-if="card.medbookType === 'custom'">
+                <input type="text" class="form-control" maxlength="1" v-model.trim="card.medbookPrefix" placeholder="Префикс" />
                 <input
                   type="number"
                   class="form-control"
@@ -488,7 +502,7 @@
                   :max="medbook_auto_start - 1"
                   min="1"
                   v-model="card.medbookNumberCustom"
-                  :placeholder="`Введите номер книжки до ${medbook_auto_start}`"
+                  :placeholder="`Номер книжки до ${medbook_auto_start}`"
                 />
                 <span
                   class="input-group-btn"
@@ -758,8 +772,8 @@ export default {
       card: {
         number: '',
         number_poli: '',
-        main_address_full: JSON.stringify({ address: '', fias: null }),
-        fact_address_full: JSON.stringify({ address: '', fias: null }),
+        main_address_full: JSON.stringify({ address: '', fias: null, details: null }),
+        fact_address_full: JSON.stringify({ address: '', fias: null, details: null }),
         work_place: '',
         work_position: '',
         family: '',
@@ -802,6 +816,7 @@ export default {
         tfoms_idp: null,
         tfoms_enp: null,
         time_tfoms_last_sync: null,
+        medbookPrefix: '',
         medbookNumber: '',
         medbookNumberCustom: '',
         medbookNumberCustomOriginal: '',
@@ -1039,6 +1054,7 @@ export default {
           'phone',
           'number_poli',
           'harmful',
+          'medbookPrefix',
           'medbookNumber',
           'medbookType',
           'medbookNumberCustom',
@@ -1400,5 +1416,21 @@ export default {
 
 .button-f {
   flex: 1;
+}
+
+.input-group-custom {
+  flex: 1 100%;
+  display: flex;
+  flex-direction: row;
+
+  .form-control:first-child {
+    flex: 1 80px;
+    padding: 6px 8px;
+    border-right: 1px solid #434a54;
+  }
+
+  .form-control:last-child {
+    flex: 1 calc(100% - 80px);
+  }
 }
 </style>

@@ -1,10 +1,13 @@
 import calendar
+from cda.integration import get_required_signatures
 import datetime
+import os
 import re
 import time
 import unicodedata
 from datetime import date
 from typing import Optional, Union
+from django.contrib.postgres.fields.array import ArrayField
 
 import simplejson as json
 from dateutil.relativedelta import relativedelta
@@ -208,14 +211,34 @@ class IstochnikiFinansirovaniya(models.Model):
     Таблица источников финансирования
     """
 
-    title = models.CharField(max_length=511, help_text='Название')
-    active_status = models.BooleanField(default=True, help_text='Статус активности')
-    base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие", db_index=True)
-    rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС", db_index=True)
-    default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
-    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE)
-    order_weight = models.SmallIntegerField(default=0)
+    title = models.CharField(max_length=511, verbose_name='Название')
+    active_status = models.BooleanField(default=True, verbose_name='Статус активности')
+    base = models.ForeignKey(Clients.CardBase, verbose_name='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, verbose_name="Скрытие", db_index=True)
+    rmis_auto_send = models.BooleanField(default=True, blank=True, verbose_name="Автоматическая отправка в РМИС", db_index=True)
+    default_diagnos = models.CharField(max_length=36, verbose_name="Диагноз по умолчанию", default="", blank=True)
+    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE, verbose_name="Договоры")
+    order_weight = models.SmallIntegerField(default=0, verbose_name="Сортировка")
+    n3_code = models.CharField(max_length=2, default="", blank=True, verbose_name="Код источника финансирования для N3")
+
+    def get_n3_code(self):
+        codes = {
+            'омс': '1',
+            'бюджет': '2',
+            'платные услуги': '3',
+            'платно': '3',
+            'дмс': '4',
+            'собственные средства': '5',
+            'другое': '6',
+        }
+        if not self.n3_code:
+            lower_title = self.title.lower()
+
+            if lower_title in codes:
+                self.n3_code = codes[lower_title]
+                self.save()
+
+        return self.n3_code or codes['другое']
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
@@ -263,6 +286,7 @@ class Diagnoses(models.Model):
     m_type = models.IntegerField(choices=M, db_index=True)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     nsi_id = models.CharField(max_length=128, blank=True, default=None, null=True)
+    hide = models.BooleanField(default=False, blank=True, db_index=True)
 
     def __str__(self):
         return "{} {}".format(self.code, self.title)
@@ -411,6 +435,87 @@ class Napravleniya(models.Model):
     qr_check_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для проверки результата по QR внешним сервисом')
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
+    n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
+    eds_required_documents = ArrayField(
+        models.CharField(max_length=3),
+        verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True
+    )
+    eds_required_signature_types = ArrayField(
+        models.CharField(max_length=32),
+        verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True
+    )
+    eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
+    eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
+
+    def get_eds_title(self):
+        iss = Issledovaniya.objects.filter(napravleniye=self)
+
+        for i in iss:
+            research: directory.Researches = i.research
+            if research.desc:
+                return research.title
+
+        return 'Лабораторное исследование'
+
+    def required_signatures(self, fast=False, need_save=False):
+        if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):
+            return {
+                "docTypes": self.eds_required_documents,
+                "signsRequired": self.eds_required_signature_types,
+            }
+
+        data = get_required_signatures(self.get_eds_title())
+
+        result = {
+            "docTypes": ['PDF', 'CDA'] if data.get('needCda') else ['PDF'],
+            "signsRequired": data.get('signsRequired') or ['Врач', 'Медицинская организация'],
+        }
+
+        if need_save:
+            updated = []
+            if any([x not in self.eds_required_documents for x in result['docTypes']]) or len(self.eds_required_documents) != len(result['docTypes']):
+                self.eds_required_documents = result['docTypes']
+                updated.append('eds_required_documents')
+
+            if any([x not in self.eds_required_signature_types for x in result['signsRequired']]) or len(self.eds_required_signature_types) != len(result['signsRequired']):
+                self.eds_required_signature_types = result['signsRequired']
+                updated.append('eds_required_signature_types')
+
+            if updated:
+                self.save(update_fields=updated)
+
+        return result
+
+    def get_eds_total_signed(self, forced=False):
+        if self.eds_total_signed and not forced:
+            return True
+        rs = self.required_signatures(fast=True, need_save=True)
+
+        status = len(rs['docTypes']) > 0 and len(rs['signsRequired']) > 0
+
+        for r in rs['docTypes']:
+            dd: DirectionDocument = DirectionDocument.objects.filter(direction=self, is_archive=False, last_confirmed_at=self.last_time_confirm(), file_type=r.lower()).first()
+
+            has_signatures = []
+            empty_signatures = rs['signsRequired']
+            if dd:
+                for s in DocumentSign.objects.filter(document=dd):
+                    has_signatures.append(s.sign_type)
+
+                    empty_signatures = [x for x in empty_signatures if x != s.sign_type]
+            if len(empty_signatures) != 0:
+                status = False
+                break
+
+        if status != self.eds_total_signed:
+            self.eds_total_signed = status
+            if status:
+                self.eds_total_signed_at = timezone.now()
+            else:
+                self.eds_total_signed_at = None
+            self.save(update_fields=['eds_total_signed', 'eds_total_signed_at'])
+
+        return status
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
@@ -458,6 +563,13 @@ class Napravleniya(models.Model):
         if hosp:
             return hosp.ogrn
         return SettingManager.get("org_ogrn")
+
+    @property
+    def hospital_n3id(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.n3_id
+        return None
 
     def get_ogrn_org_initiator(self):
         return self.ogrn_org_initiator or self.hospital_ogrn or ""
@@ -515,6 +627,15 @@ class Napravleniya(models.Model):
         for i in Issledovaniya.objects.filter(napravleniye=self).exclude(research__instructions=""):
             r.append({"pk": i.research_id, "title": i.research.title, "text": i.research.instructions})
         return r
+
+    def get_executors(self):
+        executors = {}
+
+        i: Issledovaniya
+        for i in self.issledovaniya_set.all():
+            if i.doc_confirmation_id not in executors:
+                executors[i.doc_confirmation_id] = i.doc_confirmation_fio
+        return executors
 
     @property
     def fin_title(self):
@@ -1129,6 +1250,14 @@ class Napravleniya(models.Model):
         """
         return all([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
+    def last_time_confirm(self):
+        return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
+
+    def last_doc_confirm(self):
+        iss = Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').first()
+
+        return str(iss.doc_confirmation) if iss else None
+
     def is_has_deff(self):
         """
         Есть ли отложенные исследования
@@ -1219,6 +1348,50 @@ class Napravleniya(models.Model):
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
+
+
+def get_direction_file_path(instance: 'DirectionDocument', filename):
+    return os.path.join('directions', str(instance.direction.get_hospital_tfoms_id()), str(instance.direction.pk), filename)
+
+
+class DirectionDocument(models.Model):
+    PDF = 'pdf'
+    CDA = 'cda'
+    FILE_TYPES = (
+        (PDF, PDF),
+        (CDA, CDA),
+    )
+
+    direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направление")
+    file_type = models.CharField(max_length=3, db_index=True, verbose_name="Тип файла")
+    file = models.FileField(upload_to=get_direction_file_path, blank=True, null=True, default=None, verbose_name="Файл документа")
+    is_archive = models.BooleanField(db_index=True, verbose_name="Архивный документ", blank=True, default=False)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
+    last_confirmed_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата и время подтверждения протокола')
+
+    def __str__(self) -> str:
+        return f"{self.direction} — {self.file_type} – {self.last_confirmed_at}"
+
+    class Meta:
+        unique_together = ('direction', 'file_type', 'last_confirmed_at')
+        verbose_name = 'Документ направления'
+        verbose_name_plural = 'Документы направлений'
+
+
+class DocumentSign(models.Model):
+    document = models.ForeignKey(DirectionDocument, on_delete=models.CASCADE, db_index=True, verbose_name="Документ")
+    executor = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Исполнитель подписи', on_delete=models.CASCADE)
+    signed_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время подписи")
+    sign_type = models.CharField(max_length=32, db_index=True, verbose_name='Тип подписи')
+    sign_value = models.TextField(verbose_name="Значение подписи")
+
+    def __str__(self) -> str:
+        return f"{self.document} — {self.sign_type} – {self.executor}"
+
+    class Meta:
+        unique_together = ('document', 'executor', 'sign_type')
+        verbose_name = 'Подпись документа направления'
+        verbose_name_plural = 'Подписи документов направлений'
 
 
 class PersonContract(models.Model):
@@ -1420,6 +1593,8 @@ class Issledovaniya(models.Model):
             return "Сброс подтверждения выписки" in groups
         if forbidden_edit_dir(self.napravleniye_id):
             return False
+        if self.napravleniye and self.napravleniye.eds_total_signed:
+            return "Сброс подтверждений результатов" in groups
         ctp = int(0 if not self.time_confirmation else int(time.mktime(timezone.localtime(self.time_confirmation).timetuple())))
         ctime = int(time.time())
         current_doc_confirmation = self.doc_confirmation
@@ -1656,6 +1831,7 @@ class ParaclinicResult(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()
+    value_json = JSONField(default=dict, blank=True)
 
     def get_field_type(self):
         return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
@@ -1673,6 +1849,18 @@ class ParaclinicResult(models.Model):
             try:
                 data = json.loads(result)
                 result = data['address']
+            except:
+                pass
+        if self.get_field_type() == 32:
+            try:
+                data = json.loads(result)
+                result = f"{data['code']} – {data['title']}"
+            except:
+                pass
+        if self.get_field_type() == 33:
+            try:
+                data = json.loads(result)
+                result = f"{data['code']} – {data['title']}"
             except:
                 pass
         return result
@@ -1875,10 +2063,12 @@ class Result(models.Model):
         return "%s | %s | %s" % (self.pk, self.fraction, self.ref_m is not None and self.ref_f is not None)
 
     def get_units(self, needsave=True):
-        if not self.units and self.fraction.units and self.fraction.units != "":
-            self.units = self.fraction.units
-            if needsave:
-                self.save()
+        if not self.units:
+            u = self.fraction.get_unit_str()
+            if u:
+                self.units = u
+                if needsave:
+                    self.save()
         return self.units or ""
 
     def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False, needsave=True):
@@ -2222,3 +2412,28 @@ class DirectionsHistory(models.Model):
                 dir_history.save()
 
         return directions
+
+
+class NumberGenerator(models.Model):
+    DEATH_FORM_NUMBER = 'deathFormNumber'
+
+    KEYS = (
+        (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
+    )
+
+    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
+    key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')
+    year = models.IntegerField(verbose_name='Год', db_index=True)
+    is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
+    start = models.PositiveIntegerField(verbose_name='Начало диапазона')
+    end = models.PositiveIntegerField(verbose_name='Конец диапазона')
+    last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
+    free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
+    prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
+
+    def __str__(self):
+        return f"{self.hospital} {self.key} {self.year} {self.is_active} {self.start} — {self.end} ({self.last})"
+
+    class Meta:
+        verbose_name = 'Диапазон номеров'
+        verbose_name_plural = 'Диапазоны номеров'

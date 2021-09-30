@@ -1,23 +1,39 @@
 <template>
   <div>
-    <div class="input-group" style="width: 100%;">
-      <span class="input-group-btn" style="vertical-align: top;" v-if="!readonly">
-        <button class="btn btn-block" :class="{btn_color: not_autoload_result}" style="white-space: normal;text-align: left;"
-                title="Загрузить последний результат"
-                @click="loadLast"
-                v-tippy="{ placement : 'bottom', arrow: true }">
-            <i class="fa fa-circle"/>
+    <div class="input-group">
+      <span class="input-group-btn" style="vertical-align: top;" v-if="!readonly && (!once || (once && isStaticLink))">
+        <button
+          class="btn btn-block"
+          :class="{ btn_color: not_autoload_result }"
+          :title="isStaticLink ? 'Загрузить данные' : 'Загрузить последний результат'"
+          @click="loadLast"
+          v-tippy="{ placement: 'bottom', arrow: true }"
+        >
+          <i class="fa fa-circle" />
         </button>
       </span>
-      <textarea :readonly="readonly" :rows="lines" class="form-control"
-                :placeholder="title"
-                v-tippy="{ placement : 'bottom', arrow: true }" :title="title" v-if="lines > 1" v-model="val"/>
-      <input :readonly="readonly" class="form-control"
-             :placeholder="title"
-             v-tippy="{ placement : 'bottom', arrow: true }" :title="title" v-else v-model="val"/>
+      <textarea
+        :readonly="readonly"
+        :rows="lines"
+        class="form-control"
+        :placeholder="title"
+        v-tippy="{ placement: 'bottom', arrow: true }"
+        :title="title"
+        v-if="lines > 1"
+        v-model="val"
+      />
+      <input
+        :readonly="readonly"
+        class="form-control"
+        :placeholder="title"
+        v-tippy="{ placement: 'bottom', arrow: true }"
+        :title="title"
+        v-else
+        v-model="val"
+      />
     </div>
     <a v-if="direction" class="a-under" href="#" @click.prevent="print_results">
-      печать результатов направления {{direction}}
+      печать результатов направления {{ direction }}
     </a>
   </div>
 </template>
@@ -34,7 +50,11 @@ export default {
     },
     fieldPk: {
       type: String,
-      required: true,
+      required: false,
+    },
+    fieldPkInitial: {
+      type: String,
+      required: false,
     },
     clientPk: {
       type: Number,
@@ -60,19 +80,33 @@ export default {
       type: Number,
       required: false,
     },
+    once: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
       val: this.value,
       title: '',
       direction: null,
+      fpkInitial: this.fieldPkInitial,
     };
+  },
+  computed: {
+    isStaticLink() {
+      return this.fpk?.startsWith('%');
+    },
+    fpk() {
+      return this.fpkInitial || this.fieldPk;
+    },
   },
   mounted() {
     if (!this.raw) {
-      researchesPoint.fieldTitle({ pk: this.fieldPk }).then((data) => {
+      researchesPoint.fieldTitle({ pk: this.fpk }).then(data => {
         const titles = new Set([data.research, data.group, data.field]);
-        this.title = [...titles].filter((t) => !!t).join(' – ');
+        this.title = [...titles].filter(t => !!t).join(' – ');
         this.checkDirection();
 
         setTimeout(() => {
@@ -83,8 +117,11 @@ export default {
       });
     } else if (!this.val && !this.not_autoload_result) {
       this.loadLast();
-    } else if (this.not_autoload_result) {
+    } else if (this.not_autoload_result && (!this.once || this.isStaticLink)) {
       this.val = '';
+    } else if (!this.not_autoload_result && this.once && this.isStaticLink) {
+      this.val = '';
+      this.loadLast();
     }
   },
   watch: {
@@ -108,13 +145,9 @@ export default {
     },
     async loadLast() {
       this.direction = null;
-      const { result } = await directionsPoint.lastFieldResult(this, [
-        'fieldPk',
-        'clientPk',
-        'iss_pk',
-      ]);
+      const { result } = await directionsPoint.lastFieldResult(this, ['clientPk', 'iss_pk'], { fieldPk: this.fpk });
       let logicalAnd = false;
-      if (this.fieldPk.indexOf('&') > -1) {
+      if (this.fpk.indexOf('&') > -1) {
         logicalAnd = true;
       }
       if (result) {
@@ -135,16 +168,26 @@ export default {
 };
 </script>
 
-<style scoped>
-  .base input, .base textarea {
-    z-index: 1;
-  }
+<style scoped land="scss">
+.base input,
+.base textarea {
+  z-index: 1;
+}
 
-  div.btn:hover {
-    cursor: default;
-  }
+div.btn:hover {
+  cursor: default;
+}
 
-  .btn_color {
-    color: #049372;
-  }
+.btn_color {
+  color: #049372;
+}
+
+.btn-block {
+  white-space: normal;
+  text-align: left;
+}
+
+.input-group {
+  width: 100%;
+}
 </style>

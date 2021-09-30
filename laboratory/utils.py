@@ -15,7 +15,7 @@ def localtime(d: datetime):
     return timezone.localtime(d)
 
 
-def strfdatetime(d, format: str):
+def strfdatetime(d, format: str = '%d.%m.%Y %X'):
     if not d:
         return ""
     try:

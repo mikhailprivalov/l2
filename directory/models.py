@@ -4,7 +4,7 @@ from jsonfield import JSONField
 
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
-from users.models import Speciality
+from users.models import DoctorProfile, Speciality
 
 
 class DirectionsGroup(models.Model):
@@ -139,6 +139,7 @@ class Researches(models.Model):
         (10401, '104.01 - Заключение на ВМП'),
         (10402, '104.02 - Направление на ВМП'),
         (10403, '104.03 - Рапорт на ВМП'),
+        (10501, '105.01 - Свидетельство о смерти'),
     )
 
     CO_EXECUTOR_MODES = (
@@ -232,6 +233,7 @@ class Researches(models.Model):
     direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
     type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
+    paddings_size = models.CharField(max_length=10, null=True, blank=True, default=None, help_text="Отступы для бланка результатов (лево| вверх|право|низ)")
 
     @staticmethod
     def filter_type(t):
@@ -447,7 +449,7 @@ class ParaclinicInputField(models.Model):
     TYPES = (
         (0, 'Text'),
         (1, 'Date'),
-        (2, 'MKB'),
+        (2, 'MKB-10'),
         (3, 'Calc'),
         (4, 'purpose'),
         (5, 'first_time'),
@@ -475,6 +477,11 @@ class ParaclinicInputField(models.Model):
         (27, 'Table'),
         (28, 'NSI directory'),
         (29, 'FIAS address'),
+        (30, 'Генератор номера документа'),
+        (31, 'Прикрепление: МО-участок'),
+        (32, 'МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)'),
+        (33, 'МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)'),
+        (34, 'МКБ-обычный (1.2.643.5.1.13.13.11.1005)'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
@@ -553,7 +560,17 @@ class ParaclinicTemplateField(models.Model):
     value = models.TextField(help_text='Значение')
 
     def __str__(self):
-        return "%s (Лаб. %s, Скрыт=%s)" % (self.template_name, self.input_field.title, self.value)
+        return "%s (%s, %s)" % (self.template_name, self.input_field.title, self.value)
+
+
+class ParaclinicUserInputTemplateField(models.Model):
+    doc = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, db_index=True)
+    field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE, db_index=True)
+    value = models.TextField(help_text='Значение')
+    value_lower = models.TextField(help_text='Значение (для индексации)', db_index=True, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.field}, {self.value}"
 
 
 class AutoAdd(models.Model):
@@ -627,34 +644,61 @@ class MaterialVariants(models.Model):
 # class SharedParameters(models.Model):
 #     title = models.CharField(max_length=255, help_text='Название параметра')
 
+class Unit(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Название единицы измерения')
+    short_title = models.CharField(max_length=255, db_index=True, verbose_name='Краткое название единицы измерения')
+    code = models.CharField(max_length=4, db_index=True, verbose_name='Код')
+    hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
+
+    def __str__(self) -> str:
+        return f"{self.code} — {self.short_title} – {self.title}"
+
 
 class Fractions(models.Model):
     """
     Фракции для исследований
     """
 
-    title = models.CharField(max_length=255, help_text='Название фракции')
-    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция', on_delete=models.CASCADE)
-    units = models.CharField(max_length=255, help_text='Еденицы измерения', blank=True, default='')
-    default_ref = models.ForeignKey(References, help_text='Референс по-умолчанию', blank=True, null=True, default=None, on_delete=models.SET_NULL)
-    ref_m = JSONField(help_text='Референсы (М)', blank=True, default="{}")
-    ref_f = JSONField(help_text='Референсы (Ж)', blank=True, default="{}")
-    relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)', db_index=True, on_delete=models.CASCADE, null=True, default=None, blank=True)
-    uet_doc = models.FloatField(default=0, help_text='УЕТы врача', blank=True)
-    uet_co_executor_1 = models.FloatField(default=0, help_text='УЕТы со-исполнителя 1', blank=True)
-    uet_co_executor_2 = models.FloatField(default=0, help_text='УЕТы со-исполнителя 2', blank=True)
-    max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций', blank=True)
-    variants = models.ForeignKey(ResultVariants, null=True, blank=True, help_text='Варианты подсказок результатов', on_delete=models.SET_NULL)
-    variants2 = models.ForeignKey(ResultVariants, related_name="variants2", null=True, blank=True, help_text='Варианты подсказок результатов для Бак.лаб.', on_delete=models.SET_NULL)
-    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
-    render_type = models.IntegerField(default=0, blank=True, help_text='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
-    options = models.CharField(max_length=511, default="", blank=True, help_text='Варианты для динамического числа полей')
-    formula = models.TextField(default="", blank=True, help_text="Формула для автоматического вычисления значения")
-    code = models.CharField(max_length=16, default='', blank=True, help_text='Код фракции')
-    print_title = models.BooleanField(default=False, blank=True, help_text='Печатать название(Группировка)', db_index=True)
-    readonly_title = models.BooleanField(default=False, blank=True, help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
+    title = models.CharField(max_length=255, verbose_name='Название фракции')
+    research = models.ForeignKey(Researches, db_index=True, verbose_name='Исследование, к которому относится фракция', on_delete=models.CASCADE)
+    units = models.CharField(max_length=255, verbose_name='Единицы измерения (DEPRECATED)', blank=True, default='')
+    unit = models.ForeignKey(Unit, verbose_name='Единицы измерения', blank=True, default=None, null=True, on_delete=models.SET_NULL)
+    default_ref = models.ForeignKey(References, verbose_name='Референс по-умолчанию', blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    ref_m = JSONField(verbose_name='Референсы (М)', blank=True, default="{}")
+    ref_f = JSONField(verbose_name='Референсы (Ж)', blank=True, default="{}")
+    relation = models.ForeignKey(ReleationsFT, verbose_name='Пробирка (пробирки)', db_index=True, on_delete=models.CASCADE, null=True, default=None, blank=True)
+    uet_doc = models.FloatField(default=0, verbose_name='УЕТы врача', blank=True)
+    uet_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
+    uet_co_executor_2 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 2', blank=True)
+    max_iterations = models.IntegerField(default=1, verbose_name='Максимальное число итераций', blank=True)
+    variants = models.ForeignKey(ResultVariants, null=True, blank=True, verbose_name='Варианты подсказок результатов', on_delete=models.SET_NULL)
+    variants2 = models.ForeignKey(ResultVariants, related_name="variants2", null=True, blank=True, verbose_name='Варианты подсказок результатов для Бак.лаб.', on_delete=models.SET_NULL)
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, verbose_name='Вес соритировки')
+    hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие фракции', db_index=True)
+    render_type = models.IntegerField(default=0, blank=True, verbose_name='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
+    options = models.CharField(max_length=511, default="", blank=True, verbose_name='Варианты для динамического числа полей')
+    formula = models.TextField(default="", blank=True, verbose_name="Формула для автоматического вычисления значения")
+    code = models.CharField(max_length=16, default='', blank=True, verbose_name='Код фракции')
+    print_title = models.BooleanField(default=False, blank=True, verbose_name='Печатать название(Группировка)', db_index=True)
+    readonly_title = models.BooleanField(default=False, blank=True, verbose_name='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+
+    def get_unit(self):
+        if self.unit:
+            return self.unit
+        if self.units:
+            u = Unit.objects.filter(short_title=self.units).first()
+            if u:
+                self.unit = u
+                self.save(update_fields=['unit'])
+                return u
+        return None
+
+    def get_unit_str(self):
+        u = self.get_unit()
+        if u:
+            return u.short_title
+        return self.units
 
     def get_fsli_code(self):
         return (self.fsli or '').strip()

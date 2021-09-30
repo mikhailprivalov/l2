@@ -1,5 +1,7 @@
 import { StringDict } from '@/types/common';
 
+const DEBUG = false;
+
 const FUNCTION_CACHE = {};
 
 const patientProps = ['age', 'sex'];
@@ -43,7 +45,7 @@ export const swapLayouts = (origStr: string): string => {
     k: 'л',
     l: 'д',
     ';': 'ж',
-    '\'': 'э',
+    "'": 'э',
     z: 'я',
     x: 'ч',
     c: 'с',
@@ -76,25 +78,85 @@ interface Field {
   value: string | void;
 }
 
+const reDigitBrackets = /{(\d+)}/g;
+const reBrackets = /[{}]/g;
+const reFloat = /^\d+([,.]\d+)?$/;
+const reOpen = /{/g;
+const reClose = /}/g;
+const reN = /\n/g;
+
+const RE_CACHE = {};
+
+const getRe = (re: string, m: any) => {
+  const k = `${re}%%${m || null}`;
+  if (!RE_CACHE[k]) {
+    RE_CACHE[k] = new RegExp(re, m);
+  }
+
+  return RE_CACHE[k];
+};
+
+const BRACKETS_REPLACE_CACHE = {};
+
+const replaceBrackets = (str: string) => {
+  if (!BRACKETS_REPLACE_CACHE[str]) {
+    BRACKETS_REPLACE_CACHE[str] = str.replace(reOpen, '\\{').replace(reClose, '\\}');
+  }
+  return BRACKETS_REPLACE_CACHE[str];
+};
+
+const BRACKETS_CLEAN_CACHE = {};
+
+const cleanBrackets = (str: string) => {
+  if (!BRACKETS_CLEAN_CACHE[str]) {
+    BRACKETS_CLEAN_CACHE[str] = str.replace(reBrackets, '');
+  }
+  return BRACKETS_CLEAN_CACHE[str];
+};
+
+const cleanObject = (obj: any) => {
+  for (const key of Object.keys(obj)) {
+    // eslint-disable-next-line no-param-reassign
+    delete obj[key];
+  }
+};
+
+export const cleanCaches = () => {
+  cleanObject(FUNCTION_CACHE);
+  cleanObject(RE_CACHE);
+  cleanObject(BRACKETS_REPLACE_CACHE);
+  cleanObject(BRACKETS_CLEAN_CACHE);
+};
+
 export const PrepareFormula = (
-  fields: Field[], formula: string, patient = {}, strict = false, returnLinks = false,
+  fields: Field[],
+  formula: string,
+  patient = {},
+  strict = false,
+  returnLinks = false,
 ): string | Link[] => {
   let s = formula;
-  const necessary = s.match(/{(\d+)}/g);
+  const necessary = s.match(reDigitBrackets);
   const links = [];
 
   if (necessary) {
     for (const n of necessary) {
       let v = null;
-      const vid = n.replace(/[{}]/g, '');
+      const vid = cleanBrackets(n);
       const vFromField = (fields[vid] || {}).value;
-      const vOrig = String(Number(vFromField) === 0 ? 0 : (vFromField || '')).trim();
+      if (DEBUG) {
+        console.log('vFromField', vid, vFromField);
+      }
+      const vOrig = String(parseInt(vFromField || '', 10) === 0 ? 0 : vFromField || '').trim();
+      if (DEBUG) {
+        console.log('vOrig', vid, vOrig);
+      }
       if (returnLinks) {
-        if (!links.find((l) => l.id === vid)) {
+        if (!links.find(l => l.id === vid)) {
           links.push(new Link(LINK_FIELD, vid));
         }
       } else {
-        if ((/^\d+([,.]\d+)?$/).test(vOrig) && !strict) {
+        if (reFloat.test(vOrig) && !strict) {
           if (fields[vid]) {
             v = parseFloat(vOrig.trim().replace(',', '.'));
           }
@@ -103,11 +165,11 @@ export const PrepareFormula = (
         } else {
           v = vOrig;
         }
-        const r = new RegExp(n.replace(/{/g, '\\{').replace(/}/g, '\\}'), 'g');
+        const r = getRe(replaceBrackets(n), 'g');
         if (strict) {
           s = s.replace(r, `\`${v}\``);
         } else {
-          s = s.replace(r, String(v === 0 ? 0 : (v || '')));
+          s = s.replace(r, String(v === 0 ? 0 : v || ''));
         }
       }
     }
@@ -120,7 +182,7 @@ export const PrepareFormula = (
         links.push(new Link(LINK_PATIENT, prop));
       }
     } else {
-      const r = new RegExp(`\\[_${prop}_\\]`, 'g');
+      const r = getRe(`\\[_${prop}_\\]`, 'g');
       s = s.replace(r, patient[prop] || '');
     }
   }
@@ -129,15 +191,19 @@ export const PrepareFormula = (
     return links;
   }
 
-  s = s.replace(/\n/g, '\\n');
+  s = s.replace(reN, '\\n');
 
-  return `return (${s});`;
+  return `return /*strict=${strict}*/ (${s});`;
 };
 
-export const CalculateFormula = (
-  fields: Field[], formula: string, patient = {}, strict = false,
-): string | number => {
+const isEmpty = v => !v;
+const isFilled = v => !isEmpty(v);
+
+export const CalculateFormula = (fields: Field[], formula: string, patient = {}, strict = false): string | number => {
   const s = PrepareFormula(fields, formula, patient, strict);
+  if (DEBUG) {
+    console.log(s);
+  }
 
   if (Array.isArray(s)) {
     return '';
@@ -146,10 +212,10 @@ export const CalculateFormula = (
   try {
     if (!FUNCTION_CACHE[s]) {
       // eslint-disable-next-line no-new-func
-      const result = (new Function(s)());
-      FUNCTION_CACHE[s] = (typeof result === 'boolean' || result) ? result : 0;
+      const result = new Function('isEmpty', 'isFilled', s)(isEmpty, isFilled);
+      FUNCTION_CACHE[s] = typeof result === 'boolean' || result ? result : 0;
     }
-    console.log(FUNCTION_CACHE);
+    // console.log(FUNCTION_CACHE);
     return FUNCTION_CACHE[s];
   } catch (e) {
     FUNCTION_CACHE[s] = null;
@@ -159,15 +225,17 @@ export const CalculateFormula = (
   }
 };
 
-export const CalculateVisibility = (
-  fields: Field[], rule: string, patient = {},
-): boolean => Boolean(CalculateFormula(fields, rule, patient, true));
+export const CalculateVisibility = (f: Field[], rule: string, p = {}): boolean => Boolean(CalculateFormula(f, rule, p, true));
 
-interface Error {code?: number, message?: string}
+interface Error {
+  code?: number;
+  message?: string;
+}
 
 export const validateSnils = (
-  snilsOrig: string | number, returnErrors?: boolean,
-) : boolean | {result: boolean, errors: Error} => {
+  snilsOrig: string | number,
+  returnErrors?: boolean,
+): boolean | { result: boolean; errors: Error } => {
   let result = false;
   let snils = snilsOrig;
   const errors: Error = {};
@@ -234,8 +302,10 @@ export const normalizeNamePart = (stringOrig: string): string => {
 
 export const replaceAll = (s: string, a: string, b: string) => s.replace(new RegExp(a, 'gm'), b);
 
-export const valuesToString = (origStr: string, values: StringDict) => Object.keys(values)
-  .reduce((s, k) => replaceAll(s, `{${k}}`, values[k]), origStr);
+const keys = (values: StringDict) => Object.keys(values);
+const v2s = (origStr: string, values: StringDict) => keys(values).reduce((s, k) => replaceAll(s, `{${k}}`, values[k]), origStr);
+
+export const valuesToString = v2s;
 
 export const getFormattedDate = (date: Date | void): string => {
   if (!date) {

@@ -1,5 +1,7 @@
+import base64
 import datetime
 import logging
+from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
 import re
@@ -33,7 +35,7 @@ from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
-from directions.models import Napravleniya
+from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 
@@ -44,17 +46,26 @@ logger = logging.getLogger("IF")
 def next_result_direction(request):
     from_pk = request.GET.get("fromPk")
     after_date = request.GET.get("afterDate")
+    only_signed = request.GET.get("onlySigned")
     if after_date == '0':
         after_date = AFTER_DATE
     next_n = int(request.GET.get("nextN", 1))
     type_researches = request.GET.get("research", '*')
     d_start = f'{after_date}'
-    is_research = -1
+    is_research = 1
     researches = [-999]
-    if type_researches != '*':
+    if type_researches == 'lab':
+        researches = [x.pk for x in Researches.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY)]
+    elif type_researches != '*':
         researches = [int(i) for i in type_researches.split(',')]
-        is_research = 1
-    dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
+    else:
+        is_research = -1
+    if only_signed == '1':
+        # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
+        # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
+        dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
+    else:
+        dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
     next_time = None
     naprs = [d[0] for d in dirs]
@@ -132,7 +143,7 @@ def result_amd_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
-    direction = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
+    direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
     individual = card.individual
 
@@ -144,6 +155,25 @@ def direction_data(request):
         return Response({"ok": False})
 
     iss_index = random.randrange(len(iss))
+
+    signed_documents = []
+
+    if direction.eds_total_signed:
+        last_time_confirm = direction.last_time_confirm()
+        for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
+            document = {
+                'type': d.file_type.upper(),
+                'content': base64.b64encode(d.file.read()).decode('utf-8'),
+                'signatures': [],
+            }
+
+            for s in DocumentSign.objects.filter(document=d):
+                document['signatures'].append({
+                    "content": base64.b64encode(s.sign_value.encode('utf-8')).decode('utf-8'),
+                    "type": s.sign_type,
+                })
+
+            signed_documents.append(document)
 
     return Response(
         {
@@ -157,7 +187,13 @@ def direction_data(request):
                 "patronymic": individual.patronymic,
                 "birthday": individual.birthday,
                 "sex": individual.sex,
-                "card": {"base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title}, "pk": card.pk, "number": card.number},
+                "card": {
+                    "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
+                    "pk": card.pk,
+                    "number": card.number,
+                    "n3Id": card.n3_id,
+                    "numberWithType": card.number_with_type(),
+                },
             },
             "issledovaniya": [x.pk for x in iss],
             "timeConfirmation": iss[iss_index].time_confirmation,
@@ -165,13 +201,18 @@ def direction_data(request):
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
-            "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else 'ОМС',
+            "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else 'другое',
+            "finSourceCode": direction.istochnik_f.get_n3_code() if direction.istochnik_f else '6',
             "oldPk": direction.core_id,
             "isExternal": direction.is_external,
             "titleInitiator": direction.get_title_org_initiator(),
             "ogrnInitiator": direction.get_ogrn_org_initiator(),
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
+            "hospitalN3Id": direction.hospital_n3id,
+            "signed": direction.eds_total_signed,
+            "totalSignedAt": direction.eds_total_signed_at,
+            "signedDocuments": signed_documents,
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
         }
@@ -212,8 +253,14 @@ def issledovaniye_data(request):
                     refs = [f'от {refs_list[0]}']
                 elif refs_list[0] == refs_list[1]:
                     refs = [refs.const_orig]
+                else:
+                    refs = refs_list
         else:
             refs = [r.calc_normal(only_ref=True) or '']
+
+        norm = r.calc_normal()
+
+        u = r.fraction.get_unit()
 
         results_data.append(
             {
@@ -221,11 +268,27 @@ def issledovaniye_data(request):
                 "fsli": r.fraction.get_fsli_code(),
                 "value": r.value.replace(',', '.'),
                 "units": r.get_units(),
+                "unitCode": u.code if u else None,
                 "ref": refs,
+                "interpretation": 'N' if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else 'A',
             }
         )
 
     time_confirmation = i.time_confirmation_local
+
+    doctor_data = {}
+
+    if i.doc_confirmation:
+        doctor_data = {
+            "pk": i.doc_confirmation_id,
+            "snils": i.doc_confirmation.snils,
+            "n3Id": i.doc_confirmation.n3_id,
+            "spec": i.doc_confirmation.specialities.n3_id if i.doc_confirmation.specialities else None,
+            "role": i.doc_confirmation.position.n3_id if i.doc_confirmation.position else None,
+            "family": i.doc_confirmation.family,
+            "name": i.doc_confirmation.name,
+            "patronymic": i.doc_confirmation.patronymic,
+        }
 
     return Response(
         {
@@ -237,6 +300,7 @@ def issledovaniye_data(request):
             "dateTimeReceive": format_time_if_is_not_none(sample.time_recive_local) if sample else None,
             "dateTimeConfirm": format_time_if_is_not_none(time_confirmation),
             "docConfirm": i.doc_confirmation_fio,
+            "doctorData": doctor_data,
             "results": results_data,
             "code": i.research.code,
             "comments": i.lab_comment,
@@ -322,7 +386,7 @@ def issledovaniye_data_multi(request):
     )
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def make_log(request):
     key = request.GET.get("key")
     keys = request.GET.get("keys", key).split(",")
@@ -335,6 +399,9 @@ def make_log(request):
     pks_to_resend_n3_false = [x for x in keys if x] if t in (60000, 60001, 60002, 60003) else []
     pks_to_resend_l2_false = [x for x in keys if x] if t in (60004, 60005) else []
 
+    pks_to_set_odli_id = [x for x in keys if x] if t in (60007,) else []
+    pks_to_set_odli_id_fail = [x for x in keys if x] if t in (60008,) else []
+
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
@@ -344,6 +411,17 @@ def make_log(request):
 
         for k in pks_to_resend_l2_false:
             Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_odli_id_fail:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_odli_id:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+            if str(k) in body and isinstance(body[k], dict) and body[str(k)]['id']:
+                d = directions.Napravleniya.objects.get(pk=k)
+                d.n3_odli_id = body[str(k)]['id']
+                d.save(update_fields=['n3_odli_id'])
 
     return Response({"ok": True})
 
@@ -1089,6 +1167,24 @@ def eds_get_user_data(request):
     )
 
 
+def get_cda_data(pk):
+    n: Napravleniya = Napravleniya.objects.get(pk=pk)
+    card = n.client
+    ind = n.client.individual
+
+    return {
+        "title": n.get_eds_title(),
+        "patient": {
+            'pk': card.number,
+            'family': ind.family,
+            'name': ind.name,
+            'patronymic': ind.patronymic,
+            'gender': ind.sex.lower(),
+            'birthdate': ind.birthday.strftime("%Y%m%d"),
+        },
+    }
+
+
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
@@ -1103,24 +1199,7 @@ def eds_get_cda_data(request):
 
     pk = body.get("pk")
 
-    n = Napravleniya.objects.get(pk=pk)
-    i: directions.Issledovaniya = n.issledovaniya_set.all()[0]
-    card = n.client
-    ind = n.client.individual
-
-    return Response(
-        {
-            "title": i.research.title,
-            "patient": {
-                'pk': card.number,
-                'family': ind.family,
-                'name': ind.name,
-                'patronymic': ind.patronymic,
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
-            },
-        }
-    )
+    return Response(get_cda_data(pk))
 
 
 @api_view(['POST'])

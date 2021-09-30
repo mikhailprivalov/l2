@@ -540,6 +540,7 @@ export default {
       external_organization: 'NONE',
       directions_count: '1',
       researches_direction_params: {},
+      tableFieldsErrors: {},
     };
   },
   watch: {
@@ -785,6 +786,12 @@ export default {
     }
     this.load_direction_params();
     this.load_stationar_deparments();
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
+    });
   },
   methods: {
     async changeSelectGlobalResearchDirectionParam(pk) {
@@ -976,6 +983,7 @@ export default {
       this.directions_count = '1';
       this.global_current_direction_param = -1;
       this.hospital_department_override = -1;
+      this.tableFieldsErrors = {};
     },
     clear_fin() {
       this.select_fin(-1);
@@ -1014,8 +1022,12 @@ export default {
         for (const f of g.fields) {
           n++;
           if (
-            f.required
-            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            ((f.required
+              && (f.value === ''
+                || f.value === '- Не выбрано'
+                || !f.value
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+              || this.tableFieldsErrors[f.pk])
             && vField(g, research.groups, f.visibility, this.simulated_patient)
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
@@ -1241,7 +1253,6 @@ export default {
   border-radius: 0 !important;
   border: none;
   border-bottom: 1px solid #aab2bd;
-
   &:first-child {
     width: 180px;
   }

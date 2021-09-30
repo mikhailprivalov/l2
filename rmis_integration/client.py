@@ -1350,7 +1350,7 @@ class Directions(BaseRequester):
         diagnos = x.issledovaniye.diagnos.split(" ")[0]
         if not diagnos:
             return None
-        diagnos_rmis_id = Diagnoses.objects.values_list('rmis_id', flat=True).filter(code=diagnos)
+        diagnos_rmis_id = Diagnoses.objects.values_list('rmis_id', flat=True).filter(code=diagnos, hide=False)
         if not diagnos_rmis_id:
             return None
 

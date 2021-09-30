@@ -7,20 +7,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import Component from 'vue-class-component';
-
-@Component({
+export default {
   props: {
     color: { type: String, required: true },
     title: { type: String, required: true },
   },
-})
-export default class ColorTitled extends Vue {
-  color: string;
-
-  title: string;
-}
+};
 </script>
 
 <style lang="scss" scoped>

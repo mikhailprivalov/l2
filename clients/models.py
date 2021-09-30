@@ -14,6 +14,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.db.models.signals import pre_save
 from django.utils import timezone
+from jsonfield import JSONField
 
 import slog.models as slog
 from appconf.manager import SettingManager
@@ -514,6 +515,24 @@ class Individual(models.Model):
 
         return is_new, updated
 
+    def match_tfoms(self):
+        enp_doc: Union[Document, None] = Document.objects.filter(document_type__title__startswith="Полис ОМС", individual=self).first()
+
+        tfoms_data = None
+        if enp_doc and enp_doc.number:
+            from tfoms.integration import match_enp
+
+            tfoms_data = match_enp(enp_doc.number)
+
+        if not tfoms_data:
+            from tfoms.integration import match_patient
+
+            tfoms_data = match_patient(self.family, self.name, self.patronymic, strfdatetime(self.birthday, '%Y-%m-%d'))
+
+            tfoms_data = None if not isinstance(tfoms_data, list) or len(tfoms_data) == 0 else tfoms_data[0]
+
+        return tfoms_data
+
     @staticmethod
     def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False, need_return_card=False):
         if isinstance(data, list):
@@ -897,8 +916,10 @@ class Card(models.Model):
     main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     main_address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, help_text="ФИАС Адрес регистрации")
+    main_address_details = JSONField(blank=True, null=True, help_text="Детали адреса регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     fact_address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, help_text="ФИАС Адрес факт. проживания")
+    fact_address_details = JSONField(blank=True, null=True, help_text="Детали факт адреса")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
@@ -920,18 +941,20 @@ class Card(models.Model):
     phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
 
+    medbook_prefix = models.CharField(max_length=3, blank=True, default='', db_index=True, help_text="Префикс номера мед.книжки")
     medbook_number = models.CharField(max_length=16, blank=True, default='', db_index=True, help_text="Номер мед.книжки")
     medbook_type = models.CharField(max_length=6, choices=MEDBOOK_TYPES, blank=True, default=MEDBOOK_TYPES[0][0], help_text="Тип номера мед.книжки")
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
     @property
     def main_address_full(self):
-        return json.dumps({'address': self.main_address, 'fias': self.main_address_fias})
+        return json.dumps({'address': self.main_address, 'fias': self.main_address_fias, 'details': self.main_address_details})
 
     @property
     def fact_address_full(self):
-        return json.dumps({'address': self.fact_address, 'fias': self.fact_address_fias})
+        return json.dumps({'address': self.fact_address, 'fias': self.fact_address_fias, 'details': self.fact_address_details})
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -1023,7 +1046,7 @@ class Card(models.Model):
         ind_data['passport_issued'] = (
             "______________________________________________________________" if not ind_documents['passport']['issued'] and not full_empty else ind_documents['passport']['issued']
         )
-
+        ind_data['passport_issued_orig'] = ind_documents['passport']['issued']
         # document "св-во о рождении"
         ind_data['bc_num'] = ind_documents['bc']['num']
         ind_data['bc_serial'] = ind_documents['bc']['serial']

@@ -21,6 +21,7 @@ from researches.models import Tubes
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
+from utils.parse_sql import death_form_result_parse
 from . import sql_func
 from . import structure_sheet
 import datetime
@@ -39,7 +40,7 @@ from .sql_func import (
     sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
 )
 
-from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID
+from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -682,11 +683,17 @@ def statistic_xls(request):
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Отчет")
         research_title = Researches.objects.values_list('title').get(pk=research_id)
-        ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
-        researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
-        ws = structure_sheet.statistic_research_data(ws, researches_sql)
+        if research_id == DEATH_RESEARCH_PK:
+            researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
+            data_death = death_form_result_parse(researches_sql)
+            ws = structure_sheet.statistic_research_death_base(ws, d1, d2, research_title[0])
+            ws = structure_sheet.statistic_research_death_data(ws, data_death)
+        else:
+            ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
+            researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
+            ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
     elif tp == "journal-get-material":
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
@@ -1507,6 +1514,7 @@ def sreening_xls(request):
 
     # кол-во в плане по скринингу в текущем месяце
     count_regplan_for_month = screening_plan_for_month_all_count(year, month)
+
     screening_data['count_regplan_for_month'] = count_regplan_for_month[0].count
 
     sreening_plan_individuals = screening_plan_for_month_all_patient(year, month)
@@ -1532,13 +1540,13 @@ def sreening_xls(request):
 
     # адекватных
     pass_pap_adequate_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "адекватный"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "^адекватный"
     )
     screening_data['pass_pap_adequate_result_value'] = pass_pap_adequate_result_value[0].count
 
     # недостаточно адекватный
     pass_pap_not_enough_adequate_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "недостаточно адекватный"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "^недостаточно"
     )
     screening_data['pass_pap_not_enough_adequate_result_value'] = pass_pap_not_enough_adequate_result_value[0].count
 
@@ -1564,25 +1572,25 @@ def sreening_xls(request):
 
     # CIN-I
     pass_pap_cin_i_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I%"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "дисплазии CIN-I$", "", count_param=1
     )
     screening_data['pass_pap_cin_i_result_value'] = pass_pap_cin_i_result_value[0].count
 
     # CIN I-II, II
     pass_pap_cin_i_ii_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I-II%", "%CIN-II%", count_param=2
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "CIN-I-II$", "дисплазии CIN-II$", count_param=2
     )
     screening_data['pass_pap_cin_i_ii_result_value'] = pass_pap_cin_i_ii_result_value[0].count
 
     # CIN-II-III, III
     pass_pap_cin_ii_iii_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-II-III%", "%CIN-III%", count_param=2
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "CIN-II-III$", "CIN-III$", count_param=2
     )
     screening_data['pass_pap_cin_ii_iii_result_value'] = pass_pap_cin_ii_iii_result_value[0].count
 
     # cr in situ
     pass_pap_cr_in_situ_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%cr in situ%"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "cr in situ", "", count_param=1
     )
     screening_data['pass_pap_cr_in_situ_result_value'] = pass_pap_cr_in_situ_result_value[0].count
 

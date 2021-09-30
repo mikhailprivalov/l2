@@ -72,6 +72,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
@@ -81,6 +82,7 @@ MIDDLEWARE_ADD = []
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
+    'django.contrib.auth.backends.RemoteUserBackend',
 ]
 
 REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication']}
@@ -212,6 +214,7 @@ DOC_CALL_SYNC_WAIT_LONG_TIME_SECS = 300
 RATELIMIT_VIEW = 'mainmenu.views.ratelimited'
 
 RMIS_PROXY = None
+FIAS_PROXY = None
 AFTER_DATE = None
 AFTER_DATE_HOLTER = None
 
@@ -273,10 +276,12 @@ URL_ELN_MADE = ""
 URL_SCHEDULE = ""
 EXTRA_MASTER_RESEARCH_PK = None
 EXTRA_SLAVE_RESEARCH_PK = None
+
 PAP_ANALYSIS_ID = []
 PAP_ANALYSIS_FRACTION_QUALITY_ID = []
 PAP_ANALYSIS_FRACTION_CONTAIN_ID = []
 
+DEATH_RESEARCH_PK = None
 
 COVID_RESEARCHES_PK = []
 CENTRE_GIGIEN_EPIDEMIOLOGY = ""

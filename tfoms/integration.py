@@ -67,3 +67,11 @@ def match_enp(enp) -> Optional[dict]:
     if isinstance(data, list) and len(data) > 0:
         return data[0]
     return data
+
+
+def get_attachment_by_idt(idt) -> Optional[dict]:
+    logger.exception(f"tfms: get_attachment_by_idt: {idt}")
+    data = make_request("get-attachment-info-by-idt", {"idt": idt}, timeout=5)
+    if isinstance(data, list) and len(data) > 0:
+        return data[0]
+    return data

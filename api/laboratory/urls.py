@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('fractions', views.fractions),
+    path('units', views.units),
     path('fraction', views.fraction),
     path('save-fsli', views.save_fsli),
     path('laboratories', views.laboratories),

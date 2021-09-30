@@ -16,6 +16,8 @@ import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
 // @ts-ignore
 import plural from 'plural-ru';
+import VueFormulate from '@braid/vue-formulate';
+import { ru } from '@braid/vue-formulate-i18n';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 
 import api from './api';
@@ -47,6 +49,10 @@ export default (): void => {
   Vue.use(VueInputMask);
   Vue.use(VueCollapse);
   Vue.use(PortalVue);
+  Vue.use(VueFormulate, {
+    plugins: [ru],
+    locale: 'ru',
+  });
   Vue.prototype.$api = api;
   Vue.filter('pluralAge', amount => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
   Vue.filter('pluralRecords', amount => `${amount} ${plural(amount, 'запись', 'записи', 'записей')}`);

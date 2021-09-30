@@ -1,6 +1,7 @@
 from django.db import connection
 
 from laboratory.settings import TIME_ZONE
+from utils.db import namedtuplefetchall
 
 
 def dispensarization_research(sex, age, client_id, d_start, d_end):
@@ -111,7 +112,7 @@ def get_field_result(client_id, field_id, count=1):
     return row
 
 
-def users_by_group(title_groups):
+def users_by_group(title_groups, hosp_id):
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -129,23 +130,23 @@ def users_by_group(title_groups):
           SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
             
         t_users AS (
-          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id
           FROM users_doctorprofile
           LEFT JOIN
           t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
-          WHERE user_id in (SELECT user_id FROM t_users_id))
-            
+          WHERE user_id in (SELECT user_id FROM t_users_id) and hospital_id = %(hosp_id)s) 
+    
         SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title FROM t_users
         ORDER BY podrazdeleniye_id                    
         """,
-            params={'title_groups': title_groups},
+            params={'title_groups': title_groups, "hosp_id": hosp_id},
         )
 
         row = cursor.fetchall()
     return row
 
 
-def users_all():
+def users_all(hosp_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -157,15 +158,38 @@ def users_all():
           SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
             
         t_users AS (
-          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id
           FROM users_doctorprofile
           LEFT JOIN
           t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
-          WHERE user_id in (SELECT user_id FROM t_users_id))
-            
+          WHERE user_id in (SELECT user_id FROM t_users_id) and hospital_id = %(hosp_id)s)            
         SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title FROM t_users
         ORDER BY podrazdeleniye_id                    
-        """)
+        """,
+            params={"hosp_id": hosp_id},
+        )
 
         row = cursor.fetchall()
     return row
+
+
+def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1"):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT * FROM public.directions_diagnoses
+            WHERE d_type=%(d_type)s and 
+              CASE
+                WHEN %(diag_title)s != '-1' AND %(diag_mkb)s != '-1' THEN 
+                  code ~* %(diag_mkb)s and title ~* %(diag_title)s
+                WHEN %(diag_title)s != '-1' AND %(diag_mkb)s = '-1' THEN 
+                  title ~* %(diag_title)s
+                WHEN %(diag_title)s = '-1' AND %(diag_mkb)s != '-1' THEN 
+                  code ~* %(diag_mkb)s
+              END
+        LIMIT 200
+        """,
+            params={"d_type": d_type, "diag_title": diag_title, "diag_mkb": diag_mkb},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

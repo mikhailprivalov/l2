@@ -220,8 +220,16 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
             AND client_id=%(card_pk)s
             ORDER BY directions_issledovaniya.time_confirmation DESC, directions_napravleniya.id
         """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal,
-                    'lab_podr': lab_podr, 'card_pk': card_pk1},
+            params={
+                'd_start': d_s,
+                'd_end': d_e,
+                'tz': TIME_ZONE,
+                'is_lab': is_lab,
+                'is_paraclinic': is_paraclinic,
+                'is_doc_refferal': is_doc_refferal,
+                'lab_podr': lab_podr,
+                'card_pk': card_pk1,
+            },
         )
         rows = namedtuplefetchall(cursor)
     return rows

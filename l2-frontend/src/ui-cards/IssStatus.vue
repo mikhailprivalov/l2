@@ -1,5 +1,5 @@
 <template>
-  <span :class="'status-' + status" class="status">{{text}}</span>
+  <span :class="'status-' + status" class="status">{{ text }}</span>
 </template>
 
 <script lang="ts">
@@ -47,23 +47,23 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .status {
-    padding: 5px;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.status {
+  padding: 5px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-    &-none {
-      color: #CF3A24
-    }
-
-    &-saved {
-      color: #F4D03F
-    }
-
-    &-confirmed {
-      color: #049372
-    }
+  &-none {
+    color: #cf3a24;
   }
+
+  &-saved {
+    color: #f4d03f;
+  }
+
+  &-confirmed {
+    color: #049372;
+  }
+}
 </style>

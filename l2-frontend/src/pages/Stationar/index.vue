@@ -687,6 +687,7 @@ export default {
       departments: [],
       prev_department: '',
       change_department: false,
+      tableFieldsErrors: {},
     };
   },
   watch: {
@@ -732,6 +733,12 @@ export default {
     this.inited = true;
     this.$root.$on('open-history', d => {
       this.load_pk(d, false);
+    });
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
     });
   },
   methods: {
@@ -834,6 +841,7 @@ export default {
       this.researches_forms = null;
       this.patient_form = null;
       this.stationar_research = -1;
+      this.tableFieldsErrors = {};
     },
     async load_pk(pk, every = false) {
       this.pk = String(pk);
@@ -1165,9 +1173,13 @@ export default {
         for (const f of g.fields) {
           n++;
           if (
-            f.required
-            && f.field_type !== 3
-            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            ((f.required
+              && f.field_type !== 3
+              && (f.value === ''
+                || f.value === '- Не выбрано'
+                || !f.value
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+              || this.tableFieldsErrors[f.pk])
             && vField(g, research.research.groups, f.visibility, this.patient_form)
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));

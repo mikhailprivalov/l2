@@ -1,11 +1,12 @@
 <template>
-  <div class="field-inputs"
-       v-if="values.length > 0 && !confirmed && ![10, 12, 18, 19, 21, 24, 25, 26, 27, 28].includes(field_type)">
+  <div
+    class="field-inputs"
+    v-if="values.length > 0 && !confirmed && ![10, 12, 18, 19, 21, 24, 25, 26, 27, 28].includes(field_type)"
+  >
     <div class="input-values-wrap">
       <div class="input-values">
         <div class="inner-wrap">
-          <div @click="append_value(val)" class="input-value" :key="`${val}_${i}`"
-               v-for="(val, i) in values">
+          <div @click="append_value(val)" class="input-value" :key="`${val}_${i}`" v-for="(val, i) in values">
             {{ val }}
           </div>
         </div>
@@ -59,12 +60,7 @@ export default {
           }
           add_val = ` ${add_val}`;
         } else if (
-          (val.length === 0
-            || (val.length >= 2
-              && val[val.length - 2] === '.'
-              && val[val.length - 1] === '\n'
-            )
-          )
+          (val.length === 0 || (val.length >= 2 && val[val.length - 2] === '.' && val[val.length - 1] === '\n'))
           && this.field_title === ''
         ) {
           add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());

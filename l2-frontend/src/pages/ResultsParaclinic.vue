@@ -350,6 +350,7 @@
                 :position="['left', 'bottom', 'left', 'top']"
                 v-if="!data.has_microbiology && !data.has_monitoring"
                 @clickout="hide_results"
+                :key="`dd-${row.pk}`"
               >
                 <a style="font-weight: normal" href="#" @click.prevent="open_results(row.pk)">
                   (другие результаты)
@@ -424,6 +425,7 @@
             :patient="data.patient"
             :change_mkb="change_mkb(row)"
             :pk="row.pk"
+            :key="`df-${row.pk}`"
           />
           <div
             class="group"
@@ -731,7 +733,11 @@
                 Отправить в АМД
               </button>
             </template>
-            <EDSButton :key="`${data.direction.pk}_${row.confirmed}`" :iss-data="row" :direction-data="data" />
+            <EDSDirection
+              :key="`${data.direction.pk}_${row.confirmed}`"
+              :direction-pk="data.direction.pk"
+              :all_confirmed="data.direction.all_confirmed"
+            />
             <div class="status-list" v-if="!r(row) && !row.confirmed">
               <div class="status status-none">Не верно:</div>
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
@@ -915,10 +921,11 @@ import moment from 'moment';
 import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
 import { vField, vGroup } from '@/components/visibility-triggers';
+import { cleanCaches } from '@/utils';
 import { enter_field, leave_field } from '@/forms/utils';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
-import EDSButton from '@/ui-cards/EDSButton.vue';
+import EDSDirection from '@/ui-cards/EDSDirection.vue';
 import patientsPoint from '../api/patients-point';
 import * as actions from '../store/action-types';
 import directionsPoint from '../api/directions-point';
@@ -948,7 +955,7 @@ import FastTemplates from '../forms/FastTemplates.vue';
 export default {
   name: 'results-paraclinic',
   components: {
-    EDSButton,
+    EDSDirection,
     FastTemplates,
     BacMicroForm,
     DescriptiveForm,
@@ -1028,6 +1035,7 @@ export default {
         2: 'Результат подтверждён',
       },
       embedded: false,
+      tableFieldsErrors: {},
     };
   },
   watch: {
@@ -1102,6 +1110,13 @@ export default {
 
     this.$root.$on('preselect-args-ok', () => {
       this.hasPreselectOk = true;
+    });
+
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
     });
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1230,10 +1245,13 @@ export default {
         let n = 0;
         for (const f of g.fields) {
           n++;
-          console.log(f.title, f.controlParam);
           if (
-            (f.required
-              && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            (((f.required
+              && (f.value === ''
+                || f.value === '- Не выбрано'
+                || !f.value
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+              || this.tableFieldsErrors[f.pk])
               && vField(g, research.research.groups, f.visibility, this.data.patient))
             || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {
@@ -1531,6 +1549,8 @@ export default {
       this.dreg_rows = [];
       this.benefit_rows_loading = false;
       this.benefit_rows = [];
+      this.tableFieldsErrors = {};
+      cleanCaches();
       this.$root.$emit('preselect-card', null);
     },
     print_direction(pk) {

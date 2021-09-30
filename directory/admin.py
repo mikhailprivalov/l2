@@ -92,6 +92,7 @@ class RefFractions(admin.ModelAdmin):
     )
     list_filter = ('research__podrazdeleniye',)
     search_fields = ('title',)
+    autocomplete_fields = ('unit', 'research')
 
     def podr(self, obj):
         return obj.research.podrazdeleniye
@@ -215,6 +216,14 @@ class ScreeningPlanAdmin(admin.ModelAdmin):
     autocomplete_fields = ('research',)
 
 
+class UnitAdmin(admin.ModelAdmin):
+    list_display = ('title', 'short_title', 'code', 'hide')
+    list_filter = (
+        'hide',
+    )
+    search_fields = ('title', 'short_title', 'code')
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -240,3 +249,4 @@ admin.site.register(models.Localization, TitleFsli)
 admin.site.register(models.ServiceLocation, TitleHide)
 admin.site.register(models.HospitalService, ResHospitalService)
 admin.site.register(models.ScreeningPlan, ScreeningPlanAdmin)
+admin.site.register(models.Unit, UnitAdmin)

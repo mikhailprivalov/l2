@@ -27,7 +27,7 @@
     </div>
     <div class="input-group mt5" v-if="l2_profcenter">
       <span class="input-group-addon addon-fixed">Мед.книжка</span>
-      <input class="form-control" v-model="form.medbookNumber" placeholder="номер" maxlength="16" />
+      <input class="form-control" v-model="form.medbookNumber" placeholder="номер (без префикса)" maxlength="16" />
     </div>
     <div class="row mt5">
       <div class="col-xs-8">
