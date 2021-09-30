@@ -85,7 +85,7 @@ def get_researches(request):
 
         restricted_to_direct.extend(restricted_monitoring)
 
-        #Доступные услуги по роли
+        # Доступные услуги по роли
         user_gr = [x.pk for x in request.user.groups.all()]
         global_groups = [x.pk for x in Group.objects.all()]
         restricted_researches_by_group = []
