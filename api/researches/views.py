@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q, Prefetch
@@ -83,8 +84,18 @@ def get_researches(request):
             restricted_monitoring.extend(groups_black_list)
 
         restricted_to_direct.extend(restricted_monitoring)
-        restricted_to_direct = list(set(restricted_to_direct))
 
+        #Доступные услуги по роли
+        user_gr = [x.pk for x in request.user.groups.all()]
+        global_groups = [x.pk for x in Group.objects.all()]
+        restricted_researches_by_group = []
+        for global_gr in global_groups:
+            researches_in_group = users.AvailableResearchByGroup.objects.values_list('research_id', flat=True).filter(group_id=global_gr)
+            if len(researches_in_group) > 0 and global_gr not in user_gr:
+                restricted_researches_by_group.extend(researches_in_group)
+        restricted_to_direct.extend(restricted_researches_by_group)
+
+        restricted_to_direct = list(set(restricted_to_direct))
         cache.set(k, json.dumps(restricted_to_direct), 30)
     else:
         restricted_to_direct = json.loads(restricted_to_direct)
