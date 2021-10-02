@@ -624,6 +624,33 @@ def statistic_research_death_base(ws1, d1, d2, research_titile):
     return ws1
 
 
+def statistic_reserved_research_death_base(ws1, d1, d2, research_titile):
+    style_border = NamedStyle(name="style_border_rz")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=1).value = 'Услуга:'
+    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+
+    columns = [
+        ('Медицинская организация', 40),
+        ('Номер в резерве', 20),
+        ('Дата создания', 22),
+        ('ФИО пациента', 35),
+        ('Направление', 20),
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=4, column=idx).style = style_border
+
+    return ws1
+
+
 def statistic_research_death_data(ws1, researches):
     """
     :return:
@@ -636,7 +663,8 @@ def statistic_research_death_data(ws1, researches):
     r = 4
 
     for i in researches:
-
+        if not i:
+            return ws1
         try:
             type_doc_death = i["Вид медицинского свидетельства о смерти"]["title"]
         except:
@@ -697,6 +725,34 @@ def statistic_research_death_data(ws1, researches):
         ws1.cell(row=r, column=30).value = i["Заполнил"]
 
         rows = ws1[f'A{r}:AD{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    return ws1
+
+
+def statistic_reserved_research_death_data(ws1, researches):
+    """
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res_rz")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 4
+
+    for i in researches:
+        if not i:
+            return ws1
+        r += 1
+        ws1.cell(row=r, column=1).value = i["hosp_title"]
+        ws1.cell(row=r, column=2).value = i["Номер"]
+        ws1.cell(row=r, column=3).value = i["date_create"]
+        ws1.cell(row=r, column=4).value = i["fio_patient"]
+        ws1.cell(row=r, column=5).value = i["napravleniye_id"]
+        rows = ws1[f'A{r}:E{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res

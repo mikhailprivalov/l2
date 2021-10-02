@@ -687,9 +687,14 @@ def statistic_xls(request):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         if research_id == DEATH_RESEARCH_PK:
             researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
-            data_death = death_form_result_parse(researches_sql)
+            data_death = death_form_result_parse(researches_sql, reserved=False)
             ws = structure_sheet.statistic_research_death_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_death_data(ws, data_death)
+            reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date, end_date)
+            data_death_reserved = death_form_result_parse(reserved_researches_sql, reserved=True)
+            ws2 = wb.create_sheet("Номера в резерве")
+            ws2 = structure_sheet.statistic_reserved_research_death_base(ws2, d1, d2, research_title[0])
+            ws2 = structure_sheet.statistic_reserved_research_death_data(ws2, data_death_reserved)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
