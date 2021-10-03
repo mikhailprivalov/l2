@@ -629,7 +629,7 @@ def where_death_start_tbl(text, params):
     if whera_data["code"] == '1':
         place = f"<u>{op_bold_tag}{place}{cl_bold_tag}</u>"
     elif whera_data["code"] == '2':
-        place = f"<u>{op_bold_tag}{car}{cl_bold_tag}</u>"
+        car = f"<u>{op_bold_tag}{car}{cl_bold_tag}</u>"
     elif whera_data["code"] == '3':
         hospital = f"<u>{op_bold_tag}{hospital}{cl_bold_tag}</u>"
     elif whera_data["code"] == '4':
