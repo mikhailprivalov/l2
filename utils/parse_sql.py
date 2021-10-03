@@ -14,6 +14,9 @@ def death_form_result_parse(data):
             tmp_data[i.title] = i.json_value
         else:
             tmp_data[i.title] = i.value
+        tmp_data["fio_patient"] = i.fio_patient
+        tmp_data["sex"] = i.sex
+        tmp_data["hosp_title"] = i.hosp_title
         prev_issledovaniye_id = i.issledovaniye_id
         count += 1
     data_return.append(deepcopy(tmp_data))
