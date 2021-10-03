@@ -127,6 +127,7 @@ class SettingManager:
             "descriptive_rich_text": SettingManager.get("descriptive_rich_text", default='false', default_type='b'),
             "number_generator_field": SettingManager.get("number_generator_field", default='false', default_type='b'),
             "tfoms_attachment_field": SettingManager.get("tfoms_attachment_field", default='false', default_type='b'),
+            "auto_clinical_examination_direct": SettingManager.get("auto_clinical_examination_direct", default='false', default_type='b'),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 
