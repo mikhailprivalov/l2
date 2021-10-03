@@ -1623,7 +1623,7 @@ def directions_paraclinic_result(request):
                         ]
                         monitoring_result.value_text = ""
 
-                    if field['field_type'] == 18 or field['field_type'] == 3:
+                    if field['field_type'] == 18 or field['field_type'] == 3 or field['field_type'] == 19:
                         monitoring_result.value_aggregate = field["value"]
                     else:
                         monitoring_result.value_aggregate = None
