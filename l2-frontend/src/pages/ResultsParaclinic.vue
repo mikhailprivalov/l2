@@ -66,6 +66,7 @@
               </div>
               <div class="col-xs-4 text-right">
                 <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
+                <a href="#" @click.prevent="print_example(direction.pk)" v-else>Образец</a>
               </div>
             </div>
           </div>
@@ -383,6 +384,15 @@
                   &nbsp;<i class="fa fa-camera"></i>&nbsp;
                 </a>
                 <template v-if="!row.confirmed">
+                  <button
+                    class="btn btn-blue-nb"
+                    @click="print_example(data.direction.pk)"
+                    v-if="!row.confirmed"
+                    title="Печать образца"
+                    v-tippy
+                  >
+                    Образец
+                  </button>
                   <button
                     class="btn btn-blue-nb"
                     @click="save(row)"
@@ -1558,6 +1568,9 @@ export default {
     },
     print_results(pk) {
       this.$root.$emit('print:results', [pk]);
+    },
+    print_example(pk) {
+      this.$root.$emit('print:example', [pk]);
     },
     copy_results(row, pk) {
       this.$store.dispatch(actions.INC_LOADING);
