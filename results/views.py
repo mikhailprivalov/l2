@@ -347,7 +347,8 @@ def result_print(request):
             if direction.is_external:
                 canvas_mark.drawString(55 * mm, 9.6 * mm, f'№ карты: {direction.client.number_with_type()}; Номер в организации: {direction.id_in_hospital}; Направление № {direction.pk}')
             else:
-                canvas_mark.drawString(55 * mm, 9.6 * mm, '№ карты: {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+                canvas_mark.drawString(55 * mm, 9.6 * mm,
+                                       '№ карты: {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
             canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
             canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
             if qr_data:
