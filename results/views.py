@@ -334,7 +334,6 @@ def result_print(request):
         canvas_mark.setFont('FreeSansBold', 8)
         if watermarks:
             canvas_mark.rotate(90)
-            # canvas_mark.setFillColor(colors.red)
             canvas_mark.setFillColor(HexColor(0xed775c))
             canvas_mark.setFont('PTAstraSerifReg', 6)
             canvas_mark.drawString(10 * mm, -23 * mm, '{}'.format(40 * " #ЕРЦП# - НЕ ПОДТВЕРЖДЕНО (ОБРАЗЕЦ) - "))
