@@ -122,6 +122,8 @@ def covid_result(request):
     for i in result:
         if i.hosp_id in EXCLUDE_HOSP_SEND_EPGU:
             continue
+        if not i.value_result:
+            continue
         result_value = i.value_result.lower()
         if result_value.find('отрицат') != -1:
             result_value = 0
