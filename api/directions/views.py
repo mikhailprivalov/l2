@@ -1436,7 +1436,7 @@ def directions_anesthesia_load(request):
     return JsonResponse({'data': tb_data, 'row_category': row_category})
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_paraclinic_result(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
