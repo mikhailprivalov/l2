@@ -1237,7 +1237,6 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
 
 
 def diagnos_tbl(data):
-    print(data)
     description_diag = data["result"][2]
     description_diag_json = None
     if len(description_diag) > 1:

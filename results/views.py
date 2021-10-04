@@ -96,7 +96,6 @@ def save(form, filename: str):
 
 @logged_in_or_token
 def result_print(request):
-    print(request)
     """Печать результатов"""
     plain_response = True if hasattr(request, 'plain_response') and request.plain_response else False
     inline = request.GET.get("inline", "1") == "1" or plain_response
@@ -303,9 +302,7 @@ def result_print(request):
     for i in hosp_nums_obj:
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
         break
-    print(request.GET.get("portion", "0"))
     portion = request.GET.get("portion", "0") == "1"
-    print(portion)
     dirs = []
     if not portion:
         dirs = (
