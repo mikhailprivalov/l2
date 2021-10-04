@@ -993,7 +993,7 @@ def directions_results_report(request):
     return JsonResponse({"data": data})
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_paraclinic_form(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
@@ -1910,7 +1910,7 @@ def directions_paraclinic_confirm_reset(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Заполнение мониторингов")
+@group_required("Врач параклиники", "Врач консультаций", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_paraclinic_history(request):
     response = {"directions": []}
     request_data = json.loads(request.body)

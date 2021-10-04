@@ -26,6 +26,7 @@ from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import qr
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
+from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
 from reportlab.lib.pagesizes import A4, landscape, portrait
 from reportlab.lib.styles import getSampleStyleSheet
@@ -333,12 +334,14 @@ def result_print(request):
         canvas_mark.setFont('FreeSansBold', 8)
         if watermarks:
             canvas_mark.rotate(90)
-            canvas_mark.setFillColor(colors.red)
+            canvas_mark.setFillColor(HexColor(0xed775c))
             canvas_mark.setFont('PTAstraSerifReg', 6)
-            canvas_mark.drawString(10 * mm, -23 * mm, '{}'.format(40 * " ОБРАЗЕЦ "))
+            canvas_mark.drawString(10 * mm, -23 * mm, '{}'.format(40 * " #ЕРЦП# - НЕ ПОДТВЕРЖДЕНО (ОБРАЗЕЦ) - "))
             canvas_mark.rotate(-90)
-            canvas_mark.setFont('PTAstraSerifReg', 16)
-            canvas_mark.drawString(170 * mm, 285 * mm, '{}'.format(" ОБРАЗЕЦ "))
+            canvas_mark.setFont('PTAstraSerifReg', 14)
+            canvas_mark.drawString(155 * mm, 285 * mm, '{}'.format(" НЕ ПОДТВЕРЖДЕНО "))
+            canvas_mark.setFont('PTAstraSerifReg', 12)
+            canvas_mark.drawString(175 * mm, 281 * mm, '{}'.format("( образец )"))
         if not watermarks:
             if direction.hospital:
                 canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.safe_short_title)
