@@ -29,6 +29,11 @@ export default (instance: Vue): void => {
     printForm(url, pks);
   });
 
+  instance.$root.$on('print:example', pks => {
+    const url = '/results/preview?pk={pks}&portion=1';
+    printForm(url, pks);
+  });
+
   instance.$root.$on('print:directions_list', pks => printForm('/statistic/xls?pk={pks}&type=directions_list', pks));
 
   instance.$root.$on('msg', (type, message, timeout: number | void) => {

@@ -302,49 +302,63 @@ def result_print(request):
     for i in hosp_nums_obj:
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
         break
-
-    dirs = (
-        Napravleniya.objects.filter(pk__in=pk)
-        .select_related('client')
-        .prefetch_related(
-            Prefetch(
-                'issledovaniya_set',
-                queryset=(
-                    Issledovaniya.objects.filter(Q(time_save__isnull=False) | Q(time_confirmation__isnull=False)).select_related(
-                        'research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'
-                    )
-                ),
+    portion = request.GET.get("portion", "0") == "1"
+    dirs = []
+    if not portion:
+        dirs = (
+            Napravleniya.objects.filter(pk__in=pk)
+            .select_related('client')
+            .prefetch_related(
+                Prefetch(
+                    'issledovaniya_set',
+                    queryset=(
+                        Issledovaniya.objects.filter(Q(time_save__isnull=False) | Q(time_confirmation__isnull=False)).select_related(
+                            'research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'
+                        )
+                    ),
+                )
             )
+            .annotate(results_count=Count('issledovaniya__result'))
+            .distinct()
         )
-        .annotate(results_count=Count('issledovaniya__result'))
-        .distinct()
-    )
+    elif portion and len(pk) == 1:
+        dirs = Napravleniya.objects.filter(pk=pk[0])
 
     count_direction = 0
     previous_size_form = None
     is_page_template_set = False
 
-    def mark_pages(canvas_mark, direction: Napravleniya, qr_data: Optional[str] = None):
+    def mark_pages(canvas_mark, direction: Napravleniya, qr_data: Optional[str] = None, watermarks: Optional[str] = None):
         canvas_mark.saveState()
         canvas_mark.setFont('FreeSansBold', 8)
-        if direction.hospital:
-            canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.safe_short_title)
-        else:
-            canvas_mark.drawString(55 * mm, 13 * mm, '{}'.format(SettingManager.get("org_title")))
-        if direction.is_external:
-            canvas_mark.drawString(55 * mm, 9.6 * mm, f'№ карты: {direction.client.number_with_type()}; Номер в организации: {direction.id_in_hospital}; Направление № {direction.pk}')
-        else:
-            canvas_mark.drawString(55 * mm, 9.6 * mm, '№ карты: {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
-        canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
-        if qr_data:
-            qr_code = qr.QrCodeWidget(qr_data)
-            qr_code.barWidth = 15 * mm
-            qr_code.barHeight = 15 * mm
-            qr_code.qrVersion = 1
-            d = Drawing()
-            d.add(qr_code)
-            renderPDF.draw(d, canvas_mark, 20 * mm, 3 * mm)
+        if watermarks:
+            canvas_mark.rotate(90)
+            canvas_mark.setFillColor(colors.red)
+            canvas_mark.setFont('PTAstraSerifReg', 6)
+            canvas_mark.drawString(10 * mm, -23 * mm, '{}'.format(40 * " ОБРАЗЕЦ "))
+            canvas_mark.rotate(-90)
+            canvas_mark.setFont('PTAstraSerifReg', 16)
+            canvas_mark.drawString(170 * mm, 285 * mm, '{}'.format(" ОБРАЗЕЦ "))
+        if not watermarks:
+            if direction.hospital:
+                canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.safe_short_title)
+            else:
+                canvas_mark.drawString(55 * mm, 13 * mm, '{}'.format(SettingManager.get("org_title")))
+            if direction.is_external:
+                canvas_mark.drawString(55 * mm, 9.6 * mm, f'№ карты: {direction.client.number_with_type()}; Номер в организации: {direction.id_in_hospital}; Направление № {direction.pk}')
+            else:
+                canvas_mark.drawString(55 * mm, 9.6 * mm,
+                                       '№ карты: {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+            canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+            canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
+            if qr_data:
+                qr_code = qr.QrCodeWidget(qr_data)
+                qr_code.barWidth = 15 * mm
+                qr_code.barHeight = 15 * mm
+                qr_code.qrVersion = 1
+                d = Drawing()
+                d.add(qr_code)
+                renderPDF.draw(d, canvas_mark, 20 * mm, 3 * mm)
         canvas_mark.restoreState()
 
     count_pages = 0
@@ -355,10 +369,14 @@ def result_print(request):
     need_qr = SettingManager.qr_check_result()
 
     direction: Napravleniya
-    for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
+    if not portion:
+        sorted_direction = sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk)
+    else:
+        sorted_direction = dirs
+    for direction in sorted_direction:
         dpk = direction.pk
 
-        if not direction.is_all_confirm():
+        if not direction.is_all_confirm() and not portion:
             continue
         dates = {}
         date_t = ""
@@ -417,6 +435,8 @@ def result_print(request):
         def local_mark_pages(c, _):
             if not has_own_form_result:
                 mark_pages(c, direction, qr_data)
+            if not iss.time_confirmation and has_own_form_result and portion:
+                mark_pages(c, direction, qr_data, "Образец")
 
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
@@ -1074,6 +1094,7 @@ def result_print(request):
 
     if not hosp:
         num_card = pk[0]
+
     if len(pk) == 1 and has_own_form_result:
         doc.build(fwb)
     elif len(pk) == 1 and not link_result and not hosp and fwb:

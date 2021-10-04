@@ -261,26 +261,26 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Мед. св-во о смерти 106/у
     text = []
-    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"],
+    text = title_data(text, fields.get("Серия",""), fields.get("Номер", ""), fields.get("Дата выдачи",""), fields.get("Вид медицинского свидетельства о смерти", ""),
                       fields)
     text.append(Spacer(1, 1.7 * mm))
-    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields['fio'])
+    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields.get('fio',''))
 
     # Пол
     text.append(Spacer(1, 0.3 * mm))
-    text = sex_tbl(text, fields['sex'])
+    text = sex_tbl(text, fields.get('sex',''))
 
     # Дата рождения
-    text = born_tbl(text, fields['Дата рождения'])
+    text = born_tbl(text, fields.get('Дата рождения', ''))
     text.append(Spacer(1, 0.3 * mm))
 
     # Дата смерти
-    text = death_tbl(text, "4. Дата смерти:", fields['Дата смерти'], fields['Время смерти'])
+    text = death_tbl(text, "4. Дата смерти:", fields.get('Дата смерти', ''), fields.get('Время смерти', ''))
 
-    text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", fields["Место постоянного жительства (регистрации)"])
+    text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", fields.get("Место постоянного жительства (регистрации)", ""))
 
     # Смерть наступила
-    text = where_death_start_tbl(text, fields["Типы мест наступления смерти"])
+    text = where_death_start_tbl(text, fields.get("Типы мест наступления смерти", ""))
     text.append(Spacer(1, 0.2 * mm))
 
     text.append(Paragraph('Для детей, умерших в возрасте до 1 года:', styleBold))
@@ -328,7 +328,7 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text = []
 
     text = title_med_organization(text, fields['org'])
-    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"], fields)
+    text = title_data(text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"], fields)
     text.append(Spacer(1, 1.7 * mm))
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields["fio"])
 
@@ -397,7 +397,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         styleT))
     text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
     text = who_set_death(text, fields["Тип медицинского работника"])
-    text = doctor_fio(text, fields)
+    text = doctor_fio(text, fields, iss)
     text.append(Spacer(1, 1 * mm))
     text = why_death(text, fields, "22", "23", "24", "25")
     text.append(Spacer(1, 2 * mm))
@@ -431,11 +431,11 @@ def title_data(text, serial, number, date_issue, type_document, data_fields):
     if type_death_document["code"] == '4':
         instead_final = f"<u>{op_bold_tag}взамен окончательного{cl_bold_tag}</u>"
     elif type_death_document["code"] == '3':
-        instead_final = f"<u>{op_bold_tag}взамен предварительного{cl_bold_tag}</u>"
+        instead_preparatory = f"<u>{op_bold_tag}взамен предварительного{cl_bold_tag}</u>"
     elif type_death_document["code"] == '1':
-        instead_final = f"{op_bold_tag}<u>окончательного</u>{cl_bold_tag}"
+        final = f"{op_bold_tag}<u>окончательного</u>{cl_bold_tag}"
     elif type_death_document["code"] == '2':
-        instead_final = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
+        preparatory = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
     if data_fields.get("Серия предшествующего", None):
         text.append(Paragraph("ранее выданное свидетельство", styleCentre))
@@ -1441,8 +1441,8 @@ def who_set_death(text, params):
     return text
 
 
-def doctor_fio(text, params):
-    doc_fio = ""
+def doctor_fio(text, params, iss: Issledovaniya):
+    doc_fio = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
     opinion = gen_opinion(['21. Я, врач (фельдшер, акушерка)', doc_fio])
 
     col_width = (50 * mm, 140 * mm,)
@@ -1456,7 +1456,7 @@ def doctor_fio(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    doc_position = ""
+    doc_position = iss.doc_position
     opinion = gen_opinion(['должность', doc_position])
     col_width = (25 * mm, 165 * mm,)
     tbl_style = [

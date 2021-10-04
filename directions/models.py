@@ -1512,6 +1512,18 @@ class Issledovaniya(models.Model):
             return self.doc_confirmation.get_fio()
         return ''
 
+    @property
+    def doc_confirmation_full_fio(self):
+        if self.doc_confirmation:
+            return self.doc_confirmation.get_fio()
+        return ''
+
+    @property
+    def doc_position(self):
+        if self.doc_confirmation:
+            return self.doc_confirmation.position.title
+        return ''
+
     def gen_after_confirm(self, user: User):
         if not self.time_confirmation or not self.gen_direction_with_research_after_confirm:
             return

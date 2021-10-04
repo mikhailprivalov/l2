@@ -133,7 +133,7 @@ const router = new Router({
       component: () => import('@/pages/ResultsParaclinic.vue'),
       meta: {
         title: 'Ввод описательных результатов',
-        groups: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов'],
+        groups: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
         module: 'paraclinic_module',
         showCreateDirection: true,
         showRmisLinkSchedule: true,
