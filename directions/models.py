@@ -1513,6 +1513,12 @@ class Issledovaniya(models.Model):
         return ''
 
     @property
+    def doc_confirmation_full_fio(self):
+        if self.doc_confirmation:
+            return self.doc_confirmation.get_fio()
+        return ''
+
+    @property
     def doc_position(self):
         if self.doc_confirmation:
             return self.doc_confirmation.position.title

@@ -1442,7 +1442,7 @@ def who_set_death(text, params):
 
 
 def doctor_fio(text, params, iss: Issledovaniya):
-    doc_fio = iss.doc_confirmation_fio
+    doc_fio = iss.doc_confirmation.get_full_fio()
     opinion = gen_opinion(['21. Я, врач (фельдшер, акушерка)', doc_fio])
 
     col_width = (50 * mm, 140 * mm,)
