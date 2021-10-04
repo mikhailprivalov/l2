@@ -397,7 +397,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         styleT))
     text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
     text = who_set_death(text, fields["Тип медицинского работника"])
-    text = doctor_fio(text, fields)
+    text = doctor_fio(text, fields, iss)
     text.append(Spacer(1, 1 * mm))
     text = why_death(text, fields, "22", "23", "24", "25")
     text.append(Spacer(1, 2 * mm))
@@ -435,7 +435,7 @@ def title_data(text, serial, number, date_issue, type_document, data_fields):
     elif type_death_document["code"] == '1':
         instead_final = f"{op_bold_tag}<u>окончательного</u>{cl_bold_tag}"
     elif type_death_document["code"] == '2':
-        instead_final = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
+        preparatory = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
     if data_fields.get("Серия предшествующего", None):
         text.append(Paragraph("ранее выданное свидетельство", styleCentre))
@@ -1441,8 +1441,8 @@ def who_set_death(text, params):
     return text
 
 
-def doctor_fio(text, params):
-    doc_fio = ""
+def doctor_fio(text, params, iss: Issledovaniya):
+    doc_fio = iss.doc_confirmation_fio
     opinion = gen_opinion(['21. Я, врач (фельдшер, акушерка)', doc_fio])
 
     col_width = (50 * mm, 140 * mm,)
@@ -1456,7 +1456,7 @@ def doctor_fio(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    doc_position = ""
+    doc_position = iss.doc_position
     opinion = gen_opinion(['должность', doc_position])
     col_width = (25 * mm, 165 * mm,)
     tbl_style = [
