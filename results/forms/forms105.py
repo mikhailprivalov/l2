@@ -605,7 +605,7 @@ def address_tbl(text, type_address, address):
     text.append(tbl)
 
     # дом, стр, корп, кв, комн
-    opinion = gen_opinion(['дом', address_details['house'], 'стр.', '', 'корп.', '', 'кв.', '', 'комн.', ''])
+    opinion = gen_opinion(['дом', address_details['house'], 'стр.', '', 'корп.', '', 'кв.', address_details.get("flat", ""), 'комн.', ''])
     col_width = (14 * mm, 15 * mm, 12 * mm, 12 * mm, 14 * mm, 15 * mm, 12 * mm, 15 * mm, 14 * mm, 15 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
