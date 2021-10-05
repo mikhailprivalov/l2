@@ -605,7 +605,7 @@ def address_tbl(text, type_address, address):
     text.append(tbl)
 
     # дом, стр, корп, кв, комн
-    opinion = gen_opinion(['дом', address_details['house'], 'стр.', '', 'корп.', '', 'кв.', '', 'комн.', ''])
+    opinion = gen_opinion(['дом', address_details['house'], 'стр.', '', 'корп.', '', 'кв.', address_details.get("flat", ""), 'комн.', ''])
     col_width = (14 * mm, 15 * mm, 12 * mm, 12 * mm, 14 * mm, 15 * mm, 12 * mm, 15 * mm, 14 * mm, 15 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1478,7 +1478,7 @@ def doctor_fio(text, params, iss: Issledovaniya):
         write_medical_dicument = f"{op_bold_tag}<u>{write_medical_dicument}</u>{cl_bold_tag}"
     opinion = gen_opinion(['удостоверяю, что на основании:', see_body, '1', write_medical_dicument, '2'])
 
-    col_width = (53 * mm, 26 * mm, 6 * mm, 58 * mm, 6 * mm,)
+    col_width = (53 * mm, 26 * mm, 6 * mm, 61 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1491,13 +1491,13 @@ def doctor_fio(text, params, iss: Issledovaniya):
     text.append(tbl)
 
     see_patient, open_body = 'предшествующего наблюдения за больным(ой)', ', вскрытия',
-    if base_diagnos["code"] == "4":
+    if base_diagnos["code"] == "3" or base_diagnos["code"] == "5":
         see_patient = f"{op_bold_tag}<u>{see_patient}</u>{cl_bold_tag}"
     elif base_diagnos["code"] == "4":
         open_body = f"{op_bold_tag}<u>{open_body}</u>{cl_bold_tag}"
     opinion = gen_opinion([see_patient, '3', open_body, '4', ' мною установлены причины смерти'])
 
-    col_width = (75 * mm, 6 * mm, 19 * mm, 6 * mm, 70 * mm)
+    col_width = (75 * mm, 6 * mm, 21 * mm, 6 * mm, 70 * mm)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),

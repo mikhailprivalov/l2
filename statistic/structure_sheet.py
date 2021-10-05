@@ -670,7 +670,7 @@ def statistic_research_death_data(ws1, researches):
         except:
             type_doc_death = i["Вид медицинского свидетельства о смерти"]
 
-        diag_details = None
+        diag_details = {}
         try:
             i["а) Болезнь или состояние, непосредственно приведшее к смерти"].keys()
             diag_data = i["а) Болезнь или состояние, непосредственно приведшее к смерти"]
@@ -682,7 +682,8 @@ def statistic_research_death_data(ws1, researches):
         except:
             is_dict = False
         if not is_dict:
-            continue
+            diag_details["code"] = "-"
+            diag_details["title"] = "-"
 
         r += 1
         ws1.cell(row=r, column=1).value = i["Серия"]
