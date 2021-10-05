@@ -663,7 +663,6 @@ def statistic_research_death_data(ws1, researches):
     r = 4
 
     for i in researches:
-        print("##",i)
         if not i:
             return ws1
         try:
