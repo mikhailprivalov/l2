@@ -77,7 +77,7 @@ from utils.data_verification import data_parse
 
 
 @login_required
-@group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Заполнение мониторингов")
+@group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_generate(request):
     result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
     if request.method == "POST":
