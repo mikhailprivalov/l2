@@ -56,7 +56,7 @@ from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplat
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
-from laboratory.settings import DICOM_SERVER, TIME_ZONE
+from laboratory.settings import DICOM_SERVER, TIME_ZONE, DEATH_RESEARCH_PK
 from laboratory.utils import current_year, strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
@@ -1984,14 +1984,14 @@ def directions_data_by_fields(request):
     if i.time_confirmation:
         if i.research == i_dest.research:
             for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
-                if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
+                if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists() and field.field_type != 30:
                     data[field.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
             return JsonResponse({"data": data})
         else:
             for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
                 if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
                     for field_dest in ParaclinicInputField.objects.filter(group__research=i_dest.research, group__hide=False, hide=False):
-                        if field_dest.attached and field_dest.attached == field.attached:
+                        if field_dest.attached and field_dest.attached == field.attached and field_dest.field_type != 30:
                             data[field_dest.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
                             break
             return JsonResponse({"data": data})
