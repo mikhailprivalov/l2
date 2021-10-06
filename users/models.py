@@ -171,6 +171,12 @@ class DoctorProfile(models.Model):
     def get_data(self):
         return {"pk": self.pk, "fio": self.get_fio(), "username": self.user.username}
 
+    def get_position(self):
+        if self.position:
+            return self.position.title
+        else:
+            return None
+
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
             return self.get_full_fio() + ', ' + self.podrazdeleniye.title
