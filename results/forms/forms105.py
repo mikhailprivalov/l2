@@ -81,7 +81,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Серия предшествующего",
         "Номер предшествующего",
         "Дата выдачи предшествующего",
-
         "Дата рождения",
         "Дата смерти",
         "Время смерти",
@@ -130,6 +129,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Заполнил",
         "Проверил",
         "Главный врач",
+        "Должность",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
@@ -209,6 +209,9 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     if not data.get("Заполнил", None):
         data["Заполнил"] = ""
+
+    if not data.get("Должность", None):
+        data["Должность"] = ""
 
     if not data.get("Проверил", None):
         data["Проверил"] = ""
@@ -1442,7 +1445,7 @@ def who_set_death(text, params):
 
 
 def doctor_fio(text, params, iss: Issledovaniya):
-    doc_fio = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
+    doc_fio = params["Заполнил"]
     opinion = gen_opinion(['21. Я, врач (фельдшер, акушерка)', doc_fio])
 
     col_width = (50 * mm, 140 * mm,)
@@ -1456,7 +1459,7 @@ def doctor_fio(text, params, iss: Issledovaniya):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    doc_position = iss.doc_position
+    doc_position = params["Должность"]
     opinion = gen_opinion(['должность', doc_position])
     col_width = (25 * mm, 165 * mm,)
     tbl_style = [

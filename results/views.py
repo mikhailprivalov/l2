@@ -335,12 +335,12 @@ def result_print(request):
         if watermarks:
             canvas_mark.rotate(90)
             canvas_mark.setFillColor(HexColor(0xed775c))
-            canvas_mark.setFont('PTAstraSerifReg', 6)
+            canvas_mark.setFont('FreeSans', 6)
             canvas_mark.drawString(10 * mm, -23 * mm, '{}'.format(40 * " #ЕРЦП# - НЕ ПОДТВЕРЖДЕНО (ОБРАЗЕЦ) - "))
             canvas_mark.rotate(-90)
-            canvas_mark.setFont('PTAstraSerifReg', 14)
+            canvas_mark.setFont('FreeSans', 14)
             canvas_mark.drawString(155 * mm, 285 * mm, '{}'.format(" НЕ ПОДТВЕРЖДЕНО "))
-            canvas_mark.setFont('PTAstraSerifReg', 12)
+            canvas_mark.setFont('FreeSans', 12)
             canvas_mark.drawString(175 * mm, 281 * mm, '{}'.format("( образец )"))
         if not watermarks:
             if direction.hospital:
@@ -436,10 +436,14 @@ def result_print(request):
             qr_data = qr_data.replace('<instance_id>', instance_id)
 
         def local_mark_pages(c, _):
-            if not has_own_form_result:
-                mark_pages(c, direction, qr_data)
             if not iss.time_confirmation and has_own_form_result and portion:
                 mark_pages(c, direction, qr_data, "Образец")
+
+            if not has_own_form_result and portion:
+                mark_pages(c, direction, qr_data, "Образец")
+            elif iss.time_confirmation:
+                mark_pages(c, direction, qr_data)
+
 
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)

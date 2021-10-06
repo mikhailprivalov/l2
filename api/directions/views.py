@@ -1984,14 +1984,14 @@ def directions_data_by_fields(request):
     if i.time_confirmation:
         if i.research == i_dest.research:
             for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
-                if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
+                if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists() and field.field_type != 30:
                     data[field.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
             return JsonResponse({"data": data})
         else:
             for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
                 if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
                     for field_dest in ParaclinicInputField.objects.filter(group__research=i_dest.research, group__hide=False, hide=False):
-                        if field_dest.attached and field_dest.attached == field.attached:
+                        if field_dest.attached and field_dest.attached == field.attached and field_dest.field_type != 30:
                             data[field_dest.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
                             break
             return JsonResponse({"data": data})
@@ -2040,6 +2040,8 @@ def last_field_result(request):
         result = {"value": c.main_address_full}
     elif request_data["fieldPk"].find('%docprofile') != -1:
         result = {"value": request.user.doctorprofile.get_full_fio()}
+    elif request_data["fieldPk"].find('%doc_position') != -1:
+        result = {"value": request.user.doctorprofile.get_position()}
     elif request_data["fieldPk"].find('%patient_fio') != -1:
         result = {"value": data['fio']}
     elif request_data["fieldPk"].find('%patient_born') != -1:
