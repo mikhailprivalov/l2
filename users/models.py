@@ -174,8 +174,7 @@ class DoctorProfile(models.Model):
     def get_position(self):
         if self.position:
             return self.position.title
-        else:
-            return None
+        return None
 
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:

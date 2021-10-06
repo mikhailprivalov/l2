@@ -56,7 +56,7 @@ from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplat
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
-from laboratory.settings import DICOM_SERVER, TIME_ZONE, DEATH_RESEARCH_PK
+from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import current_year, strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions

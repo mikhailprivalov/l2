@@ -78,7 +78,7 @@ const DB_LINKS = {
   '%harmful_factor': 'Фактор вредности пациента',
   '%proto_operation': 'proto_operation',
   '%proto_description': 'proto_description',
-  '%doc_position': 'должноть врача',
+  '%doc_position': 'Должноть врача',
 };
 
 export default {
