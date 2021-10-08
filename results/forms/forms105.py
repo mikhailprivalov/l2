@@ -1254,7 +1254,6 @@ def diagnos_tbl(data):
         if len(list(decription)) > 72:
             top_padd = -2 * mm
         period = f'{data["result"][0]} {data["result"][1]}'
-    print(mkb10)
 
     if data.get("top_padd", None):
         top_padd = data.get("top_padd")
