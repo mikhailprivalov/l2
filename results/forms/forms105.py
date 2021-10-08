@@ -1258,27 +1258,7 @@ def diagnos_tbl(data):
     if data.get("top_padd", None):
         top_padd = data.get("top_padd")
 
-    try:
-        el0 = mkb10[0]
-    except:
-        el0 = ""
-
-    try:
-        el1 = mkb10[1]
-    except:
-        el1 = ""
-
-    try:
-        el2 = mkb10[2]
-    except:
-        el2 = ""
-
-    try:
-        el4 = mkb10[4]
-    except:
-        el4 = ""
-
-    opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', el0, el1, el2, '.', el4])
+    opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', get_try_mkb(mkb10, 0), get_try_mkb(mkb10, 1), get_try_mkb(mkb10, 2), '.', get_try_mkb(mkb10, 4)])
     col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
     tbl_style = [
         ('GRID', (5, 0), (5, 0), 0.75, colors.black),
@@ -1580,3 +1560,10 @@ def check_person_data(text, fio_check):
     text.append(Spacer(1, 3 * mm))
     text.append(tbl)
     return text
+
+
+def get_try_mkb(data_mkb, element):
+    try:
+        return data_mkb[element]
+    except:
+        return ""
