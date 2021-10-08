@@ -1245,9 +1245,9 @@ def diagnos_tbl(data):
     if len(description_diag) > 1:
         description_diag_json = json.loads(description_diag)
     decription = ''
-    mkb10 = {0: "", 1: "", 2: "", 3: "", 4: ""}
     period = ""
     top_padd = 0 * mm
+    mkb10 = ["", "", "", "", ""]
     if len(description_diag) > 1:
         decription = description_diag_json["title"]
         mkb10 = list(description_diag_json["code"])
@@ -1257,8 +1257,15 @@ def diagnos_tbl(data):
 
     if data.get("top_padd", None):
         top_padd = data.get("top_padd")
+    
+    elements = []
+    for element in range(5):
+        try:
+            elements.insert(element, mkb10[element])
+        except:
+            elements.insert(element, "")
 
-    opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', mkb10[0], mkb10[1], mkb10[2], '.', mkb10[4]])
+    opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', elements[0], elements[1], elements[2], '.', elements[4]])
     col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
     tbl_style = [
         ('GRID', (5, 0), (5, 0), 0.75, colors.black),
