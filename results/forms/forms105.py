@@ -1245,9 +1245,9 @@ def diagnos_tbl(data):
     if len(description_diag) > 1:
         description_diag_json = json.loads(description_diag)
     decription = ''
-    mkb10 = {0: "", 1: "", 2: "", 3: "", 4: ""}
     period = ""
     top_padd = 0 * mm
+    mkb10 = ["", "", "", "", ""]
     if len(description_diag) > 1:
         decription = description_diag_json["title"]
         mkb10 = list(description_diag_json["code"])
