@@ -1254,11 +1254,32 @@ def diagnos_tbl(data):
         if len(list(decription)) > 72:
             top_padd = -2 * mm
         period = f'{data["result"][0]} {data["result"][1]}'
+    print(mkb10)
 
     if data.get("top_padd", None):
         top_padd = data.get("top_padd")
 
-    opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', mkb10[0], mkb10[1], mkb10[2], '.', mkb10[4]])
+    try:
+        el0 = mkb10[0]
+    except:
+        el0 = ""
+
+    try:
+        el1 = mkb10[1]
+    except:
+        el1 = ""
+
+    try:
+        el2 = mkb10[2]
+    except:
+        el2 = ""
+
+    try:
+        el4 = mkb10[4]
+    except:
+        el4 = ""
+
+    opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', el0, el1, el2, '.', el4])
     col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
     tbl_style = [
         ('GRID', (5, 0), (5, 0), 0.75, colors.black),
