@@ -436,14 +436,8 @@ class Napravleniya(models.Model):
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
     n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
-    eds_required_documents = ArrayField(
-        models.CharField(max_length=3),
-        verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True
-    )
-    eds_required_signature_types = ArrayField(
-        models.CharField(max_length=32),
-        verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True
-    )
+    eds_required_documents = ArrayField(models.CharField(max_length=3), verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True)
+    eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
 
@@ -635,6 +629,8 @@ class Napravleniya(models.Model):
         for i in self.issledovaniya_set.all():
             if i.doc_confirmation_id not in executors:
                 executors[i.doc_confirmation_id] = i.doc_confirmation_fio
+            if i.executor_confirmation:
+                executors[i.executor_confirmation_id] = i.executor_confirmation.get_fio()
         return executors
 
     @property
@@ -1437,10 +1433,13 @@ class Issledovaniya(models.Model):
     )
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения результата')
     doc_confirmation = models.ForeignKey(
-        DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL
+        DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль автора результата', on_delete=models.SET_NULL
     )
     doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+    executor_confirmation = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, related_name="executor_confirmation", db_index=True, help_text='Профиль оператора, заполнившего результат', on_delete=models.SET_NULL
+    )
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
     comment = models.CharField(max_length=255, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
@@ -1610,8 +1609,11 @@ class Issledovaniya(models.Model):
         ctp = int(0 if not self.time_confirmation else int(time.mktime(timezone.localtime(self.time_confirmation).timetuple())))
         ctime = int(time.time())
         current_doc_confirmation = self.doc_confirmation
+        executor_confirmation = self.executor_confirmation
         rt = SettingManager.get("lab_reset_confirm_time_min") * 60
-        return (ctime - ctp < rt and current_doc_confirmation == user.doctorprofile) or "Сброс подтверждений результатов" in groups
+        return (
+            ctime - ctp < rt and (current_doc_confirmation == user.doctorprofile or (executor_confirmation is not None and executor_confirmation == user.doctorprofile))
+        ) or "Сброс подтверждений результатов" in groups
 
     class Meta:
         verbose_name = 'Назначение на исследование'
@@ -2429,9 +2431,7 @@ class DirectionsHistory(models.Model):
 class NumberGenerator(models.Model):
     DEATH_FORM_NUMBER = 'deathFormNumber'
 
-    KEYS = (
-        (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
-    )
+    KEYS = ((DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),)
 
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
     key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')
