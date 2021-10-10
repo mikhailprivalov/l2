@@ -1177,6 +1177,11 @@ def directions_paraclinic_form(request):
                         "service": i.napravleniye.parent.research.get_title(),
                         "is_hospital": i.napravleniye.parent.research.is_hospital,
                     },
+                    "whoSaved": None if not i.doc_save or not i.time_save else f"{i.doc_save}, {strdatetime(i.time_save)}",
+                    "whoConfirmed": (
+                        None if not i.doc_confirmation or not i.time_confirmation else f"{i.doc_confirmation}, {strdatetime(i.time_confirmation)}"
+                    ),
+                    "whoExecuted": None if not i.time_confirmation or not i.executor_confirmation else str(i.executor_confirmation),
                 }
 
                 if i.research.is_microbiology:
@@ -1440,7 +1445,11 @@ def directions_anesthesia_load(request):
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_paraclinic_result(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
-    response = {"ok": False, "message": ""}
+    response = {"ok": False, "message": "", "execData": {
+        "whoSaved": None,
+        "whoConfirmed": None,
+        "whoExecuted": None,
+    }}
     rb = json.loads(request.body)
     request_data = rb.get("data", {})
     pk = request_data.get("pk", -1)
@@ -1777,6 +1786,13 @@ def directions_paraclinic_result(request):
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
         response["confirmed_at"] = None if not iss.time_confirmation else time.mktime(timezone.localtime(iss.time_confirmation).timetuple())
+        response["execData"] = {
+            "whoSaved": None if not iss.doc_save or not iss.time_save else f"{iss.doc_save}, {strdatetime(iss.time_save)}",
+            "whoConfirmed": (
+                None if not iss.doc_confirmation or not iss.time_confirmation else f"{iss.doc_confirmation}, {strdatetime(iss.time_confirmation)}"
+            ),
+            "whoExecuted": None if not iss.time_confirmation or not iss.executor_confirmation else str(iss.executor_confirmation),
+        }
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
             if stationar_research != -1:

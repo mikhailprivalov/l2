@@ -667,28 +667,6 @@
               </div>
             </div>
           </div>
-          <div class="group" v-if="!row.confirmed && can_confirm_by_other_user">
-            <div class="fields">
-              <div class="field">
-                <label class="field-title" for="onco">
-                  Подтверждение от имени
-                </label>
-                <div class="field-value">
-                  <Treeselect
-                    :multiple="false"
-                    :disable-branch-nodes="true"
-                    class="treeselect-wide"
-                    :options="workFromUsers"
-                    :append-to-body="true"
-                    :clearable="true"
-                    v-model="row.work_by"
-                    :zIndex="5001"
-                    placeholder="Не выбрано"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
           <div class="group" v-if="row.parentDirection">
             <div class="group-title">Главное направление</div>
             <div class="fields">
@@ -722,6 +700,56 @@
                   <ul>
                     <li v-for="(s, j) in d.services" :key="j">{{ s }}</li>
                   </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="!row.confirmed && can_confirm_by_other_user">
+            <div class="fields">
+              <div class="field">
+                <label class="field-title">
+                  Подтверждение от имени
+                </label>
+                <div class="field-value">
+                  <Treeselect
+                    :multiple="false"
+                    :disable-branch-nodes="true"
+                    class="treeselect-wide"
+                    :options="workFromUsers"
+                    :append-to-body="true"
+                    :clearable="true"
+                    v-model="row.work_by"
+                    :zIndex="5001"
+                    placeholder="Не выбрано"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.whoSaved || row.whoConfirmed || row.whoExecuted">
+            <div class="fields">
+              <div class="field" v-if="row.whoSaved">
+                <label class="field-title">
+                  Сохранено
+                </label>
+                <div class="field-value">
+                  {{ row.whoSaved }}
+                </div>
+              </div>
+              <div class="field" v-if="row.whoConfirmed">
+                <label class="field-title">
+                  Подтверждено
+                </label>
+                <div class="field-value">
+                  {{ row.whoConfirmed }}
+                </div>
+              </div>
+              <div class="field" v-if="row.whoExecuted">
+                <label class="field-title">
+                  Оператор
+                </label>
+                <div class="field-value">
+                  {{ row.whoExecuted }}
                 </div>
               </div>
             </div>
@@ -1457,6 +1485,14 @@ export default {
             this.$root.$emit('msg', 'ok', 'Сохранено');
             // eslint-disable-next-line no-param-reassign
             iss.saved = true;
+            if (data.execData) {
+              // eslint-disable-next-line no-param-reassign
+              iss.whoSaved = data.execData.whoSaved;
+              // eslint-disable-next-line no-param-reassign
+              iss.whoConfirmed = data.execData.whoConfirmed;
+              // eslint-disable-next-line no-param-reassign
+              iss.whoExecuted = data.execData.whoExecuted;
+            }
             this.data.direction.amd = data.amd;
             this.data.direction.amd_number = data.amd_number;
             this.reload_if_need();
@@ -1494,6 +1530,14 @@ export default {
             iss.allow_reset_confirm = true;
             // eslint-disable-next-line no-param-reassign
             iss.confirmed = true;
+            if (data.execData) {
+              // eslint-disable-next-line no-param-reassign
+              iss.whoSaved = data.execData.whoSaved;
+              // eslint-disable-next-line no-param-reassign
+              iss.whoConfirmed = data.execData.whoConfirmed;
+              // eslint-disable-next-line no-param-reassign
+              iss.whoExecuted = data.execData.whoExecuted;
+            }
             this.data.direction.amd = data.amd;
             this.data.direction.amd_number = data.amd_number;
             this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
@@ -1560,6 +1604,10 @@ export default {
         this.$root.$emit('msg', 'ok', 'Подтверждение сброшено');
         // eslint-disable-next-line no-param-reassign
         iss.confirmed = false;
+        // eslint-disable-next-line no-param-reassign
+        iss.whoConfirmed = null;
+        // eslint-disable-next-line no-param-reassign
+        iss.whoExecuted = null;
         this.data.direction.amd = 'not_need';
         this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
         if (this.hasEDSigns) {
