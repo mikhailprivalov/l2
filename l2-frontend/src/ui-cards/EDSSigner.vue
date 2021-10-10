@@ -110,7 +110,7 @@ export default {
       const r = {};
       for (const d of this.documents) {
         for (const s of Object.keys(d.signatures)) {
-          if (!d.signatures[s]) {
+          if (!d.signatures[s] && (s !== 'Врач' || this.isDocAllowedSign)) {
             r[s] = true;
           }
         }
