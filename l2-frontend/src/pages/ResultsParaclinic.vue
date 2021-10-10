@@ -722,6 +722,14 @@
                     :zIndex="5001"
                     placeholder="Не выбрано"
                   />
+
+                  <div v-if="workFromHistoryList.length > 0" style="margin-top: 5px;">
+                    <div v-for="p in workFromHistoryList" :key="p.id">
+                      <a href="#" @click.prevent="row.work_by = p.id" class="a-under-reversed" title="Выбрать из истории" v-tippy>
+                        <i class="fas fa-history"></i> {{ p.label }} — {{ p.podr }}
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -732,7 +740,7 @@
                 <label class="field-title">
                   Сохранено
                 </label>
-                <div class="field-value">
+                <div class="field-value simple-value">
                   {{ row.whoSaved }}
                 </div>
               </div>
@@ -740,7 +748,7 @@
                 <label class="field-title">
                   Подтверждено
                 </label>
-                <div class="field-value">
+                <div class="field-value simple-value">
                   {{ row.whoConfirmed }}
                 </div>
               </div>
@@ -748,7 +756,7 @@
                 <label class="field-title">
                   Оператор
                 </label>
-                <div class="field-value">
+                <div class="field-value simple-value">
                   {{ row.whoExecuted }}
                 </div>
               </div>
@@ -1102,6 +1110,7 @@ export default {
       embedded: false,
       tableFieldsErrors: {},
       workFromUsers: [],
+      workFromHistory: [],
     };
   },
   watch: {
@@ -1199,6 +1208,18 @@ export default {
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
     window.$(window).on('beforeunload', this.unload);
+
+    try {
+      if (localStorage.getItem('results-paraclinic:work-from-history')) {
+        const savedWorkedFrom = JSON.parse(localStorage.getItem('results-paraclinic:work-from-history'));
+
+        if (Array.isArray(savedWorkedFrom)) {
+          this.workFromHistory = savedWorkedFrom;
+        }
+      }
+    } catch (e) {
+      console.log(e);
+    }
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
@@ -1524,6 +1545,12 @@ export default {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
             this.$root.$emit('msg', 'ok', 'Подтверждено');
+
+            if (iss.work_by) {
+              this.workFromHistory = [iss.work_by, ...this.workFromHistory.filter(x => x !== iss.work_by).slice(0, 5)];
+            }
+            localStorage.setItem('results-paraclinic:work-from-history', JSON.stringify(this.workFromHistory));
+
             // eslint-disable-next-line no-param-reassign
             iss.saved = true;
             // eslint-disable-next-line no-param-reassign
@@ -1606,6 +1633,8 @@ export default {
         iss.confirmed = false;
         // eslint-disable-next-line no-param-reassign
         iss.whoConfirmed = null;
+        // eslint-disable-next-line no-param-reassign
+        iss.work_by = null;
         // eslint-disable-next-line no-param-reassign
         iss.whoExecuted = null;
         this.data.direction.amd = 'not_need';
@@ -1983,6 +2012,21 @@ export default {
       return {
         pk: this.data.direction.pk,
       };
+    },
+    workFromHistoryList() {
+      return this.workFromHistory
+        .map(p => {
+          for (const podr of this.workFromUsers) {
+            const profile = podr.children.find(x => x.id === p);
+
+            if (profile) {
+              return profile;
+            }
+          }
+
+          return null;
+        })
+        .filter(Boolean);
     },
   },
 };
