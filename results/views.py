@@ -47,7 +47,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
 from laboratory.decorators import logged_in_or_token
-from laboratory.local_settings import DEATH_RESEARCH_PK
+from laboratory.settings import DEATH_RESEARCH_PK
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
