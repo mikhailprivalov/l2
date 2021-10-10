@@ -338,7 +338,13 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
   }
 
   if (obj.T && obj.SN && obj.G) {
-    return `${obj.SN} ${obj.G} — ${obj.T} — ${obj.CN}`;
+    let CN = obj.CN.replace('"""', '""');
+
+    if (CN.length > 1 && CN[0] === '"' && CN[CN.length - 1] === '"') {
+      CN = CN.slice(1, -1);
+    }
+    CN = CN.replace('""', '"');
+    return `${obj.SN} ${obj.G} — ${obj.T} — ${CN}`;
   }
 
   return name;
