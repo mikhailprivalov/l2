@@ -615,7 +615,7 @@ def reset_confirm(request):
 
         if iss.allow_reset_confirm(request.user):
             predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": pk, "direction": iss.napravleniye_id}
-            iss.doc_confirmation = iss.time_confirmation = None
+            iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
             iss.save()
             if iss.napravleniye.result_rmis_send:
                 c = Client()

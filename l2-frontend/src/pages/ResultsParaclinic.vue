@@ -667,6 +667,28 @@
               </div>
             </div>
           </div>
+          <div class="group" v-if="!row.confirmed && can_confirm_by_other_user">
+            <div class="fields">
+              <div class="field">
+                <label class="field-title" for="onco">
+                  Подтверждение от имени
+                </label>
+                <div class="field-value">
+                  <Treeselect
+                    :multiple="false"
+                    :disable-branch-nodes="true"
+                    class="treeselect-wide"
+                    :options="workFromUsers"
+                    :append-to-body="true"
+                    :clearable="true"
+                    v-model="row.work_by"
+                    :zIndex="5001"
+                    placeholder="Не выбрано"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="group" v-if="row.parentDirection">
             <div class="group-title">Главное направление</div>
             <div class="fields">
@@ -706,13 +728,13 @@
           </div>
           <div class="control-row">
             <div class="res-title">{{ row.research.title }}:</div>
-            <iss-status :i="row" />
+            <IssStatus :i="row" />
             <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
             <button
               class="btn btn-blue-nb"
               @click="save_and_confirm(row)"
               v-if="!row.confirmed && can_confirm"
-              :disabled="!r(row)"
+              :disabled="!r(row) || needFillWorkBy(row)"
             >
               Сохранить и подтвердить
             </button>
@@ -748,9 +770,10 @@
               :direction-pk="data.direction.pk"
               :all_confirmed="data.direction.all_confirmed"
             />
-            <div class="status-list" v-if="!r(row) && !row.confirmed">
+            <div class="status-list" v-if="(!r(row) || needFillWorkBy(row)) && !row.confirmed">
               <div class="status status-none">Не верно:</div>
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
+              <div class="status status-none" v-if="needFillWorkBy(row)">подтверждение от имени</div>
             </div>
           </div>
         </div>
@@ -930,6 +953,9 @@ import moment from 'moment';
 // @ts-ignore
 import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
 import { vField, vGroup } from '@/components/visibility-triggers';
 import { cleanCaches } from '@/utils';
 import { enter_field, leave_field } from '@/forms/utils';
@@ -988,6 +1014,7 @@ export default {
     ResultsByYear,
     RmisLink,
     ScreeningButton,
+    Treeselect,
   },
   data() {
     return {
@@ -1046,6 +1073,7 @@ export default {
       },
       embedded: false,
       tableFieldsErrors: {},
+      workFromUsers: [],
     };
   },
   watch: {
@@ -1057,6 +1085,17 @@ export default {
         if (!this.location.init && rmis_location) {
           await this.load_location();
           this.location.init = true;
+        }
+      },
+      immediate: true,
+    },
+    can_confirm_by_other_user: {
+      async handler() {
+        if (this.can_confirm_by_other_user && this.workFromUsers.length === 0) {
+          const { users } = await usersPoint.loadUsersByGroup({
+            group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
+          });
+          this.workFromUsers = users;
         }
       },
       immediate: true,
@@ -1772,6 +1811,12 @@ export default {
     leave_field(...args) {
       return leave_field.apply(this, args);
     },
+    needFillWorkBy(row) {
+      if (!this.can_confirm_by_other_user || row.confirmed) {
+        return false;
+      }
+      return !row.work_by;
+    },
   },
   computed: {
     userServicesFiltered() {
@@ -1870,6 +1915,14 @@ export default {
     can_reset_amd() {
       for (const g of this.$store.getters.user_data.groups || []) {
         if (g === 'Управление отправкой в АМД') {
+          return true;
+        }
+      }
+      return false;
+    },
+    can_confirm_by_other_user() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Работа от имени в описательных протоколах') {
           return true;
         }
       }
