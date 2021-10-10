@@ -208,10 +208,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         data["СНИЛС (получатель)"] = ""
 
     if not data.get("Заполнил", None):
-        data["Заполнил"] = ""
+        data["Заполнил"] = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
 
     if not data.get("Должность", None):
-        data["Должность"] = ""
+        data["Должность"] = iss.doc_position if iss.doc_confirmation else ""
 
     if not data.get("Проверил", None):
         data["Проверил"] = ""

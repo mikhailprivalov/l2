@@ -47,6 +47,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
 from laboratory.decorators import logged_in_or_token
+from laboratory.settings import DEATH_RESEARCH_PK
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -342,7 +343,7 @@ def result_print(request):
             canvas_mark.drawString(155 * mm, 285 * mm, '{}'.format(" НЕ ПОДТВЕРЖДЕНО "))
             canvas_mark.setFont('FreeSans', 12)
             canvas_mark.drawString(175 * mm, 281 * mm, '{}'.format("( образец )"))
-        if not watermarks:
+        if not watermarks and not DEATH_RESEARCH_PK:
             if direction.hospital:
                 canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.safe_short_title)
             else:
