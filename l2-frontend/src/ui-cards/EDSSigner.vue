@@ -3,13 +3,12 @@
     <div v-if="!checked" class="eds-preloader"><i class="fa fa-spinner"></i> загрузка</div>
     <div v-frag v-else>
       <div class="row cryptopro">
-        <div class="col-xs-3">
-          <div v-if="!hasCP" class="eds-status status-error">Плагин CSP не настроен</div>
-          <div v-else class="eds-status status-ok"><i class="fa fa-check"></i> Плагин CSP {{ systemInfo.cspVersion }}</div>
+        <div class="col-xs-3" v-if="!hasCP">
+          <div class="eds-status status-error">Плагин CSP не настроен</div>
         </div>
-        <div class="col-xs-5" v-if="hasCP">
-          <select class="form-control" v-model="selectedCertificate" v-if="selectedCertificate.length > 0">
-            <option v-for="c in certificates" :key="c.thumbprint" :value="c.thumbprint">
+        <div class="col-xs-8" v-else>
+          <select class="form-control" v-model="selectedCertificate" v-if="certificatesDisplay.length > 0">
+            <option v-for="c in certificatesDisplay" :key="c.thumbprint" :value="c.thumbprint">
               {{ c.name }}
             </option>
           </select>
@@ -57,6 +56,7 @@ import moment from 'moment';
 
 import * as actions from '@/store/action-types';
 import EDSDocument from './EDSDocument.vue';
+import { convertSubjectNameToTitle } from '@/utils';
 
 export default {
   name: 'EDSSigner',
@@ -99,6 +99,12 @@ export default {
         validFrom: moment(cert.validFrom).format('DD.MM.YYYY HH:mm'),
         validTo: moment(cert.validTo).format('DD.MM.YYYY HH:mm'),
       };
+    },
+    certificatesDisplay() {
+      return this.certificates.map(c => ({
+        thumbprint: c.thumbprint,
+        name: convertSubjectNameToTitle(null, c.subjectName, c.name),
+      }));
     },
     isDocAllowedSign() {
       return Boolean(this.executors[this.$store.getters.user_data.doc_pk]);
