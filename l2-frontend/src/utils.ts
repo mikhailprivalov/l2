@@ -333,19 +333,17 @@ export const convertSubjectNameToCertObject = (subjectName: string): any => {
 export const convertSubjectNameToTitle = (object: any, subjectName: string | null, name: string) => {
   const obj = object || convertSubjectNameToCertObject(subjectName);
 
-  if (!obj.CN) {
-    return name;
-  }
+  let result = `НЕТ СНИЛС ${name}`;
+  if (obj.CN) {
+    if (obj.T && obj.SN && obj.G) {
+      let CN = obj.CN.replace('"""', '""');
 
-  if (obj.T && obj.SN && obj.G) {
-    let CN = obj.CN.replace('"""', '""');
-
-    if (CN.length > 1 && CN[0] === '"' && CN[CN.length - 1] === '"') {
-      CN = CN.slice(1, -1);
+      if (CN.length > 1 && CN[0] === '"' && CN[CN.length - 1] === '"') {
+        CN = CN.slice(1, -1);
+      }
+      CN = CN.replace('""', '"');
+      result = `${!obj.SNILS ? 'НЕТ СНИЛС ' : ''}${obj.SN} ${obj.G} — ${obj.T} — ${CN}`;
     }
-    CN = CN.replace('""', '"');
-    return `${obj.SN} ${obj.G} — ${obj.T} — ${CN}`;
   }
-
-  return name;
+  return result;
 };
