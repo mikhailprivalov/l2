@@ -1163,6 +1163,7 @@ def directions_paraclinic_form(request):
                     "lab_comment": i.lab_comment,
                     "forbidden_edit": forbidden_edit,
                     "maybe_onco": i.maybe_onco,
+                    "work_by": None,
                     "tube": tube,
                     "procedure_list": [],
                     "is_form": i.research.is_form,
@@ -1664,7 +1665,12 @@ def directions_paraclinic_result(request):
         if iss.research.is_doc_refferal:
             iss.medical_examination = request_data.get("examination_date") or timezone.now().date()
         if with_confirm:
-            iss.doc_confirmation = request.user.doctorprofile
+            work_by = request_data.get("work_by")
+            if work_by and isinstance(work_by, str) and work_by.isdigit():
+                iss.doc_confirmation_id = work_by
+                iss.executor_confirmation = request.user.doctorprofile
+            else:
+                iss.doc_confirmation = request.user.doctorprofile
             iss.time_confirmation = timezone.now()
             if iss.napravleniye:
                 iss.napravleniye.qr_check_token = None
@@ -1736,7 +1742,12 @@ def directions_paraclinic_result(request):
                 i.time_save = timezone.now()
                 i.creator = request.user.doctorprofile
                 if with_confirm:
-                    i.doc_confirmation = request.user.doctorprofile
+                    work_by = request_data.get("work_by")
+                    if work_by and isinstance(work_by, str) and work_by.isdigit():
+                        i.doc_confirmation_id = work_by
+                        i.executor_confirmation = request.user.doctorprofile
+                    else:
+                        i.doc_confirmation = request.user.doctorprofile
                     i.time_confirmation = timezone.now()
                     if i.napravleniye:
                         i.napravleniye.qr_check_token = None
@@ -1747,7 +1758,12 @@ def directions_paraclinic_result(request):
                 for i2 in Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile, research_id=m):
                     i2.time_save = timezone.now()
                     if with_confirm:
-                        i2.doc_confirmation = request.user.doctorprofile
+                        work_by = request_data.get("work_by")
+                        if work_by and isinstance(work_by, str) and work_by.isdigit():
+                            i2.doc_confirmation_id = work_by
+                            i2.executor_confirmation = request.user.doctorprofile
+                        else:
+                            i2.doc_confirmation = request.user.doctorprofile
                         i2.time_confirmation = timezone.now()
                         if i2.napravleniye:
                             i2.napravleniye.qr_check_token = None
@@ -1879,7 +1895,7 @@ def directions_paraclinic_confirm_reset(request):
 
         if allow_reset:
             predoc = {"fio": iss.doc_confirmation_fio, "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
-            iss.doc_confirmation = iss.time_confirmation = None
+            iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
             iss.save()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             if transfer_d:
@@ -1891,6 +1907,7 @@ def directions_paraclinic_confirm_reset(request):
             response["ok"] = True
             for i in Issledovaniya.objects.filter(parent=iss):
                 i.doc_confirmation = None
+                i.executor_confirmation = None
                 i.time_confirmation = None
                 i.save()
             if iss.napravleniye:
@@ -1918,7 +1935,11 @@ def directions_paraclinic_history(request):
     has_dirs = []
 
     for direction in (
-        Napravleniya.objects.filter(Q(issledovaniya__doc_save=request.user.doctorprofile) | Q(issledovaniya__doc_confirmation=request.user.doctorprofile))
+        Napravleniya.objects.filter(
+            Q(issledovaniya__doc_save=request.user.doctorprofile)
+            | Q(issledovaniya__doc_confirmation=request.user.doctorprofile)
+            | Q(issledovaniya__executor_confirmation=request.user.doctorprofile)
+        )
         .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) | Q(issledovaniya__time_save__range=(date_start, date_end)))
         .order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation")
     ):
