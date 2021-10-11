@@ -712,9 +712,9 @@ def statistic_research_death_data(ws1, researches):
         d2 = du_parse(i["Дата рождения"])
         delta = relativedelta(d1, d2)
         ws1.cell(row=r, column=11).value = delta.years
+        # а)
         diag_data = get_table_diagnos(i, "а) Болезнь или состояние, непосредственно приведшее к смерти")
         ws1.cell(row=r, column=12).value = f'{diag_data[1]["code"]} {diag_data[1]["title"]}'
-        # а) период
         ws1.cell(row=r, column=13).value = diag_data[0]
         ws1.cell(row=r, column=14).value = diag_data[1]["code"]
 
