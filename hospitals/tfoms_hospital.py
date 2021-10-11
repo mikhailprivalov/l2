@@ -1,4 +1,4 @@
-CODETFOMS_HOSPITALTITLE = {
+HOSPITAL_TITLE_BY_CODE_TFOMS = {
     '000000': 'Не определено',
     '380427': 'ООО МЕДГРАФТ',
     '380017': 'ОГАУЗ ГИМДКБ',
