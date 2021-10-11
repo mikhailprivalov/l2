@@ -681,7 +681,7 @@ def statistic_research_death_data(ws1, researches):
         mo_attachment, mo_district = "-", "-"
         if i.get("Прикрепление", None):
             attachment_data = i.get("Прикрепление").split("—")
-            mo_attachment = CODETFOMS_HOSPITALTITLE.get(attachment_data[0].strip(), "")
+            mo_attachment = HOSPITAL_TITLE_BY_CODE_TFOMS.get(attachment_data[0].strip(), "")
             mo_district = attachment_data[1]
 
         ws1.cell(row=r, column=5).value = mo_attachment
