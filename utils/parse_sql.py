@@ -1,4 +1,5 @@
 from copy import deepcopy
+from directions.models import Issledovaniya
 
 
 def death_form_result_parse(data, reserved=False):
@@ -8,6 +9,10 @@ def death_form_result_parse(data, reserved=False):
     prev_issledovaniye_id = None
     for i in data:
         if i.issledovaniye_id != prev_issledovaniye_id and count > 0:
+            if not tmp_data.get("Заполнил", None):
+                iss = Issledovaniya.objects.filter(pk=prev_issledovaniye_id).first()
+                if iss and iss.doc_confirmation:
+                    tmp_data["Заполнил"] = iss.doc_confirmation.get_full_fio()
             data_return.append(deepcopy(tmp_data))
             tmp_data = {}
         if not reserved and i.json_value:
@@ -22,5 +27,11 @@ def death_form_result_parse(data, reserved=False):
             tmp_data["date_create"] = i.date_create or ""
         prev_issledovaniye_id = i.issledovaniye_id
         count += 1
+
+    if not tmp_data.get("Заполнил", None):
+        iss: Issledovaniya = Issledovaniya.objects.filter(pk=prev_issledovaniye_id).first()
+        if iss and iss.doc_confirmation:
+            tmp_data["Заполнил"] = iss.doc_confirmation.get_full_fio()
+
     data_return.append(deepcopy(tmp_data))
     return data_return
