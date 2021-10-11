@@ -7,7 +7,7 @@ from openpyxl.utils.cell import get_column_letter
 
 from directions.models import IstochnikiFinansirovaniya
 from doctor_call.models import DoctorCall
-from hospitals.tfoms_hospital import CODETFOMS_HOSPITALTITLE
+from hospitals.tfoms_hospital import HOSPITAL_TITLE_BY_CODE_TFOMS
 from utils.dates import normalize_dash_date
 from dateutil.parser import parse as du_parse
 from dateutil.relativedelta import relativedelta
