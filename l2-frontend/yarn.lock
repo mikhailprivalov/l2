@@ -9471,10 +9471,10 @@ vue-eslint-parser@^7.0.0:
     lodash "^4.17.21"
     semver "^6.3.0"
 
-vue-frag@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/vue-frag/-/vue-frag-1.2.4.tgz#e15da54af385711ea1055386eb97040a895bc0a1"
-  integrity sha512-gdpdPbMohnMZwu1VxWplX9OAu9Oa75H/XKXeV05dgx1IyNDL2WhHtBN+2Arlqj7rA8f6zqpn1gyMddm2nZaVZg==
+vue-frag@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/vue-frag/-/vue-frag-1.3.1.tgz#8cc3ef0532754069b5c0755f10f42a6b17651f56"
+  integrity sha512-fDNHLqVGhZafKUE00FCUFX/IXRxfB198NfHfBIQ8XNiF16G7Zx9W0SRscHfBwFqrqBkWr+O8dRQ03VMjocF1RQ==
 
 vue-full-loading@^1.2.1:
   version "1.2.1"
@@ -9553,10 +9553,10 @@ vue-router@*, vue-router@^3.5.2:
   resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-3.5.2.tgz#5f55e3f251970e36c3e8d88a7cd2d67a350ade5c"
   integrity sha512-807gn82hTnjCYGrnF3eNmIw/dk7/GE4B5h69BlyCK9KHASwSloD1Sjcn06zg9fVG4fYH2DrsNBZkpLtb25WtaQ==
 
-vue-select@^3.13.0:
-  version "3.13.0"
-  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-3.13.0.tgz#78d519984139156adcbf56af260fb6c2a69093a6"
-  integrity sha512-+PcWtfA1i3WVtkVwBPQknnOZL6QWSD2XiAVbSn0xAQvjOrmGAg7z+o9HkezXhtGdEstloJOdM8SujrUVyphKqg==
+vue-select@^3.13.2:
+  version "3.13.2"
+  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-3.13.2.tgz#e9c0f6a0d3c4613aebd23b0bbee7d8568e81e25a"
+  integrity sha512-KfvUebV9cFwsov56Rx3pMYBhkSsVv28zsoZ5XmtMa2P5htVIaC12LImPx9IL/mtmdR4WOt9Fxx9UVEuXfUiWQg==
 
 vue-simple-progress@^1.1.1:
   version "1.1.1"
