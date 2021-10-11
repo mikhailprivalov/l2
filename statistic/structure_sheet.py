@@ -671,24 +671,6 @@ def statistic_research_death_data(ws1, researches):
         except:
             type_doc_death = i["Вид медицинского свидетельства о смерти"]
 
-        # diag_details = {}
-        # period_data = ""
-        # try:
-        #     i["а) Болезнь или состояние, непосредственно приведшее к смерти"].keys()
-        #     diag_data = i["а) Болезнь или состояние, непосредственно приведшее к смерти"]
-        # except:
-        #     diag_data = json.loads(i["а) Болезнь или состояние, непосредственно приведшее к смерти"])
-        # try:
-        #     diag_details = json.loads(diag_data["rows"][0][2])
-        #     period_data = f'{diag_data["rows"][0][0]} {diag_data["rows"][0][1]}'
-        #     is_dict = True
-        # except:
-        #     is_dict = False
-        # if not is_dict:
-        #     diag_details["code"] = "-"
-        #     diag_details["title"] = "-"
-        #     period_data = "-"
-
         r += 1
         ws1.cell(row=r, column=1).value = i["Серия"]
         ws1.cell(row=r, column=2).value = i["Номер"]
