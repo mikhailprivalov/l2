@@ -681,7 +681,7 @@ def statistic_research_death_data(ws1, researches):
         mo_attachment, mo_district = "-", "-"
         if i.get("Прикрепление", None):
             attachment_data = i.get("Прикрепление").split("—")
-            mo_attachment = HOSPITAL_TITLE_BY_CODE_TFOMS.get(attachment_data[0].strip(), "")
+            mo_attachment = HOSPITAL_TITLE_BY_CODE_TFOMS.get(attachment_data[0].strip(), attachment_data[0].strip())
             mo_district = attachment_data[1]
 
         ws1.cell(row=r, column=5).value = mo_attachment
@@ -779,6 +779,57 @@ def statistic_reserved_research_death_data(ws1, researches):
         ws1.cell(row=r, column=4).value = i["fio_patient"]
         ws1.cell(row=r, column=5).value = i["napravleniye_id"]
         rows = ws1[f'A{r}:E{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    return ws1
+
+
+def statistic_research_by_sum_lab_base(ws1, d1, d2, research_titile):
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+    columns = [
+        ('Лаборатория', 33),
+        ('Услуга', 55),
+        ('Кол-во', 25),
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=4, column=idx).style = style_border
+
+    return ws1
+
+
+def statistic_research_by_sum_lab_data(ws1, researches):
+    """
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 4
+    if not researches:
+        return ws1
+
+    for i in researches:
+        r += 1
+        ws1.cell(row=r, column=1).value = i.lab_title
+        ws1.cell(row=r, column=2).value = i.research_title
+        ws1.cell(row=r, column=3).value = i.sum_research_id
+
+
+        rows = ws1[f'A{r}:C{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
