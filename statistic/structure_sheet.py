@@ -828,7 +828,6 @@ def statistic_research_by_sum_lab_data(ws1, researches):
         ws1.cell(row=r, column=2).value = i.research_title
         ws1.cell(row=r, column=3).value = i.sum_research_id
 
-
         rows = ws1[f'A{r}:C{r}']
         for row in rows:
             for cell in row:
