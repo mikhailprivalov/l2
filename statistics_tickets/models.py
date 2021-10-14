@@ -39,6 +39,7 @@ class Outcomes(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
 
     def __str__(self):
         return self.title

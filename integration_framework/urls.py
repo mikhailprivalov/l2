@@ -11,6 +11,7 @@ urlpatterns = [
     path('result/sendamd', views.result_amd_send),
     path('direction/data', views.direction_data),
     path('iss/data', views.issledovaniye_data),
+    path('iss/data-simple', views.issledovaniye_data_simple),
     path('iss/data-multi', views.issledovaniye_data_multi),
     path('set-core-id', views.set_core_id),
     path('check-enp', views.check_enp),

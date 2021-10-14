@@ -89,6 +89,21 @@ class DoctorProfile(models.Model):
     snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
+    @property
+    def uploading_data(self):
+        return {
+            "pk": self.pk,
+            "snils": self.snils,
+            "n3Id": self.n3_id,
+            "spec": self.specialities.n3_id if self.specialities else None,
+            "speciality": self.specialities.n3_id if self.specialities else None,
+            "role": self.position.n3_id if self.position else None,
+            "position": self.position.n3_id if self.position else None,
+            "family": self.family,
+            "name": self.name,
+            "patronymic": self.patronymic,
+        }
+
     def get_eds_allowed_sign(self):
         ret = []
         doc_groups = ("Врач параклиники", "Врач консультаций", 'Врач-лаборант')

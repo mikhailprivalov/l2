@@ -133,7 +133,7 @@
                 <EDSDirection :direction-pk="r.pk" :all_confirmed="true" :documents-prefetched="r.documents" />
               </div>
               <div v-if="totallySigned(r)" class="uploading-status" :class="r.n3number ? 'm-ok' : 'm-error'">
-                {{ r.n3number ? 'выгружено в N3' : 'не выгружено в N3' }}
+                {{ r.n3number ? 'выгружено в ИЭМК' : 'не выгружено в ИЭМК' }}
               </div>
             </td>
             <td class="x-cell">

@@ -169,8 +169,9 @@ def direction_data(request):
 
             for s in DocumentSign.objects.filter(document=d):
                 document['signatures'].append({
-                    "content": base64.b64encode(s.sign_value.encode('utf-8')).decode('utf-8'),
+                    "content": s.sign_value.replace('\n', ''),
                     "type": s.sign_type,
+                    "executor": s.executor.uploading_data,
                 })
 
             signed_documents.append(document)
@@ -186,6 +187,7 @@ def direction_data(request):
                 "name": individual.name,
                 "patronymic": individual.patronymic,
                 "birthday": individual.birthday,
+                "docs": card.get_n3_documents(),
                 "sex": individual.sex,
                 "card": {
                     "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
@@ -279,16 +281,7 @@ def issledovaniye_data(request):
     doctor_data = {}
 
     if i.doc_confirmation:
-        doctor_data = {
-            "pk": i.doc_confirmation_id,
-            "snils": i.doc_confirmation.snils,
-            "n3Id": i.doc_confirmation.n3_id,
-            "spec": i.doc_confirmation.specialities.n3_id if i.doc_confirmation.specialities else None,
-            "role": i.doc_confirmation.position.n3_id if i.doc_confirmation.position else None,
-            "family": i.doc_confirmation.family,
-            "name": i.doc_confirmation.name,
-            "patronymic": i.doc_confirmation.patronymic,
-        }
+        doctor_data = i.doc_confirmation.uploading_data
 
     return Response(
         {
@@ -304,6 +297,31 @@ def issledovaniye_data(request):
             "results": results_data,
             "code": i.research.code,
             "comments": i.lab_comment,
+        }
+    )
+
+
+@api_view()
+def issledovaniye_data_simple(request):
+    pk = request.GET.get("pk")
+    i = directions.Issledovaniya.objects.get(pk=pk)
+
+    doctor_data = {}
+
+    if i.doc_confirmation:
+        doctor_data = i.doc_confirmation.uploading_data
+
+    return Response(
+        {
+            "ok": True,
+            "pk": pk,
+            "date": i.time_confirmation_local,
+            "docConfirm": i.doc_confirmation_fio,
+            "doctorData": doctor_data,
+            "outcome": (i.outcome_illness if i.outcome_illness else None) or '3',
+            "visitPlace": '1',  # TODO: from DB
+            "visitPurpose": '2',  # TODO: from DB
+            "typeFlags": i.research.get_flag_types_n3(),
         }
     )
 
@@ -402,6 +420,9 @@ def make_log(request):
     pks_to_set_odli_id = [x for x in keys if x] if t in (60007,) else []
     pks_to_set_odli_id_fail = [x for x in keys if x] if t in (60008,) else []
 
+    pks_to_set_iemk = [x for x in keys if x] if t in (60009,) else []
+    pks_to_set_iemk_fail = [x for x in keys if x] if t in (60010,) else []
+
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
@@ -422,6 +443,16 @@ def make_log(request):
                 d = directions.Napravleniya.objects.get(pk=k)
                 d.n3_odli_id = body[str(k)]['id']
                 d.save(update_fields=['n3_odli_id'])
+
+        for k in pks_to_set_iemk_fail:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_iemk:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+            d = directions.Napravleniya.objects.get(pk=k)
+            d.n3_iemk_ok = True
+            d.save(update_fields=['n3_iemk_ok'])
 
     return Response({"ok": True})
 
