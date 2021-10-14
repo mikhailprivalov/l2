@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import directory.models as directory
 import slog.models as slog
+from api.directions.sql_func import get_lab_podr
 from clients.models import CardBase
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
@@ -84,7 +85,7 @@ def statistic_xls(request):
 
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
-    if date_start and date_end:
+    if date_start and date_end and tp != "lab_sum":
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -1010,6 +1011,22 @@ def statistic_xls(request):
                 if ns == 0:
                     ws.sheet_visible = False
                     ws_pat.sheet_visible = False
+
+    elif tp == "lab_sum":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Кол-во по лаборатории")
+
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        lab_podr = get_lab_podr()
+        lab_podr = tuple([i[0] for i in lab_podr])
+        researches_by_sum = sql_func.statistics_sum_research_by_lab(lab_podr, start_date, end_date)
+        ws = structure_sheet.statistic_research_by_sum_lab_base(ws, d1, d2, "Кол-во по лабораториям")
+        ws = structure_sheet.statistic_research_by_sum_lab_data(ws, researches_by_sum)
 
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
