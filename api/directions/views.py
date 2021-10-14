@@ -1365,7 +1365,7 @@ def directions_paraclinic_form(request):
 
     hospital = d and d.get_hospital()
 
-    hospital_access = not hospital or hospital == request.user.doctorprofile.hospital or request.user.is_superuser
+    hospital_access = not hospital or hospital == request.user.doctorprofile.hospital or request.user.is_superuser or request.user.groups.filter(name="Доступ ко всем направлениям").exists()
 
     # TODO: для полного запрета доступа из других организаций убрать response.get("has_monitoring") (так проверяется только для мониторингов)
     if response.get("has_monitoring") and not hospital_access:
