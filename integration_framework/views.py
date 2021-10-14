@@ -319,9 +319,9 @@ def issledovaniye_data_simple(request):
             "date": i.time_confirmation_local,
             "docConfirm": i.doc_confirmation_fio,
             "doctorData": doctor_data,
-            "outcome": (i.outcome_illness if i.outcome_illness else None) or '3',
-            "visitPlace": '1',  # TODO: from DB
-            "visitPurpose": '2',  # TODO: from DB
+            "outcome": (i.outcome_illness.n3_id if i.outcome_illness else None) or '3',
+            "visitPlace": (i.place.n3_id if i.place else None) or '1',
+            "visitPurpose": (i.purpose.n3_id if i.purpose else None) or '2',
             "typeFlags": i.research.get_flag_types_n3(),
         }
     )
