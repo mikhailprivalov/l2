@@ -217,6 +217,7 @@ def direction_data(request):
             "signedDocuments": signed_documents,
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
+            "hasN3IemkUploading": direction.n3_iemk_ok,
         }
     )
 
