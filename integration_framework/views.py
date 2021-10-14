@@ -421,7 +421,7 @@ def make_log(request):
     pks_to_set_odli_id = [x for x in keys if x] if t in (60007,) else []
     pks_to_set_odli_id_fail = [x for x in keys if x] if t in (60008,) else []
 
-    pks_to_set_iemk = [x for x in keys if x] if t in (60009,) else []
+    pks_to_set_iemk = [x for x in keys if x] if t in (60009, 60011) else []
     pks_to_set_iemk_fail = [x for x in keys if x] if t in (60010,) else []
 
     with transaction.atomic():
