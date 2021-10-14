@@ -569,7 +569,7 @@ def direction_info(request):
                 data.append(d)
             for lg in slog.Log.objects.filter(key=str(pk), type__in=(5002,)):
                 data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
-            for lg in slog.Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003)):
+            for lg in slog.Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 600010)):
                 data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
