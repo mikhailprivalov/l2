@@ -30,7 +30,7 @@ from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
 from rmis_integration.client import Client
 from slog.models import Log
-from tfoms.integration import match_enp, match_patient
+from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
@@ -502,7 +502,7 @@ def check_enp(request):
     enp, family, name, patronymic, bd, enp_mode = data_parse(
         request.body,
         {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str},
-        {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None},
+        {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None, 'ud': None},
     )
     enp = enp.replace(' ', '')
 
@@ -511,6 +511,10 @@ def check_enp(request):
     if enp_mode == 'l2-enp':
         tfoms_data = match_enp(enp)
 
+        if tfoms_data:
+            return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'l2-enp-ud':
+        tfoms_data = get_ud_info_by_enp(enp)
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
     elif enp_mode == 'l2-enp-full':
