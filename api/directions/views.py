@@ -3161,7 +3161,7 @@ def eds_to_sign(request):
                 'docConfirmation': ldc,
                 'documents': documents,
                 'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
-                'n3number': d.n3_odli_id,
+                'n3number': d.n3_odli_id or d.n3_iemk_ok,
             }
         )
 

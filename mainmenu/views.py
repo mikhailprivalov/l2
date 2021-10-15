@@ -552,6 +552,7 @@ def direction_info(request):
                             ["Направление привязано к случаю РМИС", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],
                             ["Направление привязано к записи отделения госпитализации РМИС", yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
                             ["Результат отправлен в РМИС", yesno[dir.result_rmis_send]],
+                            ["Результат отправлен в ИЭМК", yesno[dir.n3_iemk_ok]],
                         ]
                     ],
                 }
@@ -569,7 +570,7 @@ def direction_info(request):
                 data.append(d)
             for lg in slog.Log.objects.filter(key=str(pk), type__in=(5002,)):
                 data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
-            for lg in slog.Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003)):
+            for lg in slog.Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011)):
                 data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Ёмкость №%s" % tube.pk, "events": []}

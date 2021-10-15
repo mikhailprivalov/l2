@@ -293,6 +293,15 @@ class Researches(models.Model):
             or self.is_monitoring
         )
 
+    def get_flag_types_n3(self):
+        return {
+            "title": self.title,
+            "isHosp": self.is_hospital,
+            "isDocReferral": self.is_doc_refferal,
+            "isParaclinic": self.is_paraclinic,
+            "isForm": self.is_form,
+        }
+
     @property
     def can_transfer(self):
         if self.desc:
