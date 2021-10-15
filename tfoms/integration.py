@@ -75,3 +75,9 @@ def get_attachment_by_idt(idt) -> Optional[dict]:
     if isinstance(data, list) and len(data) > 0:
         return data[0]
     return data
+
+
+def get_ud_info_by_enp(enp) -> Optional[dict]:
+    logger.exception(f"tfms: get_ud_info_by_enp: {enp}")
+    data = make_request("get-ud-info-by-enp", {"enp": enp}, timeout=5)
+    return data
