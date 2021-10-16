@@ -12,8 +12,9 @@ import datetime
 # import fitz
 # from pdf2docx import Page
 # from appconf.manager import SettingManager
-from forms.sql_func import get_covid_to_json
-from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU
+from forms.sql_func import get_covid_to_json, get_extra_notification_data_for_pdf
+from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
+from utils.dates import normalize_date
 
 
 def pdf(request):
@@ -205,3 +206,40 @@ def covid_result(request):
     response.write(json.dumps(data_return, ensure_ascii=False))
 
     return response
+
+
+def json_nofication(request):
+    response = HttpResponse(content_type='application/json')
+    if not request.user.doctorprofile.has_group('Заполнение экстренных извещений'):
+        response.write(json.dumps({"error": "Access denied"}, ensure_ascii=False))
+        return response
+
+    request_data = {**dict(request.GET.items())}
+    directions = [x for x in json.loads(request_data["pk"]) if x is not None]
+    data_result = get_epid_data(directions)
+    response['Content-Disposition'] = f"attachment; filename=\"json_nofication.json\""
+    response.write(json.dumps(data_result, ensure_ascii=False))
+
+    return response
+
+
+def get_epid_data(directions):
+    result = get_extra_notification_data_for_pdf(directions, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK)
+    data = {}
+    for i in result:
+        if i.master_field == 1:
+            master_value = normalize_date(i.master_value)
+        else:
+            master_value = i.master_value
+        if data.get(i.slave_dir) is None:
+            data[i.slave_dir] = {
+                'master_dir': i.master_dir,
+                'epid_title': i.epid_title,
+                'epid_value': i.epid_value,
+                'master_field_results': [{'master_field_title': i.master_field_title, 'master_value': master_value}],
+            }
+        else:
+            temp_data = data.get(i.slave_dir)
+            temp_data['master_field_results'].append({'master_field_title': i.master_field_title, 'master_value': master_value})
+
+    return data
