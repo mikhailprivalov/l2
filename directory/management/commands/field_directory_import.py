@@ -31,7 +31,5 @@ class Command(BaseCommand):
                 start_val.append(cells[value])
 
         field = ParaclinicInputField.objects.get(pk=field_id)
-        print(field)
-        print(start_val)
         field.input_templates = json.dumps(start_val)
         field.save()

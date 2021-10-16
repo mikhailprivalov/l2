@@ -217,7 +217,7 @@ def json_nofication(request):
     request_data = {**dict(request.GET.items())}
     directions = [x for x in json.loads(request_data["pk"]) if x is not None]
     data_result = get_epid_data(directions)
-    response['Content-Disposition'] = f"attachment; filename=\"json_nofication.json\""
+    response['Content-Disposition'] = "attachment; filename=\"json_nofication.json\""
     response.write(json.dumps(data_result, ensure_ascii=False))
 
     return response
