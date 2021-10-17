@@ -879,6 +879,38 @@ def mkb10_dict(request):
     return JsonResponse({"data": data})
 
 
+def doctorprofile_search(request):
+    q = request.GET["query"].strip()
+    if not q:
+        return JsonResponse({"data": []})
+
+    q = q.split()
+
+    d_qs = users.DoctorProfile.objects.filter(
+        hospital=request.user.doctorprofile.get_hospital(),
+        family__istartswith=q[0]
+    )
+
+    if len(q) > 1:
+        d_qs = d_qs.filter(name__istartswith=q[1])
+
+    if len(q) > 2:
+        d_qs = d_qs.filter(patronymic__istartswith=q[2])
+
+    data = []
+
+    d: users.DoctorProfile
+    for d in d_qs.order_by('fio')[:15]:
+        data.append({
+            "id": d.pk,
+            "fio": str(d),
+            "department": d.podrazdeleniye.title if d.podrazdeleniye else "",
+            **d.dict_data,
+        })
+
+    return JsonResponse({"data": data})
+
+
 def methods_of_taking(request):
     prescription = request.GET.get("prescription", "")
     kw = request.GET.get("keyword", "")

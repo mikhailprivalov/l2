@@ -178,8 +178,8 @@ def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1"):
         cursor.execute(
             """
         SELECT * FROM public.directions_diagnoses
-            WHERE d_type=%(d_type)s and 
-              CASE
+            WHERE d_type=%(d_type)s 
+            AND CASE
                 WHEN %(diag_title)s != '-1' AND %(diag_mkb)s != '-1' THEN 
                   code ~* %(diag_mkb)s and title ~* %(diag_title)s
                 WHEN %(diag_title)s != '-1' AND %(diag_mkb)s = '-1' THEN 
@@ -187,6 +187,8 @@ def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1"):
                 WHEN %(diag_title)s = '-1' AND %(diag_mkb)s != '-1' THEN 
                   code ~* %(diag_mkb)s
               END
+            AND nsi_id IS NOT NULL
+            AND nsi_id != ''
         LIMIT 200
         """,
             params={"d_type": d_type, "diag_title": diag_title, "diag_mkb": diag_mkb},

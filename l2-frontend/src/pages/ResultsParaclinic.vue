@@ -2215,12 +2215,12 @@ export default {
 .research-left {
   position: relative;
   text-align: left;
-  width: calc(100% - 390px);
+  width: calc(100% - 430px);
 }
 
 .research-right {
   text-align: right;
-  width: 390px;
+  width: 430px;
   margin-top: -5px;
   margin-right: -5px;
   margin-bottom: -5px;

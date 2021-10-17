@@ -22,7 +22,7 @@
           </td>
           <td v-for="(_, i) in params.columns.titles" :key="i" class="cl-td" :class="settings[i].type === 2 && 'mkb'">
             <div
-              v-if="settings[i].type === 'rowNumber' || (disabled && ![32, 33, 34].includes(settings[i].type))"
+              v-if="settings[i].type === 'rowNumber' || (disabled && ![32, 33, 34, 35].includes(settings[i].type))"
               class="just-val"
               :class="settings[i].type === 'rowNumber' && 'rowNumber'"
             >
@@ -84,6 +84,13 @@
               dictionary="mkb10.6"
               :disabled="disabled"
             />
+            <DoctorProfileTreeselectField
+              v-else-if="settings[i].type === 35"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              v-model="r[i]"
+              @modified="changeCell(j, i, $event)"
+              :disabled="disabled"
+            />
             <SearchFieldValueField
               v-else-if="settings[i].type === 23"
               :readonly="false"
@@ -120,6 +127,7 @@ import DateFieldWithNow from '@/fields/DateFieldWithNow.vue';
 import MKBFieldForm from '@/fields/MKBFieldForm.vue';
 import MKBFieldTreeselect from '@/fields/MKBFieldTreeselect.vue';
 import SearchFieldValueField from '@/fields/SearchFieldValueField.vue';
+import DoctorProfileTreeselectField from '@/fields/DoctorProfileTreeselectField.vue';
 
 const DEFAULT_SETTINGS = () => ({
   type: 0,
@@ -138,6 +146,7 @@ export default {
     MKBFieldForm,
     SearchFieldValueField,
     MKBFieldTreeselect,
+    DoctorProfileTreeselectField,
   },
   props: {
     value: {
