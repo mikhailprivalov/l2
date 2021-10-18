@@ -4,6 +4,8 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.lib.enums import TA_JUSTIFY
+
+from forms.views import get_epid_data
 from laboratory.settings import FONTS_FOLDER
 import os.path
 from reportlab.pdfbase import pdfmetrics
@@ -29,25 +31,8 @@ def form_01(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Эпид. извещение"))
-    result = get_extra_notification_data_for_pdf(directions, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK)
 
-    data_result = {}
-    for i in result:
-        if i.master_field == 1:
-            master_value = normalize_date(i.master_value)
-        else:
-            master_value = i.master_value
-        if data_result.get(i.slave_dir) is None:
-            data_result[i.slave_dir] = {
-                'master_dir': i.master_dir,
-                'epid_title': i.epid_title,
-                'epid_value': i.epid_value,
-                'master_field_results': [{'master_field_title': i.master_field_title, 'master_value': master_value}],
-            }
-        else:
-            temp_data = data_result.get(i.slave_dir)
-            temp_data['master_field_results'].append({'master_field_title': i.master_field_title, 'master_value': master_value})
-
+    data_result = get_epid_data(directions)
     objs = []
     for k, v in data_result.items():
         opinion = [

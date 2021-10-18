@@ -54,7 +54,7 @@
           <col style="width: 260px" />
           <col style="width: 120px" />
           <col style="width: 120px" />
-          <col style="width: 34px" />
+          <col style="width: 50px" />
         </colgroup>
         <thead>
           <tr>
@@ -75,6 +75,16 @@
                 v-tippy
               >
                 <i class="fas fa-print"></i>
+              </a>
+              <a
+                href="#"
+                @click.prevent="savejson()"
+                class="a-under"
+                title="JSON-file"
+                v-if="toPrintNumbers.length > 0"
+                v-tippy
+              >
+                <i class="fas fa-poll-h"></i>
               </a>
             </th>
           </tr>
@@ -236,6 +246,14 @@ export default class ExtraNotification extends Vue {
   print() {
     const ids = this.toPrintNumbers;
     window.open(`/forms/extra-nofication?pk=[${ids}]`);
+    for (const i of ids) {
+      this.toPrint[i] = false;
+    }
+  }
+
+  savejson() {
+    const ids = this.toPrintNumbers;
+    window.open(`/forms/json-nofication?pk=[${ids}]`);
     for (const i of ids) {
       this.toPrint[i] = false;
     }
