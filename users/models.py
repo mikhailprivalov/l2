@@ -90,18 +90,24 @@ class DoctorProfile(models.Model):
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
     @property
-    def uploading_data(self):
+    def dict_data(self):
         return {
-            "pk": self.pk,
             "snils": self.snils,
-            "n3Id": self.n3_id,
-            "spec": self.specialities.n3_id if self.specialities else None,
             "speciality": self.specialities.n3_id if self.specialities else None,
-            "role": self.position.n3_id if self.position else None,
             "position": self.position.n3_id if self.position else None,
             "family": self.family,
             "name": self.name,
             "patronymic": self.patronymic,
+        }
+
+    @property
+    def uploading_data(self):
+        return {
+            "pk": self.pk,
+            "n3Id": self.n3_id,
+            "spec": self.specialities.n3_id if self.specialities else None,
+            "role": self.position.n3_id if self.position else None,
+            **self.dict_data,
         }
 
     def get_eds_allowed_sign(self):

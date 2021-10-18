@@ -6,7 +6,7 @@ import re
 import time
 import unicodedata
 from datetime import date
-from typing import Optional, Union
+from typing import List, Optional, Union
 from django.contrib.postgres.fields.array import ArrayField
 
 import simplejson as json
@@ -1851,34 +1851,65 @@ class ParaclinicResult(models.Model):
     def get_field_type(self):
         return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
 
+    class JsonParser:
+        PARSERS = {
+            29: 'address',
+            28: 'code_title',
+            32: 'code_title',
+            33: 'code_title',
+            34: 'code_title',
+            35: 'doctorprofile',
+        }
+
+        @staticmethod
+        def get_value_as_json(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            result = field.value_json
+            if not result:
+                try:
+                    return json.loads(field.value)
+                except:
+                    pass
+            return result
+
+        @staticmethod
+        def get_value_json_field(field: Union['ParaclinicResult', 'DirectionParamsResult'], prop: str, cached_json_value=None):
+            json_result = cached_json_value or ParaclinicResult.JsonParser.get_value_as_json(field)
+            if json_result and isinstance(json_result, dict):
+                return json_result.get(prop) or ''
+
+            return ''
+
+        @staticmethod
+        def get_value_json_fields(field: Union['ParaclinicResult', 'DirectionParamsResult'], props: List[str]):
+            json_result = ParaclinicResult.JsonParser.get_value_as_json(field)
+            return [ParaclinicResult.JsonParser.get_value_json_field(field, prop, cached_json_value=json_result) for prop in props]
+
+        @staticmethod
+        def from_json_to_string_value(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            t = field.get_field_type()
+
+            if t in ParaclinicResult.JsonParser.PARSERS:
+                func = f"{ParaclinicResult.JsonParser.PARSERS[t]}_parser"
+                if hasattr(ParaclinicResult.JsonParser, func):
+                    return getattr(ParaclinicResult.JsonParser, func)(field)
+
+            return field.value
+
+        @staticmethod
+        def address_parser(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            return ParaclinicResult.JsonParser.get_value_json_field(field, 'address')
+
+        @staticmethod
+        def code_title_parser(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            return ' – '.join(ParaclinicResult.JsonParser.get_value_json_fields(field, ('code', 'title')))
+
+        @staticmethod
+        def doctorprofile_parser(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            return ParaclinicResult.JsonParser.get_value_json_field(field, 'fio')
+
     @property
     def string_value(self):
-        result = self.value
-        if self.get_field_type() == 28:
-            try:
-                data = json.loads(result)
-                result = f"{data['code']} – {data['title']}"
-            except:
-                pass
-        if self.get_field_type() == 29:
-            try:
-                data = json.loads(result)
-                result = data['address']
-            except:
-                pass
-        if self.get_field_type() == 32:
-            try:
-                data = json.loads(result)
-                result = f"{data['code']} – {data['title']}"
-            except:
-                pass
-        if self.get_field_type() == 33:
-            try:
-                data = json.loads(result)
-                result = f"{data['code']} – {data['title']}"
-            except:
-                pass
-        return result
+        return ParaclinicResult.JsonParser.from_json_to_string_value(self)
 
     @staticmethod
     def anesthesia_value_get(iss_pk=-1, field_pk=-1):
@@ -1962,20 +1993,7 @@ class DirectionParamsResult(models.Model):
 
     @property
     def string_value(self):
-        result = self.value
-        if self.get_field_type() == 28:
-            try:
-                data = json.loads(result)
-                result = f"{data['code']} – {data['title']}"
-            except:
-                pass
-        if self.get_field_type() == 29:
-            try:
-                data = json.loads(result)
-                result = data['address']
-            except:
-                pass
-        return result
+        return ParaclinicResult.JsonParser.from_json_to_string_value(self)
 
     @property
     def string_value_normalized(self):
