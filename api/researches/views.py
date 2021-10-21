@@ -704,7 +704,7 @@ def fast_template_save(request):
 def fraction_title(request):
     request_data = json.loads(request.body)
     fraction = Fractions.objects.get(pk=request_data["pk"])
-    return JsonResponse({"fraction": fraction.title, "research": fraction.research.title, "units": fraction.f.get_unit()})
+    return JsonResponse({"fraction": fraction.title, "research": fraction.research.title, "units": fraction.get_unit()})
 
 
 def field_title(request):
