@@ -2058,6 +2058,11 @@ def last_field_result(request):
 
     c = Card.objects.get(pk=client_pk)
     data = c.get_data_individual()
+    mother_obj = None
+    mother_data = None
+    if c.mother:
+        mother_obj = c.mother
+        mother_data = mother_obj.get_data_individual()
     if request_data["fieldPk"].find('%work_place') != -1:
         if c.work_place:
             work_place = c.work_place
@@ -2073,6 +2078,8 @@ def last_field_result(request):
         result = {"value": hosp_title}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
+    elif request_data["fieldPk"].find('%mother_full_main_address') != -1:
+        result = {"value": mother_obj.main_address_full}
     elif request_data["fieldPk"].find('%full_main_address') != -1:
         result = {"value": c.main_address_full}
     elif request_data["fieldPk"].find('%docprofile') != -1:
@@ -2081,12 +2088,24 @@ def last_field_result(request):
         result = {"value": request.user.doctorprofile.get_position()}
     elif request_data["fieldPk"].find('%patient_fio') != -1:
         result = {"value": data['fio']}
+    elif request_data["fieldPk"].find('%mother_family') != -1:
+        result = {"value": mother_data['family']}
+    elif request_data["fieldPk"].find('%mother_name') != -1:
+        result = {"value": mother_data['name']}
+    elif request_data["fieldPk"].find('%mother_patronymic') != -1:
+        result = {"value": mother_data['patronymic']}
     elif request_data["fieldPk"].find('%patient_born') != -1:
         result = {"value": data['born']}
+    elif request_data["fieldPk"].find('%mother_born') != -1:
+        result = {"value": mother_data['born']}
     elif request_data["fieldPk"].find('%snils') != -1:
         result = {"value": data['snils']}
+    elif request_data["fieldPk"].find('%mother_snils') != -1:
+        result = {"value": mother_data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:
         result = {"value": data['enp']}
+    elif request_data["fieldPk"].find('%mother_polis_enp') != -1:
+        result = {"value": mother_data['enp']}
     elif request_data["fieldPk"].find('%tfoms-attachment') != -1:
         tfoms_data = c.individual.match_tfoms()
         if not tfoms_data or not isinstance(tfoms_data, dict):
@@ -2103,26 +2122,41 @@ def last_field_result(request):
             result = {"value": "1-Паспорт гражданина Российской Федерации"}
         elif not data['passport_num'] and data['bc_num']:
             result = {"value": "6-Свидетельство о рождении"}
+    elif request_data["fieldPk"].find('%mother_document_type') != -1:
+        if mother_data['passport_num']:
+            result = {"value": "1-Паспорт гражданина Российской Федерации"}
     elif request_data["fieldPk"].find('%doc_serial') != -1:
         if data['passport_num']:
             result = {"value": data["passport_serial"]}
         elif not data['passport_serial'] and data['bc_num']:
             result = {"value": data["bc_serial"]}
+    elif request_data["fieldPk"].find('%mother_passport_serial') != -1:
+        if mother_data['passport_num']:
+            result = {"value": mother_data["passport_serial"]}
     elif request_data["fieldPk"].find('%doc_number') != -1:
         if data['passport_num']:
             result = {"value": data["passport_num"]}
         elif not data['passport_serial'] and data['bc_num']:
             result = {"value": data["bc_num"]}
+    elif request_data["fieldPk"].find('%mother_passport_num') != -1:
+        if mother_data['passport_num']:
+            result = {"value": mother_data["passport_num"]}
     elif request_data["fieldPk"].find('%doc_who_issue') != -1:
         if data['passport_num']:
             result = {"value": data["passport_issued"]}
         elif not data['passport_serial'] and data['bc_num']:
             result = {"value": data["bc_issued"]}
+    elif request_data["fieldPk"].find('%mother_passport_who') != -1:
+        if mother_data['passport_num']:
+            result = {"value": mother_data["passport_issued"]}
     elif request_data["fieldPk"].find('%doc_date_issue') != -1:
         if data['passport_num']:
             result = {"value": data["passport_date_start"]}
         elif not data['passport_serial'] and data['bc_num']:
             result = {"value": data["bc_date_start"]}
+    elif request_data["fieldPk"].find('%mother_passport_date_issue') != -1:
+        if mother_data['passport_num']:
+            result = {"value": mother_data["passport_date_start"]}
     elif request_data["fieldPk"].find('%fact_address') != -1:
         result = {"value": c.fact_address}
     elif request_data["fieldPk"].find('%full_fact_address') != -1:

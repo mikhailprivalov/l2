@@ -1073,6 +1073,9 @@ class Card(models.Model):
                 docs.append(Document.objects.filter(pk=cd[d])[0])
         ind_data['doc'] = docs if not full_empty else []
         ind_data['fio'] = self.individual.fio()
+        ind_data['family'] = self.individual.family
+        ind_data['name'] = self.individual.name
+        ind_data['patronymic'] = self.individual.patronymic
         ind_data['born'] = self.individual.bd()
         ind_data['main_address'] = "____________________________________________________" if not self.main_address and not full_empty else self.main_address
         ind_data['fact_address'] = "____________________________________________________" if not self.fact_address and not full_empty else self.fact_address
