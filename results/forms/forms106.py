@@ -99,18 +99,22 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Дата смерти",
         "Время смерти",
         "Место постоянного жительства (регистрации)"
+
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
         data[i["title"]] = i["value"]
 
+    hospital_obj: Hospitals = user.doctorprofile.get_hospital()
+    data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data,
+                   "org_okpo": hospital_obj.okpo}
+
     template = add_template(iss, direction, data, 5 * mm)
     fwb.extend(template)
-    # template = add_line_split(iss, direction, 4 * mm)
-
-    # fwb.extend(template)
-    # template = death_data(iss, direction, data, 0 * mm)
-    # fwb.extend(template)
+    template = add_line_split(iss, direction, 4 * mm)
+    fwb.extend(template)
+    template = death_data(iss, direction, data, 0 * mm)
+    fwb.extend(template)
 
     return fwb
 
@@ -123,34 +127,44 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
 
     text.append(Spacer(1, 3 * mm))
     text.append(Paragraph(f"1. Рождение мертвого ребенка: {space_symbol * 5} число__________ месяц______________ год____________ час__________ мин____________", style))
+    text.append(Spacer(1, 1.2 * mm))
     text.append(Paragraph(f"2. Ребенок родился живым: {space_symbol * 11} число__________ месяц______________ год____________ час__________ мин____________", style))
+    text.append(Spacer(1, 1.2 * mm))
     text.append(Paragraph(f" {space_symbol * 6}и умер (дата): {space_symbol * 28} число__________ месяц______________ год____________ час__________ мин____________", style))
-    text.append(Spacer(1, 0.4 * mm))
+    text.append(Spacer(1, 1.2 * mm))
     text.append(Paragraph(f"3.	Смерть наступила: до начала родов {digit_one} во время родов {digit_two} после родов {digit_three} неизвестно {digit_four}", style))
+    text.append(Spacer(1, 1.2 * mm))
     text.append(Paragraph(f"4.	Фамилия, имя, отчество (при наличии) матери:", style))
+    text.append(Spacer(1, 1.2 * mm))
     text.append(Paragraph(f"5.	Дата рождения матери:	число_______ месяц_________ год __________", style))
+    text.append(Spacer(1, 1.2 * mm))
     text.append(Paragraph(f"6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
     text.append(Paragraph(f"субъект Российской Федерации  ", style))
     text.append(Paragraph(f"район__________________ город ____________________", style))
     text.append(Paragraph(f"населенный пункт__________________ улица ____________________", style))
     text.append(Paragraph(f"дом______стр.______корп. _____ кв._________", style))
-    text.append(Spacer(1, 0.4 * mm))
+    text.append(Spacer(1, 1.2 * mm))
     text.append(Paragraph(f"7.	Местность: городская {digit_one} сельская {digit_two}", style))
+    text.append(Spacer(1, 1.2 * mm))
+    text.append(Paragraph(f"8.	Фамилия, имя, отчество (при наличии) умершего ребенка (фамилия ребенка, родившегося мертвым)", style))
+    text.append(Spacer(1, 1.2 * mm))
+    text.append(Paragraph(f"9.	Пол: мужской {digit_one} женский {digit_two}", style))
+    text.append(Spacer(1, 1.2 * mm))
+    text.append(Paragraph(f"10. Смерть   (мертворождение)  произошла(о):  в  стационаре {digit_one} дома {digit_two} в другом месте {digit_three} неизвестно {digit_three}", style))
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
     return obj
 
 
-# def add_line_split(iss: Issledovaniya, direction, offset=0):
-#     # Лини отреза
-#     text = []
-#     text = line_split(text)
-#     obj = [(FrameDataUniversal(0 * mm, offset, 190 * mm, 5 * mm, text=text))]
-#     return obj
+def add_line_split(iss: Issledovaniya, direction, offset=0):
+    # Лини отреза
+    text = []
+    text = line_split(text)
+    obj = [(FrameDataUniversal(0 * mm, offset, 190 * mm, 5 * mm, text=text))]
+    return obj
 
 
-# общие функции
 def title_data(text, serial, number, date_issue, type_document, data_fields):
     text.append(Spacer(1, 1.7 * mm))
     text.append(Paragraph("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", styleCentreBold))
@@ -176,3 +190,72 @@ def title_data(text, serial, number, date_issue, type_document, data_fields):
         text.append(Paragraph("ранее выданное свидетельство", styleCentre))
         text.append(Paragraph(f"серия {data_fields['Серия предшествующего']} No {data_fields['Номер предшествующего']} от {data_fields['Дата выдачи предшествующего']} г.", styleCentre))
     return text
+
+
+def line_split(text):
+    step_round_dash = (1.5 * mm, 1 * mm)
+
+    styleColor = deepcopy(style)
+    styleColor.textColor = colors.gray
+
+    opinion = [[Paragraph('', style), Paragraph('линия отреза', styleColor), Paragraph('', style), ], ]
+    tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=(80 * mm, 25 * mm, 80 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('LINEBELOW', (0, 0), (0, 0), 0.2 * mm, colors.gray, 'round', step_round_dash),
+                ('LINEBELOW', (2, 0), (2, 0), 0.2 * mm, colors.gray, 'round', step_round_dash),
+                ('BOTTOMPADDING', (1, 0), (1, 0), -0.5 * mm),
+            ]
+        )
+    )
+    text.append(tbl)
+    return text
+
+
+def death_data(iss: Issledovaniya, direction, fields, offset=0):
+    text = []
+
+    text = title_med_organization(text, fields['org'])
+    text = title_data(text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"], fields)
+    text.append(Spacer(1, 1.7 * mm))
+
+    obj = []
+    obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 178 * mm, text=text))
+
+    return obj
+
+
+def title_med_organization(text, params):
+    opinion = [
+        [
+            Paragraph(f'{params["full_title"]}<br/>'
+                      f'адрес места нахождения {params["org_address"]}<br/>'
+                      f'Код по ОКПО {params["org_okpo"]}<br/>'
+                      f'Номер и дата выдачи лицензии на осуществление медицинской деятельности: <br/>{params["org_license"]}<br/>', styleOrg),
+            Paragraph('', styleOrg),
+            Paragraph('Код формы по ОКУД _______<br/>Медицинская документация<br/>Учётная форма № 106/У<br/>Утверждена приказом Минздрава России <br/>от «15» апреля 2021 г. № 352н',
+                      styleOrg),
+        ],
+    ]
+    col_width = (125 * mm, 5 * mm, 60 * mm,)
+    tbl_style = [
+        ('GRID', (0, 0), (0, 0), 0.75, colors.black),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    return text
+
+
+def gen_table(opinion, col_width, tbl_style, row_height=None):
+    tbl = Table(opinion, colWidths=col_width, rowHeights=row_height, hAlign='LEFT', )
+    tbl.setStyle(TableStyle(tbl_style))
+    return tbl
+
+
