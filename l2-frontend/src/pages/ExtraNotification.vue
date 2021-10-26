@@ -119,10 +119,8 @@
                 {{ r.slaveDir }}
               </a>
             </td>
-            <td class="text-center cl-td">
-              <label v-if="r.slaveConfirm">
+            <td class="text-center cl-td" :class="[r.slaveConfirm ? 'checkbox-color' : '']">
                 <input type="checkbox" v-model="toPrint[r.slaveDir]" />
-              </label>
             </td>
           </tr>
           <tr v-if="rows.length === 0">
@@ -323,5 +321,9 @@ export default class ExtraNotification extends Vue {
     top: -1px;
     background: #fff;
   }
+}
+
+.checkbox-color {
+  background-color: #9dcaeb
 }
 </style>
