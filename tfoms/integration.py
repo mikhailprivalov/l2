@@ -81,3 +81,15 @@ def get_ud_info_by_enp(enp) -> Optional[dict]:
     logger.exception(f"tfms: get_ud_info_by_enp: {enp}")
     data = make_request("get-ud-info-by-enp", {"enp": enp}, timeout=5)
     return data
+
+
+def get_dn_info_by_enp(enp) -> Optional[dict]:
+    logger.exception(f"tfms: get_dn_info_by_enp: {enp}")
+    data = make_request("get-dn-info-by-enp", {"enp": enp}, timeout=5)
+    return data
+
+
+def match_patient_by_snils(snils) -> Optional[dict]:
+    logger.exception(f"tfms: get_patient_by_snils: {snils}")
+    data = make_request("match-patient-by-snils", {"snils": snils}, timeout=5)
+    return data
