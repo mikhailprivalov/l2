@@ -535,7 +535,7 @@ def patients_get_card_data(request, card_id):
 
 
 @login_required
-@group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра")
+@group_required("Картотека L2", "Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра")
 def patients_card_save(request):
     request_data = json.loads(request.body)
     message = ""
