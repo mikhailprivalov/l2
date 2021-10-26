@@ -523,7 +523,6 @@ def check_enp(request):
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
     elif enp_mode == 'l2-snils':
-        print(snils)
         tfoms_data = match_patient_by_snils(snils)
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
