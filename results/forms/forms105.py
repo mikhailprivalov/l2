@@ -425,7 +425,7 @@ def title_data(title_name, title_form, text, serial, number, date_issue, type_do
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"{title_form}", styleCentreBold))
     text.append(Spacer(1, 0.2 * mm))
-    text.append(Paragraph(f"СЕРИЯ {serial} No {number}", styleCentreBold))
+    text.append(Paragraph(f"СЕРИЯ {serial} № {number}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
@@ -698,7 +698,12 @@ def line_split(text):
 
 
 def patient_passport(text, data_document):
-    opinion = gen_opinion(['4.Документ, удостоверяющий личность умершего:', data_document["type"], 'серия', data_document["serial"], 'номер', data_document['number']])
+    if "-" in data_document["type"]:
+        document_type = data_document["type"].split("-")
+        document_type_print = document_type[1]
+    else:
+        document_type_print = data_document["type"]
+    opinion = gen_opinion(['4.Документ, удостоверяющий личность умершего:', document_type_print, 'серия', data_document["serial"], 'номер', data_document['number']])
     tbl_style = [
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
         ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
