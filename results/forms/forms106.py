@@ -70,7 +70,7 @@ styleOrgBold.leading = 2 * mm
 op_bold_tag = '<font face="PTAstraSerifBold">'
 cl_bold_tag = '</font>'
 
-op_boxed_tag = '<font face="digit8" size=8>'
+op_boxed_tag = '<font face="digit8" size=8.5>'
 cl_boxed_tag = '</font>'
 
 digit_one = f"{op_boxed_tag}1{cl_boxed_tag}"
@@ -87,7 +87,7 @@ op_boxedT_tag = '<font face="digit8table" size=8>'
 cl_boxedT_tag = '</font>'
 
 space_symbol = '&nbsp;'
-
+line_break = "<br/>"
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/-2у
@@ -154,7 +154,7 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 1.2 * mm))
     text.append(Paragraph(f"9.	Пол: мужской {digit_one} женский {digit_two}", style))
     text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"10. Смерть   (мертворождение)  произошла(о):  в  стационаре {digit_one} дома {digit_two} в другом месте {digit_three} неизвестно {digit_three}", style))
+    text.append(Paragraph(f"10. Смерть   (мертворождение)  произошла(о):  в  стационаре {digit_one} дома {digit_two} в другом месте {digit_three} неизвестно {digit_four}", style))
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
@@ -244,8 +244,8 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
         93 * mm,
     )
     tbl_style = [
-        ('GRID', (0, 0), (0, 0), 0.75, colors.black),
-        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (0, 0), (0, 0), 0.75, colors.white),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
@@ -256,11 +256,12 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
 
     text.append(Spacer(1, 0.3 * mm))
     mom_data = mother_data()
+    # baby_data = child_data()
     opinion = [
         [
             Paragraph(f'{mom_data}', styleT),
             Paragraph('', styleOrg),
-            Paragraph(f'{op_bold_tag}Ребенок{cl_bold_tag}', styleT),
+            Paragraph(f'{child_data()}', styleT),
         ],
     ]
 
@@ -270,8 +271,8 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
         93 * mm,
     )
     tbl_style = [
-        ('GRID', (0, 0), (0, 0), 0.75, colors.black),
-        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (0, 0), (0, 0), 0.75, colors.white),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
@@ -333,7 +334,6 @@ def gen_table(opinion, col_width, tbl_style, row_height=None):
 
 
 def mother_data():
-    line_break = "<br/>"
     fio = f"4.Фамилия, имя, отчество (при наличии): Соропудова Людмила Феоктистовна {line_break}{line_break}"
     born = f"5. Дата рождения: {op_boxedT_tag}1{cl_boxedT_tag}{op_boxedT_tag}2{cl_boxedT_tag} {space_symbol * 3} {op_boxedT_tag}0{cl_boxedT_tag}{op_boxedT_tag}5{cl_boxedT_tag} " \
            f"{space_symbol * 3} {op_boxedT_tag}1{cl_boxedT_tag}{op_boxedT_tag}9{cl_boxedT_tag}{op_boxedT_tag}9{cl_boxedT_tag}{op_boxedT_tag}3{cl_boxedT_tag}{line_break}{line_break}"
@@ -349,8 +349,8 @@ def mother_data():
     street = f"{space_symbol * 5} улица {line_break}"
     house = f"{space_symbol * 5} дом ______ стр.______ корп.________ кв._________ {line_break}{line_break}"
     type_place = f"10. Местность: городская {digit_one} сельская {digit_two}{line_break}{line_break}"
-    married_status = f"11. Семейное положение: состоит в зарегистрированном браке {digit_one}{line_break}{line_break}"
-    married_other_status = f"{space_symbol * 5} не состоит в зарегистрированном брак {digit_two} неизвестно {digit_three} {line_break}{line_break}"
+    married_status = f"11. Семейное положение:{line_break} состоит в зарегистрированном браке {digit_one}{line_break}"
+    married_other_status = f"не состоит в зарегистрированном брак {digit_two} неизвестно {digit_three} {line_break}{line_break}"
     education = f"12. Образование: профессиональное: высшее {digit_one} неполное высшее{digit_two} среднее профессиональное {digit_three} " \
                 f"{line_break} общее: среднее {digit_four} основное {digit_five} начальное {digit_six} не имеет начального образования " \
                 f"{digit_seven} неизвестно {digit_eight}{line_break}{line_break}"
@@ -362,4 +362,24 @@ def mother_data():
 
 
 def child_data():
-    return ""
+    child_fio = f"15. Фамилия _____________{line_break}"
+    child_place_death = f"16. Место смерти (рождения мертвого ребенка):{line_break}"
+    child_region_country = f"{space_symbol * 5}субъект Российской Федерации {line_break}"
+    child_area_region = f"{space_symbol * 5} район {line_break}"
+    child_city = f"{space_symbol * 5} город {line_break}"
+    child_live_punkt = f"{space_symbol * 5} населенный пункт {line_break}"
+    child_street = f"{space_symbol * 5} улица {line_break}"
+    child_house = f"{space_symbol * 5} дом ______ стр.______ корп.________ кв._________ {line_break}{line_break}"
+    child_type_place = f"17. Местность: городская {digit_one} сельская {digit_two}{line_break}{line_break}"
+    where_death = f"18. Смерть (рождение мертвым) произошла(о): в стационаре {digit_one} дома {digit_two} в другом месте {digit_three} неизвестно {digit_four} {line_break}{line_break}"
+    sex = f"19.	Пол: мужской {digit_one} женский{digit_two} {line_break}{line_break}"
+    weight = f"20. Масса тела ребенка при рождении (г) {line_break}{line_break}"
+    long_body = f"21. Длина тела ребенка при рождении (см) {line_break}{line_break}"
+    why_death = f"22. Рождение мертвым или живорождение произошло:  {line_break}"
+    singleton_birth = f"{space_symbol * 3} при одноплодных родах {digit_one} {line_break}"
+    multiple_birth = f"{space_symbol * 3} при многоплодных родах {digit_two} {line_break}"
+    child_count = f"{space_symbol * 3} которыми по счет {line_break}"
+    child_all_birth_count = f"{space_symbol * 3} число родившихся (живыми или мертвыми) детей {line_break}"
+
+    return f"{child_fio}{child_place_death}{child_region_country}{child_area_region}{child_city}{child_live_punkt}{child_street}{child_house}{child_type_place}" \
+           f"{where_death}{sex}{weight}{long_body}{why_death}{singleton_birth}{multiple_birth}{child_count}{child_all_birth_count}"
