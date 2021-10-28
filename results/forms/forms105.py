@@ -20,7 +20,6 @@ from hospitals.models import Hospitals
 
 pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-pdfmetrics.registerFont(TTFont('digit8', os.path.join(FONTS_FOLDER, 'digit8.ttf')))
 styleSheet = getSampleStyleSheet()
 style = styleSheet["Normal"]
 style.fontName = "PTAstraSerifReg"
@@ -67,6 +66,7 @@ op_bold_tag = '<font face="PTAstraSerifBold">'
 cl_bold_tag = '</font>'
 
 space_symbol = '&nbsp;'
+
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/у
@@ -264,8 +264,9 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Мед. св-во о смерти 106/у
     text = []
-    text = title_data(text, fields.get("Серия",""), fields.get("Номер", ""), fields.get("Дата выдачи",""), fields.get("Вид медицинского свидетельства о смерти", ""),
-                      fields)
+    text = title_data("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", "К УЧЕТНОЙ ФОРМЕ № 106/У", text, fields.get("Серия", ""), fields.get("Номер", ""), fields.get("Дата выдачи", ""),
+                      fields.get("Вид медицинского свидетельства о смерти", ""), fields)
+    text.append(Spacer(1, 1.7 * mm))
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields.get('fio',''))
 
     # Пол
@@ -328,9 +329,9 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
 def death_data(iss: Issledovaniya, direction, fields, offset=0):
     # Лини отреза
     text = []
-
     text = title_med_organization(text, fields['org'])
-    text = title_data(text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"], fields)
+    text = title_data("МЕДИЦИНСКОЕ СВИДЕТЕЛЬСТВО О СМЕРТИ", "", text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"],
+                      fields)
     text.append(Spacer(1, 1.7 * mm))
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields["fio"])
 
@@ -419,13 +420,12 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
 
 
 # общие функции
-def title_data(text, serial, number, date_issue, type_document, data_fields):
-    text.append(Spacer(1, 1.7 * mm))
-    text.append(Paragraph("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", styleCentreBold))
+def title_data(title_name, title_form, text, serial, number, date_issue, type_document, data_fields):
+    text.append(Paragraph(f"{title_name}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
-    text.append(Paragraph("К УЧЕТНОЙ ФОРМЕ № 106/У", styleCentreBold))
+    text.append(Paragraph(f"{title_form}", styleCentreBold))
     text.append(Spacer(1, 0.2 * mm))
-    text.append(Paragraph(f"СЕРИЯ {serial} No {number}", styleCentreBold))
+    text.append(Paragraph(f"СЕРИЯ {serial} № {number}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
@@ -698,7 +698,12 @@ def line_split(text):
 
 
 def patient_passport(text, data_document):
-    opinion = gen_opinion(['4.Документ, удостоверяющий личность умершего:', data_document["type"], 'серия', data_document["serial"], 'номер', data_document['number']])
+    if "-" in data_document["type"]:
+        document_type = data_document["type"].split("-")
+        document_type_print = document_type[1]
+    else:
+        document_type_print = data_document["type"]
+    opinion = gen_opinion(['4.Документ, удостоверяющий личность умершего:', document_type_print, 'серия', data_document["serial"], 'номер', data_document['number']])
     tbl_style = [
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
         ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),

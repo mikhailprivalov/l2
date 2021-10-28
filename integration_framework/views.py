@@ -30,7 +30,7 @@ from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
 from rmis_integration.client import Client
 from slog.models import Log
-from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp
+from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
@@ -499,22 +499,31 @@ def crie_status(request):
 
 @api_view(['POST'])
 def check_enp(request):
-    enp, family, name, patronymic, bd, enp_mode = data_parse(
+    enp, family, name, patronymic, bd, enp_mode, snils = data_parse(
         request.body,
-        {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str},
-        {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None, 'ud': None},
+        {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str, 'snils': str},
+        {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None, 'ud': None, 'snils': None},
     )
+    if not enp:
+        enp = ""
     enp = enp.replace(' ', '')
 
     logger.exception(f'enp_mode: {enp_mode}')
 
     if enp_mode == 'l2-enp':
         tfoms_data = match_enp(enp)
-
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
     elif enp_mode == 'l2-enp-ud':
         tfoms_data = get_ud_info_by_enp(enp)
+        if tfoms_data:
+            return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'l2-enp-dn':
+        tfoms_data = get_dn_info_by_enp(enp)
+        if tfoms_data:
+            return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'l2-snils':
+        tfoms_data = match_patient_by_snils(snils)
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
     elif enp_mode == 'l2-enp-full':
