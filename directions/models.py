@@ -1477,6 +1477,7 @@ class Issledovaniya(models.Model):
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None, help_text="Место оказания услуги", on_delete=models.SET_NULL)
     link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
     study_instance_uid = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="uuid снимка")
+    acsn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ уникальным идентификатором заявки")
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )
