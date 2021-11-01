@@ -80,6 +80,7 @@ def change_acsn(link_study, accession_number):
     if dicom_study and dicom_study.json()['ID']:
         requests.delete(f'{DICOM_SERVER_DELETE}/studies/{link_study}')
         link_study = dicom_study.json()['ID']
+    if REMOTE_DICOM_SERVER:
         requests.post(f'{REMOTE_DICOM_SERVER}/peers/{REMOTE_DICOM_PEER}/store', data=link_study)
 
     return link_study
