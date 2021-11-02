@@ -14,7 +14,7 @@ class Speciality(models.Model):
     )
 
     title = models.CharField(max_length=255, help_text='Название')
-    hide = models.BooleanField(help_text='Скрытие')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
     spec_type = models.SmallIntegerField(choices=SPEC_TYPES, help_text='Тип специальности', default=0)
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
@@ -38,7 +38,7 @@ def add_dots_if_not_digit(w: str, dots):
 
 class Position(models.Model):
     title = models.CharField(max_length=255, help_text='Название')
-    hide = models.BooleanField(help_text='Скрытие')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
 
