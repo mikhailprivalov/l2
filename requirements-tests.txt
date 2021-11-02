@@ -7,7 +7,7 @@ cached-property==1.5.2
 certifi==2021.10.8
 chardet==4.0.0
 defusedxml==0.7.1
-Django==3.2.8
+Django==3.2.9
 django-ajax-selects==2.1.0
 django-cors-headers
 django-logtail==0.3.0
