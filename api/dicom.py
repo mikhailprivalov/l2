@@ -1,7 +1,7 @@
 import socket
 from functools import reduce
 from directions.models import Issledovaniya
-from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER
+from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER, RMIS_PROXY
 import requests
 import simplejson as json
 

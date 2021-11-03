@@ -5,7 +5,7 @@ from django.utils import timezone
 
 import requests
 
-from laboratory.settings import N3_ODII_BASE_URL, N3_ODII_SYSTEM_ID, N3_ODII_TOKEN
+from laboratory.settings import N3_ODII_BASE_URL, N3_ODII_SYSTEM_ID, N3_ODII_TOKEN, RMIS_PROXY
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def make_request(path, query=None, as_json=True, **kwargs):
     try:
         url = get_url(path, query=query)
         headers = {"Content-Type": "application/json", "Authorization": f"N3 {N3_ODII_TOKEN}"}
-        data = requests.post(url, headers=headers, **kwargs)
+        data = requests.post(url, headers=headers, **kwargs, proxies=RMIS_PROXY)
         if as_json:
             return data.json()
         return data.text
