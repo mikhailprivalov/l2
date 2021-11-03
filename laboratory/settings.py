@@ -306,6 +306,10 @@ FORCE_CACHALOT = False
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+N3_ODII_BASE_URL = ""
+N3_ODII_TOKEN = ""
+N3_ODII_SYSTEM_ID = ""
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

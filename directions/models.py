@@ -1,4 +1,5 @@
 import calendar
+import logging
 from cda.integration import get_required_signatures
 import datetime
 import os
@@ -17,6 +18,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
+from odii.integration import add_task_request
 import slog.models as slog
 import users.models as umodels
 import cases.models as cases
@@ -31,6 +33,9 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes,
 
 
 from appconf.manager import SettingManager
+
+
+logger = logging.getLogger(__name__)
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -651,6 +656,64 @@ class Napravleniya(models.Model):
             c = True
         if c:
             self.save()
+
+    def fill_acsn(self):
+        if not SettingManager.l2('fill_acsn'):
+            return
+        iss: Issledovaniya
+        card = self.client
+        individual = card.individual
+        for iss in self.issledovaniya_set.filter(acsn_id__isnull=True):
+            if iss.research.is_paraclinic and iss.research.podrazdeleniye and iss.research.podrazdeleniye.can_has_pacs and iss.research.nsi_id:
+                try:
+                    add_task_resp = add_task_request(
+                        self.hospital_n3id,
+                        {
+                            **card.get_data_individual(full_empty=True, only_json_serializable=True),
+                            "family": individual.family,
+                            "name": individual.name,
+                            "patronymic": individual.patronymic,
+                            "birthday": individual.birthday.strftime("%Y-%m-%d"),
+                            "docs": card.get_n3_documents(),
+                            "sex": individual.sex,
+                            "card": {
+                                "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
+                                "pk": card.pk,
+                                "number": card.number,
+                                "n3Id": card.n3_id,
+                                "numberWithType": card.number_with_type(),
+                            },
+                        },
+                        self.pk,
+                        self.istochnik_f.get_n3_code() if self.istochnik_f else '6',
+                        iss.research.nsi_id,
+                        self.diagnos,
+                        self.doc.uploading_data
+                    )
+
+                    acsn = None
+
+                    for entry in add_task_resp.get('entry', []):
+                        if entry.get('resource', {}).get('resourceType') == 'Task':
+                            for idt in entry['resource'].get('identifier', []):
+                                for cd in idt.get('type', {}).get('coding', []):
+                                    if cd.get('code') == 'ACSN':
+                                        acsn = idt.get('value')
+                                        break
+                                if acsn:
+                                    break
+                        if acsn:
+                            break
+
+                    if acsn:
+                        iss.acsn_id = str(acsn)
+                        iss.save(update_fields=['acsn_id'])
+                    else:
+                        logger.error(str(add_task_resp))
+
+                    logger.error(f'ACSN: {acsn}')
+                except Exception as e:
+                    logger.error(e)
 
     @staticmethod
     def gen_napravleniye(
