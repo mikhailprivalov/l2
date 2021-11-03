@@ -57,12 +57,15 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
         )
 
     if patient_data.get("passport_num") and patient_data.get("passport_serial"):
+        patient_passport_issued = patient_data.get('passport_issued_orig', None)
+        if "_" in patient_passport_issued or not patient_passport_issued:
+            patient_passport_issued = "УФМС"
         ids.append(
             {
                 "system": "urn:oid:1.2.643.2.69.1.1.1.6.14",
                 "value": f"{patient_data['passport_serial']}:{patient_data['passport_num']}",
                 "assigner": {
-                    "display": patient_data.get('passport_issued_orig', 'УФМС'),
+                    "display": patient_passport_issued,
                 },
             }
         )
