@@ -13,4 +13,3 @@ class Command(BaseCommand):
             spec = doctor.specialities if doctor.specialities else "Специальность не заполнена"
             position = doctor.position.title if doctor.position else "Должность не заполнена"
             print(f"{fio}@{podr}@{snils}@{spec}@{position}") # noqa: T001
-
