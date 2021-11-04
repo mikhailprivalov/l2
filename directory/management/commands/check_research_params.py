@@ -25,6 +25,7 @@ class Command(BaseCommand):
                                 unit_code = f.unit.code
                             fsli = f.fsli if f.fsli else "ФСЛИ не заполнено"
                             print(f"{k}@{r.podrazdeleniye.title}@ {r.title}@ {research_code}@ {r.hide}@ - @{f.title}@ {fsli}@ {unit_title}@ {unit_code}")  # noqa: T001
+
         if type_researches == "is_paraclinic":
             researches = Researches.objects.filter(is_paraclinic=True, hide=False)
             k = 0
