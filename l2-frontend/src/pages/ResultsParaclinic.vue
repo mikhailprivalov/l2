@@ -1432,6 +1432,9 @@ export default {
             this.benefit_rows = [];
             this.pk = '';
             this.data = data;
+            if (!data?.patient?.has_snils) {
+              this.$root.$emit('msg', 'error', 'У пациента не заполнен СНИЛС!');
+            }
             this.sidebarIsOpened = false;
             this.hasEDSigns = false;
             this.hasPreselectOk = false;

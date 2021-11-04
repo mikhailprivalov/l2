@@ -32,7 +32,7 @@ from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
-from clients.models import Card, Individual, DispensaryReg, BenefitReg
+from clients.models import Card, DocumentType, Individual, DispensaryReg, BenefitReg
 from directions.models import (
     DirectionDocument,
     DocumentSign,
@@ -1070,6 +1070,11 @@ def directions_paraclinic_form(request):
             response["has_monitoring"] = False
             response["card_internal"] = d.client.base.internal_type
             response["hospital_title"] = d.hospital_title
+            card_documents = d.client.get_card_documents()
+            snils_types = [x.pk for x in DocumentType.objects.filter(title='СНИЛС')]
+
+            snils_numbers = {x: card_documents[x] for x in snils_types if card_documents.get(x)}
+
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
                 "fio": d.client.individual.fio(),
@@ -1086,6 +1091,7 @@ def directions_paraclinic_form(request):
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
                 "base": d.client.base_id,
                 "main_diagnosis": d.client.main_diagnosis,
+                "has_snils": bool(snils_numbers),
             }
             response["direction"] = {
                 "pk": d.pk,
