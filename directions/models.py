@@ -800,6 +800,8 @@ class Napravleniya(models.Model):
                 if add_task_request.get('response', {}).get('location'):
                     slog.Log.log(key=self.pk, type=60012, body=add_task_request['response'])
                     print('send_task_result: OK')  # noqa: T001
+                    iss.n3_odii_uploaded_task_id = add_task_request['response']['location'].split('/')[1]
+                    iss.save(update_fields=['n3_odii_uploaded_task_id'])
                 else:
                     slog.Log.log(key=self.pk, type=60013, body=add_task_result_resp)
                     print('send_task_result: FAIL')  # noqa: T001
@@ -1635,6 +1637,7 @@ class Issledovaniya(models.Model):
     n3_odii_task = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task заявки")
     n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")
     n3_odii_patient = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор пациента заявки")
+    n3_odii_uploaded_task_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task результата")
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )
