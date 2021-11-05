@@ -819,7 +819,7 @@ class Napravleniya(models.Model):
                     iss.n3_odii_uploaded_task_id = task_resp
                     iss.save(update_fields=['n3_odii_uploaded_task_id'])
                 else:
-                    print(add_task_result_resp)
+                    print(add_task_result_resp)  # noqa: T001
                     slog.Log.log(key=self.pk, type=60013, body=add_task_result_resp)
                     print('send_task_result: FAIL')  # noqa: T001
             except Exception as e:
