@@ -1,5 +1,8 @@
+import base64
 import calendar
+import collections
 import logging
+
 from cda.integration import get_required_signatures
 import datetime
 import os
@@ -18,7 +21,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
-from odii.integration import add_task_request
+from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
 import cases.models as cases
@@ -663,6 +666,9 @@ class Napravleniya(models.Model):
         iss: Issledovaniya
         card = self.client
         individual = card.individual
+
+        print('fill_acsn', str(self))  # noqa: T001
+
         for iss in self.issledovaniya_set.filter(acsn_id__isnull=True):
             if iss.research.is_paraclinic and iss.research.podrazdeleniye and iss.research.podrazdeleniye.can_has_pacs and iss.research.nsi_id:
                 try:
@@ -692,9 +698,21 @@ class Napravleniya(models.Model):
                     )
 
                     acsn = None
+                    n3_odii_task = None
+                    n3_odii_service_request = None
+                    n3_odii_patient = None
 
                     for entry in add_task_resp.get('entry', []):
-                        if entry.get('resource', {}).get('resourceType') == 'Task':
+                        t = entry.get('resource', {}).get('resourceType')
+                        u = entry.get('fullUrl')
+                        if not u:
+                            continue
+                        if '/' in u:
+                            u = u.split('/')[1]
+                        else:
+                            u = u.split(':')[2]
+                        if t == 'Task':
+                            n3_odii_task = u
                             for idt in entry['resource'].get('identifier', []):
                                 for cd in idt.get('type', {}).get('coding', []):
                                     if cd.get('code') == 'ACSN':
@@ -702,18 +720,91 @@ class Napravleniya(models.Model):
                                         break
                                 if acsn:
                                     break
-                        if acsn:
-                            break
+                        elif t == 'ServiceRequest':
+                            n3_odii_service_request = u
+                        elif t == 'Patient':
+                            n3_odii_patient = u
 
-                    if acsn:
+                    d = {
+                        'acsn': acsn,
+                        'n3_odii_task': n3_odii_task,
+                        'n3_odii_service_request': n3_odii_service_request,
+                        'n3_odii_patient': n3_odii_patient,
+                    }
+
+                    if acsn and n3_odii_task and n3_odii_service_request and n3_odii_patient:
                         iss.acsn_id = str(acsn)
-                        iss.save(update_fields=['acsn_id'])
-                    else:
-                        logger.error(str(add_task_resp))
+                        iss.n3_odii_task = str(n3_odii_task)
+                        iss.n3_odii_service_request = str(n3_odii_service_request)
+                        iss.n3_odii_patient = str(n3_odii_patient)
+                        iss.save(update_fields=['acsn_id', 'n3_odii_task', 'n3_odii_service_request', 'n3_odii_patient'])
 
-                    logger.error(f'ACSN: {acsn}')
+                    logger.error(f"ACSN REQUEST: {d}")
                 except Exception as e:
                     logger.error(e)
+
+    def send_task_result(self):
+        if not SettingManager.l2('fill_acsn'):
+            return
+        from results.views import result_print
+        iss: Issledovaniya
+        pdf_content = None
+        request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+        req = {
+            'GET': {
+                "pk": f'[{self.pk}]',
+                "split": '1',
+                "leftnone": '0',
+                "inline": '1',
+                "protocol_plain_text": '1',
+            },
+            'user': self.doc.user,
+            'plain_response': True,
+        }
+        pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+
+        print('send_task_result', str(self))  # noqa: T001
+
+        for iss in self.issledovaniya_set.filter(acsn_id__isnull=False):
+            if not iss.research.is_paraclinic:
+                print(str(iss), '!is_paraclinic')  # noqa: T001
+                continue
+            if not iss.research.podrazdeleniye:
+                print(str(iss), '!iss.research.podrazdeleniye')  # noqa: T001
+                continue
+            if not iss.research.podrazdeleniye.can_has_pacs:
+                print(str(iss), '!iss.research.podrazdeleniye.can_has_pacs')  # noqa: T001
+                continue
+            if not iss.research.nsi_id:
+                print(str(iss), '!iss.research.nsi_id')  # noqa: T001
+                continue
+            if not iss.doc_confirmation:
+                print(str(iss), '!iss.doc_confirmation')  # noqa: T001
+                continue
+            try:
+                add_task_result_resp = add_task_result(
+                    self.hospital_n3id,
+                    iss.n3_odii_patient,
+                    iss.n3_odii_task,
+                    iss.n3_odii_service_request,
+                    iss.study_instance_uid,
+                    iss.acsn_id,
+                    self.pk,
+                    iss.research.nsi_id,
+                    iss.research.odii_type or ('' if not iss.research.podrazdeleniye else iss.research.podrazdeleniye.odii_type),
+                    iss.doc_confirmation.uploading_data,
+                    iss.time_confirmation_local.isoformat(),
+                    pdf_content
+                )
+
+                if add_task_request.get('response', {}).get('location'):
+                    slog.Log.log(key=self.pk, type=60012, body=add_task_request['response'])
+                    print('send_task_result: OK')  # noqa: T001
+                else:
+                    slog.Log.log(key=self.pk, type=60013, body=add_task_result_resp)
+                    print('send_task_result: FAIL')  # noqa: T001
+            except Exception as e:
+                logger.error(e)
 
     @staticmethod
     def gen_napravleniye(
@@ -1540,7 +1631,10 @@ class Issledovaniya(models.Model):
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None, help_text="Место оказания услуги", on_delete=models.SET_NULL)
     link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
     study_instance_uid = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="uuid снимка")
-    acsn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ уникальным идентификатором заявки")
+    acsn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ уникальный идентификатор заявки")
+    n3_odii_task = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task заявки")
+    n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")
+    n3_odii_patient = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор пациента заявки")
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )
