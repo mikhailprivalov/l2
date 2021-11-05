@@ -738,6 +738,8 @@ class Napravleniya(models.Model):
                         iss.n3_odii_service_request = str(n3_odii_service_request)
                         iss.n3_odii_patient = str(n3_odii_patient)
                         iss.save(update_fields=['acsn_id', 'n3_odii_task', 'n3_odii_service_request', 'n3_odii_patient'])
+                    else:
+                        logger.error(add_task_resp)
 
                     logger.error(f"ACSN REQUEST: {d}")
                 except Exception as e:
@@ -797,12 +799,27 @@ class Napravleniya(models.Model):
                     pdf_content
                 )
 
-                if add_task_request.get('response', {}).get('location'):
-                    slog.Log.log(key=self.pk, type=60012, body=add_task_request['response'])
+                task_resp = None
+
+                for entry in add_task_result_resp.get('entry', []):
+                    t = entry.get('resource', {}).get('resourceType')
+                    u = entry.get('fullUrl')
+                    if not u:
+                        continue
+                    if '/' in u:
+                        u = u.split('/')[1]
+                    else:
+                        u = u.split(':')[2]
+                    if t == 'Task' and entry.get('response', {}).get('location'):
+                        task_resp = entry.get('response', {}).get('location').split('/')[1]
+
+                if task_resp:
+                    slog.Log.log(key=self.pk, type=60012, body=task_resp)
                     print('send_task_result: OK')  # noqa: T001
-                    iss.n3_odii_uploaded_task_id = add_task_request['response']['location'].split('/')[1]
+                    iss.n3_odii_uploaded_task_id = task_resp
                     iss.save(update_fields=['n3_odii_uploaded_task_id'])
                 else:
+                    print(add_task_result_resp)
                     slog.Log.log(key=self.pk, type=60013, body=add_task_result_resp)
                     print('send_task_result: FAIL')  # noqa: T001
             except Exception as e:
