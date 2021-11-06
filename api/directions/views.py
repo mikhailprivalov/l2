@@ -1806,6 +1806,8 @@ def directions_paraclinic_result(request):
         }
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
+            if iss.napravleniye:
+                iss.napravleniye.send_task_result()
             if stationar_research != -1:
                 iss.gen_after_confirm(request.user)
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
@@ -1887,6 +1889,10 @@ def directions_paraclinic_confirm(request):
             if i.napravleniye:
                 i.napravleniye.qr_check_token = None
                 i.napravleniye.save(update_fields=['qr_check_token'])
+
+        if iss.napravleniye:
+            iss.napravleniye.send_task_result()
+
         response["ok"] = True
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
@@ -1906,7 +1912,7 @@ def directions_paraclinic_confirm_reset(request):
     pk = request_data.get("iss_pk", -1)
 
     if Issledovaniya.objects.filter(pk=pk).exists():
-        iss = Issledovaniya.objects.get(pk=pk)
+        iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
         is_transfer = iss.research.can_transfer
         is_extract = iss.research.is_extract
 
@@ -1923,6 +1929,7 @@ def directions_paraclinic_confirm_reset(request):
         if allow_reset:
             predoc = {"fio": iss.doc_confirmation_fio, "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
+            iss.n3_odii_uploaded_task_id = None
             iss.save()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             if transfer_d:
@@ -1938,10 +1945,11 @@ def directions_paraclinic_confirm_reset(request):
                 i.time_confirmation = None
                 i.save()
             if iss.napravleniye:
-                iss.napravleniye.need_resend_amd = False
-                iss.napravleniye.eds_total_signed = False
-                iss.napravleniye.eds_total_signed_at = None
-                iss.napravleniye.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd'])
+                n: Napravleniya = iss.napravleniye
+                n.need_resend_amd = False
+                n.eds_total_signed = False
+                n.eds_total_signed_at = None
+                n.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd'])
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))

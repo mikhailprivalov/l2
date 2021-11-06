@@ -104,7 +104,7 @@ def result_print(request):
     response = HttpResponse(content_type='application/pdf')
 
     if inline:
-        if SettingManager.get("pdf_auto_print", "true", "b"):
+        if SettingManager.get("pdf_auto_print", "true", "b") and not plain_response:
             pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
         response['Content-Disposition'] = 'inline; filename="results.pdf"'
     else:
@@ -444,7 +444,6 @@ def result_print(request):
                 mark_pages(c, direction, qr_data, "Образец")
             elif iss.time_confirmation:
                 mark_pages(c, direction, qr_data)
-
 
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)

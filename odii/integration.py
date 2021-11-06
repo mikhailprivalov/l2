@@ -1,11 +1,12 @@
 import logging
+from typing import Union
 import uuid
 from urllib.parse import urljoin, urlencode
 from django.utils import timezone
 
 import requests
 
-from laboratory.settings import N3_ODII_BASE_URL, N3_ODII_SYSTEM_ID, N3_ODII_TOKEN, RMIS_PROXY
+from laboratory.settings import N3_ODII_BASE_URL, N3_ODII_SYSTEM_ID, N3_ODII_TOKEN, RMIS_PROXY, DEFAULT_N3_DOCTOR
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ def make_request(path, query=None, as_json=True, **kwargs):
 
 def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int, fin_source_n3: str, service_n3_id: str, diagnosis: str, doc_data: dict) -> dict:
     ids = []
+    is_all_correct_doc_data = bool(doc_data["snils"] and doc_data["position"] and doc_data["speciality"])
 
     if patient_data.get('enp'):
         ids.append(
@@ -87,7 +89,7 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
         doc_ids.append(
             {
                 "system": "urn:oid:1.2.643.5.1.13.2.7.100.5",
-                "value": doc_data["pk"],
+                "value": doc_data["pk"] if is_all_correct_doc_data else DEFAULT_N3_DOCTOR["pk"],
                 "assigner": {
                     "display": N3_ODII_SYSTEM_ID,
                 },
@@ -98,7 +100,7 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
         doc_ids.append(
             {
                 "system": "urn:oid:1.2.643.2.69.1.1.1.6.223",
-                "value": doc_data['snils'],
+                "value": doc_data['snils'] if is_all_correct_doc_data else DEFAULT_N3_DOCTOR["snils"],
                 "assigner": {
                     "display": 'ПФР',
                 },
@@ -183,14 +185,12 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
             "identifier": doc_ids,
             "name": [
                 {
-                    "family": doc_data['family'],
-                    "given": [doc_data['name'], doc_data['patronymic']],
+                    "family": doc_data['family'] if is_all_correct_doc_data else DEFAULT_N3_DOCTOR["family"],
+                    "given": [doc_data['name'], doc_data['patronymic']] if is_all_correct_doc_data else [DEFAULT_N3_DOCTOR['name'], DEFAULT_N3_DOCTOR['patronymic']],
                 },
             ],
         },
-        "request": {
-            "method": "POST"
-        }
+        "request": {"method": "POST"},
     }
 
     requester_urn = f"urn:uuid:{str(uuid.uuid4())}"
@@ -206,32 +206,10 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
             "organization": {
                 "reference": f"Organization/{hospital_n3_id}",
             },
-            "code": [
-                {
-                    "coding": [
-                        {
-                            "system": "urn:oid:1.2.643.5.1.13.13.11.1002",
-                            "version": "1",
-                            "code": doc_data.get('position') or '73'
-                        }
-                    ]
-                }
-            ],
-            "specialty": [
-                {
-                    "coding": [
-                        {
-                            "system": "urn:oid:1.2.643.5.1.13.13.11.1066",
-                            "version": "1",
-                            "code": doc_data.get('specialty') or "27"
-                        }
-                    ]
-                }
-            ]
+            "code": [{"coding": [{"system": "urn:oid:1.2.643.5.1.13.13.11.1002", "version": "1", "code": doc_data.get('position') or '73'}]}],
+            "specialty": [{"coding": [{"system": "urn:oid:1.2.643.5.1.13.13.11.1066", "version": "1", "code": doc_data.get('specialty') or "27"}]}],
         },
-        "request": {
-            "method": "POST"
-        }
+        "request": {"method": "POST"},
     }
 
     service_request_urn = f"urn:uuid:{str(uuid.uuid4())}"
@@ -287,6 +265,211 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
             service_request_resource,
             task_resource,
         ],
+    }
+
+    return make_request('?_format=json', json=bundle)
+
+
+def add_task_result(
+    hospital_n3_id: str,
+    patient_uuid: str,
+    original_task_uuid: str,
+    service_request_uuid: str,
+    study_instance_uuid: Union[str, None],
+    acsn_id: Union[str, None],
+    direction_pk: int,
+    service_n3_id: str,
+    service_odii_type: int,
+    executor_data: Union[dict, None],
+    time_confirmation: str,
+    pdf_content: Union[str, None],
+) -> dict:
+    entry = []
+
+    if executor_data:
+        executor_ids = []
+
+        if executor_data.get('pk'):
+            executor_ids.append(
+                {
+                    "system": "urn:oid:1.2.643.5.1.13.2.7.100.5",
+                    "value": executor_data["pk"],
+                    "assigner": {
+                        "display": N3_ODII_SYSTEM_ID,
+                    },
+                }
+            )
+
+        if executor_data.get('snils'):
+            executor_ids.append(
+                {
+                    "system": "urn:oid:1.2.643.2.69.1.1.1.6.223",
+                    "value": executor_data['snils'],
+                    "assigner": {
+                        "display": 'ПФР',
+                    },
+                }
+            )
+
+        if not executor_ids:
+            return {
+                'error': 'No executor ids',
+            }
+
+        practitioner_urn = f"urn:uuid:{str(uuid.uuid4())}"
+
+        practitioner_resource = {
+            "fullUrl": practitioner_urn,
+            "resource": {
+                "resourceType": "Practitioner",
+                "active": True,
+                "identifier": executor_ids,
+                "name": [
+                    {
+                        "family": executor_data['family'],
+                        "given": [executor_data['name'], executor_data['patronymic']],
+                    },
+                ],
+            },
+            "request": {"method": "POST"},
+        }
+
+        entry.append(practitioner_resource)
+
+        performer_urn = f"urn:uuid:{str(uuid.uuid4())}"
+
+        performer_resource = {
+            "fullUrl": performer_urn,
+            "resource": {
+                "resourceType": "PractitionerRole",
+                "active": True,
+                "practitioner": {
+                    "reference": practitioner_urn,
+                },
+                "organization": {
+                    "reference": f"Organization/{hospital_n3_id}",
+                },
+                "code": [{"coding": [{"system": "urn:oid:1.2.643.5.1.13.13.11.1002", "version": "1", "code": executor_data.get('position') or '73'}]}],
+                "specialty": [{"coding": [{"system": "urn:oid:1.2.643.5.1.13.13.11.1066", "version": "1", "code": executor_data.get('specialty') or "27"}]}],
+            },
+            "request": {"method": "POST"},
+        }
+
+        entry.append(performer_resource)
+    else:
+        performer_urn = None
+
+    if acsn_id and study_instance_uuid:
+        image_study_urn = f"urn:uuid:{str(uuid.uuid4())}"
+
+        image_study_resource = {
+            "fullUrl": image_study_urn,
+            "resource": {
+                "resourceType": "ImagingStudy",
+                "identifier": [
+                    {"system": f"urn:oid:{N3_ODII_SYSTEM_ID}", "value": acsn_id, "type": {"coding": [{"system": "urn:oid:1.2.643.2.69.1.1.1.122", "version": "1", "code": "ACSN"}]}},
+                    {"system": "urn:dicom:uid", "value": f"urn:oid:{study_instance_uuid}"},
+                ],
+                "status": "available",
+                "subject": {"reference": f"Patient/{patient_uuid}"},
+            },
+        }
+        entry.append(image_study_resource)
+    else:
+        image_study_urn = None
+
+    if pdf_content:
+        presented_form_urn = f"urn:uuid:{str(uuid.uuid4())}"
+
+        presented_form_resource = {"fullUrl": presented_form_urn, "resource": {"resourceType": "Binary", "contentType": "application/pdf", "data": pdf_content}}
+        entry.append(presented_form_resource)
+    else:
+        presented_form_urn = None
+
+    diagnostic_report_urn = f"urn:uuid:{str(uuid.uuid4())}"
+
+    diagnostic_report_resource = {
+        "fullUrl": diagnostic_report_urn,
+        "resource": {
+            "resourceType": "DiagnosticReport",
+            "meta": {"security": [{"code": "N"}]},
+            "basedOn": {
+                "reference": f"ServiceRequest/{service_request_uuid}",
+            },
+            "status": "final" if presented_form_urn else "partial",
+            "category": {"coding": [{"system": "urn:oid:1.2.643.5.1.13.13.11.1472", "version": "1", "code": service_odii_type}]},
+            "code": {"coding": [{"system": "urn:oid:1.2.643.5.1.13.13.11.1471", "version": "6", "code": service_n3_id}]},
+            "subject": {"reference": f"Patient/{patient_uuid}"},
+            "effectiveDateTime": time_confirmation,
+            "issued": time_confirmation,
+            "performer": [
+                {
+                    "reference": performer_urn,
+                }
+            ],
+            **(
+                {
+                    "imagingStudy": [
+                        {
+                            "reference": image_study_urn,
+                        }
+                    ],
+                }
+                if image_study_urn
+                else {}
+            ),
+            **(
+                {
+                    "presentedForm": [
+                        {
+                            "contentType": "application/pdf",
+                            "url": presented_form_urn,
+                        }
+                    ]
+                }
+                if presented_form_urn
+                else {}
+            ),
+        },
+    }
+
+    entry.append(diagnostic_report_resource)
+
+    task_urn = f"urn:uuid:{str(uuid.uuid4())}"
+
+    task_resource = {
+        "fullUrl": task_urn,
+        "resource": {
+            "resourceType": "Task",
+            "identifier": [
+                {
+                    "system": f"urn:oid:{N3_ODII_SYSTEM_ID}",
+                    "value": f"{direction_pk}/{'completed' if presented_form_urn else 'in-progress'}",
+                }
+            ],
+            "basedOn": {
+                "reference": f"Task/{original_task_uuid}",
+            },
+            "status": "completed" if presented_form_urn else "in-progress",
+            "intent": "reflex-order",
+            "focus": {"reference": diagnostic_report_urn},
+            "authoredOn": timezone.now().isoformat(),
+            "for": {"reference": f"Patient/{patient_uuid}"},
+            "requester": {
+                "reference": f"Organization/{hospital_n3_id}",
+            },
+            "owner": {
+                "reference": f"Organization/{hospital_n3_id}",
+            },
+        },
+    }
+
+    entry.append(task_resource)
+
+    bundle = {
+        "resourceType": "Bundle",
+        "type": "transaction",
+        "entry": entry,
     }
 
     return make_request('?_format=json', json=bundle)

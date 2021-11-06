@@ -310,6 +310,16 @@ N3_ODII_BASE_URL = ""
 N3_ODII_TOKEN = ""
 N3_ODII_SYSTEM_ID = ""
 
+DEFAULT_N3_DOCTOR = {
+    "pk": "",
+    "snils": "",
+    "speciality": "27",
+    "position": "73",
+    "family": "",
+    "name": "",
+    "patronymic": "",
+}
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
