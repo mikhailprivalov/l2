@@ -6,7 +6,7 @@ from django.utils import timezone
 
 import requests
 
-from laboratory.settings import N3_ODII_BASE_URL, N3_ODII_SYSTEM_ID, N3_ODII_TOKEN, RMIS_PROXY
+from laboratory.settings import N3_ODII_BASE_URL, N3_ODII_SYSTEM_ID, N3_ODII_TOKEN, RMIS_PROXY, DEFAULT_N3_DOCTOR
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ def make_request(path, query=None, as_json=True, **kwargs):
 
 def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int, fin_source_n3: str, service_n3_id: str, diagnosis: str, doc_data: dict) -> dict:
     ids = []
+    is_all_correct_doc_data = bool(doc_data["snils"] and doc_data["position"] and doc_data["speciality"])
 
     if patient_data.get('enp'):
         ids.append(
@@ -88,7 +89,7 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
         doc_ids.append(
             {
                 "system": "urn:oid:1.2.643.5.1.13.2.7.100.5",
-                "value": doc_data["pk"],
+                "value": doc_data["pk"] if is_all_correct_doc_data else DEFAULT_N3_DOCTOR["pk"],
                 "assigner": {
                     "display": N3_ODII_SYSTEM_ID,
                 },
@@ -99,7 +100,7 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
         doc_ids.append(
             {
                 "system": "urn:oid:1.2.643.2.69.1.1.1.6.223",
-                "value": doc_data['snils'],
+                "value": doc_data['snils'] if is_all_correct_doc_data else DEFAULT_N3_DOCTOR["snils"],
                 "assigner": {
                     "display": 'ПФР',
                 },
@@ -184,8 +185,8 @@ def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int,
             "identifier": doc_ids,
             "name": [
                 {
-                    "family": doc_data['family'],
-                    "given": [doc_data['name'], doc_data['patronymic']],
+                    "family": doc_data['family'] if is_all_correct_doc_data else DEFAULT_N3_DOCTOR["family"],
+                    "given": [doc_data['name'], doc_data['patronymic']] if is_all_correct_doc_data else [DEFAULT_N3_DOCTOR['name'], DEFAULT_N3_DOCTOR['patronymic']],
                 },
             ],
         },
