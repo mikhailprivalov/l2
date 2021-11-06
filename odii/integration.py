@@ -396,7 +396,7 @@ def add_task_result(
             "basedOn": {
                 "reference": f"ServiceRequest/{service_request_uuid}",
             },
-            "status": "final",
+            "status": "final" if presented_form_urn else "partial",
             "category": {"coding": [{"system": "urn:oid:1.2.643.5.1.13.13.11.1472", "version": "1", "code": service_odii_type}]},
             "code": {"coding": [{"system": "urn:oid:1.2.643.5.1.13.13.11.1471", "version": "6", "code": service_n3_id}]},
             "subject": {"reference": f"Patient/{patient_uuid}"},
@@ -444,13 +444,13 @@ def add_task_result(
             "identifier": [
                 {
                     "system": f"urn:oid:{N3_ODII_SYSTEM_ID}",
-                    "value": str(direction_pk),
+                    "value": f"{direction_pk}/{'completed' if presented_form_urn else 'in-progress'}",
                 }
             ],
             "basedOn": {
                 "reference": f"Task/{original_task_uuid}",
             },
-            "status": "completed",
+            "status": "completed" if presented_form_urn else "in-progress",
             "intent": "reflex-order",
             "focus": {"reference": diagnostic_report_urn},
             "authoredOn": timezone.now().isoformat(),
