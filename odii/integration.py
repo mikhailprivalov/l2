@@ -33,9 +33,7 @@ def make_request(path, query=None, as_json=True, **kwargs):
 
 def add_task_request(hospital_n3_id: str, patient_data: dict, direction_pk: int, fin_source_n3: str, service_n3_id: str, diagnosis: str, doc_data: dict) -> dict:
     ids = []
-    is_all_correct_doc_data = False
-    if doc_data["snils"] and doc_data["position"] and doc_data["speciality"]:
-        is_all_correct_doc_data = True
+    is_all_correct_doc_data = bool(doc_data["snils"] and doc_data["position"] and doc_data["speciality"])
 
     if patient_data.get('enp'):
         ids.append(
