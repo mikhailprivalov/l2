@@ -671,6 +671,8 @@ class Napravleniya(models.Model):
 
         for iss in self.issledovaniya_set.filter(acsn_id__isnull=True):
             if iss.research.is_paraclinic and iss.research.podrazdeleniye and iss.research.podrazdeleniye.can_has_pacs and iss.research.nsi_id:
+                has_acsn = False
+                data_to_log = {}
                 try:
                     add_task_resp = add_task_request(
                         self.hospital_n3id,
@@ -725,7 +727,7 @@ class Napravleniya(models.Model):
                         elif t == 'Patient':
                             n3_odii_patient = u
 
-                    d = {
+                    data_to_log = {
                         'acsn': acsn,
                         'n3_odii_task': n3_odii_task,
                         'n3_odii_service_request': n3_odii_service_request,
@@ -738,35 +740,43 @@ class Napravleniya(models.Model):
                         iss.n3_odii_service_request = str(n3_odii_service_request)
                         iss.n3_odii_patient = str(n3_odii_patient)
                         iss.save(update_fields=['acsn_id', 'n3_odii_task', 'n3_odii_service_request', 'n3_odii_patient'])
+                        has_acsn = True
                     else:
                         logger.error(add_task_resp)
 
-                    logger.error(f"ACSN REQUEST: {d}")
+                    logger.error(f"ACSN REQUEST: {data_to_log}")
                 except Exception as e:
                     logger.error(e)
+
+                if has_acsn:
+                    slog.Log.log(key=self.pk, type=60016, body=data_to_log)
+                else:
+                    slog.Log.log(key=self.pk, type=60017, body=data_to_log)
 
     def send_task_result(self):
         if not SettingManager.l2('fill_acsn'):
             return
-        from results.views import result_print
-        iss: Issledovaniya
         pdf_content = None
-        request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
-        req = {
-            'GET': {
-                "pk": f'[{self.pk}]',
-                "split": '1',
-                "leftnone": '0',
-                "inline": '1',
-                "protocol_plain_text": '1',
-            },
-            'user': self.doc.user,
-            'plain_response': True,
-        }
-        pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+
+        if self.is_all_confirm():
+            from results.views import result_print
+            request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+            req = {
+                'GET': {
+                    "pk": f'[{self.pk}]',
+                    "split": '1',
+                    "leftnone": '0',
+                    "inline": '1',
+                    "protocol_plain_text": '1',
+                },
+                'user': self.doc.user,
+                'plain_response': True,
+            }
+            pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
 
         print('send_task_result', str(self))  # noqa: T001
 
+        iss: Issledovaniya
         for iss in self.issledovaniya_set.filter(acsn_id__isnull=False):
             if not iss.research.is_paraclinic:
                 print(str(iss), '!is_paraclinic')  # noqa: T001
@@ -780,9 +790,14 @@ class Napravleniya(models.Model):
             if not iss.research.nsi_id:
                 print(str(iss), '!iss.research.nsi_id')  # noqa: T001
                 continue
-            if not iss.doc_confirmation:
-                print(str(iss), '!iss.doc_confirmation')  # noqa: T001
+
+            has_image = bool(iss.study_instance_uid)
+            has_protocol = bool(pdf_content)
+
+            if not has_image and not has_protocol:
+                print(str(iss), '{has_image=} {has_protocol=}')  # noqa: T001
                 continue
+
             try:
                 add_task_result_resp = add_task_result(
                     self.hospital_n3id,
@@ -794,8 +809,8 @@ class Napravleniya(models.Model):
                     self.pk,
                     iss.research.nsi_id,
                     iss.research.odii_type or ('' if not iss.research.podrazdeleniye else iss.research.podrazdeleniye.odii_type),
-                    iss.doc_confirmation.uploading_data,
-                    iss.time_confirmation_local.isoformat(),
+                    iss.doc_confirmation.uploading_data if iss.doc_confirmation else self.doc.uploading_data,
+                    iss.time_confirmation_local.isoformat() if iss.time_confirmation else timezone.now().isoformat(),
                     pdf_content
                 )
 
@@ -812,16 +827,27 @@ class Napravleniya(models.Model):
                         u = u.split(':')[2]
                     if t == 'Task' and entry.get('response', {}).get('location'):
                         task_resp = entry.get('response', {}).get('location').split('/')[1]
-
+                t = None
                 if task_resp:
-                    slog.Log.log(key=self.pk, type=60012, body=task_resp)
                     print('send_task_result: OK')  # noqa: T001
                     iss.n3_odii_uploaded_task_id = task_resp
                     iss.save(update_fields=['n3_odii_uploaded_task_id'])
+                    if has_image and has_protocol:
+                        t = 60012
+                    elif has_image:
+                        t = 60014
+                    elif has_protocol:
+                        t = 60018
                 else:
                     print(add_task_result_resp)  # noqa: T001
-                    slog.Log.log(key=self.pk, type=60013, body=add_task_result_resp)
+                    if has_image and has_protocol:
+                        t = 60013
+                    elif has_image:
+                        t = 60015
+                    elif has_protocol:
+                        t = 60019
                     print('send_task_result: FAIL')  # noqa: T001
+                slog.Log.log(key=self.pk, type=t, body=add_task_result_resp)
             except Exception as e:
                 logger.error(e)
 
@@ -1649,7 +1675,7 @@ class Issledovaniya(models.Model):
     localization = models.ForeignKey(directory.Localization, blank=True, null=True, default=None, help_text="Локализация", on_delete=models.SET_NULL)
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None, help_text="Место оказания услуги", on_delete=models.SET_NULL)
     link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
-    study_instance_uid = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="uuid снимка")
+    study_instance_uid = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="uuid снимка")
     acsn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ уникальный идентификатор заявки")
     n3_odii_task = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task заявки")
     n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")
