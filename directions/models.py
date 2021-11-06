@@ -767,7 +767,7 @@ class Napravleniya(models.Model):
 
         print('send_task_result', str(self))  # noqa: T001
 
-        for iss in self.issledovaniya_set.filter(acsn_id__isnull=False):
+        for iss in self.issledovaniya_set.filter(acsn_id__isnull=False, study_instance_uid_tag__isnull=False):
             if not iss.research.is_paraclinic:
                 print(str(iss), '!is_paraclinic')  # noqa: T001
                 continue
@@ -789,7 +789,7 @@ class Napravleniya(models.Model):
                     iss.n3_odii_patient,
                     iss.n3_odii_task,
                     iss.n3_odii_service_request,
-                    iss.study_instance_uid,
+                    iss.study_instance_uid_tag,
                     iss.acsn_id,
                     self.pk,
                     iss.research.nsi_id,
@@ -1649,7 +1649,8 @@ class Issledovaniya(models.Model):
     localization = models.ForeignKey(directory.Localization, blank=True, null=True, default=None, help_text="Локализация", on_delete=models.SET_NULL)
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None, help_text="Место оказания услуги", on_delete=models.SET_NULL)
     link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
-    study_instance_uid = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="uuid снимка")
+    study_instance_uid = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="uuid снимка - экземпляр")
+    study_instance_uid_tag = models.CharField(max_length=60, blank=True, null=True, default=None, help_text="study instance_uid tag")
     acsn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ уникальный идентификатор заявки")
     n3_odii_task = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task заявки")
     n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")

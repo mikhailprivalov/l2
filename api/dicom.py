@@ -56,7 +56,7 @@ def search_dicom_study(direction=None):
                     dicom_study_link = change_acsn(dicom_study_link, acsn['acsn_id'])
 
                 if dicom_study_link:
-                    Issledovaniya.objects.filter(napravleniye_id=direction).update(study_instance_uid=dicom_study_link)
+                    Issledovaniya.objects.filter(napravleniye_id=direction).update(study_instance_uid=dicom_study_link[0], study_instance_uid_tag=dicom_study_link[1])
                     try:
                         d: Napravleniya = Napravleniya.objects.filter(pk=direction).first()
 
@@ -76,10 +76,10 @@ def search_dicom_study(direction=None):
 def find_image_firstly(data_direction):
     for tag in DICOM_SEARCH_TAGS:
         for dir in data_direction:
-            data = {'Level': 'Study', 'Query': {tag: dir}}
+            data = {'Level': 'Study', 'Query': {tag: dir}, "Expand": True}
             dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
             if len(dicom_study.json()) > 0:
-                return dicom_study.json()[0]
+                return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
     return None
 
 
