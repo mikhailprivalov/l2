@@ -20,8 +20,8 @@ from hospitals.models import Hospitals
 
 pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-pdfmetrics.registerFont(TTFont('digit8', os.path.join(FONTS_FOLDER, 'digit8.ttf')))
-pdfmetrics.registerFont(TTFont('digit8table', os.path.join(FONTS_FOLDER, 'digit8table.ttf')))
+pdfmetrics.registerFont(TTFont('digit8', os.path.join(FONTS_FOLDER, 'digit88table.ttf')))
+# pdfmetrics.registerFont(TTFont('digit88table', os.path.join(FONTS_FOLDER, 'digit88table.ttf')))
 styleSheet = getSampleStyleSheet()
 style = styleSheet["Normal"]
 style.fontName = "PTAstraSerifReg"
@@ -47,8 +47,15 @@ styleT.alignment = TA_LEFT
 styleT.fontSize = 9.5
 styleT.leading = 3.3 * mm
 
+styleDiag = deepcopy(styleT)
+styleDiag.fontSize = 11
+
 styleOrg = deepcopy(styleT)
 styleOrg.fontSize = 9
+
+styleMicro = deepcopy(styleT)
+styleMicro.fontSize = 5.5
+styleMicro.alignment = TA_CENTER
 
 styleOrgCentre = deepcopy(styleOrg)
 styleOrgCentre.alignment = TA_CENTER
@@ -70,8 +77,11 @@ styleOrgBold.leading = 2 * mm
 op_bold_tag = '<font face="PTAstraSerifBold">'
 cl_bold_tag = '</font>'
 
-op_boxed_tag = '<font face="digit8" size=8.5>'
+op_boxed_tag = '<font face="digit8" size=15.5>'
 cl_boxed_tag = '</font>'
+
+# op_boxed_tag = '<font face="digit88table" size=8>'
+# cl_boxed_tag = '</font>'
 
 digit_one = f"{op_boxed_tag}1{cl_boxed_tag}"
 digit_two = f"{op_boxed_tag}2{cl_boxed_tag}"
@@ -83,8 +93,7 @@ digit_seven = f"{op_boxed_tag}7{cl_boxed_tag}"
 digit_eight = f"{op_boxed_tag}8{cl_boxed_tag}"
 digit_nine = f"{op_boxed_tag}9{cl_boxed_tag}"
 
-op_boxedT_tag = '<font face="digit8table" size=8>'
-cl_boxedT_tag = '</font>'
+
 
 space_symbol = '&nbsp;'
 line_break = "<br/>"
@@ -120,6 +129,14 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.extend(template)
     template = death_data(iss, direction, data, 0 * mm)
     fwb.extend(template)
+    fwb.append(PageBreak())
+
+    template = second_page_add_template(iss, direction, data, 0 * mm)
+    fwb.extend(template)
+    template = add_line_split(iss, direction, -1 * mm)
+    fwb.extend(template)
+    template = death_data2(iss, direction, data, -5 * mm)
+    fwb.extend(template)
 
     return fwb
 
@@ -127,8 +144,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Мед. св-во о смерти 106-2/у
     text = []
-    text = title_data(text, fields.get("Серия", ""), fields.get("Номер", ""), fields.get("Дата выдачи", ""), fields.get("Вид медицинского свидетельства о смерти", ""), fields)
-
+    text = title_data("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О ПЕРИНАТАЛЬНОЙ СМЕРТИ", "К УЧЕТНОЙ ФОРМЕ № 106-2/У", text, fields.get("Серия", ""), fields.get("Номер", ""), fields.get("Дата выдачи", ""),
+                      fields.get("Вид медицинского свидетельства о смерти", ""), fields)
     text.append(Spacer(1, 3 * mm))
     text.append(Paragraph(f"1. Рождение мертвого ребенка: {space_symbol * 5} число__________ месяц______________ год____________ час__________ мин____________", style))
     text.append(Spacer(1, 1.2 * mm))
@@ -169,13 +186,12 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
     return obj
 
 
-def title_data(text, serial, number, date_issue, type_document, data_fields):
-    text.append(Spacer(1, 1.7 * mm))
-    text.append(Paragraph("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", styleCentreBold))
+def title_data(title_name, title_form, text, serial, number, date_issue, type_document, data_fields):
+    text.append(Paragraph(f"{title_name}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
-    text.append(Paragraph("К УЧЕТНОЙ ФОРМЕ № 106/У", styleCentreBold))
+    text.append(Paragraph(f"{title_form}", styleCentreBold))
     text.append(Spacer(1, 0.2 * mm))
-    text.append(Paragraph(f"СЕРИЯ {serial} No {number}", styleCentreBold))
+    text.append(Paragraph(f"СЕРИЯ {serial} № {number}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
@@ -227,7 +243,8 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text = []
 
     text = title_med_organization(text, fields['org'])
-    text = title_data(text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"], fields)
+    text = title_data("МЕДИЦИНСКОЕ СВИДЕТЕЛЬСТВО О ПЕРИНАТАЛЬНОЙ СМЕРТИ", "", text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"],
+                      fields)
     text.append(Spacer(1, 1.7 * mm))
 
     opinion = [
@@ -287,6 +304,53 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     return obj
 
 
+def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
+    text = []
+    text = back_size(text)
+    text = why_death(text, fields, '11')
+    # text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fields["ФИО (получатель)"])
+    # text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
+    # text = destination_person_passport(text, f'{fields["Документ (получатель)"]} {fields["Серия (получатель)"]} {fields["Номер (получатель)"]} {fields["Кем и когда выдан (получатель)"]}')
+    # text = destination_person_snils(text, f'{fields["СНИЛС (получатель)"]}')
+    # text.append(Spacer(1, 2 * mm))
+    # text.append(Paragraph(f"«___» ___________ 20 ___ г.{space_symbol * 30} Подпись получателя _________________________", styleT))
+
+    obj = []
+    obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
+
+    return obj
+
+
+def death_data2(iss: Issledovaniya, direction, fields, offset=0):
+    text = []
+    # text = death_happaned(text, fields["Род причины смерти"])
+    # date, month, year, hour, min = "____", "____", "_________", "____", "____"
+    # unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
+    # text.append(Paragraph(
+    #     f"19. В случае смерти от несчастного случая, убийства, самоубийства, от военных и террористических действий, при неустановленном роде смерти - указать дату травмы (отравления): "
+    #     f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при",
+    #     styleT))
+    # text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
+    # text = who_set_death(text, fields["Тип медицинского работника"])
+    # text = doctor_fio(text, fields, iss)
+    # text.append(Spacer(1, 1 * mm))
+    # text = why_death(text, fields, "22", "23", "24", "25")
+    # text.append(Spacer(1, 2 * mm))
+    # text.append(
+    #     Paragraph("<u>Руководитель (иное уполномоченное лицо **) медицинской организации</u>, индивидуальный предприниматель, осуществляющий медицинскую деятельность (подчеркнуть)", styleT))
+    # text.append(Spacer(1, 2 * mm))
+    # text = hospital_manager_stamp(text, fields["Главный врач"])
+    # text.append(Spacer(1, 2 * mm))
+    # text.append(Paragraph("26 Свидетельство проверено ответственным за правильность заполнения медицинских свидетельств.", styleT))
+    # text = check_person_data(text, fields["Проверил"])
+    text = bottom_colontitul(text, '** В случае, установленном частью 10 статьи 9 Федерального закона от 5 июня 2012 г. № 50-ФЗ "О регулировании деятельности российских граждан и '
+                                   'российских юридических лиц в Антарктике" (Собрание законодательства Российской Федерации, 2012, № 24, ст. 3067). ')
+    obj = []
+    obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 168 * mm, text=text))
+
+    return obj
+
+
 def title_med_organization(text, params):
     opinion = [
         [
@@ -299,7 +363,7 @@ def title_med_organization(text, params):
             ),
             Paragraph('', styleOrg),
             Paragraph(
-                'Код формы по ОКУД _______<br/>Медицинская документация<br/>Учётная форма № 106/У<br/>Утверждена приказом Минздрава России <br/>от «15» апреля 2021 г. № 352н', styleOrg
+                'Код формы по ОКУД _______<br/>Медицинская документация<br/>Учётная форма № 106-2/У<br/>Утверждена приказом Минздрава России <br/>от «15» апреля 2021 г. № 352н', styleOrg
             ),
         ],
     ]
@@ -335,8 +399,8 @@ def gen_table(opinion, col_width, tbl_style, row_height=None):
 
 def mother_data():
     fio = f"4.Фамилия, имя, отчество (при наличии): Соропудова Людмила Феоктистовна {line_break}{line_break}"
-    born = f"5. Дата рождения: {op_boxedT_tag}1{cl_boxedT_tag}{op_boxedT_tag}2{cl_boxedT_tag} {space_symbol * 3} {op_boxedT_tag}0{cl_boxedT_tag}{op_boxedT_tag}5{cl_boxedT_tag} " \
-           f"{space_symbol * 3} {op_boxedT_tag}1{cl_boxedT_tag}{op_boxedT_tag}9{cl_boxedT_tag}{op_boxedT_tag}9{cl_boxedT_tag}{op_boxedT_tag}3{cl_boxedT_tag}{line_break}{line_break}"
+    born = f"5. Дата рождения: {op_boxed_tag}1{cl_boxed_tag}{op_boxed_tag}2{cl_boxed_tag} {space_symbol * 3} {op_boxed_tag}0{cl_boxed_tag}{op_boxed_tag}5{cl_boxed_tag} " \
+           f"{space_symbol * 3} {op_boxed_tag}1{cl_boxed_tag}{op_boxed_tag}9{cl_boxed_tag}{op_boxed_tag}9{cl_boxed_tag}{op_boxed_tag}3{cl_boxed_tag}{line_break}{line_break}"
     type_document = f"6. Документ, удостоверяющий личность: {line_break}"
     serial_number = f"{space_symbol * 5}серия __________номер ______________ кем и когда выдан _____________________ {line_break}{line_break}"
     snils = f"7. СНИЛС___________{line_break}{line_break}"
@@ -383,3 +447,142 @@ def child_data():
 
     return f"{child_fio}{child_place_death}{child_region_country}{child_area_region}{child_city}{child_live_punkt}{child_street}{child_house}{child_type_place}" \
            f"{where_death}{sex}{weight}{long_body}{why_death}{singleton_birth}{multiple_birth}{child_count}{child_all_birth_count}"
+
+
+def back_size(text):
+    opinion = [[Paragraph('Оборотная сторона', styleColontitulBold), ], ]
+    col_width = (190 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 166 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+    return text
+
+
+def why_death(text, params, item_why):
+    tbl = title_table("Причины смерти:", "Коды по МКБ")
+    text.append(Spacer(1, 1.5 * mm))
+    text.append(tbl)
+    text.append(Spacer(1, 2 * mm))
+
+    tbl = diagnos_tbl("а)", "Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита", "")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+    tbl = about_diag_tbl("(основное заболевание или патологическое состояние плода или ребенка)")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = diagnos_tbl("б)", " Скрининг с целью иелита Скрининг с целью выявления полиомиелита", "")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+    tbl = about_diag_tbl("(другие заболевания или патологические состояния плода или ребенка)")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = diagnos_tbl("в)", "", "")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+    tbl = about_diag_tbl("(основное заболевание или патологическое состояние матери, оказавшее неблагоприятное влияние на плод или ребенка)")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = diagnos_tbl("г)", "", "")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+    tbl = about_diag_tbl("(другие заболевания или патологические состояния матери, оказавшие неблагоприятное влияние на плод или ребенка)")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = diagnos_tbl("д)", "", "")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+    tbl = about_diag_tbl("(другие обстоятельства, имевшие отношение к мертворождению, смерти)")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    return text
+
+
+def title_table(diag_data, diag_code):
+    opinion = [
+        [
+            Paragraph("", styleT),
+            Paragraph(f"{diag_data}", styleT),
+            Paragraph(f"{diag_code}", styleT),
+        ],
+    ]
+    col_width = (10 * mm, 150 * mm, 30 * mm)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('LEFTPADDING', (2, 0), (2, 0), 8 * mm),
+        ('TOPPADDING', (1, 0), (1, 0), -1.2 * mm),
+        ('TOPPADDING', (-1, -1), (-1, -1), -1.5 * mm),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+def diagnos_tbl(item, diag_data, diag_code):
+    opinion = [
+        [
+            Paragraph(f"{item}", styleT),
+            Paragraph(f"{diag_data}", styleOrgBold),
+            Paragraph(f"{op_boxed_tag}Y14{cl_boxed_tag} . {op_boxed_tag}3{cl_boxed_tag}", styleDiag),
+        ],
+    ]
+    col_width = (10 * mm, 150 * mm, 30 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('LEFTPADDING', (2, 0), (2, 0), 8 * mm),
+        ('TOPPADDING', (1, 0), (1, 0), -1.2 * mm),
+        ('TOPPADDING', (-1, -1), (-1, -1), -1.5 * mm),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style, 4 * mm)
+    return tbl
+
+
+def about_diag_tbl(note_title):
+    opinion = [
+        [
+            Paragraph('', styleOrg),
+            Paragraph(f"{note_title}", styleMicro),
+            Paragraph('', styleOrg),
+        ],
+    ]
+    col_width = (10 * mm, 150 * mm, 30 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('LEFTPADDING', (2, 0), (2, 0), 8 * mm),
+        ('LINEABOVE', (1, 0), (1, 0), 0.75, colors.black),
+
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+
+
+def bottom_colontitul(text, params):
+    opinion = [[Paragraph(f'{params}', styleColontitul), ], ]
+    col_width = (190 * mm)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 10 * mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    return text
