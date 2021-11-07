@@ -791,7 +791,7 @@ class Napravleniya(models.Model):
                 print(str(iss), '!iss.research.nsi_id')  # noqa: T001
                 continue
 
-            has_image = bool(iss.study_instance_uid)
+            has_image = bool(iss.study_instance_uid_tag)
             has_protocol = bool(pdf_content)
 
             if not has_image and not has_protocol:
