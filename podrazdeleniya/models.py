@@ -33,6 +33,16 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (MONITORINGS, "Мониторинги"),
     )
 
+    ODII_TYPES = (
+        (1, 'Компьютерная томография'),
+        (2, 'Магнитно-резонансная томография'),
+        (3, 'Ультразвуковая диагностика'),
+        (4, 'Рентгенологическая диагностика'),
+        (5, 'Радионуклидная диагностика'),
+        (6, 'Функциональная диагностика'),
+        (7, 'Эндоскопия'),
+    )
+
     title = models.CharField(max_length=255)  # Название подразделения
     short_title = models.CharField(max_length=50, default='', blank=True)
     gid_n = models.IntegerField(default=None, null=True, blank=True)  # gidNumber в LDAP
@@ -43,6 +53,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     rmis_direction_type = models.CharField(max_length=255, default="Направление в лабораторию", blank=True)
     rmis_department_title = models.CharField(max_length=255, default="Клинико-диагностическая лаборатория (КДЛ)", blank=True)
     can_has_pacs = models.BooleanField(default=False, blank=True)
+    odii_type = models.PositiveSmallIntegerField(choices=ODII_TYPES, default=None, null=True, blank=True, help_text="Оказываемые виды инструментальных услуг")
     oid = models.CharField(max_length=55, default="", blank=True, help_text='OID подразделения')
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
 
