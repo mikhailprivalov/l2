@@ -335,6 +335,11 @@
                 <strong>{{ selected_card.medbookNumber }}</strong>
               </td>
             </tr>
+            <tr v-if="!hasSnils">
+              <td class="table-content-row error-row" colspan="4">
+                <strong>Некорректный СНИЛС!</strong>
+              </td>
+            </tr>
           </tbody>
         </table>
         <div v-if="phones.length > 0 && !hide_card_editor" class="hovershow">
@@ -661,6 +666,9 @@ export default {
     tfoms_as_l2() {
       return Boolean(this.$store.getters.modules.l2_tfoms_as_l2);
     },
+    auto_clinical_examination_direct() {
+      return Boolean(this.$store.getters.modules.auto_clinical_examination_direct);
+    },
     is_operator() {
       if ('groups' in this.$store.getters.user_data) {
         for (const g of this.$store.getters.user_data.groups) {
@@ -721,6 +729,13 @@ export default {
         return this.selected_card.phones;
       }
       return [];
+    },
+    hasSnils() {
+      if (!this.selected_card.docs) {
+        return true;
+      }
+
+      return this.selected_card.docs.some(d => d.type_title === 'СНИЛС' && d.number && d.number.length >= 11);
     },
     ...mapGetters(['user_data']),
     allow_l2_card_edit() {
@@ -992,6 +1007,17 @@ export default {
       this.emit_input();
       this.loaded = true;
       this.$root.$emit('patient-picker:select_card');
+      setTimeout(() => {
+        if (!this.auto_clinical_examination_direct || !this.is_operator || !this.is_doc) {
+          return;
+        }
+        const pks = this.selected_card.disp_data?.filter(d => !d[2]).map(d => d[0]) || [];
+        if (pks.length === 0) {
+          return;
+        }
+        this.add_researches(pks, true);
+        this.$root.$emit('msg', 'ok', 'Добавлены назначения по диспансеризации');
+      }, 100);
     },
     check_base() {
       if (this.base === -1 && this.bases.length > 0) {
@@ -1527,5 +1553,9 @@ td:not(.select-td):not(.cl-td) {
       z-index: 10;
     }
   }
+}
+
+.error-row {
+  color: #f00;
 }
 </style>

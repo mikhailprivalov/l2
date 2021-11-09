@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q, Prefetch
@@ -29,6 +30,7 @@ from slog.models import Log
 from users.models import Speciality
 from utils.nsi_directories import NSI
 from utils.response import status_response
+from hospitals.models import HospitalsGroup
 
 
 @login_required
@@ -72,9 +74,28 @@ def get_researches(request):
             if len(black_list_monitoring) > 0:
                 restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True, pk__in=black_list_monitoring))
 
-        restricted_to_direct.extend(restricted_monitoring)
-        restricted_to_direct = list(set(restricted_to_direct))
+        doc_hospital = [doctorprofile.get_hospital()]
+        groups_black_list = HospitalsGroup.access_black_list_edit_monitoring.through.objects.filter(hospitalsgroup__hospital__in=doc_hospital).values_list('researches__pk', flat=True)
+        groups_white_list = HospitalsGroup.access_white_list_edit_monitoring.through.objects.filter(hospitalsgroup__hospital__in=doc_hospital).values_list('researches__pk', flat=True)
 
+        if groups_white_list:
+            restricted_monitoring.extend(list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True).exclude(pk__in=groups_white_list)))
+        else:
+            restricted_monitoring.extend(groups_black_list)
+
+        restricted_to_direct.extend(restricted_monitoring)
+
+        # Доступные услуги по роли
+        user_gr = [x.pk for x in request.user.groups.all()]
+        global_groups = [x.pk for x in Group.objects.all()]
+        restricted_researches_by_group = []
+        for global_gr in global_groups:
+            researches_in_group = users.AvailableResearchByGroup.objects.values_list('research_id', flat=True).filter(group_id=global_gr)
+            if len(researches_in_group) > 0 and global_gr not in user_gr:
+                restricted_researches_by_group.extend(researches_in_group)
+        restricted_to_direct.extend(restricted_researches_by_group)
+
+        restricted_to_direct = list(set(restricted_to_direct))
         cache.set(k, json.dumps(restricted_to_direct), 30)
     else:
         restricted_to_direct = json.loads(restricted_to_direct)
@@ -683,7 +704,7 @@ def fast_template_save(request):
 def fraction_title(request):
     request_data = json.loads(request.body)
     fraction = Fractions.objects.get(pk=request_data["pk"])
-    return JsonResponse({"fraction": fraction.title, "research": fraction.research.title, "units": fraction.f.get_unit()})
+    return JsonResponse({"fraction": fraction.title, "research": fraction.research.title, "units": fraction.get_unit_str()})
 
 
 def field_title(request):

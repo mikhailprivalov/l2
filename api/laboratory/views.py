@@ -615,7 +615,7 @@ def reset_confirm(request):
 
         if iss.allow_reset_confirm(request.user):
             predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": pk, "direction": iss.napravleniye_id}
-            iss.doc_confirmation = iss.time_confirmation = None
+            iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
             iss.save()
             if iss.napravleniye.result_rmis_send:
                 c = Client()
@@ -623,6 +623,11 @@ def reset_confirm(request):
             if iss.napravleniye:
                 iss.napravleniye.need_resend_amd = False
                 iss.napravleniye.save()
+            if iss.napravleniye:
+                iss.napravleniye.need_resend_amd = False
+                iss.napravleniye.eds_total_signed = False
+                iss.napravleniye.eds_total_signed_at = None
+                iss.napravleniye.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd'])
             result = {"ok": True}
             Log.log(str(pk), 24, body=predoc, user=request.user.doctorprofile)
         else:

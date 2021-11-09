@@ -229,11 +229,14 @@ class Researches(models.Model):
     bac_culture_comments_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для комментария в культуре")
     speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальность услуги', on_delete=models.SET_NULL)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
+    nsi_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
     direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
     type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     paddings_size = models.CharField(max_length=10, null=True, blank=True, default=None, help_text="Отступы для бланка результатов (лево| вверх|право|низ)")
+    odii_type = models.PositiveSmallIntegerField(choices=Podrazdeleniya.ODII_TYPES, default=None, blank=True, null=True,
+                                                 help_text="Оказываемые виды инструментальных услуг (перезатирает из подразделения, если оно там указано)")
 
     @staticmethod
     def filter_type(t):
@@ -292,6 +295,15 @@ class Researches(models.Model):
             or self.is_direction_params
             or self.is_monitoring
         )
+
+    def get_flag_types_n3(self):
+        return {
+            "title": self.title,
+            "isHosp": self.is_hospital,
+            "isDocReferral": self.is_doc_refferal,
+            "isParaclinic": self.is_paraclinic,
+            "isForm": self.is_form,
+        }
 
     @property
     def can_transfer(self):
@@ -449,7 +461,7 @@ class ParaclinicInputField(models.Model):
     TYPES = (
         (0, 'Text'),
         (1, 'Date'),
-        (2, 'MKB'),
+        (2, 'MKB-10'),
         (3, 'Calc'),
         (4, 'purpose'),
         (5, 'first_time'),
@@ -478,6 +490,11 @@ class ParaclinicInputField(models.Model):
         (28, 'NSI directory'),
         (29, 'FIAS address'),
         (30, 'Генератор номера документа'),
+        (31, 'Прикрепление: МО-участок'),
+        (32, 'МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)'),
+        (33, 'МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)'),
+        (34, 'МКБ-обычный (1.2.643.5.1.13.13.11.1005)'),
+        (35, 'Врач'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')

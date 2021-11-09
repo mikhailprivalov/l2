@@ -274,7 +274,7 @@ export default {
     },
     role_can_use_descriptive() {
       for (const g of this.$store.getters.user_data.groups || []) {
-        if (['Врач консультаций', 'Врач параклиники'].includes(g)) {
+        if (['Врач консультаций', 'Врач параклиники', 'Свидетельство о смерти-доступ'].includes(g)) {
           return true;
         }
       }

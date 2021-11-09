@@ -54,7 +54,7 @@
           <col style="width: 260px" />
           <col style="width: 120px" />
           <col style="width: 120px" />
-          <col style="width: 34px" />
+          <col style="width: 50px" />
         </colgroup>
         <thead>
           <tr>
@@ -75,6 +75,16 @@
                 v-tippy
               >
                 <i class="fas fa-print"></i>
+              </a>
+              <a
+                href="#"
+                @click.prevent="savejson()"
+                class="a-under"
+                title="JSON-file"
+                v-if="toPrintNumbers.length > 0"
+                v-tippy
+              >
+                <i class="fas fa-poll-h"></i>
               </a>
             </th>
           </tr>
@@ -109,10 +119,8 @@
                 {{ r.slaveDir }}
               </a>
             </td>
-            <td class="text-center cl-td">
-              <label v-if="r.slaveConfirm">
+            <td class="text-center cl-td" :class="[r.slaveConfirm ? 'checkbox-color' : '']">
                 <input type="checkbox" v-model="toPrint[r.slaveDir]" />
-              </label>
             </td>
           </tr>
           <tr v-if="rows.length === 0">
@@ -241,6 +249,14 @@ export default class ExtraNotification extends Vue {
     }
   }
 
+  savejson() {
+    const ids = this.toPrintNumbers;
+    window.open(`/forms/json-nofication?pk=[${ids}]`);
+    for (const i of ids) {
+      this.toPrint[i] = false;
+    }
+  }
+
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await this.$api('extra-notification/search', this.params);
@@ -305,5 +321,9 @@ export default class ExtraNotification extends Vue {
     top: -1px;
     background: #fff;
   }
+}
+
+.checkbox-color {
+  background-color: #9dcaeb
 }
 </style>

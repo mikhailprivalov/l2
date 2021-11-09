@@ -1,6 +1,6 @@
 import uuid
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import models
 
 from appconf.manager import SettingManager
@@ -14,7 +14,7 @@ class Speciality(models.Model):
     )
 
     title = models.CharField(max_length=255, help_text='Название')
-    hide = models.BooleanField(help_text='Скрытие')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
     spec_type = models.SmallIntegerField(choices=SPEC_TYPES, help_text='Тип специальности', default=0)
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
@@ -38,7 +38,7 @@ def add_dots_if_not_digit(w: str, dots):
 
 class Position(models.Model):
     title = models.CharField(max_length=255, help_text='Название')
-    hide = models.BooleanField(help_text='Скрытие')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
 
@@ -83,18 +83,41 @@ class DoctorProfile(models.Model):
     rmis_service_id_time_table = models.CharField(max_length=20, blank=True, default=None, null=True, help_text='РМИС service id для расписания')
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
     all_hospitals_users_control = models.BooleanField(default=False, blank=True, help_text="Может настраивать пользователей во всех организациях")
-    eds_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для L2 EDS')
     white_list_monitoring = models.ManyToManyField('directory.Researches', related_name='white_list_monitoring', blank=True, help_text='Доступные для просмотра мониторинги')
     black_list_monitoring = models.ManyToManyField('directory.Researches', related_name='black_list_monitoring', blank=True, help_text='Запрещены для просмотра мониторинги')
     position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
     snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
-    def get_eds_token(self):
-        if not self.eds_token:
-            self.eds_token = uuid.uuid4()
-            self.save(update_fields=['eds_token'])
-        return str(self.eds_token)
+    @property
+    def dict_data(self):
+        return {
+            "snils": self.snils,
+            "speciality": self.specialities.n3_id if self.specialities else None,
+            "position": self.position.n3_id if self.position else None,
+            "family": self.family,
+            "name": self.name,
+            "patronymic": self.patronymic,
+        }
+
+    @property
+    def uploading_data(self):
+        return {
+            "pk": self.pk,
+            "n3Id": self.n3_id,
+            "spec": self.specialities.n3_id if self.specialities else None,
+            "role": self.position.n3_id if self.position else None,
+            **self.dict_data,
+        }
+
+    def get_eds_allowed_sign(self):
+        ret = []
+        doc_groups = ("Врач параклиники", "Врач консультаций", 'Врач-лаборант')
+        if any([self.has_group(x) for x in doc_groups]):
+            ret.append('Врач')
+        if self.has_group('ЭЦП Медицинской организации'):
+            ret.append('Медицинская организация')
+        return ret
 
     def get_hospital_id(self):
         hosp = self.get_hospital()
@@ -169,6 +192,11 @@ class DoctorProfile(models.Model):
     def get_data(self):
         return {"pk": self.pk, "fio": self.get_fio(), "username": self.user.username}
 
+    def get_position(self):
+        if self.position:
+            return self.position.title
+        return None
+
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
             return self.get_full_fio() + ', ' + self.podrazdeleniye.title
@@ -204,3 +232,16 @@ class AssignmentResearches(models.Model):
     class Meta:
         verbose_name = 'Исследование для шаблона назначений'
         verbose_name_plural = 'Исследования для шаблонов назначений'
+
+
+class AvailableResearchByGroup(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    research = models.ForeignKey('directory.Researches', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.group) + "  | " + str(self.research)
+
+    class Meta:
+        unique_together = ('group', 'research')
+        verbose_name = 'Услуга для групп'
+        verbose_name_plural = 'Услуги для групп'

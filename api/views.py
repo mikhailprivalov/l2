@@ -44,7 +44,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all
+from .sql_func import users_by_group, users_all, get_diagnoses
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -581,12 +581,7 @@ def current_user_info(request):
             ret["groups"] = list(user.groups.values_list('name', flat=True))
             if user.is_superuser:
                 ret["groups"].append("Admin")
-            ret["eds_token"] = doctorprofile.get_eds_token()
-            ret["eds_allowed_sign"] = []
-            if 'Врач консультаций' in ret["groups"] or 'Заведующий отделением' in ret["groups"]:
-                ret["eds_allowed_sign"].append('Врач')
-            if 'Заведующий отделением' in ret["groups"] or 'Admin' in ret["groups"]:
-                ret["eds_allowed_sign"].append('Заведующий отделением')
+            ret["eds_allowed_sign"] = doctorprofile.get_eds_allowed_sign() if ret['modules'].get('l2_eds') else []
 
             try:
                 connections.close_all()
@@ -844,8 +839,75 @@ def get_reset_time_vars(n):
 def mkb10(request):
     kw = request.GET.get("keyword", "").split(' ')[0]
     data = []
-    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw).order_by("code").distinct()[:11]:
+    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw, hide=False).order_by("code").distinct()[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
+    return JsonResponse({"data": data})
+
+
+def mkb10_dict(request):
+    q = request.GET["query"].strip()
+    if not q:
+        return JsonResponse({"data": []})
+
+    if q == '-':
+        return JsonResponse({"data": [{"code": '-', "title": '', "id": '-'}]})
+
+    d = request.GET.get("dictionary", "mkb10.4")
+    parts = q.split(' ', 1)
+    code = "-1"
+    diag_title = "-1"
+    if len(parts) == 2:
+        if re.search(r'^[a-zA-Z0-9]', parts[0]):
+            code = parts[0]
+            diag_title = f"{parts[1]}"
+        else:
+            diag_title = f"{parts[0]} {parts[1]}"
+    else:
+        if re.search(r'^[a-zA-Z0-9]', parts[0]):
+            code = parts[0]
+        else:
+            diag_title = parts[0]
+
+    if diag_title != "-1":
+        diag_title = f"{diag_title}."
+    diag_query = get_diagnoses(d_type=d, diag_title=f"{diag_title}", diag_mkb=code)
+
+    data = []
+    for d in diag_query:
+        data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
+
+    return JsonResponse({"data": data})
+
+
+def doctorprofile_search(request):
+    q = request.GET["query"].strip()
+    if not q:
+        return JsonResponse({"data": []})
+
+    q = q.split()
+
+    d_qs = users.DoctorProfile.objects.filter(
+        hospital=request.user.doctorprofile.get_hospital(),
+        family__istartswith=q[0]
+    )
+
+    if len(q) > 1:
+        d_qs = d_qs.filter(name__istartswith=q[1])
+
+    if len(q) > 2:
+        d_qs = d_qs.filter(patronymic__istartswith=q[2])
+
+    data = []
+
+    d: users.DoctorProfile
+    for d in d_qs.order_by('fio')[:15]:
+        data.append({
+            "id": d.pk,
+            "fio": str(d),
+            "department": d.podrazdeleniye.title if d.podrazdeleniye else "",
+            **d.dict_data,
+        })
+
     return JsonResponse({"data": data})
 
 
@@ -872,7 +934,7 @@ def key_value(request):
 def vich_code(request):
     kw = request.GET.get("keyword", "")
     data = []
-    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="vc").order_by("code")[:11]:
+    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="vc", hide=False).order_by("code")[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": {"-": ""}.get(d.title, d.title)})
     return JsonResponse({"data": data})
 
@@ -1123,12 +1185,21 @@ def users_view(request):
                 otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
             data.append(otd)
 
-    spec = users.Speciality.objects.all().order_by("title")
-    spec_data = []
+    spec = users.Speciality.objects.filter(hide=False).order_by("title")
+    spec_data = [
+        {"pk": -1, "title": "Не выбрано"}
+    ]
     for s in spec:
         spec_data.append({"pk": s.pk, "title": s.title})
 
-    return JsonResponse({"departments": data, "specialities": spec_data})
+    positions_qs = users.Position.objects.filter(hide=False).order_by("title")
+    positions = [
+        {"pk": -1, "title": "Не выбрано"}
+    ]
+    for s in positions_qs:
+        positions.append({"pk": s.pk, "title": s.title})
+
+    return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions})
 
 
 @login_required
@@ -1156,9 +1227,11 @@ def user_view(request):
             "doc_code": -1,
             "rmis_employee_id": '',
             "rmis_service_id_time_table": '',
+            "snils": '',
+            "position": -1,
         }
     else:
-        doc = users.DoctorProfile.objects.get(pk=pk)
+        doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
         fio_parts = doc.get_fio_parts()
         data = {
             "family": fio_parts[0],
@@ -1177,9 +1250,11 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
-            "speciality": doc.specialities_id,
+            "speciality": doc.specialities_id or -1,
             "rmis_employee_id": doc.rmis_employee_id,
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
+            "snils": doc.snils,
+            "position": doc.position_id or -1,
         }
 
     return JsonResponse({"user": data})
@@ -1201,6 +1276,10 @@ def user_save_view(request):
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
+    snils = ud.get("snils").strip() or ''
+    position = ud.get("position", -1)
+    if position == -1:
+        position = None
     user_hospital_pk = request.user.doctorprofile.get_hospital_id()
     hospital_pk = request_data.get('hospital_pk', user_hospital_pk)
 
@@ -1252,8 +1331,11 @@ def user_save_view(request):
             for r in ud["users_services"]:
                 doc.users_services.add(DResearches.objects.get(pk=r))
 
+            spec = ud.get('speciality', None)
+            if spec == -1:
+                spec = None
             doc.podrazdeleniye_id = ud['department']
-            doc.specialities_id = ud.get('speciality', None)
+            doc.specialities_id = spec
             doc.family = ud["family"]
             doc.name = ud["name"]
             doc.patronymic = ud["patronymic"]
@@ -1264,6 +1346,8 @@ def user_save_view(request):
             doc.personal_code = personal_code
             doc.rmis_resource_id = rmis_resource_id
             doc.hospital_id = hospital_pk
+            doc.snils = snils
+            doc.position_id = position
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:

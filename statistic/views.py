@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import directory.models as directory
 import slog.models as slog
+from api.directions.sql_func import get_lab_podr
 from clients.models import CardBase
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
@@ -84,7 +85,7 @@ def statistic_xls(request):
 
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
-    if date_start and date_end:
+    if date_start and date_end and tp != "lab_sum":
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -687,9 +688,14 @@ def statistic_xls(request):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         if research_id == DEATH_RESEARCH_PK:
             researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
-            data_death = death_form_result_parse(researches_sql)
+            data_death = death_form_result_parse(researches_sql, reserved=False)
             ws = structure_sheet.statistic_research_death_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_death_data(ws, data_death)
+            reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date, end_date)
+            data_death_reserved = death_form_result_parse(reserved_researches_sql, reserved=True)
+            ws2 = wb.create_sheet("Номера в резерве")
+            ws2 = structure_sheet.statistic_reserved_research_death_base(ws2, d1, d2, research_title[0])
+            ws2 = structure_sheet.statistic_reserved_research_death_data(ws2, data_death_reserved)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
@@ -1005,6 +1011,22 @@ def statistic_xls(request):
                 if ns == 0:
                     ws.sheet_visible = False
                     ws_pat.sheet_visible = False
+
+    elif tp == "lab_sum":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Кол-во по лаборатории")
+
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        lab_podr = get_lab_podr()
+        lab_podr = tuple([i[0] for i in lab_podr])
+        researches_by_sum = sql_func.statistics_sum_research_by_lab(lab_podr, start_date, end_date)
+        ws = structure_sheet.statistic_research_by_sum_lab_base(ws, d1, d2, "Кол-во по лабораториям")
+        ws = structure_sheet.statistic_research_by_sum_lab_data(ws, researches_by_sum)
 
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
@@ -1514,6 +1536,7 @@ def sreening_xls(request):
 
     # кол-во в плане по скринингу в текущем месяце
     count_regplan_for_month = screening_plan_for_month_all_count(year, month)
+
     screening_data['count_regplan_for_month'] = count_regplan_for_month[0].count
 
     sreening_plan_individuals = screening_plan_for_month_all_patient(year, month)
@@ -1539,13 +1562,13 @@ def sreening_xls(request):
 
     # адекватных
     pass_pap_adequate_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "адекватный"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "^адекватный"
     )
     screening_data['pass_pap_adequate_result_value'] = pass_pap_adequate_result_value[0].count
 
     # недостаточно адекватный
     pass_pap_not_enough_adequate_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "недостаточно адекватный"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "^недостаточно"
     )
     screening_data['pass_pap_not_enough_adequate_result_value'] = pass_pap_not_enough_adequate_result_value[0].count
 
@@ -1571,25 +1594,25 @@ def sreening_xls(request):
 
     # CIN-I
     pass_pap_cin_i_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I%"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "дисплазии CIN-I$", "", count_param=1
     )
     screening_data['pass_pap_cin_i_result_value'] = pass_pap_cin_i_result_value[0].count
 
     # CIN I-II, II
     pass_pap_cin_i_ii_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I-II%", "%CIN-II%", count_param=2
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "CIN-I-II$", "дисплазии CIN-II$", count_param=2
     )
     screening_data['pass_pap_cin_i_ii_result_value'] = pass_pap_cin_i_ii_result_value[0].count
 
     # CIN-II-III, III
     pass_pap_cin_ii_iii_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-II-III%", "%CIN-III%", count_param=2
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "CIN-II-III$", "CIN-III$", count_param=2
     )
     screening_data['pass_pap_cin_ii_iii_result_value'] = pass_pap_cin_ii_iii_result_value[0].count
 
     # cr in situ
     pass_pap_cr_in_situ_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%cr in situ%"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "cr in situ", "", count_param=1
     )
     screening_data['pass_pap_cr_in_situ_result_value'] = pass_pap_cr_in_situ_result_value[0].count
 

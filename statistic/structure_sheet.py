@@ -1,3 +1,4 @@
+import json
 from collections import OrderedDict
 
 import openpyxl
@@ -6,6 +7,10 @@ from openpyxl.utils.cell import get_column_letter
 
 from directions.models import IstochnikiFinansirovaniya
 from doctor_call.models import DoctorCall
+from hospitals.tfoms_hospital import HOSPITAL_TITLE_BY_CODE_TFOMS
+from utils.dates import normalize_dash_date
+from dateutil.parser import parse as du_parse
+from dateutil.relativedelta import relativedelta
 
 month_dict = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август', 9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
 
@@ -620,6 +625,33 @@ def statistic_research_death_base(ws1, d1, d2, research_titile):
     return ws1
 
 
+def statistic_reserved_research_death_base(ws1, d1, d2, research_titile):
+    style_border = NamedStyle(name="style_border_rz")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=1).value = 'Услуга:'
+    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+
+    columns = [
+        ('Медицинская организация', 40),
+        ('Номер в резерве', 20),
+        ('Дата создания', 22),
+        ('ФИО пациента', 35),
+        ('Направление', 20),
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=4, column=idx).style = style_border
+
+    return ws1
+
+
 def statistic_research_death_data(ws1, researches):
     """
     :return:
@@ -632,44 +664,171 @@ def statistic_research_death_data(ws1, researches):
     r = 4
 
     for i in researches:
+        if not i:
+            return ws1
+        try:
+            type_doc_death = i["Вид медицинского свидетельства о смерти"]["title"]
+        except:
+            type_doc_death = i["Вид медицинского свидетельства о смерти"]
+
         r += 1
         ws1.cell(row=r, column=1).value = i["Серия"]
         ws1.cell(row=r, column=2).value = i["Номер"]
-        ws1.cell(row=r, column=3).value = i["Вид медицинского свидетельства о смерти"]
-        ws1.cell(row=r, column=4).value = "ГИМДКБ"
-        ws1.cell(row=r, column=5).value = "Прикрепление пациента"
-        ws1.cell(row=r, column=6).value = "Участок"
-        ws1.cell(row=r, column=7).value = i["Дата смерти"]
+
+        ws1.cell(row=r, column=3).value = type_doc_death
+        ws1.cell(row=r, column=4).value = i["hosp_title"]
+
+        mo_attachment, mo_district = "-", "-"
+        if i.get("Прикрепление", None):
+            attachment_data = i.get("Прикрепление").split("—")
+            mo_attachment = HOSPITAL_TITLE_BY_CODE_TFOMS.get(attachment_data[0].strip(), attachment_data[0].strip())
+            mo_district = attachment_data[1]
+
+        ws1.cell(row=r, column=5).value = mo_attachment
+        ws1.cell(row=r, column=6).value = mo_district
+        ws1.cell(row=r, column=7).value = normalize_dash_date(i["Дата смерти"])
         ws1.cell(row=r, column=8).value = i["Дата рождения"]
-        ws1.cell(row=r, column=9).value = "ФИО умершего пациента"
-        ws1.cell(row=r, column=10).value = "возраст"
-        ws1.cell(row=r, column=11).value = "пол"
-        ws1.cell(row=r, column=12).value = i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][2]
-        ws1.cell(row=r, column=13).value = f'{i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][0]} ' \
-                                           f'{i["а) Болезнь или состояние, непосредственно приведшее к смерти"]["rows"][0][1]}'
+        ws1.cell(row=r, column=9).value = i["fio_patient"]
+        ws1.cell(row=r, column=10).value = i["sex"]
+        d1 = du_parse(i["Дата смерти"])
+        d2 = du_parse(i["Дата рождения"])
+        delta = relativedelta(d1, d2)
+        ws1.cell(row=r, column=11).value = delta.years
+        # а)
+        diag_data = get_table_diagnos(i, "а) Болезнь или состояние, непосредственно приведшее к смерти")
+        ws1.cell(row=r, column=12).value = f'{diag_data[1]["code"]} {diag_data[1]["title"]}'
+        ws1.cell(row=r, column=13).value = diag_data[0]
+        ws1.cell(row=r, column=14).value = diag_data[1]["code"]
 
-        ws1.cell(row=r, column=14).value = ""
+        # б)
+        diag_data = get_table_diagnos(i, "б) патологическое состояние, которое привело к возникновению вышеуказанной причины:")
+        ws1.cell(row=r, column=15).value = f'{diag_data[1]["code"]} {diag_data[1]["title"]}'
+        ws1.cell(row=r, column=16).value = diag_data[0]
+        ws1.cell(row=r, column=17).value = diag_data[1]["code"]
 
-        ws1.cell(row=r, column=15).value = ""
-        ws1.cell(row=r, column=16).value = ""
-        ws1.cell(row=r, column=17).value = ""
+        # в)
+        diag_data = get_table_diagnos(i, "в) первоначальная причина смерти:")
+        ws1.cell(row=r, column=18).value = f'{diag_data[1]["code"]} {diag_data[1]["title"]}'
+        ws1.cell(row=r, column=19).value = diag_data[0]
+        ws1.cell(row=r, column=20).value = diag_data[1]["code"]
 
-        ws1.cell(row=r, column=18).value = ""
-        ws1.cell(row=r, column=19).value = ""
-        ws1.cell(row=r, column=20).value = ""
+        # г)
+        diag_data = get_table_diagnos(i, "г) внешняя причина при травмах и отравлениях:")
+        ws1.cell(row=r, column=21).value = f'{diag_data[1]["code"]} {diag_data[1]["title"]}'
+        ws1.cell(row=r, column=22).value = diag_data[0]
+        ws1.cell(row=r, column=23).value = diag_data[1]["code"]
 
-        ws1.cell(row=r, column=21).value = ""
-        ws1.cell(row=r, column=22).value = ""
-        ws1.cell(row=r, column=23).value = ""
-        ws1.cell(row=r, column=24).value = "II"
+        diag_data = get_table_diagnos(i, "II. Прочие важные состояния, способствовавшие смерти, но не связанные с болезнью или патологическим состоянием, приведшим к ней")
+        ws1.cell(row=r, column=24).value = f'{diag_data[1]["code"]} {diag_data[1]["title"]} {diag_data[0]}'
         ws1.cell(row=r, column=25).value = ""
-        ws1.cell(row=r, column=26).value = i["Место смерти"]
+
+        place_death_details = ""
+        try:
+            place_death_details = json.loads(i["Место смерти"])
+            is_dict = True
+        except:
+            is_dict = False
+        if not is_dict:
+            try:
+                place_death_details = i["Место смерти"].get("address", None)
+                is_dict = True
+            except:
+                is_dict = False
+        if not is_dict:
+            place_death_details = "-"
+
+        ws1.cell(row=r, column=26).value = place_death_details
+        # Название стационара
         ws1.cell(row=r, column=27).value = ""
+        # ДТП
         ws1.cell(row=r, column=28).value = ""
         ws1.cell(row=r, column=29).value = ""
-        ws1.cell(row=r, column=30).value = i["Заполнил"]
+
+        if i.get("Заполнил", None):
+            who_write = i.get("Заполнил")
+        else:
+            who_write = ""
+        ws1.cell(row=r, column=30).value = who_write
 
         rows = ws1[f'A{r}:AD{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    return ws1
+
+
+def statistic_reserved_research_death_data(ws1, researches):
+    """
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res_rz")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 4
+
+    for i in researches:
+        if not i:
+            return ws1
+        r += 1
+        ws1.cell(row=r, column=1).value = i["hosp_title"]
+        ws1.cell(row=r, column=2).value = i["Номер"]
+        ws1.cell(row=r, column=3).value = i["date_create"]
+        ws1.cell(row=r, column=4).value = i["fio_patient"]
+        ws1.cell(row=r, column=5).value = i["napravleniye_id"]
+        rows = ws1[f'A{r}:E{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    return ws1
+
+
+def statistic_research_by_sum_lab_base(ws1, d1, d2, research_titile):
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+    columns = [
+        ('Лаборатория', 33),
+        ('Услуга', 55),
+        ('Кол-во', 25),
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=4, column=idx).style = style_border
+
+    return ws1
+
+
+def statistic_research_by_sum_lab_data(ws1, researches):
+    """
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 4
+    if not researches:
+        return ws1
+
+    for i in researches:
+        r += 1
+        ws1.cell(row=r, column=1).value = i.lab_title
+        ws1.cell(row=r, column=2).value = i.research_title
+        ws1.cell(row=r, column=3).value = i.sum_research_id
+
+        rows = ws1[f'A{r}:C{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
@@ -851,3 +1010,26 @@ def statistic_screening_month_data(ws1, data, month, year, style_border_res):
             ws1.cell(row=6, column=17).style = style_border_res
 
     return ws1
+
+
+def get_table_diagnos(diagnos_data, item):
+    diag_details = {}
+    period_data = ""
+
+    try:
+        diagnos_data[item].keys()
+        diag_data = diagnos_data[item]
+    except:
+        diag_data = json.loads(diagnos_data[item])
+    try:
+        diag_details = json.loads(diag_data["rows"][0][2])
+        period_data = f'{diag_data["rows"][0][0]} {diag_data["rows"][0][1]}'
+        is_dict = True
+    except:
+        is_dict = False
+    if not is_dict:
+        diag_details["code"] = "-"
+        diag_details["title"] = "-"
+        period_data = "-"
+
+    return (period_data, diag_details)

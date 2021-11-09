@@ -81,7 +81,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Серия предшествующего",
         "Номер предшествующего",
         "Дата выдачи предшествующего",
-
         "Дата рождения",
         "Дата смерти",
         "Время смерти",
@@ -130,6 +129,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Заполнил",
         "Проверил",
         "Главный врач",
+        "Должность",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
@@ -208,7 +208,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         data["СНИЛС (получатель)"] = ""
 
     if not data.get("Заполнил", None):
-        data["Заполнил"] = ""
+        data["Заполнил"] = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
+
+    if not data.get("Должность", None):
+        data["Должность"] = iss.doc_position if iss.doc_confirmation else ""
 
     if not data.get("Проверил", None):
         data["Проверил"] = ""
@@ -261,26 +264,26 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Мед. св-во о смерти 106/у
     text = []
-    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"],
-                      fields)
+    text = title_data("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", "К УЧЕТНОЙ ФОРМЕ № 106/У", text, fields.get("Серия", ""), fields.get("Номер", ""), fields.get("Дата выдачи", ""),
+                      fields.get("Вид медицинского свидетельства о смерти", ""), fields)
     text.append(Spacer(1, 1.7 * mm))
-    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields['fio'])
+    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields.get('fio',''))
 
     # Пол
     text.append(Spacer(1, 0.3 * mm))
-    text = sex_tbl(text, fields['sex'])
+    text = sex_tbl(text, fields.get('sex',''))
 
     # Дата рождения
-    text = born_tbl(text, fields['Дата рождения'])
+    text = born_tbl(text, fields.get('Дата рождения', ''))
     text.append(Spacer(1, 0.3 * mm))
 
     # Дата смерти
-    text = death_tbl(text, "4. Дата смерти:", fields['Дата смерти'], fields['Время смерти'])
+    text = death_tbl(text, "4. Дата смерти:", fields.get('Дата смерти', ''), fields.get('Время смерти', ''))
 
-    text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", fields["Место постоянного жительства (регистрации)"])
+    text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", fields.get("Место постоянного жительства (регистрации)", ""))
 
     # Смерть наступила
-    text = where_death_start_tbl(text, fields["Типы мест наступления смерти"])
+    text = where_death_start_tbl(text, fields.get("Типы мест наступления смерти", ""))
     text.append(Spacer(1, 0.2 * mm))
 
     text.append(Paragraph('Для детей, умерших в возрасте до 1 года:', styleBold))
@@ -326,9 +329,9 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
 def death_data(iss: Issledovaniya, direction, fields, offset=0):
     # Лини отреза
     text = []
-
     text = title_med_organization(text, fields['org'])
-    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"], fields)
+    text = title_data("МЕДИЦИНСКОЕ СВИДЕТЕЛЬСТВО О СМЕРТИ", "", text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"],
+                      fields)
     text.append(Spacer(1, 1.7 * mm))
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields["fio"])
 
@@ -397,7 +400,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         styleT))
     text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
     text = who_set_death(text, fields["Тип медицинского работника"])
-    text = doctor_fio(text, fields)
+    text = doctor_fio(text, fields, iss)
     text.append(Spacer(1, 1 * mm))
     text = why_death(text, fields, "22", "23", "24", "25")
     text.append(Spacer(1, 2 * mm))
@@ -417,12 +420,12 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
 
 
 # общие функции
-def title_data(text, serial, number, date_issue, type_document, data_fields):
-    text.append(Paragraph("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", styleCentreBold))
+def title_data(title_name, title_form, text, serial, number, date_issue, type_document, data_fields):
+    text.append(Paragraph(f"{title_name}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
-    text.append(Paragraph("К УЧЕТНОЙ ФОРМЕ № 106/У", styleCentreBold))
+    text.append(Paragraph(f"{title_form}", styleCentreBold))
     text.append(Spacer(1, 0.2 * mm))
-    text.append(Paragraph(f"СЕРИЯ {serial} No {number}", styleCentreBold))
+    text.append(Paragraph(f"СЕРИЯ {serial} № {number}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
@@ -431,11 +434,11 @@ def title_data(text, serial, number, date_issue, type_document, data_fields):
     if type_death_document["code"] == '4':
         instead_final = f"<u>{op_bold_tag}взамен окончательного{cl_bold_tag}</u>"
     elif type_death_document["code"] == '3':
-        instead_final = f"<u>{op_bold_tag}взамен предварительного{cl_bold_tag}</u>"
+        instead_preparatory = f"<u>{op_bold_tag}взамен предварительного{cl_bold_tag}</u>"
     elif type_death_document["code"] == '1':
-        instead_final = f"{op_bold_tag}<u>окончательного</u>{cl_bold_tag}"
+        final = f"{op_bold_tag}<u>окончательного</u>{cl_bold_tag}"
     elif type_death_document["code"] == '2':
-        instead_final = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
+        preparatory = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
     if data_fields.get("Серия предшествующего", None):
         text.append(Paragraph("ранее выданное свидетельство", styleCentre))
@@ -605,7 +608,7 @@ def address_tbl(text, type_address, address):
     text.append(tbl)
 
     # дом, стр, корп, кв, комн
-    opinion = gen_opinion(['дом', address_details['house'], 'стр.', '', 'корп.', '', 'кв.', '', 'комн.', ''])
+    opinion = gen_opinion(['дом', address_details['house'], 'стр.', '', 'корп.', '', 'кв.', address_details.get("flat", ""), 'комн.', ''])
     col_width = (14 * mm, 15 * mm, 12 * mm, 12 * mm, 14 * mm, 15 * mm, 12 * mm, 15 * mm, 14 * mm, 15 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -629,7 +632,7 @@ def where_death_start_tbl(text, params):
     if whera_data["code"] == '1':
         place = f"<u>{op_bold_tag}{place}{cl_bold_tag}</u>"
     elif whera_data["code"] == '2':
-        place = f"<u>{op_bold_tag}{car}{cl_bold_tag}</u>"
+        car = f"<u>{op_bold_tag}{car}{cl_bold_tag}</u>"
     elif whera_data["code"] == '3':
         hospital = f"<u>{op_bold_tag}{hospital}{cl_bold_tag}</u>"
     elif whera_data["code"] == '4':
@@ -695,7 +698,12 @@ def line_split(text):
 
 
 def patient_passport(text, data_document):
-    opinion = gen_opinion(['4.Документ, удостоверяющий личность умершего:', data_document["type"], 'серия', data_document["serial"], 'номер', data_document['number']])
+    if "-" in data_document["type"]:
+        document_type = data_document["type"].split("-")
+        document_type_print = document_type[1]
+    else:
+        document_type_print = data_document["type"]
+    opinion = gen_opinion(['4.Документ, удостоверяющий личность умершего:', document_type_print, 'серия', data_document["serial"], 'номер', data_document['number']])
     tbl_style = [
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
         ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
@@ -1096,7 +1104,6 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     tbl = about_diagnos("(болезнь или состояние, непосредственно приведшее к смерти)")
     text.append(Spacer(1, 0.1 * mm))
     text.append(tbl)
-
     tbl = diagnos_tbl({"para": "", "item": "б)", "result": params["б"]["rows"][0]})
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
@@ -1112,7 +1119,6 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     tbl = about_diagnos("(первоначальная причина смерти указывается последней)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
-
     tbl = diagnos_tbl({"para": "", "item": "г)", "result": params["г"]["rows"][0]})
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
@@ -1239,27 +1245,32 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
 
 
 def diagnos_tbl(data):
-    description_diag = data["result"][2].split(' ')
+    description_diag = data["result"][2]
+    description_diag_json = None
+    if len(description_diag) > 1:
+        description_diag_json = json.loads(description_diag)
     decription = ''
-    mkb10 = {0: "", 1: "", 2: "", 3: "", 4: ""}
     period = ""
     top_padd = 0 * mm
+    mkb10 = ["", "", "", "", ""]
     if len(description_diag) > 1:
-        decription = deepcopy(description_diag)
-        mkb10_data = list(decription.pop(0))
-        count = 0
-        for i in mkb10_data:
-            mkb10[count] = i
-            count += 1
-        decription = ' '.join(decription)
+        decription = description_diag_json["title"]
+        mkb10 = list(description_diag_json["code"])
         if len(list(decription)) > 72:
             top_padd = -2 * mm
         period = f'{data["result"][0]} {data["result"][1]}'
 
     if data.get("top_padd", None):
         top_padd = data.get("top_padd")
+    
+    elements = []
+    for element in range(5):
+        try:
+            elements.insert(element, mkb10[element])
+        except:
+            elements.insert(element, "")
 
-    opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', mkb10[0], mkb10[1], mkb10[2], '.', mkb10[4]])
+    opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', elements[0], elements[1], elements[2], '.', elements[4]])
     col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
     tbl_style = [
         ('GRID', (5, 0), (5, 0), 0.75, colors.black),
@@ -1406,7 +1417,7 @@ def who_set_death(text, params):
 
     opinion = gen_opinion(['20. Причины смерти установлены:', only_doc_death, '1', doc_work, '2', paramedic, '3'])
 
-    col_width = (49 * mm, 54 * mm, 6 * mm, 27 * mm, 6 * mm, 40 * mm, 6 * mm,)
+    col_width = (49 * mm, 58 * mm, 6 * mm, 27 * mm, 6 * mm, 40 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1445,8 +1456,8 @@ def who_set_death(text, params):
     return text
 
 
-def doctor_fio(text, params):
-    doc_fio = ""
+def doctor_fio(text, params, iss: Issledovaniya):
+    doc_fio = params["Заполнил"]
     opinion = gen_opinion(['21. Я, врач (фельдшер, акушерка)', doc_fio])
 
     col_width = (50 * mm, 140 * mm,)
@@ -1460,7 +1471,7 @@ def doctor_fio(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    doc_position = ""
+    doc_position = params["Должность"]
     opinion = gen_opinion(['должность', doc_position])
     col_width = (25 * mm, 165 * mm,)
     tbl_style = [
@@ -1482,7 +1493,7 @@ def doctor_fio(text, params):
         write_medical_dicument = f"{op_bold_tag}<u>{write_medical_dicument}</u>{cl_bold_tag}"
     opinion = gen_opinion(['удостоверяю, что на основании:', see_body, '1', write_medical_dicument, '2'])
 
-    col_width = (53 * mm, 24 * mm, 6 * mm, 58 * mm, 6 * mm,)
+    col_width = (53 * mm, 26 * mm, 6 * mm, 61 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1495,13 +1506,13 @@ def doctor_fio(text, params):
     text.append(tbl)
 
     see_patient, open_body = 'предшествующего наблюдения за больным(ой)', ', вскрытия',
-    if base_diagnos["code"] == "4":
+    if base_diagnos["code"] == "3" or base_diagnos["code"] == "5":
         see_patient = f"{op_bold_tag}<u>{see_patient}</u>{cl_bold_tag}"
     elif base_diagnos["code"] == "4":
         open_body = f"{op_bold_tag}<u>{open_body}</u>{cl_bold_tag}"
     opinion = gen_opinion([see_patient, '3', open_body, '4', ' мною установлены причины смерти'])
 
-    col_width = (75 * mm, 6 * mm, 19 * mm, 6 * mm, 70 * mm)
+    col_width = (75 * mm, 6 * mm, 21 * mm, 6 * mm, 70 * mm)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),

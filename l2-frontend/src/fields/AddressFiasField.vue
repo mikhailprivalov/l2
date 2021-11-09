@@ -349,6 +349,8 @@ const getDetails = (original = null) => {
     flat: details.flat || '',
     flat_type: details.flat_type || '',
     postal_code: details.postal_code || '',
+    geo_lat: details.geo_lat || '',
+    geo_lon: details.geo_lon || '',
     custom: details.custom || false,
   };
 };

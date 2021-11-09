@@ -1,3 +1,4 @@
+import base64
 import datetime
 import logging
 from podrazdeleniya.models import Podrazdeleniya
@@ -29,12 +30,12 @@ from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
 from rmis_integration.client import Client
 from slog.models import Log
-from tfoms.integration import match_enp, match_patient
+from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
-from directions.models import Napravleniya
+from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 
@@ -45,6 +46,7 @@ logger = logging.getLogger("IF")
 def next_result_direction(request):
     from_pk = request.GET.get("fromPk")
     after_date = request.GET.get("afterDate")
+    only_signed = request.GET.get("onlySigned")
     if after_date == '0':
         after_date = AFTER_DATE
     next_n = int(request.GET.get("nextN", 1))
@@ -58,7 +60,12 @@ def next_result_direction(request):
         researches = [int(i) for i in type_researches.split(',')]
     else:
         is_research = -1
-    dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
+    if only_signed == '1':
+        # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
+        # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
+        dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
+    else:
+        dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
     next_time = None
     naprs = [d[0] for d in dirs]
@@ -136,7 +143,7 @@ def result_amd_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
-    direction = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
+    direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
     individual = card.individual
 
@@ -149,6 +156,26 @@ def direction_data(request):
 
     iss_index = random.randrange(len(iss))
 
+    signed_documents = []
+
+    if direction.eds_total_signed:
+        last_time_confirm = direction.last_time_confirm()
+        for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
+            document = {
+                'type': d.file_type.upper(),
+                'content': base64.b64encode(d.file.read()).decode('utf-8'),
+                'signatures': [],
+            }
+
+            for s in DocumentSign.objects.filter(document=d):
+                document['signatures'].append({
+                    "content": s.sign_value.replace('\n', ''),
+                    "type": s.sign_type,
+                    "executor": s.executor.uploading_data,
+                })
+
+            signed_documents.append(document)
+
     return Response(
         {
             "ok": True,
@@ -160,6 +187,7 @@ def direction_data(request):
                 "name": individual.name,
                 "patronymic": individual.patronymic,
                 "birthday": individual.birthday,
+                "docs": card.get_n3_documents(),
                 "sex": individual.sex,
                 "card": {
                     "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
@@ -184,8 +212,12 @@ def direction_data(request):
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
             "hospitalN3Id": direction.hospital_n3id,
+            "signed": direction.eds_total_signed,
+            "totalSignedAt": direction.eds_total_signed_at,
+            "signedDocuments": signed_documents,
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
+            "hasN3IemkUploading": direction.n3_iemk_ok,
         }
     )
 
@@ -250,16 +282,7 @@ def issledovaniye_data(request):
     doctor_data = {}
 
     if i.doc_confirmation:
-        doctor_data = {
-            "pk": i.doc_confirmation_id,
-            "snils": i.doc_confirmation.snils,
-            "n3Id": i.doc_confirmation.n3_id,
-            "spec": i.doc_confirmation.specialities.n3_id if i.doc_confirmation.specialities else None,
-            "role": i.doc_confirmation.position.n3_id if i.doc_confirmation.position else None,
-            "family": i.doc_confirmation.family,
-            "name": i.doc_confirmation.name,
-            "patronymic": i.doc_confirmation.patronymic,
-        }
+        doctor_data = i.doc_confirmation.uploading_data
 
     return Response(
         {
@@ -275,6 +298,31 @@ def issledovaniye_data(request):
             "results": results_data,
             "code": i.research.code,
             "comments": i.lab_comment,
+        }
+    )
+
+
+@api_view()
+def issledovaniye_data_simple(request):
+    pk = request.GET.get("pk")
+    i = directions.Issledovaniya.objects.get(pk=pk)
+
+    doctor_data = {}
+
+    if i.doc_confirmation:
+        doctor_data = i.doc_confirmation.uploading_data
+
+    return Response(
+        {
+            "ok": True,
+            "pk": pk,
+            "date": i.time_confirmation_local,
+            "docConfirm": i.doc_confirmation_fio,
+            "doctorData": doctor_data,
+            "outcome": (i.outcome_illness.n3_id if i.outcome_illness else None) or '3',
+            "visitPlace": (i.place.n3_id if i.place else None) or '1',
+            "visitPurpose": (i.purpose.n3_id if i.purpose else None) or '2',
+            "typeFlags": i.research.get_flag_types_n3(),
         }
     )
 
@@ -373,6 +421,9 @@ def make_log(request):
     pks_to_set_odli_id = [x for x in keys if x] if t in (60007,) else []
     pks_to_set_odli_id_fail = [x for x in keys if x] if t in (60008,) else []
 
+    pks_to_set_iemk = [x for x in keys if x] if t in (60009, 60011) else []
+    pks_to_set_iemk_fail = [x for x in keys if x] if t in (60010,) else []
+
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
@@ -393,6 +444,16 @@ def make_log(request):
                 d = directions.Napravleniya.objects.get(pk=k)
                 d.n3_odli_id = body[str(k)]['id']
                 d.save(update_fields=['n3_odli_id'])
+
+        for k in pks_to_set_iemk_fail:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_iemk:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+            d = directions.Napravleniya.objects.get(pk=k)
+            d.n3_iemk_ok = True
+            d.save(update_fields=['n3_iemk_ok'])
 
     return Response({"ok": True})
 
@@ -438,18 +499,31 @@ def crie_status(request):
 
 @api_view(['POST'])
 def check_enp(request):
-    enp, family, name, patronymic, bd, enp_mode = data_parse(
+    enp, family, name, patronymic, bd, enp_mode, snils = data_parse(
         request.body,
-        {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str},
-        {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None},
+        {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str, 'snils': str},
+        {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None, 'ud': None, 'snils': None},
     )
+    if not enp:
+        enp = ""
     enp = enp.replace(' ', '')
 
     logger.exception(f'enp_mode: {enp_mode}')
 
     if enp_mode == 'l2-enp':
         tfoms_data = match_enp(enp)
-
+        if tfoms_data:
+            return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'l2-enp-ud':
+        tfoms_data = get_ud_info_by_enp(enp)
+        if tfoms_data:
+            return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'l2-enp-dn':
+        tfoms_data = get_dn_info_by_enp(enp)
+        if tfoms_data:
+            return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'l2-snils':
+        tfoms_data = match_patient_by_snils(snils)
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
     elif enp_mode == 'l2-enp-full':
@@ -1138,6 +1212,24 @@ def eds_get_user_data(request):
     )
 
 
+def get_cda_data(pk):
+    n: Napravleniya = Napravleniya.objects.get(pk=pk)
+    card = n.client
+    ind = n.client.individual
+
+    return {
+        "title": n.get_eds_title(),
+        "patient": {
+            'pk': card.number,
+            'family': ind.family,
+            'name': ind.name,
+            'patronymic': ind.patronymic,
+            'gender': ind.sex.lower(),
+            'birthdate': ind.birthday.strftime("%Y%m%d"),
+        },
+    }
+
+
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
@@ -1152,24 +1244,7 @@ def eds_get_cda_data(request):
 
     pk = body.get("pk")
 
-    n = Napravleniya.objects.get(pk=pk)
-    i: directions.Issledovaniya = n.issledovaniya_set.all()[0]
-    card = n.client
-    ind = n.client.individual
-
-    return Response(
-        {
-            "title": i.research.title,
-            "patient": {
-                'pk': card.number,
-                'family': ind.family,
-                'name': ind.name,
-                'patronymic': ind.patronymic,
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
-            },
-        }
-    )
+    return Response(get_cda_data(pk))
 
 
 @api_view(['POST'])

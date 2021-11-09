@@ -1,10 +1,16 @@
+import base64
 import calendar
+import collections
+import logging
+
+from cda.integration import get_required_signatures
 import datetime
+import os
 import re
 import time
 import unicodedata
 from datetime import date
-from typing import Optional, Union
+from typing import List, Optional, Union
 from django.contrib.postgres.fields.array import ArrayField
 
 import simplejson as json
@@ -15,6 +21,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
+from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
 import cases.models as cases
@@ -29,6 +36,9 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes,
 
 
 from appconf.manager import SettingManager
+
+
+logger = logging.getLogger(__name__)
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -284,6 +294,7 @@ class Diagnoses(models.Model):
     m_type = models.IntegerField(choices=M, db_index=True)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     nsi_id = models.CharField(max_length=128, blank=True, default=None, null=True)
+    hide = models.BooleanField(default=False, blank=True, db_index=True)
 
     def __str__(self):
         return "{} {}".format(self.code, self.title)
@@ -433,6 +444,81 @@ class Napravleniya(models.Model):
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
     n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
+    n3_iemk_ok = models.BooleanField(default=False, blank=True, null=True)
+    eds_required_documents = ArrayField(models.CharField(max_length=3), verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True)
+    eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
+    eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
+    eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
+
+    def get_eds_title(self):
+        iss = Issledovaniya.objects.filter(napravleniye=self)
+
+        for i in iss:
+            research: directory.Researches = i.research
+            if research.desc:
+                return research.title
+
+        return 'Лабораторное исследование'
+
+    def required_signatures(self, fast=False, need_save=False):
+        if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):
+            return {
+                "docTypes": self.eds_required_documents,
+                "signsRequired": self.eds_required_signature_types,
+            }
+
+        data = get_required_signatures(self.get_eds_title())
+
+        result = {
+            "docTypes": ['PDF', 'CDA'] if data.get('needCda') else ['PDF'],
+            "signsRequired": data.get('signsRequired') or ['Врач', 'Медицинская организация'],
+        }
+
+        if need_save:
+            updated = []
+            if any([x not in self.eds_required_documents for x in result['docTypes']]) or len(self.eds_required_documents) != len(result['docTypes']):
+                self.eds_required_documents = result['docTypes']
+                updated.append('eds_required_documents')
+
+            if any([x not in self.eds_required_signature_types for x in result['signsRequired']]) or len(self.eds_required_signature_types) != len(result['signsRequired']):
+                self.eds_required_signature_types = result['signsRequired']
+                updated.append('eds_required_signature_types')
+
+            if updated:
+                self.save(update_fields=updated)
+
+        return result
+
+    def get_eds_total_signed(self, forced=False):
+        if self.eds_total_signed and not forced:
+            return True
+        rs = self.required_signatures(fast=True, need_save=True)
+
+        status = len(rs['docTypes']) > 0 and len(rs['signsRequired']) > 0
+
+        for r in rs['docTypes']:
+            dd: DirectionDocument = DirectionDocument.objects.filter(direction=self, is_archive=False, last_confirmed_at=self.last_time_confirm(), file_type=r.lower()).first()
+
+            has_signatures = []
+            empty_signatures = rs['signsRequired']
+            if dd:
+                for s in DocumentSign.objects.filter(document=dd):
+                    has_signatures.append(s.sign_type)
+
+                    empty_signatures = [x for x in empty_signatures if x != s.sign_type]
+            if len(empty_signatures) != 0:
+                status = False
+                break
+
+        if status != self.eds_total_signed:
+            self.eds_total_signed = status
+            if status:
+                self.eds_total_signed_at = timezone.now()
+            else:
+                self.eds_total_signed_at = None
+            self.save(update_fields=['eds_total_signed', 'eds_total_signed_at'])
+
+        return status
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
@@ -545,6 +631,17 @@ class Napravleniya(models.Model):
             r.append({"pk": i.research_id, "title": i.research.title, "text": i.research.instructions})
         return r
 
+    def get_executors(self):
+        executors = {}
+
+        i: Issledovaniya
+        for i in self.issledovaniya_set.all():
+            if i.doc_confirmation_id not in executors:
+                executors[i.doc_confirmation_id] = i.doc_confirmation_fio
+            if i.executor_confirmation:
+                executors[i.executor_confirmation_id] = i.executor_confirmation.get_fio()
+        return executors
+
     @property
     def fin_title(self):
         return self.istochnik_f.title if self.istochnik_f else ''
@@ -562,6 +659,197 @@ class Napravleniya(models.Model):
             c = True
         if c:
             self.save()
+
+    def fill_acsn(self):
+        if not SettingManager.l2('fill_acsn'):
+            return
+        iss: Issledovaniya
+        card = self.client
+        individual = card.individual
+
+        print('fill_acsn', str(self))  # noqa: T001
+
+        for iss in self.issledovaniya_set.filter(acsn_id__isnull=True):
+            if iss.research.is_paraclinic and iss.research.podrazdeleniye and iss.research.podrazdeleniye.can_has_pacs and iss.research.nsi_id:
+                has_acsn = False
+                data_to_log = {}
+                try:
+                    add_task_resp = add_task_request(
+                        self.hospital_n3id,
+                        {
+                            **card.get_data_individual(full_empty=True, only_json_serializable=True),
+                            "family": individual.family,
+                            "name": individual.name,
+                            "patronymic": individual.patronymic,
+                            "birthday": individual.birthday.strftime("%Y-%m-%d"),
+                            "docs": card.get_n3_documents(),
+                            "sex": individual.sex,
+                            "card": {
+                                "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
+                                "pk": card.pk,
+                                "number": card.number,
+                                "n3Id": card.n3_id,
+                                "numberWithType": card.number_with_type(),
+                            },
+                        },
+                        self.pk,
+                        self.istochnik_f.get_n3_code() if self.istochnik_f else '6',
+                        iss.research.nsi_id,
+                        self.diagnos,
+                        self.doc.uploading_data
+                    )
+
+                    acsn = None
+                    n3_odii_task = None
+                    n3_odii_service_request = None
+                    n3_odii_patient = None
+
+                    for entry in add_task_resp.get('entry', []):
+                        t = entry.get('resource', {}).get('resourceType')
+                        u = entry.get('fullUrl')
+                        if not u:
+                            continue
+                        if '/' in u:
+                            u = u.split('/')[1]
+                        else:
+                            u = u.split(':')[2]
+                        if t == 'Task':
+                            n3_odii_task = u
+                            for idt in entry['resource'].get('identifier', []):
+                                for cd in idt.get('type', {}).get('coding', []):
+                                    if cd.get('code') == 'ACSN':
+                                        acsn = idt.get('value')
+                                        break
+                                if acsn:
+                                    break
+                        elif t == 'ServiceRequest':
+                            n3_odii_service_request = u
+                        elif t == 'Patient':
+                            n3_odii_patient = u
+
+                    data_to_log = {
+                        'acsn': acsn,
+                        'n3_odii_task': n3_odii_task,
+                        'n3_odii_service_request': n3_odii_service_request,
+                        'n3_odii_patient': n3_odii_patient,
+                    }
+
+                    if acsn and n3_odii_task and n3_odii_service_request and n3_odii_patient:
+                        iss.acsn_id = str(acsn)
+                        iss.n3_odii_task = str(n3_odii_task)
+                        iss.n3_odii_service_request = str(n3_odii_service_request)
+                        iss.n3_odii_patient = str(n3_odii_patient)
+                        iss.save(update_fields=['acsn_id', 'n3_odii_task', 'n3_odii_service_request', 'n3_odii_patient'])
+                        has_acsn = True
+                    else:
+                        logger.error(add_task_resp)
+
+                    logger.error(f"ACSN REQUEST: {data_to_log}")
+                except Exception as e:
+                    logger.error(e)
+
+                if has_acsn:
+                    slog.Log.log(key=self.pk, type=60016, body=data_to_log)
+                else:
+                    slog.Log.log(key=self.pk, type=60017, body=data_to_log)
+
+    def send_task_result(self):
+        if not SettingManager.l2('fill_acsn'):
+            return
+        pdf_content = None
+
+        if self.is_all_confirm():
+            from results.views import result_print
+            request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+            req = {
+                'GET': {
+                    "pk": f'[{self.pk}]',
+                    "split": '1',
+                    "leftnone": '0',
+                    "inline": '1',
+                    "protocol_plain_text": '1',
+                },
+                'user': self.doc.user,
+                'plain_response': True,
+            }
+            pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+
+        print('send_task_result', str(self))  # noqa: T001
+
+        iss: Issledovaniya
+        for iss in self.issledovaniya_set.filter(acsn_id__isnull=False):
+            if not iss.research.is_paraclinic:
+                print(str(iss), '!is_paraclinic')  # noqa: T001
+                continue
+            if not iss.research.podrazdeleniye:
+                print(str(iss), '!iss.research.podrazdeleniye')  # noqa: T001
+                continue
+            if not iss.research.podrazdeleniye.can_has_pacs:
+                print(str(iss), '!iss.research.podrazdeleniye.can_has_pacs')  # noqa: T001
+                continue
+            if not iss.research.nsi_id:
+                print(str(iss), '!iss.research.nsi_id')  # noqa: T001
+                continue
+
+            has_image = bool(iss.study_instance_uid_tag)
+            has_protocol = bool(pdf_content)
+
+            if not has_image and not has_protocol:
+                print(str(iss), '{has_image=} {has_protocol=}')  # noqa: T001
+                continue
+
+            try:
+                add_task_result_resp = add_task_result(
+                    self.hospital_n3id,
+                    iss.n3_odii_patient,
+                    iss.n3_odii_task,
+                    iss.n3_odii_service_request,
+                    iss.study_instance_uid_tag,
+                    iss.acsn_id,
+                    self.pk,
+                    iss.research.nsi_id,
+                    iss.research.odii_type or ('' if not iss.research.podrazdeleniye else iss.research.podrazdeleniye.odii_type),
+                    iss.doc_confirmation.uploading_data if iss.doc_confirmation else self.doc.uploading_data,
+                    iss.time_confirmation_local.isoformat() if iss.time_confirmation else timezone.now().isoformat(),
+                    pdf_content
+                )
+
+                task_resp = None
+
+                for entry in add_task_result_resp.get('entry', []):
+                    t = entry.get('resource', {}).get('resourceType')
+                    u = entry.get('fullUrl')
+                    if not u:
+                        continue
+                    if '/' in u:
+                        u = u.split('/')[1]
+                    else:
+                        u = u.split(':')[2]
+                    if t == 'Task' and entry.get('response', {}).get('location'):
+                        task_resp = entry.get('response', {}).get('location').split('/')[1]
+                t = None
+                if task_resp:
+                    print('send_task_result: OK')  # noqa: T001
+                    iss.n3_odii_uploaded_task_id = task_resp
+                    iss.save(update_fields=['n3_odii_uploaded_task_id'])
+                    if has_image and has_protocol:
+                        t = 60012
+                    elif has_image:
+                        t = 60014
+                    elif has_protocol:
+                        t = 60018
+                else:
+                    print(add_task_result_resp)  # noqa: T001
+                    if has_image and has_protocol:
+                        t = 60013
+                    elif has_image:
+                        t = 60015
+                    elif has_protocol:
+                        t = 60019
+                    print('send_task_result: FAIL')  # noqa: T001
+                slog.Log.log(key=self.pk, type=t, body=add_task_result_resp)
+            except Exception as e:
+                logger.error(e)
 
     @staticmethod
     def gen_napravleniye(
@@ -1158,6 +1446,14 @@ class Napravleniya(models.Model):
         """
         return all([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
+    def last_time_confirm(self):
+        return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
+
+    def last_doc_confirm(self):
+        iss = Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').first()
+
+        return str(iss.doc_confirmation) if iss else None
+
     def is_has_deff(self):
         """
         Есть ли отложенные исследования
@@ -1250,6 +1546,50 @@ class Napravleniya(models.Model):
         verbose_name_plural = 'Направления'
 
 
+def get_direction_file_path(instance: 'DirectionDocument', filename):
+    return os.path.join('directions', str(instance.direction.get_hospital_tfoms_id()), str(instance.direction.pk), filename)
+
+
+class DirectionDocument(models.Model):
+    PDF = 'pdf'
+    CDA = 'cda'
+    FILE_TYPES = (
+        (PDF, PDF),
+        (CDA, CDA),
+    )
+
+    direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направление")
+    file_type = models.CharField(max_length=3, db_index=True, verbose_name="Тип файла")
+    file = models.FileField(upload_to=get_direction_file_path, blank=True, null=True, default=None, verbose_name="Файл документа")
+    is_archive = models.BooleanField(db_index=True, verbose_name="Архивный документ", blank=True, default=False)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
+    last_confirmed_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата и время подтверждения протокола')
+
+    def __str__(self) -> str:
+        return f"{self.direction} — {self.file_type} – {self.last_confirmed_at}"
+
+    class Meta:
+        unique_together = ('direction', 'file_type', 'last_confirmed_at')
+        verbose_name = 'Документ направления'
+        verbose_name_plural = 'Документы направлений'
+
+
+class DocumentSign(models.Model):
+    document = models.ForeignKey(DirectionDocument, on_delete=models.CASCADE, db_index=True, verbose_name="Документ")
+    executor = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Исполнитель подписи', on_delete=models.CASCADE)
+    signed_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время подписи")
+    sign_type = models.CharField(max_length=32, db_index=True, verbose_name='Тип подписи')
+    sign_value = models.TextField(verbose_name="Значение подписи")
+
+    def __str__(self) -> str:
+        return f"{self.document} — {self.sign_type} – {self.executor}"
+
+    class Meta:
+        unique_together = ('document', 'executor', 'sign_type')
+        verbose_name = 'Подпись документа направления'
+        verbose_name_plural = 'Подписи документов направлений'
+
+
 class PersonContract(models.Model):
     """
     Каждый раз при генерации нового контракта для физлица создается просто запись
@@ -1293,10 +1633,13 @@ class Issledovaniya(models.Model):
     )
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения результата')
     doc_confirmation = models.ForeignKey(
-        DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL
+        DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль автора результата', on_delete=models.SET_NULL
     )
     doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+    executor_confirmation = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, related_name="executor_confirmation", db_index=True, help_text='Профиль оператора, заполнившего результат', on_delete=models.SET_NULL
+    )
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
     comment = models.CharField(max_length=255, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
@@ -1332,7 +1675,13 @@ class Issledovaniya(models.Model):
     localization = models.ForeignKey(directory.Localization, blank=True, null=True, default=None, help_text="Локализация", on_delete=models.SET_NULL)
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None, help_text="Место оказания услуги", on_delete=models.SET_NULL)
     link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
-    study_instance_uid = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="uuid снимка")
+    study_instance_uid = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="uuid снимка - экземпляр")
+    study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag")
+    acsn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ уникальный идентификатор заявки")
+    n3_odii_task = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task заявки")
+    n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")
+    n3_odii_patient = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор пациента заявки")
+    n3_odii_uploaded_task_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task результата")
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )
@@ -1366,6 +1715,18 @@ class Issledovaniya(models.Model):
             return self.doc_confirmation_string
         if self.doc_confirmation:
             return self.doc_confirmation.get_fio()
+        return ''
+
+    @property
+    def doc_confirmation_full_fio(self):
+        if self.doc_confirmation:
+            return self.doc_confirmation.get_fio()
+        return ''
+
+    @property
+    def doc_position(self):
+        if self.doc_confirmation:
+            return self.doc_confirmation.position.title
         return ''
 
     def gen_after_confirm(self, user: User):
@@ -1449,11 +1810,16 @@ class Issledovaniya(models.Model):
             return "Сброс подтверждения выписки" in groups
         if forbidden_edit_dir(self.napravleniye_id):
             return False
+        if self.napravleniye and self.napravleniye.eds_total_signed:
+            return "Сброс подтверждений результатов" in groups
         ctp = int(0 if not self.time_confirmation else int(time.mktime(timezone.localtime(self.time_confirmation).timetuple())))
         ctime = int(time.time())
         current_doc_confirmation = self.doc_confirmation
+        executor_confirmation = self.executor_confirmation
         rt = SettingManager.get("lab_reset_confirm_time_min") * 60
-        return (ctime - ctp < rt and current_doc_confirmation == user.doctorprofile) or "Сброс подтверждений результатов" in groups
+        return (
+            ctime - ctp < rt and (current_doc_confirmation == user.doctorprofile or (executor_confirmation is not None and executor_confirmation == user.doctorprofile))
+        ) or "Сброс подтверждений результатов" in groups
 
     class Meta:
         verbose_name = 'Назначение на исследование'
@@ -1690,22 +2056,65 @@ class ParaclinicResult(models.Model):
     def get_field_type(self):
         return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
 
+    class JsonParser:
+        PARSERS = {
+            29: 'address',
+            28: 'code_title',
+            32: 'code_title',
+            33: 'code_title',
+            34: 'code_title',
+            35: 'doctorprofile',
+        }
+
+        @staticmethod
+        def get_value_as_json(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            result = field.value_json
+            if not result:
+                try:
+                    return json.loads(field.value)
+                except:
+                    pass
+            return result
+
+        @staticmethod
+        def get_value_json_field(field: Union['ParaclinicResult', 'DirectionParamsResult'], prop: str, cached_json_value=None):
+            json_result = cached_json_value or ParaclinicResult.JsonParser.get_value_as_json(field)
+            if json_result and isinstance(json_result, dict):
+                return json_result.get(prop) or ''
+
+            return ''
+
+        @staticmethod
+        def get_value_json_fields(field: Union['ParaclinicResult', 'DirectionParamsResult'], props: List[str]):
+            json_result = ParaclinicResult.JsonParser.get_value_as_json(field)
+            return [ParaclinicResult.JsonParser.get_value_json_field(field, prop, cached_json_value=json_result) for prop in props]
+
+        @staticmethod
+        def from_json_to_string_value(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            t = field.get_field_type()
+
+            if t in ParaclinicResult.JsonParser.PARSERS:
+                func = f"{ParaclinicResult.JsonParser.PARSERS[t]}_parser"
+                if hasattr(ParaclinicResult.JsonParser, func):
+                    return getattr(ParaclinicResult.JsonParser, func)(field)
+
+            return field.value
+
+        @staticmethod
+        def address_parser(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            return ParaclinicResult.JsonParser.get_value_json_field(field, 'address')
+
+        @staticmethod
+        def code_title_parser(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            return ' – '.join(ParaclinicResult.JsonParser.get_value_json_fields(field, ('code', 'title')))
+
+        @staticmethod
+        def doctorprofile_parser(field: Union['ParaclinicResult', 'DirectionParamsResult']):
+            return ParaclinicResult.JsonParser.get_value_json_field(field, 'fio')
+
     @property
     def string_value(self):
-        result = self.value
-        if self.get_field_type() == 28:
-            try:
-                data = json.loads(result)
-                result = f"{data['code']} – {data['title']}"
-            except:
-                pass
-        if self.get_field_type() == 29:
-            try:
-                data = json.loads(result)
-                result = data['address']
-            except:
-                pass
-        return result
+        return ParaclinicResult.JsonParser.from_json_to_string_value(self)
 
     @staticmethod
     def anesthesia_value_get(iss_pk=-1, field_pk=-1):
@@ -1789,20 +2198,7 @@ class DirectionParamsResult(models.Model):
 
     @property
     def string_value(self):
-        result = self.value
-        if self.get_field_type() == 28:
-            try:
-                data = json.loads(result)
-                result = f"{data['code']} – {data['title']}"
-            except:
-                pass
-        if self.get_field_type() == 29:
-            try:
-                data = json.loads(result)
-                result = data['address']
-            except:
-                pass
-        return result
+        return ParaclinicResult.JsonParser.from_json_to_string_value(self)
 
     @property
     def string_value_normalized(self):
@@ -2259,9 +2655,7 @@ class DirectionsHistory(models.Model):
 class NumberGenerator(models.Model):
     DEATH_FORM_NUMBER = 'deathFormNumber'
 
-    KEYS = (
-        (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
-    )
+    KEYS = ((DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),)
 
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
     key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')

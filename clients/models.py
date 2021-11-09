@@ -5,6 +5,7 @@ import sys
 from datetime import date, datetime
 from typing import List, Union, Dict, Optional
 import logging
+import re
 
 import simplejson
 from dateutil.relativedelta import relativedelta
@@ -726,6 +727,17 @@ class DocumentType(models.Model):
     def __str__(self):
         return "{} | {} | ^{}".format(self.pk, self.title, self.check_priority)
 
+    @property
+    def n3_type(self):
+        title = self.title.lower().strip()
+        if 'снилс' in title:
+            return 'snils'
+        if 'паспорт гражданина рф' in title:
+            return 'passport'
+        if 'полис омс' in title:
+            return 'enp'
+        return None
+
     class Meta:
         verbose_name = 'Вид документа'
         verbose_name_plural = 'Виды документов'
@@ -941,6 +953,7 @@ class Card(models.Model):
     phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
 
+    medbook_prefix = models.CharField(max_length=3, blank=True, default='', db_index=True, help_text="Префикс номера мед.книжки")
     medbook_number = models.CharField(max_length=16, blank=True, default='', db_index=True, help_text="Номер мед.книжки")
     medbook_type = models.CharField(max_length=6, choices=MEDBOOK_TYPES, blank=True, default=MEDBOOK_TYPES[0][0], help_text="Тип номера мед.книжки")
 
@@ -990,21 +1003,57 @@ class Card(models.Model):
             for p in Phones.objects.filter(card=self, number=t):
                 p.normalize_number()
 
-    def get_card_documents(self):
+    def get_card_documents(self, as_model=False):
         types = [t.pk for t in DocumentType.objects.all()]
         docs = {}
         for t in types:
             CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=False).delete()
             if CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=True).exists():
-                docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document_id
+                docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document
             elif Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).exists():
                 d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by('-id')[0]
                 c = CardDocUsage(card=self, document=d)
                 c.save()
-                docs[t] = d.pk
+                docs[t] = d
             else:
                 docs[t] = None
+
+            if docs[t] and not as_model:
+                docs[t] = docs[t].pk
         return docs
+
+    def get_n3_documents(self):
+        docs = self.get_card_documents(as_model=True)
+
+        result = []
+
+        for t in DocumentType.objects.all():
+            n3_t = t.n3_type
+
+            if not n3_t or not docs.get(t.pk):
+                continue
+
+            doc: Document = docs[t.pk]
+            d = {
+                'number': doc.number,
+                'series': doc.serial,
+                'type': n3_t,
+                'issuer': doc.who_give,
+                'issuerId': '',
+                'start': doc.date_start.strftime('%Y-%m-%d') if doc.date_start else None,
+                'end': doc.date_end.strftime('%Y-%m-%d') if doc.date_end else None,
+            }
+
+            if n3_t == 'enp':
+                ns = re.findall(r'\d{6}', d['issuer'])
+                if ns:
+                    d['issuerId'] = ns[0]
+                else:
+                    d['issuerId'] = '38014'
+
+            result.append(d)
+
+        return result
 
     def get_data_individual(self, empty=False, full_empty=False, only_json_serializable=False):
         if not empty and full_empty:

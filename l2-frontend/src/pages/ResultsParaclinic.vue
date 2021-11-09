@@ -66,6 +66,7 @@
               </div>
               <div class="col-xs-4 text-right">
                 <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
+                <a href="#" @click.prevent="print_example(direction.pk)" v-else>Образец</a>
               </div>
             </div>
           </div>
@@ -385,6 +386,15 @@
                 <template v-if="!row.confirmed">
                   <button
                     class="btn btn-blue-nb"
+                    @click="print_example(data.direction.pk)"
+                    v-if="!row.confirmed"
+                    title="Печать образца"
+                    v-tippy
+                  >
+                    Образец
+                  </button>
+                  <button
+                    class="btn btn-blue-nb"
                     @click="save(row)"
                     v-if="!row.confirmed"
                     title="Сохранить без подтверждения"
@@ -694,15 +704,73 @@
               </div>
             </div>
           </div>
+          <div class="group" v-if="!row.confirmed && can_confirm_by_other_user">
+            <div class="fields">
+              <div class="field">
+                <label class="field-title">
+                  Подтверждение от имени
+                </label>
+                <div class="field-value">
+                  <Treeselect
+                    :multiple="false"
+                    :disable-branch-nodes="true"
+                    class="treeselect-wide"
+                    :options="workFromUsers"
+                    :append-to-body="true"
+                    :clearable="true"
+                    v-model="row.work_by"
+                    :zIndex="5001"
+                    placeholder="Не выбрано"
+                  />
+
+                  <div v-if="workFromHistoryList.length > 0" style="margin-top: 5px;">
+                    <div v-for="p in workFromHistoryList" :key="p.id">
+                      <a href="#" @click.prevent="row.work_by = p.id" class="a-under-reversed" title="Выбрать из истории" v-tippy>
+                        <i class="fas fa-history"></i> {{ p.label }} — {{ p.podr }}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.whoSaved || row.whoConfirmed || row.whoExecuted">
+            <div class="fields">
+              <div class="field" v-if="row.whoSaved">
+                <label class="field-title">
+                  Сохранено
+                </label>
+                <div class="field-value simple-value">
+                  {{ row.whoSaved }}
+                </div>
+              </div>
+              <div class="field" v-if="row.whoConfirmed">
+                <label class="field-title">
+                  Подтверждено
+                </label>
+                <div class="field-value simple-value">
+                  {{ row.whoConfirmed }}
+                </div>
+              </div>
+              <div class="field" v-if="row.whoExecuted">
+                <label class="field-title">
+                  Оператор
+                </label>
+                <div class="field-value simple-value">
+                  {{ row.whoExecuted }}
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="control-row">
             <div class="res-title">{{ row.research.title }}:</div>
-            <iss-status :i="row" />
+            <IssStatus :i="row" />
             <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
             <button
               class="btn btn-blue-nb"
               @click="save_and_confirm(row)"
               v-if="!row.confirmed && can_confirm"
-              :disabled="!r(row)"
+              :disabled="!r(row) || needFillWorkBy(row)"
             >
               Сохранить и подтвердить
             </button>
@@ -733,10 +801,15 @@
                 Отправить в АМД
               </button>
             </template>
-            <EDSButton :key="`${data.direction.pk}_${row.confirmed}`" :iss-data="row" :direction-data="data" />
-            <div class="status-list" v-if="!r(row) && !row.confirmed">
+            <EDSDirection
+              :key="`${data.direction.pk}_${row.confirmed}`"
+              :direction-pk="data.direction.pk"
+              :all_confirmed="data.direction.all_confirmed"
+            />
+            <div class="status-list" v-if="(!r(row) || needFillWorkBy(row)) && !row.confirmed">
               <div class="status status-none">Не верно:</div>
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
+              <div class="status status-none" v-if="needFillWorkBy(row)">подтверждение от имени</div>
             </div>
           </div>
         </div>
@@ -916,12 +989,15 @@ import moment from 'moment';
 // @ts-ignore
 import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
 import { vField, vGroup } from '@/components/visibility-triggers';
 import { cleanCaches } from '@/utils';
 import { enter_field, leave_field } from '@/forms/utils';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
-import EDSButton from '@/ui-cards/EDSButton.vue';
+import EDSDirection from '@/ui-cards/EDSDirection.vue';
 import patientsPoint from '../api/patients-point';
 import * as actions from '../store/action-types';
 import directionsPoint from '../api/directions-point';
@@ -951,7 +1027,7 @@ import FastTemplates from '../forms/FastTemplates.vue';
 export default {
   name: 'results-paraclinic',
   components: {
-    EDSButton,
+    EDSDirection,
     FastTemplates,
     BacMicroForm,
     DescriptiveForm,
@@ -974,6 +1050,7 @@ export default {
     ResultsByYear,
     RmisLink,
     ScreeningButton,
+    Treeselect,
   },
   data() {
     return {
@@ -1032,6 +1109,8 @@ export default {
       },
       embedded: false,
       tableFieldsErrors: {},
+      workFromUsers: [],
+      workFromHistory: [],
     };
   },
   watch: {
@@ -1043,6 +1122,17 @@ export default {
         if (!this.location.init && rmis_location) {
           await this.load_location();
           this.location.init = true;
+        }
+      },
+      immediate: true,
+    },
+    can_confirm_by_other_user: {
+      async handler() {
+        if (this.can_confirm_by_other_user && this.workFromUsers.length === 0) {
+          const { users } = await usersPoint.loadUsersByGroup({
+            group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
+          });
+          this.workFromUsers = users;
         }
       },
       immediate: true,
@@ -1118,6 +1208,18 @@ export default {
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
     window.$(window).on('beforeunload', this.unload);
+
+    try {
+      if (localStorage.getItem('results-paraclinic:work-from-history')) {
+        const savedWorkedFrom = JSON.parse(localStorage.getItem('results-paraclinic:work-from-history'));
+
+        if (Array.isArray(savedWorkedFrom)) {
+          this.workFromHistory = savedWorkedFrom;
+        }
+      }
+    } catch (e) {
+      console.log(e);
+    }
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
@@ -1330,6 +1432,9 @@ export default {
             this.benefit_rows = [];
             this.pk = '';
             this.data = data;
+            if (!data?.patient?.has_snils) {
+              this.$root.$emit('msg', 'error', 'У пациента не заполнен СНИЛС!');
+            }
             this.sidebarIsOpened = false;
             this.hasEDSigns = false;
             this.hasPreselectOk = false;
@@ -1404,6 +1509,14 @@ export default {
             this.$root.$emit('msg', 'ok', 'Сохранено');
             // eslint-disable-next-line no-param-reassign
             iss.saved = true;
+            if (data.execData) {
+              // eslint-disable-next-line no-param-reassign
+              iss.whoSaved = data.execData.whoSaved;
+              // eslint-disable-next-line no-param-reassign
+              iss.whoConfirmed = data.execData.whoConfirmed;
+              // eslint-disable-next-line no-param-reassign
+              iss.whoExecuted = data.execData.whoExecuted;
+            }
             this.data.direction.amd = data.amd;
             this.data.direction.amd_number = data.amd_number;
             this.reload_if_need();
@@ -1435,12 +1548,26 @@ export default {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
             this.$root.$emit('msg', 'ok', 'Подтверждено');
+
+            if (iss.work_by) {
+              this.workFromHistory = [iss.work_by, ...this.workFromHistory.filter(x => x !== iss.work_by).slice(0, 5)];
+            }
+            localStorage.setItem('results-paraclinic:work-from-history', JSON.stringify(this.workFromHistory));
+
             // eslint-disable-next-line no-param-reassign
             iss.saved = true;
             // eslint-disable-next-line no-param-reassign
             iss.allow_reset_confirm = true;
             // eslint-disable-next-line no-param-reassign
             iss.confirmed = true;
+            if (data.execData) {
+              // eslint-disable-next-line no-param-reassign
+              iss.whoSaved = data.execData.whoSaved;
+              // eslint-disable-next-line no-param-reassign
+              iss.whoConfirmed = data.execData.whoConfirmed;
+              // eslint-disable-next-line no-param-reassign
+              iss.whoExecuted = data.execData.whoExecuted;
+            }
             this.data.direction.amd = data.amd;
             this.data.direction.amd_number = data.amd_number;
             this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
@@ -1507,6 +1634,12 @@ export default {
         this.$root.$emit('msg', 'ok', 'Подтверждение сброшено');
         // eslint-disable-next-line no-param-reassign
         iss.confirmed = false;
+        // eslint-disable-next-line no-param-reassign
+        iss.whoConfirmed = null;
+        // eslint-disable-next-line no-param-reassign
+        iss.work_by = null;
+        // eslint-disable-next-line no-param-reassign
+        iss.whoExecuted = null;
         this.data.direction.amd = 'not_need';
         this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
         if (this.hasEDSigns) {
@@ -1554,6 +1687,9 @@ export default {
     },
     print_results(pk) {
       this.$root.$emit('print:results', [pk]);
+    },
+    print_example(pk) {
+      this.$root.$emit('print:example', [pk]);
     },
     copy_results(row, pk) {
       this.$store.dispatch(actions.INC_LOADING);
@@ -1755,6 +1891,12 @@ export default {
     leave_field(...args) {
       return leave_field.apply(this, args);
     },
+    needFillWorkBy(row) {
+      if (!this.can_confirm_by_other_user || row.confirmed) {
+        return false;
+      }
+      return !row.work_by;
+    },
   },
   computed: {
     userServicesFiltered() {
@@ -1858,6 +2000,14 @@ export default {
       }
       return false;
     },
+    can_confirm_by_other_user() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Работа от имени в описательных протоколах') {
+          return true;
+        }
+      }
+      return false;
+    },
     navState() {
       if (!this.data.ok) {
         return null;
@@ -1865,6 +2015,21 @@ export default {
       return {
         pk: this.data.direction.pk,
       };
+    },
+    workFromHistoryList() {
+      return this.workFromHistory
+        .map(p => {
+          for (const podr of this.workFromUsers) {
+            const profile = podr.children.find(x => x.id === p);
+
+            if (profile) {
+              return profile;
+            }
+          }
+
+          return null;
+        })
+        .filter(Boolean);
     },
   },
 };
@@ -2053,12 +2218,12 @@ export default {
 .research-left {
   position: relative;
   text-align: left;
-  width: calc(100% - 390px);
+  width: calc(100% - 430px);
 }
 
 .research-right {
   text-align: right;
-  width: 390px;
+  width: 430px;
   margin-top: -5px;
   margin-right: -5px;
   margin-bottom: -5px;

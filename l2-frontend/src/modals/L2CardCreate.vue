@@ -493,7 +493,8 @@
           </div>
           <div class="col-xs-6" style="padding-left: 0">
             <div class="form-row sm-f" style="height: 28px;">
-              <div class="input-group" style="flex: 1 100%;" v-if="card.medbookType === 'custom'">
+              <div class="input-group input-group-custom" v-if="card.medbookType === 'custom'">
+                <input type="text" class="form-control" maxlength="1" v-model.trim="card.medbookPrefix" placeholder="Префикс" />
                 <input
                   type="number"
                   class="form-control"
@@ -501,7 +502,7 @@
                   :max="medbook_auto_start - 1"
                   min="1"
                   v-model="card.medbookNumberCustom"
-                  :placeholder="`Введите номер книжки до ${medbook_auto_start}`"
+                  :placeholder="`Номер книжки до ${medbook_auto_start}`"
                 />
                 <span
                   class="input-group-btn"
@@ -815,6 +816,7 @@ export default {
         tfoms_idp: null,
         tfoms_enp: null,
         time_tfoms_last_sync: null,
+        medbookPrefix: '',
         medbookNumber: '',
         medbookNumberCustom: '',
         medbookNumberCustomOriginal: '',
@@ -1052,6 +1054,7 @@ export default {
           'phone',
           'number_poli',
           'harmful',
+          'medbookPrefix',
           'medbookNumber',
           'medbookType',
           'medbookNumberCustom',
@@ -1413,5 +1416,21 @@ export default {
 
 .button-f {
   flex: 1;
+}
+
+.input-group-custom {
+  flex: 1 100%;
+  display: flex;
+  flex-direction: row;
+
+  .form-control:first-child {
+    flex: 1 80px;
+    padding: 6px 8px;
+    border-right: 1px solid #434a54;
+  }
+
+  .form-control:last-child {
+    flex: 1 calc(100% - 80px);
+  }
 }
 </style>

@@ -400,7 +400,9 @@
                     <select v-model.number="row.field_type" class="form-control">
                       <option value="0">Строка</option>
                       <option value="1">Дата</option>
-                      <option value="2">Диагноз по МКБ</option>
+                      <option value="2">Диагноз по МКБ (1.2.643.5.1.13.13.11.1005)</option>
+                      <option value="32">МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)</option>
+                      <option value="33">МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)</option>
                       <option value="3">Расчётное</option>
                       <option value="10">Справочник</option>
                       <option value="11">Фракция</option>
@@ -426,6 +428,7 @@
                       <option value="31" v-if="tfoms_attachment_field_enabled">
                         Сведения о прикреплении застрахованного лица (ТФОМС)
                       </option>
+                      <option value="35">Врач</option>
                     </select>
                   </label>
                 </div>

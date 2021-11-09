@@ -318,3 +318,32 @@ export const getFormattedDate = (date: Date | void): string => {
   day = day.length > 1 ? day : `0${day}`;
   return `${day}.${month}.${year}`;
 };
+
+export const convertSubjectNameToCertObject = (subjectName: string): any => {
+  const result = {};
+  const parts = subjectName.split(/(, )?(\w+)=/);
+  const p = parts.slice(2).filter(s => s !== ', ');
+  for (let i = 0; i < p.length; i += 2) {
+    result[p[i]] = p[i + 1];
+  }
+
+  return result;
+};
+
+export const convertSubjectNameToTitle = (object: any, subjectName: string | null, name: string) => {
+  const obj = object || convertSubjectNameToCertObject(subjectName);
+
+  let result = `НЕТ СНИЛС ${name}`;
+  if (obj.CN) {
+    if (obj.T && obj.SN && obj.G) {
+      let CN = obj.CN.replace('"""', '""');
+
+      if (CN.length > 1 && CN[0] === '"' && CN[CN.length - 1] === '"') {
+        CN = CN.slice(1, -1);
+      }
+      CN = CN.replace('""', '"');
+      result = `${!obj.SNILS ? 'НЕТ СНИЛС ' : ''}${obj.SN} ${obj.G} — ${obj.T} — ${CN}`;
+    }
+  }
+  return result;
+};
