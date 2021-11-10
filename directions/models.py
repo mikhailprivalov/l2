@@ -759,20 +759,24 @@ class Napravleniya(models.Model):
         pdf_content = None
 
         if self.is_all_confirm():
-            from results.views import result_print
-            request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
-            req = {
-                'GET': {
-                    "pk": f'[{self.pk}]',
-                    "split": '1',
-                    "leftnone": '0',
-                    "inline": '1',
-                    "protocol_plain_text": '1',
-                },
-                'user': self.doc.user,
-                'plain_response': True,
-            }
-            pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+            try:
+                from results.views import result_print
+                request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+                req = {
+                    'GET': {
+                        "pk": f'[{self.pk}]',
+                        "split": '1',
+                        "leftnone": '0',
+                        "inline": '1',
+                        "protocol_plain_text": '1',
+                    },
+                    'user': self.doc.user,
+                    'plain_response': True,
+                }
+                pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+            except Exception as e:
+                logger.error(e)
+                return
 
         print('send_task_result', str(self))  # noqa: T001
 
