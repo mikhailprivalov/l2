@@ -776,7 +776,6 @@ class Napravleniya(models.Model):
                 pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
             except Exception as e:
                 logger.error(e)
-                return
 
         print('send_task_result', str(self))  # noqa: T001
 
