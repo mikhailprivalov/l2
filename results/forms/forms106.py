@@ -56,6 +56,7 @@ styleOrg.fontSize = 9
 styleMicro = deepcopy(styleT)
 styleMicro.fontSize = 5.5
 styleMicro.alignment = TA_CENTER
+styleMicro.leading = 2.1 * mm
 
 styleOrgCentre = deepcopy(styleOrg)
 styleOrgCentre.alignment = TA_CENTER
@@ -80,6 +81,8 @@ cl_bold_tag = '</font>'
 op_boxed_tag = '<font face="digit8" size=15.5>'
 cl_boxed_tag = '</font>'
 
+op_boxed_tagD = '<font face="digit8" size=22.5>'
+cl_boxed_tagD = '</font>'
 # op_boxed_tag = '<font face="digit88table" size=8>'
 # cl_boxed_tag = '</font>'
 
@@ -308,6 +311,28 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
     text = []
     text = back_size(text)
     text = why_death(text, fields, '11')
+
+    tbl = who_write_documet("12.", "Акушерка", "Иванова анна Ивановна")
+    text.append(Spacer(1, 4 * mm))
+    text.append(tbl)
+    tbl = who_writer_about_tbl()
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = who_get_document("13. Получатель", "Иванова анна Ивановна - мать")
+    text.append(Spacer(1, 4 * mm))
+    text.append(tbl)
+
+    tbl = who_get_about_tbl()
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = who_get_type_document("data")
+    text.append(Spacer(1, 1 * mm))
+    text.append(tbl)
+
+    text.append(Spacer(1, 1 * mm))
+    text.append(Paragraph("СНИЛС получателя (при наличии)_________", style))
     # text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fields["ФИО (получатель)"])
     # text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
     # text = destination_person_passport(text, f'{fields["Документ (получатель)"]} {fields["Серия (получатель)"]} {fields["Номер (получатель)"]} {fields["Кем и когда выдан (получатель)"]}')
@@ -323,6 +348,53 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
 
 def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text = []
+    text.append(Paragraph("23. Которым по счету ребенок был рожден у матери (считая умерших и не считая мертворожденных) ______", styleT))
+    text.append(Paragraph(
+        f"24. Смерть ребенка (рождение мертвым) произошла(о): от заболевания {op_boxed_tag}1{cl_boxed_tag} несчастного случая {op_boxed_tag}2{cl_boxed_tag}"
+        f"убийства {op_boxed_tag}3{cl_boxed_tag} в ходе действий: военных {op_boxed_tag}4{cl_boxed_tag} террористических {op_boxed_tag}5{cl_boxed_tag}"
+        f" род смерти не установлен {op_boxed_tag}6{cl_boxed_tag}",
+        styleT))
+    text.append(Paragraph(f"25.Лицо, принимавшее роды: врач {op_boxed_tag}1{cl_boxed_tag} фельдшер, акушерка {op_boxed_tag}2{cl_boxed_tag} другое {op_boxed_tag}3{cl_boxed_tag}", styleT))
+    text = why_death(text, fields, '26')
+    text.append(Paragraph(f"27. Причины смерти установлены: врачом, только удостоверившим смерть {op_boxed_tag}1{cl_boxed_tag} "
+                          f"врачом-акушером-гинекологом, принимавшим роды {op_boxed_tag}2{cl_boxed_tag} "
+                          f"врачом-неонатологом (или врачом-педиатром), лечившим ребенка {op_boxed_tag}3{cl_boxed_tag} "
+                          f"врачом-патологоанатомом {op_boxed_tag}4{cl_boxed_tag} "
+                          f"врачом - судебно-медицинским экспертом {op_boxed_tag}5{cl_boxed_tag} "
+                          f"фельдшером, акушеркой {op_boxed_tag}6{cl_boxed_tag}", styleT))
+    text.append(Spacer(1, 2 * mm))
+    text.append(Paragraph(f"28. На основании: осмотра трупа {op_boxed_tag}1{cl_boxed_tag} записей в медицинской документации {op_boxed_tag}2{cl_boxed_tag} "
+                          f"собственного предшествовавшего наблюдения {op_boxed_tag}3{cl_boxed_tag} вскрытия {op_boxed_tag}4{cl_boxed_tag}", styleT))
+
+    tbl = who_write_documet("29.", "Акушерка", "Иванова анна Ивановна")
+    text.append(Spacer(1, 8 * mm))
+    text.append(tbl)
+    tbl = who_writer_about_tbl()
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    text.append(Spacer(1, 2 * mm))
+    text.append(Paragraph("Руководитель медицинской организации, индивидуальный предприниматель, осуществляющий медицинскую деятельность (подчеркнуть)", styleT))
+    text.append(Spacer(1, 4 * mm))
+
+    tbl = manager_hospital_document("Иванова Анна Ивановна")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+    tbl = manager_hospital_about_tbl()
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    text.append(Spacer(1, 4 * mm))
+    text.append(Paragraph("30. Свидетельство проверено ответственным за правильность заполнения медицинских свидетельств.", styleT))
+
+    text.append(Spacer(1, 4 * mm))
+    tbl = who_check("20", "июля", "2021", "Иванова Анна Ивановна")
+    text.append(tbl)
+
+    tbl = who_check_about()
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
     # text = death_happaned(text, fields["Род причины смерти"])
     # date, month, year, hour, min = "____", "____", "_________", "____", "____"
     # unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
@@ -464,8 +536,8 @@ def back_size(text):
 
 
 def why_death(text, params, item_why):
-    tbl = title_table("Причины смерти:", "Коды по МКБ")
-    text.append(Spacer(1, 1.5 * mm))
+    tbl = title_table(item_why, "Причины смерти:", "Коды по МКБ")
+    text.append(Spacer(1, 5 * mm))
     text.append(tbl)
     text.append(Spacer(1, 2 * mm))
 
@@ -507,43 +579,149 @@ def why_death(text, params, item_why):
     return text
 
 
-def title_table(diag_data, diag_code):
+def who_write_documet(item, position_writer, fio):
     opinion = [
         [
+            Paragraph(f"{item}", styleT),
+            Paragraph(f"{position_writer}", styleT),
             Paragraph("", styleT),
-            Paragraph(f"{diag_data}", styleT),
-            Paragraph(f"{diag_code}", styleT),
+            Paragraph("", styleT),
+            Paragraph("", styleT),
+            Paragraph(f"{fio}", styleT),
         ],
     ]
-    col_width = (10 * mm, 150 * mm, 30 * mm)
+    col_width = (10 * mm, 70 * mm, 5 * mm, 40 * mm, 5 * mm, 70 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP',),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
-        ('LEFTPADDING', (2, 0), (2, 0), 8 * mm),
-        ('TOPPADDING', (1, 0), (1, 0), -1.2 * mm),
-        ('TOPPADDING', (-1, -1), (-1, -1), -1.5 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
     ]
 
     tbl = gen_table(opinion, col_width, tbl_style)
     return tbl
+
+
+def who_writer_about_tbl():
+    opinion = [
+        [
+            Paragraph(f"", styleMicro),
+            Paragraph("(должность врача (фельдшера, акушерки), заполнившего медицинское свидетельство о перинатальной смерти)", styleMicro),
+            Paragraph("", styleMicro),
+            Paragraph("(подпись)", styleMicro),
+            Paragraph("", styleMicro),
+            Paragraph("(фамилия, имя, отчество (при наличии)", styleMicro),
+        ],
+    ]
+    col_width = (10 * mm, 65 * mm, 5 * mm, 40 * mm, 5 * mm, 65 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('LINEABOVE', (1, 0), (1, 0), 0.75, colors.black),
+        ('LINEABOVE', (3, 0), (3, 0), 0.75, colors.black),
+        ('LINEABOVE', (5, 0), (5, 0), 0.75, colors.black),
+
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+
+def who_get_document(item, fio):
+    opinion = [
+        [
+            Paragraph(f"{item}", styleT),
+            Paragraph(f"{fio}", styleT),
+        ],
+    ]
+    col_width = (27 * mm, 163 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+
+def who_get_about_tbl():
+    opinion = [
+        [
+            Paragraph("", styleT),
+            Paragraph(f"(фамилия, имя, отчество (при наличии) и отношение к мертворожденному (умершему) ребенку", styleMicro),
+        ],
+    ]
+    col_width = (27 * mm, 163 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('LINEABOVE', (1, 0), (1, 0), 0.75, colors.black),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+
+def who_get_type_document(document_data):
+    opinion = [
+        [
+            Paragraph("Документ, удостоверяющий личность получателя (вид, серия, номер, кем выдан)", styleT),
+            Paragraph(f"{document_data}", styleMicro),
+        ],
+    ]
+    col_width = (126 * mm, 64 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 7 * mm),
+        ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+
+def title_table(item, diag_data, diag_code):
+    opinion = [
+        [
+            Paragraph(f"{item}", styleT),
+            Paragraph(f"{diag_data}", styleT),
+            Paragraph(f"{diag_code}", styleT),
+        ],
+    ]
+    col_width = (10 * mm, 157 * mm, 26 * mm)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -1.3 * mm),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
 
 def diagnos_tbl(item, diag_data, diag_code):
     opinion = [
         [
             Paragraph(f"{item}", styleT),
             Paragraph(f"{diag_data}", styleOrgBold),
-            Paragraph(f"{op_boxed_tag}Y14{cl_boxed_tag} . {op_boxed_tag}3{cl_boxed_tag}", styleDiag),
+            Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),
         ],
     ]
-    col_width = (10 * mm, 150 * mm, 30 * mm,)
+    col_width = (10 * mm, 154 * mm, 26 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
-        ('LEFTPADDING', (2, 0), (2, 0), 8 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('LEFTPADDING', (2, 0), (2, 0), 5 * mm),
         ('TOPPADDING', (1, 0), (1, 0), -1.2 * mm),
-        ('TOPPADDING', (-1, -1), (-1, -1), -1.5 * mm),
+        ('TOPPADDING', (-1, -1), (-1, -1), -4 * mm),
     ]
 
     tbl = gen_table(opinion, col_width, tbl_style, 4 * mm)
@@ -558,12 +736,11 @@ def about_diag_tbl(note_title):
             Paragraph('', styleOrg),
         ],
     ]
-    col_width = (10 * mm, 150 * mm, 30 * mm,)
+    col_width = (10 * mm, 154 * mm, 26 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
-        ('LEFTPADDING', (2, 0), (2, 0), 8 * mm),
         ('LINEABOVE', (1, 0), (1, 0), 0.75, colors.black),
 
     ]
@@ -571,6 +748,100 @@ def about_diag_tbl(note_title):
     tbl = gen_table(opinion, col_width, tbl_style)
     return tbl
 
+
+def manager_hospital_document(fio):
+    opinion = [
+        [
+            Paragraph("", styleT),
+            Paragraph("", styleT),
+            Paragraph("", styleT),
+            Paragraph("", styleT),
+            Paragraph(f"{fio}", styleT),
+        ],
+    ]
+    col_width = (65 * mm, 5 * mm, 40 * mm, 5 * mm, 65 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+
+def manager_hospital_about_tbl():
+    opinion = [
+        [
+            Paragraph("печать", styleMicro),
+            Paragraph("", styleMicro),
+            Paragraph("(подпись)", styleMicro),
+            Paragraph("", styleMicro),
+            Paragraph("(фамилия, имя, отчество (при наличии)", styleMicro),
+        ],
+    ]
+    col_width = (65 * mm, 5 * mm, 40 * mm, 5 * mm, 65 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('LINEABOVE', (0, 0), (0, 0), 0.75, colors.black),
+        ('LINEABOVE', (2, 0), (2, 0), 0.75, colors.black),
+        ('LINEABOVE', (4, 0), (4, 0), 0.75, colors.black),
+
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+
+def who_check(number, month, year, fio):
+    opinion = [
+        [
+            Paragraph(f"{number}", styleT),
+            Paragraph(f"{month}", styleT),
+            Paragraph(f"{year} г.", styleT),
+            Paragraph(f"", styleT),
+            Paragraph(f"{fio}", styleT),
+        ],
+    ]
+    col_width = (10 * mm, 15 * mm, 16 * mm, 20 * mm, 65 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
+
+
+def who_check_about():
+    opinion = [
+        [
+            Paragraph("", styleT),
+            Paragraph("", styleT),
+            Paragraph("", styleT),
+            Paragraph("", styleT),
+            Paragraph("", styleT),
+        ],
+    ]
+    col_width = (10 * mm, 15 * mm, 16 * mm, 20 * mm, 65 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
+        ('LINEABOVE', (0, 0), (0, 0), 0.75, colors.black),
+        ('LINEABOVE', (1, 0), (1, 0), 0.75, colors.black),
+        ('LINEABOVE', (2, 0), (2, 0), 0.75, colors.black),
+        ('LINEABOVE', (4, 0), (4, 0), 0.75, colors.black),
+    ]
+
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
 
 
 def bottom_colontitul(text, params):
