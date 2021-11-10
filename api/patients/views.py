@@ -735,15 +735,15 @@ def get_sex_by_param(request):
 def edit_doc(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
-    serial = request_data["serial"]
-    number = request_data["number"]
+    serial = request_data["serial"].strip()
+    number = request_data["number"].strip()
     type_o = DocumentType.objects.get(pk=request_data["type"])
     is_active = request_data["is_active"]
     date_start = request_data["date_start"]
     date_start = None if date_start == "" else date_start
     date_end = request_data["date_end"]
     date_end = None if date_end == "" else date_end
-    who_give = request_data["who_give"] or ""
+    who_give = (request_data["who_give"] or "").strip()
 
     if pk == -1:
         card = Card.objects.get(pk=request_data["card_pk"])
