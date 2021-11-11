@@ -4,7 +4,7 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
-def get_extra_notification_data_for_pdf(directions, extra_master_research_id, extra_slave_research_id):
+def get_extra_notification_data_for_pdf(directions, extra_master_research_id, extra_slave_research_id, with_confirm):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -57,14 +57,23 @@ def get_extra_notification_data_for_pdf(directions, extra_master_research_id, ex
                     ) as master_book_data
                 ON directions_napravleniya.parent_id=master_book_data.master_iss
                 WHERE directions_issledovaniya.napravleniye_id = any(ARRAY[%(num_dirs)s]) 
-                AND directions_issledovaniya.time_confirmation is not null 
+                AND
+                CASE 
+                  WHEN %(with_confirm)s = 1 THEN
+                    directions_issledovaniya.time_confirmation is not null
+                  WHEN  %(with_confirm)s < 1 THEN
+                    directions_issledovaniya.time_confirmation is null
+                END
                 AND directions_issledovaniya.research_id = %(slave_research_id)s and master_direction.master_research_id = %(master_research_id)s
                 ORDER BY master_dir, master_field_sort
         """,
-            params={'num_dirs': directions, 'master_research_id': extra_master_research_id, 'slave_research_id': extra_slave_research_id},
+            params={'num_dirs': directions, 'master_research_id': extra_master_research_id, 'slave_research_id': extra_slave_research_id,
+                    'with_confirm': with_confirm},
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
 
 
 def get_covid_to_json(researches, d_s, d_e):

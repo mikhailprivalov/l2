@@ -832,7 +832,7 @@ def form_06(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
-        renderPDF.draw(dir_code, c, 10 * mm, 245 * mm)
+        renderPDF.draw(dir_code, c, 10 * mm, 250 * mm)
 
         objs = []
         hospital_name = dir.hospital.title

@@ -216,15 +216,15 @@ def json_nofication(request):
 
     request_data = {**dict(request.GET.items())}
     directions = [x for x in json.loads(request_data["pk"]) if x is not None]
-    data_result = get_epid_data(directions)
+    data_result = get_epid_data(directions, -1)
     response['Content-Disposition'] = "attachment; filename=\"json_nofication.json\""
     response.write(json.dumps(data_result, ensure_ascii=False))
 
     return response
 
 
-def get_epid_data(directions):
-    result = get_extra_notification_data_for_pdf(directions, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK)
+def get_epid_data(directions, with_confirm):
+    result = get_extra_notification_data_for_pdf(directions, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, with_confirm)
     data = {}
     for i in result:
         if i.master_field == 1:

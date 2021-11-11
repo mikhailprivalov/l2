@@ -269,8 +269,16 @@ AFTER_DATE_HOLTER = None
 
 DICOM_SEARCH_TAGS = []
 DICOM_ADDRESS = ''
+DICOM_SERVER_DELETE = ''
 DICOM_PORT = None
-DICOM_SERVER = ""
+DICOM_SERVER = ''
+
+ACSN_MODE = None
+REMOTE_DICOM_ADDRESS = ''
+REMOTE_DICOM_PORT = None
+REMOTE_DICOM_SERVER = ""
+REMOTE_DICOM_PEER = ""
+
 URL_RMIS_AUTH = ""
 URL_ELN_MADE = ""
 URL_SCHEDULE = ""
@@ -297,6 +305,20 @@ FORM_100_08_A4_FORMAT = False
 FORCE_CACHALOT = False
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+N3_ODII_BASE_URL = ""
+N3_ODII_TOKEN = ""
+N3_ODII_SYSTEM_ID = ""
+
+DEFAULT_N3_DOCTOR = {
+    "pk": "",
+    "snils": "",
+    "speciality": "27",
+    "position": "73",
+    "family": "",
+    "name": "",
+    "patronymic": "",
+}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
