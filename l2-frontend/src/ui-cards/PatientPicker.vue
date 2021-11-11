@@ -335,6 +335,11 @@
                 <strong>{{ selected_card.medbookNumber }}</strong>
               </td>
             </tr>
+            <tr v-if="!hasSnils">
+              <td class="table-content-row error-row" colspan="4">
+                <strong>Некорректный СНИЛС!</strong>
+              </td>
+            </tr>
           </tbody>
         </table>
         <div v-if="phones.length > 0 && !hide_card_editor" class="hovershow">
@@ -724,6 +729,13 @@ export default {
         return this.selected_card.phones;
       }
       return [];
+    },
+    hasSnils() {
+      if (!this.selected_card.docs) {
+        return true;
+      }
+
+      return this.selected_card.docs.some(d => d.type_title === 'СНИЛС' && d.number && d.number.length >= 11);
     },
     ...mapGetters(['user_data']),
     allow_l2_card_edit() {
@@ -1541,5 +1553,9 @@ td:not(.select-td):not(.cl-td) {
       z-index: 10;
     }
   }
+}
+
+.error-row {
+  color: #f00;
 }
 </style>

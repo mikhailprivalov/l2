@@ -1,4 +1,8 @@
+import base64
 import calendar
+import collections
+import logging
+
 from cda.integration import get_required_signatures
 import datetime
 import os
@@ -17,6 +21,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
+from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
 import cases.models as cases
@@ -31,6 +36,9 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes,
 
 
 from appconf.manager import SettingManager
+
+
+logger = logging.getLogger(__name__)
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -651,6 +659,200 @@ class Napravleniya(models.Model):
             c = True
         if c:
             self.save()
+
+    def fill_acsn(self):
+        if not SettingManager.l2('fill_acsn'):
+            return
+        iss: Issledovaniya
+        card = self.client
+        individual = card.individual
+
+        print('fill_acsn', str(self))  # noqa: T001
+
+        for iss in self.issledovaniya_set.filter(acsn_id__isnull=True):
+            if iss.research.is_paraclinic and iss.research.podrazdeleniye and iss.research.podrazdeleniye.can_has_pacs and iss.research.nsi_id:
+                has_acsn = False
+                data_to_log = {}
+                try:
+                    add_task_resp = add_task_request(
+                        self.hospital_n3id,
+                        {
+                            **card.get_data_individual(full_empty=True, only_json_serializable=True),
+                            "family": individual.family,
+                            "name": individual.name,
+                            "patronymic": individual.patronymic,
+                            "birthday": individual.birthday.strftime("%Y-%m-%d"),
+                            "docs": card.get_n3_documents(),
+                            "sex": individual.sex,
+                            "card": {
+                                "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
+                                "pk": card.pk,
+                                "number": card.number,
+                                "n3Id": card.n3_id,
+                                "numberWithType": card.number_with_type(),
+                            },
+                        },
+                        self.pk,
+                        self.istochnik_f.get_n3_code() if self.istochnik_f else '6',
+                        iss.research.nsi_id,
+                        self.diagnos,
+                        self.doc.uploading_data
+                    )
+
+                    acsn = None
+                    n3_odii_task = None
+                    n3_odii_service_request = None
+                    n3_odii_patient = None
+
+                    for entry in add_task_resp.get('entry', []):
+                        t = entry.get('resource', {}).get('resourceType')
+                        u = entry.get('fullUrl')
+                        if not u:
+                            continue
+                        if '/' in u:
+                            u = u.split('/')[1]
+                        else:
+                            u = u.split(':')[2]
+                        if t == 'Task':
+                            n3_odii_task = u
+                            for idt in entry['resource'].get('identifier', []):
+                                for cd in idt.get('type', {}).get('coding', []):
+                                    if cd.get('code') == 'ACSN':
+                                        acsn = idt.get('value')
+                                        break
+                                if acsn:
+                                    break
+                        elif t == 'ServiceRequest':
+                            n3_odii_service_request = u
+                        elif t == 'Patient':
+                            n3_odii_patient = u
+
+                    data_to_log = {
+                        'acsn': acsn,
+                        'n3_odii_task': n3_odii_task,
+                        'n3_odii_service_request': n3_odii_service_request,
+                        'n3_odii_patient': n3_odii_patient,
+                    }
+
+                    if acsn and n3_odii_task and n3_odii_service_request and n3_odii_patient:
+                        iss.acsn_id = str(acsn)
+                        iss.n3_odii_task = str(n3_odii_task)
+                        iss.n3_odii_service_request = str(n3_odii_service_request)
+                        iss.n3_odii_patient = str(n3_odii_patient)
+                        iss.save(update_fields=['acsn_id', 'n3_odii_task', 'n3_odii_service_request', 'n3_odii_patient'])
+                        has_acsn = True
+                    else:
+                        logger.error(add_task_resp)
+
+                    logger.error(f"ACSN REQUEST: {data_to_log}")
+                except Exception as e:
+                    logger.error(e)
+
+                if has_acsn:
+                    slog.Log.log(key=self.pk, type=60016, body=data_to_log)
+                else:
+                    slog.Log.log(key=self.pk, type=60017, body=data_to_log)
+
+    def send_task_result(self):
+        if not SettingManager.l2('fill_acsn'):
+            return
+        pdf_content = None
+
+        if self.is_all_confirm():
+            try:
+                from results.views import result_print
+                request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+                req = {
+                    'GET': {
+                        "pk": f'[{self.pk}]',
+                        "split": '1',
+                        "leftnone": '0',
+                        "inline": '1',
+                        "protocol_plain_text": '1',
+                    },
+                    'user': self.doc.user,
+                    'plain_response': True,
+                }
+                pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+            except Exception as e:
+                logger.error(e)
+
+        print('send_task_result', str(self))  # noqa: T001
+
+        iss: Issledovaniya
+        for iss in self.issledovaniya_set.filter(acsn_id__isnull=False):
+            if not iss.research.is_paraclinic:
+                print(str(iss), '!is_paraclinic')  # noqa: T001
+                continue
+            if not iss.research.podrazdeleniye:
+                print(str(iss), '!iss.research.podrazdeleniye')  # noqa: T001
+                continue
+            if not iss.research.podrazdeleniye.can_has_pacs:
+                print(str(iss), '!iss.research.podrazdeleniye.can_has_pacs')  # noqa: T001
+                continue
+            if not iss.research.nsi_id:
+                print(str(iss), '!iss.research.nsi_id')  # noqa: T001
+                continue
+
+            has_image = bool(iss.study_instance_uid_tag)
+            has_protocol = bool(pdf_content)
+
+            if not has_image and not has_protocol:
+                print(str(iss), '{has_image=} {has_protocol=}')  # noqa: T001
+                continue
+
+            try:
+                add_task_result_resp = add_task_result(
+                    self.hospital_n3id,
+                    iss.n3_odii_patient,
+                    iss.n3_odii_task,
+                    iss.n3_odii_service_request,
+                    iss.study_instance_uid_tag,
+                    iss.acsn_id,
+                    self.pk,
+                    iss.research.nsi_id,
+                    iss.research.odii_type or ('' if not iss.research.podrazdeleniye else iss.research.podrazdeleniye.odii_type),
+                    iss.doc_confirmation.uploading_data if iss.doc_confirmation else self.doc.uploading_data,
+                    iss.time_confirmation_local.isoformat() if iss.time_confirmation else timezone.now().isoformat(),
+                    pdf_content
+                )
+
+                task_resp = None
+
+                for entry in add_task_result_resp.get('entry', []):
+                    t = entry.get('resource', {}).get('resourceType')
+                    u = entry.get('fullUrl')
+                    if not u:
+                        continue
+                    if '/' in u:
+                        u = u.split('/')[1]
+                    else:
+                        u = u.split(':')[2]
+                    if t == 'Task' and entry.get('response', {}).get('location'):
+                        task_resp = entry.get('response', {}).get('location').split('/')[1]
+                t = None
+                if task_resp:
+                    print('send_task_result: OK')  # noqa: T001
+                    iss.n3_odii_uploaded_task_id = task_resp
+                    iss.save(update_fields=['n3_odii_uploaded_task_id'])
+                    if has_image and has_protocol:
+                        t = 60012
+                    elif has_image:
+                        t = 60014
+                    elif has_protocol:
+                        t = 60018
+                else:
+                    print(add_task_result_resp)  # noqa: T001
+                    if has_image and has_protocol:
+                        t = 60013
+                    elif has_image:
+                        t = 60015
+                    elif has_protocol:
+                        t = 60019
+                    print('send_task_result: FAIL')  # noqa: T001
+                slog.Log.log(key=self.pk, type=t, body=add_task_result_resp)
+            except Exception as e:
+                logger.error(e)
 
     @staticmethod
     def gen_napravleniye(
@@ -1476,7 +1678,13 @@ class Issledovaniya(models.Model):
     localization = models.ForeignKey(directory.Localization, blank=True, null=True, default=None, help_text="Локализация", on_delete=models.SET_NULL)
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None, help_text="Место оказания услуги", on_delete=models.SET_NULL)
     link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
-    study_instance_uid = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="uuid снимка")
+    study_instance_uid = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="uuid снимка - экземпляр")
+    study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag")
+    acsn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ уникальный идентификатор заявки")
+    n3_odii_task = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task заявки")
+    n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")
+    n3_odii_patient = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор пациента заявки")
+    n3_odii_uploaded_task_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task результата")
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )

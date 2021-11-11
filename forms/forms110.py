@@ -32,7 +32,7 @@ def form_01(request_data):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Эпид. извещение"))
 
-    data_result = get_epid_data(directions)
+    data_result = get_epid_data(directions, 1)
     objs = []
     for k, v in data_result.items():
         opinion = [

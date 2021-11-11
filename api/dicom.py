@@ -1,7 +1,7 @@
 import socket
 from functools import reduce
-from directions.models import Issledovaniya
-from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS
+from directions.models import Issledovaniya, Napravleniya
+from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER
 import requests
 import simplejson as json
 
@@ -50,14 +50,46 @@ def search_dicom_study(direction=None):
                 check_sum = check_sum_ean13(ean13_dir)
                 ean13_dir = f'{ean13_dir}{check_sum}'
 
-                for tag in DICOM_SEARCH_TAGS:
-                    for dir in [ean13_dir, str_dir]:
-                        data = {'Level': 'Study', 'Query': {tag: dir}}
-                        dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
-                        if len(dicom_study.json()) > 0:
-                            Issledovaniya.objects.filter(napravleniye=direction).update(study_instance_uid=dicom_study.json()[0])
-                            return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study.json()[0]}'
+                dicom_study_link = find_image_firstly([ean13_dir, str_dir])
+                if ACSN_MODE:
+                    acsn = Issledovaniya.objects.values('acsn_id').filter(napravleniye_id=direction).first()
+                    dicom_study_link = change_acsn(dicom_study_link, acsn['acsn_id'])
+
+                if dicom_study_link:
+                    Issledovaniya.objects.filter(napravleniye_id=direction).update(study_instance_uid=dicom_study_link[0], study_instance_uid_tag=dicom_study_link[1])
+                    try:
+                        d: Napravleniya = Napravleniya.objects.filter(pk=direction).first()
+
+                        if d:
+                            d.send_task_result()
+                    except Exception as e:
+                        print('FAIL send_task_result')  # noqa: T001
+                        print(e)  # noqa: T001
+
+                    return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study_link}'
 
             except Exception as e:
                 print(e)  # noqa: T001
     return ''
+
+
+def find_image_firstly(data_direction):
+    for tag in DICOM_SEARCH_TAGS:
+        for dir in data_direction:
+            data = {'Level': 'Study', 'Query': {tag: dir}, "Expand": True}
+            dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
+            if len(dicom_study.json()) > 0:
+                return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
+    return None
+
+
+def change_acsn(link_study, accession_number):
+    data_replace = {"Replace": {"AccessionNumber": accession_number}}
+    dicom_study = requests.post(f'{DICOM_SERVER}/studies/{link_study}/modify', data=json.dumps(data_replace))
+    if dicom_study and dicom_study.json()['ID']:
+        requests.delete(f'{DICOM_SERVER_DELETE}/studies/{link_study}')
+        link_study = dicom_study.json()['ID']
+    if REMOTE_DICOM_SERVER:
+        requests.post(f'{REMOTE_DICOM_SERVER}/peers/{REMOTE_DICOM_PEER}/store', data=link_study)
+
+    return link_study

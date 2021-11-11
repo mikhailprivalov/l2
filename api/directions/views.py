@@ -32,7 +32,7 @@ from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
-from clients.models import Card, Individual, DispensaryReg, BenefitReg
+from clients.models import Card, DocumentType, Individual, DispensaryReg, BenefitReg
 from directions.models import (
     DirectionDocument,
     DocumentSign,
@@ -147,6 +147,11 @@ def directions_generate(request):
             result["directionsStationar"].extend(rc["list_stationar_id"])
             if not result["ok"]:
                 break
+
+        if result["ok"]:
+            for pk in result["directions"]:
+                d: Napravleniya = Napravleniya.objects.get(pk=pk)
+                d.fill_acsn()
     return JsonResponse(result)
 
 
@@ -1065,6 +1070,11 @@ def directions_paraclinic_form(request):
             response["has_monitoring"] = False
             response["card_internal"] = d.client.base.internal_type
             response["hospital_title"] = d.hospital_title
+            card_documents = d.client.get_card_documents()
+            snils_types = [x.pk for x in DocumentType.objects.filter(title='СНИЛС')]
+
+            snils_numbers = {x: card_documents[x] for x in snils_types if card_documents.get(x)}
+
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
                 "fio": d.client.individual.fio(),
@@ -1081,6 +1091,7 @@ def directions_paraclinic_form(request):
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
                 "base": d.client.base_id,
                 "main_diagnosis": d.client.main_diagnosis,
+                "has_snils": bool(snils_numbers),
             }
             response["direction"] = {
                 "pk": d.pk,
@@ -1178,9 +1189,7 @@ def directions_paraclinic_form(request):
                         "is_hospital": i.napravleniye.parent.research.is_hospital,
                     },
                     "whoSaved": None if not i.doc_save or not i.time_save else f"{i.doc_save}, {strdatetime(i.time_save)}",
-                    "whoConfirmed": (
-                        None if not i.doc_confirmation or not i.time_confirmation else f"{i.doc_confirmation}, {strdatetime(i.time_confirmation)}"
-                    ),
+                    "whoConfirmed": (None if not i.doc_confirmation or not i.time_confirmation else f"{i.doc_confirmation}, {strdatetime(i.time_confirmation)}"),
                     "whoExecuted": None if not i.time_confirmation or not i.executor_confirmation else str(i.executor_confirmation),
                 }
 
@@ -1445,11 +1454,15 @@ def directions_anesthesia_load(request):
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_paraclinic_result(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
-    response = {"ok": False, "message": "", "execData": {
-        "whoSaved": None,
-        "whoConfirmed": None,
-        "whoExecuted": None,
-    }}
+    response = {
+        "ok": False,
+        "message": "",
+        "execData": {
+            "whoSaved": None,
+            "whoConfirmed": None,
+            "whoExecuted": None,
+        },
+    }
     rb = json.loads(request.body)
     request_data = rb.get("data", {})
     pk = request_data.get("pk", -1)
@@ -1788,13 +1801,13 @@ def directions_paraclinic_result(request):
         response["confirmed_at"] = None if not iss.time_confirmation else time.mktime(timezone.localtime(iss.time_confirmation).timetuple())
         response["execData"] = {
             "whoSaved": None if not iss.doc_save or not iss.time_save else f"{iss.doc_save}, {strdatetime(iss.time_save)}",
-            "whoConfirmed": (
-                None if not iss.doc_confirmation or not iss.time_confirmation else f"{iss.doc_confirmation}, {strdatetime(iss.time_confirmation)}"
-            ),
+            "whoConfirmed": (None if not iss.doc_confirmation or not iss.time_confirmation else f"{iss.doc_confirmation}, {strdatetime(iss.time_confirmation)}"),
             "whoExecuted": None if not iss.time_confirmation or not iss.executor_confirmation else str(iss.executor_confirmation),
         }
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
+            if iss.napravleniye:
+                iss.napravleniye.send_task_result()
             if stationar_research != -1:
                 iss.gen_after_confirm(request.user)
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
@@ -1876,6 +1889,10 @@ def directions_paraclinic_confirm(request):
             if i.napravleniye:
                 i.napravleniye.qr_check_token = None
                 i.napravleniye.save(update_fields=['qr_check_token'])
+
+        if iss.napravleniye:
+            iss.napravleniye.send_task_result()
+
         response["ok"] = True
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
@@ -1895,7 +1912,7 @@ def directions_paraclinic_confirm_reset(request):
     pk = request_data.get("iss_pk", -1)
 
     if Issledovaniya.objects.filter(pk=pk).exists():
-        iss = Issledovaniya.objects.get(pk=pk)
+        iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
         is_transfer = iss.research.can_transfer
         is_extract = iss.research.is_extract
 
@@ -1912,6 +1929,7 @@ def directions_paraclinic_confirm_reset(request):
         if allow_reset:
             predoc = {"fio": iss.doc_confirmation_fio, "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
+            iss.n3_odii_uploaded_task_id = None
             iss.save()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             if transfer_d:
@@ -1927,10 +1945,11 @@ def directions_paraclinic_confirm_reset(request):
                 i.time_confirmation = None
                 i.save()
             if iss.napravleniye:
-                iss.napravleniye.need_resend_amd = False
-                iss.napravleniye.eds_total_signed = False
-                iss.napravleniye.eds_total_signed_at = None
-                iss.napravleniye.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd'])
+                n: Napravleniya = iss.napravleniye
+                n.need_resend_amd = False
+                n.eds_total_signed = False
+                n.eds_total_signed_at = None
+                n.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd'])
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
