@@ -21,7 +21,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
-from odii.integration import add_task_request, add_task_result
+from n3.odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
 import cases.models as cases
