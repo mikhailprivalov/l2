@@ -23,7 +23,7 @@ def make_request(path, query=None, as_json=True, **kwargs):
     try:
         url = get_url(path, query=query)
         headers = {"Content-Type": "application/json", "Authorization": f"N3 {N3_ODII_TOKEN}"}
-        data = requests.post(url, headers=headers, **kwargs, proxies=RMIS_PROXY)
+        data = requests.post(url, headers=headers, **kwargs, proxies=RMIS_PROXY, timeout=7)
         if as_json:
             return data.json()
         return data.text

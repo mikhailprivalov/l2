@@ -310,6 +310,10 @@ N3_ODII_BASE_URL = ""
 N3_ODII_TOKEN = ""
 N3_ODII_SYSTEM_ID = ""
 
+N3_ODLI_BASE_URL = ""
+N3_ODLI_TOKEN = ""
+N3_ODLI_SYSTEM_ID = ""
+
 DEFAULT_N3_DOCTOR = {
     "pk": "",
     "snils": "",
