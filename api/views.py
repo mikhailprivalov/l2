@@ -426,7 +426,7 @@ def departments(request):
     current_user_hospital_id = request.user.doctorprofile.get_hospital_id() or -1
     hospital_pk = req.get('hospital', current_user_hospital_id)
 
-    su = request.user.is_superuser
+    su = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control
 
     if hospital_pk == -1:
         hospital_pk = None
@@ -582,6 +582,7 @@ def current_user_info(request):
             if user.is_superuser:
                 ret["groups"].append("Admin")
             ret["eds_allowed_sign"] = doctorprofile.get_eds_allowed_sign() if ret['modules'].get('l2_eds') else []
+            ret["can_edit_all_department"] = doctorprofile.all_hospitals_users_control
 
             try:
                 connections.close_all()
