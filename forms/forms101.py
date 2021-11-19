@@ -838,13 +838,13 @@ def form_06(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("COVID-19 согласие")
+        buffer, pagesize=A4, leftMargin=20 * mm, rightMargin=10 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("COVID-19 согласие")
     )
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 10.5
+    style.fontSize = 11.5
     style.leading = 10
     style.spaceAfter = 0 * mm
     style.alignment = TA_JUSTIFY
@@ -868,6 +868,17 @@ def form_06(request_data):
     styleCenter.leading = 10
     styleCenter.spaceAfter = 0 * mm
 
+    styleBig = deepcopy(style)
+    styleBig.alignment = TA_CENTER
+    styleBig.fontSize = 12
+    styleBig.leading = 10
+    styleBig.spaceAfter = 0 * mm
+
+    stylePR = deepcopy(style)
+    stylePR.alignment = TA_RIGHT
+    stylePR.fontSize = 12
+    stylePR.leading = 13
+
     styleCenterBold = deepcopy(styleBold)
     styleCenterBold.alignment = TA_CENTER
     styleCenterBold.firstLineIndent = 0
@@ -881,150 +892,150 @@ def form_06(request_data):
     styleJustified.fontSize = 12
     styleJustified.leading = 4.5 * mm
 
-    objs = [
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    space_symbol = '&nbsp;'
+    styleECenter = deepcopy(style)
+    styleECenter.fontSize = 7
+    styleECenter.alignment = TA_CENTER
+    objs = []
+    objs.append(
         Paragraph(
-            "COГЛАСИЕНА<br/> ОКАЗАНИЕ МЕДИЦИНСКОЙ ПОМОЩИ В АМБУЛАТОРНЫЙ<br/> УСЛОВИЯХ И СОБЛЮДЕНИЕ РЕЖИМА ИЗОЛЯЦИИ ПРИ ЛЕЧЕНИИ<br/>"
-            "НОВОЙ КОРОНАВИРУСНОЙ ИНФЕКЦИИ (COVID-19) В ПЕРИОД<br/>ПОДЪЕМА ЗАБОЛЕВАЕМОСТИ в 2020 - 2021 ГОДУ",
-            styleCenterBold,
+            'Приложение к распоряжению<br/>министерств здравоохранения<br/>Иркутской области<br/>'
+            'от 22 июля 2021 года №1450-мр',
+            stylePR,
         )
-    ]
+    )
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph('COГЛАСИЕ<br/>', styleCenterBold,))
+    objs.append(
+        Paragraph(
+            'на передачу сведений о результатах исследований на наличие возбудителя новой коронавирусной инфекции '
+            '(СОVID-19) методом полимеразной цепной реакции, на наличие антител к возбудителю новой коронивирусной инфекции '
+            '(COVID-19) (любым из методов), на наличие антител после вакцинации путём определения специальными тестами в '
+            'федеральное бюджетное учереждения здравоохранения "Центр гигиены и эпидемиологии в Иркутской '
+            'области" для последующей передачи в федеральное бюджетное учреждение науки '
+            '"Центральный научно-исследовательский институт эпидемиологии" Федеральной службы по надзору в сфере защиты'
+            'прав потребителей и благополучия человека',
+            styleBig,
+        )
+    )
 
     objs.append(Spacer(1, 3 * mm))
     d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Я, {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), styleSign))
-
+    objs.append(
+        Paragraph(
+            'Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.format(person_data['type_doc'], person_data['passport_serial'], person_data['passport_num']), styleSign
+        )
+    )
+    objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
     styleLeft = deepcopy(style)
     styleLeft.alignment = TA_LEFT
-
     objs.append(Paragraph('Зарегистрированный(ая) по адресу: {}'.format(person_data['main_address']), styleSign))
     objs.append(Paragraph('Проживающий(ая) по адресу: {}'.format(person_data['fact_address']), styleSign))
     objs.append(Spacer(1, 3 * mm))
-    objs.append(
-        Paragraph(
-            'В соответствии с частью 2 статьи 22 Федерального закона от 21.11.2011 №323-ФЗ «Об основах охраны здоровья граждан в '
-            'Российской Федерации» проинформирован(-а) медицинским работником',
-            styleSign,
-        )
-    )
 
     hospital: Hospitals = request_data["hospital"]
 
     hospital_name = hospital.safe_short_title
 
-    objs.append(Paragraph(f"<u>{hospital_name}</u>", styleCenterBold))
-    objs.append(Paragraph('<br/>_____________________________________________________________________________________', styleSign))
-    objs.append(Paragraph('(должность, фамилия, имя, отчество медицинского работника)', styleCenter))
     objs.append(
-        Paragraph(
-            'О положительном результате лабораторного исследования моего биологического материала на новую коронавирусную инфекцию (COVID-19) и '
-            'постановке мне диагноза:заболевание, вызванное новой коронавирусной инфекцией (COVID-19).',
-            styleSign,
-        )
-    )
+		Paragraph(
+            'В соответствии с требованиями статей 9 и 10.1 Федерального закона "О персональных данных" от '
+            '27.07.2006 года №152-ФЗ, статьи 13 Федерального закона от 21.11.2011 года №323-ФЗ "Об основах '
+            'охраны здоровья граждан в Российской Федерации", Постановления Правительства РФ от 27.03.2021 '
+            '№ 452 "Об обеспечении уведомления физических лиц о результатах исследований на наличие возбудителя '
+            'новой коронавирусной инфекции (COVID-19) с использованием федеральной государственной информационной '
+            'системы "Единый портал государственных и муниципальных услуг (функций)" и обмена информацией о '
+            'результатах  таких исследований,<br/> даю своё согласие ____________________________________________'
+			'__________________________',
+			styleSign,
+		)
+	)
+    objs.append(Paragraph('(Наименование медицинской организации)', styleECenter))
     objs.append(Spacer(1, 1.5 * mm))
     objs.append(
         Paragraph(
-            'По результатам осмотра и оценки  состояния моего здоровья, в связи с течением заболевания в легкой (средней) форме, '
-            'медицинским работником в доступной для меня форме была разъяснена возможность оказания медицинской помощи в амбулаторных условиях (на дому), '
-            'после чего я выражаю свое согласие на:',
+            'на передачу сведений, составляющих врчебную тайну, а именно: результатов исследований на наличие '
+            'возбудителя новой коронавирусной инфекции (COVID-19); результатов исследований на наличие антител '
+            'к возбудителю новой короавирусной инфекции (COVID-19); результатов исследований на наличие антител '
+            'после вакцинации путем определения специальными тестами, с указанием даты забора, даты проведения '
+            'исследования, результата исследования в федеральное бюджетное учреждение здравохранения "Центр'
+            'гигиены и эпидемиологии в Иркутской области" для последующей передачи в федеральное бюджетное '
+            'учреждение науки "Центральный научно-исследовательский институт эпидемиологии" Федеральной службы '
+            'по надзору в сфере защиты прав потребителей и благополучия человека, в связи с чем, для указанных '
+            'целей<br/>даю свое согласие ______________________________________________________________________',
             styleSign,
         )
     )
-    objs.append(Paragraph('-получение медицинской помощи в амбулаторных условиях (на дому) по адресу:', styleSign))
-    objs.append(Paragraph(f"{person_data['fact_address']}", styleSign))
-    objs.append(Paragraph('-соблюдение режима изоляции на период лечения в указанном выше помещении.', styleSign))
-    objs.append(Paragraph('Мне разъяснено, что я обязан(-а):', styleSign))
-    objs.append(Paragraph('-не покидать указанное помещение, находиться в отдельной, хорошо проветриваемой комнате;', styleSign))
+    objs.append(Paragraph('(Наименование медицинской организации)', styleECenter))
     objs.append(
         Paragraph(
-            '-не посещать работу, учебу, магазины, аптеки, иные общественные места и массовые скопления людей, '
-            'не пользоваться общественным транспортом, не контактировать с третьими лицами;',
-            styleSign,
-        )
-    )
-    objs.append(Paragraph('-при невозможности избежать кратковременного контакта с третьими лицами в обязательном ' 'порядке использовать медицинскую маску;', styleSign))
-    objs.append(
-        Paragraph(
-            '-соблюдать врачебные и санитарные предписания, изложенные в памятках, врученных мне медицинским работником, '
-            'а также предписания, которые будут выданы мне медицинскими работниками в течении всего срока лечения;',
-            styleSign,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '-при первых признаках ухудшения самочувствия (повышение температуры, кашель, затрудненное дыхание) обратиться за медицинской помощью ' 'и не допускать самолечения;', styleSign
-        )
-    )
-    objs.append(Paragraph('-сдать пробы для последующего лабораторного контроля при посещении меня медицинским работником на дому.', styleSign))
-    objs.append(Spacer(1, 1.5 * mm))
-    objs.append(
-        Paragraph(
-            'Медицинским работником мне разъяснено, что новая коронавирусная инфекция (COVID-19) представляет опасность для окружающих, '
-            'в связи с чем при возможном контакте со мной третьи лица имеют высокий риск заражения, что особо опасно для людей старшего возраста, '
-            'а также людей, страдающих хроническими заболеваниями.',
-            styleSign,
-        )
-    )
-    objs.append(Spacer(1, 1.5 * mm))
-    objs.append(
-        Paragraph(
-            'Я предупрежден(а), что нарушение санитарно-эпидемиологических правил, повлекшее по неосторожности массовое заболевание, '
-            'может повлечь привлечение к уголовной ответственности, предусмотренной статьей 236 Уголовного кодекса Российской Федерации.',
-            styleSign,
-        )
-    )
-    objs.append(Spacer(1, 1.5 * mm))
-    objs.append(
-        Paragraph(
-            'Медицинским работником мне предоставлены информационные материалы по вопросам ухода за пациентами – '
-            'больными новой коронавирусной инфекцией (COVID-19) и общим рекомендациям по защите от инфекций, передающихся воздушно-капельным и '
-            'контактным путем, их содержание мне разъяснено и полностью понятно',
+            '(Оператору) на обработку и передачу в федеральное бюджетное учреждение здравохранения "Центр '
+            'гигиены и эпидемиологии в Иркутской области" для последующей передачи в федеральное бюджетное '
+            'учреждение науки "Центральный научно-исследовательский институт эпидемиологии" Федеральной службы '
+            'по надзору в сфере защиты прав потребителей и благополучия человека моих персональных данных, '
+            'включающих: фамилию, имя, отчество, пол, дату рождения, серию и номер документа, удостоверяющего'
+            'личность физического лица, страховой номер индивидуального лицевого счета (СНИЛС).',
             styleSign,
         )
     )
 
-    objs.append(Spacer(1, 1.5 * mm))
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
     objs.append(
         Paragraph(
-            'Я проинформирован(а) о том, что в случае отказа от подписания настоящего согласия, за мной сохраняется право повторно '
-            'обратиться в медицинскую организацию по месту жительства для предоставления лекарственного обеспечения до получения '
-            'второго отрицательного результата лабораторного исследования на новую коронавирусную инфекцию (COVID-19).',
+            'Настоящее согласие дано мной и действует бессрочно с '
+            '{} г.'.format(date_now),
+            styleSign,
+        )
+    )
+    objs.append(Spacer(1, 3 * mm))
+
+    objs.append(
+        Paragraph(
+            'Я оставляю за собой право отозвать свое согласие посредством составления соответствующего '
+            'письменного документа, который может быть направлен мой в адрес Оператора по почте заказным '
+            'письмом с уведомление о вручении либо вручен лично под расписку представителю Оператора.',
             styleSign,
         )
     )
 
-    space_symbol = '&nbsp;'
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('Субъект персональных данных:', styleSign))
+
     styleFCenter = deepcopy(style)
-    styleFCenter.alignment = TA_CENTER
-
-    styleBottom = deepcopy(style)
-    styleBottom.fontSize = 8
+    styleFCenter.fontSize = 11
+    styleFCenter.leading = 10
+    styleFCenter.alignment = TA_JUSTIFY
+    styleFCenter.firstLineIndent = 40
 
     sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     sign_fio_doc = '(Ф.И.О. медицинского работника)'
 
-    objs.append(Spacer(1, 9 * mm))
-    objs.append(Paragraph('', styleFCenter))
-    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('{} {}'.format(73 * space_symbol, sign_fio_person), styleBottom))
+    # objs.append(Spacer(1, 9 * mm))
+    # objs.append(Paragraph('', styleFCenter))
+    # objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    # objs.append(Paragraph('{} {}'.format(73 * space_symbol, sign_fio_person), styleBottom))
 
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('{}'.format(person_data['fio']), styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_patient_agent), styleBottom))
+    objs.append(Paragraph('{} {} {} (подпись)'.format(sign_patient_agent, 38 * space_symbol, 38 * space_symbol), styleBottom))
 
-    objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('{}'.format(space_symbol), styleFCenter))
-    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
+    # objs.append(Spacer(1, 3 * mm))
+    # objs.append(Paragraph('{}'.format(space_symbol), styleFCenter))
+    # objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    # objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
 
-    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
     objs.append(Spacer(1, 5 * mm))
     objs.append(Paragraph('{} г.'.format(date_now), style))
-    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(HRFlowable(width=35 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph('(дата оформления)', styleBottom))
 
     def first_pages(canvas, document):
