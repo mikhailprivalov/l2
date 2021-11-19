@@ -152,7 +152,7 @@ export default {
     },
     ...mapGetters(['user_data', 'hospitals', 'all_hospitals_with_none']),
     can_edit_any_organization() {
-      return this.user_data.su;
+      return this.user_data.su || this.user_data.can_edit_all_department;
     },
     user_hospital() {
       return this.user_data.hospital || -1;
