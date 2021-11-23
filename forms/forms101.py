@@ -360,7 +360,8 @@ def form_03(request_data):
     # hospital_address = SettingManager.get("org_address")
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("информированное добровольное согласие на медицинское вмешательство"))
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1,
+    title="Форма {}".format("информированное добровольное согласие на медицинское вмешательство"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -402,14 +403,7 @@ def form_03(request_data):
     styleJustified.fontSize = 12
     styleJustified.leading = 4.5 * mm
 
-    objs = [
-        Paragraph(
-            'Информированное добровольное согласие на медицинское вмешательство<br/>'
-            '(для лиц старше 15 лет)'.format(who_patient),
-            styleCenterBold,
-        ),
-    ]
-
+    objs = [Paragraph('Информированное добровольное согласие на медицинское вмешательство<br/>'.format(who_patient),styleCenterBold,)]
     objs.append(Spacer(1, 4 * mm))
 
     d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
@@ -482,7 +476,6 @@ def form_03(request_data):
     )
 
     space_symbol = '&nbsp;'
-    objs.append(Spacer(0, 0 * mm))
     objs.append(
         Paragraph(
             'заболевание (состояние) вписывается медицинским работником',
@@ -491,7 +484,7 @@ def form_03(request_data):
     )
 
     space_symbol = '&nbsp;'
-    objs.append(Spacer(0, 0 * mm))
+    objs.append(Spacer(1, 1 * mm))
     objs.append(
         Paragraph(
             '_____________________________________________________________________________________'
@@ -501,7 +494,6 @@ def form_03(request_data):
     )
 
     space_symbol = '&nbsp;'
-    objs.append(Spacer(0, 0 * mm))
     objs.append(
         Paragraph(
             'указываются цель, методы, риски, варианты мед.вмешательства, последствия, предполагаемые результаты(заполняется медицинским работником)',
@@ -561,20 +553,20 @@ def form_03(request_data):
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     sign_fio_doc = '(Ф.И.О. медицинского работника)'
 
-  # objs.append(Spacer(1, 9 * mm))
-  # objs.append(Paragraph('', styleFCenter))
-  # objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-  # objs.append(Paragraph('{} {}'.format(73 * space_symbol, sign_fio_person), styleBottom)) 
+    # objs.append(Spacer(1, 9 * mm))
+    # objs.append(Paragraph('', styleFCenter))
+    # objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    # objs.append(Paragraph('{} {}'.format(73 * space_symbol, sign_fio_person), styleBottom)) 
 
     objs.append(Spacer(4, 4 * mm))
     objs.append(Paragraph('{}'.format(person_data['fio']), styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_patient_agent), styleBottom))
 
-  # objs.append(Spacer(1, 3 * mm))
-  # objs.append(Paragraph('{}'.format(space_symbol), styleFCenter))
-  # objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-  # objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
+    # objs.append(Spacer(1, 3 * mm))
+    # objs.append(Paragraph('{}'.format(space_symbol), styleFCenter))
+    # objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    # objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
 
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
     objs.append(Spacer(1, 3 * mm))
@@ -710,7 +702,7 @@ def form_05(request_data):
     hospital: Hospitals = request_data["hospital"]
 
     hospital_name = hospital.safe_short_title
-  # hospital_address = hospital.safe_address
+    # hospital_address = hospital.safe_address
 
     objs.append(
         Paragraph(
@@ -838,7 +830,8 @@ def form_06(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=A4, leftMargin=20 * mm, rightMargin=10 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("COVID-19 согласие")
+        buffer, pagesize=A4, leftMargin=20 * mm, rightMargin=10 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1,
+        title="Форма {}".format("COVID-19 согласие")
     )
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -929,7 +922,8 @@ def form_06(request_data):
     objs.append(Paragraph('Я, {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), styleSign))
     objs.append(
         Paragraph(
-            'Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.format(person_data['type_doc'], person_data['passport_serial'], person_data['passport_num']), styleSign
+            'Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.format(person_data['type_doc'],
+             person_data['passport_serial'], person_data['passport_num']), styleSign
         )
     )
     objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
