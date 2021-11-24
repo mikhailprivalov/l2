@@ -356,12 +356,13 @@ def form_03(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
-    hospital_name = SettingManager.get("org_title")
+    # hospital_name = SettingManager.get("org_title")
     # hospital_address = SettingManager.get("org_address")
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1,
-    title="Форма {}".format("информированное добровольное согласие на медицинское вмешательство"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1,
+        title="Форма {}".format("информированное добровольное согласие на медицинское вмешательство"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -403,7 +404,7 @@ def form_03(request_data):
     styleJustified.fontSize = 12
     styleJustified.leading = 4.5 * mm
 
-    objs = [Paragraph('Информированное добровольное согласие на медицинское вмешательство<br/>'.format(who_patient),styleCenterBold,)]
+    objs = [Paragraph('Информированное добровольное согласие на медицинское вмешательство<br/>',styleCenterBold,)]
     objs.append(Spacer(1, 4 * mm))
 
     d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
@@ -423,9 +424,9 @@ def form_03(request_data):
     objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
     objs.append(Spacer(1, 3 * mm))
 
-    hospital: Hospitals = request_data["hospital"]
+    # hospital: Hospitals = request_data["hospital"]
 
-    hospital_name = hospital.safe_short_title
+    # hospital_name = hospital.safe_short_title
 
     opinion = []
     if agent_status:
@@ -549,7 +550,7 @@ def form_03(request_data):
     styleBottom = deepcopy(style)
     styleBottom.fontSize = 8
 
-    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
+    # sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     sign_fio_doc = '(Ф.И.О. медицинского работника)'
 
@@ -613,19 +614,19 @@ def form_03(request_data):
             styleFL,
         )
     )
-	
+
     objs.append(
         Paragraph(
-			'<br/>Расписался в моем присутствии:',
-			styleBold,
-		)
-	)
-  
+            '<br/>Расписался в моем присутствии:',
+            styleBold,
+        )
+    )
+
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('{}'.format(space_symbol), styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
-	
+
     def first_pages(canvas, document):
         canvas.saveState()
         canvas.restoreState()
@@ -702,7 +703,7 @@ def form_05(request_data):
     hospital: Hospitals = request_data["hospital"]
 
     hospital_name = hospital.safe_short_title
-    # hospital_address = hospital.safe_address
+    hospital_address = hospital.safe_address
 
     objs.append(
         Paragraph(
@@ -922,8 +923,7 @@ def form_06(request_data):
     objs.append(Paragraph('Я, {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), styleSign))
     objs.append(
         Paragraph(
-            'Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.format(person_data['type_doc'],
-             person_data['passport_serial'], person_data['passport_num']), styleSign
+            'Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.format(person_data['type_doc'],person_data['passport_serial'], person_data['passport_num']), styleSign
         )
     )
     objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
@@ -933,9 +933,9 @@ def form_06(request_data):
     objs.append(Paragraph('Проживающий(ая) по адресу: {}'.format(person_data['fact_address']), styleSign))
     objs.append(Spacer(1, 3 * mm))
 
-    hospital: Hospitals = request_data["hospital"]
+    # hospital: Hospitals = request_data["hospital"]
 
-    hospital_name = hospital.safe_short_title
+    # hospital_name = hospital.safe_short_title
 
     objs.append(
         Paragraph(
@@ -946,10 +946,10 @@ def form_06(request_data):
             'новой коронавирусной инфекции (COVID-19) с использованием федеральной государственной информационной '
             'системы "Единый портал государственных и муниципальных услуг (функций)" и обмена информацией о '
             'результатах  таких исследований,<br/> даю своё согласие ____________________________________________'
-			'__________________________',
-			styleSign,
-		)
-	)
+            '__________________________',
+            styleSign,
+        )
+    )
     objs.append(Paragraph('(Наименование медицинской организации)', styleECenter))
     objs.append(Spacer(1, 1.5 * mm))
     objs.append(
@@ -1008,9 +1008,9 @@ def form_06(request_data):
     styleFCenter.alignment = TA_JUSTIFY
     styleFCenter.firstLineIndent = 40
 
-    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
+    # sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
-    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+    # sign_fio_doc = '(Ф.И.О. медицинского работника)'
 
     # objs.append(Spacer(1, 9 * mm))
     # objs.append(Paragraph('', styleFCenter))
@@ -2689,7 +2689,7 @@ def form_10(request_data):
 
 def form_11(request_data):
     """
-	Отказ от медицинского вмешательства/госпитализации
+    Отказ от медицинского вмешательства/госпитализации
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
@@ -2794,12 +2794,12 @@ def form_11(request_data):
 
     objs.append(
         Paragraph(
-			'<br/> ОТКАЗ <br/>' 
-			'от медицинского вмешательства/госпитализации <br/>'
-			'(для законного представителя) <br/>'
-			'заполняется полностью рукой законного представителя!!! <br/>'.format(who_patient),
+            '<br/> ОТКАЗ <br/>' 
+            'от медицинского вмешательства/госпитализации <br/>'
+            '(для законного представителя) <br/>'
+            'заполняется полностью рукой законного представителя!!!<br/>',
             styleCenterBold
-        ),
+        )
     )
 
     d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
@@ -2817,10 +2817,6 @@ def form_11(request_data):
         )
     )
     objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
-
-    hospital: Hospitals = request_data["hospital"]
-	
-    hospital_name = hospital.safe_short_title
 
     if agent_status:
         opinion = [
@@ -2848,10 +2844,6 @@ def form_11(request_data):
 
         objs.extend(opinion)
 
-    hospital: Hospitals = request_data["hospital"]
-
-    hospital_name = hospital.safe_short_title
-
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Отказываюсь от предложенной  госпитализации, медицинского вмешательства моему ребёнку в <br/>', styleSign))  
     objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
@@ -2868,26 +2860,29 @@ def form_11(request_data):
         )
     )
 
-    objs.append(Paragraph(
-			'1) в доступной для меня форме мне разъяснены возможные последствия отказа от '
+    objs.append(
+        Paragraph(
+            '1) в доступной для меня форме мне разъяснены возможные последствия отказа от '
             'вышеуказанных видов медицинских вмешательств, в том числе вероятность '
             'развития осложнений заболевания (состояния). Мне разъяснено, что при '
             'возникновении необходимости в осуществлении одного или нескольких видов '
             'медицинских вмешательств, в отношении которых оформлен настоящий отказ, я'
             'имею право оформить информированное добровольное согласие на такой вид '
-			'(такие виды) медицинского вмешательства; <br/>'
-			'2) мне были предложены альтернативные методы лечения моего ребёнка:___________________________________________;<br/>'
-			'3) Я не имею, и не буду иметь каких-либо претензий к сотрудникам ГБУЗ ИГОДКБ в случае развития негативных последствий'
-			'вследствие моего решения об отказе в госпитализации, медицинского вмешательства моего ребёнка;<br/>'
-			'4) Ст. 125 УК РФ «Оставление в опасности - заведомое оставление без помощи лица, находящегося в опасном для жизни или здоровья'
-			'состоянии и лишенного возможности принять меры к самосохранению по малолетству, старости, болезни или вследствие своей беспомощности,'
-			'в случаях, если виновный имел возможность оказать помощь этому лицу и был обязан иметь о нем заботу либо сам поставил его в опасное для'
-			'жизни или здоровья состояние», мне разъяснена и понятна;<br/>'
-			'5) Я разрешаю, в случае необходимости, предоставить информацию о диагнозе моего ребёнка,'
-			'степени тяжести и характере заболевания и другим законным представителям, гражданам_____________________________________________________________________;<br/>'
-			'6) Я ознакомлен(а) и согласен (а) со всеми пунктами настоящего документа, положения которого мне разъяснены, мною поняты и добровольно даю свое'
-			'согласие на отказ от медицинского вмешательства/госпитализации моего ребёнка.<br/>',
-            styleSign,))
+            '(такие виды) медицинского вмешательства; <br/>'
+            '2) мне были предложены альтернативные методы лечения моего ребёнка:___________________________________________;<br/>'
+            '3) Я не имею, и не буду иметь каких-либо претензий к сотрудникам ГБУЗ ИГОДКБ в случае развития негативных последствий'
+            'вследствие моего решения об отказе в госпитализации, медицинского вмешательства моего ребёнка;<br/>'
+            '4) Ст. 125 УК РФ «Оставление в опасности - заведомое оставление без помощи лица, находящегося в опасном для жизни или здоровья'
+            'состоянии и лишенного возможности принять меры к самосохранению по малолетству, старости, болезни или вследствие своей беспомощности,'
+            'в случаях, если виновный имел возможность оказать помощь этому лицу и был обязан иметь о нем заботу либо сам поставил его в опасное для'
+            'жизни или здоровья состояние», мне разъяснена и понятна;<br/>'
+            '5) Я разрешаю, в случае необходимости, предоставить информацию о диагнозе моего ребёнка,'
+            'степени тяжести и характере заболевания и другим законным представителям, гражданам_____________________________________________________________________;<br/>'
+            '6) Я ознакомлен(а) и согласен (а) со всеми пунктами настоящего документа, положения которого мне разъяснены, мною поняты и добровольно даю свое'
+            'согласие на отказ от медицинского вмешательства/госпитализации моего ребёнка.<br/>',
+            styleSign,
+        )
+    )
     space_bottom = ' &nbsp;'
 
     objs.append(Spacer(1, 3 * mm))
