@@ -123,7 +123,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "СНИЛС матери",
         "Тип ДУЛ",
         "ДУЛ матери",
-        "Адрес материи",
+        "Адрес матери",
         "Вид места жительства",
         "Семейное положение",
         "Классификатор образования для медицинских свидетельств",
@@ -202,31 +202,83 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text = title_data("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О ПЕРИНАТАЛЬНОЙ СМЕРТИ", "К УЧЕТНОЙ ФОРМЕ № 106-2/У", text, fields.get("Серия", ""), fields.get("Номер", ""), fields.get("Дата выдачи", ""),
                       fields.get("Вид медицинского свидетельства о смерти", ""), fields)
     text.append(Spacer(1, 3 * mm))
-    text.append(Paragraph(f"1. Рождение мертвого ребенка: {space_symbol * 5} число__________ месяц______________ год____________ час__________ мин____________", style))
+
+    text = death_data_child(text, fields)
+    text.append(Spacer(1, 3 * mm))
+    mother_fio = mother_fio_data(fields)
+    text.append(Paragraph(f"4. Фамилия, имя, отчество (при наличии) матери: {mother_fio}", style))
     text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"2. Ребенок родился живым: {space_symbol * 11} число__________ месяц______________ год____________ час__________ мин____________", style))
+    mother_born_date, mother_born_month, mother_born_year = "_______", "_________", "__________"
+    mother_born_data = fields.get("Дата рождения матери", None)
+    if mother_born_data:
+        mother_born_data = mother_born_data.split(".")
+        mother_born_date = f"<u>{space_symbol * 8}{mother_born_data[0]}{space_symbol * 8}</u>"
+        mother_born_month = f"<u>{space_symbol * 8}{mother_born_data[1]}{space_symbol * 8}</u>"
+        mother_born_year = f"<u>{space_symbol * 8}{mother_born_data[2]}{space_symbol * 8}</u>"
+
+    text.append(Paragraph(f"5.	Дата рождения матери:	число {mother_born_date} месяц {mother_born_month} год {mother_born_year}", style))
     text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f" {space_symbol * 6}и умер (дата): {space_symbol * 28} число__________ месяц______________ год____________ час__________ мин____________", style))
-    text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"3.	Смерть наступила: до начала родов {digit_one} во время родов {digit_two} после родов {digit_three} неизвестно {digit_four}", style))
-    text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"4.	Фамилия, имя, отчество (при наличии) матери:", style))
-    text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"5.	Дата рождения матери:	число_______ месяц_________ год __________", style))
-    text.append(Spacer(1, 1.2 * mm))
+
+    mother_address = json.loads(fields.get("Адрес матери", None))
+    area = "__________________"
+    city = "____________________"
+    street = "____________________"
+    house = "______"
+    flat = "_________"
+    if mother_address:
+        mother_address_details = mother_address.get("details", None)
+        region = mother_address_details.get("region", "")
+        region_type = mother_address_details.get("region_type", "")
+        area = mother_address_details.get("area", "__________________")
+        area_type = mother_address_details.get("area_type", "")
+        city = mother_address_details.get("city", "____________________")
+        city_type = mother_address_details.get("city_type", "")
+        street = mother_address_details.get("street", "____________________")
+        street_type = mother_address_details.get("street_type", "")
+        house = mother_address_details.get("house", "______")
+        house_type = mother_address_details.get("house_type", "")
+        flat = mother_address_details.get("flat", "_________")
+        flat_type = mother_address_details.get("flat_type", "")
+        postal_code = mother_address_details.get("postal_code", "")
     text.append(Paragraph(f"6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
-    text.append(Paragraph(f"субъект Российской Федерации  ", style))
-    text.append(Paragraph(f"район__________________ город ____________________", style))
-    text.append(Paragraph(f"населенный пункт__________________ улица ____________________", style))
-    text.append(Paragraph(f"дом______стр.______корп. _____ кв._________", style))
-    text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"7.	Местность: городская {digit_one} сельская {digit_two}", style))
-    text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"8.	Фамилия, имя, отчество (при наличии) умершего ребенка (фамилия ребенка, родившегося мертвым)", style))
-    text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"9.	Пол: мужской {digit_one} женский {digit_two}", style))
-    text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f"10. Смерть   (мертворождение)  произошла(о):  в  стационаре {digit_one} дома {digit_two} в другом месте {digit_three} неизвестно {digit_four}", style))
+    text.append(Paragraph(f"субъект Российской Федерации {region_type} {region}", style))
+    text.append(Paragraph(f"район ______ город {city} ", style))
+    text.append(Paragraph(f"населенный пункт__________________ улица {street}", style))
+    text.append(Paragraph(f"дом {house} стр.______корп. _____ кв. {flat}", style))
+    text.append(Spacer(1, 2 * mm))
+    type_live = json.loads(fields["Вид места жительства"])
+    town, rural = "городская", "сельская"
+    if type_live["title"].lower() == "город":
+        town = "<u>городская</u>"
+    else:
+        rural = "<u>сельская</u>"
+    text.append(Paragraph(f"7.	Местность: {town} {digit_one} {rural} {digit_two}", style))
+    text.append(Spacer(1, 4 * mm))
+    child_family = fields.get("Фамилия", "")
+    text.append(Paragraph(f"8.	Фамилия, имя, отчество (при наличии) умершего ребенка (фамилия ребенка, родившегося мертвым) {child_family}", style))
+    # text.append(Spacer(1, 1 * mm))
+    sex_child = fields.get("Пол", "")
+    sex_men, sex_woomen = "мужской", "женский"
+    if sex_child.lower() == "мужской":
+        sex_men = "<u>мужской</u>"
+    else:
+        sex_woomen = "<u>женский</u>"
+
+    text.append(Paragraph(f"9.	Пол: {sex_men} {digit_one} {sex_woomen} {digit_two}", style))
+    text.append(Spacer(1, 1.5 * mm))
+
+    place_death = json.loads(fields["Типы мест наступления смерти"])
+    print(place_death)
+    stationar, home, other_place, not_know = "в  стационаре", "дома", "в другом месте", "неизвестно"
+    if place_death["title"].lower() == "в стационаре":
+        stationar = "<u>в стационаре</u>"
+    elif place_death["title"].lower() == "дома":
+        home = "<u>дома</u>"
+    elif place_death["title"].lower() == "в другом месте":
+        other_place = "<u>в другом месте</u>"
+    elif place_death["title"].lower() == "неизвестно":
+        not_know = "<u>неизвестно</u>"
+    text.append(Paragraph(f"10. Смерть   (мертворождение)  произошла(о):  {stationar} {digit_one} {home} {digit_two} {other_place} {digit_three} {not_know} {digit_four}", style))
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
@@ -300,7 +352,8 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text = title_med_organization(text, fields['org'])
     text = title_data("МЕДИЦИНСКОЕ СВИДЕТЕЛЬСТВО О ПЕРИНАТАЛЬНОЙ СМЕРТИ", "", text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"],
                       fields)
-    text.append(Spacer(1, 1.7 * mm))
+    text = death_data_child(text, fields)
+    text.append(Spacer(1, 3.5 * mm))
 
     opinion = [
         [
@@ -327,8 +380,7 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text.append(tbl)
 
     text.append(Spacer(1, 0.3 * mm))
-    mom_data = mother_data()
-    # baby_data = child_data()
+    mom_data = mother_data(fields)
     opinion = [
         [
             Paragraph(f'{mom_data}', styleT),
@@ -521,10 +573,19 @@ def gen_table(opinion, col_width, tbl_style, row_height=None):
     return tbl
 
 
-def mother_data():
-    fio = f"4.Фамилия, имя, отчество (при наличии): Соропудова Людмила Феоктистовна {line_break}{line_break}"
-    born = f"5. Дата рождения: {op_boxed_tag}1{cl_boxed_tag}{op_boxed_tag}2{cl_boxed_tag} {space_symbol * 3} {op_boxed_tag}0{cl_boxed_tag}{op_boxed_tag}5{cl_boxed_tag} " \
-           f"{space_symbol * 3} {op_boxed_tag}1{cl_boxed_tag}{op_boxed_tag}9{cl_boxed_tag}{op_boxed_tag}9{cl_boxed_tag}{op_boxed_tag}3{cl_boxed_tag}{line_break}{line_break}"
+def mother_data(fields):
+    mother_fio = mother_fio_data(fields)
+    fio = f"4.Фамилия, имя, отчество (при наличии): {mother_fio}{line_break}{line_break}"
+    mother_born = fields.get("Дата рождения матери", None)
+    mother_born_date, mother_born_month, mother_born_year = " ", " ", " "
+    if mother_born:
+        mother_born_data = mother_born.split(".")
+        mother_born_date = mother_born_data[0]
+        mother_born_month = mother_born_data[1]
+        mother_born_year = mother_born_data[2]
+
+    born = f"5. Дата рождения: {op_boxed_tag}{mother_born_date}{cl_boxed_tag} {space_symbol * 3} {op_boxed_tag}{mother_born_month}{cl_boxed_tag} " \
+           f"{space_symbol * 3} {op_boxed_tag}{mother_born_year}{cl_boxed_tag}{line_break}{line_break}"
     type_document = f"6. Документ, удостоверяющий личность: {line_break}"
     serial_number = f"{space_symbol * 5}серия __________номер ______________ кем и когда выдан _____________________ {line_break}{line_break}"
     snils = f"7. СНИЛС___________{line_break}{line_break}"
@@ -909,3 +970,62 @@ def bottom_colontitul(text, params):
     text.append(tbl)
 
     return text
+
+
+def death_data_child(text, fields_data):
+    death_date_def, death_month_def, death_year_def = "__________", "______________", " ____________"
+    death_hour_def, death_min_def = "__________", "____________"
+
+    death_data = fields_data["Дата смерти"].split(".")
+    death_date_result = f"<u>{space_symbol * 8}{death_data[0]}{space_symbol * 8}</u>"
+    death_month_result = f"<u>{space_symbol * 12}{death_data[1]}{space_symbol * 12}</u>"
+    death_year_result = f"<u>{space_symbol * 8}{death_data[2]}{space_symbol * 8}</u>"
+    if fields_data.get("Дата рождения", None):
+        death_date = death_date_def
+        death_month = death_month_def
+        death_year = death_year_def
+    if not fields_data.get("Дата рождения", None):
+        death_date = death_date_result
+        death_month = death_month_result
+        death_year = death_year_result
+    text.append(Paragraph(f"1. Рождение мертвого ребенка: {space_symbol * 5} число {death_date} месяц{death_month} год{death_year} час__________ мин____________", style))
+    text.append(Spacer(1, 1.2 * mm))
+    born_date, born_month, born_year = "__________", "______________", " ____________"
+    born_hour, born_min = "__________", "____________"
+    if fields_data.get("Дата рождения", None):
+        born_data = fields_data["Дата рождения"].split(".")
+        born_date = f"<u>{space_symbol * 8}{born_data[0]}{space_symbol * 8}</u>"
+        born_month = f"<u>{space_symbol * 12}{born_data[1]}{space_symbol * 12}</u>"
+        born_year = f"<u>{space_symbol * 8}{born_data[2]}{space_symbol * 8}</u>"
+        death_date = death_date_result
+        death_month = death_month_result
+        death_year = death_year_result
+    if fields_data.get("Дата рождения", None) is None:
+        death_date = death_date_def
+        death_month = death_month_def
+        death_year = death_year_def
+
+    text.append(Paragraph(f"2. Ребенок родился живым: {space_symbol * 11} число{born_date} месяц{born_month} год{born_year} час__________ мин____________", style))
+    text.append(Spacer(1, 1.2 * mm))
+    text.append(Paragraph(f" {space_symbol * 6}и умер (дата): {space_symbol * 28} число {death_date} месяц{death_month} год{death_year} час__________ мин____________", style))
+    text.append(Spacer(1, 1.2 * mm))
+
+    regarding_time = json.loads(fields_data["Наступление летального исхода относительно времени родов"])
+    before_start_birth, during_birth, after_birth, not_known = "до начала родов", "во время родов", "после родов", "неизвестно"
+    if regarding_time["title"].lower() == "до начала родов":
+        before_start_birth = "<u>до начала родов</u>"
+    elif regarding_time["title"].lower() == "во время родов":
+        during_birth = "<u>во время родов</u>"
+    elif regarding_time["title"].lower() == "после родов":
+        after_birth = "<u>после родов</u>"
+    elif regarding_time["title"].lower() == "неизвестно":
+        not_known = "<u>неизвестно</u>"
+    text.append(Paragraph(f"3. Смерть наступила: {before_start_birth} {digit_one} {during_birth} {digit_two} {after_birth} {digit_three} {not_known} {digit_four}", style))
+    return text
+
+
+def mother_fio_data(fields):
+    mother_family = fields.get("Фамилия матери", "")
+    mother_name  = fields.get("Имя матери", "")
+    mother_patronymic = fields.get("Отчество матери", "")
+    return f"{mother_family} {mother_name} {mother_patronymic}"
