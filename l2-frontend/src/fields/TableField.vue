@@ -84,6 +84,14 @@
               dictionary="mkb10.6"
               :disabled="disabled"
             />
+            <MKBFieldTreeselect
+              v-else-if="settings[i].type === 36"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              v-model="r[i]"
+              @modified="changeCell(j, i, $event)"
+              dictionary="mkb10.combined"
+              :disabled="disabled"
+            />
             <DoctorProfileTreeselectField
               v-else-if="settings[i].type === 35"
               :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"

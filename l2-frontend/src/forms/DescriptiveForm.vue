@@ -198,6 +198,9 @@
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 35">
                 <DoctorProfileTreeselectField v-model="field.value" :disabled="confirmed" />
               </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 36">
+                <MKBFieldTreeselect v-model="field.value" :disabled="confirmed" dictionary="mkb10.combined" />
+              </div>
               <div
                 :title="field.helper"
                 class="field-helper"

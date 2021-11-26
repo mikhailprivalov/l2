@@ -108,6 +108,9 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Смерть от внешних причин",
         "Дата смерти от внешних причин",
         "Время смерти от внешних причин",
+        "Дата события",
+        "Время события",
+        "Место и обстоятельства",
 
         "Тип медицинского работника",
         "Основания для определения причины смерти",
@@ -393,12 +396,29 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text = []
     text = death_happaned(text, fields["Род причины смерти"])
     date, month, year, hour, min = "____", "____", "_________", "____", "____"
-    unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
+    date_event_data = fields.get("Дата события", None)
+    time_event_data = fields.get("Время события", None)
+    print(time_event_data)
+    if date_event_data:
+        date_event_data = date_event_data.split(".")
+        date = f"<u>{space_symbol * 3}{date_event_data[0]}{space_symbol * 3}</u>"
+        month = f"<u>{space_symbol * 3}{date_event_data[1]}{space_symbol * 3}</u>"
+        year = f"<u>{space_symbol * 3}{date_event_data[2]}{space_symbol * 3}</u>"
+    if time_event_data:
+        time_event_data = time_event_data.split(":")
+        hour = f"<u>{space_symbol * 3}{time_event_data[0]}{space_symbol * 3}</u>"
+        min = f"<u>{space_symbol * 3}{time_event_data[1]}{space_symbol * 3}</u>"
+
     text.append(Paragraph(
         f"19. В случае смерти от несчастного случая, убийства, самоубийства, от военных и террористических действий, при неустановленном роде смерти - указать дату травмы (отравления): "
-        f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при",
+        f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при которых",
         styleT))
-    text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
+
+    unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
+    place_and_reasons = fields.get("Место и обстоятельства", None)
+    if place_and_reasons:
+        unfortunate_and_other_info = f"<u>{space_symbol * 2}{place_and_reasons} {space_symbol * 2}</u>"
+    text.append(Paragraph(f"произошла травма (отравление){unfortunate_and_other_info}", styleT))
     text = who_set_death(text, fields["Тип медицинского работника"])
     text = doctor_fio(text, fields, iss)
     text.append(Spacer(1, 1 * mm))
@@ -1387,7 +1407,7 @@ def death_happaned(text, params):
         not_know = f"{op_bold_tag}<u>{not_know}</u>{cl_bold_tag}"
 
     opinion = gen_opinion([kill, '4', self_kill, '5', military, '6', terrorist, '7', not_know, '8'])
-    col_width = (20 * mm, 6 * mm, 23 * mm, 6 * mm, 40 * mm, 6 * mm, 30 * mm, 6 * mm, 40 * mm, 6 * mm,)
+    col_width = (22 * mm, 6 * mm, 23 * mm, 6 * mm, 40 * mm, 6 * mm, 30 * mm, 6 * mm, 40 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
