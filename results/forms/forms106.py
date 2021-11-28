@@ -219,32 +219,12 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph(f"5.	Дата рождения матери:	число {mother_born_date} месяц {mother_born_month} год {mother_born_year}", style))
     text.append(Spacer(1, 1.2 * mm))
 
-    mother_address = json.loads(fields.get("Адрес матери", None))
-    area = "__________________"
-    city = "____________________"
-    street = "____________________"
-    house = "______"
-    flat = "_________"
-    if mother_address:
-        mother_address_details = mother_address.get("details", None)
-        region = mother_address_details.get("region", "")
-        region_type = mother_address_details.get("region_type", "")
-        area = mother_address_details.get("area", "__________________")
-        area_type = mother_address_details.get("area_type", "")
-        city = mother_address_details.get("city", "____________________")
-        city_type = mother_address_details.get("city_type", "")
-        street = mother_address_details.get("street", "____________________")
-        street_type = mother_address_details.get("street_type", "")
-        house = mother_address_details.get("house", "______")
-        house_type = mother_address_details.get("house_type", "")
-        flat = mother_address_details.get("flat", "_________")
-        flat_type = mother_address_details.get("flat_type", "")
-        postal_code = mother_address_details.get("postal_code", "")
+    mother_address = mother_address_get(fields)
     text.append(Paragraph(f"6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
-    text.append(Paragraph(f"субъект Российской Федерации {region_type} {region}", style))
-    text.append(Paragraph(f"район ______ город {city} ", style))
-    text.append(Paragraph(f"населенный пункт__________________ улица {street}", style))
-    text.append(Paragraph(f"дом {house} стр.______корп. _____ кв. {flat}", style))
+    text.append(Paragraph(f"субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}", style))
+    text.append(Paragraph(f"район ______ город {mother_address['city']}", style))
+    text.append(Paragraph(f"населенный пункт__________________ улица {mother_address['street']}", style))
+    text.append(Paragraph(f"дом {mother_address['house']} стр.______корп. _____ кв. {mother_address['flat']}", style))
     text.append(Spacer(1, 2 * mm))
     type_live = json.loads(fields["Вид места жительства"])
     town, rural = "городская", "сельская"
@@ -586,20 +566,50 @@ def mother_data(fields):
 
     born = f"5. Дата рождения: {op_boxed_tag}{mother_born_date}{cl_boxed_tag} {space_symbol * 3} {op_boxed_tag}{mother_born_month}{cl_boxed_tag} " \
            f"{space_symbol * 3} {op_boxed_tag}{mother_born_year}{cl_boxed_tag}{line_break}{line_break}"
-    type_document = f"6. Документ, удостоверяющий личность: {line_break}"
-    serial_number = f"{space_symbol * 5}серия __________номер ______________ кем и когда выдан _____________________ {line_break}{line_break}"
-    snils = f"7. СНИЛС___________{line_break}{line_break}"
-    polis = f"8. Полис ОМС ________________ {line_break}{line_break}"
+    type_document_mother = fields.get("Тип ДУЛ", "")
+    if type_document_mother and "-" in type_document_mother:
+        type_document_mother = type_document_mother.split("-")
+        type_document_mother = f"<u>{type_document_mother[1]}</u>"
+    type_document = f"6. Документ, удостоверяющий личность: {type_document_mother}{line_break}"
+    doc_serial, doc_number, doc_who_issued, doc_date = "__________", "______________", "_____________________", ""
+    dul = json.loads(fields.get("ДУЛ матери", None))
+    if dul:
+        doc_serial = f"<u>{dul.get('rows')[0][0]}</u>"
+        doc_number = f"<u>{dul.get('rows')[0][1]}</u>"
+        doc_who_issued = f"<u>{dul.get('rows')[0][2]}</u>"
+        doc_date = f"<u>{dul.get('rows')[0][3]}</u>"
+
+    serial_number = f"{space_symbol * 5}серия {doc_serial} номер {doc_number} кем и когда выдан {doc_who_issued} {doc_date} {line_break}{line_break}"
+    doc_snils = "________________"
+    doc_data_snils = fields.get("СНИЛС матери", "")
+    if doc_data_snils:
+        doc_snils = f"<u>{doc_snils}</u>"
+    snils = f"7. СНИЛС {doc_snils}{line_break}{line_break}"
+    doc_polis = "________________"
+    doc_data_polis = fields.get("Полис матери", "")
+    if doc_data_polis:
+        doc_polis = f"<u>{doc_data_polis}</u>"
+    polis = f"8. Полис ОМС {doc_polis} {line_break}{line_break}"
     address_title = f"9. Регистрация по месту жительства (пребывания):{line_break}"
-    region_country = f"{space_symbol * 5}субъект Российской Федерации {line_break}"
+    mother_address = mother_address_get(fields)
+    region_country = f"{space_symbol * 5}субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}{line_break}"
     area_region = f"{space_symbol * 5} район {line_break}"
-    city = f"{space_symbol * 5} город {line_break}"
+    city = f"{space_symbol * 5} город {mother_address['city']} {line_break}"
     live_punkt = f"{space_symbol * 5} населенный пункт {line_break}"
-    street = f"{space_symbol * 5} улица {line_break}"
-    house = f"{space_symbol * 5} дом ______ стр.______ корп.________ кв._________ {line_break}{line_break}"
+    street = f"{space_symbol * 5} улица {mother_address['street']}{line_break}"
+    house = f"{space_symbol * 5} дом {mother_address['house']} стр.______ корп.________ кв.{mother_address['flat']} {line_break}{line_break}"
     type_place = f"10. Местность: городская {digit_one} сельская {digit_two}{line_break}{line_break}"
-    married_status = f"11. Семейное положение:{line_break} состоит в зарегистрированном браке {digit_one}{line_break}"
-    married_other_status = f"не состоит в зарегистрированном брак {digit_two} неизвестно {digit_three} {line_break}{line_break}"
+
+    is_married, not_married, not_known = "состоит в зарегистрированном браке", "не состоит в зарегистрированном брак", "неизвестно"
+    married_mother = json.loads(fields.get("Семейное положение", None))
+    if int(married_mother["code"]) == 4:
+        is_married = f"<u>{op_bold_tag}{is_married}{cl_bold_tag}</u>"
+    elif int(married_mother["code"]) == 3:
+        not_known = f"<u>{op_bold_tag}{not_known}{cl_bold_tag}</u>"
+    elif int(married_mother["code"]) == 5:
+        not_married = f"<u>{op_bold_tag}{not_married}{cl_bold_tag}</u>"
+    married_status = f"11. Семейное положение:{line_break} {is_married} {digit_one}{line_break}"
+    married_other_status = f"{not_married} {digit_two} {not_known} {digit_three} {line_break}{line_break}"
     education = f"12. Образование: профессиональное: высшее {digit_one} неполное высшее{digit_two} среднее профессиональное {digit_three} " \
                 f"{line_break} общее: среднее {digit_four} основное {digit_five} начальное {digit_six} не имеет начального образования " \
                 f"{digit_seven} неизвестно {digit_eight}{line_break}{line_break}"
@@ -1029,3 +1039,31 @@ def mother_fio_data(fields):
     mother_name  = fields.get("Имя матери", "")
     mother_patronymic = fields.get("Отчество матери", "")
     return f"{mother_family} {mother_name} {mother_patronymic}"
+
+
+def mother_address_get(data_fields):
+    mother_address = json.loads(data_fields.get("Адрес матери", None))
+    area = "__________________"
+    city = "____________________"
+    street = "____________________"
+    house = "______"
+    flat = "_________"
+    region, region_type, area_type, city_type, street_type, house_type, flat_type, postal_code = "", "", "", "", "", "", "", ""
+    if mother_address:
+        mother_address_details = mother_address.get("details", None)
+        region = mother_address_details.get("region", "")
+        region_type = mother_address_details.get("region_type", "")
+        area = mother_address_details.get("area", "__________________")
+        area_type = mother_address_details.get("area_type", "")
+        city = mother_address_details.get("city", "____________________")
+        city_type = mother_address_details.get("city_type", "")
+        street = mother_address_details.get("street", "____________________")
+        street_type = mother_address_details.get("street_type", "")
+        house = mother_address_details.get("house", "______")
+        house_type = mother_address_details.get("house_type", "")
+        flat = mother_address_details.get("flat", "_________")
+        flat_type = mother_address_details.get("flat_type", "")
+        postal_code = mother_address_details.get("postal_code", "")
+
+    return {"region": region, "region_type": region_type, "area": area, "area_type": area_type, "city": city, "city_type": city_type, "street": street,
+            "street_type": street_type, "house": house, "house_type": house_type, "flat": flat, "flat_type": flat_type, "postal_code": postal_code}
