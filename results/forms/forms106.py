@@ -214,7 +214,7 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 1.2 * mm))
 
     mother_address = mother_address_get(fields)
-    text.append(Paragraph(f"6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
+    text.append(Paragraph("6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
     text.append(Paragraph(f"субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}", style))
     text.append(Paragraph(f"район ______ город {mother_address['city']}", style))
     text.append(Paragraph(f"населенный пункт__________________ улица {mother_address['street']}", style))
@@ -654,7 +654,7 @@ def mother_data(fields):
         f"{digit_seven} {not_known} {digit_eight}{line_break}{line_break}"
     )
     work = f"Занятость: работала {digit_one} проходила военную или приравненную к ней службу {digit_two} студентка {digit_three} не работала {digit_four} прочее {digit_five} {line_break}{line_break}"
-    count_birth = f"14.	Которые по счету роды __________"
+    count_birth = "14.	Которые по счету роды __________"
 
     return (
         f"{fio}{born}{type_document}{serial_number}{snils}{polis}{address_title}{region_country}{area_region}{city}{live_punkt}{street}{house}{type_place}"
@@ -790,7 +790,7 @@ def who_write_documet(item, position_writer, fio):
 def who_writer_about_tbl():
     opinion = [
         [
-            Paragraph(f"", styleMicro),
+            Paragraph("", styleMicro),
             Paragraph("(должность врача (фельдшера, акушерки), заполнившего медицинское свидетельство о перинатальной смерти)", styleMicro),
             Paragraph("", styleMicro),
             Paragraph("(подпись)", styleMicro),
@@ -855,7 +855,7 @@ def who_get_about_tbl():
     opinion = [
         [
             Paragraph("", styleT),
-            Paragraph(f"(фамилия, имя, отчество (при наличии) и отношение к мертворожденному (умершему) ребенку", styleMicro),
+            Paragraph("(фамилия, имя, отчество (при наличии) и отношение к мертворожденному (умершему) ребенку", styleMicro),
         ],
     ]
     col_width = (
@@ -1065,7 +1065,7 @@ def who_check(number, month, year, fio):
             Paragraph(f"{number}", styleT),
             Paragraph(f"{month}", styleT),
             Paragraph(f"{year} г.", styleT),
-            Paragraph(f"", styleT),
+            Paragraph("", styleT),
             Paragraph(f"{fio}", styleT),
         ],
     ]
