@@ -871,12 +871,15 @@ def mkb10_dict(request):
 
     if diag_title != "-1":
         diag_title = f"{diag_title}."
-    diag_query = get_diagnoses(d_type=d, diag_title=f"{diag_title}", diag_mkb=code)
+    if d != "mkb10.combined":
+        diag_query = get_diagnoses(d_type=d, diag_title=f"{diag_title}", diag_mkb=code)
+    else:
+        diag_query = get_diagnoses(d_type="mkb10.5", diag_title=f"{diag_title}", diag_mkb=code, limit=50)
+        diag_query.extend(get_diagnoses(d_type="mkb10.6", diag_title=f"{diag_title}", diag_mkb=code, limit=50))
 
     data = []
     for d in diag_query:
         data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
-
     return JsonResponse({"data": data})
 
 

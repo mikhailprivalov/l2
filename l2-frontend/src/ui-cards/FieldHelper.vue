@@ -66,6 +66,7 @@ const DB_LINKS = {
   '%full_main_address': 'Адрес регистрации пациента (полный)',
   '%docprofile': 'Текущий пользователь (врач)',
   '%patient_fio': 'ФИО пациента',
+  '%patient_family': 'Фамилия пациента',
   '%patient_born': 'Дата рождения пациента',
   '%snils': 'СНИЛС пациента',
   '%polis_enp': 'ЕНП пациента',
@@ -79,6 +80,18 @@ const DB_LINKS = {
   '%proto_operation': 'proto_operation',
   '%proto_description': 'proto_description',
   '%doc_position': 'Должность врача',
+  '%mother_family': 'Мать-Фамилия',
+  '%mother_name': 'Мать-Имя',
+  '%mother_patronymic': 'Мать-Отчество',
+  '%mother_born': 'Мать-Дата рождения',
+  '%mother_snils': 'Мать-СНИЛС',
+  '%mother_polis_enp': 'Мать-ЕНП',
+  '%mother_document_type': 'Мать-Тип Документа',
+  '%mother_passport_num': 'Мать-паспорт-номер',
+  '%mother_passport_serial': 'Мать-паспорт-серия',
+  '%mother_passport_who': 'Мать-паспорт-кто выдал',
+  '%mother_passport_date_issue': 'Мать-паспорт-дата выдачи',
+  '%mother_full_main_address': 'Мать-Адрес регистрации пациента (полный)',
 };
 
 export default {

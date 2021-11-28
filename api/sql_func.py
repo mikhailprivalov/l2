@@ -173,7 +173,7 @@ def users_all(hosp_id):
     return row
 
 
-def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1"):
+def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1", limit=100):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -189,9 +189,9 @@ def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1"):
               END
             AND nsi_id IS NOT NULL
             AND nsi_id != ''
-        LIMIT 200
+        LIMIT %(limit)s
         """,
-            params={"d_type": d_type, "diag_title": diag_title, "diag_mkb": diag_mkb},
+            params={"d_type": d_type, "diag_title": diag_title, "diag_mkb": diag_mkb, "limit": limit},
         )
         rows = namedtuplefetchall(cursor)
     return rows
