@@ -398,7 +398,6 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     date, month, year, hour, min = "____", "____", "_________", "____", "____"
     date_event_data = fields.get("Дата события", None)
     time_event_data = fields.get("Время события", None)
-    print(time_event_data)
     if date_event_data:
         date_event_data = date_event_data.split(".")
         date = f"<u>{space_symbol * 3}{date_event_data[0]}{space_symbol * 3}</u>"

@@ -492,26 +492,6 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    # text = death_happaned(text, fields["Род причины смерти"])
-    # date, month, year, hour, min = "____", "____", "_________", "____", "____"
-    # unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
-    # text.append(Paragraph(
-    #     f"19. В случае смерти от несчастного случая, убийства, самоубийства, от военных и террористических действий, при неустановленном роде смерти - указать дату травмы (отравления): "
-    #     f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при",
-    #     styleT))
-    # text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
-    # text = who_set_death(text, fields["Тип медицинского работника"])
-    # text = doctor_fio(text, fields, iss)
-    # text.append(Spacer(1, 1 * mm))
-    # text = why_death(text, fields, "22", "23", "24", "25")
-    # text.append(Spacer(1, 2 * mm))
-    # text.append(
-    #     Paragraph("<u>Руководитель (иное уполномоченное лицо **) медицинской организации</u>, индивидуальный предприниматель, осуществляющий медицинскую деятельность (подчеркнуть)", styleT))
-    # text.append(Spacer(1, 2 * mm))
-    # text = hospital_manager_stamp(text, fields["Главный врач"])
-    # text.append(Spacer(1, 2 * mm))
-    # text.append(Paragraph("26 Свидетельство проверено ответственным за правильность заполнения медицинских свидетельств.", styleT))
-    # text = check_person_data(text, fields["Проверил"])
     text = bottom_colontitul(
         text,
         '** В случае, установленном частью 10 статьи 9 Федерального закона от 5 июня 2012 г. № 50-ФЗ "О регулировании деятельности российских граждан и '
@@ -1164,7 +1144,7 @@ def death_data_child(text, fields_data):
         death_date = death_date_result
         death_month = death_month_result
         death_year = death_year_result
-    text.append(Paragraph(f"1. Рождение мертвого ребенка: {space_symbol * 5} число {death_date} месяц{death_month} год{death_year} час__________ мин____________", style))
+    text.append(Paragraph(f"1. Рождение мертвого ребенка: {space_symbol * 5} число {death_date} месяц{death_month} год{death_year} час {death_hour_def} мин {death_min_def}", style))
     text.append(Spacer(1, 1.2 * mm))
     born_date, born_month, born_year = "__________", "______________", " ____________"
     born_hour, born_min = "__________", "____________"
@@ -1181,9 +1161,9 @@ def death_data_child(text, fields_data):
         death_month = death_month_def
         death_year = death_year_def
 
-    text.append(Paragraph(f"2. Ребенок родился живым: {space_symbol * 11} число{born_date} месяц{born_month} год{born_year} час__________ мин____________", style))
+    text.append(Paragraph(f"2. Ребенок родился живым: {space_symbol * 11} число{born_date} месяц{born_month} год{born_year} час{born_hour} мин{born_min}", style))
     text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f" {space_symbol * 6}и умер (дата): {space_symbol * 28} число {death_date} месяц{death_month} год{death_year} час__________ мин____________", style))
+    text.append(Paragraph(f" {space_symbol * 6}и умер (дата): {space_symbol * 28} число {death_date} месяц{death_month} год{death_year} час{born_hour} мин{born_min}", style))
     text.append(Spacer(1, 1.2 * mm))
 
     regarding_time = json.loads(fields_data["Наступление летального исхода относительно времени родов"])
