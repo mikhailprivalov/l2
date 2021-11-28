@@ -171,8 +171,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
-        print(i["title"])
-        print(i["value"])
         data[i["title"]] = i["value"]
 
     hospital_obj: Hospitals = user.doctorprofile.get_hospital()
@@ -248,7 +246,6 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 1.5 * mm))
 
     place_death = json.loads(fields["Типы мест наступления смерти"])
-    print(place_death)
     stationar, home, other_place, not_know = "в  стационаре", "дома", "в другом месте", "неизвестно"
     if place_death["title"].lower() == "в стационаре":
         stationar = "<u>в стационаре</u>"
@@ -610,9 +607,29 @@ def mother_data(fields):
         not_married = f"<u>{op_bold_tag}{not_married}{cl_bold_tag}</u>"
     married_status = f"11. Семейное положение:{line_break} {is_married} {digit_one}{line_break}"
     married_other_status = f"{not_married} {digit_two} {not_known} {digit_three} {line_break}{line_break}"
-    education = f"12. Образование: профессиональное: высшее {digit_one} неполное высшее{digit_two} среднее профессиональное {digit_three} " \
-                f"{line_break} общее: среднее {digit_four} основное {digit_five} начальное {digit_six} не имеет начального образования " \
-                f"{digit_seven} неизвестно {digit_eight}{line_break}{line_break}"
+
+    high_school, not_high_school, middle_school = "высшее", "неполное высшее", "среднее профессиональное"
+    general_middle, main, initial, not_has_initial, not_known = "среднее", "основное", "начальное", "не имеет начального образования", "неизвестно"
+    education_status = json.loads(fields.get("Классификатор образования для медицинских свидетельств", None))
+    if education_status["code"] == "1":
+        high_school = f"<u>{op_bold_tag}{high_school}{cl_bold_tag}</u>"
+    elif education_status["code"] == "2":
+        not_high_school = f"<u>{op_bold_tag}{not_high_school}{cl_bold_tag}</u>"
+    elif education_status["code"] == "3":
+        middle_school = f"<u>{op_bold_tag}{middle_school}{cl_bold_tag}</u>"
+    elif education_status["code"] == "5":
+        general_middle = f"<u>{op_bold_tag}{general_middle}{cl_bold_tag}</u>"
+    elif education_status["code"] == "6":
+        main = f"<u>{op_bold_tag}{main}{cl_bold_tag}</u>"
+    elif education_status["code"] == "7":
+        initial = f"<u>{op_bold_tag}{initial}{cl_bold_tag}</u>"
+    elif education_status["code"] == "8":
+        not_has_initial = f"<u>{op_bold_tag}{not_has_initial}{cl_bold_tag}</u>"
+    elif education_status["code"] == "9":
+        not_known = f"<u>{op_bold_tag}{not_known}{cl_bold_tag}</u>"
+    education = f"12. Образование: профессиональное: {high_school} {digit_one} {not_high_school} {digit_two} {middle_school} {digit_three} " \
+                f"{line_break} общее: {general_middle} {digit_four} {main} {digit_five} {initial} {digit_six} {not_has_initial}" \
+                f"{digit_seven} {not_known} {digit_eight}{line_break}{line_break}"
     work = f"Занятость: работала {digit_one} проходила военную или приравненную к ней службу {digit_two} студентка {digit_three} не работала {digit_four} прочее {digit_five} {line_break}{line_break}"
     count_birth = f"14.	Которые по счету роды __________"
 
