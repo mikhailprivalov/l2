@@ -1452,7 +1452,6 @@ class Directions(BaseRequester):
             s.acquire()
             update_lock()
             try:
-                print(direct.pk)
                 uploaded.append(self.check_send(direct, out))
                 if out:
                     out.write("Upload direction {} ({}/{}); RMIS number={}".format(direct.pk, i, cnt, uploaded[-1]))

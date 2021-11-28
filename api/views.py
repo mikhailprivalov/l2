@@ -854,7 +854,6 @@ def mkb10_dict(request):
         return JsonResponse({"data": [{"code": '-', "title": '', "id": '-'}]})
 
     d = request.GET.get("dictionary", "mkb10.4")
-    print("dictionary", d)
     parts = q.split(' ', 1)
     code = "-1"
     diag_title = "-1"
@@ -881,7 +880,6 @@ def mkb10_dict(request):
     data = []
     for d in diag_query:
         data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
-    print(data)
     return JsonResponse({"data": data})
 
 

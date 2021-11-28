@@ -14,14 +14,11 @@ from .flowable import FrameDataUniversal
 from directions.models import Issledovaniya
 from ..prepare_data import fields_result_only_title_fields
 import simplejson as json
-import datetime
-from dateutil.relativedelta import relativedelta
 from hospitals.models import Hospitals
 
 pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 pdfmetrics.registerFont(TTFont('digit8', os.path.join(FONTS_FOLDER, 'digit88table.ttf')))
-# pdfmetrics.registerFont(TTFont('digit88table', os.path.join(FONTS_FOLDER, 'digit88table.ttf')))
 styleSheet = getSampleStyleSheet()
 style = styleSheet["Normal"]
 style.fontName = "PTAstraSerifReg"
@@ -95,15 +92,12 @@ digit_six = f"{op_boxed_tag}6{cl_boxed_tag}"
 digit_seven = f"{op_boxed_tag}7{cl_boxed_tag}"
 digit_eight = f"{op_boxed_tag}8{cl_boxed_tag}"
 digit_nine = f"{op_boxed_tag}9{cl_boxed_tag}"
-
-
-
 space_symbol = '&nbsp;'
 line_break = "<br/>"
 
+
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/-2у
-    data_individual = direction.client.get_data_individual()
     data = {}
 
     title_fields = [
@@ -114,7 +108,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Серия предшествующего",
         "Номер предшествующего",
         "Дата выдачи предшествующего",
-
         "Фамилия матери",
         "Имя матери",
         "Отчество матери",
@@ -129,7 +122,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Классификатор образования для медицинских свидетельств",
         "Социальные группы населения в учетной медицинской документации",
         "Которые по счету роды",
-
         "Родился",
         "Дата рождения",
         "Время рождения (известно)",
@@ -147,23 +139,19 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Рождение мертвым или живорождение произошло",
         "Которыми по счету",
         "Число родившихся (живыми или мертвыми) детей",
-
         "а) Основной заболевание (плода или ребенка)",
         "б) Другие заболевания плода или ребенка",
         "в) основное заболевание матери",
         "г) другие заболевания матери",
         "д) другие обстоятельства",
-
         "Тип медицинского работника, установившего причины смерти",
         "Род причины смерти",
-
         "ФИО (получатель)",
         "Документ (получатель)",
         "Серия (получатель)",
         "Номер (получатель)",
         "Кем и когда выдан (получатель)",
         "СНИЛС (получатель)",
-
         "Заполнил",
         "Должность",
         "Проверил",
@@ -197,8 +185,16 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Мед. св-во о смерти 106-2/у
     text = []
-    text = title_data("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О ПЕРИНАТАЛЬНОЙ СМЕРТИ", "К УЧЕТНОЙ ФОРМЕ № 106-2/У", text, fields.get("Серия", ""), fields.get("Номер", ""), fields.get("Дата выдачи", ""),
-                      fields.get("Вид медицинского свидетельства о смерти", ""), fields)
+    text = title_data(
+        "КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О ПЕРИНАТАЛЬНОЙ СМЕРТИ",
+        "К УЧЕТНОЙ ФОРМЕ № 106-2/У",
+        text,
+        fields.get("Серия", ""),
+        fields.get("Номер", ""),
+        fields.get("Дата выдачи", ""),
+        fields.get("Вид медицинского свидетельства о смерти", ""),
+        fields,
+    )
     text.append(Spacer(1, 3 * mm))
 
     text = death_data_child(text, fields)
@@ -234,7 +230,6 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 4 * mm))
     child_family = fields.get("Фамилия", "")
     text.append(Paragraph(f"8.	Фамилия, имя, отчество (при наличии) умершего ребенка (фамилия ребенка, родившегося мертвым) {child_family}", style))
-    # text.append(Spacer(1, 1 * mm))
     sex_child = fields.get("Пол", "")
     sex_men, sex_woomen = "мужской", "женский"
     if sex_child.lower() == "мужской":
@@ -327,8 +322,16 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text = []
 
     text = title_med_organization(text, fields['org'])
-    text = title_data("МЕДИЦИНСКОЕ СВИДЕТЕЛЬСТВО О ПЕРИНАТАЛЬНОЙ СМЕРТИ", "", text, fields["Серия"], fields.get("Номер", ""), fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"],
-                      fields)
+    text = title_data(
+        "МЕДИЦИНСКОЕ СВИДЕТЕЛЬСТВО О ПЕРИНАТАЛЬНОЙ СМЕРТИ",
+        "",
+        text,
+        fields["Серия"],
+        fields.get("Номер", ""),
+        fields["Дата выдачи"],
+        fields["Вид медицинского свидетельства о смерти"],
+        fields,
+    )
     text = death_data_child(text, fields)
     text.append(Spacer(1, 3.5 * mm))
 
@@ -430,22 +433,35 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
 def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text = []
     text.append(Paragraph("23. Которым по счету ребенок был рожден у матери (считая умерших и не считая мертворожденных) ______", styleT))
-    text.append(Paragraph(
-        f"24. Смерть ребенка (рождение мертвым) произошла(о): от заболевания {op_boxed_tag}1{cl_boxed_tag} несчастного случая {op_boxed_tag}2{cl_boxed_tag}"
-        f"убийства {op_boxed_tag}3{cl_boxed_tag} в ходе действий: военных {op_boxed_tag}4{cl_boxed_tag} террористических {op_boxed_tag}5{cl_boxed_tag}"
-        f" род смерти не установлен {op_boxed_tag}6{cl_boxed_tag}",
-        styleT))
+    text.append(
+        Paragraph(
+            f"24. Смерть ребенка (рождение мертвым) произошла(о): от заболевания {op_boxed_tag}1{cl_boxed_tag} несчастного случая {op_boxed_tag}2{cl_boxed_tag}"
+            f"убийства {op_boxed_tag}3{cl_boxed_tag} в ходе действий: военных {op_boxed_tag}4{cl_boxed_tag} террористических {op_boxed_tag}5{cl_boxed_tag}"
+            f" род смерти не установлен {op_boxed_tag}6{cl_boxed_tag}",
+            styleT,
+        )
+    )
     text.append(Paragraph(f"25.Лицо, принимавшее роды: врач {op_boxed_tag}1{cl_boxed_tag} фельдшер, акушерка {op_boxed_tag}2{cl_boxed_tag} другое {op_boxed_tag}3{cl_boxed_tag}", styleT))
     text = why_death(text, fields, '26')
-    text.append(Paragraph(f"27. Причины смерти установлены: врачом, только удостоверившим смерть {op_boxed_tag}1{cl_boxed_tag} "
-                          f"врачом-акушером-гинекологом, принимавшим роды {op_boxed_tag}2{cl_boxed_tag} "
-                          f"врачом-неонатологом (или врачом-педиатром), лечившим ребенка {op_boxed_tag}3{cl_boxed_tag} "
-                          f"врачом-патологоанатомом {op_boxed_tag}4{cl_boxed_tag} "
-                          f"врачом - судебно-медицинским экспертом {op_boxed_tag}5{cl_boxed_tag} "
-                          f"фельдшером, акушеркой {op_boxed_tag}6{cl_boxed_tag}", styleT))
+    text.append(
+        Paragraph(
+            f"27. Причины смерти установлены: врачом, только удостоверившим смерть {op_boxed_tag}1{cl_boxed_tag} "
+            f"врачом-акушером-гинекологом, принимавшим роды {op_boxed_tag}2{cl_boxed_tag} "
+            f"врачом-неонатологом (или врачом-педиатром), лечившим ребенка {op_boxed_tag}3{cl_boxed_tag} "
+            f"врачом-патологоанатомом {op_boxed_tag}4{cl_boxed_tag} "
+            f"врачом - судебно-медицинским экспертом {op_boxed_tag}5{cl_boxed_tag} "
+            f"фельдшером, акушеркой {op_boxed_tag}6{cl_boxed_tag}",
+            styleT,
+        )
+    )
     text.append(Spacer(1, 2 * mm))
-    text.append(Paragraph(f"28. На основании: осмотра трупа {op_boxed_tag}1{cl_boxed_tag} записей в медицинской документации {op_boxed_tag}2{cl_boxed_tag} "
-                          f"собственного предшествовавшего наблюдения {op_boxed_tag}3{cl_boxed_tag} вскрытия {op_boxed_tag}4{cl_boxed_tag}", styleT))
+    text.append(
+        Paragraph(
+            f"28. На основании: осмотра трупа {op_boxed_tag}1{cl_boxed_tag} записей в медицинской документации {op_boxed_tag}2{cl_boxed_tag} "
+            f"собственного предшествовавшего наблюдения {op_boxed_tag}3{cl_boxed_tag} вскрытия {op_boxed_tag}4{cl_boxed_tag}",
+            styleT,
+        )
+    )
 
     tbl = who_write_documet("29.", "Акушерка", "Иванова анна Ивановна")
     text.append(Spacer(1, 8 * mm))
@@ -496,8 +512,11 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     # text.append(Spacer(1, 2 * mm))
     # text.append(Paragraph("26 Свидетельство проверено ответственным за правильность заполнения медицинских свидетельств.", styleT))
     # text = check_person_data(text, fields["Проверил"])
-    text = bottom_colontitul(text, '** В случае, установленном частью 10 статьи 9 Федерального закона от 5 июня 2012 г. № 50-ФЗ "О регулировании деятельности российских граждан и '
-                                   'российских юридических лиц в Антарктике" (Собрание законодательства Российской Федерации, 2012, № 24, ст. 3067). ')
+    text = bottom_colontitul(
+        text,
+        '** В случае, установленном частью 10 статьи 9 Федерального закона от 5 июня 2012 г. № 50-ФЗ "О регулировании деятельности российских граждан и '
+        'российских юридических лиц в Антарктике" (Собрание законодательства Российской Федерации, 2012, № 24, ст. 3067). ',
+    )
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 168 * mm, text=text))
 
@@ -561,8 +580,10 @@ def mother_data(fields):
         mother_born_month = mother_born_data[1]
         mother_born_year = mother_born_data[2]
 
-    born = f"5. Дата рождения: {op_boxed_tag}{mother_born_date}{cl_boxed_tag} {space_symbol * 3} {op_boxed_tag}{mother_born_month}{cl_boxed_tag} " \
-           f"{space_symbol * 3} {op_boxed_tag}{mother_born_year}{cl_boxed_tag}{line_break}{line_break}"
+    born = (
+        f"5. Дата рождения: {op_boxed_tag}{mother_born_date}{cl_boxed_tag} {space_symbol * 3} {op_boxed_tag}{mother_born_month}{cl_boxed_tag} "
+        f"{space_symbol * 3} {op_boxed_tag}{mother_born_year}{cl_boxed_tag}{line_break}{line_break}"
+    )
     type_document_mother = fields.get("Тип ДУЛ", "")
     if type_document_mother and "-" in type_document_mother:
         type_document_mother = type_document_mother.split("-")
@@ -627,14 +648,18 @@ def mother_data(fields):
         not_has_initial = f"<u>{op_bold_tag}{not_has_initial}{cl_bold_tag}</u>"
     elif education_status["code"] == "9":
         not_known = f"<u>{op_bold_tag}{not_known}{cl_bold_tag}</u>"
-    education = f"12. Образование: профессиональное: {high_school} {digit_one} {not_high_school} {digit_two} {middle_school} {digit_three} " \
-                f"{line_break} общее: {general_middle} {digit_four} {main} {digit_five} {initial} {digit_six} {not_has_initial}" \
-                f"{digit_seven} {not_known} {digit_eight}{line_break}{line_break}"
+    education = (
+        f"12. Образование: профессиональное: {high_school} {digit_one} {not_high_school} {digit_two} {middle_school} {digit_three} "
+        f"{line_break} общее: {general_middle} {digit_four} {main} {digit_five} {initial} {digit_six} {not_has_initial}"
+        f"{digit_seven} {not_known} {digit_eight}{line_break}{line_break}"
+    )
     work = f"Занятость: работала {digit_one} проходила военную или приравненную к ней службу {digit_two} студентка {digit_three} не работала {digit_four} прочее {digit_five} {line_break}{line_break}"
     count_birth = f"14.	Которые по счету роды __________"
 
-    return f"{fio}{born}{type_document}{serial_number}{snils}{polis}{address_title}{region_country}{area_region}{city}{live_punkt}{street}{house}{type_place}" \
-           f"{married_status}{married_other_status}{education}{work}{count_birth}"
+    return (
+        f"{fio}{born}{type_document}{serial_number}{snils}{polis}{address_title}{region_country}{area_region}{city}{live_punkt}{street}{house}{type_place}"
+        f"{married_status}{married_other_status}{education}{work}{count_birth}"
+    )
 
 
 def child_data():
@@ -657,12 +682,18 @@ def child_data():
     child_count = f"{space_symbol * 3} которыми по счет {line_break}"
     child_all_birth_count = f"{space_symbol * 3} число родившихся (живыми или мертвыми) детей {line_break}"
 
-    return f"{child_fio}{child_place_death}{child_region_country}{child_area_region}{child_city}{child_live_punkt}{child_street}{child_house}{child_type_place}" \
-           f"{where_death}{sex}{weight}{long_body}{why_death}{singleton_birth}{multiple_birth}{child_count}{child_all_birth_count}"
+    return (
+        f"{child_fio}{child_place_death}{child_region_country}{child_area_region}{child_city}{child_live_punkt}{child_street}{child_house}{child_type_place}"
+        f"{where_death}{sex}{weight}{long_body}{why_death}{singleton_birth}{multiple_birth}{child_count}{child_all_birth_count}"
+    )
 
 
 def back_size(text):
-    opinion = [[Paragraph('Оборотная сторона', styleColontitulBold), ], ]
+    opinion = [
+        [
+            Paragraph('Оборотная сторона', styleColontitulBold),
+        ],
+    ]
     col_width = (190 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -681,7 +712,9 @@ def why_death(text, params, item_why):
     text.append(tbl)
     text.append(Spacer(1, 2 * mm))
 
-    tbl = diagnos_tbl("а)", "Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита", "")
+    tbl = diagnos_tbl(
+        "а)", "Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита", ""
+    )
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(основное заболевание или патологическое состояние плода или ребенка)")
@@ -730,9 +763,21 @@ def who_write_documet(item, position_writer, fio):
             Paragraph(f"{fio}", styleT),
         ],
     ]
-    col_width = (10 * mm, 70 * mm, 5 * mm, 40 * mm, 5 * mm, 70 * mm,)
+    col_width = (
+        10 * mm,
+        70 * mm,
+        5 * mm,
+        40 * mm,
+        5 * mm,
+        70 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
@@ -753,15 +798,26 @@ def who_writer_about_tbl():
             Paragraph("(фамилия, имя, отчество (при наличии)", styleMicro),
         ],
     ]
-    col_width = (10 * mm, 65 * mm, 5 * mm, 40 * mm, 5 * mm, 65 * mm,)
+    col_width = (
+        10 * mm,
+        65 * mm,
+        5 * mm,
+        40 * mm,
+        5 * mm,
+        65 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('LINEABOVE', (1, 0), (1, 0), 0.75, colors.black),
         ('LINEABOVE', (3, 0), (3, 0), 0.75, colors.black),
         ('LINEABOVE', (5, 0), (5, 0), 0.75, colors.black),
-
     ]
 
     tbl = gen_table(opinion, col_width, tbl_style)
@@ -775,9 +831,17 @@ def who_get_document(item, fio):
             Paragraph(f"{fio}", styleT),
         ],
     ]
-    col_width = (27 * mm, 163 * mm,)
+    col_width = (
+        27 * mm,
+        163 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
@@ -794,9 +858,17 @@ def who_get_about_tbl():
             Paragraph(f"(фамилия, имя, отчество (при наличии) и отношение к мертворожденному (умершему) ребенку", styleMicro),
         ],
     ]
-    col_width = (27 * mm, 163 * mm,)
+    col_width = (
+        27 * mm,
+        163 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('LINEABOVE', (1, 0), (1, 0), 0.75, colors.black),
@@ -813,9 +885,17 @@ def who_get_type_document(document_data):
             Paragraph(f"{document_data}", styleMicro),
         ],
     ]
-    col_width = (126 * mm, 64 * mm,)
+    col_width = (
+        126 * mm,
+        64 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 7 * mm),
         ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
@@ -835,7 +915,12 @@ def title_table(item, diag_data, diag_code):
     ]
     col_width = (10 * mm, 157 * mm, 26 * mm)
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), -1.3 * mm),
@@ -853,9 +938,18 @@ def diagnos_tbl(item, diag_data, diag_code):
             Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),
         ],
     ]
-    col_width = (10 * mm, 154 * mm, 26 * mm,)
+    col_width = (
+        10 * mm,
+        154 * mm,
+        26 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -876,13 +970,21 @@ def about_diag_tbl(note_title):
             Paragraph('', styleOrg),
         ],
     ]
-    col_width = (10 * mm, 154 * mm, 26 * mm,)
+    col_width = (
+        10 * mm,
+        154 * mm,
+        26 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('LINEABOVE', (1, 0), (1, 0), 0.75, colors.black),
-
     ]
 
     tbl = gen_table(opinion, col_width, tbl_style)
@@ -899,9 +1001,20 @@ def manager_hospital_document(fio):
             Paragraph(f"{fio}", styleT),
         ],
     ]
-    col_width = (65 * mm, 5 * mm, 40 * mm, 5 * mm, 65 * mm,)
+    col_width = (
+        65 * mm,
+        5 * mm,
+        40 * mm,
+        5 * mm,
+        65 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
@@ -921,15 +1034,25 @@ def manager_hospital_about_tbl():
             Paragraph("(фамилия, имя, отчество (при наличии)", styleMicro),
         ],
     ]
-    col_width = (65 * mm, 5 * mm, 40 * mm, 5 * mm, 65 * mm,)
+    col_width = (
+        65 * mm,
+        5 * mm,
+        40 * mm,
+        5 * mm,
+        65 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP', ),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('LINEABOVE', (0, 0), (0, 0), 0.75, colors.black),
         ('LINEABOVE', (2, 0), (2, 0), 0.75, colors.black),
         ('LINEABOVE', (4, 0), (4, 0), 0.75, colors.black),
-
     ]
 
     tbl = gen_table(opinion, col_width, tbl_style)
@@ -946,9 +1069,20 @@ def who_check(number, month, year, fio):
             Paragraph(f"{fio}", styleT),
         ],
     ]
-    col_width = (10 * mm, 15 * mm, 16 * mm, 20 * mm, 65 * mm,)
+    col_width = (
+        10 * mm,
+        15 * mm,
+        16 * mm,
+        20 * mm,
+        65 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
@@ -968,9 +1102,20 @@ def who_check_about():
             Paragraph("", styleT),
         ],
     ]
-    col_width = (10 * mm, 15 * mm, 16 * mm, 20 * mm, 65 * mm,)
+    col_width = (
+        10 * mm,
+        15 * mm,
+        16 * mm,
+        20 * mm,
+        65 * mm,
+    )
     tbl_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP',),
+        (
+            'VALIGN',
+            (0, 0),
+            (-1, -1),
+            'TOP',
+        ),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
@@ -985,8 +1130,12 @@ def who_check_about():
 
 
 def bottom_colontitul(text, params):
-    opinion = [[Paragraph(f'{params}', styleColontitul), ], ]
-    col_width = (190 * mm)
+    opinion = [
+        [
+            Paragraph(f'{params}', styleColontitul),
+        ],
+    ]
+    col_width = 190 * mm
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 10 * mm),
@@ -1053,7 +1202,7 @@ def death_data_child(text, fields_data):
 
 def mother_fio_data(fields):
     mother_family = fields.get("Фамилия матери", "")
-    mother_name  = fields.get("Имя матери", "")
+    mother_name = fields.get("Имя матери", "")
     mother_patronymic = fields.get("Отчество матери", "")
     return f"{mother_family} {mother_name} {mother_patronymic}"
 
@@ -1082,5 +1231,18 @@ def mother_address_get(data_fields):
         flat_type = mother_address_details.get("flat_type", "")
         postal_code = mother_address_details.get("postal_code", "")
 
-    return {"region": region, "region_type": region_type, "area": area, "area_type": area_type, "city": city, "city_type": city_type, "street": street,
-            "street_type": street_type, "house": house, "house_type": house_type, "flat": flat, "flat_type": flat_type, "postal_code": postal_code}
+    return {
+        "region": region,
+        "region_type": region_type,
+        "area": area,
+        "area_type": area_type,
+        "city": city,
+        "city_type": city_type,
+        "street": street,
+        "street_type": street_type,
+        "house": house,
+        "house_type": house_type,
+        "flat": flat,
+        "flat_type": flat_type,
+        "postal_code": postal_code,
+    }
