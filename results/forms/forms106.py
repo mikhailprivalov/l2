@@ -633,7 +633,8 @@ def mother_data(fields):
         f"{line_break} общее: {general_middle} {digit_four} {main} {digit_five} {initial} {digit_six} {not_has_initial}"
         f"{digit_seven} {not_known} {digit_eight}{line_break}{line_break}"
     )
-    work = f"Занятость: работала {digit_one} проходила военную или приравненную к ней службу {digit_two} студентка {digit_three} не работала {digit_four} прочее {digit_five} {line_break}{line_break}"
+    work = f"Занятость: работала {digit_one} проходила военную или приравненную к ней службу {digit_two} студентка {digit_three} не работала {digit_four} прочее {digit_five} {line_break}" \
+           f"{line_break}"
     count_birth = "14.	Которые по счету роды __________"
 
     return (
