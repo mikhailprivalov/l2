@@ -1003,10 +1003,10 @@
   resolved "https://registry.yarnpkg.com/@openfonts/open-sans_all/-/open-sans_all-1.44.2.tgz#5365e8cbc5aee53684b86512b82f6b75dfadae59"
   integrity sha512-SuLQ9tKnow0+ur62tHif7/HQ530h0EkxJuwPFngP2xLJb+hrGqF6OZGjXCZSSbEEsTbk3VxgY+fSbdaOWUP9Yw==
 
-"@popperjs/core@^2.10.1":
-  version "2.10.1"
-  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.10.1.tgz#728ecd95ab207aab8a9a4e421f0422db329232be"
-  integrity sha512-HnUhk1Sy9IuKrxEMdIRCxpIqPw6BFsbYSEUO9p/hNw5sMld/+3OLMWQP80F8/db9qsv3qUjs7ZR5bS/R+iinXw==
+"@popperjs/core@^2.11.0":
+  version "2.11.0"
+  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.0.tgz#6734f8ebc106a0860dff7f92bf90df193f0935d7"
+  integrity sha512-zrsUxjLOKAzdewIDRWy9nsV1GQsKBCWaGwsZQlCgr6/q+vjyZhFgqedLfFBuI9anTPEUT4APq9Mu0SZBTzIcGQ==
 
 "@riophae/vue-treeselect@^0.4.0":
   version "0.4.0"
