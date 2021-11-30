@@ -410,14 +410,14 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
 
     text.append(Paragraph(
         f"19. В случае смерти от несчастного случая, убийства, самоубийства, от военных и террористических действий, при неустановленном роде смерти - указать дату травмы (отравления): "
-        f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при которых",
+        f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при которых произошла травма (отравление)",
         styleT))
 
     unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
     place_and_reasons = fields.get("Место и обстоятельства", None)
     if place_and_reasons:
         unfortunate_and_other_info = f"<u>{space_symbol * 2}{place_and_reasons} {space_symbol * 2}</u>"
-    text.append(Paragraph(f"произошла травма (отравление){unfortunate_and_other_info}", styleT))
+    text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
     text = who_set_death(text, fields["Тип медицинского работника"])
     text = doctor_fio(text, fields, iss)
     text.append(Spacer(1, 1 * mm))
@@ -447,17 +447,20 @@ def title_data(title_name, title_form, text, serial, number, date_issue, type_do
     text.append(Paragraph(f"СЕРИЯ {serial} № {number}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
+
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
+    if title_name == "МЕДИЦИНСКОЕ СВИДЕТЕЛЬСТВО О СМЕРТИ":
+        final, preparatory = "окончательное", "предварительное"
 
     type_death_document = json.loads(type_document)
     if type_death_document["code"] == '4':
-        instead_final = f"<u>{op_bold_tag}взамен окончательного{cl_bold_tag}</u>"
+        instead_final = f"<u>{op_bold_tag}{instead_final}{cl_bold_tag}</u>"
     elif type_death_document["code"] == '3':
-        instead_preparatory = f"<u>{op_bold_tag}взамен предварительного{cl_bold_tag}</u>"
+        instead_preparatory = f"<u>{op_bold_tag}{instead_preparatory}{cl_bold_tag}</u>"
     elif type_death_document["code"] == '1':
-        final = f"{op_bold_tag}<u>окончательного</u>{cl_bold_tag}"
+        final = f"{op_bold_tag}<u>{final}</u>{cl_bold_tag}"
     elif type_death_document["code"] == '2':
-        preparatory = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
+        preparatory = f"<u>{op_bold_tag}{preparatory}{cl_bold_tag}</u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
     if data_fields.get("Серия предшествующего", None):
         text.append(Paragraph("ранее выданное свидетельство", styleCentre))

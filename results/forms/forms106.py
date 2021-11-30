@@ -160,6 +160,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
         data[i["title"]] = i["value"]
+        print(i["title"])
+        print(i["value"])
 
     hospital_obj: Hospitals = user.doctorprofile.get_hospital()
     data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data, "org_okpo": hospital_obj.okpo}
@@ -633,9 +635,24 @@ def mother_data(fields):
         f"{line_break} общее: {general_middle} {digit_four} {main} {digit_five} {initial} {digit_six} {not_has_initial}"
         f"{digit_seven} {not_known} {digit_eight}{line_break}{line_break}"
     )
-    work = f"Занятость: работала {digit_one} проходила военную или приравненную к ней службу {digit_two} студентка {digit_three} не работала {digit_four} прочее {digit_five} {line_break}" \
+    is_worked, military, student, not_worked, other = "работала", "проходила военную или приравненную к ней службу", "студентка", "не работала", "прочее"
+    social_status = json.loads(fields.get("Социальные группы населения в учетной медицинской документации", None))
+    if social_status["code"] == "4":
+        student = f"<u>{op_bold_tag}{student}{cl_bold_tag}</u>"
+    elif social_status["code"] == "5":
+        is_worked = f"<u>{op_bold_tag}{is_worked}{cl_bold_tag}</u>"
+    elif social_status["code"] == "8":
+        not_worked = f"<u>{op_bold_tag}{not_worked}{cl_bold_tag}</u>"
+    elif social_status["code"] == "17":
+        military = f"<u>{op_bold_tag}{military}{cl_bold_tag}</u>"
+    elif social_status["code"] == "10":
+        other = f"<u>{op_bold_tag}{other}{cl_bold_tag}</u>"
+
+    work = f"13. Занятость: {is_worked} {digit_one} {military} {digit_two} студентка {digit_three} {not_worked} {digit_four} {other} {digit_five} {line_break}" \
            f"{line_break}"
-    count_birth = "14.	Которые по счету роды __________"
+    mother_count_birth = f"<u>{op_bold_tag}{fields.get('Которые по счету роды', '')}{cl_bold_tag}</u>"
+
+    count_birth = f"14.	Которые по счету роды {mother_count_birth}"
 
     return (
         f"{fio}{born}{type_document}{serial_number}{snils}{polis}{address_title}{region_country}{area_region}{city}{live_punkt}{street}{house}{type_place}"
@@ -643,8 +660,10 @@ def mother_data(fields):
     )
 
 
-def child_data():
-    child_fio = f"15. Фамилия _____________{line_break}"
+def child_data(data_fields):
+    child_family = data_fields.get("Фамилия", "_____________")
+    child_fio = f"15. Фамилия {child_family}{line_break}"
+
     child_place_death = f"16. Место смерти (рождения мертвого ребенка):{line_break}"
     child_region_country = f"{space_symbol * 5}субъект Российской Федерации {line_break}"
     child_area_region = f"{space_symbol * 5} район {line_break}"
