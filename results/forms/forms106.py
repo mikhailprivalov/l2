@@ -215,7 +215,7 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph(f"5.	Дата рождения матери:	число {mother_born_date} месяц {mother_born_month} год {mother_born_year}", style))
     text.append(Spacer(1, 1.2 * mm))
 
-    mother_address = mother_address_get(fields)
+    mother_address = address_get(fields.get("Адрес матери", None))
     text.append(Paragraph("6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
     text.append(Paragraph(f"субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}", style))
     text.append(Paragraph(f"район ______ город {mother_address['city']}", style))
@@ -242,17 +242,14 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph(f"9.	Пол: {sex_men} {digit_one} {sex_woomen} {digit_two}", style))
     text.append(Spacer(1, 1.5 * mm))
 
-    place_death = json.loads(fields["Типы мест наступления смерти"])
-    stationar, home, other_place, not_know = "в  стационаре", "дома", "в другом месте", "неизвестно"
-    if place_death["title"].lower() == "в стационаре":
-        stationar = "<u>в стационаре</u>"
-    elif place_death["title"].lower() == "дома":
-        home = "<u>дома</u>"
-    elif place_death["title"].lower() == "в другом месте":
-        other_place = "<u>в другом месте</u>"
-    elif place_death["title"].lower() == "неизвестно":
-        not_know = "<u>неизвестно</u>"
-    text.append(Paragraph(f"10. Смерть   (мертворождение)  произошла(о):  {stationar} {digit_one} {home} {digit_two} {other_place} {digit_three} {not_know} {digit_four}", style))
+    data_place_death = place_death_get(fields)
+    text.append(
+        Paragraph(
+            f"10. Смерть   (мертворождение)  произошла(о):  {data_place_death['stationar']} {digit_one} {data_place_death['home']} {digit_two} "
+            f"{data_place_death['other_place']} {digit_three} {data_place_death['not_know']} {digit_four}",
+            style,
+        )
+    )
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
@@ -363,11 +360,12 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
 
     text.append(Spacer(1, 0.3 * mm))
     mom_data = mother_data(fields)
+    child_data = child_data_get(fields)
     opinion = [
         [
             Paragraph(f'{mom_data}', styleT),
             Paragraph('', styleOrg),
-            Paragraph(f'{child_data()}', styleT),
+            Paragraph(f'{child_data}', styleT),
         ],
     ]
 
@@ -591,7 +589,7 @@ def mother_data(fields):
         doc_polis = f"<u>{doc_data_polis}</u>"
     polis = f"8. Полис ОМС {doc_polis} {line_break}{line_break}"
     address_title = f"9. Регистрация по месту жительства (пребывания):{line_break}"
-    mother_address = mother_address_get(fields)
+    mother_address = address_get(fields.get("Адрес матери", None))
     region_country = f"{space_symbol * 5}субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}{line_break}"
     area_region = f"{space_symbol * 5} район {line_break}"
     city = f"{space_symbol * 5} город {mother_address['city']} {line_break}"
@@ -648,8 +646,7 @@ def mother_data(fields):
     elif social_status["code"] == "10":
         other = f"<u>{op_bold_tag}{other}{cl_bold_tag}</u>"
 
-    work = f"13. Занятость: {is_worked} {digit_one} {military} {digit_two} студентка {digit_three} {not_worked} {digit_four} {other} {digit_five} {line_break}" \
-           f"{line_break}"
+    work = f"13. Занятость: {is_worked} {digit_one} {military} {digit_two} студентка {digit_three} {not_worked} {digit_four} {other} {digit_five} {line_break}" f"{line_break}"
     mother_count_birth = f"<u>{op_bold_tag}{fields.get('Которые по счету роды', '')}{cl_bold_tag}</u>"
 
     count_birth = f"14.	Которые по счету роды {mother_count_birth}"
@@ -660,27 +657,54 @@ def mother_data(fields):
     )
 
 
-def child_data(data_fields):
+def child_data_get(data_fields):
     child_family = data_fields.get("Фамилия", "_____________")
     child_fio = f"15. Фамилия {child_family}{line_break}"
-
     child_place_death = f"16. Место смерти (рождения мертвого ребенка):{line_break}"
-    child_region_country = f"{space_symbol * 5}субъект Российской Федерации {line_break}"
+    child_address_death = address_get(data_fields.get("Место смерти (адрес)", None))
+    child_region_country = f"{space_symbol * 5} субъект Российской Федерации {child_address_death['region_type']} {child_address_death['region']}{line_break}"
     child_area_region = f"{space_symbol * 5} район {line_break}"
-    child_city = f"{space_symbol * 5} город {line_break}"
+    child_city = f"{space_symbol * 5} город {child_address_death['city']}{line_break}"
     child_live_punkt = f"{space_symbol * 5} населенный пункт {line_break}"
-    child_street = f"{space_symbol * 5} улица {line_break}"
-    child_house = f"{space_symbol * 5} дом ______ стр.______ корп.________ кв._________ {line_break}{line_break}"
-    child_type_place = f"17. Местность: городская {digit_one} сельская {digit_two}{line_break}{line_break}"
-    where_death = f"18. Смерть (рождение мертвым) произошла(о): в стационаре {digit_one} дома {digit_two} в другом месте {digit_three} неизвестно {digit_four} {line_break}{line_break}"
-    sex = f"19.	Пол: мужской {digit_one} женский{digit_two} {line_break}{line_break}"
-    weight = f"20. Масса тела ребенка при рождении (г) {line_break}{line_break}"
-    long_body = f"21. Длина тела ребенка при рождении (см) {line_break}{line_break}"
+    child_street = f"{space_symbol * 5} улица {child_address_death['street']} {line_break}"
+    child_house = f"{space_symbol * 5} дом {child_address_death['house']} стр.______ корп.________ кв.{child_address_death['flat']} {line_break}{line_break}"
+
+    place_death = json.loads(data_fields["Местность смерти"])
+    town_death, rural_death = "городская", "сельская"
+    if place_death["code"] == "1":
+        town_death = f"<u>{op_bold_tag}{town_death}{cl_bold_tag}</u>"
+    elif place_death["code"] == "2":
+        town_death = f"<u>{op_bold_tag}{rural_death}{cl_bold_tag}</u>"
+    child_type_place = f"17. Местность: {town_death} {digit_one} {rural_death} {digit_two}{line_break}{line_break}"
+    data_place_death = place_death_get(data_fields)
+    where_death = f"18. Смерть (рождение мертвым) произошла(о):{line_break}{data_place_death['stationar']} {digit_one} {data_place_death['home']} {digit_two} " \
+                  f"{data_place_death['other_place']} {digit_three} {data_place_death['not_know']} {digit_four} {line_break}{line_break}"
+    sex_men, sex_women = "мужской", "женский"
+    if data_fields["Пол"].lower() == "женский":
+        sex_women = f"<u>{op_bold_tag}{sex_women}{cl_bold_tag}</u>"
+    elif data_fields["Пол"].lower() == "мужской":
+        sex_men = f"<u>{op_bold_tag}{sex_men}{cl_bold_tag}</u>"
+    sex = f"19.	Пол: {sex_men} {digit_one} {sex_women} {digit_two} {line_break}{line_break}"
+
+    born_mass = data_fields.get("Масса тела ребенка при рождении (г)", "")
+    weight = f"20. Масса тела ребенка при рождении (г) {born_mass}{line_break}{line_break}"
+    long_body_data = data_fields.get("Длина тела ребенка при рождении (см)", "")
+    long_body = f"21. Длина тела ребенка при рождении (см) {long_body_data}{line_break}{line_break}"
     why_death = f"22. Рождение мертвым или живорождение произошло:  {line_break}"
-    singleton_birth = f"{space_symbol * 3} при одноплодных родах {digit_one} {line_break}"
-    multiple_birth = f"{space_symbol * 3} при многоплодных родах {digit_two} {line_break}"
-    child_count = f"{space_symbol * 3} которыми по счет {line_break}"
-    child_all_birth_count = f"{space_symbol * 3} число родившихся (живыми или мертвыми) детей {line_break}"
+
+    type_birth = data_fields.get("Рождение мертвым или живорождение произошло", "")
+    single_type, multiple_type = "при одноплодных родах", "при многоплодных родах"
+    if type_birth == "при одноплодных родах":
+        single_type = f"<u>{op_bold_tag}{single_type}{cl_bold_tag}</u>"
+    elif type_birth == "при многоплодных родах":
+        multiple_type = f"<u>{op_bold_tag}{multiple_type}{cl_bold_tag}</u>"
+    singleton_birth = f"{space_symbol * 3} {single_type} {digit_one} {line_break}"
+    multiple_birth = f"{space_symbol * 3} {multiple_type} {digit_two} {line_break}"
+    what_count = data_fields.get("Которыми по счету", "")
+    child_count = f"{space_symbol * 3} которыми по счет <u>{op_bold_tag}{what_count}{cl_bold_tag}</u>{line_break}"
+
+    all_count = data_fields.get("Число родившихся (живыми или мертвыми) детей", "")
+    child_all_birth_count = f"{space_symbol * 3} число родившихся (живыми или мертвыми) детей <u>{op_bold_tag}{all_count}{cl_bold_tag}</u> {line_break}"
 
     return (
         f"{child_fio}{child_place_death}{child_region_country}{child_area_region}{child_city}{child_live_punkt}{child_street}{child_house}{child_type_place}"
@@ -1207,29 +1231,29 @@ def mother_fio_data(fields):
     return f"{mother_family} {mother_name} {mother_patronymic}"
 
 
-def mother_address_get(data_fields):
-    mother_address = json.loads(data_fields.get("Адрес матери", None))
+def address_get(address_data):
+    address_data = json.loads(address_data)
     area = "__________________"
     city = "____________________"
     street = "____________________"
     house = "______"
     flat = "_________"
     region, region_type, area_type, city_type, street_type, house_type, flat_type, postal_code = "", "", "", "", "", "", "", ""
-    if mother_address:
-        mother_address_details = mother_address.get("details", None)
-        region = mother_address_details.get("region", "")
-        region_type = mother_address_details.get("region_type", "")
-        area = mother_address_details.get("area", "__________________")
-        area_type = mother_address_details.get("area_type", "")
-        city = mother_address_details.get("city", "____________________")
-        city_type = mother_address_details.get("city_type", "")
-        street = mother_address_details.get("street", "____________________")
-        street_type = mother_address_details.get("street_type", "")
-        house = mother_address_details.get("house", "______")
-        house_type = mother_address_details.get("house_type", "")
-        flat = mother_address_details.get("flat", "_________")
-        flat_type = mother_address_details.get("flat_type", "")
-        postal_code = mother_address_details.get("postal_code", "")
+    if address_data:
+        address_details = address_data.get("details", None)
+        region = address_details.get("region", "")
+        region_type = address_details.get("region_type", "")
+        area = address_details.get("area", "__________________")
+        area_type = address_details.get("area_type", "")
+        city = address_details.get("city", "____________________")
+        city_type = address_details.get("city_type", "")
+        street = address_details.get("street", "____________________")
+        street_type = address_details.get("street_type", "")
+        house = address_details.get("house", "______")
+        house_type = address_details.get("house_type", "")
+        flat = address_details.get("flat", "_________")
+        flat_type = address_details.get("flat_type", "")
+        postal_code = address_details.get("postal_code", "")
 
     return {
         "region": region,
@@ -1246,3 +1270,18 @@ def mother_address_get(data_fields):
         "flat_type": flat_type,
         "postal_code": postal_code,
     }
+
+
+def place_death_get(data_fields):
+    place_death = json.loads(data_fields["Типы мест наступления смерти"])
+    stationar, home, other_place, not_know = "в  стационаре", "дома", "в другом месте", "неизвестно"
+    if place_death["title"].lower() == "в стационаре":
+        stationar = "<u>в стационаре</u>"
+    elif place_death["title"].lower() == "дома":
+        home = "<u>дома</u>"
+    elif place_death["title"].lower() == "в другом месте":
+        other_place = "<u>в другом месте</u>"
+    elif place_death["title"].lower() == "неизвестно":
+        not_know = "<u>неизвестно</u>"
+
+    return {"stationar": stationar, "home": home, "other_place": other_place, "not_know": not_know}
