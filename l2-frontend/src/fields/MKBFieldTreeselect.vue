@@ -188,5 +188,8 @@ export default {
       }
     },
   },
+  model: {
+    event: 'modified',
+  },
 };
 </script>
