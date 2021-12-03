@@ -22,7 +22,7 @@
           </td>
           <td v-for="(_, i) in params.columns.titles" :key="i" class="cl-td" :class="settings[i].type === 2 && 'mkb'">
             <div
-              v-if="settings[i].type === 'rowNumber' || (disabled && ![32, 33, 34, 35].includes(settings[i].type))"
+              v-if="settings[i].type === 'rowNumber' || (disabled && ![32, 33, 34, 35, 36].includes(settings[i].type))"
               class="just-val"
               :class="settings[i].type === 'rowNumber' && 'rowNumber'"
             >
