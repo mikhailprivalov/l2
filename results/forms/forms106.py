@@ -163,6 +163,18 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         print(i["title"])
         print(i["value"])
 
+    if not data.get("Заполнил", None):
+        data["Заполнил"] = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
+
+    if not data.get("Должность", None):
+        data["Должность"] = iss.doc_position if iss.doc_confirmation else ""
+
+    if not data.get("Проверил", None):
+        data["Проверил"] = ""
+
+    if not data.get("Главный врач", None):
+        data["Главный врач"] = ""
+
     hospital_obj: Hospitals = user.doctorprofile.get_hospital()
     data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data, "org_okpo": hospital_obj.okpo}
 
@@ -396,14 +408,14 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
     text = back_size(text)
     text = why_death(text, fields, '11')
 
-    tbl = who_write_documet("12.", "Акушерка", "Иванова анна Ивановна")
+    tbl = who_write_documet("12.", fields["Должность"], fields["Заполнил"])
     text.append(Spacer(1, 4 * mm))
     text.append(tbl)
     tbl = who_writer_about_tbl()
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = who_get_document("13. Получатель", "Иванова анна Ивановна - мать")
+    tbl = who_get_document("13. Получатель", fields["ФИО (получатель)"])
     text.append(Spacer(1, 4 * mm))
     text.append(tbl)
 
@@ -411,12 +423,10 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = who_get_type_document("data")
-    text.append(Spacer(1, 1 * mm))
-    text.append(tbl)
+    text = who_get_type_document_para(text, fields)
 
-    text.append(Spacer(1, 1 * mm))
-    text.append(Paragraph("СНИЛС получателя (при наличии)_________", style))
+    text.append(Spacer(1, 2 * mm))
+    text.append(Paragraph(f"{space_symbol * 3}СНИЛС получателя (при наличии)_________", style))
     # text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fields["ФИО (получатель)"])
     # text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
     # text = destination_person_passport(text, f'{fields["Документ (получатель)"]} {fields["Серия (получатель)"]} {fields["Номер (получатель)"]} {fields["Кем и когда выдан (получатель)"]}')
@@ -735,43 +745,80 @@ def why_death(text, params, item_why):
     text.append(Spacer(1, 5 * mm))
     text.append(tbl)
     text.append(Spacer(1, 2 * mm))
-
-    tbl = diagnos_tbl(
-        "а)", "Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита", ""
-    )
+    a_diag = params.get('а) Основной заболевание (плода или ребенка)', None)
+    a_diag_title, a_diag_code = "", ""
+    if a_diag:
+        a_diag = json.loads(a_diag)
+        a_diag_title = a_diag["title"]
+        a_diag_code = a_diag["code"]
+    tbl = diagnos_tbl("а)", a_diag_title, a_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(основное заболевание или патологическое состояние плода или ребенка)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl("б)", " Скрининг с целью иелита Скрининг с целью выявления полиомиелита", "")
+    b_diag = params.get('б) Другие заболевания плода или ребенка', None)
+    b_diag_title, b_diag_code = "", ""
+    if b_diag:
+        b_diag = json.loads(b_diag)
+        b_diag_title = b_diag["title"]
+        b_diag_code = b_diag["code"]
+
+    tbl = diagnos_tbl("б)", b_diag_title, b_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(другие заболевания или патологические состояния плода или ребенка)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl("в)", "", "")
+    v_diag = params.get('в) основное заболевание матери', None)
+    v_diag_title, v_diag_code = "", ""
+    if v_diag:
+        v_diag = json.loads(v_diag)
+        v_diag_title = v_diag["title"]
+        v_diag_code = v_diag["code"]
+
+    tbl = diagnos_tbl("в)", v_diag_title, v_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(основное заболевание или патологическое состояние матери, оказавшее неблагоприятное влияние на плод или ребенка)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl("г)", "", "")
+    g_diag = params.get('г) другие заболевания матери', None)
+    g_diag_title, g_diag_code = "", ""
+    if g_diag:
+        g_diag = json.loads(g_diag)
+        g_diag_title = g_diag["title"]
+        g_diag_code = g_diag["code"]
+
+    tbl = diagnos_tbl("г)", g_diag_title, g_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(другие заболевания или патологические состояния матери, оказавшие неблагоприятное влияние на плод или ребенка)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl("д)", "", "")
-    text.append(Spacer(1, 0 * mm))
-    text.append(tbl)
-    tbl = about_diag_tbl("(другие обстоятельства, имевшие отношение к мертворождению, смерти)")
-    text.append(Spacer(1, 0 * mm))
-    text.append(tbl)
+    d_diag = params.get('д) другие обстоятельства', None)
+    if d_diag:
+        d_diag_dict = json.loads(d_diag)
+        count = 0
+        d_diag_rows = d_diag_dict.get("rows", None)
+        for r in d_diag_rows:
+            r = json.loads(r[0])
+            d_diag_title = r["title"]
+            d_diag_code = r["code"]
+            if count == 0:
+                tbl = diagnos_tbl("д)", d_diag_title, d_diag_code)
+            else:
+                tbl = diagnos_tbl("", d_diag_title, d_diag_code)
+            text.append(Spacer(1, 0 * mm))
+            text.append(tbl)
+            tbl = about_diag_tbl("(другие обстоятельства, имевшие отношение к мертворождению, смерти)")
+            text.append(Spacer(1, 0 * mm))
+            text.append(tbl)
+            count += 1
 
     return text
 
@@ -902,7 +949,13 @@ def who_get_about_tbl():
     return tbl
 
 
-def who_get_type_document(document_data):
+def who_get_type_document_tbl(param_doc):
+    type_document = param_doc.get("Документ (получатель)", "")
+    serial_document = param_doc.get("Серия (получатель)", "")
+    number_document = param_doc.get("Номер (получатель)", "")
+    who_where_document = param_doc.get("Кем и когда выдан (получатель)", "")
+
+    document_data = f"{type_document} {serial_document} {number_document} {who_where_document}"
     opinion = [
         [
             Paragraph("Документ, удостоверяющий личность получателя (вид, серия, номер, кем выдан)", styleT),
@@ -927,6 +980,16 @@ def who_get_type_document(document_data):
 
     tbl = gen_table(opinion, col_width, tbl_style)
     return tbl
+
+
+def who_get_type_document_para(text, param_doc):
+    type_document = param_doc.get("Документ (получатель)", "")
+    serial_document = param_doc.get("Серия (получатель)", "")
+    number_document = param_doc.get("Номер (получатель)", "")
+    who_where_document = param_doc.get("Кем и когда выдан (получатель)", "")
+    doc_data = f"{type_document} {serial_document} {number_document} {who_where_document}"
+    text.append(Paragraph(f"{space_symbol * 3}Документ, удостоверяющий личность получателя (вид, серия, номер, кем выдан) {doc_data}", styleT))
+    return text
 
 
 def title_table(item, diag_data, diag_code):
@@ -955,11 +1018,16 @@ def title_table(item, diag_data, diag_code):
 
 
 def diagnos_tbl(item, diag_data, diag_code):
+    diag_code = list(diag_code)
+    about_diag_code = Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),
+    if len(diag_code) > 0:
+        about_diag_code = Paragraph(f"{op_boxed_tagD}{diag_code[0]}{diag_code[1]}{diag_code[2]}{cl_boxed_tag} . {op_boxed_tagD}{diag_code[4]}{cl_boxed_tagD}", styleDiag),
+
     opinion = [
         [
             Paragraph(f"{item}", styleT),
             Paragraph(f"{diag_data}", styleOrgBold),
-            Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),
+            about_diag_code
         ],
     ]
     col_width = (
