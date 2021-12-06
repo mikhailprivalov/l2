@@ -1604,6 +1604,7 @@ def directions_paraclinic_result(request):
             iss.napravleniye.save()
 
         count = 0
+        date_death = None
         for group in request_data["research"]["groups"]:
             if not v_g.get(str(group["pk"]), True):
                 ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group["pk"]).delete()
@@ -1615,6 +1616,8 @@ def directions_paraclinic_result(request):
                 if not ParaclinicInputField.objects.filter(pk=field["pk"]).exists():
                     continue
                 f = ParaclinicInputField.objects.get(pk=field["pk"])
+                if f.title == "Дата смерти":
+                    date_death = datetime.strptime(field["value"], "%Y-%m-%d").date()
                 if f.field_type == 21:
                     continue
                 if not ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
@@ -1697,6 +1700,10 @@ def directions_paraclinic_result(request):
             if iss.napravleniye:
                 iss.napravleniye.qr_check_token = None
                 iss.napravleniye.save(update_fields=['qr_check_token'])
+            if date_death:
+                client_obj = iss.napravleniye.client
+                client_obj.death_date = date_death
+                client_obj.save()
 
         if not iss.napravleniye.visit_who_mark or not iss.napravleniye.visit_date:
             iss.napravleniye.visit_who_mark = request.user.doctorprofile

@@ -133,6 +133,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Проверил",
         "Главный врач",
         "Должность",
+        "Время известно",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
@@ -281,7 +282,7 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 0.3 * mm))
 
     # Дата смерти
-    text = death_tbl(text, "4. Дата смерти:", fields.get('Дата смерти', ''), fields.get('Время смерти', ''))
+    text = death_tbl(text, "4. Дата смерти:", fields.get('Дата смерти', '-'), fields.get('Время смерти', '-'))
 
     text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", fields.get("Место постоянного жительства (регистрации)", ""))
 
@@ -351,7 +352,7 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text = who_issue_passport(text, {"who_issue": dul['rows'][0][2], "date_issue": dul['rows'][0][3]})
     text = patient_snils(text, fields["СНИЛС"] or "")
     text = patient_polis(text, fields["Полис ОМС"] or "")
-    text = death_tbl(text, "7. Дата смерти:", fields['Дата смерти'], fields['Время смерти'])
+    text = death_tbl(text, "7. Дата смерти:", fields.get('Дата смерти', '-'), fields.get('Время смерти', '-'))
     text = address_tbl(text, "8. Регистрация по месту жительства (пребывания) умершего(ей):", fields["Место постоянного жительства (регистрации)"])
     text = type_city(text, "9. Местность:", fields["Вид места жительства"])
     text = address_tbl(text, "10. Место смерти:", fields["Место смерти"])
@@ -410,14 +411,14 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
 
     text.append(Paragraph(
         f"19. В случае смерти от несчастного случая, убийства, самоубийства, от военных и террористических действий, при неустановленном роде смерти - указать дату травмы (отравления): "
-        f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при которых",
+        f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при которых произошла травма (отравление)",
         styleT))
 
     unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
     place_and_reasons = fields.get("Место и обстоятельства", None)
     if place_and_reasons:
         unfortunate_and_other_info = f"<u>{space_symbol * 2}{place_and_reasons} {space_symbol * 2}</u>"
-    text.append(Paragraph(f"произошла травма (отравление){unfortunate_and_other_info}", styleT))
+    text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
     text = who_set_death(text, fields["Тип медицинского работника"])
     text = doctor_fio(text, fields, iss)
     text.append(Spacer(1, 1 * mm))
@@ -447,17 +448,20 @@ def title_data(title_name, title_form, text, serial, number, date_issue, type_do
     text.append(Paragraph(f"СЕРИЯ {serial} № {number}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
+
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
+    if title_name == "МЕДИЦИНСКОЕ СВИДЕТЕЛЬСТВО О СМЕРТИ":
+        final, preparatory = "окончательное", "предварительное"
 
     type_death_document = json.loads(type_document)
     if type_death_document["code"] == '4':
-        instead_final = f"<u>{op_bold_tag}взамен окончательного{cl_bold_tag}</u>"
+        instead_final = f"<u>{op_bold_tag}{instead_final}{cl_bold_tag}</u>"
     elif type_death_document["code"] == '3':
-        instead_preparatory = f"<u>{op_bold_tag}взамен предварительного{cl_bold_tag}</u>"
+        instead_preparatory = f"<u>{op_bold_tag}{instead_preparatory}{cl_bold_tag}</u>"
     elif type_death_document["code"] == '1':
-        final = f"{op_bold_tag}<u>окончательного</u>{cl_bold_tag}"
+        final = f"{op_bold_tag}<u>{final}</u>{cl_bold_tag}"
     elif type_death_document["code"] == '2':
-        preparatory = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
+        preparatory = f"<u>{op_bold_tag}{preparatory}{cl_bold_tag}</u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
     if data_fields.get("Серия предшествующего", None):
         text.append(Paragraph("ранее выданное свидетельство", styleCentre))
@@ -557,9 +561,11 @@ def death_tbl(text, number, death_data, death_time):
     death_day = death_data[0]
     death_month = death_data[1]
     death_year = death_data[2]
-    death_time = death_time.split(":")
-    death_hour = death_time[0]
-    death_min = death_time[1]
+    death_hour, death_min = "", ""
+    if death_time:
+        death_time = death_time.split(":")
+        death_hour = death_time[0] if len(death_time) >= 1 else " "
+        death_min = death_time[1] if len(death_time) >= 2 else " "
 
     opinion = gen_opinion([number, 'число', death_day, 'месяц', death_month, 'год', death_year, 'час.', death_hour, 'мин.', death_min])
 

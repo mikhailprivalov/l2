@@ -152,14 +152,25 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Номер (получатель)",
         "Кем и когда выдан (получатель)",
         "СНИЛС (получатель)",
-        "Заполнил",
-        "Должность",
         "Проверил",
-        "Главный врач",
+        "Главный врач"
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
         data[i["title"]] = i["value"]
+
+    data["Заполнил"] = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
+
+    data["Должность"] = iss.doc_position if iss.doc_confirmation else ""
+
+    if not data.get("Проверил", None):
+        data["Проверил"] = ""
+
+    if not data.get("Главный врач", None):
+        data["Главный врач"] = ""
+
+    if not data.get("Род причины смерти", None):
+        data["Род причины смерти"] = '{"code": "", "title": ""}'
 
     hospital_obj: Hospitals = user.doctorprofile.get_hospital()
     data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data, "org_okpo": hospital_obj.okpo}
@@ -213,7 +224,7 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph(f"5.	Дата рождения матери:	число {mother_born_date} месяц {mother_born_month} год {mother_born_year}", style))
     text.append(Spacer(1, 1.2 * mm))
 
-    mother_address = mother_address_get(fields)
+    mother_address = address_get(fields.get("Адрес матери", None))
     text.append(Paragraph("6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
     text.append(Paragraph(f"субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}", style))
     text.append(Paragraph(f"район ______ город {mother_address['city']}", style))
@@ -240,17 +251,14 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph(f"9.	Пол: {sex_men} {digit_one} {sex_woomen} {digit_two}", style))
     text.append(Spacer(1, 1.5 * mm))
 
-    place_death = json.loads(fields["Типы мест наступления смерти"])
-    stationar, home, other_place, not_know = "в  стационаре", "дома", "в другом месте", "неизвестно"
-    if place_death["title"].lower() == "в стационаре":
-        stationar = "<u>в стационаре</u>"
-    elif place_death["title"].lower() == "дома":
-        home = "<u>дома</u>"
-    elif place_death["title"].lower() == "в другом месте":
-        other_place = "<u>в другом месте</u>"
-    elif place_death["title"].lower() == "неизвестно":
-        not_know = "<u>неизвестно</u>"
-    text.append(Paragraph(f"10. Смерть   (мертворождение)  произошла(о):  {stationar} {digit_one} {home} {digit_two} {other_place} {digit_three} {not_know} {digit_four}", style))
+    data_place_death = place_death_get(fields)
+    text.append(
+        Paragraph(
+            f"10. Смерть   (мертворождение)  произошла(о):  {data_place_death['stationar']} {digit_one} {data_place_death['home']} {digit_two} "
+            f"{data_place_death['other_place']} {digit_three} {data_place_death['not_know']} {digit_four}",
+            style,
+        )
+    )
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
@@ -361,11 +369,12 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
 
     text.append(Spacer(1, 0.3 * mm))
     mom_data = mother_data(fields)
+    child_data = child_data_get(fields)
     opinion = [
         [
             Paragraph(f'{mom_data}', styleT),
             Paragraph('', styleOrg),
-            Paragraph(f'{child_data()}', styleT),
+            Paragraph(f'{child_data}', styleT),
         ],
     ]
 
@@ -396,14 +405,14 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
     text = back_size(text)
     text = why_death(text, fields, '11')
 
-    tbl = who_write_documet("12.", "Акушерка", "Иванова анна Ивановна")
+    tbl = who_write_documet("12.", fields["Должность"], fields["Заполнил"])
     text.append(Spacer(1, 4 * mm))
     text.append(tbl)
     tbl = who_writer_about_tbl()
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = who_get_document("13. Получатель", "Иванова анна Ивановна - мать")
+    tbl = who_get_document("13. Получатель", fields["ФИО (получатель)"])
     text.append(Spacer(1, 4 * mm))
     text.append(tbl)
 
@@ -411,18 +420,11 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = who_get_type_document("data")
-    text.append(Spacer(1, 1 * mm))
-    text.append(tbl)
+    text = who_get_type_document_para(text, fields)
 
-    text.append(Spacer(1, 1 * mm))
-    text.append(Paragraph("СНИЛС получателя (при наличии)_________", style))
-    # text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fields["ФИО (получатель)"])
-    # text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
-    # text = destination_person_passport(text, f'{fields["Документ (получатель)"]} {fields["Серия (получатель)"]} {fields["Номер (получатель)"]} {fields["Кем и когда выдан (получатель)"]}')
-    # text = destination_person_snils(text, f'{fields["СНИЛС (получатель)"]}')
-    # text.append(Spacer(1, 2 * mm))
-    # text.append(Paragraph(f"«___» ___________ 20 ___ г.{space_symbol * 30} Подпись получателя _________________________", styleT))
+    text.append(Spacer(1, 2 * mm))
+    snils = fields.get("СНИЛС (получатель)", "______________")
+    text.append(Paragraph(f"{space_symbol * 3} СНИЛС получателя (при наличии) {snils}", style))
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
@@ -433,11 +435,27 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
 def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text = []
     text.append(Paragraph("23. Которым по счету ребенок был рожден у матери (считая умерших и не считая мертворожденных) ______", styleT))
+    type_happend = json.loads(fields["Род причины смерти"])
+    ill, unfortunate, kill, millitary, terrorist, not_know = "от заболевания", "несчастного случая", "убийства", "военных", "террористических", "род смерти не установлен"
+
+    if type_happend["code"] == "1":
+        ill = f"{op_bold_tag}<u>{ill}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "9":
+        unfortunate = f"{op_bold_tag}<u>{unfortunate}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "4":
+        kill = f"{op_bold_tag}<u>{kill}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "6":
+        millitary = f"{op_bold_tag}<u>{millitary}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "7":
+        terrorist = f"{op_bold_tag}<u>{terrorist}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "8":
+        not_know = f"{op_bold_tag}<u>{not_know}</u>{cl_bold_tag}"
+
     text.append(
         Paragraph(
-            f"24. Смерть ребенка (рождение мертвым) произошла(о): от заболевания {op_boxed_tag}1{cl_boxed_tag} несчастного случая {op_boxed_tag}2{cl_boxed_tag}"
-            f"убийства {op_boxed_tag}3{cl_boxed_tag} в ходе действий: военных {op_boxed_tag}4{cl_boxed_tag} террористических {op_boxed_tag}5{cl_boxed_tag}"
-            f" род смерти не установлен {op_boxed_tag}6{cl_boxed_tag}",
+            f"24. Смерть ребенка (рождение мертвым) произошла(о): {ill} {op_boxed_tag}1{cl_boxed_tag} {unfortunate} {op_boxed_tag}2{cl_boxed_tag}"
+            f"{kill} {op_boxed_tag}3{cl_boxed_tag} в ходе действий: {millitary} {op_boxed_tag}4{cl_boxed_tag} {terrorist} {op_boxed_tag}5{cl_boxed_tag}"
+            f" {not_know} {op_boxed_tag}6{cl_boxed_tag}",
             styleT,
         )
     )
@@ -463,7 +481,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         )
     )
 
-    tbl = who_write_documet("29.", "Акушерка", "Иванова анна Ивановна")
+    tbl = who_write_documet("29.", fields["Должность"], fields["Заполнил"])
     text.append(Spacer(1, 8 * mm))
     text.append(tbl)
     tbl = who_writer_about_tbl()
@@ -474,7 +492,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph("Руководитель медицинской организации, индивидуальный предприниматель, осуществляющий медицинскую деятельность (подчеркнуть)", styleT))
     text.append(Spacer(1, 4 * mm))
 
-    tbl = manager_hospital_document("Иванова Анна Ивановна")
+    tbl = manager_hospital_document(fields["Главный врач"])
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = manager_hospital_about_tbl()
@@ -485,7 +503,16 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph("30. Свидетельство проверено ответственным за правильность заполнения медицинских свидетельств.", styleT))
 
     text.append(Spacer(1, 4 * mm))
-    tbl = who_check("20", "июля", "2021", "Иванова Анна Ивановна")
+    person_check = fields["Проверил"]
+    data_check = fields.get("Дата выдачи", "")
+    check_day, check_month, check_year = "", "", ""
+    if person_check:
+        data_check = data_check.split(".")
+        check_day = f"{data_check[0]}."
+        check_month = f"{data_check[1]}."
+        check_year = f"{data_check[2]} г."
+
+    tbl = who_check(check_day, check_month, check_year, person_check)
     text.append(tbl)
 
     tbl = who_check_about()
@@ -589,7 +616,7 @@ def mother_data(fields):
         doc_polis = f"<u>{doc_data_polis}</u>"
     polis = f"8. Полис ОМС {doc_polis} {line_break}{line_break}"
     address_title = f"9. Регистрация по месту жительства (пребывания):{line_break}"
-    mother_address = mother_address_get(fields)
+    mother_address = address_get(fields.get("Адрес матери", None))
     region_country = f"{space_symbol * 5}субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}{line_break}"
     area_region = f"{space_symbol * 5} район {line_break}"
     city = f"{space_symbol * 5} город {mother_address['city']} {line_break}"
@@ -633,9 +660,23 @@ def mother_data(fields):
         f"{line_break} общее: {general_middle} {digit_four} {main} {digit_five} {initial} {digit_six} {not_has_initial}"
         f"{digit_seven} {not_known} {digit_eight}{line_break}{line_break}"
     )
-    work = f"Занятость: работала {digit_one} проходила военную или приравненную к ней службу {digit_two} студентка {digit_three} не работала {digit_four} прочее {digit_five} {line_break}" \
-           f"{line_break}"
-    count_birth = "14.	Которые по счету роды __________"
+    is_worked, military, student, not_worked, other = "работала", "проходила военную или приравненную к ней службу", "студентка", "не работала", "прочее"
+    social_status = json.loads(fields.get("Социальные группы населения в учетной медицинской документации", None))
+    if social_status["code"] == "4":
+        student = f"<u>{op_bold_tag}{student}{cl_bold_tag}</u>"
+    elif social_status["code"] == "5":
+        is_worked = f"<u>{op_bold_tag}{is_worked}{cl_bold_tag}</u>"
+    elif social_status["code"] == "8":
+        not_worked = f"<u>{op_bold_tag}{not_worked}{cl_bold_tag}</u>"
+    elif social_status["code"] == "17":
+        military = f"<u>{op_bold_tag}{military}{cl_bold_tag}</u>"
+    elif social_status["code"] == "10":
+        other = f"<u>{op_bold_tag}{other}{cl_bold_tag}</u>"
+
+    work = f"13. Занятость: {is_worked} {digit_one} {military} {digit_two} студентка {digit_three} {not_worked} {digit_four} {other} {digit_five} {line_break}" f"{line_break}"
+    mother_count_birth = f"<u>{op_bold_tag}{fields.get('Которые по счету роды', '')}{cl_bold_tag}</u>"
+
+    count_birth = f"14.	Которые по счету роды {mother_count_birth}"
 
     return (
         f"{fio}{born}{type_document}{serial_number}{snils}{polis}{address_title}{region_country}{area_region}{city}{live_punkt}{street}{house}{type_place}"
@@ -643,25 +684,54 @@ def mother_data(fields):
     )
 
 
-def child_data():
-    child_fio = f"15. Фамилия _____________{line_break}"
+def child_data_get(data_fields):
+    child_family = data_fields.get("Фамилия", "_____________")
+    child_fio = f"15. Фамилия {child_family}{line_break}"
     child_place_death = f"16. Место смерти (рождения мертвого ребенка):{line_break}"
-    child_region_country = f"{space_symbol * 5}субъект Российской Федерации {line_break}"
+    child_address_death = address_get(data_fields.get("Место смерти (адрес)", None))
+    child_region_country = f"{space_symbol * 5} субъект Российской Федерации {child_address_death['region_type']} {child_address_death['region']}{line_break}"
     child_area_region = f"{space_symbol * 5} район {line_break}"
-    child_city = f"{space_symbol * 5} город {line_break}"
+    child_city = f"{space_symbol * 5} город {child_address_death['city']}{line_break}"
     child_live_punkt = f"{space_symbol * 5} населенный пункт {line_break}"
-    child_street = f"{space_symbol * 5} улица {line_break}"
-    child_house = f"{space_symbol * 5} дом ______ стр.______ корп.________ кв._________ {line_break}{line_break}"
-    child_type_place = f"17. Местность: городская {digit_one} сельская {digit_two}{line_break}{line_break}"
-    where_death = f"18. Смерть (рождение мертвым) произошла(о): в стационаре {digit_one} дома {digit_two} в другом месте {digit_three} неизвестно {digit_four} {line_break}{line_break}"
-    sex = f"19.	Пол: мужской {digit_one} женский{digit_two} {line_break}{line_break}"
-    weight = f"20. Масса тела ребенка при рождении (г) {line_break}{line_break}"
-    long_body = f"21. Длина тела ребенка при рождении (см) {line_break}{line_break}"
+    child_street = f"{space_symbol * 5} улица {child_address_death['street']} {line_break}"
+    child_house = f"{space_symbol * 5} дом {child_address_death['house']} стр.______ корп.________ кв.{child_address_death['flat']} {line_break}{line_break}"
+
+    place_death = json.loads(data_fields["Местность смерти"])
+    town_death, rural_death = "городская", "сельская"
+    if place_death["code"] == "1":
+        town_death = f"<u>{op_bold_tag}{town_death}{cl_bold_tag}</u>"
+    elif place_death["code"] == "2":
+        town_death = f"<u>{op_bold_tag}{rural_death}{cl_bold_tag}</u>"
+    child_type_place = f"17. Местность: {town_death} {digit_one} {rural_death} {digit_two}{line_break}{line_break}"
+    data_place_death = place_death_get(data_fields)
+    where_death = f"18. Смерть (рождение мертвым) произошла(о):{line_break}{data_place_death['stationar']} {digit_one} {data_place_death['home']} {digit_two} " \
+                  f"{data_place_death['other_place']} {digit_three} {data_place_death['not_know']} {digit_four} {line_break}{line_break}"
+    sex_men, sex_women = "мужской", "женский"
+    if data_fields["Пол"].lower() == "женский":
+        sex_women = f"<u>{op_bold_tag}{sex_women}{cl_bold_tag}</u>"
+    elif data_fields["Пол"].lower() == "мужской":
+        sex_men = f"<u>{op_bold_tag}{sex_men}{cl_bold_tag}</u>"
+    sex = f"19.	Пол: {sex_men} {digit_one} {sex_women} {digit_two} {line_break}{line_break}"
+
+    born_mass = data_fields.get("Масса тела ребенка при рождении (г)", "")
+    weight = f"20. Масса тела ребенка при рождении (г) {born_mass}{line_break}{line_break}"
+    long_body_data = data_fields.get("Длина тела ребенка при рождении (см)", "")
+    long_body = f"21. Длина тела ребенка при рождении (см) {long_body_data}{line_break}{line_break}"
     why_death = f"22. Рождение мертвым или живорождение произошло:  {line_break}"
-    singleton_birth = f"{space_symbol * 3} при одноплодных родах {digit_one} {line_break}"
-    multiple_birth = f"{space_symbol * 3} при многоплодных родах {digit_two} {line_break}"
-    child_count = f"{space_symbol * 3} которыми по счет {line_break}"
-    child_all_birth_count = f"{space_symbol * 3} число родившихся (живыми или мертвыми) детей {line_break}"
+
+    type_birth = data_fields.get("Рождение мертвым или живорождение произошло", "")
+    single_type, multiple_type = "при одноплодных родах", "при многоплодных родах"
+    if type_birth == "при одноплодных родах":
+        single_type = f"<u>{op_bold_tag}{single_type}{cl_bold_tag}</u>"
+    elif type_birth == "при многоплодных родах":
+        multiple_type = f"<u>{op_bold_tag}{multiple_type}{cl_bold_tag}</u>"
+    singleton_birth = f"{space_symbol * 3} {single_type} {digit_one} {line_break}"
+    multiple_birth = f"{space_symbol * 3} {multiple_type} {digit_two} {line_break}"
+    what_count = data_fields.get("Которыми по счету", "")
+    child_count = f"{space_symbol * 3} которыми по счет <u>{op_bold_tag}{what_count}{cl_bold_tag}</u>{line_break}"
+
+    all_count = data_fields.get("Число родившихся (живыми или мертвыми) детей", "")
+    child_all_birth_count = f"{space_symbol * 3} число родившихся (живыми или мертвыми) детей <u>{op_bold_tag}{all_count}{cl_bold_tag}</u> {line_break}"
 
     return (
         f"{child_fio}{child_place_death}{child_region_country}{child_area_region}{child_city}{child_live_punkt}{child_street}{child_house}{child_type_place}"
@@ -692,43 +762,80 @@ def why_death(text, params, item_why):
     text.append(Spacer(1, 5 * mm))
     text.append(tbl)
     text.append(Spacer(1, 2 * mm))
-
-    tbl = diagnos_tbl(
-        "а)", "Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита Скрининг с целью выявления полиомиелита", ""
-    )
+    a_diag = params.get('а) Основной заболевание (плода или ребенка)', None)
+    a_diag_title, a_diag_code = "", ""
+    if a_diag:
+        a_diag = json.loads(a_diag)
+        a_diag_title = a_diag["title"]
+        a_diag_code = a_diag["code"]
+    tbl = diagnos_tbl("а)", a_diag_title, a_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(основное заболевание или патологическое состояние плода или ребенка)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl("б)", " Скрининг с целью иелита Скрининг с целью выявления полиомиелита", "")
+    b_diag = params.get('б) Другие заболевания плода или ребенка', None)
+    b_diag_title, b_diag_code = "", ""
+    if b_diag:
+        b_diag = json.loads(b_diag)
+        b_diag_title = b_diag["title"]
+        b_diag_code = b_diag["code"]
+
+    tbl = diagnos_tbl("б)", b_diag_title, b_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(другие заболевания или патологические состояния плода или ребенка)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl("в)", "", "")
+    v_diag = params.get('в) основное заболевание матери', None)
+    v_diag_title, v_diag_code = "", ""
+    if v_diag:
+        v_diag = json.loads(v_diag)
+        v_diag_title = v_diag["title"]
+        v_diag_code = v_diag["code"]
+
+    tbl = diagnos_tbl("в)", v_diag_title, v_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(основное заболевание или патологическое состояние матери, оказавшее неблагоприятное влияние на плод или ребенка)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl("г)", "", "")
+    g_diag = params.get('г) другие заболевания матери', None)
+    g_diag_title, g_diag_code = "", ""
+    if g_diag:
+        g_diag = json.loads(g_diag)
+        g_diag_title = g_diag["title"]
+        g_diag_code = g_diag["code"]
+
+    tbl = diagnos_tbl("г)", g_diag_title, g_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = about_diag_tbl("(другие заболевания или патологические состояния матери, оказавшие неблагоприятное влияние на плод или ребенка)")
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl("д)", "", "")
-    text.append(Spacer(1, 0 * mm))
-    text.append(tbl)
-    tbl = about_diag_tbl("(другие обстоятельства, имевшие отношение к мертворождению, смерти)")
-    text.append(Spacer(1, 0 * mm))
-    text.append(tbl)
+    d_diag = params.get('д) другие обстоятельства', None)
+    if d_diag:
+        d_diag_dict = json.loads(d_diag)
+        count = 0
+        d_diag_rows = d_diag_dict.get("rows", None)
+        for r in d_diag_rows:
+            r = json.loads(r[0])
+            d_diag_title = r["title"]
+            d_diag_code = r["code"]
+            if count == 0:
+                tbl = diagnos_tbl("д)", d_diag_title, d_diag_code)
+            else:
+                tbl = diagnos_tbl("", d_diag_title, d_diag_code)
+            text.append(Spacer(1, 0 * mm))
+            text.append(tbl)
+            tbl = about_diag_tbl("(другие обстоятельства, имевшие отношение к мертворождению, смерти)")
+            text.append(Spacer(1, 0 * mm))
+            text.append(tbl)
+            count += 1
 
     return text
 
@@ -747,9 +854,9 @@ def who_write_documet(item, position_writer, fio):
     col_width = (
         10 * mm,
         70 * mm,
-        5 * mm,
+        7 * mm,
         40 * mm,
-        5 * mm,
+        7 * mm,
         70 * mm,
     )
     tbl_style = [
@@ -859,7 +966,13 @@ def who_get_about_tbl():
     return tbl
 
 
-def who_get_type_document(document_data):
+def who_get_type_document_tbl(param_doc):
+    type_document = param_doc.get("Документ (получатель)", "")
+    serial_document = param_doc.get("Серия (получатель)", "")
+    number_document = param_doc.get("Номер (получатель)", "")
+    who_where_document = param_doc.get("Кем и когда выдан (получатель)", "")
+
+    document_data = f"{type_document} {serial_document} {number_document} {who_where_document}"
     opinion = [
         [
             Paragraph("Документ, удостоверяющий личность получателя (вид, серия, номер, кем выдан)", styleT),
@@ -884,6 +997,16 @@ def who_get_type_document(document_data):
 
     tbl = gen_table(opinion, col_width, tbl_style)
     return tbl
+
+
+def who_get_type_document_para(text, param_doc):
+    type_document = param_doc.get("Документ (получатель)", "")
+    serial_document = param_doc.get("Серия (получатель)", "")
+    number_document = param_doc.get("Номер (получатель)", "")
+    who_where_document = param_doc.get("Кем и когда выдан (получатель)", "")
+    doc_data = f"{type_document} {serial_document} {number_document} {who_where_document}"
+    text.append(Paragraph(f"{space_symbol * 3}Документ, удостоверяющий личность получателя (вид, серия, номер, кем выдан) {doc_data}", styleT))
+    return text
 
 
 def title_table(item, diag_data, diag_code):
@@ -912,11 +1035,21 @@ def title_table(item, diag_data, diag_code):
 
 
 def diagnos_tbl(item, diag_data, diag_code):
+    diag_code = list(diag_code)
+    symbol_one = diag_code[0] if len(diag_code) >= 1 else space_symbol
+    symbol_two = diag_code[1] if len(diag_code) >= 2 else space_symbol
+    symbol_three = diag_code[2] if len(diag_code) >= 3 else space_symbol
+    symbol_four = diag_code[4] if len(diag_code) >= 4 else ""
+
+    about_diag_code = Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),
+    if len(diag_code) > 0:
+        about_diag_code = Paragraph(f"{op_boxed_tagD}{symbol_one}{symbol_two}{symbol_three}{cl_boxed_tag} . {op_boxed_tagD}{symbol_four}{cl_boxed_tagD}", styleDiag),
+
     opinion = [
         [
             Paragraph(f"{item}", styleT),
             Paragraph(f"{diag_data}", styleOrgBold),
-            Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),
+            about_diag_code
         ],
     ]
     col_width = (
@@ -1045,16 +1178,16 @@ def who_check(number, month, year, fio):
         [
             Paragraph(f"{number}", styleT),
             Paragraph(f"{month}", styleT),
-            Paragraph(f"{year} г.", styleT),
+            Paragraph(f"{year}", styleT),
             Paragraph("", styleT),
             Paragraph(f"{fio}", styleT),
         ],
     ]
     col_width = (
-        10 * mm,
-        15 * mm,
+        9 * mm,
+        9 * mm,
         16 * mm,
-        20 * mm,
+        30 * mm,
         65 * mm,
     )
     tbl_style = [
@@ -1188,29 +1321,29 @@ def mother_fio_data(fields):
     return f"{mother_family} {mother_name} {mother_patronymic}"
 
 
-def mother_address_get(data_fields):
-    mother_address = json.loads(data_fields.get("Адрес матери", None))
+def address_get(address_data):
+    address_data = json.loads(address_data)
     area = "__________________"
     city = "____________________"
     street = "____________________"
     house = "______"
     flat = "_________"
     region, region_type, area_type, city_type, street_type, house_type, flat_type, postal_code = "", "", "", "", "", "", "", ""
-    if mother_address:
-        mother_address_details = mother_address.get("details", None)
-        region = mother_address_details.get("region", "")
-        region_type = mother_address_details.get("region_type", "")
-        area = mother_address_details.get("area", "__________________")
-        area_type = mother_address_details.get("area_type", "")
-        city = mother_address_details.get("city", "____________________")
-        city_type = mother_address_details.get("city_type", "")
-        street = mother_address_details.get("street", "____________________")
-        street_type = mother_address_details.get("street_type", "")
-        house = mother_address_details.get("house", "______")
-        house_type = mother_address_details.get("house_type", "")
-        flat = mother_address_details.get("flat", "_________")
-        flat_type = mother_address_details.get("flat_type", "")
-        postal_code = mother_address_details.get("postal_code", "")
+    if address_data:
+        address_details = address_data.get("details", None)
+        region = address_details.get("region", "")
+        region_type = address_details.get("region_type", "")
+        area = address_details.get("area", "__________________")
+        area_type = address_details.get("area_type", "")
+        city = address_details.get("city", "____________________")
+        city_type = address_details.get("city_type", "")
+        street = address_details.get("street", "____________________")
+        street_type = address_details.get("street_type", "")
+        house = address_details.get("house", "______")
+        house_type = address_details.get("house_type", "")
+        flat = address_details.get("flat", "_________")
+        flat_type = address_details.get("flat_type", "")
+        postal_code = address_details.get("postal_code", "")
 
     return {
         "region": region,
@@ -1227,3 +1360,18 @@ def mother_address_get(data_fields):
         "flat_type": flat_type,
         "postal_code": postal_code,
     }
+
+
+def place_death_get(data_fields):
+    place_death = json.loads(data_fields["Типы мест наступления смерти"])
+    stationar, home, other_place, not_know = "в  стационаре", "дома", "в другом месте", "неизвестно"
+    if place_death["title"].lower() == "в стационаре":
+        stationar = "<u>в стационаре</u>"
+    elif place_death["title"].lower() == "дома":
+        home = "<u>дома</u>"
+    elif place_death["title"].lower() == "в другом месте":
+        other_place = "<u>в другом месте</u>"
+    elif place_death["title"].lower() == "неизвестно":
+        not_know = "<u>неизвестно</u>"
+
+    return {"stationar": stationar, "home": home, "other_place": other_place, "not_know": not_know}

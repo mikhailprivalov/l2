@@ -561,6 +561,7 @@ def statistic_research_data(ws1, researches):
         ws1.cell(row=r, column=11).value = current_born
         ws1.cell(row=r, column=12).value = current_age
         ws1.cell(row=r, column=13).value = current_num_card
+        ws1.cell(row=r, column=14).value = res[19]
 
         rows = ws1[f'A{r}:M{r}']
         for row in rows:
