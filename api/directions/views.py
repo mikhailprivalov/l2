@@ -1610,7 +1610,6 @@ def directions_paraclinic_result(request):
                 ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group["pk"]).delete()
                 continue
             for field in group["fields"]:
-                print(field)
                 if not v_f.get(str(field["pk"]), True):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
                     continue
