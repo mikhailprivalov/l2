@@ -158,13 +158,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
         data[i["title"]] = i["value"]
-        print(i["title"])
-        print(i["value"])
-
 
     data["Заполнил"] = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
-    print("2312", iss.doc_confirmation)
-
 
     data["Должность"] = iss.doc_position if iss.doc_confirmation else ""
 
@@ -796,13 +791,11 @@ def why_death(text, params, item_why):
 
     v_diag = params.get('в) основное заболевание матери', None)
     v_diag_title, v_diag_code = "", ""
-    print("text", v_diag)
     if v_diag:
         v_diag = json.loads(v_diag)
         v_diag_title = v_diag["title"]
         v_diag_code = v_diag["code"]
 
-    print("json", v_diag)
     tbl = diagnos_tbl("в)", v_diag_title, v_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
