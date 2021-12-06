@@ -152,10 +152,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Номер (получатель)",
         "Кем и когда выдан (получатель)",
         "СНИЛС (получатель)",
-        "Заполнил",
-        "Должность",
         "Проверил",
-        "Главный врач",
+        "Главный врач"
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
@@ -163,17 +161,21 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         print(i["title"])
         print(i["value"])
 
-    if not data.get("Заполнил", None):
-        data["Заполнил"] = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
 
-    if not data.get("Должность", None):
-        data["Должность"] = iss.doc_position if iss.doc_confirmation else ""
+    data["Заполнил"] = iss.doc_confirmation.get_full_fio() if iss.doc_confirmation else ""
+    print("2312", iss.doc_confirmation)
+
+
+    data["Должность"] = iss.doc_position if iss.doc_confirmation else ""
 
     if not data.get("Проверил", None):
         data["Проверил"] = ""
 
     if not data.get("Главный врач", None):
         data["Главный врач"] = ""
+
+    if not data.get("Род причины смерти", None):
+        data["Род причины смерти"] = '{"code": "", "title": ""}'
 
     hospital_obj: Hospitals = user.doctorprofile.get_hospital()
     data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data, "org_okpo": hospital_obj.okpo}
@@ -426,13 +428,8 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
     text = who_get_type_document_para(text, fields)
 
     text.append(Spacer(1, 2 * mm))
-    text.append(Paragraph(f"{space_symbol * 3}СНИЛС получателя (при наличии)_________", style))
-    # text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fields["ФИО (получатель)"])
-    # text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
-    # text = destination_person_passport(text, f'{fields["Документ (получатель)"]} {fields["Серия (получатель)"]} {fields["Номер (получатель)"]} {fields["Кем и когда выдан (получатель)"]}')
-    # text = destination_person_snils(text, f'{fields["СНИЛС (получатель)"]}')
-    # text.append(Spacer(1, 2 * mm))
-    # text.append(Paragraph(f"«___» ___________ 20 ___ г.{space_symbol * 30} Подпись получателя _________________________", styleT))
+    snils = fields.get("СНИЛС (получатель)", "______________")
+    text.append(Paragraph(f"{space_symbol * 3} СНИЛС получателя (при наличии) {snils}", style))
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
@@ -443,11 +440,27 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
 def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text = []
     text.append(Paragraph("23. Которым по счету ребенок был рожден у матери (считая умерших и не считая мертворожденных) ______", styleT))
+    type_happend = json.loads(fields["Род причины смерти"])
+    ill, unfortunate, kill, millitary, terrorist, not_know = "от заболевания", "несчастного случая", "убийства", "военных", "террористических", "род смерти не установлен"
+
+    if type_happend["code"] == "1":
+        ill = f"{op_bold_tag}<u>{ill}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "9":
+        unfortunate = f"{op_bold_tag}<u>{unfortunate}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "4":
+        kill = f"{op_bold_tag}<u>{kill}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "6":
+        millitary = f"{op_bold_tag}<u>{millitary}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "7":
+        terrorist = f"{op_bold_tag}<u>{terrorist}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "8":
+        not_know = f"{op_bold_tag}<u>{not_know}</u>{cl_bold_tag}"
+
     text.append(
         Paragraph(
-            f"24. Смерть ребенка (рождение мертвым) произошла(о): от заболевания {op_boxed_tag}1{cl_boxed_tag} несчастного случая {op_boxed_tag}2{cl_boxed_tag}"
-            f"убийства {op_boxed_tag}3{cl_boxed_tag} в ходе действий: военных {op_boxed_tag}4{cl_boxed_tag} террористических {op_boxed_tag}5{cl_boxed_tag}"
-            f" род смерти не установлен {op_boxed_tag}6{cl_boxed_tag}",
+            f"24. Смерть ребенка (рождение мертвым) произошла(о): {ill} {op_boxed_tag}1{cl_boxed_tag} {unfortunate} {op_boxed_tag}2{cl_boxed_tag}"
+            f"{kill} {op_boxed_tag}3{cl_boxed_tag} в ходе действий: {millitary} {op_boxed_tag}4{cl_boxed_tag} {terrorist} {op_boxed_tag}5{cl_boxed_tag}"
+            f" {not_know} {op_boxed_tag}6{cl_boxed_tag}",
             styleT,
         )
     )
@@ -473,7 +486,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         )
     )
 
-    tbl = who_write_documet("29.", "Акушерка", "Иванова анна Ивановна")
+    tbl = who_write_documet("29.", fields["Должность"], fields["Заполнил"])
     text.append(Spacer(1, 8 * mm))
     text.append(tbl)
     tbl = who_writer_about_tbl()
@@ -484,7 +497,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph("Руководитель медицинской организации, индивидуальный предприниматель, осуществляющий медицинскую деятельность (подчеркнуть)", styleT))
     text.append(Spacer(1, 4 * mm))
 
-    tbl = manager_hospital_document("Иванова Анна Ивановна")
+    tbl = manager_hospital_document(fields["Главный врач"])
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
     tbl = manager_hospital_about_tbl()
@@ -495,7 +508,16 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph("30. Свидетельство проверено ответственным за правильность заполнения медицинских свидетельств.", styleT))
 
     text.append(Spacer(1, 4 * mm))
-    tbl = who_check("20", "июля", "2021", "Иванова Анна Ивановна")
+    person_check = fields["Проверил"]
+    data_check = fields.get("Дата выдачи", "")
+    check_day, check_month, check_year = "", "", ""
+    if person_check:
+        data_check = data_check.split(".")
+        check_day = f"{data_check[0]}."
+        check_month = f"{data_check[1]}."
+        check_year = f"{data_check[2]} г."
+
+    tbl = who_check(check_day, check_month, check_year, person_check)
     text.append(tbl)
 
     tbl = who_check_about()
@@ -774,11 +796,13 @@ def why_death(text, params, item_why):
 
     v_diag = params.get('в) основное заболевание матери', None)
     v_diag_title, v_diag_code = "", ""
+    print("text", v_diag)
     if v_diag:
         v_diag = json.loads(v_diag)
         v_diag_title = v_diag["title"]
         v_diag_code = v_diag["code"]
 
+    print("json", v_diag)
     tbl = diagnos_tbl("в)", v_diag_title, v_diag_code)
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
@@ -837,9 +861,9 @@ def who_write_documet(item, position_writer, fio):
     col_width = (
         10 * mm,
         70 * mm,
-        5 * mm,
+        7 * mm,
         40 * mm,
-        5 * mm,
+        7 * mm,
         70 * mm,
     )
     tbl_style = [
@@ -1019,9 +1043,14 @@ def title_table(item, diag_data, diag_code):
 
 def diagnos_tbl(item, diag_data, diag_code):
     diag_code = list(diag_code)
+    symbol_one = diag_code[0] if len(diag_code) >= 1 else space_symbol
+    symbol_two = diag_code[1] if len(diag_code) >= 2 else space_symbol
+    symbol_three = diag_code[2] if len(diag_code) >= 3 else space_symbol
+    symbol_four = diag_code[4] if len(diag_code) >= 4 else ""
+
     about_diag_code = Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),
     if len(diag_code) > 0:
-        about_diag_code = Paragraph(f"{op_boxed_tagD}{diag_code[0]}{diag_code[1]}{diag_code[2]}{cl_boxed_tag} . {op_boxed_tagD}{diag_code[4]}{cl_boxed_tagD}", styleDiag),
+        about_diag_code = Paragraph(f"{op_boxed_tagD}{symbol_one}{symbol_two}{symbol_three}{cl_boxed_tag} . {op_boxed_tagD}{symbol_four}{cl_boxed_tagD}", styleDiag),
 
     opinion = [
         [
@@ -1156,16 +1185,16 @@ def who_check(number, month, year, fio):
         [
             Paragraph(f"{number}", styleT),
             Paragraph(f"{month}", styleT),
-            Paragraph(f"{year} г.", styleT),
+            Paragraph(f"{year}", styleT),
             Paragraph("", styleT),
             Paragraph(f"{fio}", styleT),
         ],
     ]
     col_width = (
-        10 * mm,
-        15 * mm,
+        9 * mm,
+        9 * mm,
         16 * mm,
-        20 * mm,
+        30 * mm,
         65 * mm,
     )
     tbl_style = [

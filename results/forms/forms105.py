@@ -133,6 +133,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Проверил",
         "Главный врач",
         "Должность",
+        "Время известно",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
@@ -281,7 +282,7 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 0.3 * mm))
 
     # Дата смерти
-    text = death_tbl(text, "4. Дата смерти:", fields.get('Дата смерти', ''), fields.get('Время смерти', ''))
+    text = death_tbl(text, "4. Дата смерти:", fields.get('Дата смерти', '-'), fields.get('Время смерти', '-'))
 
     text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", fields.get("Место постоянного жительства (регистрации)", ""))
 
@@ -351,7 +352,7 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text = who_issue_passport(text, {"who_issue": dul['rows'][0][2], "date_issue": dul['rows'][0][3]})
     text = patient_snils(text, fields["СНИЛС"] or "")
     text = patient_polis(text, fields["Полис ОМС"] or "")
-    text = death_tbl(text, "7. Дата смерти:", fields['Дата смерти'], fields['Время смерти'])
+    text = death_tbl(text, "7. Дата смерти:", fields.get('Дата смерти', '-'), fields.get('Время смерти', '-'))
     text = address_tbl(text, "8. Регистрация по месту жительства (пребывания) умершего(ей):", fields["Место постоянного жительства (регистрации)"])
     text = type_city(text, "9. Местность:", fields["Вид места жительства"])
     text = address_tbl(text, "10. Место смерти:", fields["Место смерти"])
@@ -560,9 +561,11 @@ def death_tbl(text, number, death_data, death_time):
     death_day = death_data[0]
     death_month = death_data[1]
     death_year = death_data[2]
-    death_time = death_time.split(":")
-    death_hour = death_time[0]
-    death_min = death_time[1]
+    death_hour, death_min = "", ""
+    if death_time:
+        death_time = death_time.split(":")
+        death_hour = death_time[0] if len(death_time) >= 1 else " "
+        death_min = death_time[1] if len(death_time) >= 2 else " "
 
     opinion = gen_opinion([number, 'число', death_day, 'месяц', death_month, 'год', death_year, 'час.', death_hour, 'мин.', death_min])
 
