@@ -1358,3 +1358,30 @@ def external_check_result(request):
             "results": results,
         }
     )
+
+
+@api_view(['POST'])
+def get_protocol_result(request):
+    body = json.loads(request.body)
+    pk = body.get("pk")
+    n: Napravleniya = Napravleniya.objects.get(pk=pk)
+    card = n.client
+    ind = n.client.individual
+
+    result_protocol = get_paraclinic_results_by_direction(pk)
+    data = {}
+    for r in result_protocol:
+        data[r.title] = r.value
+
+    return Response({
+        "title": n.get_eds_title(),
+        "patient": {
+            'pk': card.number,
+            'family': ind.family,
+            'name': ind.name,
+            'patronymic': ind.patronymic,
+            'gender': ind.sex.lower(),
+            'birthdate': ind.birthday.strftime("%Y%m%d"),
+        },
+        "data": data
+    })

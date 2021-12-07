@@ -87,7 +87,6 @@ def get_paraclinic_results_by_direction(pk_dir):
                 directions_issledovaniya.id,
                 directions_issledovaniya.napravleniye_id,
                 directions_issledovaniya.research_id,
-                directory_researches.title,
                 directions_paraclinicresult.value,
                 directions_paraclinicresult.field_id,
                 directory_ParaclinicInputField.title
