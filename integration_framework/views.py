@@ -1368,7 +1368,12 @@ def get_protocol_result(request):
     data = {}
     for r in result_protocol:
         if "{" in r.value and "}" in r.value:
-            val = json.loads(r.value)
+            try:
+                val = json.loads(r.value)
+                if not val or not isinstance(val, dict):
+                    pass
+            except Exception as e:
+                val = r.value
         else:
             val = r.value
 
@@ -1377,8 +1382,14 @@ def get_protocol_result(request):
                 count = 0
                 for el in k:
                     if "{" in el and "}" in el:
-                        el = json.loads(el)
-                        k[count] = el
+                        try:
+                            el = json.loads(el)
+                            if not el or not isinstance(el, dict):
+                                pass
+                            else:
+                                k[count] = el
+                        except Exception as e:
+                            pass
                     count += 1
         data[r.title] = val
 
