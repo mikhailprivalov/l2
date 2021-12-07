@@ -1218,10 +1218,6 @@ def get_cda_data(pk):
     card = n.client
     ind = n.client.individual
 
-    result_protocol = get_paraclinic_results_by_direction(227303)
-    for r in result_protocol:
-        print(r.title, r.value)
-
     return {
         "title": n.get_eds_title(),
         "patient": {
