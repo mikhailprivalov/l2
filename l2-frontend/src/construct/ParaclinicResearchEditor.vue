@@ -261,6 +261,13 @@
                       <option value="deathFormNumber">Номер свидетельства о смерти</option>
                     </select>
                   </div>
+                  <div v-else-if="row.field_type === 37">
+                    <strong>Тип номера:</strong>
+                    <select v-model="row.default" class="form-control">
+                      <option value="">не выбрано</option>
+                      <option value="deathPerinatalNumber">Номер перинатольного МСС</option>
+                    </select>
+                  </div>
                   <div v-else-if="row.field_type === 11">
                     <strong>ID фракции:</strong>
                     <input v-model="row.default" class="form-control" />
@@ -426,6 +433,7 @@
                       <option value="28">НСИ-справочник</option>
                       <option value="29">Адрес по ФИАС</option>
                       <option value="30" v-if="number_generator_field_enabled">Генератор номера документа</option>
+                      <option value="37" v-if="number_generator_field_enabled">Генератор номера перинатального МСС св-ва</option>
                       <option value="31" v-if="tfoms_attachment_field_enabled">
                         Сведения о прикреплении застрахованного лица (ТФОМС)
                       </option>

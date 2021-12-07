@@ -28,6 +28,7 @@ from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
+from results.sql_func import get_paraclinic_results_by_direction
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
@@ -1353,3 +1354,54 @@ def external_check_result(request):
             "results": results,
         }
     )
+
+
+@api_view(['POST'])
+def get_protocol_result(request):
+    body = json.loads(request.body)
+    pk = body.get("pk")
+    n: Napravleniya = Napravleniya.objects.get(pk=pk)
+    card = n.client
+    ind = n.client.individual
+
+    result_protocol = get_paraclinic_results_by_direction(pk)
+    data = {}
+    for r in result_protocol:
+        if "{" in r.value and "}" in r.value:
+            try:
+                val = json.loads(r.value)
+                if not val or not isinstance(val, dict):
+                    pass
+            except Exception as e:
+                val = r.value
+        else:
+            val = r.value
+
+        if "rows" in val:
+            for k in val['rows']:
+                count = 0
+                for el in k:
+                    if "{" in el and "}" in el:
+                        try:
+                            el = json.loads(el)
+                            if not el or not isinstance(el, dict):
+                                pass
+                            else:
+                                k[count] = el
+                        except Exception as e:
+                            pass
+                    count += 1
+        data[r.title] = val
+
+    return Response({
+        "title": n.get_eds_title(),
+        "patient": {
+            'pk': card.number,
+            'family': ind.family,
+            'name': ind.name,
+            'patronymic': ind.patronymic,
+            'gender': ind.sex.lower(),
+            'birthdate': ind.birthday.strftime("%Y%m%d"),
+        },
+        "data": data
+    })

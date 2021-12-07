@@ -49,6 +49,9 @@ import * as actions from '@/store/action-types';
   model: {
     event: 'modified',
   },
+  mounted() {
+    this.checkVal();
+  },
   watch: {
     value: {
       handler() {

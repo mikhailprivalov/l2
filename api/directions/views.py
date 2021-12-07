@@ -2937,11 +2937,20 @@ def free_number(request):
 
         field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=iss, field_id=field_pk).first()
 
-        if not field:
-            field = ParaclinicResult.objects.create(issledovaniye=iss, field_id=field_pk, field_type=30)
+        if key == "deathPerinatalNumber":
+            field_type = 37
+        else:
+            field_type = 30
 
-        if field.field_type != 30:
+        if not field:
+            field = ParaclinicResult.objects.create(issledovaniye=iss, field_id=field_pk, field_type=field_type)
+
+        if field.field_type != 30 and key == "deathFormNumber":
             field.field_type = 30
+            field.save()
+
+        if field.field_type != 37 and key == "deathPerinatalNumber":
+            field.field_type = 37
             field.save()
 
         if not field.value:
