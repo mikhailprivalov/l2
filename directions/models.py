@@ -2657,8 +2657,12 @@ class DirectionsHistory(models.Model):
 
 class NumberGenerator(models.Model):
     DEATH_FORM_NUMBER = 'deathFormNumber'
+    PERINATAL_DEATH_FORM_NUMBER = 'deathPerinatalNumber'
 
-    KEYS = ((DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),)
+    KEYS = (
+        (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
+        (PERINATAL_DEATH_FORM_NUMBER, 'Номер свидетельства о перинатальной смерти'),
+    )
 
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
     key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')

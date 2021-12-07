@@ -183,6 +183,15 @@
                   :field-pk="field.pk"
                 />
               </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 37">
+                <NumberGeneratorField
+                  v-model="field.value"
+                  :number-key="field.default_value"
+                  :disabled="confirmed"
+                  :iss-pk="pk"
+                  :field-pk="field.pk"
+                />
+              </div>
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 31">
                 <TfomsAttachmentField v-model="field.value" :disabled="confirmed" :client-pk="patient.card_pk" />
               </div>
