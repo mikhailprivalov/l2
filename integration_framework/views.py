@@ -28,6 +28,7 @@ from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
+from results.sql_func import get_paraclinic_results_by_direction
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
@@ -1216,6 +1217,10 @@ def get_cda_data(pk):
     n: Napravleniya = Napravleniya.objects.get(pk=pk)
     card = n.client
     ind = n.client.individual
+
+    result_protocol = get_paraclinic_results_by_direction(227303)
+    for r in result_protocol:
+        print(r.title, r.value)
 
     return {
         "title": n.get_eds_title(),

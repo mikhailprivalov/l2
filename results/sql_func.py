@@ -77,3 +77,31 @@ def get_laboratory_results_by_directions(list_dirs):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_paraclinic_results_by_direction(pk_dir):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+              SELECT 
+                directions_issledovaniya.id,
+                directions_issledovaniya.napravleniye_id,
+                directions_issledovaniya.research_id,
+                directory_researches.title,
+                directions_paraclinicresult.value,
+                directions_paraclinicresult.field_id,
+                directory_ParaclinicInputField.title
+                FROM directions_issledovaniya
+                LEFT JOIN directions_paraclinicresult ON
+                directions_issledovaniya.id=directions_paraclinicresult.issledovaniye_id
+                LEFT JOIN directory_researches ON
+                directions_issledovaniya.research_id=directory_researches.id
+                LEFT JOIN directory_paraclinicinputfield ON
+                directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
+              WHERE directions_issledovaniya.napravleniye_id = %(num_dir)s
+
+        """,
+            params={'num_dir': pk_dir},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

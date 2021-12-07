@@ -988,4 +988,3 @@ def get_direction_params(direction_params, titles):
         if param.title in titles:
             result[param.title] = param.string_value
     return result
-
