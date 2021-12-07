@@ -1367,7 +1367,20 @@ def get_protocol_result(request):
     result_protocol = get_paraclinic_results_by_direction(pk)
     data = {}
     for r in result_protocol:
-        data[r.title] = r.value
+        if "{" in r.value and "}" in r.value:
+            val = json.loads(r.value)
+        else:
+            val = r.value
+
+        if "rows" in val:
+            for k in val['rows']:
+                count = 0
+                for el in k:
+                    if "{" in el and "}" in el:
+                        el = json.loads(el)
+                        k[count] = el
+                    count += 1
+        data[r.title] = val
 
     return Response({
         "title": n.get_eds_title(),
