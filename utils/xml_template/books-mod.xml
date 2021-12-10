@@ -1,0 +1,802 @@
+<?xml version='1.0' encoding='utf8'?>
+<ClinicalDocument xmlns:ns0="urn:hl7-org:v3" xmlns:ns1="urn:hl7-ru:identity" xmlns:ns3="urn:hl7-ru:address" xmlns:ns4="urn:hl7-ru:fias" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	
+	
+	
+	
+	
+	
+	
+	<realmCode code="RU" />
+	
+	<typeId extension="POCD_MT000040" root="2.16.840.1.113883.1.3" />
+	
+	
+	<templateId root="1.2.643.5.1.13.2.7.5.1.13.9.5" />
+	
+	
+	
+	<id extension="123789" root="1.2.643.5.1.13.13.12.2.77.7834.100.1.1.51" />
+	
+	<code code="13" codeSystem="1.2.643.5.1.13.13.11.1522" codeSystemName="Виды медицинской документации" codeSystemVersion="4.2" displayName="Медицинское свидетельство о смерти" />
+	
+	<title>Медицинское свидетельство о смерти<title>
+	
+	<effectiveTime value="20150815" />
+	
+	<confidentialityCode code="N" codeSystem="1.2.643.5.1.13.13.99.2.285" codeSystemName="Уровень конфиденциальности документа" codeSystemVersion="1.1" displayName="обычный" />
+	
+	<languageCode code="ru-RU" />
+	
+	
+	
+	<setId extension="78543" root="1.2.643.5.1.13.13.12.2.77.7834.100.1.1.50" />
+	
+	<versionNumber value="2" />
+	
+	<recordTarget>
+		
+		<patientRole>
+			
+			
+			
+			<id extension="654654" root="1.2.643.5.1.13.13.12.2.77.7834.100.1.1.10" />
+			
+			<id extension="123-456-789 10" root="1.2.643.100.3" />
+			
+			<IdentityDoc>
+				
+				<IdentityCardTypeId code="1" codeSystem="1.2.643.5.1.13.13.99.2.48" codeSystemName="Документы, удостоверяющие личность" codeSystemVersion="2.1" displayName="Паспорт гражданина Российской Федерации" xsi:type="CD" />
+				
+				<Series xsi:type="ST">4507<Series>
+				
+				<Number xsi:type="ST">691154<Number>
+				
+				<IssueOrgName xsi:type="ST">ОВД "Гольяново" гор. Москвы.<IssueOrgName>
+				
+				<IssueOrgCode xsi:type="ST">772-050<IssueOrgCode>
+				
+				<IssueDate value="19980404" xsi:type="TS" />
+			<IdentityDoc>
+			
+			<addr>
+				
+				<streetAddressLine>Воронежская область, Павловский район, село Лосево, улица Базарная, дом 13, кв. 5<streetAddressLine>
+				
+				<Type code="1" codeSystem="1.2.643.5.1.13.13.11.1504" codeSystemName="Тип адреса пациента" codeSystemVersion="1.3" displayName="Адрес по месту жительства (постоянной регистрации)" xsi:type="CD" />
+				
+				<stateCode code="36" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="Воронежская область" xsi:type="CD" />
+				
+				<postalCode>396431<postalCode>
+				
+				<Address>
+					
+					<AOGUID>a77b3168-997a-4e0c-8c0a-d4a137391aac<AOGUID>
+					
+					<HOUSEGUID>c36e86a2-045e-42b3-bda0-38e8edbdaa78<HOUSEGUID>
+				<Address>
+			<addr>
+			
+			<patient>
+				
+				<name>
+					
+					<family>Пробная<family>
+					
+					<given>Нина<given>
+					
+					<given>Петровна<given>
+				<name>
+				
+				
+				<administrativeGenderCode code="2" codeSystem="1.2.643.5.1.13.13.11.1040" codeSystemName="Пол пациента" codeSystemVersion="2.1" displayName="Женский" />
+				
+				<birthTime value="19710621" />
+			<patient>
+			
+			<providerOrganization>
+				
+				
+				<id root="1.2.643.5.1.13.13.12.2.77.7834" />
+				
+				<id assigningAuthorityName="Территориальный орган Росздравнадзора по г. Москве и Московской области. Дата регистрации: 12.05.20." extension="ФС-77-01-007343" root="1.2.643.5.1.13.2.1.1.1504.101" />
+				
+				<Okpo xsi:type="ST">00000000<Okpo>
+				
+				<name>ГБУЗ "ГКБ 13 ДЗМ"<name>
+				
+				<telecom use="WP" value="tel:+74999411345" />
+				
+				<telecom use="WP" value="fax:+74993153789" />
+				
+				<telecom value="http://gkb13.ru/" />
+				
+				<addr>
+					
+					<streetAddressLine>г. Москва, ул. Велозаводская, д. 1/1<streetAddressLine>
+					
+					<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+					
+					<postalCode>115280<postalCode>
+					
+					<Address>
+						
+						<AOGUID>c49bae98-6019-4ad8-9245-c83bf93c39d0<AOGUID>
+						
+						<HOUSEGUID>a0ac6949-f37f-4e17-927b-a80f87ab9c42<HOUSEGUID>
+					<Address>
+				<addr>
+			<providerOrganization>
+		<patientRole>
+	<recordTarget>
+	
+	<author>
+		
+		<time value="201508151255+0300" />
+		
+		<assignedAuthor>
+			
+			
+			
+			<id extension="465" root="1.2.643.5.1.13.13.12.2.77.7834.100.1.1.70" />
+			
+			<id extension="321-654-987 01" root="1.2.643.100.3" />
+			
+			<code code="45" codeSystem="1.2.643.5.1.13.13.99.2.700" codeSystemName="Должности медицинских работников для ФРМСС" codeSystemVersion="1.1" displayName="врач-невролог" />
+			
+			<addr>
+				
+				<streetAddressLine>г. Москва, улица Вучетича, дом 8, кв. 123<streetAddressLine>
+				
+				<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+				
+				<postalCode>127206<postalCode>
+				
+				<Address>
+					
+					<AOGUID>f58aa8e8-6846-4a46-8e0e-973c5e3d719e<AOGUID>
+					
+					<HOUSEGUID>48bf6f50-ad67-44f1-9448-3cde5aa20eec<HOUSEGUID>
+				<Address>
+			<addr>
+			
+			<telecom value="tel:+749513246579" />
+			
+			<telecom use="MC" value="tel:+790112345678" />
+			
+			<telecom value="mailto:a.shuvalov@gkb13.ru" />
+			
+			<telecom value="fax:+749513245678" />
+			
+			<assignedPerson>
+				
+				<name>
+					
+					<family>Шувалов<family>
+					
+					<given>Анатолий<given>
+					
+					<given>Сергеевич<given>
+				<name>
+			<assignedPerson>
+			
+			<representedOrganization>
+				
+				
+				<id root="1.2.643.5.1.13.13.12.2.77.7834" />
+				
+				<name>ГБУЗ "ГКБ 13 ДЗМ"<name>
+				
+				<telecom use="WP" value="tel:+74999411345" />
+				
+				<telecom use="WP" value="fax:+74993153789" />
+				
+				<telecom value="http://gkb13.ru/" />
+				
+				<addr>
+					
+					<streetAddressLine>г. Москва, ул. Велозаводская, д. 1/1<streetAddressLine>
+					
+					<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+					
+					<postalCode>115280<postalCode>
+					
+					<Address>
+						
+						<AOGUID>c49bae98-6019-4ad8-9245-c83bf93c39d0<AOGUID>
+						
+						<HOUSEGUID>a0ac6949-f37f-4e17-927b-a80f87ab9c42<HOUSEGUID>
+					<Address>
+				<addr>
+			<representedOrganization>
+		<assignedAuthor>
+	<author>
+	
+	<custodian>
+		
+		<assignedCustodian>
+			
+			<representedCustodianOrganization>
+				
+				
+				
+				<id root="1.2.643.5.1.13.13.12.2.77.7834" />
+				
+				<name>ГБУЗ "ГКБ 13 ДЗМ"<name>
+				
+				<telecom use="WP" value="tel:+74999411345" />
+				
+				<addr>
+					
+					<streetAddressLine>г. Москва, ул. Велозаводская, д. 1/1<streetAddressLine>
+					
+					<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+					
+					<postalCode>115280<postalCode>
+					
+					<Address>
+						
+						<AOGUID>c49bae98-6019-4ad8-9245-c83bf93c39d0<AOGUID>
+						
+						<HOUSEGUID>a0ac6949-f37f-4e17-927b-a80f87ab9c42<HOUSEGUID>
+					<Address>
+				<addr>
+			<representedCustodianOrganization>
+		<assignedCustodian>
+	<custodian>
+	
+	<informationRecipient>
+		
+		<intendedRecipient>
+			
+			<receivedOrganization>
+				
+				<id root="1.2.643.5.1.13" />
+				
+				<name>Министерство здравоохранения Российской Федерации<name>
+			<receivedOrganization>
+		<intendedRecipient>
+	<informationRecipient>
+	
+	<legalAuthenticator>
+		
+		<time value="201508151503+0300" />
+		
+		<signatureCode code="S" />
+		
+		<assignedEntity>
+			
+			
+			
+			<id extension="2791" root="1.2.643.5.1.13.13.12.2.77.7834.100.1.1.70" />
+			
+			<id extension="885-996-741 11" root="1.2.643.100.3" />
+			
+			<code code="334" codeSystem="1.2.643.5.1.13.13.99.2.700" codeSystemName="Должности медицинских работников для ФРМСС" codeSystemVersion="1.1" displayName="главный врач медицинской организации" />
+			
+			<addr>
+				
+				<streetAddressLine>г.Москва, улица Малая Полянка, дом 13, кв. 9, 119180<streetAddressLine>
+				
+				<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+				
+				<postalCode>119180<postalCode>
+				
+				<Address>
+					
+					<AOGUID>79be7677-5bf6-4d57-b1a7-9fbdfafe040c<AOGUID>
+					
+					<HOUSEGUID>bf618246-0184-4223-b20f-8829bb4f4ea2<HOUSEGUID>
+				<Address>
+			<addr>
+			
+			<telecom value="tel:+74998643578" />
+			
+			<telecom use="MC" value="tel:+79017987965" />
+			
+			<telecom value="mailto:minaev@gkb13.ru" />
+			
+			<telecom value="fax:+74954244567" />
+			
+			<assignedPerson>
+				
+				<name>
+					
+					<family>Минаев<family>
+					
+					<given>Виктор<given>
+					
+					<given>Владимирович<given>
+				<name>
+			<assignedPerson>
+			
+			<representedOrganization>
+				
+				
+				<id root="1.2.643.5.1.13.13.12.2.77.7834" />
+				
+				<name>ГБУЗ "ГКБ 13 ДЗМ"<name>
+				
+				<telecom use="WP" value="tel:+74999411345" />
+				
+				<telecom use="WP" value="fax:+74993153789" />
+				
+				<telecom value="http://gkb13.ru/" />
+				
+				<addr>
+					
+					<streetAddressLine>г. Москва, ул. Велозаводская, д. 1/1<streetAddressLine>
+					
+					<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+					
+					<postalCode>115280<postalCode>
+					
+					<Address>
+						
+						<AOGUID>c49bae98-6019-4ad8-9245-c83bf93c39d0<AOGUID>
+						
+						<HOUSEGUID>a0ac6949-f37f-4e17-927b-a80f87ab9c42<HOUSEGUID>
+					<Address>
+				<addr>
+			<representedOrganization>
+		<assignedEntity>
+	<legalAuthenticator>
+	
+	<authenticator>
+		
+		<time value="201508151501+0300" />
+		
+		<signatureCode code="S" />
+		
+		<assignedEntity>
+			
+			
+			
+			<id extension="24563" root="1.2.643.5.1.13.13.12.2.77.7834.100.1.1.70" />
+			
+			<id extension="987-996-991 15" root="1.2.643.100.3" />
+			
+			<code code="99" codeSystem="1.2.643.5.1.13.13.99.2.700" codeSystemName="Должности медицинских работников для ФРМСС" codeSystemVersion="1.2" displayName="врач-статистик" />
+			
+			<addr>
+				
+				<streetAddressLine>г.Москва, улица Кубинка, дом 142, корпус 16, кв.149<streetAddressLine>
+				
+				<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+				
+				<postalCode>117854<postalCode>
+				
+				<Address>
+					
+					<AOGUID>da2f2e3-a677-4956-a871-ec9ba066ad10<AOGUID>
+					
+					<HOUSEGUID>02fa0fa0-a944-4f66-b493-fd3e9ee9c133<HOUSEGUID>
+				<Address>
+			<addr>
+			
+			<telecom value="tel:+74997865328" />
+			
+			<telecom use="MC" value="tel:+790256897463" />
+			
+			<telecom value="mailto:prohorov@gkb13.ru" />
+			
+			<telecom value="fax:+74956434469" />
+			
+			<assignedPerson>
+				
+				<name>
+					
+					<family>Прохоров<family>
+					
+					<given>Николай<given>
+					
+					<given>Ахметович<given>
+				<name>
+			<assignedPerson>
+			
+			<representedOrganization>
+				
+				
+				<id root="1.2.643.5.1.13.13.12.2.77.7834" />
+				
+				<name>ГБУЗ "ГКБ 13 ДЗМ"<name>
+				
+				<telecom use="WP" value="tel:+74999411345" />
+				
+				<telecom use="WP" value="fax:+74993153789" />
+				
+				<telecom value="http://gkb13.ru/" />
+				
+				<addr>
+					
+					<streetAddressLine>г. Москва, ул. Велозаводская, д. 1/1<streetAddressLine>
+					
+					<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+					
+					<postalCode>115280<postalCode>
+					
+					<Address>
+						
+						<AOGUID>c49bae98-6019-4ad8-9245-c83bf93c39d0<AOGUID>
+						
+						<HOUSEGUID>a0ac6949-f37f-4e17-927b-a80f87ab9c42<HOUSEGUID>
+					<Address>
+				<addr>
+			<representedOrganization>
+		<assignedEntity>
+	<authenticator>
+	
+	<component>
+		
+		<structuredBody>
+			
+			<component>
+				<section>
+					
+					<code code="DOCINFO" codeSystem="1.2.643.5.1.13.13.99.2.197" codeSystemName="Секции электронных медицинских документов" codeSystemVersion="1.8" displayName="Сведения о документе" />
+					
+					<title>Медицинское свидетельство о смерти<title>
+					
+					<text>
+						<content>СЕРИЯ 45 <content>
+						<content>N 123456789 <content>
+						<br />
+						<content>Дата выдачи "15" августа 2015 г.<content>
+						<br />
+						<content>взамен предварительного <content>
+						<content>серия 45 <content>
+						<content>№ 123456790 <content>
+						<content>от 9 августа 2015 г. <content>
+						<br />
+					<text>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="5013" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Серия медицинского свидетельства о смерти" />
+							<value xsi:type="ST">45<value>
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="5014" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Номер медицинского свидетельства о смерти" />
+							<value xsi:type="ST">123456789<value>
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="511" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Тип свидетельства о смерти" />
+							<value code="3" codeSystem="1.2.643.5.1.13.13.99.2.19" codeSystemName="Вид медицинского свидетельства о смерти" codeSystemVersion="1.1" displayName="взамен предварительного" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="5015" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Серия предшествующего медицинского свидетельства о смерти" />
+							<value xsi:type="ST">45<value>
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="5016" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Номер предшествующего медицинского свидетельства о смерти" />
+							<value xsi:type="ST">123456790<value>
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="112" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Дата выдачи предшествующего медицинского свидетельства о смерти" />
+							<value value="20150809" xsi:type="TS" />
+						<observation>
+					<entry>
+				<section>
+			<component>
+			
+			<component>
+				<section>
+					
+					<code code="DEADPATINFO" codeSystem="1.2.643.5.1.13.13.99.2.197" codeSystemName="Секции электронных медицинских документов" codeSystemVersion="1.8" displayName="Информация об умершем" />
+					
+					<title>Информация об умершем<title>
+					
+					<text>
+						<content>Дата рождения: 21 июня 1971 года.<content>
+						<br />
+						<content>Дата смерти: 6 августа 2015 года, время 21:01.<content>
+						<br />
+						<content>Место постоянного жительства (регистрации): 396400, Воронежская область, Павловский район, село Лосево, улица Базарная, дом 13, кв. 5, 396431<content>
+						<br />
+						<content>Местность: 2 - сельская.<content>
+						<br />
+						<content>Место смерти: город Москва, улица Велозаводская, дом 1/1, палата 314<content>
+						<br />
+						<content>Местность: 1 - городская.<content>
+						<br />
+						<content>Смерть наступила: 3 - в стационаре.<content>
+						<br />
+						<content>Для детей, умерших  в возрасте от 168 час. до 1 месяца: неприменимо<content>
+						<br />
+						<content>Для детей, умерших  в возрасте от 168 час. до 1 года: неприменимо<content>
+						<br />
+						<content>Семейное положение: 2 - состояла в зарегистрированном браке<content>
+						<br />
+						<content>Образование: 4 - общее: среднее<content>
+						<br />
+						<content>Занятость: 1 - Работающий<content>
+						<br />
+						<content>Полис ОМС: 123456789123456<content>
+					<text>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="521" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Дата и время смерти" />
+							<value value="201508062101+0300" xsi:type="TS" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="6016" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Тип местности постоянного проживания (регистрации)" />
+							<value code="2" codeSystem="1.2.643.5.1.13.13.11.1042" codeSystemName="Вид места жительства" codeSystemVersion="2.1" displayName="Село" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="531" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Место смерти" />
+							<value xsi:type="AD">
+								
+								<streetAddressLine>город Москва, улица Велозаводская, дом 1/1, палата 314<streetAddressLine>
+								
+								<stateCode code="77" codeSystem="1.2.643.5.1.13.13.99.2.206" codeSystemName="Субъекты Российской Федерации" codeSystemVersion="6.2" displayName="г. Москва" xsi:type="CD" />
+								
+								<postalCode>115088<postalCode>
+								
+								<Address>
+									
+									<AOGUID>c49bae98-6019-4ad8-9245-c83bf93c39d0<AOGUID>
+									
+									<HOUSEGUID>a0ac6949-f37f-4e17-927b-a80f87ab9c42<HOUSEGUID>
+								<Address>
+							<value>
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="252" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Местность смерти" />
+							<value code="1" codeSystem="1.2.643.5.1.13.13.11.1042" codeSystemName="Вид места жительства" codeSystemVersion="2.1" displayName="Город" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="541" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Место наступления смерти" />
+							<value code="3" codeSystem="1.2.643.5.1.13.13.99.2.20" codeSystemName="Типы мест наступления смерти" codeSystemVersion="3.1" displayName="в стационаре" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="612" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Доношенность умершего ребенка возрастом от 168 часов до 1 месяца жизни" />
+							<value codeSystem="1.2.643.5.1.13.13.99.2.18" codeSystemName="Доношенность новорожденного" codeSystemVersion="1.1" nullFlavor="NA" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="410" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Масса тела ребёнка при рождении (в граммах)" />
+							<value nullFlavor="NA" unit="г" xsi:type="PQ" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="370" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Которым по счёту ребёнок был рождён у матери" />
+							<value nullFlavor="NA" xsi:type="INT" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="261" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Семейное положение умершего" />
+							<value code="1" codeSystem="1.2.643.5.1.13.13.99.2.15" codeSystemName="Семейное положение" codeSystemVersion="1.1" displayName="состоял(а) в зарегистрированном браке" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="271" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Образование умершего" />
+							<value code="4" codeSystem="1.2.643.5.1.13.13.99.2.16" codeSystemName="Классификатор образования для медицинских свидетельств" codeSystemVersion="2.1" displayName="общее: среднее" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="281" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Занятость умершего" />
+							<value code="1" codeSystem="1.2.643.5.1.13.13.11.1038" codeSystemName="Социальные группы населения в учетной медицинской документации" codeSystemVersion="4.1" displayName="Работающий" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="5010" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Серия и номер полиса ОМС" />
+							
+							<value xsi:type="ST">123456789123456<value>
+						<observation>
+					<entry>
+				<section>
+			<component>
+			
+			<component>
+				<section>
+					
+					<code code="ABOUTDEAD" codeSystem="1.2.643.5.1.13.13.99.2.197" codeSystemName="Секции электронных медицинских документов" codeSystemVersion="1.8" displayName="Информация о причинах смерти" />
+					
+					<title>Характеристика причины смерти<title>
+					
+					<text>
+						<content>Смерть произошла: 2 - от несчастного случая не связанного с производством.<content>
+						<br />
+						<content>Для смерти от несчастного случая, установленная дата травмы (отравления): 2 августа 2015 года, время 04:00. Место и обстоятельства, при которых произошла травма: падение из седла на сельскохозяйственной территории в Павловском районе Воронежской области.<content>
+						<br />
+						<content>Тип медицинского работника, установившего причины смерти: 2 - лечащий врач.<content>
+						<br />
+						<content>Основание для определения причины смерти: 3 - предшествующее наблюдение за больным.<content>
+						<br />
+						<br />
+						Причины смерти
+						<table>
+							<tbody>
+								<tr>
+									<th>I. Причины смерти:<th>
+									<th>Период времени<th>
+									<th>Код МКБ10<th>
+								<tr>
+								<tr>
+									<td>
+										<sub>а) Болезнь или состояние, напосредственно приведшее к смерти:<sub>
+										<br />Грыжа большого затылочного отверстия головного мозга<td>
+									<td>40 часов<td>
+									<td>G93.5<td>
+								<tr>
+								<tr>
+									<td>
+										<sub>б) патологическое состояние, которое привело к возникновению вышеуказанной причины:<sub>
+										<br />Отек головного мозга травматический<td>
+									<td>4 суток<td>
+									<td>S06.1<td>
+								<tr>
+								<tr>
+									<td>
+										<sub>в) первоначальная причина смерти:<sub>
+										<br />Перелом множественный лицевых костей и черепа<td>
+									<td>6 суток<td>
+									<td>S02.7<td>
+								<tr>
+								<tr>
+									<td>
+										<sub>г) внешняя причина при травмах и отравлениях:<sub>
+										<br />Всадник, пострадавший без столкновения<td>
+									<td>6 суток<td>
+									<td>V80.0<td>
+								<tr>
+								<tr>
+									<th>II. Прочие важные состояния, способствовавшие смерти, но не связанные<br /> с болезнью или патологическим состоянием, приведшим к ней<th>
+									<th>Период времени<th>
+									<th>Код МКБ10<th>
+								<tr>
+								<tr>
+									<td>Ампутация правой голени от 27 июня 2013 года<td>
+									<td>2 года<td>
+									<td>Z89.5<td>
+								<tr>
+							<tbody>
+						<table>
+						<br />
+						<br />
+						<content>В случае смерти в результате ДТП: 1 - Смерть наступила в течение 30 суток, 2 - из них в течении 7 суток<content>
+						<br />
+						<content>Связь смерти с беременностью: неприменимо.<content>
+					<text>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="551" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Род смерти" />
+							<value code="2" codeSystem="1.2.643.5.1.13.13.99.2.21" codeSystemName="Род причины смерти" codeSystemVersion="2.1" displayName="от несчастного случая, не связанного с производством" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="6019" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Дата и время проишествия для смерти от внешних причин" />
+							<value value="201508020400+0300" xsi:type="TS" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="571" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Тип медицинского работника, установившего причины смерти" />
+							<value code="2" codeSystem="1.2.643.5.1.13.13.99.2.22" codeSystemName="Тип медицинского работника, установившего причины смерти" codeSystemVersion="3.1" displayName="лечащий врач" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="581" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Основания для определения причины смерти" />
+							<value code="3" codeSystem="1.2.643.5.1.13.13.99.2.23" codeSystemName="Основания для определения причины смерти" codeSystemVersion="2.1" displayName="предшествующее наблюдение за пациентом" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="4030" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Болезнь или состояние, непосредственно приведшее к смерти" />
+							
+							<effectiveTime value="201508050500+0300" />
+							<value code="10015949" codeSystem="1.2.643.5.1.13.13.11.1489" codeSystemName="Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3)" codeSystemVersion="2.5" displayName="Грыжа большого затылочного отверстия головного мозга" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="4035" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Патологическое состояние, которое привело к возникновению непосредственной причины смерти" />
+							<effectiveTime value="20150804" />
+							<value code="10047286" codeSystem="1.2.643.5.1.13.13.11.1489" codeSystemName="Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3)" codeSystemVersion="2.5" displayName="Отек головного мозга травматический" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="4040" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Первоначальная причина смерти" />
+							<effectiveTime value="20150802" />
+							<value code="10055034" codeSystem="1.2.643.5.1.13.13.11.1489" codeSystemName="Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3)" codeSystemVersion="2.5" displayName="Перелом множественный лицевых костей и черепа" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="4045" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Внешняя причина смерти при травмах и отравлениях" />
+							<effectiveTime value="20150802" />
+							<value code="10085702" codeSystem="1.2.643.5.1.13.13.99.2.692" codeSystemName="Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3, внешние причины заболеваемости и смертности)" codeSystemVersion="1.2" displayName="Всадник, пострадавший без столкновения" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="4050" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Прочие важные состояния, способствовавшие смерти" />
+							<effectiveTime value="20130627" />
+							<value code="10053479" codeSystem="1.2.643.5.1.13.13.11.1489" codeSystemName="Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3)" codeSystemVersion="2.5" displayName="Отсутствие конечности ниже колена одностороннее" xsi:type="CD" />
+							
+							<entryRelationship typeCode="CAUS">
+								<procedure classCode="PROC" moodCode="EVN">
+									<code code="A16.30.017.001" codeSystem="1.2.643.5.1.13.13.11.1070" codeSystemName="Номенклатура медицинских услуг" codeSystemVersion="2.6" displayName="Ампутация голени" />
+									
+									<statusCode code="completed" />
+									
+									<effectiveTime value="20150627" />
+								<procedure>
+							<entryRelationship>
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="601" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Варианты связи смерти с ДТП" />
+							<value code="1" codeSystem="1.2.643.5.1.13.13.99.2.24" codeSystemName="Связь смерти с ДТП" codeSystemVersion="1.1" displayName="в течение 30 суток" xsi:type="CD" />
+							<value code="2" codeSystem="1.2.643.5.1.13.13.99.2.24" codeSystemName="Связь смерти с ДТП" codeSystemVersion="1.1" displayName="из них в течение 7 суток" xsi:type="CD" />
+						<observation>
+					<entry>
+					
+					<entry>
+						<observation classCode="OBS" moodCode="EVN">
+							<code code="591" codeSystem="1.2.643.5.1.13.13.99.2.166" codeSystemName="Кодируемые поля CDA документов" codeSystemVersion="1.36" displayName="Варианты связи смерти с беременностью" />
+							<value codeSystem="1.2.643.5.1.13.13.99.2.25" codeSystemName="Связь смерти с беременностью" codeSystemVersion="1.2" nullFlavor="NA" xsi:type="CD" />
+						<observation>
+					<entry>
+				<section>
+			<component>
+		<structuredBody>
+	<component>
+<ClinicalDocument>

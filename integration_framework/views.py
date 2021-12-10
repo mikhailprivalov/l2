@@ -35,6 +35,7 @@ from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, matc
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
+from utils.xml_doc import edit_xml_template
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
@@ -1392,6 +1393,7 @@ def get_protocol_result(request):
                             pass
                     count += 1
         data[r.title] = val
+    edit_xml_template(data)
 
     return Response({
         "title": n.get_eds_title(),
