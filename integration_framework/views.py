@@ -36,7 +36,7 @@ from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
-from directions.models import DirectionDocument, DocumentSign, Napravleniya, Issledovaniya
+from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 
