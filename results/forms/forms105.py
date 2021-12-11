@@ -75,6 +75,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     title_fields = [
         "Серия",
+        "Префикс номера",
         "Номер",
         "Дата выдачи",
         "Вид медицинского свидетельства о смерти",
@@ -435,7 +436,6 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
                                    'российских юридических лиц в Антарктике" (Собрание законодательства Российской Федерации, 2012, № 24, ст. 3067). ')
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 168 * mm, text=text))
-
     return obj
 
 
@@ -445,7 +445,8 @@ def title_data(title_name, title_form, text, serial, number, date_issue, type_do
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"{title_form}", styleCentreBold))
     text.append(Spacer(1, 0.2 * mm))
-    text.append(Paragraph(f"СЕРИЯ {serial} № {number}", styleCentreBold))
+    prefix = data_fields.get("Префикс номера", "")
+    text.append(Paragraph(f"СЕРИЯ {serial} № {prefix}{number}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
 

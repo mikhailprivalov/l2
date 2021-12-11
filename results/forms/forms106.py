@@ -102,6 +102,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     title_fields = [
         "Серия",
+        "Префикс номера",
         "Номер",
         "Дата выдачи",
         "Вид медицинского свидетельства о смерти",
@@ -278,7 +279,8 @@ def title_data(title_name, title_form, text, serial, number, date_issue, type_do
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"{title_form}", styleCentreBold))
     text.append(Spacer(1, 0.2 * mm))
-    text.append(Paragraph(f"СЕРИЯ {serial} № {number}", styleCentreBold))
+    prefix = data_fields.get("Префикс номера", "")
+    text.append(Paragraph(f"СЕРИЯ {serial} № {prefix}{number}", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
