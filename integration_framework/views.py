@@ -1425,9 +1425,3 @@ def start_pathological_process(date_death, time_data, type_period):
     delta = dt + period[type_period]
     delta.strftime("%Y%m%d%H:%M:%S")
     return f"{delta.strftime('%Y%m%d%H%M')}+0800"
-
-
-def check_directly_death(title):
-    if title == "а) Болезнь или состояние, непосредственно приведшее к смерти":
-        return True
-    return False
