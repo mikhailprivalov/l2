@@ -24,7 +24,7 @@ from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
-from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY, REGION
+from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY, REGION, DEATH_RESEARCH_PK
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
@@ -36,7 +36,7 @@ from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
-from directions.models import DirectionDocument, DocumentSign, Napravleniya
+from directions.models import DirectionDocument, DocumentSign, Napravleniya, Issledovaniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 
@@ -1372,11 +1372,10 @@ def get_protocol_result(request):
                 val = json.loads(r.value)
                 if not val or not isinstance(val, dict):
                     pass
-            except Exception as e:
+            except Exception:
                 val = r.value
         else:
             val = r.value
-
         if "rows" in val:
             for k in val['rows']:
                 count = 0
@@ -1391,7 +1390,19 @@ def get_protocol_result(request):
                         except Exception as e:
                             pass
                     count += 1
+
         data[r.title] = val
+
+    iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)
+    if iss.research_id == DEATH_RESEARCH_PK:
+        data_direct_death = data.get("а) Болезнь или состояние, непосредственно приведшее к смерти", None)
+        if data_direct_death:
+            period_befor_death = data_direct_death["rows"][0][0]
+            type_period_befor_death = data_direct_death["rows"][0][1]
+            date_death = data["Дата смерти"]
+            time_death = data.get("Время смерти", "00:00")
+            if period_befor_death and type_period_befor_death:
+                data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
 
     return Response({
         "title": n.get_eds_title(),
@@ -1405,3 +1416,18 @@ def get_protocol_result(request):
         },
         "data": data
     })
+
+
+def start_pathological_process(date_death, time_data, type_period):
+    dt = datetime.datetime.strptime(date_death, '%Y-%m-%d %H:%M')
+    period = {"часов": relativedelta(hours=-time_data), "минут": relativedelta(minutes=-time_data), "дней": relativedelta(days=-time_data), "суток": relativedelta(days=-time_data),
+              "месяцев": relativedelta(months=-time_data), "лет": relativedelta(years=-time_data)}
+    delta = dt + period[type_period]
+    delta.strftime("%Y%m%d%H:%M:%S")
+    return f"{delta.strftime('%Y%m%d%H%M')}+0800"
+
+
+def check_directly_death(title):
+    if title == "а) Болезнь или состояние, непосредственно приведшее к смерти":
+        return True
+    return False
