@@ -238,6 +238,7 @@ class Researches(models.Model):
     paddings_size = models.CharField(max_length=10, null=True, blank=True, default=None, help_text="Отступы для бланка результатов (лево| вверх|право|низ)")
     odii_type = models.PositiveSmallIntegerField(choices=Podrazdeleniya.ODII_TYPES, default=None, blank=True, null=True,
                                                  help_text="Оказываемые виды инструментальных услуг (перезатирает из подразделения, если оно там указано)")
+    generator_name = models.CharField(max_length=60, null=True, blank=True, default=None, help_text="Название для xml-generator")
 
     @staticmethod
     def filter_type(t):
@@ -495,7 +496,7 @@ class ParaclinicInputField(models.Model):
         (32, 'МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)'),
         (33, 'МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)'),
         (34, 'МКБ-обычный (1.2.643.5.1.13.13.11.1005)'),
-        (35, 'Врач'),
+        (35, 'Лицо от организации придавшее юр. силу документу'),
         (36, 'МКБ-10(комбинация 1489, 692)'),
         (37, 'Генератор номера перинатального МСС'),
     )

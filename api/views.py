@@ -892,7 +892,8 @@ def doctorprofile_search(request):
 
     d_qs = users.DoctorProfile.objects.filter(
         hospital=request.user.doctorprofile.get_hospital(),
-        family__istartswith=q[0]
+        family__istartswith=q[0],
+        user__groups__name__in=["ЭЦП Медицинской организации"]
     )
 
     if len(q) > 1:
