@@ -1221,12 +1221,10 @@ def get_cda_data(pk):
     n: Napravleniya = Napravleniya.objects.get(pk=pk)
     card = n.client
     ind = n.client.individual
-
     data = get_json_protocol_data(pk)
-    meta_title = n.get_eds_title()
     return {
-        "title": meta_title["title"],
-        "generatorName": meta_title["generator_name"],
+        "title":  n.get_eds_title(),
+        "generatorName": n.get_eds_generator(),
         "rawResponse": True,
         "data": {
             "oidMo": data["oidMo"],
@@ -1378,11 +1376,9 @@ def get_protocol_result(request):
     card = n.client
     ind = n.client.individual
     data = get_json_protocol_data(pk)
-    meta_title = n.get_eds_title()
     return Response({
-        "title": meta_title["title"],
-        "generatorName": meta_title["generator_name"],
-
+        "title":  n.get_eds_title(),
+        "generatorName": n.get_eds_generator(),
         "data": {
             "oidMo": data["oidMo"],
             "document": data,
