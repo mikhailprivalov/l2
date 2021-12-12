@@ -456,7 +456,7 @@ class Napravleniya(models.Model):
         for i in iss:
             research: directory.Researches = i.research
             if research.desc:
-                return research.title
+                return {"title": research.title, "generator_name": research.generator_name}
 
         return 'Лабораторное исследование'
 

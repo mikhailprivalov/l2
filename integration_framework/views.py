@@ -1,6 +1,10 @@
 import base64
 import datetime
 import logging
+
+import pytz
+
+from laboratory import settings
 from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
@@ -1218,16 +1222,27 @@ def get_cda_data(pk):
     card = n.client
     ind = n.client.individual
 
+    data = get_json_protocol_data(pk)
+    meta_title = n.get_eds_title()
     return {
-        "title": n.get_eds_title(),
-        "patient": {
-            'pk': card.number,
-            'family': ind.family,
-            'name': ind.name,
-            'patronymic': ind.patronymic,
-            'gender': ind.sex.lower(),
-            'birthdate': ind.birthday.strftime("%Y%m%d"),
-        },
+        "title": meta_title["title"],
+        "generatorName": meta_title["generator_name"],
+        "rawResponse": True,
+        "data": {
+            "oidMo": data["oidMo"],
+            "document": data,
+            "patient": {
+                'id': card.number,
+                'snils': card.get_data_individual()["snils"],
+                'name': {
+                    'family': ind.family,
+                    'name': ind.name,
+                    'patronymic': ind.patronymic
+                },
+                'gender': ind.sex.lower(),
+                'birthdate': ind.birthday.strftime("%Y%m%d"),
+            },
+        }
     }
 
 
@@ -1242,7 +1257,6 @@ def eds_get_cda_data(request):
         return Response({"ok": False})
 
     body = json.loads(request.body)
-
     pk = body.get("pk")
 
     return Response(get_cda_data(pk))
@@ -1363,9 +1377,34 @@ def get_protocol_result(request):
     n: Napravleniya = Napravleniya.objects.get(pk=pk)
     card = n.client
     ind = n.client.individual
+    data = get_json_protocol_data(pk)
+    meta_title = n.get_eds_title()
+    return Response({
+        "title": meta_title["title"],
+        "generatorName": meta_title["generator_name"],
 
+        "data": {
+            "oidMo": data["oidMo"],
+            "document": data,
+            "patient": {
+                'id': card.number,
+                'snils': card.get_data_individual()["snils"],
+                'name': {
+                    'family': ind.family,
+                    'name': ind.name,
+                    'patronymic': ind.patronymic
+                },
+                'gender': ind.sex.lower(),
+                'birthdate': ind.birthday.strftime("%Y%m%d"),
+            },
+        }
+    })
+
+
+def get_json_protocol_data(pk):
     result_protocol = get_paraclinic_results_by_direction(pk)
     data = {}
+    document = {}
     for r in result_protocol:
         if "{" in r.value and "}" in r.value:
             try:
@@ -1403,19 +1442,44 @@ def get_protocol_result(request):
             time_death = data.get("Время смерти", "00:00")
             if period_befor_death and type_period_befor_death:
                 data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
+    author = {}
+    doctor_confirm_obj = iss.doc_confirmation
+    author["id"] = doctor_confirm_obj.pk
+    author["positionCode"] = doctor_confirm_obj.position.n3_id
+    author["positionName"] = doctor_confirm_obj.position.title
+    author["snils"] = doctor_confirm_obj.snils if doctor_confirm_obj.snils else ""
+    author["name"] = {}
+    author["name"]["family"] = doctor_confirm_obj.family
+    author["name"]["name"] = doctor_confirm_obj.name
+    author["name"]["patronymic"] = doctor_confirm_obj.patronymic
 
-    return Response({
-        "title": n.get_eds_title(),
-        "patient": {
-            'pk': card.number,
-            'family': ind.family,
-            'name': ind.name,
-            'patronymic': ind.patronymic,
-            'gender': ind.sex.lower(),
-            'birthdate': ind.birthday.strftime("%Y%m%d"),
-        },
-        "data": data
-    })
+    legal_auth_data = data.get("Подпись от организации", None)
+    legal_auth = {"id": "", "snils": "", "positionCode": "", "positionName": "", "name": {"family": "", "name": "", "patronymic": ""}}
+    if legal_auth_data:
+        id_doc = legal_auth_data["id"]
+        legal_doctor = DoctorProfile.objects.get(pk=id_doc)
+        legal_auth["id"] = legal_doctor.pk
+        legal_auth["snils"] = legal_doctor.snils
+        legal_auth["positionCode"] = legal_doctor.position.n3_id
+        legal_auth["positionName"] = legal_doctor.position.title
+        legal_auth["name"]["family"] = legal_doctor.family
+        legal_auth["name"]["name"] = legal_doctor.name
+        legal_auth["name"]["patronymic"] = legal_doctor.patronymic
+    hosp_obj = doctor_confirm_obj.hospital
+    hosp_oid = hosp_obj.oid
+
+    time_confirm = iss.time_confirmation
+    document["id"] = pk
+    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+    document["confirmedAt"] = f"{confirmed_time}+0800"
+    document["legalAuthenticator"] = legal_auth
+    document["author"] = author
+    document["content"] = data
+    document["oidMo"] = hosp_oid
+    document["orgName"] = hosp_obj.title
+    document["tel"] = hosp_obj.phones
+
+    return document
 
 
 def start_pathological_process(date_death, time_data, type_period):

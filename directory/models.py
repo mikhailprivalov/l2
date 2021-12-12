@@ -238,6 +238,7 @@ class Researches(models.Model):
     paddings_size = models.CharField(max_length=10, null=True, blank=True, default=None, help_text="Отступы для бланка результатов (лево| вверх|право|низ)")
     odii_type = models.PositiveSmallIntegerField(choices=Podrazdeleniya.ODII_TYPES, default=None, blank=True, null=True,
                                                  help_text="Оказываемые виды инструментальных услуг (перезатирает из подразделения, если оно там указано)")
+    generator_name = models.CharField(max_length=60, null=True, blank=True, default=None, help_text="Название для xml-generator")
 
     @staticmethod
     def filter_type(t):
