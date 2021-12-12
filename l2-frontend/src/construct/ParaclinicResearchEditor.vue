@@ -437,7 +437,7 @@
                       <option value="31" v-if="tfoms_attachment_field_enabled">
                         Сведения о прикреплении застрахованного лица (ТФОМС)
                       </option>
-                      <option value="35">Врач</option>
+                      <option value="35">Лицо от организации придавшее юр. силу документу</option>
                     </select>
                   </label>
                 </div>
