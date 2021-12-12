@@ -1223,7 +1223,7 @@ def get_cda_data(pk):
     ind = n.client.individual
     data = get_json_protocol_data(pk)
     return {
-        "title":  n.get_eds_title(),
+        "title": n.get_eds_title(),
         "generatorName": n.get_eds_generator(),
         "rawResponse": True,
         "data": {
@@ -1377,7 +1377,7 @@ def get_protocol_result(request):
     ind = n.client.individual
     data = get_json_protocol_data(pk)
     return Response({
-        "title":  n.get_eds_title(),
+        "title": n.get_eds_title(),
         "generatorName": n.get_eds_generator(),
         "data": {
             "oidMo": data["oidMo"],
