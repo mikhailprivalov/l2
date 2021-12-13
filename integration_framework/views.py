@@ -1425,7 +1425,8 @@ def get_json_protocol_data(pk):
                         except Exception as e:
                             pass
                     count += 1
-
+        if "-" in val and len(val) < 4:
+            val = ""
         data[r.title] = val
 
     iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)

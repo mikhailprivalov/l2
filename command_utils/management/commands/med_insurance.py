@@ -16,18 +16,13 @@ class Command(BaseCommand):
         :param path - xlsx файл с микроорганизмами со столбцами:
         Название, Группа, LIS(код)
         """
-
         fp = kwargs["path"]
         self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        title, group, lis = '', '', ''
         smo_project_file_path = os.path.join('utils', 'nsi_medinsurance.py')
         smo_file_path = os.path.join(BASE_DIR, smo_project_file_path)
-        with open(smo_file_path, 'w') as f:
-            f.write("med_insurance = {\n")
-
         smo_data = {}
         for row in ws.rows:
             cells = [str(x.value) for x in row]
