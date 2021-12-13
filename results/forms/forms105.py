@@ -288,7 +288,7 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", fields.get("Место постоянного жительства (регистрации)", ""))
 
     # Смерть наступила
-    text = where_death_start_tbl(text, fields.get("Типы мест наступления смерти", ""))
+    text = where_death_start_tbl(text, fields.get("Типы мест наступления смерти"), "6")
     text.append(Spacer(1, 0.2 * mm))
 
     text.append(Paragraph('Для детей, умерших в возрасте до 1 года:', styleBold))
@@ -358,7 +358,7 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     text = type_city(text, "9. Местность:", fields["Вид места жительства"])
     text = address_tbl(text, "10. Место смерти:", fields["Место смерти"])
     text = type_city(text, "11. Местность: ", fields["Вид места смерти"])
-    text = where_death_start_tbl(text, fields["Типы мест наступления смерти"])
+    text = where_death_start_tbl(text, fields["Типы мест наступления смерти"], "12")
     text = child_death_befor_month(text, fields["Доношенность новорожденного"])
     text = child_death_befor_year(text, {"weight": fields["Масса тела ребёнка при рождении"],
                                          "child_count": fields["По счету был ребенок"],
@@ -652,7 +652,7 @@ def address_tbl(text, type_address, address):
     return text
 
 
-def where_death_start_tbl(text, params):
+def where_death_start_tbl(text, params, item_param):
     whera_data = json.loads(params)
     place, car, hospital, home = ' на месте происшествия', ', в машине скорой помощи', ', в стационаре', ', дома'
     if whera_data["code"] == '1':
@@ -663,7 +663,7 @@ def where_death_start_tbl(text, params):
         hospital = f"<u>{op_bold_tag}{hospital}{cl_bold_tag}</u>"
     elif whera_data["code"] == '4':
         home = f"<u>{op_bold_tag}{home}{cl_bold_tag}</u>"
-    opinion = gen_opinion(['12.Смерть наступила:', place, '1', car, '2', hospital, '3', home, '4'])
+    opinion = gen_opinion([f'{item_param}.Смерть наступила:', place, '1', car, '2', hospital, '3', home, '4'])
     col_width = (32 * mm, 37 * mm, 6 * mm, 42 * mm, 6 * mm, 24 * mm, 6 * mm, 12 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
