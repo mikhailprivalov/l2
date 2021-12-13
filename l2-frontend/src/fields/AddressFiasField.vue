@@ -336,6 +336,7 @@ const getDetails = (original = null) => {
   return {
     region: details.region || '',
     region_type: details.region_type || '',
+    subject_code: (details.region_kladr_id || '').slice(0, 2),
     area: details.area || '',
     area_type: details.area_type || '',
     city: details.city || '',
