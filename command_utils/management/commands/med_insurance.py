@@ -30,24 +30,10 @@ class Command(BaseCommand):
                 if "ID" in cells:
                     smo_id = cells.index("ID")
                     smocod = cells.index("SMOCOD")
-                    ogrn = cells.index("OGRN")
-                    kpp = cells.index("KPP")
-                    nam_smop = cells.index("NAM_SMOP")
                     nam_smok = cells.index("NAM_SMOK")
-                    addr_f = cells.index("ADDR_F")
-                    n_doc = cells.index("N_DOC")
-                    print(cells[smocod]) # noqa: T001
                     starts = True
             else:
-                smo_data[cells[smocod]] = {
-                    "ID": cells[smo_id],
-                    "OGRN": cells[ogrn],
-                    "KPP": cells[kpp],
-                    "NAM_SMOP": cells[nam_smop],
-                    "NAM_SMOK": cells[nam_smok],
-                    "ADDR_F": cells[addr_f],
-                    "N_DOC": cells[n_doc]
-                }
+                smo_data[cells[smocod]] = cells[smo_id]
         import json
 
         with open(smo_file_path, 'w') as file:
