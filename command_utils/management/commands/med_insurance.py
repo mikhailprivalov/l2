@@ -2,8 +2,6 @@ import os
 
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
-
-from directory.models import Antibiotic, GroupAntibiotic
 from laboratory.settings import BASE_DIR
 
 
@@ -14,7 +12,6 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         """
         :param path - xlsx файл с микроорганизмами со столбцами:
-        Название, Группа, LIS(код)
         """
         fp = kwargs["path"]
         self.stdout.write("Path: " + fp)
@@ -30,7 +27,6 @@ class Command(BaseCommand):
                 if "ID" in cells:
                     smo_id = cells.index("ID")
                     smocod = cells.index("SMOCOD")
-                    nam_smok = cells.index("NAM_SMOK")
                     starts = True
             else:
                 smo_data[cells[smocod]] = cells[smo_id]
