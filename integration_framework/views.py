@@ -1398,7 +1398,7 @@ def get_protocol_result(request):
             }
         })
     elif check_type_research(pk) == "is_lab":
-        data = get_laboratory_results_by_directions([pk])
+        data = get_json_labortory_data(pk)
         print(data)
     return Response({"data": ""})
 
@@ -1446,8 +1446,54 @@ def get_json_protocol_data(pk):
             time_death = data.get("Время смерти", "00:00")
             if period_befor_death and type_period_befor_death:
                 data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
-    author = {}
     doctor_confirm_obj = iss.doc_confirmation
+    author_data = author_doctor(doctor_confirm_obj)
+
+    legal_auth = data.get("Подпись от организации", None)
+    legal_auth_data = legal_auth_get(legal_auth)
+    hosp_obj = doctor_confirm_obj.hospital
+    hosp_oid = hosp_obj.oid
+
+    time_confirm = iss.time_confirmation
+    document["id"] = pk
+    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+    document["confirmedAt"] = f"{confirmed_time}+0800"
+    document["legalAuthenticator"] = legal_auth_data
+    document["author"] = author_data
+    document["content"] = data
+    document["oidMo"] = hosp_oid
+    document["orgName"] = hosp_obj.title
+    document["tel"] = hosp_obj.phones
+
+    return document
+
+
+def get_json_labortory_data(pk):
+    result_protocol = get_laboratory_results_by_directions([pk])
+    data = {}
+    document = {}
+    material = {"code": "", "title": ""}
+    analyzer =  {"app": "", "": ""}
+    flsi_param = {"code": "", "title": ""}
+    unit_val = {"code": "", "title": ""}
+    result_val = ""
+    confirmedAt = ""
+    doc_confirm = ""
+    print(result_protocol)
+    data = []
+    for k in result_protocol:
+        doc_id = k.doctor_id
+        fraction_id = k.fraction_id
+        result_val = k.value
+        fraction_title = k.fraction_title
+        units = k.units
+        cofirmedAt = f"{k.date_confirm}1500+0800"
+
+    return document
+
+
+def author_doctor(doctor_confirm_obj):
+    author = {}
     author["id"] = doctor_confirm_obj.pk
     author["positionCode"] = doctor_confirm_obj.position.n3_id
     author["positionName"] = doctor_confirm_obj.position.title
@@ -1456,11 +1502,13 @@ def get_json_protocol_data(pk):
     author["name"]["family"] = doctor_confirm_obj.family
     author["name"]["name"] = doctor_confirm_obj.name
     author["name"]["patronymic"] = doctor_confirm_obj.patronymic
+    return author
 
-    legal_auth_data = data.get("Подпись от организации", None)
+
+def legal_auth_get(legal_auth_doc):
     legal_auth = {"id": "", "snils": "", "positionCode": "", "positionName": "", "name": {"family": "", "name": "", "patronymic": ""}}
-    if legal_auth_data:
-        id_doc = legal_auth_data["id"]
+    if legal_auth_doc:
+        id_doc = legal_auth_doc["id"]
         legal_doctor = DoctorProfile.objects.get(pk=id_doc)
         legal_auth["id"] = legal_doctor.pk
         legal_auth["snils"] = legal_doctor.snils
@@ -1469,21 +1517,7 @@ def get_json_protocol_data(pk):
         legal_auth["name"]["family"] = legal_doctor.family
         legal_auth["name"]["name"] = legal_doctor.name
         legal_auth["name"]["patronymic"] = legal_doctor.patronymic
-    hosp_obj = doctor_confirm_obj.hospital
-    hosp_oid = hosp_obj.oid
-
-    time_confirm = iss.time_confirmation
-    document["id"] = pk
-    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
-    document["confirmedAt"] = f"{confirmed_time}+0800"
-    document["legalAuthenticator"] = legal_auth
-    document["author"] = author
-    document["content"] = data
-    document["oidMo"] = hosp_oid
-    document["orgName"] = hosp_obj.title
-    document["tel"] = hosp_obj.phones
-
-    return document
+    return legal_auth
 
 
 def start_pathological_process(date_death, time_data, type_period):
