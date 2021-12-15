@@ -32,13 +32,14 @@ from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
-from results.sql_func import get_paraclinic_results_by_direction
+from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
+from utils.xh import check_type_research
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
@@ -1375,26 +1376,31 @@ def get_protocol_result(request):
     n: Napravleniya = Napravleniya.objects.get(pk=pk)
     card = n.client
     ind = n.client.individual
-    data = get_json_protocol_data(pk)
-    return Response({
-        "title": n.get_eds_title(),
-        "generatorName": n.get_eds_generator(),
-        "data": {
-            "oidMo": data["oidMo"],
-            "document": data,
-            "patient": {
-                'id': card.number,
-                'snils': card.get_data_individual()["snils"],
-                'name': {
-                    'family': ind.family,
-                    'name': ind.name,
-                    'patronymic': ind.patronymic
+    if check_type_research(pk) == "is_refferal":
+        data = get_json_protocol_data(pk)
+        return Response({
+            "title": n.get_eds_title(),
+            "generatorName": n.get_eds_generator(),
+            "data": {
+                "oidMo": data["oidMo"],
+                "document": data,
+                "patient": {
+                    'id': card.number,
+                    'snils': card.get_data_individual()["snils"],
+                    'name': {
+                        'family': ind.family,
+                        'name': ind.name,
+                        'patronymic': ind.patronymic
+                    },
+                    'gender': ind.sex.lower(),
+                    'birthdate': ind.birthday.strftime("%Y%m%d"),
                 },
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
-            },
-        }
-    })
+            }
+        })
+    elif check_type_research(pk) == "is_lab":
+        data = get_laboratory_results_by_directions([pk])
+        print(data)
+    return Response({"data": ""})
 
 
 def get_json_protocol_data(pk):

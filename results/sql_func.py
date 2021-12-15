@@ -53,6 +53,7 @@ def get_laboratory_results_by_directions(list_dirs):
                 directions_issledovaniya.id as iss_id,
                 directions_issledovaniya.napravleniye_id as direction,
                 directions_issledovaniya.research_id,
+                directions_issledovaniya.doc_confirmation_id as doctor_id,
                 directory_researches.title as research_title,
                 directions_result.value as value,
                 directions_result.fraction_id,
