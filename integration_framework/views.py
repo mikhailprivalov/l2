@@ -1480,15 +1480,7 @@ def get_json_protocol_data(pk):
     document["author"] = author_data
     document["content"] = data
     document["oidMo"] = hosp_oid
-    document["organization"] = {
-        "name": hosp_obj.title,
-        "tel": hosp_obj.phone,
-        "address": {
-            "text": hosp_obj.address,
-            "subjectCode": "38",
-            "subjectName": "Иркутская область"
-        }
-    }
+    document["organization"] = organization_get(hosp_obj)
     document["orgName"] = hosp_obj.title
     document["tel"] = hosp_obj.phones
 
@@ -1544,25 +1536,27 @@ def get_json_labortory_data(pk):
     document["content"]["payment"] = {"code":"1", "title":"Средства обязательного медицинского страхования"}
     document["oidMo"] = hosp_oid
     document["orgName"] = hosp_obj.title
-    document["tel"] = hosp_obj.phones
     direction_obj = Napravleniya.objects.get(pk=pk)
     direction_create = direction_obj.data_sozdaniya
     direction_create = direction_create.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
     document["createdAt"] = f"{direction_create}+0800"
     document["lastConfirmedAt"] = f"{confirmedAt}+0800"
     document["confirmedAt"] = f"{confirmedAt}+0800"
-    document["organization"] = {
-        "name": hosp_obj.title,
-        "tel": hosp_obj.phones if hosp_obj.phones else "",
-        "address": {
-            "text": hosp_obj.address if hosp_obj.address else "г. Иркутск" ,
-            "subjectCode": "38",
-            "subjectName": "Иркутская область"
-        }
-    }
-    document["orgName"] = hosp_obj.title
+    document["organization"] = organization_get(hosp_obj)
 
     return document
+
+
+def organization_get(hosp_obj_f):
+    return {
+        "name": hosp_obj_f.title,
+        "tel": hosp_obj_f.phones if hosp_obj_f.phones else "",
+        "address": {
+            "text": hosp_obj_f.address if hosp_obj_f.address else "г. Иркутск",
+            "subjectCode": "38",
+            "subjectName": "Иркутская область",
+        }
+    }
 
 
 def author_doctor(doctor_confirm_obj):

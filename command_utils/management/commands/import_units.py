@@ -26,7 +26,6 @@ class Command(BaseCommand):
                 for item in items:
                     n += 1
                     i = item['attributes']
-                    print("##########", i)
                     u: Unit = Unit.objects.filter(code=i['ID']).first()
                     if not u:
                         u = Unit.objects.create(code=i['ID'], title=i['FULLNAME'], short_title=i['SHORTNAME'], ucum=i["UCUM"])
@@ -55,5 +54,3 @@ class Command(BaseCommand):
                         self.stdout.write(f"{n}/{c} найденное: {u}")
                     else:
                         self.stdout.write(f"{n}/{c} значение для замены не найдено!")
-
-
