@@ -98,7 +98,8 @@ line_break = "<br/>"
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/-2у
-    data = {}
+    data = {"ФИО (получатель)": "", "Документ (получатель)": "", "Серия (получатель)": "", "Номер (получатель)": "", "Кем и когда выдан (получатель)": "",
+            "СНИЛС (получатель)": ""}
 
     title_fields = [
         "Серия",
@@ -218,9 +219,10 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     mother_born_data = fields.get("Дата рождения матери", None)
     if mother_born_data:
         mother_born_data = mother_born_data.split(".")
-        mother_born_date = f"<u>{space_symbol * 8}{mother_born_data[0]}{space_symbol * 8}</u>"
-        mother_born_month = f"<u>{space_symbol * 8}{mother_born_data[1]}{space_symbol * 8}</u>"
-        mother_born_year = f"<u>{space_symbol * 8}{mother_born_data[2]}{space_symbol * 8}</u>"
+        if len(mother_born_data) == 3:
+            mother_born_date = f"<u>{space_symbol * 8}{mother_born_data[0]}{space_symbol * 8}</u>"
+            mother_born_month = f"<u>{space_symbol * 8}{mother_born_data[1]}{space_symbol * 8}</u>"
+            mother_born_year = f"<u>{space_symbol * 8}{mother_born_data[2]}{space_symbol * 8}</u>"
 
     text.append(Paragraph(f"5.	Дата рождения матери:	число {mother_born_date} месяц {mother_born_month} год {mother_born_year}", style))
     text.append(Spacer(1, 1.2 * mm))
@@ -585,9 +587,10 @@ def mother_data(fields):
     mother_born_date, mother_born_month, mother_born_year = " ", " ", " "
     if mother_born:
         mother_born_data = mother_born.split(".")
-        mother_born_date = mother_born_data[0]
-        mother_born_month = mother_born_data[1]
-        mother_born_year = mother_born_data[2]
+        if len(mother_born_data) == 3:
+            mother_born_date = mother_born_data[0]
+            mother_born_month = mother_born_data[1]
+            mother_born_year = mother_born_data[2]
 
     born = (
         f"5. Дата рождения: {op_boxed_tag}{mother_born_date}{cl_boxed_tag} {space_symbol * 3} {op_boxed_tag}{mother_born_month}{cl_boxed_tag} "
@@ -825,9 +828,13 @@ def why_death(text, params, item_why):
         count = 0
         d_diag_rows = d_diag_dict.get("rows", None)
         for r in d_diag_rows:
+            if not r[0]:
+                continue
             r = json.loads(r[0])
-            d_diag_title = r["title"]
-            d_diag_code = r["code"]
+            d_diag_title = r.get("title", None)
+            d_diag_code = r.get("code", None)
+            if not d_diag_title or not d_diag_code:
+                continue
             if count == 0:
                 tbl = diagnos_tbl("д)", d_diag_title, d_diag_code)
             else:

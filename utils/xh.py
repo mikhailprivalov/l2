@@ -1,3 +1,5 @@
+from api.directions.sql_func import get_lab_podr
+from directions.models import Issledovaniya
 from podrazdeleniya.models import Podrazdeleniya
 
 
@@ -46,3 +48,17 @@ def short_fio_dots(fio):
     npf = n + ' ' + p + ' ' + f
 
     return npf
+
+
+def check_type_research(pk):
+    is_obj = Issledovaniya.objects.filter(napravleniye_id=pk)
+    lab_podr = get_lab_podr()
+    lab_podr = [i[0] for i in lab_podr]
+    for k in is_obj:
+        research = k.research
+        if research.is_paraclinic or research.is_form or research.is_stom or research.is_doc_refferal:
+            return "is_refferal"
+        if research.podrazdeleniye.pk in lab_podr:
+            return "is_lab"
+    return "error"
+

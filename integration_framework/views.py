@@ -32,13 +32,14 @@ from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
-from results.sql_func import get_paraclinic_results_by_direction
+from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date
+from utils.dates import normalize_date, valid_date, normalize_dots_date
+from utils.xh import check_type_research
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
@@ -1375,26 +1376,49 @@ def get_protocol_result(request):
     n: Napravleniya = Napravleniya.objects.get(pk=pk)
     card = n.client
     ind = n.client.individual
-    data = get_json_protocol_data(pk)
-    return Response({
-        "title": n.get_eds_title(),
-        "generatorName": n.get_eds_generator(),
-        "data": {
-            "oidMo": data["oidMo"],
-            "document": data,
-            "patient": {
-                'id': card.number,
-                'snils': card.get_data_individual()["snils"],
-                'name': {
-                    'family': ind.family,
-                    'name': ind.name,
-                    'patronymic': ind.patronymic
+    if check_type_research(pk) == "is_refferal":
+        data = get_json_protocol_data(pk)
+        return Response({
+            "title": n.get_eds_title(),
+            "generatorName": n.get_eds_generator(),
+            "data": {
+                "oidMo": data["oidMo"],
+                "document": data,
+                "patient": {
+                    'id': card.number,
+                    'snils': card.get_data_individual()["snils"],
+                    'name': {
+                        'family': ind.family,
+                        'name': ind.name,
+                        'patronymic': ind.patronymic
+                    },
+                    'gender': ind.sex.lower(),
+                    'birthdate': ind.birthday.strftime("%Y%m%d"),
                 },
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
-            },
-        }
-    })
+            }
+        })
+    elif check_type_research(pk) == "is_lab":
+        data = get_json_labortory_data(pk)
+        return Response({
+            "rawResponse": True,
+            "generatorName": "Laboratory_min",
+            "data": {
+                "oidMo": data["oidMo"],
+                "document": data,
+                "patient": {
+                    'id': card.number,
+                    'snils': card.get_data_individual()["snils"],
+                    'name': {
+                        'family': ind.family,
+                        'name': ind.name,
+                        'patronymic': ind.patronymic
+                    },
+                    'gender': ind.sex.lower(),
+                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                },
+                "organization": data["organization"]
+            }
+        })
 
 
 def get_json_protocol_data(pk):
@@ -1425,8 +1449,9 @@ def get_json_protocol_data(pk):
                         except Exception as e:
                             pass
                     count += 1
-        if val.strip() in ('-', ''):
-            val = ""
+        if isinstance(val, str):
+            if val.strip() in ('-', ''):
+                val = ""
         data[r.title] = val
 
     iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)
@@ -1439,8 +1464,103 @@ def get_json_protocol_data(pk):
             time_death = data.get("Время смерти", "00:00")
             if period_befor_death and type_period_befor_death:
                 data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
-    author = {}
     doctor_confirm_obj = iss.doc_confirmation
+    author_data = author_doctor(doctor_confirm_obj)
+
+    legal_auth = data.get("Подпись от организации", None)
+    legal_auth_data = legal_auth_get(legal_auth)
+    hosp_obj = doctor_confirm_obj.hospital
+    hosp_oid = hosp_obj.oid
+
+    document["id"] = pk
+    time_confirm = iss.time_confirmation
+    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+    document["confirmedAt"] = f"{confirmed_time}+0800"
+    document["legalAuthenticator"] = legal_auth_data
+    document["author"] = author_data
+    document["content"] = data
+    document["oidMo"] = hosp_oid
+    document["organization"] = organization_get(hosp_obj)
+    document["orgName"] = hosp_obj.title
+    document["tel"] = hosp_obj.phones
+
+    return document
+
+
+def get_json_labortory_data(pk):
+    result_protocol = get_laboratory_results_by_directions([pk])
+    document = {}
+    confirmedAt = ""
+    date_reiceve = ""
+    data = []
+    prev_research_title = ""
+    count = 0
+    tests = []
+    author_data = None
+    iss = None
+    for k in result_protocol:
+        iss = directions.Issledovaniya.objects.get(pk=k.iss_id)
+        next_research_title = iss.research.title
+        if (prev_research_title != next_research_title) and count != 0:
+            if len(tests) > 0:
+                data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmedAt, "receivedAt": date_reiceve, "author_data": author_data})
+            tests = []
+        author_data = author_doctor(iss.doc_confirmation)
+        time_confirm = iss.time_confirmation
+        confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+        fraction_id = k.fraction_id
+        frac_obj = Fractions.objects.get(pk=fraction_id)
+        if not frac_obj.unit or not frac_obj.fsli:
+            continue
+        unit_obj = frac_obj.unit
+        unit_val = {"code": unit_obj.code, "full_title": unit_obj.title, "ucum": unit_obj.ucum, "short_title": unit_obj.short_title}
+        flsi_param = {"code": frac_obj.fsli, "title": frac_obj.title}
+        result_val = k.value
+        confirmedAt = f"{confirmed_time}+0800"
+        date_reiceve = normalize_dots_date(k.date_confirm).replace("-","")
+        date_reiceve = f"{date_reiceve}0800+0800"
+        tests.append({"unit_val": unit_val, "flsi_param": flsi_param, "result_val": result_val})
+        prev_research_title = next_research_title
+        count += 1
+    if len(tests) > 0:
+        data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmedAt, "receivedAt": date_reiceve, "author_data": author_data})
+
+    hosp_obj = iss.doc_confirmation.hospital
+    hosp_oid = hosp_obj.oid
+
+    document["id"] = pk
+    document["legalAuthenticator"] = ""
+    document["author"] = author_data
+    document["content"] = {}
+    document["content"]["Лаборатория"] = data
+    document["content"]["payment"] = {"code":"1", "title":"Средства обязательного медицинского страхования"}
+    document["oidMo"] = hosp_oid
+    document["orgName"] = hosp_obj.title
+    direction_obj = Napravleniya.objects.get(pk=pk)
+    direction_create = direction_obj.data_sozdaniya
+    direction_create = direction_create.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+    document["createdAt"] = f"{direction_create}+0800"
+    document["lastConfirmedAt"] = f"{confirmedAt}+0800"
+    document["confirmedAt"] = f"{confirmedAt}+0800"
+    document["organization"] = organization_get(hosp_obj)
+
+    return document
+
+
+def organization_get(hosp_obj_f):
+    return {
+        "name": hosp_obj_f.title,
+        "tel": hosp_obj_f.phones if hosp_obj_f.phones else "",
+        "address": {
+            "text": hosp_obj_f.address if hosp_obj_f.address else "г. Иркутск",
+            "subjectCode": "38",
+            "subjectName": "Иркутская область",
+        }
+    }
+
+
+def author_doctor(doctor_confirm_obj):
+    author = {}
     author["id"] = doctor_confirm_obj.pk
     author["positionCode"] = doctor_confirm_obj.position.n3_id
     author["positionName"] = doctor_confirm_obj.position.title
@@ -1449,11 +1569,13 @@ def get_json_protocol_data(pk):
     author["name"]["family"] = doctor_confirm_obj.family
     author["name"]["name"] = doctor_confirm_obj.name
     author["name"]["patronymic"] = doctor_confirm_obj.patronymic
+    return author
 
-    legal_auth_data = data.get("Подпись от организации", None)
+
+def legal_auth_get(legal_auth_doc):
     legal_auth = {"id": "", "snils": "", "positionCode": "", "positionName": "", "name": {"family": "", "name": "", "patronymic": ""}}
-    if legal_auth_data:
-        id_doc = legal_auth_data["id"]
+    if legal_auth_doc:
+        id_doc = legal_auth_doc["id"]
         legal_doctor = DoctorProfile.objects.get(pk=id_doc)
         legal_auth["id"] = legal_doctor.pk
         legal_auth["snils"] = legal_doctor.snils
@@ -1462,21 +1584,7 @@ def get_json_protocol_data(pk):
         legal_auth["name"]["family"] = legal_doctor.family
         legal_auth["name"]["name"] = legal_doctor.name
         legal_auth["name"]["patronymic"] = legal_doctor.patronymic
-    hosp_obj = doctor_confirm_obj.hospital
-    hosp_oid = hosp_obj.oid
-
-    time_confirm = iss.time_confirmation
-    document["id"] = pk
-    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
-    document["confirmedAt"] = f"{confirmed_time}+0800"
-    document["legalAuthenticator"] = legal_auth
-    document["author"] = author
-    document["content"] = data
-    document["oidMo"] = hosp_oid
-    document["orgName"] = hosp_obj.title
-    document["tel"] = hosp_obj.phones
-
-    return document
+    return legal_auth
 
 
 def start_pathological_process(date_death, time_data, type_period):

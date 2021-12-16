@@ -28,12 +28,13 @@ class Command(BaseCommand):
                     i = item['attributes']
                     u: Unit = Unit.objects.filter(code=i['ID']).first()
                     if not u:
-                        u = Unit.objects.create(code=i['ID'], title=i['FULLNAME'], short_title=i['SHORTNAME'])
+                        u = Unit.objects.create(code=i['ID'], title=i['FULLNAME'], short_title=i['SHORTNAME'], ucum=i["UCUM"])
                         self.stdout.write(f"{n}/{len(items)} Добавлено: {str(u)}")
                     else:
                         u.hide = False
                         u.title = i['FULLNAME']
                         u.short_title = i['SHORTNAME']
+                        u.ucum = i['UCUM'] if i['UCUM'] else ""
                         u.save()
                         self.stdout.write(f"{n}/{len(items)} Обновлено: {str(u)}")
 
@@ -53,5 +54,3 @@ class Command(BaseCommand):
                         self.stdout.write(f"{n}/{c} найденное: {u}")
                     else:
                         self.stdout.write(f"{n}/{c} значение для замены не найдено!")
-
-

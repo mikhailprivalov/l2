@@ -666,6 +666,7 @@ class Unit(models.Model):
     short_title = models.CharField(max_length=255, db_index=True, verbose_name='Краткое название единицы измерения')
     code = models.CharField(max_length=4, db_index=True, verbose_name='Код')
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
+    ucum = models.CharField(max_length=55, default='', blank=True, verbose_name='UCUM')
 
     def __str__(self) -> str:
         return f"{self.code} — {self.short_title} – {self.title}"
