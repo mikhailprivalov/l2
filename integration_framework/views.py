@@ -38,7 +38,7 @@ from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date
+from utils.dates import normalize_date, valid_date, normalize_dots_date
 from utils.xh import check_type_research
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
@@ -1400,7 +1400,7 @@ def get_protocol_result(request):
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
         print(data)
-    return Response({"data": ""})
+    return Response({"data": data})
 
 
 def get_json_protocol_data(pk):
@@ -1454,8 +1454,8 @@ def get_json_protocol_data(pk):
     hosp_obj = doctor_confirm_obj.hospital
     hosp_oid = hosp_obj.oid
 
-    time_confirm = iss.time_confirmation
     document["id"] = pk
+    time_confirm = iss.time_confirmation
     confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
     document["confirmedAt"] = f"{confirmed_time}+0800"
     document["legalAuthenticator"] = legal_auth_data
@@ -1473,7 +1473,7 @@ def get_json_labortory_data(pk):
     data = {}
     document = {}
     material = {"code": "", "title": ""}
-    analyzer =  {"app": "", "": ""}
+    analyzer = {"app": "", "": ""}
     flsi_param = {"code": "", "title": ""}
     unit_val = {"code": "", "title": ""}
     result_val = ""
@@ -1482,12 +1482,40 @@ def get_json_labortory_data(pk):
     print(result_protocol)
     data = []
     for k in result_protocol:
-        doc_id = k.doctor_id
+        print(k)
+        doctor_id = k.doctor_id
+        iss = directions.Issledovaniya.objects.get(pk=k.iss_id)
+        time_confirm = iss.time_confirmation
+        confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+        author_data = author_doctor(iss.doc_confirmation)
         fraction_id = k.fraction_id
+        frac_obj = Fractions.objects.get(pk=fraction_id)
+        unit_obj = frac_obj.unit
+        unit_val = {"code": unit_obj.code, "full_title": unit_obj.title, "ucum": unit_obj.ucum, "short_title": unit_obj.short_title}
+        flsi_param = {"code": frac_obj.fsli, "title": frac_obj.title}
         result_val = k.value
-        fraction_title = k.fraction_title
-        units = k.units
-        cofirmedAt = f"{k.date_confirm}1500+0800"
+        confirmedAt = f"{confirmed_time}+0800"
+        date_reiceve = normalize_dots_date(k.date_confirm).replace("-","")
+        date_reiceve = f"{date_reiceve}0800+0800"
+        tests = []
+        tests.append({"unit_val": unit_val, "flsi_param": flsi_param, "result_val": result_val})
+        data.append({"title": "ОАК", "tests": tests, "confirmedAt": confirmedAt, "receivedAt": date_reiceve})
+    hosp_obj = iss.doc_confirmation.hospital
+    hosp_oid = hosp_obj.oid
+
+    document["id"] = pk
+    document["legalAuthenticator"] = ""
+    document["author"] = author_data
+    document["Лаборатория"] = data
+    document["oidMo"] = hosp_oid
+    document["orgName"] = hosp_obj.title
+    document["tel"] = hosp_obj.phones
+    document["tel"] = hosp_obj.phones
+    direction_obj = Napravleniya.objects.get(pk=pk)
+    direction_create = direction_obj.data_sozdaniya
+    direction_create = direction_create.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+    document["createdAt"] = f"{direction_create}+0800"
+    document["lastConfirmedAt"] = f"{confirmedAt}+0800"
 
     return document
 
