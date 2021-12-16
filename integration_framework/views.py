@@ -1399,7 +1399,6 @@ def get_protocol_result(request):
         })
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
-        print(data)
     return Response({"data": data})
 
 
@@ -1470,26 +1469,29 @@ def get_json_protocol_data(pk):
 
 def get_json_labortory_data(pk):
     result_protocol = get_laboratory_results_by_directions([pk])
-    data = {}
     document = {}
-    material = {"code": "", "title": ""}
-    analyzer = {"app": "", "": ""}
-    flsi_param = {"code": "", "title": ""}
-    unit_val = {"code": "", "title": ""}
-    result_val = ""
     confirmedAt = ""
-    doc_confirm = ""
-    print(result_protocol)
+    date_reiceve = ""
     data = []
+    prev_research_title = ""
+    count = 0
+    tests = []
+    author_data = None
+    iss = None
     for k in result_protocol:
-        print(k)
-        doctor_id = k.doctor_id
         iss = directions.Issledovaniya.objects.get(pk=k.iss_id)
+        next_research_title = iss.research.title
+        if (prev_research_title != next_research_title) and count != 0:
+            if len(tests) > 0:
+                data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmedAt, "receivedAt": date_reiceve, "author_data": author_data})
+            tests = []
+        author_data = author_doctor(iss.doc_confirmation)
         time_confirm = iss.time_confirmation
         confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
-        author_data = author_doctor(iss.doc_confirmation)
         fraction_id = k.fraction_id
         frac_obj = Fractions.objects.get(pk=fraction_id)
+        if not frac_obj.unit or not frac_obj.fsli:
+            continue
         unit_obj = frac_obj.unit
         unit_val = {"code": unit_obj.code, "full_title": unit_obj.title, "ucum": unit_obj.ucum, "short_title": unit_obj.short_title}
         flsi_param = {"code": frac_obj.fsli, "title": frac_obj.title}
@@ -1497,9 +1499,12 @@ def get_json_labortory_data(pk):
         confirmedAt = f"{confirmed_time}+0800"
         date_reiceve = normalize_dots_date(k.date_confirm).replace("-","")
         date_reiceve = f"{date_reiceve}0800+0800"
-        tests = []
         tests.append({"unit_val": unit_val, "flsi_param": flsi_param, "result_val": result_val})
-        data.append({"title": "ОАК", "tests": tests, "confirmedAt": confirmedAt, "receivedAt": date_reiceve})
+        prev_research_title = next_research_title
+        count += 1
+    if len(tests) > 0:
+        data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmedAt, "receivedAt": date_reiceve, "author_data": author_data})
+
     hosp_obj = iss.doc_confirmation.hospital
     hosp_oid = hosp_obj.oid
 
