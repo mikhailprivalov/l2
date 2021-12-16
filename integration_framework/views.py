@@ -1399,7 +1399,26 @@ def get_protocol_result(request):
         })
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
-    return Response({"data": data})
+        return Response({
+            "rawResponse": True,
+            "generatorName": "Laboratory_min",
+            "data": {
+                "oidMo": data["oidMo"],
+                "document": data,
+                "patient": {
+                    'id': card.number,
+                    'snils': card.get_data_individual()["snils"],
+                    'name': {
+                        'family': ind.family,
+                        'name': ind.name,
+                        'patronymic': ind.patronymic
+                    },
+                    'gender': ind.sex.lower(),
+                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                },
+                "organization": data["organization"]
+            }
+        })
 
 
 def get_json_protocol_data(pk):
@@ -1461,6 +1480,15 @@ def get_json_protocol_data(pk):
     document["author"] = author_data
     document["content"] = data
     document["oidMo"] = hosp_oid
+    document["organization"] = {
+        "name": hosp_obj.title,
+        "tel": hosp_obj.phone,
+        "address": {
+            "text": hosp_obj.address,
+            "subjectCode": "38",
+            "subjectName": "Иркутская область"
+        }
+    }
     document["orgName"] = hosp_obj.title
     document["tel"] = hosp_obj.phones
 
@@ -1511,16 +1539,28 @@ def get_json_labortory_data(pk):
     document["id"] = pk
     document["legalAuthenticator"] = ""
     document["author"] = author_data
-    document["Лаборатория"] = data
+    document["content"] = {}
+    document["content"]["Лаборатория"] = data
+    document["content"]["payment"] = {"code":"1", "title":"Средства обязательного медицинского страхования"}
     document["oidMo"] = hosp_oid
     document["orgName"] = hosp_obj.title
-    document["tel"] = hosp_obj.phones
     document["tel"] = hosp_obj.phones
     direction_obj = Napravleniya.objects.get(pk=pk)
     direction_create = direction_obj.data_sozdaniya
     direction_create = direction_create.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
     document["createdAt"] = f"{direction_create}+0800"
     document["lastConfirmedAt"] = f"{confirmedAt}+0800"
+    document["confirmedAt"] = f"{confirmedAt}+0800"
+    document["organization"] = {
+        "name": hosp_obj.title,
+        "tel": hosp_obj.phones if hosp_obj.phones else "",
+        "address": {
+            "text": hosp_obj.address if hosp_obj.address else "г. Иркутск" ,
+            "subjectCode": "38",
+            "subjectName": "Иркутская область"
+        }
+    }
+    document["orgName"] = hosp_obj.title
 
     return document
 
