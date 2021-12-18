@@ -45,7 +45,7 @@
             <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
               <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
               <div class="item" v-else-if="suggests.data.length === 0">
-                не найдено карт в L2, попробуйте произвести поиск по ТФОМС или РМИС
+                не найдено карт в {{system}}, попробуйте произвести поиск по ТФОМС или РМИС
               </div>
               <template v-else>
                 <div
@@ -268,7 +268,7 @@
                     class="btn last btn-blue-nb nbr"
                     type="button"
                     v-tippy="{ placement: 'bottom', arrow: true }"
-                    title="Новая L2 карта"
+                    :title="`Новая ${system} карта`"
                     @click="open_editor(true)"
                     v-if="is_l2_cards && allow_l2_card_edit"
                   >
@@ -292,12 +292,12 @@
                     class="btn last btn-blue-nb nbr"
                     type="button"
                     v-tippy="{ placement: 'bottom', arrow: true }"
-                    title="Открыть пациента в базе L2"
+                    :title="`Открыть пациента в базе ${system}`"
                     style="margin-left: -1px"
                     :disabled="!selected_card.pk"
                     @click="open_as_l2_card()"
                   >
-                    L2
+                    {{system}}
                   </button>
                 </div>
               </td>
@@ -621,6 +621,9 @@ export default {
     },
   },
   computed: {
+    system() {
+      return this.$systemTitle();
+    },
     bases() {
       return this.$store.getters.bases.filter(b => !b.hide);
     },
@@ -692,7 +695,13 @@ export default {
     is_l2_cards() {
       if ('groups' in this.$store.getters.user_data) {
         for (const g of this.$store.getters.user_data.groups) {
-          if (g === 'Картотека L2' || g === 'Admin' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
+          if (
+            g === 'Картотека'
+            || g === 'Картотека L2'
+            || g === 'Admin'
+            || g === 'Лечащий врач'
+            || g === 'Оператор лечащего врача'
+          ) {
             return true;
           }
         }
@@ -739,7 +748,7 @@ export default {
     },
     ...mapGetters(['user_data']),
     allow_l2_card_edit() {
-      return this.user_data.su || this.user_data.groups.includes('Картотека L2');
+      return this.user_data.su || this.user_data.groups.includes('Картотека') || this.user_data.groups.includes('Картотека L2');
     },
     fixedQuery() {
       return this.query

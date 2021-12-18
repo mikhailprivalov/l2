@@ -543,7 +543,7 @@ def statistic_xls(request):
 
         type_fin = request_data.get("fin")
         title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
-        if title_fin.title == 'ОМС' and title_fin.base.title == 'L2':
+        if title_fin.title == 'ОМС' and title_fin.base.internal_type:
             can_null = 1
         else:
             can_null = 0

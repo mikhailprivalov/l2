@@ -21,7 +21,7 @@
           />
           <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
             <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
-            <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в L2</div>
+            <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в {{system}}</div>
             <template v-else>
               <div
                 class="item item-selectable"
@@ -162,6 +162,9 @@ export default {
     },
   },
   computed: {
+    system() {
+      return this.$systemTitle();
+    },
     bases() {
       return this.$store.getters.bases.filter(b => !b.hide);
     },
@@ -198,7 +201,13 @@ export default {
     is_l2_cards() {
       if ('groups' in this.$store.getters.user_data) {
         for (const g of this.$store.getters.user_data.groups) {
-          if (g === 'Картотека L2' || g === 'Admin' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
+          if (
+            g === 'Картотека'
+            || g === 'Картотека L2'
+            || g === 'Admin'
+            || g === 'Лечащий врач'
+            || g === 'Оператор лечащего врача'
+          ) {
             return true;
           }
         }

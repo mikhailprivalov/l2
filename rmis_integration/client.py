@@ -33,7 +33,7 @@ from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
-from utils.common import select_key_by_one_of_values_includes, replace_values_by_keys
+from utils.common import get_system_name, select_key_by_one_of_values_includes, replace_values_by_keys
 
 logger = logging.getLogger("RMIS")
 
@@ -998,7 +998,7 @@ class Directions(BaseRequester):
                     receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.get_org_id_for_direction(direction)),
                     refServiceId=self.main_client.services.get_service_ids(direction),
                     fundingSourceTypeId=Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict()),
-                    note='Автоматический вывод из Информационной Системы L2',
+                    note=f'Автоматический вывод из Информационной Системы {get_system_name()}',
                     goalId=self.main_client.get_directory("md_referral_goal").get_first("ID", search_data=Settings.get("cel_title", default="Для коррекции лечения")),
                 )
 
@@ -1043,7 +1043,7 @@ class Directions(BaseRequester):
             isRendered="false",
             patientUid=patient_uid,
             orgId=self.main_client.get_org_id_for_direction(direction),
-            note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
+            note=f'Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС {get_system_name()}',
             quantity=1,
         )
         if not direction.imported_from_rmis:
@@ -1388,7 +1388,7 @@ class Directions(BaseRequester):
             dateFrom=ndate(x.issledovaniye.time_confirmation),
             timeFrom=strtime(x.issledovaniye.time_confirmation),
             dateTo=ndate(x.issledovaniye.time_confirmation),
-            note='Результаты в направлении на фирменном бланке или в протоколе.\nАвтоматический вывод из L2',
+            note=f'Результаты в направлении на фирменном бланке или в протоколе.\nАвтоматический вывод из {get_system_name()}',
             patientUid=rindiv,
         )
         if not direction.imported_from_rmis:

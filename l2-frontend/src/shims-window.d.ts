@@ -3,6 +3,8 @@ export {};
 declare global {
   interface Window {
     ORG_TITLE: string;
+    SYSTEM_AS_VI: boolean;
+    L2_LOGO_CLASS: string;
     $: any
     Modernizr: any
     prefetch: any

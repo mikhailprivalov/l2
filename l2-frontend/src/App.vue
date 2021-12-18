@@ -12,7 +12,8 @@
       <div id="full-page-loader" v-if="fullPageLoader">
         <div class="loader-inner">
           <div class="rotated-circle"></div>
-          <div class="fixed-loader-text">L<span>2</span></div>
+          <div class="fixed-loader-text" v-if="asVI">{{system}}</div>
+          <div class="fixed-loader-text" v-else>L<span>2</span></div>
         </div>
       </div>
     </transition>
@@ -33,7 +34,7 @@ import CheckBackend from '@/ui-cards/CheckBackend.vue';
   computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
   metaInfo() {
     return {
-      title: `${this.$route?.meta?.title || 'L2'} — ${this.$orgTitle()}`,
+      title: `${this.$route?.meta?.title || this.$systemTitle()} — ${this.$orgTitle()}`,
     };
   },
   data() {
@@ -57,6 +58,14 @@ export default class App extends Vue {
 
   get isNarrowLayout() {
     return Boolean(this?.$route?.meta?.narrowLayout);
+  }
+
+  get system() {
+    return this.$systemTitle();
+  }
+
+  get asVI() {
+    return this.$asVI();
   }
 }
 </script>

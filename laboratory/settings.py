@@ -105,6 +105,7 @@ TEMPLATES = [
                 'context_processors.utils.ws',
                 'context_processors.utils.menu',
                 'context_processors.utils.profile',
+                'context_processors.utils.local_settings',
             ],
         },
     },
@@ -319,6 +320,8 @@ DEFAULT_N3_DOCTOR = {
     "name": "",
     "patronymic": "",
 }
+
+SYSTEM_AS_VI = False
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

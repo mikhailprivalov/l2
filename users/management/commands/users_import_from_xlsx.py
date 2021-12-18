@@ -5,6 +5,7 @@ from openpyxl import load_workbook
 import podrazdeleniya.models as pod
 import users.models as users
 from api.views import translit
+from utils.common import get_system_name
 
 
 class Command(BaseCommand):
@@ -57,7 +58,7 @@ class Command(BaseCommand):
                         elif "отделение" in o.lower() or "консуль" in o.lower() or "кабинет" in o.lower() or "специалист" in o.lower() or "центр" in o.lower():
                             ps.p_type = pod.Podrazdeleniya.DEPARTMENT
                         else:
-                            self.stdout.write("Необходимо настроить тип в L2")
+                            self.stdout.write(f"Необходимо настроить тип в {get_system_name()}")
                         ps.save()
                     otds[o] = ps
                 o = otds[o]

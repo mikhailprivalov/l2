@@ -1,5 +1,7 @@
 from typing import Union, Dict, Iterable, Any
 
+from laboratory.settings import SYSTEM_AS_VI
+
 
 def one_of_includes(check_value: Union[str, Iterable[str], Dict[str, Any]], values_to_check: Iterable[str]):
     return any(x in check_value for x in values_to_check)
@@ -32,3 +34,7 @@ def none_if_minus_1(v):
     if v == -1 or v == "-1":
         return None
     return v
+
+
+def get_system_name():
+    return 'VI' if SYSTEM_AS_VI else 'L2'

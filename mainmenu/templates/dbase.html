@@ -67,7 +67,11 @@
                         <div class="navbar-header">
                             {% if show_l2_logo %}
                                 <a href="/mainmenu" class="navbar-left logo {{ l2_logo_class|safe }}">
-                                    L<sup>2</sup>
+                                    {% if SYSTEM_AS_VI %}
+                                        VI
+                                    {% else %}
+                                        L<sup>2</sup>
+                                    {% endif %}
                                     {% if l2_logo_addonational_text %}
                                         <span>{{ l2_logo_addonational_text |safe }}</span>
                                     {% endif %}
@@ -106,7 +110,7 @@
                                             {% endfor %}
                                             </div>
                                         <div class="info">
-                                            L2 {{ version|safe }}
+                                            {% if SYSTEM_AS_VI %}VI{% else %}L2{% endif %} {{ version|safe }}
                                         </div>
                                     </div>
                                 </li>
@@ -125,7 +129,11 @@
                         <div class="navbar-header">
                             {% if show_l2_logo %}
                                 <div class="navbar-left logo {{ l2_logo_class|safe }}">
-                                    L<sup>2</sup>
+                                    {% if SYSTEM_AS_VI %}
+                                        VI
+                                    {% else %}
+                                        L<sup>2</sup>
+                                    {% endif %}
                                     {% if l2_logo_addonational_text %}
                                         <span>{{ l2_logo_addonational_text |safe }}</span>
                                     {% endif %}

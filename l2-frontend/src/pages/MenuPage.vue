@@ -43,7 +43,7 @@
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info">
         <div class="panel-body">
           <span>
-            <span>L2</span><br />
+            <span>{{system}}</span><br />
             <span>{{ menu.version }}</span>
           </span>
         </div>
@@ -91,6 +91,10 @@ export default class MenuPage extends Vue {
   buttons: Button[];
 
   fio_dep: string;
+
+  get system() {
+    return this.$systemTitle();
+  }
 }
 </script>
 

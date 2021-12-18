@@ -122,6 +122,15 @@
 {% autoescape off %}
 <script>
     window.ORG_TITLE = `{% firstof request.user.doctorprofile.hospital_safe_title org_title|safe %}`;
+    {% if SYSTEM_AS_VI %}
+    window.SYSTEM_AS_VI = true;
+    {% else %}
+    window.SYSTEM_AS_VI = false;
+    {% endif %}
+
+    {% load setting_default %}
+    {% s_default "l2_logo_class" "default" "s" as l2_logo_class %}
+    window.L2_LOGO_CLASS = '{{ l2_logo_class|safe }}';
 </script>
 {% endautoescape %}
 <script src="{% manifest 'router.js' %}"></script>

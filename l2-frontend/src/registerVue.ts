@@ -26,6 +26,9 @@ import ReplaceAppendModal from './ui-cards/ReplaceAppendModal.vue';
 
 export default (): void => {
   Vue.prototype.$orgTitle = () => window.ORG_TITLE;
+  Vue.prototype.$asVI = () => window.SYSTEM_AS_VI;
+  Vue.prototype.$systemTitle = () => (Vue.prototype.$asVI() ? 'VI' : 'L2');
+  Vue.prototype.$l2LogoClass = () => window.L2_LOGO_CLASS;
   Vue.prototype.$api = api;
 
   const VueInputMask = {

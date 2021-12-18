@@ -6,6 +6,7 @@ import clients.models as Clients
 from appconf.manager import SettingManager
 from laboratory import settings
 from rmis_integration.client import get_md5
+from utils.common import get_system_name
 
 
 def card_bases(request):
@@ -13,6 +14,10 @@ def card_bases(request):
     for b in Clients.CardBase.objects.filter(hide=False).order_by("pk"):
         card_bases_vars.append(dict(title=b.title, code=b.short_title, pk=b.pk, history_number=b.history_number))
     return {"card_bases": json.dumps(card_bases_vars)}
+
+
+def local_settings(request):
+    return {"SYSTEM_AS_VI": settings.SYSTEM_AS_VI}
 
 
 def ws(request):
@@ -30,7 +35,7 @@ def menu(request):
         data = cache.get(k)
         if not data:
             pages = [
-                {"url": "/ui/menu", "title": "Меню L2", "nt": False, "access": ["*"], "not_show_home": True},
+                {"url": "/ui/menu", "title": f"Меню {get_system_name()}", "nt": False, "access": ["*"], "not_show_home": True},
                 {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
                 {"hr": True, "access": ["*"]},
                 {"url": "/ui/directions", "title": "Направления и картотека", "nt": False, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра",
