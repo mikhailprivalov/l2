@@ -829,3 +829,65 @@ def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def sql_get_result_by_direction(pk, d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """SELECT
+                    directions_napravleniya.client_id as client_id, 
+                    directions_napravleniya.data_sozdaniya,
+                    directions_issledovaniya.napravleniye_id as dir_id,
+                    directions_issledovaniya.research_id as research_id,
+                    directions_issledovaniya.time_confirmation as confirm,
+                    clients_individual.family,
+                    clients_individual.name,
+                    clients_individual.patronymic,
+                    clients_individual.birthday,
+                    clients_individual.sex,
+                    directions_result.id,
+                    directions_result.value,
+                    directions_result.fraction_id,
+                    hospitals_hospitals.title as hosp_title,
+                    hospitals_hospitals.ogrn as hosp_ogrn
+                    FROM directions_issledovaniya
+                    LEFT JOIN directions_napravleniya
+                    ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                    LEFT JOIN directions_result
+                    ON directions_result.issledovaniye_id=directions_issledovaniya.id
+                    LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
+                    LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
+                    LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
+                    WHERE
+                        directions_issledovaniya.research_id = %(pk)s
+                    AND
+                    (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
+                            """,
+            params={'pk': pk, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_get_documents_by_card_id(card_tuple):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+                clients_carddocusage.document_id,
+                clients_carddocusage.card_id,
+                clients_document.id,
+                clients_document.serial,
+                clients_document.number,
+                clients_document.is_active,
+                clients_document.document_type_id
+            FROM clients_carddocusage 
+            LEFT JOIN  clients_document on clients_document.id=clients_carddocusage.document_id
+            WHERE clients_carddocusage.card_id in %(cards)s
+            """,
+            params={'cards': card_tuple, },
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

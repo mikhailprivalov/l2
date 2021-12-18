@@ -793,19 +793,52 @@ def statistic_research_by_sum_lab_base(ws1, d1, d2, research_titile):
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border.font = Font(bold=True, size=11)
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
-
-    ws1.cell(row=1, column=2).value = research_titile
-    ws1.cell(row=2, column=1).value = 'Период:'
-    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
     columns = [
-        ('Лаборатория', 33),
-        ('Услуга', 55),
-        ('Кол-во', 25),
+        ("№ заказа", 23),
+        ("Название организации", 33),
+        ("ОГРН организации", 33),
+        ("Дата заказа", 23),
+        ("Код услуги", 33),
+        ("Название услуги", 33),
+        ("Тест-система", 13),
+        ("Дата взятия биоматериала", 13),
+        ("Дата готовности результата", 13),
+        ("Результат", 13),
+        ("Тип исследования", 13),
+        ("Значение результата", 33),
+        ("Фамилия", 33),
+        ("Имя", 33),
+        ("Отчество", 33),
+        ("Пол", 8),
+        ("Дата рождения", 13),
+        ("Телефон", 13),
+        ("e-mail", 13),
+        ("Тип ДУЛ", 13),
+        ("Номер документа", 13),
+        ("Серия документа", 13),
+        ("СНИЛС", 23),
+        ("ОМС", 23),
+        ("Адрес регистрации регион", 23),
+        ("Адрес регистрации район", 23),
+        ("Адрес регистрации город", 23),
+        ("Адрес регистрации улица", 23),
+        ("Адрес регистрации дом", 23),
+        ("Адрес регистрации строение", 23),
+        ("Адрес регистрации квартира", 23),
+        ("Адрес факт  регион", 23),
+        ("Адрес факт район", 23),
+        ("Адрес факт город", 23),
+        ("Адрес факт улица", 23),
+        ("Адрес факт дом", 23),
+        ("Адрес факт строение", 23),
+        ("Адрес факт квартира", 23),
+        ("Название лаборатории", 23),
+        ("ОГРН лаборатории", 23),
     ]
     for idx, column in enumerate(columns, 1):
-        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.cell(row=1, column=idx).value = column[0]
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
-        ws1.cell(row=4, column=idx).style = style_border
+        ws1.cell(row=1, column=idx).style = style_border
 
     return ws1
 
