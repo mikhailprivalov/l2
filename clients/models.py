@@ -25,6 +25,8 @@ from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 from django.contrib.postgres.fields import ArrayField
 
+from utils.common import get_system_name
+
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 logger = logging.getLogger(__name__)
@@ -973,7 +975,7 @@ class Card(models.Model):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
 
     def get_fio_w_card(self):
-        return "L2 №{} {} {}".format(self.number, self.individual.fio(), self.individual.bd())
+        return "{} №{} {} {}".format(get_system_name(), self.number, self.individual.fio(), self.individual.bd())
 
     def number_with_type(self):
         return "{}{}".format(self.number, (" " + self.base.short_title) if not self.base.is_rmis else "")

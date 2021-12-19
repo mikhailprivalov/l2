@@ -20,7 +20,7 @@
           </ol>
         </div>
         <div v-if="rows.length === 0" class="text-center" style="padding: 10px">
-          Направлений из РМИС, не зарегистрированных в L2, не найдено
+          Направлений из РМИС, не зарегистрированных в {{system}}, не найдено
         </div>
       </div>
       <div class="directions-content" v-if="selected_direction !== -1">
@@ -35,7 +35,7 @@
             <div class="service-rmis">
               <div class="s-title"><strong>Исследование в РМИС</strong></div>
             </div>
-            <div class="service-l2"><strong>Исследование в L2</strong></div>
+            <div class="service-l2"><strong>Исследование в {{system}}</strong></div>
           </div>
           <div class="direction-service"
                :class="{wrn: s.selected_local_service === -1 && !s.exclude_direction, cancel: s.exclude_direction}"
@@ -106,7 +106,7 @@
         <div class="direction-control">
           <button class="btn btn-primary-nb btn-blue-nb" @click="cancel">Отмена</button>
           <button class="btn btn-primary-nb btn-blue-nb" :disabled="!valid" @click="generateDirections">Создать
-            направления в L2
+            направления в {{system}}
           </button>
         </div>
       </div>
@@ -164,6 +164,9 @@ export default {
     this.load_data();
   },
   computed: {
+    system() {
+      return this.$systemTitle();
+    },
     departments() {
       const deps = {};
       for (const dep of this.$store.getters.allDepartments) {

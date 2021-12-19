@@ -26,7 +26,7 @@
           </button>
         </div>
       </div>
-      <div class="version">L2 {{ menu.version }}</div>
+      <div class="version">{{system}} {{ menu.version }}</div>
     </form>
   </div>
 </template>
@@ -56,6 +56,10 @@ export default class LoginPage extends Vue {
   username: string;
 
   password: string;
+
+  get system() {
+    return this.$systemTitle();
+  }
 
   created() {
     if (this.authenticated) {

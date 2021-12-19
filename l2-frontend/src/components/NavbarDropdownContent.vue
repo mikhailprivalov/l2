@@ -10,7 +10,7 @@
         </div>
       </template>
     </div>
-    <div class="info">L2 {{ version }}</div>
+    <div class="info">{{system}} {{ version }}</div>
   </div>
 </template>
 
@@ -26,6 +26,10 @@ export default class NavbarDropdownContent extends Vue {
   version: string | null;
 
   menu: any;
+
+  get system() {
+    return this.$systemTitle();
+  }
 }
 </script>
 

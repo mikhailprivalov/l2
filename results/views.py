@@ -47,7 +47,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import DEATH_RESEARCH_PK
+from laboratory.settings import DEATH_RESEARCH_PK, SYSTEM_AS_VI
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -228,7 +228,7 @@ def result_print(request):
             '',
             '',
             Paragraph(
-                'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
+                f'Результат из <font face="OpenSansBoldItalic">{"VI-MIS" if SYSTEM_AS_VI else "L²"}</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
                 % (
                     '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
                     d.hospital_short_title,

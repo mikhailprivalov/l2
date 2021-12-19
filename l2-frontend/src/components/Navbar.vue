@@ -2,7 +2,10 @@
   <nav class="navbar navbar-inverse" :class="loaderInHeader && 'show-loader'">
     <div class="nav-cont" v-show="!loading">
       <div class="navbar-header">
-        <router-link :to="authenticated ? '/ui/menu' : '/ui/login'" class="navbar-left logo"> L<sup>2</sup> </router-link>
+        <router-link :to="authenticated ? '/ui/menu' : '/ui/login'" class="navbar-left logo" :class="l2LogoClass">
+          <template v-if="asVI">{{system}}</template>
+          <template v-else>L<sup>2</sup></template>
+        </router-link>
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
@@ -37,7 +40,7 @@
         <ul class="nav navbar-right navbar-nav">
           <li v-if="hasNewVersion">
             <button type="button" class="btn btn-blue btn-blue-nb btn-reload" @click="reload">
-              L2 обновилась! Перезагрузить страницу
+              {{system}} обновилась! Перезагрузить страницу
             </button>
           </li>
           <li v-else>
@@ -48,7 +51,10 @@
     </div>
     <div class="nav-loader center" v-show="loading">
       <div class="navbar-header">
-        <div class="navbar-left logo">L<sup>2</sup></div>
+        <div class="navbar-left logo" :class="l2LogoClass">
+          <template v-if="asVI">{{system}}</template>
+          <template v-else>L<sup>2</sup></template>
+        </div>
         <span class="navbar-brand" v-if="authenticated">
           <small>{{ fio_short }}</small>
         </span>
@@ -117,6 +123,18 @@ export default class Navbar extends Vue {
   user_hospital_title: string | null;
 
   $orgTitle: () => string;
+
+  get system() {
+    return this.$systemTitle();
+  }
+
+  get asVI() {
+    return this.$asVI();
+  }
+
+  get l2LogoClass() {
+    return this.$l2LogoClass();
+  }
 
   get loading() {
     return this.inLoading && this.loaderInHeader;

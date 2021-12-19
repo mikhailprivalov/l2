@@ -34,6 +34,7 @@ from reportlab.graphics.barcode import code128
 import datetime
 
 from results.prepare_data import previous_laboratory_result, previous_doc_refferal_result, table_part_result, get_direction_params
+from utils.common import get_system_name
 
 w, h = A4
 
@@ -115,7 +116,7 @@ def form_01(c: Canvas, d: Napravleniya):
         c.drawString(px(18.5), py(133 + offset), "Дата выдачи результата: «_____»_________________20____г.  Подпись ____________________________")
 
         c.setFont('TimesNewRoman', 8)
-        c.drawString(px(18.5), py(139 + offset), "ИС L2. Форма 38001")
+        c.drawString(px(18.5), py(139 + offset), f"ИС {get_system_name()}. Форма 38001")
 
     printForm(0)
 

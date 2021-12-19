@@ -35,7 +35,7 @@ const router = new Router({
       component: () => import('@/pages/MenuPage.vue'),
       meta: {
         narrowLayout: true,
-        title: 'Меню L2',
+        title: 'Разделы',
       },
     },
     {

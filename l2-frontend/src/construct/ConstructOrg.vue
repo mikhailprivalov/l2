@@ -31,7 +31,7 @@
 
         <div class="journal-warning">
           Изменения будут записаны в журнал.<br />
-          <strong>Обновлённые данные будут отображены на печатных бланках, в отчётах и в интерфейсе L2</strong>
+          <strong>Обновлённые данные будут отображены на печатных бланках, в отчётах и в интерфейсе {{system}}</strong>
         </div>
       </FormulateForm>
     </div>
@@ -138,6 +138,10 @@ export default class ConstructOrg extends Vue {
   generator: any;
 
   loading: boolean;
+
+  get system() {
+    return this.$systemTitle();
+  }
 
   async save() {
     this.loading = true;

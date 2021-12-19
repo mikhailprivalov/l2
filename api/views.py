@@ -4,6 +4,7 @@ import time
 import re
 from collections import defaultdict
 from typing import Optional, Union
+from laboratory.settings import SYSTEM_AS_VI
 from utils.response import status_response
 
 from django.db.utils import IntegrityError
@@ -579,6 +580,10 @@ def current_user_info(request):
             ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
             ret["specialities"] = [] if not doctorprofile.specialities else [doctorprofile.specialities.title]
             ret["groups"] = list(user.groups.values_list('name', flat=True))
+            if SYSTEM_AS_VI:
+                for i in range(len(ret["groups"])):
+                    if ret["groups"][i] == 'Картотека L2':
+                        ret["groups"][i] = 'Картотека'
             if user.is_superuser:
                 ret["groups"].append("Admin")
             ret["eds_allowed_sign"] = doctorprofile.get_eds_allowed_sign() if ret['modules'].get('l2_eds') else []

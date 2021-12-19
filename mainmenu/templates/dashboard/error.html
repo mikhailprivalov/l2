@@ -19,7 +19,11 @@
         <br/>
         <button class="btn btn-lg btn-primary-nb" href="#" onclick="location.href = '/';return false;">Вернуться в меню</button>
     {% endif %}
-    <div style="font-weight: 200;font-size: 40px;text-align: center;margin-top: 60px;"><i>L<sup style="font-size: 24px;top: -.3em;">2</sup></i></div>
+    {% if SYSTEM_AS_VI %}
+        <div style="font-weight: 200;font-size: 40px;text-align: center;margin-top: 60px;"><i>VI</i></div>
+    {% else %}
+        <div style="font-weight: 200;font-size: 40px;text-align: center;margin-top: 60px;"><i>L<sup style="font-size: 24px;top: -.3em;">2</sup></i></div>
+    {% endif %}
     </div>
 {% endblock %}
 

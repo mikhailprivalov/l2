@@ -218,7 +218,7 @@ export default {
     is_l2_cards() {
       if ('groups' in this.$store.getters.user_data) {
         for (const g of this.$store.getters.user_data.groups) {
-          if (g === 'Картотека L2' || g === 'Admin') {
+          if (g === 'Картотека' || g === 'Картотека L2' || g === 'Admin') {
             return true;
           }
         }

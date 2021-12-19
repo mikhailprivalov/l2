@@ -9,7 +9,7 @@
     marginLeftRight="auto"
     margin-top
   >
-    <span slot="header">Регистратура L2</span>
+    <span slot="header">Регистратура {{system}}</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
       <form autocomplete="off" class="row" onsubmit.prevent>
         <input type="hidden" autocomplete="off" />
@@ -92,12 +92,12 @@
         </div>
         <div class="col-xs-6">
           <div class="info-row" v-if="loading">
-            Поиск пациентов в L2
+            Поиск пациентов в {{system}}
             <template v-if="l2_tfoms"> и в ТФОМС</template>
             ...
           </div>
           <div class="info-row" v-else>
-            Найдено физлиц в L2
+            Найдено физлиц в {{system}}
             <template v-if="l2_tfoms"> и ТФОМС</template>
             : {{ individuals.length }}
           </div>
@@ -129,7 +129,7 @@
                   <td>{{ d.number }}</td>
                 </tr>
                 <tr v-if="i.l2_cards.length > 0">
-                  <th>Активные карты L2</th>
+                  <th>Активные карты {{system}}</th>
                   <td colspan="2">
                     <div v-for="c in i.l2_cards" :key="c.pk">
                       <a
@@ -859,6 +859,9 @@ export default {
     }, 100);
   },
   computed: {
+    system() {
+      return this.$systemTitle();
+    },
     l2_tfoms() {
       return this.$store.getters.modules.l2_tfoms;
     },

@@ -15,6 +15,7 @@ from reportlab.lib.pagesizes import A4, landscape, A5, portrait
 import os.path
 import directory.models as directory
 from reportlab.lib.units import mm
+from utils.common import get_system_name
 
 from utils.dates import normalize_date
 
@@ -582,7 +583,7 @@ def form_06(request_data):
     date_diagnos = iss.medical_examination
     date_diagnos = date_diagnos.strftime("%d.%m.%Y")
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f'осомтр L2 - {dir.pk} подтверждено  {strfdatetime(iss.time_confirmation, "%d.%m.%Y")}', styleCenterBold))
+    fwb.append(Paragraph(f'осомтр {get_system_name()} - {dir.pk} подтверждено  {strfdatetime(iss.time_confirmation, "%d.%m.%Y")}', styleCenterBold))
     fwb.append(Spacer(1, 6 * mm))
     opinion = [
         [
