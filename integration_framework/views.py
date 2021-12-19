@@ -1446,7 +1446,7 @@ def get_json_protocol_data(pk):
                                 pass
                             else:
                                 k[count] = el
-                        except Exception as e:
+                        except Exception:
                             pass
                     count += 1
         if isinstance(val, str):
@@ -1474,7 +1474,7 @@ def get_json_protocol_data(pk):
 
     document["id"] = pk
     time_confirm = iss.time_confirmation
-    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%M')
     document["confirmedAt"] = f"{confirmed_time}+0800"
     document["legalAuthenticator"] = legal_auth_data
     document["author"] = author_data
@@ -1490,7 +1490,7 @@ def get_json_protocol_data(pk):
 def get_json_labortory_data(pk):
     result_protocol = get_laboratory_results_by_directions([pk])
     document = {}
-    confirmedAt = ""
+    confirmed_at = ""
     date_reiceve = ""
     data = []
     prev_research_title = ""
@@ -1503,11 +1503,11 @@ def get_json_labortory_data(pk):
         next_research_title = iss.research.title
         if (prev_research_title != next_research_title) and count != 0:
             if len(tests) > 0:
-                data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmedAt, "receivedAt": date_reiceve, "author_data": author_data})
+                data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmed_at, "receivedAt": date_reiceve, "author_data": author_data})
             tests = []
         author_data = author_doctor(iss.doc_confirmation)
         time_confirm = iss.time_confirmation
-        confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+        confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%M')
         fraction_id = k.fraction_id
         frac_obj = Fractions.objects.get(pk=fraction_id)
         if not frac_obj.unit or not frac_obj.fsli:
@@ -1516,14 +1516,14 @@ def get_json_labortory_data(pk):
         unit_val = {"code": unit_obj.code, "full_title": unit_obj.title, "ucum": unit_obj.ucum, "short_title": unit_obj.short_title}
         flsi_param = {"code": frac_obj.fsli, "title": frac_obj.title}
         result_val = k.value
-        confirmedAt = f"{confirmed_time}+0800"
+        confirmed_at = f"{confirmed_time}+0800"
         date_reiceve = normalize_dots_date(k.date_confirm).replace("-","")
-        date_reiceve = f"{date_reiceve}0800+0800"
+        date_reiceve = f"{date_reiceve}+0800"
         tests.append({"unit_val": unit_val, "flsi_param": flsi_param, "result_val": result_val})
         prev_research_title = next_research_title
         count += 1
     if len(tests) > 0:
-        data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmedAt, "receivedAt": date_reiceve, "author_data": author_data})
+        data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmed_at, "receivedAt": date_reiceve, "author_data": author_data})
 
     hosp_obj = iss.doc_confirmation.hospital
     hosp_oid = hosp_obj.oid
@@ -1538,10 +1538,10 @@ def get_json_labortory_data(pk):
     document["orgName"] = hosp_obj.title
     direction_obj = Napravleniya.objects.get(pk=pk)
     direction_create = direction_obj.data_sozdaniya
-    direction_create = direction_create.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%m')
+    direction_create = direction_create.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%M')
     document["createdAt"] = f"{direction_create}+0800"
-    document["lastConfirmedAt"] = f"{confirmedAt}+0800"
-    document["confirmedAt"] = f"{confirmedAt}+0800"
+    document["lastConfirmedAt"] = f"{confirmed_at}"
+    document["confirmedAt"] = f"{confirmed_at}"
     document["organization"] = organization_get(hosp_obj)
 
     return document
