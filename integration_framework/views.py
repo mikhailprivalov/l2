@@ -430,6 +430,9 @@ def make_log(request):
     pks_to_set_iemk = [x for x in keys if x] if t in (60009, 60011) else []
     pks_to_set_iemk_fail = [x for x in keys if x] if t in (60010,) else []
 
+    pks_to_set_vi = [x for x in keys if x] if t in (60020,) else []
+    pks_to_set_vi_fail = [x for x in keys if x] if t in (60021,) else []
+
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
@@ -450,6 +453,17 @@ def make_log(request):
                 d = directions.Napravleniya.objects.get(pk=k)
                 d.n3_odli_id = body[str(k)]['id']
                 d.save(update_fields=['n3_odli_id'])
+
+        for k in pks_to_set_vi_fail:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_vi:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+            if str(k) in body and isinstance(body[k], dict) and body[str(k)]['id']:
+                d = directions.Napravleniya.objects.get(pk=k)
+                d.vi_id = body[str(k)]['id']
+                d.save(update_fields=['vi_id'])
 
         for k in pks_to_set_iemk_fail:
             Log.log(key=k, type=t, body=body.get(k, {}))
