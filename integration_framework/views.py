@@ -1395,6 +1395,7 @@ def get_protocol_result(request):
                     'gender': ind.sex.lower(),
                     'birthdate': ind.birthday.strftime("%Y%m%d"),
                 },
+                "organization": data["organization"]
             }
         })
     elif check_type_research(pk) == "is_lab":
