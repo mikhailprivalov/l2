@@ -4,7 +4,7 @@ import time
 import re
 from collections import defaultdict
 from typing import Optional, Union
-from laboratory.local_settings import SYSTEM_AS_VI
+from laboratory.settings import SYSTEM_AS_VI
 from utils.response import status_response
 
 from django.db.utils import IntegrityError
