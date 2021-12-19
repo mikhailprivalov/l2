@@ -1035,16 +1035,12 @@ def statistic_xls(request):
         ws = wb.create_sheet("Кол-во по Ковид")
 
         pk = request_data.get("research")
-        print(pk)
         d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
         d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         result_patient = sql_get_result_by_direction(pk, start_date, end_date)
-        print(result_patient)
-        print("#########")
         cards = tuple(set([i.client_id for i in result_patient]))
-        print(cards)
         document_card = sql_get_documents_by_card_id(cards)
         patient_docs = {}
         document_type = {4: "снилс", 5: "рождение", 1: "паспорт", 3: "полис"}
@@ -1061,10 +1057,9 @@ def statistic_xls(request):
             else:
                 if data:
                     patient_docs[doc.card_id] = [data]
-        print(patient_docs)
 
-        ws = structure_sheet.statistic_research_by_sum_lab_base(ws, d1, d2, "Кол-во по лабораториям")
-        # ws = structure_sheet.statistic_research_by_sum_lab_data(ws, researches_by_sum)
+        ws = structure_sheet.statistic_research_by_covid_base(ws, d1, d2, "Кол-во по ковид")
+        ws = structure_sheet.statistic_research_by_covid_data(ws, result_patient, patient_docs)
 
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))

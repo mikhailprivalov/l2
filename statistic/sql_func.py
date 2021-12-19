@@ -836,14 +836,16 @@ def sql_get_result_by_direction(pk, d_s, d_e):
         cursor.execute(
             """SELECT
                     directions_napravleniya.client_id as client_id, 
-                    directions_napravleniya.data_sozdaniya,
+                    to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'YYYY-MM-DD') as date_create,
                     directions_issledovaniya.napravleniye_id as dir_id,
                     directions_issledovaniya.research_id as research_id,
-                    directions_issledovaniya.time_confirmation as confirm,
+                    to_char((directions_issledovaniya.time_confirmation - interval '1 day') AT TIME ZONE %(tz)s, 'YYYY-MM-DD') as date_reciev,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'YYYY-MM-DD') as date_confirm,
                     clients_individual.family,
                     clients_individual.name,
                     clients_individual.patronymic,
                     clients_individual.birthday,
+                    to_char(clients_individual.birthday AT TIME ZONE %(tz)s, 'YYYY-MM-DD') as born,
                     clients_individual.sex,
                     directions_result.id,
                     directions_result.value,

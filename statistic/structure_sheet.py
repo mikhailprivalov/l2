@@ -787,7 +787,7 @@ def statistic_reserved_research_death_data(ws1, researches):
     return ws1
 
 
-def statistic_research_by_sum_lab_base(ws1, d1, d2, research_titile):
+def statistic_research_by_covid_base(ws1, d1, d2, research_titile):
     style_border = NamedStyle(name="style_border")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -841,6 +841,96 @@ def statistic_research_by_sum_lab_base(ws1, d1, d2, research_titile):
         ws1.cell(row=1, column=idx).style = style_border
 
     return ws1
+
+
+def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
+    """
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 1
+    if not result_patient:
+        return ws1
+
+    for i in result_patient:
+        r += 1
+        ws1.cell(row=r, column=1).value = i.dir_id
+        ws1.cell(row=r, column=2).value = i.hosp_title
+        ws1.cell(row=r, column=3).value = i.hosp_ogrn
+        ws1.cell(row=r, column=4).value = i.date_create
+        ws1.cell(row=r, column=5).value = "A26.08.027.001"
+        ws1.cell(row=r, column=6).value = "Определение РНК коронавируса ТОРС (SARS-cov) в мазках со слизистой оболочки носоглотки методом ПЦР"
+        ws1.cell(row=r, column=7).value = ""
+        ws1.cell(row=r, column=8).value = i.date_reciev
+        ws1.cell(row=r, column=9).value = i.date_confirm
+        ws1.cell(row=r, column=10).value = i.value
+        ws1.cell(row=r, column=11).value = ""
+        ws1.cell(row=r, column=12).value = ""
+        ws1.cell(row=r, column=13).value = i.family
+        ws1.cell(row=r, column=14).value = i.name
+        ws1.cell(row=r, column=15).value = i.patronymic
+        ws1.cell(row=r, column=16).value = i.sex
+        ws1.cell(row=r, column=17).value = i.born
+        ws1.cell(row=r, column=18).value = ""
+        ws1.cell(row=r, column=19).value = ""
+
+        patient_doc = patient_docs.get(i.client_id, None)
+        type, serial, number, snils, polis = "", "", "", "", ""
+        if patient_doc:
+            for pat_doc in patient_doc:
+                for k, v in pat_doc.items():
+                    if k == "снилс":
+                        snils = v
+                    elif k == "полис":
+                        polis = v
+                    elif k in ["паспорт", "рождение"]:
+                        type = k
+                        data = v.split("@")
+                        serial = data[0]
+                        number = data[1]
+        ws1.cell(row=r, column=20).value = type
+        ws1.cell(row=r, column=21).value = serial
+        ws1.cell(row=r, column=22).value = number
+
+        ws1.cell(row=r, column=23).value = snils
+        ws1.cell(row=r, column=24).value = polis
+
+        ws1.cell(row=r, column=39).value = i.hosp_title
+        ws1.cell(row=r, column=40).value = i.hosp_ogrn
+
+        rows = ws1[f'A{r}:C{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    return ws1
+
+
+def statistic_research_by_sum_lab_base(ws1, d1, d2, research_titile):
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+    columns = [
+        ('Лаборатория', 33),
+        ('Услуга', 55),
+        ('Кол-во', 25),
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=4, column=idx).style = style_border
+
+    return
 
 
 def statistic_research_by_sum_lab_data(ws1, researches):
