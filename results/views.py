@@ -119,6 +119,10 @@ def result_print(request):
     split = request.GET.get("split", "1") == "1"
     protocol_plain_text = request.GET.get("protocol_plain_text", "0") == "1"
     leftnone = request.GET.get("leftnone", "0") == "0"
+    med_certificate = request.GET.get("med_certificate", "0") == "1"
+    med_certificate_title = ""
+    if med_certificate:
+        med_certificate_title = "Справка - "
     hosp = request.GET.get("hosp", "0") == "1"
 
     doc = BaseDocTemplate(
@@ -971,7 +975,7 @@ def result_print(request):
                         or iss.research.is_gistology
                         or iss.research.is_form
                     ):
-                        iss_title = iss.research.title
+                        iss_title = f"{med_certificate_title}{iss.research.title}"
                     elif iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                         iss_title = "Вакцина: " + iss.research.title
                     else:
@@ -992,9 +996,9 @@ def result_print(request):
                 elif form_result:
                     fwb = form_result(direction, iss, fwb, doc, leftnone, request.user)
                 elif not protocol_plain_text:
-                    fwb = structure_data_for_result(iss, fwb, doc, leftnone)
+                    fwb = structure_data_for_result(iss, fwb, doc, leftnone, med_certificate)
                 else:
-                    fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text)
+                    fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text,med_certificate)
 
                 recipies = Recipe.objects.filter(issledovaniye=iss).order_by('pk')
                 if recipies.exists():
