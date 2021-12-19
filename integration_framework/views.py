@@ -1401,7 +1401,6 @@ def get_protocol_result(request):
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
         return Response({
-            "rawResponse": True,
             "generatorName": "Laboratory_min",
             "data": {
                 "oidMo": data["oidMo"],
