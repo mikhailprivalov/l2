@@ -38,7 +38,7 @@ from .sql_func import (
     screening_plan_for_month_all_count,
     sql_pass_pap_analysis_count,
     sql_pass_pap_fraction_result_value,
-    sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
+    sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value, sql_get_result_by_direction, sql_get_documents_by_card_id,
 )
 
 from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK
@@ -85,7 +85,7 @@ def statistic_xls(request):
 
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
-    if date_start and date_end and tp != "lab_sum":
+    if date_start and date_end and tp not in ["lab_sum", "covid_sum"]:
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -1027,6 +1027,39 @@ def statistic_xls(request):
         researches_by_sum = sql_func.statistics_sum_research_by_lab(lab_podr, start_date, end_date)
         ws = structure_sheet.statistic_research_by_sum_lab_base(ws, d1, d2, "Кол-во по лабораториям")
         ws = structure_sheet.statistic_research_by_sum_lab_data(ws, researches_by_sum)
+
+    elif tp == "covid_sum":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Кол-во по Ковид")
+
+        pk = request_data.get("research")
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        result_patient = sql_get_result_by_direction(pk, start_date, end_date)
+        cards = tuple(set([i.client_id for i in result_patient]))
+        document_card = sql_get_documents_by_card_id(cards)
+        patient_docs = {}
+        document_type = {4: "снилс", 5: "рождение", 1: "паспорт", 3: "полис"}
+        for doc in document_card:
+            data = None
+            if doc.document_type_id in [4, 3]:
+                data = {document_type.get(doc.document_type_id): doc.number}
+            elif doc.document_type_id in [1, 5]:
+                data = {document_type.get(doc.document_type_id): f"{doc.serial}@{doc.number}"}
+            if patient_docs.get(doc.card_id, None):
+                temp_docs = patient_docs.get(doc.card_id)
+                temp_docs.append(data)
+                patient_docs[doc.card_id] = temp_docs
+            else:
+                if data:
+                    patient_docs[doc.card_id] = [data]
+
+        ws = structure_sheet.statistic_research_by_covid_base(ws, d1, d2, "Кол-во по ковид")
+        ws = structure_sheet.statistic_research_by_covid_data(ws, result_patient, patient_docs)
 
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))

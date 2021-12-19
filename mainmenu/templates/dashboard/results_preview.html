@@ -19,7 +19,7 @@
                 <label><input id="protocol_plain_text" type="checkbox"> Сплошным текстом</label>
             </div>
             <div style="text-align: center;flex-basis: 20%">
-                <label><input id="sick_list" type="checkbox"> ЛН</label>
+                <label><input id="med_certificate" type="checkbox"> Справка</label>
             </div>
             <div style="text-align: right;flex-basis: 20%">
                 <button type="button" class="btn btn-blue-nb" onclick="updatePreview();">Обновить</button>
@@ -76,11 +76,11 @@
                 $('#protocol_plain_text').prop('checked', JSON.parse(localStorage.getItem('print_results_protocol_plain_text')))
             }
 
-            if (!localStorage.getItem('print_results_sick_list')) {
-                $('#sick_list').prop('checked', false)
-                localStorage.setItem('print_results_sick_list', 'false')
+            if (!localStorage.getItem('print_results_med_certificate')) {
+                $('#med_certificate').prop('checked', false)
+                localStorage.setItem('print_results_med_certificate', 'false')
             } else {
-                $('#sick_list').prop('checked', JSON.parse(localStorage.getItem('print_results_sick_list')))
+                $('#med_certificate').prop('checked', JSON.parse(localStorage.getItem('print_results_med_certificate')))
             }
 
             updatePreview()
@@ -93,10 +93,10 @@
             localStorage.setItem('print_results_margin', margin + '')
             let protocol_plain_text = $('#protocol_plain_text').is(':checked')
             localStorage.setItem('print_results_protocol_plain_text', protocol_plain_text + '')
-            let sick_list = $('#sick_list').is(':checked')
-            localStorage.setItem('print_results_sick_list', sick_list + '')
+            let med_certificate = $('#med_certificate').is(':checked')
+            localStorage.setItem('print_results_med_certificate', med_certificate + '')
 
-            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split ? 1 : 0}&leftnone=${margin ? 0 : 1}&inline=${inline ? 1 : 0}&protocol_plain_text=${protocol_plain_text ? 1 : 0}&sick_list=${sick_list ? 1 : 0}&hosp=${hosp}&portion=${portion}`
+            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split ? 1 : 0}&leftnone=${margin ? 0 : 1}&inline=${inline ? 1 : 0}&protocol_plain_text=${protocol_plain_text ? 1 : 0}&med_certificate=${med_certificate ? 1 : 0}&hosp=${hosp}&portion=${portion}`
         }
 
         function updatePreview() {
