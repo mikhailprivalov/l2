@@ -407,7 +407,7 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
     return t
 
 
-def structure_data_for_result(iss, fwb, doc, leftnone):
+def structure_data_for_result(iss, fwb, doc, leftnone, med_certificate):
     pw = doc.width
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -428,11 +428,13 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
         group_title = False
         if results.exists():
             fwb.append(Spacer(1, 1 * mm))
-            if group.show_title and group.show_title != "":
+            if group.show_title and group.show_title != "" and not med_certificate:
                 fwb.append(Paragraph(group.title.replace('<', '&lt;').replace('>', '&gt;'), styleBold))
                 fwb.append(Spacer(1, 0.25 * mm))
                 group_title = True
             for r in results:
+                if med_certificate and not r.field.for_med_certificate:
+                    continue
                 field_type = r.get_field_type()
                 if field_type == 15:
                     date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
@@ -512,7 +514,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
     return fwb
 
 
-def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
+def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_certificate):
     pw = doc.width
     sick_result = None
     txt = ""
@@ -532,10 +534,12 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
             sick_result = collections.OrderedDict()
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
         if results.exists():
-            if group.show_title and group.title != "":
+            if group.show_title and group.title != "" and not med_certificate:
                 txt += "<font face=\"FreeSansBold\">{}:</font>&nbsp;".format(group.title.replace('<', '&lt;').replace('>', '&gt;'))
             vals = []
             for r in results:
+                if med_certificate and not r.field.for_med_certificate:
+                    continue
                 field_type = r.get_field_type()
                 v = r.string_value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                 v = v.replace('&lt;sub&gt;', '<sub>')
