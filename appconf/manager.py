@@ -76,7 +76,7 @@ class SettingManager:
         return SettingManager.get("instance_id", default='', default_type='s')
 
     @staticmethod
-    def l2_modules():
+    def l2_modules() -> object:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
         if cv:
