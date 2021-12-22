@@ -33,6 +33,7 @@ def researches_get_one(request):
                 res["res_id"] = i
                 res["co_executor"] = str(iss.co_executor_id or -1)
                 res["co_executor2"] = str(iss.co_executor2_id or -1)
+                res["legal_authenticator"] = str(iss.legal_authenticator_id or -1)
                 res["co_executor_mode"] = iss.research.co_executor_mode or 0
                 res["co_executor_title"] = iss.research.co_executor_2_title
                 if not iss.doc_save:

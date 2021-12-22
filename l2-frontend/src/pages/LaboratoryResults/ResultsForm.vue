@@ -143,6 +143,29 @@
               </td>
             </tr>
           </template>
+          <tr v-else-if="legalAuthenticator">
+            <td colspan="5">
+              <hr />
+            </td>
+          </tr>
+          <tr v-if="legalAuthenticator">
+            <td>
+              <label for="laborant">Подпись от организации</label>
+            </td>
+            <td colspan="4">
+              <treeselect
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="legalAuthenticators"
+                placeholder="Не выбрано"
+                v-model="legal_authenticator"
+                :append-to-body="true"
+                :clearable="false"
+                id="legal_authenticator"
+                :disabled="confirmed"
+              />
+            </td>
+          </tr>
         </tbody>
       </table>
       <table class="table table-bordered table-condensed" v-if="pk && execParams.length > 0">
@@ -228,6 +251,8 @@ export default {
       laborants: [],
       co_executor: -1,
       co_executor2: -1,
+      legalAuthenticators: [],
+      legal_authenticator: -1,
     };
   },
   computed: {
@@ -252,6 +277,9 @@ export default {
         r.push(['Анализатор', this.execData.app]);
       }
       return r;
+    },
+    legalAuthenticator() {
+      return !!this.$store.getters.modules.legal_authenticator;
     },
   },
   methods: {
@@ -281,6 +309,8 @@ export default {
       this.co_executor = data.co_executor;
       this.co_executor2 = data.co_executor2;
       this.allow_reset_confirm = data.allow_reset_confirm;
+      this.legalAuthenticators = data.legalAuthenticators;
+      this.legal_authenticator = data.legal_authenticator;
       this.loaded = true;
       window.$(this.$refs.root).scrollTop(0);
       if (!data.confirmed) {
@@ -320,6 +350,7 @@ export default {
         'comment',
         'co_executor',
         'co_executor2',
+        'legal_authenticator',
       ]);
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
