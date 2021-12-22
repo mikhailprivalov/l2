@@ -1664,6 +1664,8 @@ class Issledovaniya(models.Model):
     co_executor_uet = models.DecimalField(max_digits=6, null=True, blank=True, default=None, decimal_places=3)
     co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2", default=None, null=True, blank=True, on_delete=models.SET_NULL)
     co_executor2_uet = models.DecimalField(max_digits=6, null=True, blank=True, default=None, decimal_places=3)
+    legal_authenticator = models.ForeignKey(DoctorProfile, related_name="legal_authenticator", help_text="Подпись организации",
+                                            default=None, null=True, blank=True, on_delete=models.SET_NULL)
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     fin_source = models.ForeignKey(IstochnikiFinansirovaniya, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Перезаписать источник финансирования из направления")
     first_time = models.BooleanField(default=False, help_text="Впервые")

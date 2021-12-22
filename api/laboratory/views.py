@@ -392,8 +392,18 @@ def form(request):
             if SettingManager.l2('results_laborants') else
             []
         ),
+        "legalAuthenticators": (
+            [
+                {"id": x.pk, "label": x.get_full_fio()}
+                for x in
+                DoctorProfile.objects.filter(user__groups__name="Подпись от организации").order_by('fio')
+            ]
+            if SettingManager.get('legal_authenticator', default="false", default_type='b') else
+            []
+        ),
         "co_executor": iss.co_executor_id or -1,
         "co_executor2": iss.co_executor2_id or -1,
+        "legal_authenticator": iss.legal_authenticator_id or SettingManager.get("preselected_legal_authenticator", default='-1', default_type='i') or -1,
     }
 
     f: Fractions
@@ -541,6 +551,7 @@ def save(request):
     if iss.co_executor2_id:
         for r in Result.objects.filter(issledovaniye=iss):
             iss.co_executor2_uet += r.fraction.uet_co_executor_2
+    iss.legal_authenticator_id = None if request_data.get("legal_authenticator", -1) == -1 else request_data["legal_authenticator"]
     iss.save()
     Log.log(str(pk), 13, body=request_data, user=request.user.doctorprofile)
     return JsonResponse({
