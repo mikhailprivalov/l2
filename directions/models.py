@@ -445,7 +445,7 @@ class Napravleniya(models.Model):
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
     n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
     n3_iemk_ok = models.BooleanField(default=False, blank=True, null=True)
-    vi_id = models.BooleanField(max_length=40, default=None, blank=True, null=True, help_text='ИД VI', db_index=True)
+    vi_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД VI', db_index=True)
     eds_required_documents = ArrayField(models.CharField(max_length=3), verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True)
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
@@ -1680,6 +1680,8 @@ class Issledovaniya(models.Model):
     co_executor_uet = models.DecimalField(max_digits=6, null=True, blank=True, default=None, decimal_places=3)
     co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2", default=None, null=True, blank=True, on_delete=models.SET_NULL)
     co_executor2_uet = models.DecimalField(max_digits=6, null=True, blank=True, default=None, decimal_places=3)
+    legal_authenticator = models.ForeignKey(DoctorProfile, related_name="legal_authenticator", help_text="Подпись организации",
+                                            default=None, null=True, blank=True, on_delete=models.SET_NULL)
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     fin_source = models.ForeignKey(IstochnikiFinansirovaniya, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Перезаписать источник финансирования из направления")
     first_time = models.BooleanField(default=False, help_text="Впервые")
