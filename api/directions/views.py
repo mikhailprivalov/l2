@@ -3254,7 +3254,7 @@ def get_expertise(pk):
                 result_protocol = get_json_protocol_data(i.napravleniye_id)
                 content = result_protocol["content"]
                 if content and content.get("Наличие замечанй", None):
-                    if content["Наличие замечанй"].lower() == "нет":
+                    if content["Наличие замечанй"].lower() == "да":
                         is_remarks = True
             expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm, "is_remarks": is_remarks})
     return expertise_data
