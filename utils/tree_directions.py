@@ -1,6 +1,7 @@
 from django.db import connection
 
 from laboratory.settings import TIME_ZONE
+from utils.db import namedtuplefetchall
 
 
 def root_direction(napravleniye):
@@ -321,3 +322,70 @@ def get_research_by_dir(numdir):
 
         row = cursor.fetchall()
     return row
+
+
+def expertise_tree_direction(iss):
+    """
+    парам: услуга
+
+    Вернуть стуркутру Направлений:
+    id-направления, дата создания, id-услуг(и) относящейся к данному направлению, уровень поиска.
+    в SQL:
+    nn - directions_napravleniya
+    ii - directions_issledovaniya
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """WITH RECURSIVE r AS (
+            SELECT nn.id, 
+            to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
+            to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
+            nn.parent_id, 
+            ii.napravleniye_id,
+            ii.id as iss, 
+            to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
+            to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm, 
+            ii.research_id, 
+            ddrr.title,
+            ii.diagnos, 
+            1 AS level,
+            ddrr.is_expertise
+            FROM directions_issledovaniya ii 
+            LEFT JOIN directions_napravleniya nn
+            ON ii.napravleniye_id=nn.id
+            LEFT JOIN directory_researches ddrr
+            ON ii.research_id = ddrr.id
+
+            WHERE ii.id = %(num_issledovaniye)s
+
+            UNION ALL
+
+            SELECT n.id, 
+                  to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
+                  to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
+                  n.parent_id,
+                  i.napravleniye_id,
+                  i.id, 
+                  to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
+                  to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm,
+                  i.research_id, 
+                  dr.title,
+                  i.diagnos, 
+                  r.level + 1 AS level,
+                  dr.is_expertise
+            FROM directions_issledovaniya i 
+            LEFT JOIN directions_napravleniya n 
+            ON i.napravleniye_id=n.id
+            LEFT JOIN directory_researches dr
+            ON i.research_id = dr.id
+            JOIN r
+            ON r.iss = n.parent_id
+            )
+
+            SELECT * FROM r;""",
+            params={'num_issledovaniye': iss, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

@@ -68,6 +68,7 @@ from users.models import DoctorProfile
 from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
+from utils.tree_directions import root_direction, expertise_tree_direction, tree_direction
 from utils.xh import check_float_is_valid, short_fio_dots
 from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
@@ -163,7 +164,6 @@ def directions_history(request):
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
     iss_pk = request_data.get("iss_pk", None)
-    print(iss_pk)
     for_slave_hosp = request_data.get("forHospSlave", False)
     services = request_data.get("services", [])
     services = list(map(int, services or []))
@@ -290,8 +290,6 @@ def directions_history(request):
             has_descriptive = True
         if i[24]:
             is_application = True
-        if i[25]:
-            is_expertise = True
 
     status = min(status_set)
     if len(lab) > 0:
@@ -312,11 +310,13 @@ def directions_history(request):
                 'maybe_onco': maybe_onco,
                 'is_application': is_application,
                 'lab': lab_title,
-                'parent': parent_obj,
+                'parent': parent_obj
             }
         )
 
     res['directions'] = final_result
+
+    expertise_data = expertise_tree_direction(iss_pk)
 
     return JsonResponse(res)
 
@@ -339,6 +339,13 @@ def get_data_parent(parent_id):
         "parent_is_doc_refferal": research_is_doc_refferal,
         "is_confirm": is_confirm,
     }
+
+
+# def get_expertise_direction(request):
+#     request_data = json.loads(request.body)
+#     iss_pk = request_data.get("direction", None)
+#     expertise_data = expertise_tree_direction(iss_pk)
+
 
 
 @login_required
@@ -1388,6 +1395,9 @@ def directions_paraclinic_form(request):
 
     if not f:
         response["message"] = "Направление не найдено"
+
+    expertise = get_expertise(pk)
+    response["expertise"] = expertise
     return JsonResponse(response)
 
 
@@ -3243,3 +3253,19 @@ def eds_to_sign(request):
         )
 
     return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count})
+
+
+def get_expertise(pk):
+    iss_obj = Issledovaniya.objects.filter(napravleniye_id=pk)
+    expertise_from_sql = expertise_tree_direction(iss_obj[0].pk)
+    expertise_data = []
+    for i in expertise_from_sql:
+        if i.level == 2 and i.is_expertise:
+            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm})
+    return expertise_data
+
+
+
+
+    return True
+

@@ -1111,6 +1111,13 @@ export default {
       tableFieldsErrors: {},
       workFromUsers: [],
       workFromHistory: [],
+      directions_temp: [],
+      date_range: [
+        moment()
+          .subtract(6, 'month')
+          .format('DD.MM.YY'),
+        moment().format('DD.MM.YY'),
+      ],
     };
   },
   watch: {
