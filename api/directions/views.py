@@ -247,7 +247,6 @@ def directions_history(request):
             pacs = None
             maybe_onco = False
             is_application = False
-            is_expertise = False
             parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
             if i[13]:
                 if i[21]:
@@ -314,8 +313,6 @@ def directions_history(request):
         )
 
     res['directions'] = final_result
-
-    expertise_data = expertise_tree_direction(iss_pk)
 
     return JsonResponse(res)
 

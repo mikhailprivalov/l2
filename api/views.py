@@ -1518,9 +1518,7 @@ def reader_status(request):
 
 @csrf_exempt
 def reader_status_update(request):
-    print(request)
     data = json.loads(request.body)
-    print(data)
     reader_id = data.get('readerId')
 
     if not reader_id:
