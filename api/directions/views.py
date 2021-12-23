@@ -200,7 +200,6 @@ def directions_history(request):
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco = False
     is_application = False
-    is_expertise = False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     status_set = {-2}
     lab = set()
