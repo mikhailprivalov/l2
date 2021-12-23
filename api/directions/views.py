@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from cda.integration import render_cda
 import collections
 
-from integration_framework.views import get_cda_data
+from integration_framework.views import get_cda_data, get_json_protocol_data
 from utils.response import status_response
 from hospitals.models import Hospitals
 import operator
@@ -207,7 +207,7 @@ def directions_history(request):
 
     type_service = request_data.get("type_service", None)
     for i in result_sql:
-        if i[14]:
+        if i[14] or i[25]:
             continue
         elif type_service == 'is_paraclinic' and not i[18]:
             continue
@@ -3249,5 +3249,12 @@ def get_expertise(pk):
     expertise_data = []
     for i in expertise_from_sql:
         if i.level == 2 and i.is_expertise:
-            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm})
+            is_remarks = False
+            if i.date_confirm:
+                result_protocol = get_json_protocol_data(i.napravleniye_id)
+                content = result_protocol["content"]
+                if content and content.get("Наличие замечанй", None):
+                    if content["Наличие замечанй"].lower() == "нет":
+                        is_remarks = True
+            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm, "is_remarks": is_remarks})
     return expertise_data
