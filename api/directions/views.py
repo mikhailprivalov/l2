@@ -68,7 +68,7 @@ from users.models import DoctorProfile
 from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
-from utils.tree_directions import root_direction, expertise_tree_direction, tree_direction
+from utils.tree_directions import expertise_tree_direction
 from utils.xh import check_float_is_valid, short_fio_dots
 from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
@@ -236,8 +236,7 @@ def directions_history(request):
                         'maybe_onco': maybe_onco,
                         'is_application': is_application,
                         'lab': lab_title,
-                        'parent': parent_obj,
-                        'is_expertise': is_expertise,
+                        'parent': parent_obj
                     }
                 )
             dir = i[0]
@@ -339,13 +338,6 @@ def get_data_parent(parent_id):
         "parent_is_doc_refferal": research_is_doc_refferal,
         "is_confirm": is_confirm,
     }
-
-
-# def get_expertise_direction(request):
-#     request_data = json.loads(request.body)
-#     iss_pk = request_data.get("direction", None)
-#     expertise_data = expertise_tree_direction(iss_pk)
-
 
 
 @login_required
@@ -3263,9 +3255,3 @@ def get_expertise(pk):
         if i.level == 2 and i.is_expertise:
             expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm})
     return expertise_data
-
-
-
-
-    return True
-
