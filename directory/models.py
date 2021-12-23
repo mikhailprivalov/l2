@@ -203,6 +203,7 @@ class Researches(models.Model):
     is_direction_params = models.BooleanField(default=False, blank=True, help_text="Суррогатная услуга - параметры направления", db_index=True)
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
+    is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -239,6 +240,7 @@ class Researches(models.Model):
     odii_type = models.PositiveSmallIntegerField(choices=Podrazdeleniya.ODII_TYPES, default=None, blank=True, null=True,
                                                  help_text="Оказываемые виды инструментальных услуг (перезатирает из подразделения, если оно там указано)")
     generator_name = models.CharField(max_length=60, null=True, blank=True, default=None, help_text="Название для xml-generator")
+    expertise_params = models.ForeignKey('self', related_name='expertise_params_p', help_text="Экспертиза ", blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     @staticmethod
     def filter_type(t):

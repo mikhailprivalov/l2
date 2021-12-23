@@ -163,6 +163,7 @@ def directions_history(request):
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
     iss_pk = request_data.get("iss_pk", None)
+    print(iss_pk)
     for_slave_hosp = request_data.get("forHospSlave", False)
     services = request_data.get("services", [])
     services = list(map(int, services or []))
@@ -199,6 +200,7 @@ def directions_history(request):
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco = False
     is_application = False
+    is_expertise = False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     status_set = {-2}
     lab = set()
@@ -235,6 +237,7 @@ def directions_history(request):
                         'is_application': is_application,
                         'lab': lab_title,
                         'parent': parent_obj,
+                        'is_expertise': is_expertise,
                     }
                 )
             dir = i[0]
@@ -245,6 +248,7 @@ def directions_history(request):
             pacs = None
             maybe_onco = False
             is_application = False
+            is_expertise = False
             parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
             if i[13]:
                 if i[21]:
@@ -286,6 +290,8 @@ def directions_history(request):
             has_descriptive = True
         if i[24]:
             is_application = True
+        if i[25]:
+            is_expertise = True
 
     status = min(status_set)
     if len(lab) > 0:

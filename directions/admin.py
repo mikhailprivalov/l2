@@ -25,7 +25,7 @@ from .models import (
     MonitoringSumFieldTotal,
     NumberGenerator,
     DirectionDocument,
-    DocumentSign,
+    DocumentSign, AdditionNapravleniya,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -194,6 +194,14 @@ class ResDashboardCharts(admin.ModelAdmin):
     search_fields = ('title',)
 
 
+class ResAdditionNapravleniya(admin.ModelAdmin):
+    list_display = (
+        'target_direction',
+        'addition_direction',
+    )
+    search_fields = ('target_direction__pk', 'addition_direction__pk', )
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -213,3 +221,4 @@ admin.site.register(DashboardCharts, ResDashboardCharts)
 admin.site.register(DashboardChartFields, ResDashboardChartFields)
 admin.site.register(MonitoringSumFieldByDay)
 admin.site.register(MonitoringSumFieldTotal)
+admin.site.register(AdditionNapravleniya, ResAdditionNapravleniya)

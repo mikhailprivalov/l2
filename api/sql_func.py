@@ -195,3 +195,13 @@ def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1", limit=100):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_unique_research_for_patient(research_pk, date_start, date_end):
+    """
+    получить последнюю услуги за период для карты пациента
+    снилс, полис, ФИО, номер карты, дата
+    :return:
+    """
+    pass
+
