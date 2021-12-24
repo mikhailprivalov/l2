@@ -17,7 +17,6 @@ class Command(BaseCommand):
         if DEATH_RESEARCH_PK:
             results_death = sql_get_date_death(DEATH_RESEARCH_PK, start_date, end_date)
             for i in results_death:
-                print(i)
                 date_death = datetime.strptime(i.value, "%Y-%m-%d").date()
                 if date_death:
                     client_obj = Card.objects.get(pk=i.client_id)
