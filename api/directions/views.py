@@ -198,8 +198,7 @@ def directions_history(request):
     researches_titles = ''
     final_result = []
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
-    maybe_onco = False
-    is_application = False
+    maybe_onco, is_application, is_experise, expertise_status = False, False, False, False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     status_set = {-2}
     lab = set()
@@ -207,7 +206,7 @@ def directions_history(request):
 
     type_service = request_data.get("type_service", None)
     for i in result_sql:
-        if i[14] or i[25]:
+        if i[14]:
             continue
         elif type_service == 'is_paraclinic' and not i[18]:
             continue
@@ -235,10 +234,24 @@ def directions_history(request):
                         'maybe_onco': maybe_onco,
                         'is_application': is_application,
                         'lab': lab_title,
-                        'parent': parent_obj
+                        'parent': parent_obj,
+                        'is_experise': is_experise,
+                        'expertise_status': expertise_status
                     }
                 )
             dir = i[0]
+            expertise = get_expertise(dir)
+            is_experise = False
+            expertise_status = False
+            for k in expertise:
+                if k.get("confirm", None):
+                    is_experise = True
+                    if k.get("not_remarks") == True:
+                        expertise_status = 2
+                        break
+                    if k.get("not_remarks") == False:
+                        expertise_status = 0
+
             researches_titles = ''
             date = i[6]
             status_set = set()
@@ -307,7 +320,9 @@ def directions_history(request):
                 'maybe_onco': maybe_onco,
                 'is_application': is_application,
                 'lab': lab_title,
-                'parent': parent_obj
+                'parent': parent_obj,
+                'is_experise': is_experise,
+                'expertise_status': expertise_status
             }
         )
 
@@ -3249,12 +3264,12 @@ def get_expertise(pk):
     expertise_data = []
     for i in expertise_from_sql:
         if i.level == 2 and i.is_expertise:
-            is_remarks = False
+            not_remarks = False
             if i.date_confirm:
                 result_protocol = get_json_protocol_data(i.napravleniye_id)
                 content = result_protocol["content"]
-                if content and content.get("Наличие замечанй", None):
-                    if content["Наличие замечанй"].lower() == "да":
-                        is_remarks = True
-            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm, "is_remarks": is_remarks})
+                if content and content.get("Наличие замечаний", None):
+                    if content["Наличие замечаний"].lower() == "нет":
+                        not_remarks = True
+            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm if i.date_confirm else '' , "not_remarks": not_remarks})
     return expertise_data
