@@ -893,3 +893,85 @@ def sql_get_documents_by_card_id(card_tuple):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def sql_get_date_death(pk_research, d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT
+                    DISTINCT ON (directions_napravleniya.client_id) directions_napravleniya.client_id,
+                    directions_issledovaniya.napravleniye_id as dir_id,
+                    directions_issledovaniya.research_id as research_id,
+                    directions_issledovaniya.time_confirmation as confirm,
+                    directions_paraclinicresult.id,
+                    directions_paraclinicresult.value,
+                    directions_paraclinicresult.field_id,
+                    directory_paraclinicinputfield.title
+                    FROM directions_issledovaniya
+                    LEFT JOIN directions_napravleniya
+                    ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                    LEFT JOIN directions_paraclinicresult
+                    ON directions_paraclinicresult.issledovaniye_id=directions_issledovaniya.id
+                    LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
+                    LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
+                    LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
+                    LEFT JOIN directory_paraclinicinputfield on directions_paraclinicresult.field_id = directory_paraclinicinputfield.id
+                    WHERE
+                        directions_issledovaniya.research_id = %(pk)s AND directory_paraclinicinputfield.title = 'Дата смерти'
+                    AND
+                        (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
+                    ORDER BY 
+                        directions_napravleniya.client_id, directions_issledovaniya.time_confirmation DESC
+                            
+            """,
+            params={'pk': pk_research, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def statistics_death_research_by_card(research_id: object, d_s: object, d_e: object) -> object:
+    """
+    на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_paraclinicresult.issledovaniye_id,
+                directions_paraclinicresult.field_id,
+                directory_paraclinicinputfield.title,
+                directions_paraclinicresult.value,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm_time,
+                directions_paraclinicresult.value_json::json as json_value,
+                value_json::jsonb #>> '{rows, 0, 2}' as diag,
+                concat(value_json::jsonb #>> '{title}', value_json::jsonb #>> '{rows, 0, 2}') as result,
+                directions_issledovaniya.napravleniye_id,
+                directions_napravleniya.client_id,
+                concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as fio_patient,
+                clients_individual.sex,
+                hospitals_hospitals.title as hosp_title,
+                clients_card.death_date
+                FROM public.directions_paraclinicresult
+                LEFT JOIN directions_issledovaniya
+                ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
+                LEFT JOIN directory_paraclinicinputfield
+                ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
+                LEFT JOIN directions_napravleniya
+                ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
+                LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
+                LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
+                where issledovaniye_id in (
+                SELECT id FROM public.directions_issledovaniya
+                where research_id = %(death_research_id)s and (clients_card.death_date AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s))
+                order by issledovaniye_id
+            """,
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

@@ -41,7 +41,7 @@ class CardAdmin(admin.ModelAdmin):
         'payer',
     )
 
-    search_fields = ('individual', 'pk',)
+    search_fields = ('pk', 'number')
 
 
 @admin.register(models.ScreeningRegPlan)
