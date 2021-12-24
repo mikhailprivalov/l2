@@ -702,15 +702,9 @@ def statistic_xls(request):
 
             card_has_death_date = sql_func.card_has_death_date(research_id, start_date, end_date)
             card_tuple = tuple(set([i.id for i in card_has_death_date]))
-            print(card_tuple)
-
-            print(research_id)
             temp_data = sql_func.statistics_death_research_by_card(research_id, card_tuple)
             prev_card = None
             prev_direction = None
-            print(temp_data)
-            print(type(temp_data))
-            print("######")
             final_data = []
             count = 0
             for k in temp_data:
@@ -718,20 +712,13 @@ def statistic_xls(request):
                     continue
                 else:
                     final_data.append(k)
-
                 prev_card = k.client_id
                 prev_direction = k.napravleniye_id
                 count += 1
 
             data_death_card = death_form_result_parse(final_data, reserved=False)
-            print("$$$$$$$")
-            print(data_death_card)
-
             ws3 = wb.create_sheet("По людям")
             ws3 = structure_sheet.statistic_research_death_base_card(ws3, d1, d2, research_title[0])
-
-            # for s in data_death_card:
-            #     print(s)
             ws3 = structure_sheet.statistic_research_death_data_card(ws3, data_death_card)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
