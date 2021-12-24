@@ -2117,10 +2117,17 @@ def last_field_result(request):
             work_place = ""
         result = {"value": work_place}
     elif request_data["fieldPk"].find('%hospital') != -1:
-        current_iss = request_data["iss_pk"]
-        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        num_dir = get_current_direction(request_data["iss_pk"])
         hosp_title = Napravleniya.objects.get(pk=num_dir).hospital_title
         result = {"value": hosp_title}
+    elif request_data["fieldPk"].find('%parent_dir_data') != -1:
+        num_dir = get_current_direction(request_data["iss_pk"])
+        iss_parent = Napravleniya.objects.get(pk=num_dir).parent
+        research = iss_parent.research.title
+        direction_num = iss_parent.napravleniye_id
+        patient_data = f"Пациент-{data['fio']}. Д/р-{data['born']}. Полис-{data['enp']}. Снилс-{data['snils']}." \
+                       f"\nДокумент-{research} №-{direction_num}"
+        result = {"value": patient_data}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
     elif request_data["fieldPk"].find('%mother_full_main_address') != -1:
@@ -2263,6 +2270,9 @@ def last_field_result(request):
 
     return JsonResponse({"result": result})
 
+
+def get_current_direction(current_iss):
+    return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
 def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
     result, value, temp_value = None, None, None
