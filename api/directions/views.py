@@ -3281,5 +3281,5 @@ def get_expertise(pk):
                 if content and content.get("Наличие замечаний", None):
                     if content["Наличие замечаний"].lower() == "нет":
                         not_remarks = True
-            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm if i.date_confirm else '' , "not_remarks": not_remarks})
+            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm if i.date_confirm else '', "not_remarks": not_remarks})
     return expertise_data
