@@ -246,10 +246,10 @@ def directions_history(request):
             for k in expertise:
                 if k.get("confirm", None):
                     is_experise = True
-                    if k.get("not_remarks") == True:
+                    if k.get("not_remarks"):
                         expertise_status = 2
                         break
-                    if k.get("not_remarks") == False:
+                    if not k.get("not_remarks"):
                         expertise_status = 0
 
             researches_titles = ''
