@@ -4,6 +4,7 @@ from statistic.sql_func import sql_get_date_death
 from datetime import datetime
 from clients.models import Card
 
+
 class Command(BaseCommand):
     help = "Проверка и заполнение дат смерти: формат даты: 1970-01-01"
 

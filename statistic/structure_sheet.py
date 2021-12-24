@@ -652,6 +652,7 @@ def statistic_reserved_research_death_base(ws1, d1, d2, research_titile):
 
     return ws1
 
+
 def statistic_research_death_base_card(ws1, d1, d2, research_titile):
     style_border = NamedStyle(name="style_border_ca")
     bd = Side(style='thin', color="000000")
@@ -900,8 +901,6 @@ def statistic_research_death_data_card(ws1, researches):
         if not is_dict:
             place_death_details = "-"
 
-        print(type(place_death_details))
-        print(place_death_details)
         ws1.cell(row=r, column=26).value = place_death_details
         # Название стационара
         ws1.cell(row=r, column=27).value = ""
