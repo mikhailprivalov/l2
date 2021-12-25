@@ -240,17 +240,12 @@ def directions_history(request):
                     }
                 )
             dir = i[0]
-            expertise = get_expertise(dir)
+            expertise_data = get_expertise(dir)
             is_experise = False
             expertise_status = False
-            for k in expertise:
-                if k.get("confirm", None):
-                    is_experise = True
-                    if k.get("not_remarks"):
-                        expertise_status = 2
-                        break
-                    if not k.get("not_remarks"):
-                        expertise_status = 0
+            if expertise_data.get('status') != 'empty':
+                is_experise = True
+                expertise_status = 2 if expertise_data.get('status') == 'ok' else 0
 
             researches_titles = ''
             date = i[6]
