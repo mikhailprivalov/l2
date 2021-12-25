@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from cda.integration import render_cda
 import collections
 
-from integration_framework.views import get_cda_data, get_json_protocol_data
+from integration_framework.views import get_cda_data
 from utils.response import status_response
 from hospitals.models import Hospitals
 import operator
@@ -68,13 +68,13 @@ from users.models import DoctorProfile
 from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
-from utils.tree_directions import expertise_tree_direction
 from utils.xh import check_float_is_valid, short_fio_dots
 from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
+from utils.expertise import get_expertise
 
 
 @login_required
@@ -3267,21 +3267,3 @@ def eds_to_sign(request):
         )
 
     return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count})
-
-
-def get_expertise(pk):
-    expertise_data = []
-    if SettingManager.l2('expertise'):
-        iss_pk = Issledovaniya.objects.filter(napravleniye_id=pk).values_list('pk').first()
-        expertise_from_sql = expertise_tree_direction(iss_pk) if iss_pk else []
-        for i in expertise_from_sql:
-            if i.level == 2 and i.is_expertise:
-                not_remarks = False
-                if i.date_confirm:
-                    result_protocol = get_json_protocol_data(i.napravleniye_id)
-                    content = result_protocol["content"]
-                    if content and content.get("Наличие замечаний"):
-                        if content["Наличие замечаний"].lower() == "нет":
-                            not_remarks = True
-                expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm, "not_remarks": not_remarks})
-    return expertise_data
