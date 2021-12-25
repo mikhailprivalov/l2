@@ -2120,7 +2120,7 @@ def last_field_result(request):
         iss_parent = Napravleniya.objects.get(pk=num_dir).parent
         research = iss_parent.research.title
         direction_num = iss_parent.napravleniye_id
-        patient_data = f"Пациент-{data['fio']}. Д/р-{data['born']}. Полис-{data['enp']}. Снилс-{data['snils']}." \
+        patient_data = f"Пациент-{data['fio']}. Д/р-{data['born']}. Полис-{data['enp']}. СНИЛС-{data['snils']}." \
                        f"\nДокумент-{research} №-{direction_num}"
         result = {"value": patient_data}
     elif request_data["fieldPk"].find('%main_address') != -1:
