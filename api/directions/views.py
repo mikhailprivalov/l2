@@ -198,7 +198,7 @@ def directions_history(request):
     researches_titles = ''
     final_result = []
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
-    maybe_onco, is_application, is_experise, expertise_status = False, False, False, False
+    maybe_onco, is_application, is_expertise, expertise_status = False, False, False, False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     status_set = {-2}
     lab = set()
@@ -235,16 +235,16 @@ def directions_history(request):
                         'is_application': is_application,
                         'lab': lab_title,
                         'parent': parent_obj,
-                        'is_experise': is_experise,
+                        'is_expertise': is_expertise,
                         'expertise_status': expertise_status
                     }
                 )
             dir = i[0]
             expertise_data = get_expertise(dir)
-            is_experise = False
+            is_expertise = False
             expertise_status = False
             if expertise_data.get('status') != 'empty':
-                is_experise = True
+                is_expertise = True
                 expertise_status = 2 if expertise_data.get('status') == 'ok' else 0
 
             researches_titles = ''
@@ -316,7 +316,7 @@ def directions_history(request):
                 'is_application': is_application,
                 'lab': lab_title,
                 'parent': parent_obj,
-                'is_experise': is_experise,
+                'is_expertise': is_expertise,
                 'expertise_status': expertise_status
             }
         )

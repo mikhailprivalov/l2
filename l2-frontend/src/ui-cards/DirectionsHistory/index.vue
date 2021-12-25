@@ -104,7 +104,7 @@
                 >{{ row.status }}
                 <span v-if="row.maybe_onco">*О</span>
                 <span v-if="row.is_application">**З</span>
-                <span :class="['status-' + row.expertise_status]" v-if="row.is_experise">-Э</span>
+                <span :class="['status-' + row.expertise_status]" v-if="row.is_expertise">-Э</span>
               </strong>
             </td>
             <td class="button-td">
