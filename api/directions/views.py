@@ -2274,6 +2274,7 @@ def last_field_result(request):
 def get_current_direction(current_iss):
     return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
+
 def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
     result, value, temp_value = None, None, None
     for current_field_pk in field_pks:
@@ -3269,8 +3270,8 @@ def eds_to_sign(request):
 
 
 def get_expertise(pk):
-    iss_obj = Issledovaniya.objects.filter(napravleniye_id=pk)
-    expertise_from_sql = expertise_tree_direction(iss_obj[0].pk)
+    iss_pk = Issledovaniya.objects.filter(napravleniye_id=pk).values_list('pk').first()
+    expertise_from_sql = expertise_tree_direction(iss_pk) if iss_pk else []
     expertise_data = []
     for i in expertise_from_sql:
         if i.level == 2 and i.is_expertise:
@@ -3278,8 +3279,8 @@ def get_expertise(pk):
             if i.date_confirm:
                 result_protocol = get_json_protocol_data(i.napravleniye_id)
                 content = result_protocol["content"]
-                if content and content.get("Наличие замечаний", None):
+                if content and content.get("Наличие замечаний"):
                     if content["Наличие замечаний"].lower() == "нет":
                         not_remarks = True
-            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm if i.date_confirm else '', "not_remarks": not_remarks})
+            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm, "not_remarks": not_remarks})
     return expertise_data
