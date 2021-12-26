@@ -1052,6 +1052,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_gistology=True)
                         | Q(research__is_form=True)
                         | Q(research__is_monitoring=True)
+                        | Q(research__is_expertise=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
@@ -1076,6 +1077,7 @@ def directions_paraclinic_form(request):
         if df.exists():
             response["ok"] = True
             response["has_doc_referral"] = False
+            response["has_expertise"] = False
             response["has_paraclinic"] = False
             response["has_microbiology"] = False
             response["has_monitoring"] = False
@@ -1125,6 +1127,8 @@ def directions_paraclinic_form(request):
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
+                if i.research.is_expertise:
+                    response["has_expertise"] = True
                 if i.research.is_paraclinic or i.research.is_citology or i.research.is_gistology:
                     response["has_paraclinic"] = True
                 if i.research.is_microbiology and not response["has_microbiology"]:
@@ -1394,8 +1398,6 @@ def directions_paraclinic_form(request):
     if not f:
         response["message"] = "Направление не найдено"
 
-    expertise = get_expertise(pk)
-    response["expertise"] = expertise
     return JsonResponse(response)
 
 
@@ -1502,6 +1504,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_gistology=True)
             | Q(research__is_form=True)
             | Q(research__is_monitoring=True)
+            | Q(research__is_expertise=True)
         ).exists()
         or request.user.is_staff
     ):
@@ -3262,3 +3265,42 @@ def eds_to_sign(request):
         )
 
     return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count})
+
+
+@login_required
+def expertise_status(request):
+    data = json.loads(request.body)
+    pk = data.get('pk', -1)
+
+    return JsonResponse(get_expertise(pk, with_check_available=True))
+
+
+@login_required
+def expertise_create(request):
+    data = json.loads(request.body)
+    pk = data.get('pk', -1)
+
+    n = Napravleniya.objects.get(pk=pk)
+    iss: Issledovaniya = n.issledovaniya_set.all().first()
+    created_pk = None
+    if iss and iss.research and iss.research.expertise_params:
+        result = Napravleniya.gen_napravleniya_by_issledovaniya(
+            n.client_id,
+            "",
+            None,
+            "",
+            None,
+            request.user.doctorprofile,
+            {-1: [iss.research.expertise_params_id]},
+            {},
+            False,
+            {},
+            vich_code="",
+            count=1,
+            discount=0,
+            parent_iss=iss.pk,
+        )
+
+        created_pk = result["list_id"][0]
+
+    return JsonResponse({"pk": created_pk})

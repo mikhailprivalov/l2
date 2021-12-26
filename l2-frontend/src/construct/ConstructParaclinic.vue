@@ -161,6 +161,9 @@ export default {
         if (this.modules.l2_monitorings) {
           d.push({ value: -12, label: 'Мониторинги' });
         }
+        if (this.modules.l2_expertise) {
+          d.push({ value: -13, label: 'Экспертиза' });
+        }
 
         if (this.modules.l2_hosp && this.can_edit_stationar) {
           d.push({ value: -5, label: 'Стационар' });

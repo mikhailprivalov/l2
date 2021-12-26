@@ -44,6 +44,8 @@ urlpatterns = [
     path('tubes-get-history', views.tubes_get_history),
     path('gen-number', views.gen_number),
     path('free-number', views.free_number),
+    path('expertise-status', views.expertise_status),
+    path('expertise-create', views.expertise_create),
     path('eds/required-signatures', views.eds_required_signatures),
     path('eds/documents', views.eds_documents),
     path('eds/add-sign', views.eds_add_sign),

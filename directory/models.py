@@ -257,6 +257,7 @@ class Researches(models.Model):
             13: dict(is_direction_params=True),
             14: dict(is_application=True),
             15: dict(is_monitoring=True),
+            16: dict(is_expertise=True),
         }
         return ts.get(t + 1, {})
 
@@ -280,6 +281,8 @@ class Researches(models.Model):
             return -11
         if self.is_monitoring:
             return -12
+        if self.is_expertise:
+            return -13
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
@@ -298,6 +301,7 @@ class Researches(models.Model):
             or self.is_form
             or self.is_direction_params
             or self.is_monitoring
+            or self.is_expertise
         )
 
     def get_flag_types_n3(self):
@@ -354,7 +358,7 @@ class Researches(models.Model):
         return self.podrazdeleniye.title if self.podrazdeleniye else ""
 
     def get_title(self):
-        return self.short_title if self.short_title != '' else self.title
+        return self.short_title or self.title
 
     def get_full_short_title(self):
         return self.title if self.get_title() == self.title else "{} ({})".format(self.title, self.get_title())

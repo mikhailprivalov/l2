@@ -116,6 +116,7 @@ class SettingManager:
                     "extra_notifications",
                     "monitorings",
                     "schedule",
+                    "expertise",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
