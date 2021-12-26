@@ -3299,6 +3299,7 @@ def expertise_create(request):
             count=1,
             discount=0,
             parent_iss=iss.pk,
+            rmis_slot=None,
         )
 
         created_pk = result["list_id"][0]

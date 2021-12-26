@@ -45,6 +45,7 @@ new Vue({
     LaboratorySelector: () => import('@/ui-cards/LaboratorySelector.vue'),
     ExecutionList: () => import('@/ui-cards/ExecutionList.vue'),
     LaboratoryJournal: () => import('@/ui-cards/LaboratoryJournal.vue'),
+    ExpertiseStatus: () => import('@/ui-cards/ExpertiseStatus.vue'),
     LaboratoryPrintResults: () => import('@/ui-cards/LaboratoryPrintResults.vue'),
     PlanPharmacotherapy: () => import('@/pages/PlanPharmacotherapy/index.vue'),
     LaboratoryResults: () => import('@/pages/LaboratoryResults/index.vue'),

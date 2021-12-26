@@ -1588,6 +1588,7 @@ export default {
           this.$store.dispatch(actions.DEC_LOADING);
           this.inserted = true;
           this.load_location();
+          this.$root.$emit('open-pk', this.data.direction.pk);
         });
     },
     confirm(iss) {
@@ -1619,6 +1620,7 @@ export default {
           this.$store.dispatch(actions.DEC_LOADING);
           this.inserted = true;
           this.load_location();
+          this.$root.$emit('open-pk', this.data.direction.pk);
         });
     },
     async reset_confirm(iss) {
@@ -1657,6 +1659,7 @@ export default {
       } else {
         this.$root.$emit('msg', 'error', data.message);
       }
+      this.$root.$emit('open-pk', this.data.direction.pk);
       await this.$store.dispatch(actions.DEC_LOADING);
       this.inserted = true;
       this.load_location();

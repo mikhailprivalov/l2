@@ -167,6 +167,7 @@ def make_service(request):
         count=1,
         discount=0,
         parent_iss=parent_iss.pk,
+        rmis_slot=None,
     )
     pk = result["list_id"][0]
     return JsonResponse({"pk": pk})

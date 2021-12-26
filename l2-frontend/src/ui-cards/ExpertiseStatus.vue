@@ -56,7 +56,7 @@
           show-footer="true"
         >
           <span slot="header">Заполнение экспертизы</span>
-          <div slot="body" class="embedded-body" v-if="canCreateExpertise">
+          <div slot="body" class="embedded-body" v-if="canCreateExpertise && !withoutPreview">
             <div class="le">
               <iframe :src="toEnterUrl" name="toEnterEmbedded"></iframe>
             </div>
@@ -87,6 +87,13 @@ import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   components: { Modal },
+  props: {
+    withoutPreview: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+  },
   name: 'ExpertiseStatus',
   data() {
     return {
@@ -104,12 +111,8 @@ export default {
     this.$root.$on('open-pk', pk => {
       this.status = 'empty';
       this.pk = pk;
-    });
-  },
-  watch: {
-    pk() {
       this.loadStatus();
-    },
+    });
   },
   methods: {
     async open(pk) {

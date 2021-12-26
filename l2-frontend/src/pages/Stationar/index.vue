@@ -826,6 +826,7 @@ export default {
       if (mode === 'stationar') {
         this.close_form();
         this.opened_form_pk = d.pk;
+        this.$root.$emit('open-pk', d.pk);
         await this.$store.dispatch(actions.INC_LOADING);
         const { researches, patient } = await directionsPoint.getParaclinicForm({ pk: d.pk, force: true });
         this.researches_forms = researches;
@@ -842,6 +843,7 @@ export default {
       this.patient_form = null;
       this.stationar_research = -1;
       this.tableFieldsErrors = {};
+      this.$root.$emit('open-pk', -1);
     },
     async load_pk(pk, every = false) {
       this.pk = String(pk);
@@ -1097,6 +1099,7 @@ export default {
         .finally(() => {
           this.pk = this.direction;
           this.$store.dispatch(actions.DEC_LOADING);
+          this.$root.$emit('open-pk', this.opened_form_pk);
         });
     },
     async reset_confirm(iss) {
@@ -1124,6 +1127,8 @@ export default {
       } else {
         this.$root.$emit('msg', 'error', data.message);
       }
+
+      this.$root.$emit('open-pk', this.opened_form_pk);
 
       await this.$store.dispatch(actions.DEC_LOADING);
     },
