@@ -96,7 +96,8 @@
               class="text-center"
               :title="
                 statuses[row.status === 1 && row.has_descriptive ? -2 : row.status] + (row.maybe_onco ? '. Онкоподозрение' : '') +
-                (row.expertise_status > 0 ? ' (экспертиза БЕЗ заменчаний)' : ' (экспертза С замечаниями)')"
+                (row.expertise_status > 0 ? ' (экспертиза БЕЗ заменчаний)' : ' (экспертза С замечаниями)')
+              "
               v-tippy="{ placement: 'bottom', arrow: true }"
               :class="['status-' + row.status]"
             >
