@@ -702,24 +702,25 @@ def statistic_xls(request):
 
             card_has_death_date = sql_func.card_has_death_date(research_id, start_date, end_date)
             card_tuple = tuple(set([i.id for i in card_has_death_date]))
-            temp_data = sql_func.statistics_death_research_by_card(research_id, card_tuple)
-            prev_card = None
-            prev_direction = None
-            final_data = []
-            count = 0
-            for k in temp_data:
-                if k.client_id == prev_card and prev_direction != k.napravleniye_id and count != 0:
-                    continue
-                else:
-                    final_data.append(k)
-                prev_card = k.client_id
-                prev_direction = k.napravleniye_id
-                count += 1
+            if card_tuple:
+                temp_data = sql_func.statistics_death_research_by_card(research_id, card_tuple)
+                prev_card = None
+                prev_direction = None
+                final_data = []
+                count = 0
+                for k in temp_data:
+                    if k.client_id == prev_card and prev_direction != k.napravleniye_id and count != 0:
+                        continue
+                    else:
+                        final_data.append(k)
+                    prev_card = k.client_id
+                    prev_direction = k.napravleniye_id
+                    count += 1
 
-            data_death_card = death_form_result_parse(final_data, reserved=False)
-            ws3 = wb.create_sheet("По людям")
-            ws3 = structure_sheet.statistic_research_death_base_card(ws3, d1, d2, research_title[0])
-            ws3 = structure_sheet.statistic_research_death_data_card(ws3, data_death_card)
+                data_death_card = death_form_result_parse(final_data, reserved=False)
+                ws3 = wb.create_sheet("По людям")
+                ws3 = structure_sheet.statistic_research_death_base_card(ws3, d1, d2, research_title[0])
+                ws3 = structure_sheet.statistic_research_death_data_card(ws3, data_death_card)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
