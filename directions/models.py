@@ -883,7 +883,6 @@ class Napravleniya(models.Model):
         rmis_slot=None,
         direction_purpose="NONE",
         external_organization="NONE",
-        target_direction="NONE",
     ) -> 'Napravleniya':
         """
         Генерация направления
