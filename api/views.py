@@ -1508,6 +1508,7 @@ def job_cancel(request):
     return JsonResponse({"ok": True})
 
 
+@csrf_exempt
 def reader_status(request):
     data = json.loads(request.body)
     reader_id = data.get('readerId', 'null')
@@ -1515,6 +1516,7 @@ def reader_status(request):
     return JsonResponse({"status": data.get('status'), "polis": data.get('polis'), "fio": data.get('fio'), 'details': data.get('details', {})})
 
 
+@csrf_exempt
 def reader_status_update(request):
     data = json.loads(request.body)
     reader_id = data.get('readerId')

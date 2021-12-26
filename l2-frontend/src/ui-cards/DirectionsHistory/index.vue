@@ -95,15 +95,22 @@
             <td
               class="text-center"
               :title="
-                statuses[row.status === 1 && row.has_descriptive ? -2 : row.status] + (row.maybe_onco ? '. Онкоподозрение' : '')
+                statuses[row.status === 1 && row.has_descriptive ? -2 : row.status] +
+                  (row.maybe_onco ? '. Онкоподозрение' : '') +
+                  (row.is_expertise
+                    ? row.expertise_status > 0
+                      ? ' (экспертиза БЕЗ заменчаний)'
+                      : ' (экспертза С замечаниями)'
+                    : '')
               "
               v-tippy="{ placement: 'bottom', arrow: true }"
               :class="['status-' + row.status]"
             >
-              <strong
-                >{{ row.status }}
+              <strong>
+                {{ row.status }}
                 <span v-if="row.maybe_onco">*О</span>
                 <span v-if="row.is_application">**З</span>
+                <span :class="['status-' + row.expertise_status]" v-if="row.is_expertise">-Э</span>
               </strong>
             </td>
             <td class="button-td">

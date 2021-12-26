@@ -3,7 +3,7 @@
     <div class="nav-cont" v-show="!loading">
       <div class="navbar-header">
         <router-link :to="authenticated ? '/ui/menu' : '/ui/login'" class="navbar-left logo" :class="l2LogoClass">
-          <template v-if="asVI">{{system}}</template>
+          <template v-if="asVI">{{ system }}</template>
           <template v-else>L<sup>2</sup></template>
         </router-link>
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
@@ -27,20 +27,21 @@
             <NavbarDropdownContent />
           </li>
         </ul>
-        <extended-patient-search v-if="meta.showExtendedPatientSearch" />
-        <card-reader v-if="meta.showCardReader" />
+        <ExtendedPatientSearch v-if="meta.showExtendedPatientSearch" />
+        <CardReader v-if="meta.showCardReader" />
         <ul class="nav navbar-nav" v-if="meta.showCreateDirection">
-          <create-descriptive-direction />
+          <CreateDescriptiveDirection />
         </ul>
         <ul class="nav navbar-nav" v-if="meta.showRmisLinkSchedule">
           <li>
-            <rmis-link isSchedule />
+            <RmisLink isSchedule />
           </li>
         </ul>
+        <ExpertiseStatus v-if="meta.showExpertiseStatus" />
         <ul class="nav navbar-right navbar-nav">
           <li v-if="hasNewVersion">
             <button type="button" class="btn btn-blue btn-blue-nb btn-reload" @click="reload">
-              {{system}} обновилась! Перезагрузить страницу
+              {{ system }} обновилась! Перезагрузить страницу
             </button>
           </li>
           <li v-else>
@@ -52,7 +53,7 @@
     <div class="nav-loader center" v-show="loading">
       <div class="navbar-header">
         <div class="navbar-left logo" :class="l2LogoClass">
-          <template v-if="asVI">{{system}}</template>
+          <template v-if="asVI">{{ system }}</template>
           <template v-else>L<sup>2</sup></template>
         </div>
         <span class="navbar-brand" v-if="authenticated">
@@ -104,6 +105,7 @@ import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
     CardReader: () => import('@/ui-cards/CardReader.vue'),
     ExtendedPatientSearch: () => import('@/ui-cards/ExtendedPatientSearch/index.vue'),
     CreateDescriptiveDirection: () => import('@/ui-cards/CreateDescriptiveDirection.vue'),
+    ExpertiseStatus: () => import('@/ui-cards/ExpertiseStatus.vue'),
     RmisLink: () => import('@/ui-cards/RmisLink.vue'),
   },
 })

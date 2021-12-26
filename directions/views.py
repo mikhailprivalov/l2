@@ -164,9 +164,10 @@ def gen_pdf_execlist(request):
 @logged_in_or_token
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
-    if SettingManager.get("pdf_auto_print", "true", "b"):
+    direction_id = json.loads(request.GET.get("napr_id", '[]'))
+
+    if SettingManager.get("pdf_auto_print", "true", "b") and not request.GET.get('normis') and not request.GET.get('embedded'):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
-    direction_id = json.loads(request.GET["napr_id"])
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="directions.pdf"'

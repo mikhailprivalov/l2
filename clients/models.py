@@ -944,10 +944,8 @@ class Card(models.Model):
     agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание представителя")
     payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None, on_delete=models.SET_NULL)
-
     who_is_agent = models.CharField(max_length=7, choices=AGENT_CHOICES, blank=True, default='', help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок", on_delete=models.SET_NULL)
-
     ginekolog_district = models.ForeignKey(District, related_name='ginekolog_district', default=None, null=True, blank=True, help_text="Участок", on_delete=models.SET_NULL)
 
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')

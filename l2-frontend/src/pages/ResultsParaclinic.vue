@@ -160,8 +160,8 @@
         <div>направление не загружено</div>
       </div>
     </div>
-    <div class="results-content" :class="{ embedded }" v-if="data.ok">
-      <div class="results-top">
+    <div class="results-content" :class="{ embedded, embeddedFull }" v-if="data.ok">
+      <div class="results-top" v-if="!embeddedFull">
         <div class="row">
           <div :class="data.has_monitoring ? 'col-xs-11' : 'col-xs-6'">
             <div>
@@ -349,7 +349,7 @@
               <dropdown
                 :visible="research_open_history === row.pk"
                 :position="['left', 'bottom', 'left', 'top']"
-                v-if="!data.has_microbiology && !data.has_monitoring"
+                v-if="!data.has_microbiology && !data.has_monitoring && !embedded"
                 @clickout="hide_results"
                 :key="`dd-${row.pk}`"
               >
@@ -369,7 +369,7 @@
               </dropdown>
             </div>
             <div class="research-right">
-              <template v-if="data.direction.all_confirmed && !data.has_monitoring">
+              <template v-if="data.direction.all_confirmed && !data.has_monitoring && !data.has_expertise">
                 <a
                   :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
                   class="btn btn-blue-nb"
@@ -407,11 +407,11 @@
                     @click="clear_vals(row)"
                     title="Очистить протокол"
                     v-tippy
-                    v-if="!data.has_monitoring"
+                    v-if="!data.has_monitoring && !data.has_expertise"
                   >
                     &nbsp;<i class="fa fa-times"></i>&nbsp;
                   </button>
-                  <div class="right-f" v-if="fte && !data.has_monitoring">
+                  <div class="right-f" v-if="fte && !data.has_monitoring && !data.has_expertise">
                     <select-picker-m
                       v-model="templates[row.pk]"
                       :search="true"
@@ -421,7 +421,7 @@
                   <button
                     class="btn btn-blue-nb"
                     @click="load_template(row, templates[row.pk])"
-                    v-if="fte && !data.has_monitoring"
+                    v-if="fte && !data.has_monitoring && !data.has_expertise"
                   >
                     Загрузить шаблон
                   </button>
@@ -443,7 +443,8 @@
               !data.has_microbiology &&
                 row.research.show_more_services &&
                 (!row.confirmed || row.more.length > 0) &&
-                !data.has_monitoring
+                !data.has_monitoring &&
+                !data.has_expertise
             "
           >
             <div class="group-title">Дополнительные услуги</div>
@@ -655,7 +656,7 @@
               </div>
             </div>
           </div>
-          <div class="group" v-if="!data.has_microbiology && !row.is_form && !data.has_monitoring">
+          <div class="group" v-if="!data.has_microbiology && !row.is_form && !data.has_monitoring && !data.has_expertise">
             <div class="fields">
               <div class="field">
                 <label class="field-title" for="onco">
@@ -667,7 +668,7 @@
               </div>
             </div>
           </div>
-          <div class="group" v-if="row.parentDirection">
+          <div class="group" v-if="row.parentDirection && !embedded">
             <div class="group-title">Главное направление</div>
             <div class="fields">
               <div class="field">
@@ -1108,6 +1109,7 @@ export default {
         2: 'Результат подтверждён',
       },
       embedded: false,
+      embeddedFull: false,
       tableFieldsErrors: {},
       workFromUsers: [],
       workFromHistory: [],
@@ -1207,6 +1209,7 @@ export default {
 
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
+    this.embeddedFull = urlParams.get('embeddedFull') === '1';
     window.$(window).on('beforeunload', this.unload);
 
     try {
@@ -1439,6 +1442,7 @@ export default {
             this.hasEDSigns = false;
             this.hasPreselectOk = false;
             setTimeout(async () => {
+              this.$root.$emit('open-pk', data.direction.pk);
               for (let i = 0; i < 10; i++) {
                 await new Promise(r => setTimeout(r, 100));
                 if (this.hasPreselectOk) {
@@ -1681,6 +1685,7 @@ export default {
       this.tableFieldsErrors = {};
       cleanCaches();
       this.$root.$emit('preselect-card', null);
+      this.$root.$emit('open-pk', -1);
     },
     print_direction(pk) {
       this.$root.$emit('print:directions', [pk]);
@@ -2287,6 +2292,12 @@ export default {
   height: calc(100% - 68px);
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.embeddedFull {
+  .results-editor {
+    height: 100%;
+  }
 }
 
 .sidebar-bottom-top {

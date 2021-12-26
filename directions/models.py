@@ -1558,6 +1558,21 @@ class Napravleniya(models.Model):
         verbose_name_plural = 'Направления'
 
 
+class AdditionNapravleniya(models.Model):
+    """
+    Направления для добавления исполнителем услуги
+    """
+    target_direction = models.ForeignKey(Napravleniya, related_name='main_of_doctor', null=True, help_text='Направление врача', db_index=True, on_delete=models.CASCADE)
+    addition_direction = models.ForeignKey(Napravleniya, related_name='additional_direction', null=True, help_text='Направление от исполнителя', db_index=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.target_direction.pk
+
+    class Meta:
+        verbose_name = 'Направление-добавочное от исполнителя услуги'
+        verbose_name_plural = 'Направления-добавочные от исполнителя услуги'
+
+
 def get_direction_file_path(instance: 'DirectionDocument', filename):
     return os.path.join('directions', str(instance.direction.get_hospital_tfoms_id()), str(instance.direction.pk), filename)
 

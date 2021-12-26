@@ -74,6 +74,7 @@ from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
+from utils.expertise import get_expertise
 
 
 @login_required
@@ -197,8 +198,7 @@ def directions_history(request):
     researches_titles = ''
     final_result = []
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
-    maybe_onco = False
-    is_application = False
+    maybe_onco, is_application, is_expertise, expertise_status = False, False, False, False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     status_set = {-2}
     lab = set()
@@ -235,9 +235,18 @@ def directions_history(request):
                         'is_application': is_application,
                         'lab': lab_title,
                         'parent': parent_obj,
+                        'is_expertise': is_expertise,
+                        'expertise_status': expertise_status
                     }
                 )
             dir = i[0]
+            expertise_data = get_expertise(dir)
+            is_expertise = False
+            expertise_status = False
+            if expertise_data.get('status') != 'empty':
+                is_expertise = True
+                expertise_status = 2 if expertise_data.get('status') == 'ok' else 0
+
             researches_titles = ''
             date = i[6]
             status_set = set()
@@ -307,6 +316,8 @@ def directions_history(request):
                 'is_application': is_application,
                 'lab': lab_title,
                 'parent': parent_obj,
+                'is_expertise': is_expertise,
+                'expertise_status': expertise_status
             }
         )
 
@@ -1041,6 +1052,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_gistology=True)
                         | Q(research__is_form=True)
                         | Q(research__is_monitoring=True)
+                        | Q(research__is_expertise=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
@@ -1065,6 +1077,7 @@ def directions_paraclinic_form(request):
         if df.exists():
             response["ok"] = True
             response["has_doc_referral"] = False
+            response["has_expertise"] = False
             response["has_paraclinic"] = False
             response["has_microbiology"] = False
             response["has_monitoring"] = False
@@ -1114,6 +1127,8 @@ def directions_paraclinic_form(request):
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
+                if i.research.is_expertise:
+                    response["has_expertise"] = True
                 if i.research.is_paraclinic or i.research.is_citology or i.research.is_gistology:
                     response["has_paraclinic"] = True
                 if i.research.is_microbiology and not response["has_microbiology"]:
@@ -1382,6 +1397,7 @@ def directions_paraclinic_form(request):
 
     if not f:
         response["message"] = "Направление не найдено"
+
     return JsonResponse(response)
 
 
@@ -1488,6 +1504,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_gistology=True)
             | Q(research__is_form=True)
             | Q(research__is_monitoring=True)
+            | Q(research__is_expertise=True)
         ).exists()
         or request.user.is_staff
     ):
@@ -2098,10 +2115,17 @@ def last_field_result(request):
             work_place = ""
         result = {"value": work_place}
     elif request_data["fieldPk"].find('%hospital') != -1:
-        current_iss = request_data["iss_pk"]
-        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        num_dir = get_current_direction(request_data["iss_pk"])
         hosp_title = Napravleniya.objects.get(pk=num_dir).hospital_title
         result = {"value": hosp_title}
+    elif request_data["fieldPk"].find('%parent_dir_data') != -1:
+        num_dir = get_current_direction(request_data["iss_pk"])
+        iss_parent = Napravleniya.objects.get(pk=num_dir).parent
+        research = iss_parent.research.title
+        direction_num = iss_parent.napravleniye_id
+        patient_data = f"Пациент-{data['fio']}. Д/р-{data['born']}. Полис-{data['enp']}. СНИЛС-{data['snils']}." \
+                       f"\nДокумент-{research} №-{direction_num}"
+        result = {"value": patient_data}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
     elif request_data["fieldPk"].find('%mother_full_main_address') != -1:
@@ -2243,6 +2267,10 @@ def last_field_result(request):
         result = field_get_aggregate_text_protocol_data(aggregate_data)
 
     return JsonResponse({"result": result})
+
+
+def get_current_direction(current_iss):
+    return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
 
 def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
@@ -3237,3 +3265,42 @@ def eds_to_sign(request):
         )
 
     return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count})
+
+
+@login_required
+def expertise_status(request):
+    data = json.loads(request.body)
+    pk = data.get('pk', -1)
+
+    return JsonResponse(get_expertise(pk, with_check_available=True))
+
+
+@login_required
+def expertise_create(request):
+    data = json.loads(request.body)
+    pk = data.get('pk', -1)
+
+    n = Napravleniya.objects.get(pk=pk)
+    iss: Issledovaniya = n.issledovaniya_set.all().first()
+    created_pk = None
+    if iss and iss.research and iss.research.expertise_params:
+        result = Napravleniya.gen_napravleniya_by_issledovaniya(
+            n.client_id,
+            "",
+            None,
+            "",
+            None,
+            request.user.doctorprofile,
+            {-1: [iss.research.expertise_params_id]},
+            {},
+            False,
+            {},
+            vich_code="",
+            count=1,
+            discount=0,
+            parent_iss=iss.pk,
+        )
+
+        created_pk = result["list_id"][0]
+
+    return JsonResponse({"pk": created_pk})

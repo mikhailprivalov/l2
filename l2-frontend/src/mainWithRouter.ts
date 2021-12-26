@@ -44,8 +44,13 @@ const router = new Router({
       component: () => import('@/pages/Directions.vue'),
       meta: {
         title: 'Направления и картотека',
-        groups: ['Лечащий врач', 'Врач-лаборант', 'Оператор лечащего врача', 'Оператор Контакт-центра',
-          'Свидетельство о смерти-доступ'],
+        groups: [
+          'Лечащий врач',
+          'Врач-лаборант',
+          'Оператор лечащего врача',
+          'Оператор Контакт-центра',
+          'Свидетельство о смерти-доступ',
+        ],
         showCardReader: true,
         showExtendedPatientSearch: true,
       },
@@ -137,6 +142,7 @@ const router = new Router({
         module: 'paraclinic_module',
         showCreateDirection: true,
         showRmisLinkSchedule: true,
+        showExpertiseStatus: true,
       },
     },
     {
@@ -173,8 +179,14 @@ const router = new Router({
       component: () => import('@/pages/EDS.vue'),
       meta: {
         title: 'Подпись документов',
-        groups: ['Подпись документов', 'Врач параклиники', 'Врач консультаций', 'Врач-лаборант', 'ЭЦП Медицинской организации',
-          'Свидетельство о смерти-доступ'],
+        groups: [
+          'Подпись документов',
+          'Врач параклиники',
+          'Врач консультаций',
+          'Врач-лаборант',
+          'ЭЦП Медицинской организации',
+          'Свидетельство о смерти-доступ',
+        ],
         module: 'l2_eds',
       },
     },

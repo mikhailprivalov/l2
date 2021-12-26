@@ -76,7 +76,7 @@ class SettingManager:
         return SettingManager.get("instance_id", default='', default_type='s')
 
     @staticmethod
-    def l2_modules():
+    def l2_modules() -> dict:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
         if cv:
@@ -116,6 +116,7 @@ class SettingManager:
                     "extra_notifications",
                     "monitorings",
                     "schedule",
+                    "expertise",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

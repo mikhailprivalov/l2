@@ -1,6 +1,9 @@
 <template>
   <div class="root">
-    <div class="top-editor" :class="{ simpleEditor: simple, formEditor: ex_dep === 12, oneLine: ex_dep === 13 || ex_dep === 14 }">
+    <div
+      class="top-editor"
+      :class="{ simpleEditor: simple, formEditor: ex_dep === 12, oneLine: ex_dep === 13 || ex_dep === 14 || ex_dep === 15 }"
+    >
       <div class="left">
         <div class="input-group">
           <span class="input-group-addon" v-if="ex_dep === 12"> Название шаблона параметров направления ({{ loaded_pk }}) </span>
@@ -8,6 +11,7 @@
             Название заявления
           </span>
           <span class="input-group-addon" v-else-if="ex_dep === 14">Название мониторинга</span>
+          <span class="input-group-addon" v-else-if="ex_dep === 15">Название экспертизы</span>
           <span class="input-group-addon" v-else>Полное наименование</span>
           <input type="text" class="form-control" v-model="title" />
           <label v-if="ex_dep === 12" class="input-group-addon" style="height: 34px;text-align: left;">
@@ -25,7 +29,7 @@
             </button>
           </span>
         </div>
-        <div class="input-group" v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 14">
+        <div class="input-group" v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 14 && ex_dep !== 15">
           <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
           <input type="text" class="form-control" v-model="short_title" />
           <span class="input-group-addon">Профиль</span>
@@ -36,7 +40,7 @@
           </select>
         </div>
       </div>
-      <div class="right" v-if="!simple && ex_dep !== 12 && ex_dep !== 13">
+      <div class="right" v-if="!simple && ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 15">
         <div class="row" style="margin-right: 0;" v-if="department < -1 && ex_dep !== 14">
           <div class="col-xs-6" style="padding-right: 0">
             <div class="input-group" style="margin-right: -1px">
@@ -53,7 +57,7 @@
                 style="height: 34px;text-align: left;"
                 title="Показывать ли форму дополнительных услуг в протоколе"
                 v-tippy
-                v-if="ex_dep !== 8 && ex_dep !== 13"
+                v-if="ex_dep !== 8 && ex_dep !== 13 && ex_dep !== 15"
               >
                 <input type="checkbox" v-model="show_more_services" /> Доп. услуги
               </label>
@@ -74,7 +78,11 @@
           </label>
         </div>
         <div class="input-group" v-else>
-          <label class="input-group-addon" style="height: 34px;text-align: left;" v-if="ex_dep !== 8 && ex_dep !== 13">
+          <label
+            class="input-group-addon"
+            style="height: 34px;text-align: left;"
+            v-if="ex_dep !== 8 && ex_dep !== 15 && ex_dep !== 13"
+          >
             <input type="checkbox" v-model="show_more_services" /> Дополн. услуги
           </label>
           <span class="input-group-addon">Код (ОМС)</span>
@@ -120,28 +128,43 @@
       </div>
     </div>
     <div class="content-editor">
-      <template v-if="ex_dep !== 12 && ex_dep !== 13">
+      <template v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 15">
         <div class="input-group" v-if="!simple && ex_dep !== 14">
           <span class="input-group-addon nbr">Информация на направлении</span>
           <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
         </div>
         <div class="row">
-          <div class="col-xs-6" style="padding-right: 0">
+          <div :class="expertise ? 'col-xs-5' : 'col-xs-6'" style="padding-right: 0">
             <div class="input-group" v-if="direction_params_all.length > 1">
-              <span class="input-group-addon nbr" style="width: 233px">Параметры для направления</span>
+              <span class="input-group-addon nbr" style="width: 233px">Параметры направления</span>
               <treeselect
                 class="treeselect-noborder treeselect-wide"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="direction_params_all"
-                placeholder="Параметр не выбран"
+                placeholder="Параметры не выбраны"
                 v-model="direction_current_params"
                 :append-to-body="true"
                 :clearable="false"
               />
             </div>
           </div>
-          <div class="col-xs-6" style="padding-left: 0">
+          <div class="col-xs-3" style="padding-right: 0;padding-left: 0" v-if="expertise && direction_expertise_all.length > 0">
+            <div class="input-group">
+              <span class="input-group-addon nbr" style="width: 150px">Экспертиза</span>
+              <treeselect
+                class="treeselect-noborder treeselect-wide"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="direction_expertise_all"
+                placeholder="Экспертиза не выбрана"
+                v-model="direction_current_expertise"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </div>
+          </div>
+          <div c:class="expertise ? 'col-xs-4' : 'col-xs-6'" style="padding-left: 0">
             <div class="input-group" v-if="ex_dep !== 14">
               <span class="input-group-addon nbr"> Ф.результатов </span>
               <select class="form-control nbr" v-model="result_current_form">
@@ -598,6 +621,8 @@ export default {
       hospital_research_department_pk: -1,
       direction_params_all: [],
       direction_current_params: -1,
+      direction_expertise_all: [],
+      direction_current_expertise: -1,
       assigned_to_params: [],
       type_period: null,
     };
@@ -677,6 +702,7 @@ export default {
           '-10': 12,
           '-11': 13,
           '-12': 14,
+          '-13': 15,
         }[this.department] || this.department
       );
     },
@@ -691,6 +717,9 @@ export default {
     },
     tfoms_attachment_field_enabled() {
       return this.$store.getters.modules.tfoms_attachment_field;
+    },
+    expertise() {
+      return this.$store.getters.modules.l2_expertise;
     },
   },
   methods: {
@@ -884,6 +913,8 @@ export default {
             this.groups = data.groups;
             this.direction_params_all = data.direction_params_all;
             this.direction_current_params = data.direction_current_params;
+            this.direction_expertise_all = data.direction_expertise_all;
+            this.direction_current_expertise = data.direction_current_expertise;
             this.assigned_to_params = data.assigned_to_params;
             this.show_more_services = data.show_more_services;
             this.is_paraclinic = data.is_paraclinic;
@@ -928,6 +959,7 @@ export default {
         'speciality',
         'hospital_research_department_pk',
         'direction_current_params',
+        'direction_current_expertise',
         'show_more_services',
         'type_period',
       ];
