@@ -1570,7 +1570,7 @@ class AdditionNapravleniya(models.Model):
         return self.target_direction.pk
 
     class Meta:
-        verbose_name = 'Направление-добавочно от исполнителя услуги'
+        verbose_name = 'Направление-добавочное от исполнителя услуги'
         verbose_name_plural = 'Направления-добавочные от исполнителя услуги'
 
 

@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from cda.integration import render_cda
 import collections
 
-from integration_framework.views import get_cda_data, get_json_protocol_data
+from integration_framework.views import get_cda_data
 from utils.response import status_response
 from hospitals.models import Hospitals
 import operator
@@ -68,13 +68,13 @@ from users.models import DoctorProfile
 from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
-from utils.tree_directions import expertise_tree_direction
 from utils.xh import check_float_is_valid, short_fio_dots
 from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
+from utils.expertise import get_expertise
 
 
 @login_required
@@ -198,7 +198,7 @@ def directions_history(request):
     researches_titles = ''
     final_result = []
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
-    maybe_onco, is_application, is_experise, expertise_status = False, False, False, False
+    maybe_onco, is_application, is_expertise, expertise_status = False, False, False, False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     status_set = {-2}
     lab = set()
@@ -235,22 +235,17 @@ def directions_history(request):
                         'is_application': is_application,
                         'lab': lab_title,
                         'parent': parent_obj,
-                        'is_experise': is_experise,
+                        'is_expertise': is_expertise,
                         'expertise_status': expertise_status
                     }
                 )
             dir = i[0]
-            expertise = get_expertise(dir)
-            is_experise = False
+            expertise_data = get_expertise(dir)
+            is_expertise = False
             expertise_status = False
-            for k in expertise:
-                if k.get("confirm", None):
-                    is_experise = True
-                    if k.get("not_remarks"):
-                        expertise_status = 2
-                        break
-                    if not k.get("not_remarks"):
-                        expertise_status = 0
+            if expertise_data.get('status') != 'empty':
+                is_expertise = True
+                expertise_status = 2 if expertise_data.get('status') == 'ok' else 0
 
             researches_titles = ''
             date = i[6]
@@ -321,7 +316,7 @@ def directions_history(request):
                 'is_application': is_application,
                 'lab': lab_title,
                 'parent': parent_obj,
-                'is_experise': is_experise,
+                'is_expertise': is_expertise,
                 'expertise_status': expertise_status
             }
         )
@@ -2125,7 +2120,7 @@ def last_field_result(request):
         iss_parent = Napravleniya.objects.get(pk=num_dir).parent
         research = iss_parent.research.title
         direction_num = iss_parent.napravleniye_id
-        patient_data = f"Пациент-{data['fio']}. Д/р-{data['born']}. Полис-{data['enp']}. Снилс-{data['snils']}." \
+        patient_data = f"Пациент-{data['fio']}. Д/р-{data['born']}. Полис-{data['enp']}. СНИЛС-{data['snils']}." \
                        f"\nДокумент-{research} №-{direction_num}"
         result = {"value": patient_data}
     elif request_data["fieldPk"].find('%main_address') != -1:
@@ -2273,6 +2268,7 @@ def last_field_result(request):
 
 def get_current_direction(current_iss):
     return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+
 
 def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
     result, value, temp_value = None, None, None
@@ -3266,20 +3262,3 @@ def eds_to_sign(request):
         )
 
     return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count})
-
-
-def get_expertise(pk):
-    iss_obj = Issledovaniya.objects.filter(napravleniye_id=pk)
-    expertise_from_sql = expertise_tree_direction(iss_obj[0].pk)
-    expertise_data = []
-    for i in expertise_from_sql:
-        if i.level == 2 and i.is_expertise:
-            not_remarks = False
-            if i.date_confirm:
-                result_protocol = get_json_protocol_data(i.napravleniye_id)
-                content = result_protocol["content"]
-                if content and content.get("Наличие замечаний", None):
-                    if content["Наличие замечаний"].lower() == "нет":
-                        not_remarks = True
-            expertise_data.append({"direction": i.napravleniye_id, "confirm": i.date_confirm if i.date_confirm else '', "not_remarks": not_remarks})
-    return expertise_data

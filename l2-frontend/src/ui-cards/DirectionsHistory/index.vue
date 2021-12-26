@@ -86,7 +86,7 @@
               </span>
               <span v-else-if="!!row.has_descriptive && role_can_use_descriptive">
                 <a :href="`/ui/results/descriptive#{%22pk%22:${row.pk}}`" target="_blank" class="a-under">
-                  {{ row.pk}} {{row.experise}}
+                  {{ row.pk }}
                 </a>
               </span>
               <span v-else>{{ row.pk }}</span>
@@ -105,7 +105,7 @@
                 {{ row.status }}
                 <span v-if="row.maybe_onco">*О</span>
                 <span v-if="row.is_application">**З</span>
-                <span :class="['status-' + row.expertise_status]" v-if="row.is_experise">-Э</span>
+                <span :class="['status-' + row.expertise_status]" v-if="row.is_expertise">-Э</span>
               </strong>
             </td>
             <td class="button-td">
