@@ -113,7 +113,7 @@ export default {
       return Boolean(this.executors[this.$store.getters.user_data.doc_pk]);
     },
     isL2VI() {
-      return Boolean(this.executors[this.$store.getters.modules.l2_l2vi]);
+      return !!this.$store.getters.modules.l2_l2vi;
     },
     emptySignatures() {
       return Object.keys(this.d.signatures).filter(s => !this.d.signatures[s]);
