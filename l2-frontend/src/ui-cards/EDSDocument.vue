@@ -183,7 +183,13 @@ export default {
     },
     async sendToVI() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await this.$api('/directions/send-to-l2vi', this.d, 'pk');
+      const { data } = await this.$api('/directions/send-to-l2vi', this.d, 'pk');
+      if (data.ok) {
+        this.$root.$emit('msg', 'ok', 'Успешная отправка!');
+      } else {
+        console.log(data);
+        this.$root.$emit('msg', 'error', 'Ошибка!');
+      }
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit('eds:reload-document', this.direction);
     },
