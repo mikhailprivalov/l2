@@ -476,7 +476,13 @@ class Napravleniya(models.Model):
                 "signsRequired": self.eds_required_signature_types,
             }
 
-        data = get_required_signatures(self.get_eds_title())
+        if SettingManager.l2('l2vi'):
+            data = {
+                "needCda": Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False).exclude(research__generator_name="").exists(),
+                "signsRequired": None,
+            }
+        else:
+            data = get_required_signatures(self.get_eds_title())
 
         result = {
             "docTypes": ['PDF', 'CDA'] if data.get('needCda') else ['PDF'],

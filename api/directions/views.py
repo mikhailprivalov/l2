@@ -3,6 +3,7 @@ import os
 
 from django.core.paginator import Paginator
 from cda.integration import render_cda
+from l2vi.integration import gen_cda_xml
 import collections
 
 from integration_framework.views import get_cda_data
@@ -3088,9 +3089,16 @@ def eds_documents(request):
                 filename = f'{pk}-{last_time_confirm}.pdf'
                 file = ContentFile(result_print(request_tuple(**req)), filename)
             elif d.file_type == DirectionDocument.CDA:
-                cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)
+                if SettingManager.l2('l2vi'):
+                    cda_data = gen_cda_xml(pk=pk)
+                    cda_xml = cda_data.get('result', {}).get('content')
+                else:
+                    cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)
                 filename = f"{pk}–{last_time_confirm}.cda.xml"
-                file = ContentFile(cda_xml.encode('utf-8'), filename)
+                if cda_xml:
+                    file = ContentFile(cda_xml.encode('utf-8'), filename)
+                else:
+                    file = None
             if file:
                 d.file.save(filename, file)
 
