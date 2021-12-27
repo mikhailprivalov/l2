@@ -1434,6 +1434,8 @@ def get_protocol_result(request):
             }
         })
 
+    return Response({})
+
 
 def get_json_protocol_data(pk):
     result_protocol = get_paraclinic_results_by_direction(pk)
