@@ -1505,6 +1505,7 @@ def get_json_protocol_data(pk):
     document["legalAuthenticator"] = legal_auth_data
     document["author"] = author_data
     document["content"] = data
+    document["content"]["Код ОКПО"] = hosp_obj.okpo
     document["oidMo"] = hosp_oid
     document["organization"] = organization_get(hosp_obj)
     document["orgName"] = hosp_obj.title
@@ -1559,6 +1560,7 @@ def get_json_labortory_data(pk):
     document["author"] = author_data
     document["content"] = {}
     document["content"]["Лаборатория"] = data
+    document["content"]["Код ОКПО"] = hosp_obj.okpo
     document["content"]["payment"] = {"code":"1", "title":"Средства обязательного медицинского страхования"}
     document["oidMo"] = hosp_oid
     document["orgName"] = hosp_obj.title
