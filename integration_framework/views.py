@@ -1237,7 +1237,10 @@ def get_cda_data(pk):
     n: Napravleniya = Napravleniya.objects.get(pk=pk)
     card = n.client
     ind = n.client.individual
-    data = get_json_protocol_data(pk)
+    if check_type_research(pk) == "is_refferal":
+        data = get_json_protocol_data(pk)
+    elif check_type_research(pk) == "is_lab":
+        data = get_json_labortory_data(pk)
     return {
         "title": n.get_eds_title(),
         "generatorName": n.get_eds_generator(),
