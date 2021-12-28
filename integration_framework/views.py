@@ -1545,7 +1545,7 @@ def get_json_labortory_data(pk):
         result_val = k.value
         confirmed_at = f"{confirmed_time}+0800"
         date_reiceve = normalize_dots_date(k.date_confirm).replace("-","")
-        date_reiceve = f"{date_reiceve}+0800"
+        date_reiceve = f"{date_reiceve}0800+0800"
         tests.append({"unit_val": unit_val, "flsi_param": flsi_param, "result_val": result_val})
         prev_research_title = next_research_title
         count += 1
