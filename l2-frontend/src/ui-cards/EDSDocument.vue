@@ -57,9 +57,16 @@
       </ul>
     </div>
 
-    <div>
+    <div class="download-block">
       <a class="btn btn-default" :href="docHref" :download="d.fileName" v-if="d.fileContent">
         <i class="fa fa-download"></i> Загрузить {{ d.fileName }}
+      </a>
+    </div>
+
+    <div class="download-block" v-if="isL2VI && d.type === 'CDA'">
+      <div v-if="d.vi_id" class="block-header">Отправлено в ВИМИС как {{ d.vi_id }}</div>
+      <a class="btn btn-default" href="#" @click="sendToVI" v-else>
+        Отправить в ВИМИС
       </a>
     </div>
   </div>
@@ -104,6 +111,9 @@ export default {
     },
     isDocAllowedSign() {
       return Boolean(this.executors[this.$store.getters.user_data.doc_pk]);
+    },
+    isL2VI() {
+      return !!this.$store.getters.modules.l2_l2vi;
     },
     emptySignatures() {
       return Object.keys(this.d.signatures).filter(s => !this.d.signatures[s]);
@@ -170,6 +180,18 @@ export default {
     },
     signFileName(sign) {
       return `${this.d.fileName}-${sign.type}.sgn`;
+    },
+    async sendToVI() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { data } = await this.$api('/directions/send-to-l2vi', this.d, 'pk');
+      if (data.ok) {
+        this.$root.$emit('msg', 'ok', 'Успешная отправка!');
+      } else {
+        console.log(data);
+        this.$root.$emit('msg', 'error', 'Ошибка!');
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.$root.$emit('eds:reload-document', this.direction);
     },
     async addSign(fast = false) {
       if (!fast) {
@@ -262,5 +284,9 @@ export default {
 
 .block-header {
   font-weight: bold;
+}
+
+.download-block {
+  margin-top: 5px;
 }
 </style>

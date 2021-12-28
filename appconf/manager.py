@@ -60,6 +60,10 @@ class SettingManager:
         return SettingManager.get("cda_base_url", default='empty', default_type='s')
 
     @staticmethod
+    def get_l2vi_base_url():
+        return SettingManager.get("l2vi_base_url", default='empty', default_type='s')
+
+    @staticmethod
     def get_medbook_auto_start():
         return SettingManager.get("medbook_auto_start", default='100000', default_type='i')
 
@@ -117,6 +121,7 @@ class SettingManager:
                     "monitorings",
                     "schedule",
                     "expertise",
+                    "l2vi",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

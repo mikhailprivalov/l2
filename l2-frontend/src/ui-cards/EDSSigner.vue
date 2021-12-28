@@ -114,7 +114,7 @@ export default {
     },
     commonRoles() {
       const r = {};
-      for (const d of this.documents) {
+      for (const d of Array.isArray(this.documents) ? this.documents : []) {
         for (const s of Object.keys(d.signatures)) {
           if (!d.signatures[s] && (s !== 'Врач' || this.isDocAllowedSign)) {
             r[s] = true;

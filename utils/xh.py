@@ -58,7 +58,7 @@ def check_type_research(pk):
         research = k.research
         if research.is_paraclinic or research.is_form or research.is_stom or research.is_doc_refferal:
             return "is_refferal"
-        if research.podrazdeleniye.pk in lab_podr:
+        if research.podrazdeleniye and research.podrazdeleniye.pk in lab_podr:
             return "is_lab"
     return "error"
 
