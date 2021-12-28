@@ -1974,7 +1974,8 @@ def directions_paraclinic_confirm_reset(request):
                 n.need_resend_amd = False
                 n.eds_total_signed = False
                 n.eds_total_signed_at = None
-                n.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd'])
+                n.vi_id = None
+                n.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd', 'vi_id'])
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
