@@ -1556,7 +1556,8 @@ def get_json_labortory_data(pk):
     hosp_oid = hosp_obj.oid
 
     document["id"] = pk
-    document["legalAuthenticator"] = ""
+    legal_auth_data = legal_auth_get({"id": iss.legal_authenticator.pk})
+    document["legalAuthenticator"] = legal_auth_data
     document["author"] = author_data
     document["content"] = {}
     document["content"]["Лаборатория"] = data
