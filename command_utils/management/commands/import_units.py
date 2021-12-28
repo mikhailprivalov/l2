@@ -34,6 +34,8 @@ class Command(BaseCommand):
                         u.hide = False
                         u.title = i['FULLNAME']
                         u.short_title = i['SHORTNAME']
+                        if not i['UCUM']:
+                            continue
                         u.ucum = i['UCUM'] if i['UCUM'] else ""
                         u.save()
                         self.stdout.write(f"{n}/{len(items)} Обновлено: {str(u)}")

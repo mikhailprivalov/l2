@@ -44,6 +44,7 @@ from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
+from utils.nsi_directories import NSI
 
 logger = logging.getLogger("IF")
 
@@ -1466,6 +1467,12 @@ def get_json_protocol_data(pk):
         if isinstance(val, str):
             if val.strip() in ('-', ''):
                 val = ""
+        if r.title == "Страховая ОМС":
+            nsi_smo_code = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id", None)
+            if val and nsi_smo_code:
+                smo_id = nsi_smo_code["values"][val.get("code", "")]
+                val["id"] = smo_id
+
         data[r.title] = val
 
     iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)
