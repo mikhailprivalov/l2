@@ -224,14 +224,6 @@ class UnitAdmin(admin.ModelAdmin):
     search_fields = ('title', 'short_title', 'code')
 
 
-class ResTemplateInResearchesPicker(admin.ModelAdmin):
-    list_display = ('template', 'site_type', )
-    list_filter = (
-        'site_type', 'template',
-    )
-    search_fields = ('template', 'site_type', )
-
-
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -258,4 +250,3 @@ admin.site.register(models.ServiceLocation, TitleHide)
 admin.site.register(models.HospitalService, ResHospitalService)
 admin.site.register(models.ScreeningPlan, ScreeningPlanAdmin)
 admin.site.register(models.Unit, UnitAdmin)
-admin.site.register(models.TemplateInResearchesPicker, ResTemplateInResearchesPicker)

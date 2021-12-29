@@ -384,18 +384,6 @@ class Researches(models.Model):
         return self.site_type_id
 
 
-class TemplateInResearchesPicker(models.Model):
-    template = models.ForeignKey(AssignmentTemplates, on_delete=models.CASCADE)
-    site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
-
-    def __str__(self):
-        return f"{self.template} - {self.site_type}"
-
-    class Meta:
-        verbose_name = 'Шаблоны как услуги'
-        verbose_name_plural = 'Шаблоны как услуги'
-
-
 class HospitalService(models.Model):
     TYPES = (
         (0, 'Первичный прием'),
