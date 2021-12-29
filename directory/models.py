@@ -384,7 +384,7 @@ class Researches(models.Model):
         return self.site_type_id
 
 
-class TemplateAsResearch(models.Model):
+class TemplateInResearchesPicker(models.Model):
     template = models.ForeignKey(AssignmentTemplates, on_delete=models.CASCADE)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
