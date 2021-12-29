@@ -4,7 +4,7 @@ from jsonfield import JSONField
 
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
-from users.models import DoctorProfile, Speciality
+from users.models import DoctorProfile, Speciality, AssignmentTemplates
 
 
 class DirectionsGroup(models.Model):
@@ -382,6 +382,18 @@ class Researches(models.Model):
         if self.is_application:
             return -13
         return self.site_type_id
+
+
+class TemplateAsResearch(models.Model):
+    template = models.ForeignKey(AssignmentTemplates, on_delete=models.CASCADE)
+    site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
+
+    def __str__(self):
+        return f"{self.template} - {self.site_type}"
+
+    class Meta:
+        verbose_name = 'Шаблоны как услуги'
+        verbose_name_plural = 'Шаблоны как услуги'
 
 
 class HospitalService(models.Model):
