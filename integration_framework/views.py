@@ -1543,7 +1543,7 @@ def get_json_labortory_data(pk):
         unit_obj = frac_obj.unit
         unit_val = {"code": unit_obj.code, "full_title": unit_obj.title, "ucum": unit_obj.ucum, "short_title": unit_obj.short_title}
         flsi_param = {"code": frac_obj.fsli, "title": frac_obj.title}
-        result_val = k.value
+        result_val = k.value.replace(",", ".") if k.value else ""
         confirmed_at = f"{confirmed_time}+0800"
         date_reiceve = normalize_dots_date(k.date_confirm).replace("-","")
         date_reiceve = f"{date_reiceve}0800+0800"
