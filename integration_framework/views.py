@@ -1557,7 +1557,7 @@ def get_json_labortory_data(pk):
     hosp_oid = hosp_obj.oid
 
     document["id"] = pk
-    legal_auth_data = legal_auth_get({"id": iss.legal_authenticator.pk})
+    legal_auth_data = legal_auth_get({"id": iss.legal_authenticator_id})
     document["legalAuthenticator"] = legal_auth_data
     document["author"] = author_data
     document["content"] = {}
@@ -1606,7 +1606,7 @@ def author_doctor(doctor_confirm_obj, is_recursion=False):
 
 def legal_auth_get(legal_auth_doc, is_recursion=False):
     legal_auth = {"id": "", "snils": "", "positionCode": "", "positionName": "", "name": {"family": "", "name": "", "patronymic": ""}}
-    if legal_auth_doc:
+    if legal_auth_doc and legal_auth_doc["id"]:
         id_doc = legal_auth_doc["id"]
         legal_doctor = DoctorProfile.objects.get(pk=id_doc)
         legal_auth["id"] = legal_doctor.pk
