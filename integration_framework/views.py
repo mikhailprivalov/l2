@@ -28,7 +28,8 @@ from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
-from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY, REGION, DEATH_RESEARCH_PK
+from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY, REGION, DEATH_RESEARCH_PK, DEF_LABORATORY_AUTH_PK, \
+    DEF_LABORATORY_LEGAL_AUTH_PK
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
@@ -1588,12 +1589,14 @@ def organization_get(hosp_obj_f):
     }
 
 
-def author_doctor(doctor_confirm_obj):
+def author_doctor(doctor_confirm_obj, is_recursion=False):
     author = {}
     author["id"] = doctor_confirm_obj.pk
     author["positionCode"] = doctor_confirm_obj.position.n3_id if doctor_confirm_obj.position else ""
     author["positionName"] = doctor_confirm_obj.position.title if doctor_confirm_obj.position else ""
     author["snils"] = doctor_confirm_obj.snils if doctor_confirm_obj.snils else ""
+    if "" in [author["positionCode"], author["positionName"], author["snils"]] and DEF_LABORATORY_AUTH_PK and not is_recursion:
+        return author_doctor(DoctorProfile.objects.get(pk=DEF_LABORATORY_AUTH_PK), True)
     author["name"] = {}
     author["name"]["family"] = doctor_confirm_obj.family
     author["name"]["name"] = doctor_confirm_obj.name
@@ -1601,7 +1604,7 @@ def author_doctor(doctor_confirm_obj):
     return author
 
 
-def legal_auth_get(legal_auth_doc):
+def legal_auth_get(legal_auth_doc, is_recursion=False):
     legal_auth = {"id": "", "snils": "", "positionCode": "", "positionName": "", "name": {"family": "", "name": "", "patronymic": ""}}
     if legal_auth_doc:
         id_doc = legal_auth_doc["id"]
@@ -1613,6 +1616,8 @@ def legal_auth_get(legal_auth_doc):
         legal_auth["name"]["family"] = legal_doctor.family
         legal_auth["name"]["name"] = legal_doctor.name
         legal_auth["name"]["patronymic"] = legal_doctor.patronymic
+    if "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]] and DEF_LABORATORY_LEGAL_AUTH_PK and not is_recursion:
+        return legal_auth_get({"id": DEF_LABORATORY_LEGAL_AUTH_PK}, True)
     return legal_auth
 
 
