@@ -478,7 +478,11 @@ class Napravleniya(models.Model):
 
         if SettingManager.l2('l2vi'):
             data = {
-                "needCda": Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False).exclude(research__generator_name="").exists(),
+                "needCda": (
+                    Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False).exclude(
+                        research__generator_name="").exclude(research__podrazdeleniye__p_type=2).exists()
+                    or Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False, research__podrazdeleniye__p_type=2).exists(),
+                ),
                 "signsRequired": None,
             }
         else:
