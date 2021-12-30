@@ -1591,8 +1591,8 @@ def organization_get(hosp_obj_f):
 def author_doctor(doctor_confirm_obj):
     author = {}
     author["id"] = doctor_confirm_obj.pk
-    author["positionCode"] = doctor_confirm_obj.position.n3_id
-    author["positionName"] = doctor_confirm_obj.position.title
+    author["positionCode"] = doctor_confirm_obj.position.n3_id if doctor_confirm_obj.position else ""
+    author["positionName"] = doctor_confirm_obj.position.title if doctor_confirm_obj.position else ""
     author["snils"] = doctor_confirm_obj.snils if doctor_confirm_obj.snils else ""
     author["name"] = {}
     author["name"]["family"] = doctor_confirm_obj.family
