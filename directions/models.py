@@ -1119,7 +1119,7 @@ class Napravleniya(models.Model):
         current_hospital = doc_current.hospital or Hospitals.get_default_hospital()
 
         childrens = {}
-        researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
+        researches_grouped_by_lab = [] # Лист с выбранными исследованиями по лабораториям
         lab_podrazdeleniye_pk = list(Podrazdeleniya.objects.values_list('pk', flat=True).filter(p_type=2))
         if current_global_direction_params and not current_global_direction_params.get("title", False):
             current_global_direction_params = None
