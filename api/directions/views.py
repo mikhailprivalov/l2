@@ -51,7 +51,7 @@ from directions.models import (
     IstochnikiFinansirovaniya,
     DirectionsHistory,
     MonitoringResult,
-    TubesRegistration,
+    TubesRegistration, AdditionNapravleniya,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -1386,6 +1386,11 @@ def directions_paraclinic_form(request):
                 response["status_disp"] = status_disp
                 response["disp_data"] = disp_data
             response["medical_certificates"] = medical_certificates
+
+            if response["has_paraclinic"] or response["has_microbiology"]:
+                addition_direction_objs = AdditionNapravleniya.objects.filter(target_direction_id=d.pk)
+                for k in addition_direction_objs:
+                    print(k.addition_direction.pk)
 
             f = True
 

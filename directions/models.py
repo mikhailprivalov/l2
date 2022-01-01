@@ -1579,7 +1579,7 @@ class AdditionNapravleniya(models.Model):
     addition_direction = models.ForeignKey(Napravleniya, related_name='additional_direction', null=True, help_text='Направление от исполнителя', db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.target_direction.pk
+        return f"{self.target_direction.id} - {self.addition_direction.id}"
 
     class Meta:
         verbose_name = 'Направление-добавочное от исполнителя услуги'
