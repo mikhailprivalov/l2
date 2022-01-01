@@ -200,10 +200,6 @@ class ResAdditionNapravleniya(admin.ModelAdmin):
         'addition_direction',
     )
     search_fields = ('target_direction__pk', 'addition_direction__pk', )
-    raw_id_fields = (
-        'target_direction',
-        'addition_direction',
-    )
 
 
 admin.site.register(TubesRegistration)

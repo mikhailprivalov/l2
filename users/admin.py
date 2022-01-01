@@ -11,14 +11,8 @@ class DocAdmin(admin.ModelAdmin):
     filter_horizontal = ('white_list_monitoring', 'black_list_monitoring')
 
 
-class ResAssignmentTemplates(admin.ModelAdmin):
-    list_filter = ('site_type', 'show_in_research_picker', )
-    list_display = ('title', 'site_type', 'show_in_research_picker', )
-    search_fields = ('title', 'site_type', )
-
-
 admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке
-admin.site.register(AssignmentTemplates, ResAssignmentTemplates)
+admin.site.register(AssignmentTemplates)
 admin.site.register(AssignmentResearches)
 admin.site.register(Speciality)
 admin.site.register(Position)

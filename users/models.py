@@ -213,8 +213,6 @@ class AssignmentTemplates(models.Model):
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr', on_delete=models.CASCADE)
     global_template = models.BooleanField(default=True, blank=True)
-    show_in_research_picker = models.BooleanField(default=False, blank=True)
-    site_type = models.ForeignKey("directory.ResearchSite", related_name='site_type_in_template', default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     def __str__(self):
         return (self.title + " | Шаблон для ") + (str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")
