@@ -450,6 +450,7 @@ class Napravleniya(models.Model):
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
+    is_addition_direction = models.BooleanField(default=False, blank=True, null=True)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -1321,6 +1322,7 @@ class Napravleniya(models.Model):
                             DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], all_params_result)
                     if target_direction_pk:
                         AdditionNapravleniya(target_direction_id=target_direction_pk, addition_direction_id=directions_for_researches[dir_group].pk).save()
+                        directions_for_researches[dir_group].is_addition_direction = True
 
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)

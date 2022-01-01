@@ -1035,6 +1035,9 @@ def directions_paraclinic_form(request):
         else:
             pk = -1
 
+    additional_dir = AdditionNapravleniya.objects.filter(addition_direction_id=pk)
+    if additional_dir:
+        pk = additional_dir[0].target_direction.pk
     direction_data = get_direction_data(pk, force_form, add_fr, response, g, request, TADP)
     d = direction_data["d"]
     f = direction_data["f"]
@@ -1050,14 +1053,16 @@ def directions_paraclinic_form(request):
         response["message"] = "Направление не найдено"
 
     addition_direction_data = []
-    if response["has_paraclinic"] or response["has_microbiology"]:
-        addition_direction_objs = AdditionNapravleniya.objects.filter(target_direction_id=d.pk)
+    if response["has_microbiology"]:
+        addition_direction_objs = AdditionNapravleniya.objects.filter(target_direction_id=pk)
         for k in addition_direction_objs:
             response_temp = {"ok": False, "message": ""}
             data_direction = get_direction_data(k.addition_direction.pk, force_form, add_fr, response_temp, g, request, TADP)
             addition_direction_data.append(data_direction["response"])
 
     response["addition_direction"] = addition_direction_data
+    for h in addition_direction_data:
+        response["researches"].append(h["researches"][0])
 
     return JsonResponse(response)
 
