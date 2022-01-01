@@ -1035,6 +1035,34 @@ def directions_paraclinic_form(request):
         else:
             pk = -1
 
+    direction_data = get_direction_data(pk, force_form, add_fr, response, g, request, TADP)
+    d = direction_data["d"]
+    f = direction_data["f"]
+    response = direction_data["response"]
+    hospital = d and d.get_hospital()
+    hospital_access = not hospital or hospital == request.user.doctorprofile.hospital or request.user.is_superuser
+
+    # TODO: для полного запрета доступа из других организаций убрать response.get("has_monitoring") (так проверяется только для мониторингов)
+    if response.get("has_monitoring") and not hospital_access:
+        return status_response(False, "Нет доступа")
+
+    if not f:
+        response["message"] = "Направление не найдено"
+
+    addition_direction_data = []
+    if response["has_paraclinic"] or response["has_microbiology"]:
+        addition_direction_objs = AdditionNapravleniya.objects.filter(target_direction_id=d.pk)
+        for k in addition_direction_objs:
+            response_temp = {"ok": False, "message": ""}
+            data_direction = get_direction_data(k.addition_direction.pk, force_form, add_fr, response_temp, g, request, TADP)
+            addition_direction_data.append(data_direction["response"])
+
+    response["addition_direction"] = addition_direction_data
+
+    return JsonResponse(response)
+
+
+def get_direction_data(pk, force_form, add_fr, response, g, request, TADP):
     dn = (
         Napravleniya.objects.filter(pk=pk)
         .select_related('client', 'client__base', 'client__individual', 'doc', 'doc__podrazdeleniye')
@@ -1387,25 +1415,9 @@ def directions_paraclinic_form(request):
                 response["disp_data"] = disp_data
             response["medical_certificates"] = medical_certificates
 
-            if response["has_paraclinic"] or response["has_microbiology"]:
-                addition_direction_objs = AdditionNapravleniya.objects.filter(target_direction_id=d.pk)
-                for k in addition_direction_objs:
-                    print(k.addition_direction.pk)
-
             f = True
 
-    hospital = d and d.get_hospital()
-
-    hospital_access = not hospital or hospital == request.user.doctorprofile.hospital or request.user.is_superuser
-
-    # TODO: для полного запрета доступа из других организаций убрать response.get("has_monitoring") (так проверяется только для мониторингов)
-    if response.get("has_monitoring") and not hospital_access:
-        return status_response(False, "Нет доступа")
-
-    if not f:
-        response["message"] = "Направление не найдено"
-
-    return JsonResponse(response)
+    return {"response": response, "d": d, "f": f}
 
 
 def get_default_for_field(field_type):
