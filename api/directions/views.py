@@ -139,6 +139,7 @@ def directions_generate(request):
             direction_form_params=p.get("direction_form_params", {}),
             current_global_direction_params=p.get("current_global_direction_params", {}),
             hospital_department_override=p.get("hospital_department_override", -1),
+            target_direction_pk=p.get("target_direction_pk", None),
         )
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)

@@ -1106,7 +1106,7 @@ class Napravleniya(models.Model):
         direction_form_params=None,
         current_global_direction_params=None,
         hospital_department_override=-1,
-        target_direction_pk = None,
+        target_direction_pk=None,
     ):
         if not visited:
             visited = []
@@ -1320,7 +1320,7 @@ class Napravleniya(models.Model):
                             all_params_result = Napravleniya.check_and_change_special_field(research_data_params, current_global_direction_params)
                             DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], all_params_result)
                     if target_direction_pk:
-                        AdditionNapravleniya(target_direction_id=target_direction_pk, addition_direction=directions_for_researches[dir_group]).save()
+                        AdditionNapravleniya(target_direction_id=target_direction_pk, addition_direction_id=directions_for_researches[dir_group].pk).save()
 
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
