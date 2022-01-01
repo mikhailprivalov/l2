@@ -450,7 +450,7 @@ class Napravleniya(models.Model):
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
-    is_addition_direction = models.BooleanField(default=False, blank=True, null=True)
+    is_additional_created_by_executor = models.BooleanField(blank=True, default=False, db_index=True)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)

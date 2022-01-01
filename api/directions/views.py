@@ -208,7 +208,7 @@ def directions_history(request):
 
     type_service = request_data.get("type_service", None)
     for i in result_sql:
-        if i[14]:
+        if i[14] or i[26]:
             continue
         elif type_service == 'is_paraclinic' and not i[18]:
             continue
