@@ -4,7 +4,7 @@ from jsonfield import JSONField
 
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
-from users.models import DoctorProfile, Speciality
+from users.models import DoctorProfile, Speciality, AssignmentTemplates
 
 
 class DirectionsGroup(models.Model):
