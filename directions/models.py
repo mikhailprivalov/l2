@@ -450,6 +450,7 @@ class Napravleniya(models.Model):
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
+    is_additional_created_by_executor = models.BooleanField(blank=True, default=False, db_index=True)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -1106,6 +1107,7 @@ class Napravleniya(models.Model):
         direction_form_params=None,
         current_global_direction_params=None,
         hospital_department_override=-1,
+        target_direction_pk=None,
     ):
         if not visited:
             visited = []
@@ -1123,7 +1125,7 @@ class Napravleniya(models.Model):
         current_hospital = doc_current.hospital or Hospitals.get_default_hospital()
 
         childrens = {}
-        researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
+        researches_grouped_by_lab = [] # Лист с выбранными исследованиями по лабораториям
         lab_podrazdeleniye_pk = list(Podrazdeleniya.objects.values_list('pk', flat=True).filter(p_type=2))
         if current_global_direction_params and not current_global_direction_params.get("title", False):
             current_global_direction_params = None
@@ -1318,6 +1320,9 @@ class Napravleniya(models.Model):
                         if research_data_params and current_global_direction_params:
                             all_params_result = Napravleniya.check_and_change_special_field(research_data_params, current_global_direction_params)
                             DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], all_params_result)
+                    if target_direction_pk:
+                        AdditionNapravleniya(target_direction_id=target_direction_pk, addition_direction_id=directions_for_researches[dir_group].pk).save()
+                        directions_for_researches[dir_group].is_addition_direction = True
 
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
@@ -1576,7 +1581,7 @@ class AdditionNapravleniya(models.Model):
     addition_direction = models.ForeignKey(Napravleniya, related_name='additional_direction', null=True, help_text='Направление от исполнителя', db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.target_direction.pk
+        return f"{self.target_direction.id} - {self.addition_direction.id}"
 
     class Meta:
         verbose_name = 'Направление-добавочное от исполнителя услуги'

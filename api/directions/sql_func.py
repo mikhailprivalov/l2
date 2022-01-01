@@ -33,7 +33,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_issledovaniya.study_instance_uid,
             directions_napravleniya.parent_slave_hosp_id,
             directory_researches.is_application,
-            directory_researches.is_expertise
+            directory_researches.is_expertise,
+            directions_napravleniya.is_additional_created_by_executor
         FROM directions_issledovaniya
         LEFT JOIN directory_researches
         ON directions_issledovaniya.research_id = directory_researches.Id
@@ -92,7 +93,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             parent_slave_hosp_id,
             is_form,
             is_application,
-            is_expertise
+            is_expertise,
+            is_additional_created_by_executor
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
