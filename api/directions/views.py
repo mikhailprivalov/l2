@@ -158,7 +158,7 @@ def directions_generate(request):
 
 
 @login_required
-@group_required("Лечащий врач", "Врач-лаборант", "врач-консультант")
+@group_required("Лечащий врач", "Врач-лаборант", "Врач консультаций")
 def add_additional_issledovaniye(request):
     saved = False
     result = {"ok": False, "message": "Операция не выполнена"}
