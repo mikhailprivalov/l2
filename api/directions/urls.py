@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('generate', views.directions_generate),
-    path('additional-iss', views.additional_iss),
+    path('add-additional-issledovaniye', views.add_additional_issledovaniye),
     path('rmis-directions', views.directions_rmis_directions),
     path('rmis-direction', views.directions_rmis_direction),
     path('history', views.directions_history),
