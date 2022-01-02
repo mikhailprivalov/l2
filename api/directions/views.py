@@ -158,6 +158,26 @@ def directions_generate(request):
 
 
 @login_required
+@group_required("Лечащий врач", "Врач-лаборант", "Врач консультаций")
+def add_additional_issledovaniye(request):
+    saved = False
+    result = {"ok": False, "message": "Операция не выполнена"}
+    p = json.loads(request.body)
+    direction_pk = p.get("direction_pk", None)
+    who_add = request.user.doctorprofile
+    researches = p.get("researches", None)
+    created_later_research = list(Issledovaniya.objects.values_list("research_id", flat=True).filter(napravleniye_id=direction_pk))
+    with transaction.atomic():
+        for research_pk in researches:
+            if research_pk not in created_later_research:
+                Issledovaniya(napravleniye_id=direction_pk, research_id=research_pk, doc_add_additional=who_add).save()
+                saved = True
+    if saved:
+        result = {"ok": True, "message": f"Услуги добавлены к направлению {direction_pk}"}
+    return JsonResponse(result)
+
+
+@login_required
 def directions_history(request):
     # SQL-query
     res = {"directions": []}
