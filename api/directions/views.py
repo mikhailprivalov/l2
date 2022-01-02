@@ -162,18 +162,17 @@ def directions_generate(request):
 def add_additional_issledovaniye(request):
     saved = False
     result = {"ok": False, "message": "Операция не выполнена"}
-    if request.method == "POST":
-        p = json.loads(request.body)
-        direction_pk = p.get("direction_pk", None)
-        who_add = request.user.doctorprofile
-        researches = p.get("researches", None)
-        created_later_research = list(Issledovaniya.objects.values_list("research_id", flat=True).filter(napravleniye_id=direction_pk))
-        for research_pk in researches:
-            if research_pk not in created_later_research:
-                Issledovaniya(napravleniye_id=direction_pk, research_id=research_pk, doc_add_additional=who_add).save()
-                saved = True
-            if saved:
-                result = {"ok": True, "message": f"Услуги добавлены к направлению {direction_pk}"}
+    p = json.loads(request.body)
+    direction_pk = p.get("direction_pk", None)
+    who_add = request.user.doctorprofile
+    researches = p.get("researches", None)
+    created_later_research = list(Issledovaniya.objects.values_list("research_id", flat=True).filter(napravleniye_id=direction_pk))
+    for research_pk in researches:
+        if research_pk not in created_later_research:
+            Issledovaniya(napravleniye_id=direction_pk, research_id=research_pk, doc_add_additional=who_add).save()
+            saved = True
+        if saved:
+            result = {"ok": True, "message": f"Услуги добавлены к направлению {direction_pk}"}
     return JsonResponse(result)
 
 
