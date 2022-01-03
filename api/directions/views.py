@@ -161,7 +161,6 @@ def directions_generate(request):
 @group_required("Лечащий врач", "Врач-лаборант", "Врач консультаций")
 def add_additional_issledovaniye(request):
     saved = False
-    result = {"ok": False, "message": "Операция не выполнена"}
     p = json.loads(request.body)
     direction_pk = p.get("direction_pk", None)
     who_add = request.user.doctorprofile
@@ -173,8 +172,8 @@ def add_additional_issledovaniye(request):
                 Issledovaniya(napravleniye_id=direction_pk, research_id=research_pk, doc_add_additional=who_add).save()
                 saved = True
     if saved:
-        result = {"ok": True, "message": f"Услуги добавлены к направлению {direction_pk}"}
-    return JsonResponse(result)
+        return status_response(True)
+    return status_response(False, "Операция не выполнена")
 
 
 @login_required
