@@ -23,15 +23,16 @@ class Command(BaseCommand):
         ФИО
         Дата рождения
         """
-        fp = kwargs["path"]
+        data_arg = kwargs["path"].split(";")
+        fp = data_arg[0]
         self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
         fio, born = '', ''
         p = re.compile(r'^[а-яё]{3}[0-9]{8}$', re.IGNORECASE)
-        start_date = f"20210101 00:00:00"
-        end_date = f"20211201 23:59:59"
+        start_date = data_arg[1]
+        end_date = data_arg[2]
         is_lab, is_paraclinic, is_doc_refferal = True, False, False
         lab_podr = get_lab_podr()
         lab_podr = [i[0] for i in lab_podr]
@@ -73,6 +74,7 @@ class Command(BaseCommand):
                                 }
 
                             directions[d.direction]['researches'].append(d.research_title)
-                        print(f"{c.pk}-{c.number}-{c.individual}- {directions}")
+                            directions.keys()
+                        print(f"{c.pk}-{c.number}-{c.individual}-{list(directions.keys())}")
 
 
