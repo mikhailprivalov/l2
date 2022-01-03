@@ -12,11 +12,6 @@ class Command(BaseCommand):
         parser.add_argument('path', type=str)
 
     def handle(self, *args, **kwargs):
-        """
-        :param path - xlsx файл с ФСЛИ со столбцами:
-        ФИО
-        Дата рождения
-        """
         data_arg = kwargs["path"].split(";")
         fp = data_arg[0]
         self.stdout.write("Path: " + fp)
@@ -47,7 +42,9 @@ class Command(BaseCommand):
                     break
                 f, n, p, rmis_req, split = full_patient_search_data(p, query)
                 if len(split) > 3 or (len(split) == 3 and split[-1].isdigit()):
-                    objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, card__base__internal_type=True, birthday=datetime.datetime.strptime(cells[born], "%d.%m.%Y").date())
+                    objects = Individual.objects.filter(
+                        family__istartswith=f, name__istartswith=n, card__base__internal_type=True, birthday=datetime.datetime.strptime(cells[born], "%d.%m.%Y").date()
+                    )
                     if len(split) > 3:
                         objects.filter(patronymic__istartswith=p)
                     objects = objects[:10]
@@ -63,4 +60,4 @@ class Command(BaseCommand):
                         for d in confirmed_directions:
                             if d.direction not in directions:
                                 directions.append(d.direction)
-                        print(f"{c.pk};{c.number};{c.individual};{c.individual.birthday};{directions}") # noqa: T001
+                        print(f"{c.pk};{c.number};{c.individual};{c.individual.birthday};{directions}")  # noqa: T001
