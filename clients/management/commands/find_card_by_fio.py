@@ -1,16 +1,10 @@
 import re
-
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
-import json
-from django.http import HttpRequest
-
 from api.directions.sql_func import get_confirm_direction_patient_year, get_lab_podr
 from api.patients.views import patients_search_card, full_patient_search_data
 from clients.models import Individual, Card
 import datetime
-
-from directions.models import Napravleniya
 
 
 class Command(BaseCommand):
@@ -34,6 +28,10 @@ class Command(BaseCommand):
         start_date = data_arg[1]
         end_date = data_arg[2]
         is_lab, is_paraclinic, is_doc_refferal = True, False, False
+        if len(data_arg) > 3 and data_arg[3] == "is_paraclinic":
+            is_lab, is_paraclinic, is_doc_refferal = False, True, False
+        elif len(data_arg) > 3 and data_arg[3] == "is_doc_refferal":
+            is_lab, is_paraclinic, is_doc_refferal = False, False, True
         lab_podr = get_lab_podr()
         lab_podr = [i[0] for i in lab_podr]
         for row in ws.rows:
@@ -62,19 +60,8 @@ class Command(BaseCommand):
                         confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, c.pk, is_lab, is_paraclinic, is_doc_refferal)
                         if not confirmed_directions:
                             continue
-
-                        directions = {}
-
+                        directions = []
                         for d in confirmed_directions:
                             if d.direction not in directions:
-                                directions[d.direction] = {
-                                    'dir': d.direction,
-                                    'date': d.ch_time_confirmation,
-                                    'researches': [],
-                                }
-
-                            directions[d.direction]['researches'].append(d.research_title)
-                            directions.keys()
-                        print(f"{c.pk}-{c.number}-{c.individual}-{list(directions.keys())}")
-
-
+                                directions.append(d.direction)
+                        print(f"{c.pk};{c.number};{c.individual};{c.individual.birthday};{directions}")
