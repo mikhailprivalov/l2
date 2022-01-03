@@ -2,7 +2,7 @@ import re
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 from api.directions.sql_func import get_confirm_direction_patient_year, get_lab_podr
-from api.patients.views import patients_search_card, full_patient_search_data
+from api.patients.views import full_patient_search_data
 from clients.models import Individual, Card
 import datetime
 
@@ -56,7 +56,6 @@ class Command(BaseCommand):
                 cards = Card.objects.filter(base__internal_type=True, individual__in=objects)
                 if cards:
                     for c in cards:
-                        print(c.pk, c.number, c.individual)
                         confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, c.pk, is_lab, is_paraclinic, is_doc_refferal)
                         if not confirmed_directions:
                             continue
@@ -64,4 +63,4 @@ class Command(BaseCommand):
                         for d in confirmed_directions:
                             if d.direction not in directions:
                                 directions.append(d.direction)
-                        print(f"{c.pk};{c.number};{c.individual};{c.individual.birthday};{directions}")
+                        print(f"{c.pk};{c.number};{c.individual};{c.individual.birthday};{directions}") # noqa: T001

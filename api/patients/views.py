@@ -7,7 +7,6 @@ from typing import Optional, List
 import pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
 
 from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
