@@ -165,7 +165,7 @@ def add_additional_issledovaniye(request):
     direction_pk = p.get("direction_pk", None)
     who_add = request.user.doctorprofile
     researches = p.get("researches", None)
-    created_later_research = list(Issledovaniya.objects.values_list("research_id", flat=True).filter(napravleniye_id=direction_pk))
+    created_later_research = {x: True for x in Issledovaniya.objects.values_list("research_id", flat=True).filter(napravleniye_id=direction_pk)}
     with transaction.atomic():
         for research_pk in researches:
             if research_pk not in created_later_research:
