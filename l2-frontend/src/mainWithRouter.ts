@@ -191,6 +191,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/plan-hospitalization',
+      name: 'plan_hospitalization',
+      component: () => import('@/pages/PlanHospitalization/index.vue'),
+      meta: {
+        title: 'план госпитализации',
+        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Вызов врача'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
