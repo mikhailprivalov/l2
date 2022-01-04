@@ -245,6 +245,13 @@ export default {
       type: Array,
       required: false,
     },
+    filter_sub_types: {
+      default() {
+        return [];
+      },
+      type: Array,
+      required: false,
+    },
     filter_researches: {
       default() {
         return [];
@@ -440,7 +447,7 @@ export default {
       }
       const r = [];
       for (const row of this.$store.getters.allDepartments) {
-        if (row.type === this.type) {
+        if (row.type === this.type && (this.filter_sub_types.length === 0 || this.filter_sub_types.includes(row.pk))) {
           r.push(row);
         }
       }

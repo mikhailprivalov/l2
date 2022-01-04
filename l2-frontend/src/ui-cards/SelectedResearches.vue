@@ -447,12 +447,15 @@ export default {
     },
     base: {
       type: Object,
+      default: null,
     },
     card_pk: {
       type: Number,
+      default: null,
     },
     selected_card: {
       type: Object,
+      default: null,
     },
     visible: {
       type: Boolean,

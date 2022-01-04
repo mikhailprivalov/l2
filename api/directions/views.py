@@ -165,14 +165,17 @@ def add_additional_issledovaniye(request):
     direction_pk = p.get("direction_pk", None)
     who_add = request.user.doctorprofile
     researches = p.get("researches", None)
+    pks = []
     created_later_research = {x: True for x in Issledovaniya.objects.values_list("research_id", flat=True).filter(napravleniye_id=direction_pk)}
     with transaction.atomic():
         for research_pk in researches:
             if research_pk not in created_later_research:
-                Issledovaniya(napravleniye_id=direction_pk, research_id=research_pk, doc_add_additional=who_add).save()
+                iss = Issledovaniya(napravleniye_id=direction_pk, research_id=research_pk, doc_add_additional=who_add)
+                iss.save()
+                pks.append(iss.pk)
                 saved = True
     if saved:
-        return status_response(True)
+        return status_response(True, data={"pks": pks})
     return status_response(False, "Операция не выполнена")
 
 
@@ -1037,6 +1040,7 @@ def directions_paraclinic_form(request):
     pk = request_data.get("pk", -1) or -1
     by_issledovaniye = request_data.get("byIssledovaniye", False)
     force_form = request_data.get("force", False)
+    without_issledovaniye = request_data.get("withoutIssledovaniye", None)
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
@@ -1100,6 +1104,8 @@ def directions_paraclinic_form(request):
             response["has_expertise"] = False
             response["has_paraclinic"] = False
             response["has_microbiology"] = False
+            response["has_citology"] = False
+            response["has_gistology"] = False
             response["has_monitoring"] = False
             response["card_internal"] = d.client.base.internal_type
             response["hospital_title"] = d.hospital_title
@@ -1151,8 +1157,12 @@ def directions_paraclinic_form(request):
                     response["has_expertise"] = True
                 if i.research.is_paraclinic or i.research.is_citology or i.research.is_gistology:
                     response["has_paraclinic"] = True
-                if i.research.is_microbiology and not response["has_microbiology"]:
+                if i.research.is_microbiology:
                     response["has_microbiology"] = True
+                if i.research.is_citology:
+                    response["has_citology"] = True
+                if i.research.is_gistology:
+                    response["has_gistology"] = True
                 if i.research.is_monitoring:
                     response["has_monitoring"] = True
                 if i.research.microbiology_tube:
@@ -1178,6 +1188,7 @@ def directions_paraclinic_form(request):
                 iss = {
                     "pk": i.pk,
                     "research": {
+                        "pk": i.research_id,
                         "title": i.research.title,
                         "version": i.pk * 10000,
                         "is_paraclinic": i.research.is_paraclinic or i.research.is_citology or i.research.is_gistology,
@@ -1387,7 +1398,8 @@ def directions_paraclinic_form(request):
                             }
                         )
                     iss["research"]["groups"].append(g)
-                response["researches"].append(iss)
+                if not without_issledovaniye or iss['pk'] not in without_issledovaniye:
+                    response["researches"].append(iss)
             if not force_form and response["has_doc_referral"]:
                 response["anamnesis"] = d.client.anamnesis_of_life
 

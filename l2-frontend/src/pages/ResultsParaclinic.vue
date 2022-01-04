@@ -466,7 +466,7 @@
                 :class="row.confirmed ? 'col-xs-12' : 'col-xs-6'"
                 :style="'height: 200px;' + (row.confirmed ? '' : 'padding-left: 0')"
               >
-                <selected-researches :researches="row.more" :readonly="row.confirmed" :simple="true" />
+                <SelectedResearches :researches="row.more" :readonly="row.confirmed" :simple="true" />
               </div>
             </div>
           </div>
@@ -694,7 +694,7 @@
             <div class="group-title">Дочерние направления</div>
             <div class="fields" v-for="d in row.children_directions" :key="d.pk">
               <div class="field">
-                <label class="field-title" for="onco">
+                <label class="field-title">
                   №<a href="#" class="a-under" @click.prevent="load_pk(d.pk)">{{ d.pk }}</a>
                 </label>
                 <div class="field-value simple-value">
@@ -812,6 +812,37 @@
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
               <div class="status status-none" v-if="needFillWorkBy(row)">подтверждение от имени</div>
             </div>
+          </div>
+        </div>
+        <div class="group" v-if="show_additional">
+          <div class="group-title">Дополнительные исследования</div>
+          <div class="row">
+            <div class="col-xs-6" style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
+              <ResearchesPicker
+                v-model="moreServices"
+                :hidetemplates="true"
+                :just_search="true"
+                :typesOnly="[10000]"
+                :filter_sub_types="additionalTypes"
+                :filter_researches="data.researches.map(r => r.research.pk)"
+              />
+            </div>
+            <div class="col-xs-6" style="height: 200px;padding-left: 0">
+              <SelectedResearches :researches="moreServices" :simple="true" />
+            </div>
+          </div>
+          <div class="sd empty" style="margin-top: 5px">
+            <button
+              @click="add_services"
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              :disabled="moreServices.length === 0"
+            >
+              Добавить услуги в направление
+            </button>
+          </div>
+          <div class="text-right" style="margin-top: 5px">
+            Вы можете назначить дополнительные исследования только, если направление не подтверждено полностью.
           </div>
         </div>
       </div>
@@ -1113,6 +1144,7 @@ export default {
       tableFieldsErrors: {},
       workFromUsers: [],
       workFromHistory: [],
+      moreServices: [],
     };
   },
   watch: {
@@ -1242,6 +1274,24 @@ export default {
     next();
   },
   methods: {
+    async add_services() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { pks, ok, message } = await this.$api('directions/add-additional-issledovaniye', {
+        direction_pk: this.data.direction.pk,
+        researches: this.moreServices,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.moreServices = [];
+      if (ok) {
+        this.load_pk(
+          this.data.direction.pk,
+          this.data.researches.map(r => r.pk),
+        );
+        this.$root.$emit('msg', 'ok', `Добавлено услуг: ${pks.length}`);
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
     unload() {
       if (!this.has_changed) {
         return undefined;
@@ -1405,23 +1455,29 @@ export default {
         this.load_history();
       }
     },
-    load_pk(pk) {
+    load_pk(pk, withoutIssledovaniye = null) {
       this.pk = `${pk}`;
-      return this.load();
+      return this.load(withoutIssledovaniye);
     },
-    async load() {
-      if (
-        this.has_changed
-        // eslint-disable-next-line no-alert,no-restricted-globals
-        && !confirm('Возможно имеются несохраненные изменения! Вы действительно хотите закрыть текущий протокол?')
-      ) {
-        return;
+    async load(withoutIssledovaniye = null) {
+      if (!withoutIssledovaniye) {
+        if (
+          this.has_changed
+          // eslint-disable-next-line no-alert,no-restricted-globals
+          && !confirm('Возможно имеются несохраненные изменения! Вы действительно хотите закрыть текущий протокол?')
+        ) {
+          return;
+        }
+        this.clear(true);
       }
-      this.clear(true);
       this.$store.dispatch(actions.INC_LOADING);
       await directionsPoint
-        .getParaclinicForm({ pk: this.pk_c, byIssledovaniye: this.iss_search })
+        .getParaclinicForm({ pk: this.pk_c, byIssledovaniye: this.iss_search, withoutIssledovaniye })
         .then(data => {
+          if (withoutIssledovaniye) {
+            this.data.researches = [...this.data.researches, ...data.researches];
+            return;
+          }
           if (data.ok) {
             this.tnd = moment()
               .add(1, 'day')
@@ -1686,6 +1742,7 @@ export default {
       this.benefit_rows_loading = false;
       this.benefit_rows = [];
       this.tableFieldsErrors = {};
+      this.moreServices = [];
       cleanCaches();
       this.$root.$emit('preselect-card', null);
       this.$root.$emit('open-pk', -1);
@@ -1936,6 +1993,34 @@ export default {
     },
     l2_microbiology() {
       return this.$store.getters.modules.l2_microbiology;
+    },
+    l2_morfology_additional() {
+      return this.$store.getters.modules.l2_morfology_additional;
+    },
+    show_additional() {
+      if (!this.data || !this.data.ok) {
+        return false;
+      }
+      return (
+        this.l2_morfology_additional
+        && (this.data.has_microbiology || this.data.has_citology || this.data.has_gistology)
+        && !this.data.direction.all_confirmed
+      );
+    },
+    additionalTypes() {
+      if (!this.show_additional) {
+        return [];
+      }
+      if (this.data.has_microbiology) {
+        return [10001];
+      }
+      if (this.data.has_citology) {
+        return [10002];
+      }
+      if (this.data.has_gistology) {
+        return [10003];
+      }
+      return [];
     },
     pk_c() {
       const lpk = this.pk.trim();
@@ -2330,6 +2415,7 @@ export default {
   background-color: #f3f3f3;
   display: flex;
   flex-direction: row;
+  margin-bottom: 10px;
 
   button {
     align-self: stretch;
