@@ -1,5 +1,6 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
+from utils.db import namedtuplefetchall
 
 
 def get_plans_by_params_sql(d_s, d_e, doc_operate_id, doc_anesthetist_id, department):
@@ -104,3 +105,51 @@ def get_plans_by_pk(pks_plan):
 
         row = cursor.fetchall()
     return row
+
+
+def get_plans_hospitalization_sql(d_s, d_e, department):
+    """
+    парам: d_s - date-start, d_e - date-end, deparment
+
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """WITH 
+        t_plans AS 
+            (SELECT id as pk_plan, client_id,
+            to_char(exec_at AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS exec_at_char, 
+            work_status, action, exec_at, hospital_department_id, phone, research_id, diagnos FROM plans_planhospitalization
+            WHERE 
+            CASE
+            WHEN %(department_id)s > -1 THEN
+                exec_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s AND hospital_department_id=%(department_id)s and action=0
+            ELSE exec_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and action=0
+            END
+            ORDER BY hospital_department_id, exec_at),
+
+        t_patient AS
+            (SELECT clients_card.id as card_id, clients_card.individual_id, clients_individual.family as ind_family,
+             clients_individual.name AS ind_name, clients_individual.patronymic as ind_twoname, to_char(clients_individual.birthday, 'DD.MM.YYYY') as born,
+             clients_individual.birthday, clients_individual.sex
+             FROM clients_individual 
+             LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
+             WHERE clients_card.id in (SELECT client_id FROM t_plans))
+
+        SELECT pk_plan, client_id, exec_at_char, work_status, action, hospital_department_id,
+               concat_ws(' ', ind_family, ind_name, ind_twoname) as fio_patient, birthday, exec_at,
+               to_char(EXTRACT(YEAR from age(t_plans.exec_at, t_patient.birthday)), '999') as ind_age,
+               t_patient.born, podrazdeleniya_podrazdeleniya.title as depart_title, phone, directory_researches.title as research_title, diagnos, t_patient.sex
+                FROM t_plans
+        LEFT JOIN t_patient ON t_plans.client_id = t_patient.card_id 
+        LEFT JOIN podrazdeleniya_podrazdeleniya ON podrazdeleniya_podrazdeleniya.id = hospital_department_id
+        LEFT JOIN directory_researches ON t_plans.research_id = directory_researches.id 
+        
+        ORDER BY hospital_department_id, exec_at
+        
+        """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'department_id': department},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

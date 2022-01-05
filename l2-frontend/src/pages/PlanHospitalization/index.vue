@@ -9,16 +9,17 @@
       <button @click="load_data" class="btn btn-blue-nb" type="button">
         Печать
       </button>
+      {{sex_male}} {{sex_female}} {{all_patient}}
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
         <col width="85" />
         <col />
-        <col width="90" />
-        <col width="155" />
-        <col width="155" />
-        <col width="155" />
-        <col width="320" />
+        <col width="135" />
+        <col width="115" />
+        <col width="170" />
+        <col width="170" />
+        <col width="150" />
         <col width="55" />
       </colgroup>
       <thead>
@@ -28,8 +29,8 @@
           <th>Телефон</th>
           <th>Профиль</th>
           <th>Отделение</th>
-          <th>Примечание</th>
-          <th>Примечание2</th>
+          <th>Диагноз</th>
+          <th>Прим</th>
           <th></th>
         </tr>
       </thead>
@@ -70,6 +71,9 @@ import * as actions from '../../store/action-types';
       title: 'План госпитализации',
       pk_plan: '',
       data: [],
+      sex_male: '',
+      sex_female: '',
+      all_patient: '',
       departments: [],
       filters: {
         date: [
@@ -120,6 +124,16 @@ import * as actions from '../../store/action-types';
 export default class PlanHospitalization extends Vue {
   departments: any[];
 
+  data: any[];
+
+  sex_male: any;
+
+  sex_female: any;
+
+  all_patient: any;
+
+  filters: any;
+
   dateRange: any;
 
   async init() {
@@ -131,6 +145,15 @@ export default class PlanHospitalization extends Vue {
   async load_data() {
     await this.$store.dispatch(actions.INC_LOADING);
     const [d1, d2] = this.dateRange.split('x');
+    const result_data = await plansPoint.getPlansHospitalizationByParams({
+      start_date: d1,
+      end_date: d2,
+      department_pk: this.filters.department_pk || -1,
+    });
+    this.data = result_data.result;
+    this.sex_male = result_data.sex_male;
+    this.sex_female = result_data.sex_female;
+    this.all_patient = result_data.all_patient;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 }

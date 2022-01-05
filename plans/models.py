@@ -7,6 +7,7 @@ from users.models import DoctorProfile
 from datetime import datetime
 import slog.models as slog
 import simplejson as json
+from laboratory.utils import current_time
 
 
 class PlanOperations(models.Model):
@@ -128,30 +129,76 @@ class PlanHospitalization(models.Model):
         plan_hospitalization = PlanHospitalization(
             client=patient_card,
             research=research_obj,
-            exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'),
+            exec_at=datetime.strptime(data['date'], '%Y-%m-%d'),
             comment=data['comment'],
             phone=data['phone'],
             doc_who_create=doc_who_create,
             work_status=0,
             hospital_department_id=data['hospital_department_id'],
-            action=data['data']
+            action=data['action']
         )
         plan_hospitalization.save()
-
+        print({
+                    "card_pk": patient_card.pk,
+                    "research": research_obj.title,
+                    "date": data['date'],
+                    "comment": data['comment'],
+                    "hospital_department_id": data['hospital_department_id'],
+                })
         slog.Log(
             key=plan_hospitalization.pk,
-            type=80006,
+            type=80007,
             body=json.dumps(
                 {
                     "card_pk": patient_card.pk,
                     "research": research_obj.title,
                     "date": data['date'],
                     "comment": data['comment'],
-                    "action": data['data'],
-                    "hospital_department_id": data['hospital_department'],
+                    "hospital_department_id": data['hospital_department_id'],
                 }
             ),
             user=doc_who_create,
         ).save()
         return plan_hospitalization.pk
+
+
+    @staticmethod
+    def plan_hospitalization_change_status(data, doc_who_create):
+        plan_hosp = PlanHospitalization.objects.filter(pk=data['pk_plan_hosp'])[0]
+        plan_hosp.doc_who_create = doc_who_create
+        plan_hosp.status = data['status']
+        plan_hosp.save()
+
+        slog.Log(
+            key=plan_hosp.pk,
+            type=80008,
+            body=json.dumps({"card_pk": plan_hosp.client.pk, "status": plan_hosp.status, "action": data["action"]}),
+            user=doc_who_create,
+        ).save()
+        return plan_hosp.pk
+
+    @staticmethod
+    def plan_hosp_get(data):
+        if data.get('d1', None):
+            d1 = datetime.strptime(data.get('d1'), '%d.%m.%Y')
+        else:
+            d1 = current_time()
+        if data.get('d2', None):
+            d2 = datetime.strptime(data.get('d2'), '%d.%m.%Y')
+        else:
+            d2 = current_time()
+
+        start_date = datetime.combine(d1, datetime.time.min)
+        end_date = datetime.combine(d2, datetime.time.max)
+        if data.get('research', None):
+            research_obj = Researches.objects.filter(pk=data.get('research'))
+            result = PlanHospitalization.objects.filter(research=research_obj, exec_at__range=(start_date, end_date)).order_by("exec_at")
+        elif data.get('patient_pk', None):
+            result = PlanHospitalization.objects.filter(client__pk=data.get('patient_pk')).order_by("exec_at")
+        else:
+            result = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date)).order_by("pk", "exec_at", "research")
+
+        return result
+
+
 
