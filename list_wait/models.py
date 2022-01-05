@@ -1,6 +1,7 @@
 from django.db import models
 from clients.models import Card
 from directory.models import Researches
+from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 import datetime
 from laboratory.utils import current_time
@@ -22,6 +23,8 @@ class ListWait(models.Model):
     work_status = models.PositiveSmallIntegerField(choices=STATUS, db_index=True, default=0, blank=True)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель листа ожидания', on_delete=models.SET_NULL)
     phone = models.CharField(max_length=20, blank=True, default='')
+    hospital_department = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
+
 
     class Meta:
         verbose_name = 'Лист ожидания'

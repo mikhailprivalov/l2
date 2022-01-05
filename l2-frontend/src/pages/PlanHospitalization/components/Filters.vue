@@ -2,14 +2,16 @@
   <table class="table" style="table-layout: fixed">
     <colgroup>
       <col width='201'/>
+      <col />
       <col width='510'/>
-      <col/>
+      <col width='410'/>
     </colgroup>
     <tbody>
     <tr>
       <td>
         <date-range v-model="filters.date"/>
       </td>
+      <td/>
       <td>
         <treeselect
           :multiple="false"
@@ -21,6 +23,9 @@
           class="treeselect-wide"
           :clearable="false"
         />
+      </td>
+      <td>
+        <h6 style="vertical-align: middle; float: right">Выбытие </h6>
       </td>
     </tr>
     </tbody>
