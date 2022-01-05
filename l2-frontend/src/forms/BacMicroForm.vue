@@ -3,17 +3,27 @@
     <div class="group-title">
       Микроорганизмы
       <div class="input-select flex-select" v-if="!confirmed">
-        <v-select :clearable="false" label="title" :options="bacteriesGroups" :searchable="true"
-                  class="inner-select"
-                  placeholder="Выберите группу"
-                  v-model="selectedGroup"
-                  append-to-body :calculate-position="withPopper"
+        <v-select
+          :clearable="false"
+          label="title"
+          :options="bacteriesGroups"
+          :searchable="true"
+          class="inner-select"
+          placeholder="Выберите группу"
+          v-model="selectedGroup"
+          append-to-body
+          :calculate-position="withPopper"
         />
-        <v-select :clearable="false" label="title" :options="bacteries" :searchable="true"
-                  class="inner-select"
-                  placeholder="Выберите микроорганизм"
-                  v-model="selectedBactery"
-                  append-to-body :calculate-position="withPopper"
+        <v-select
+          :clearable="false"
+          label="title"
+          :options="bacteries"
+          :searchable="true"
+          class="inner-select"
+          placeholder="Выберите микроорганизм"
+          v-model="selectedBactery"
+          append-to-body
+          :calculate-position="withPopper"
         />
         <button class="btn btn-blue-nb" @click="addBactery">
           Добавить
@@ -24,34 +34,41 @@
       <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
         <div v-for="bactery in bacteriesResult" class="bactery" :key="bactery.bacteryPk">
           <div class="bactery-title">
-          <span title="Удалить" class="bactery-delete" @click="deleteBac(bactery.bacteryPk)" v-tippy>
-            <i class="fa fa-times"></i>
-          </span>
-            <span class="bactery-title-inner">
-            {{bactery.bacteryGroupTitle}} {{bactery.bacteryTitle}}
-          </span>
+            <span title="Удалить" class="bactery-delete" @click="deleteBac(bactery.bacteryPk)" v-tippy>
+              <i class="fa fa-times"></i>
+            </span>
+            <span class="bactery-title-inner"> {{ bactery.bacteryGroupTitle }} {{ bactery.bacteryTitle }} </span>
           </div>
           <div class="bactery-body">
             <div class="bactery-selects" v-if="!confirmed">
               <div class="row">
                 <div class="col-xs-6 two">
-                  <v-select :clearable="false" label="title" :options="antibiotics.sets" :searchable="true"
-                            class="inner-select"
-                            placeholder="Выберите набор"
-                            v-model="bactery.selectedSet"
-                            append-to-body :calculate-position="withPopper"
+                  <v-select
+                    :clearable="false"
+                    label="title"
+                    :options="antibiotics.sets"
+                    :searchable="true"
+                    class="inner-select"
+                    placeholder="Выберите набор"
+                    v-model="bactery.selectedSet"
+                    append-to-body
+                    :calculate-position="withPopper"
                   />
                   <button class="btn btn-blue-nb" @click="loadSet(bactery)">
                     Загрузить набор
                   </button>
                 </div>
                 <div class="col-xs-6 three">
-                  <v-select :clearable="false" label="title" :options="antibiotics.groupsObj[bactery.selectedGroup.pk]"
-                            :searchable="true"
-                            class="inner-select"
-                            placeholder="Выберите антибиотик"
-                            v-model="bactery.selectedAntibiotic"
-                            append-to-body :calculate-position="withPopper"
+                  <v-select
+                    :clearable="false"
+                    label="title"
+                    :options="antibiotics.groupsObj[bactery.selectedGroup.pk]"
+                    :searchable="true"
+                    class="inner-select"
+                    placeholder="Выберите антибиотик"
+                    v-model="bactery.selectedAntibiotic"
+                    append-to-body
+                    :calculate-position="withPopper"
                   />
                   <button class="btn btn-blue-nb" @click="loadAntibiotic(bactery)">
                     Добавить
@@ -63,53 +80,63 @@
               <div class="left">
                 <table class="table table-bordered table-condensed" style="max-width: 665px;margin-top: 15px">
                   <colgroup>
-                    <col style="width: 34px" v-if="!confirmed"/>
-                    <col/>
-                    <col style="width: 90px"/>
-                    <col style="width: 74px"/>
-                    <col style="width: 148px"/>
-                    <col style="width: 100px"/>
+                    <col style="width: 34px" v-if="!confirmed" />
+                    <col />
+                    <col style="width: 90px" />
+                    <col style="width: 74px" />
+                    <col style="width: 148px" />
+                    <col style="width: 100px" />
                   </colgroup>
                   <thead>
-                  <tr>
-                    <th colspan="2" v-if="!confirmed">Название</th>
-                    <th v-else>Название</th>
-                    <th></th>
-                    <th>Чувствительность</th>
-                    <th>Диаметр</th>
-                  </tr>
+                    <tr>
+                      <th colspan="2" v-if="!confirmed">Название</th>
+                      <th v-else>Название</th>
+                      <th></th>
+                      <th>Чувствительность</th>
+                      <th>Диаметр</th>
+                    </tr>
                   </thead>
                   <tbody>
-                  <tr v-for="a in bactery.antibiotics" :key="a.pk">
-                    <td class="cl-td" v-if="!confirmed">
-                      <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
-                              tabindex="-1"
-                              @click="deleteAnti(bactery, a.pk)">
-                        <i class="fa fa-times"></i>
-                      </button>
-                    </td>
-                    <td>
-                      {{antibiotics.antibiotics[a.pk]}}
-                    </td>
-                    <td class="cl-td">
-                      <input v-model="a.amount" class="form-control" maxlength="30" :readonly="confirmed"
-                             placeholder="Дозировка"/>
-                    </td>
-                    <td class="cl-td">
-                      <radio-field v-model="a.sri" :variants="sri" redesigned :disabled="confirmed"/>
-                    </td>
-                    <td class="cl-td">
-                      <input v-model="a.dia" class="form-control" maxlength="64" :readonly="confirmed"/>
-                    </td>
-                  </tr>
-                  <tr v-if="bactery.antibiotics.length === 0">
-                    <td colspan="5" class="text-center" v-if="!confirmed">
-                      антибиотики не выбраны
-                    </td>
-                    <td colspan="4" class="text-center" v-else>
-                      антибиотики не выбраны
-                    </td>
-                  </tr>
+                    <tr v-for="a in bactery.antibiotics" :key="a.pk">
+                      <td class="cl-td" v-if="!confirmed">
+                        <button
+                          title="Удалить"
+                          class="btn last btn-blue-nb nbr"
+                          type="button"
+                          v-tippy
+                          tabindex="-1"
+                          @click="deleteAnti(bactery, a.pk)"
+                        >
+                          <i class="fa fa-times"></i>
+                        </button>
+                      </td>
+                      <td>
+                        {{ antibiotics.antibiotics[a.pk] }}
+                      </td>
+                      <td class="cl-td">
+                        <input
+                          v-model="a.amount"
+                          class="form-control"
+                          maxlength="30"
+                          :readonly="confirmed"
+                          placeholder="Дозировка"
+                        />
+                      </td>
+                      <td class="cl-td">
+                        <radio-field v-model="a.sri" :variants="sri" redesigned :disabled="confirmed" />
+                      </td>
+                      <td class="cl-td">
+                        <input v-model="a.dia" class="form-control" maxlength="64" :readonly="confirmed" />
+                      </td>
+                    </tr>
+                    <tr v-if="bactery.antibiotics.length === 0">
+                      <td colspan="5" class="text-center" v-if="!confirmed">
+                        антибиотики не выбраны
+                      </td>
+                      <td colspan="4" class="text-center" v-else>
+                        антибиотики не выбраны
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -121,14 +148,22 @@
                   </div>
 
                   <div class="fields" style="padding: 5px 0">
-                    <div :class="{disabled: confirmed}"
-                     v-on="{
-                      mouseenter: enter_field(cultureCommentsTemplates.length > 0),
-                      mouseleave: leave_field(cultureCommentsTemplates.length > 0),
-                     }" class="field field-vertical">
+                    <div
+                      :class="{ disabled: confirmed }"
+                      v-on="{
+                        mouseenter: enter_field(cultureCommentsTemplates.length > 0),
+                        mouseleave: leave_field(cultureCommentsTemplates.length > 0),
+                      }"
+                      class="field field-vertical"
+                    >
                       <div class="field-value">
-                        <textarea v-model="bactery.comments" placeholder="Комментарии" rows="6" class="form-control"
-                                  :readonly="confirmed" />
+                        <textarea
+                          v-model="bactery.comments"
+                          placeholder="Комментарии"
+                          rows="6"
+                          class="form-control"
+                          :readonly="confirmed"
+                        />
                       </div>
 
                       <FastTemplates
@@ -171,7 +206,10 @@ const getDefaultElement = () => ({
 export default {
   name: 'BacMicroForm',
   components: {
-    KOEField, FastTemplates, RadioField, vSelect,
+    KOEField,
+    FastTemplates,
+    RadioField,
+    vSelect,
   },
   props: {
     cultureCommentsTemplates: {
@@ -266,11 +304,11 @@ export default {
         return;
       }
 
-      this.bacteriesResult = this.bacteriesResult.filter((br) => br.bacteryPk !== pk);
+      this.bacteriesResult = this.bacteriesResult.filter(br => br.bacteryPk !== pk);
     },
     deleteAnti(bactery, pk) {
       // eslint-disable-next-line no-param-reassign
-      bactery.antibiotics = bactery.antibiotics.filter((a) => a.pk !== pk);
+      bactery.antibiotics = bactery.antibiotics.filter(a => a.pk !== pk);
     },
     loadSet(bactery) {
       for (const id of bactery.selectedSet.ids) {
@@ -300,7 +338,7 @@ export default {
       bactery.selectedAntibiotic = this.antibiotics.groupsObj[bactery.selectedGroup.pk][0];
     },
     updateValue(field, prop) {
-      return (newValue) => {
+      return newValue => {
         // eslint-disable-next-line no-param-reassign
         field[prop] = newValue;
       };
@@ -330,173 +368,178 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .flex-select {
-    font-weight: normal;
-    padding-left: 5px;
-    margin-top: -5px;
-    margin-bottom: -5px;
-    width: 539px;
-    display: inline-flex;
-    flex-wrap: nowrap;
-    justify-content: stretch;
-    align-content: stretch;
-    align-items: stretch;
+.flex-select {
+  font-weight: normal;
+  padding-left: 5px;
+  margin-top: -5px;
+  margin-bottom: -5px;
+  width: 539px;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  align-content: stretch;
+  align-items: stretch;
 
-    .btn {
-      border-radius: 0 !important;
-      height: 30px !important;
-    }
-
-    .inner-select {
-      align-self: stretch;
-      &:first-child {
-        flex: 0 0 210px;
-        max-width: 210px;
-      }
-      &:last-child {
-        flex: 1;
-      }
-      margin-right: 5px;
-      height: 30px !important;
-
-      ::v-deep .vs__dropdown-toggle {
-        border-radius: 0 !important;
-      }
-    }
-  }
-
-  .table-row {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: stretch;
-    align-content: stretch;
-    align-items: stretch;
-
-    .left, .right {
-      align-self: stretch;
-    }
-
-    .left {
-      flex: 1 60%;
-      max-width: 665px;
-    }
-
-    .right {
-      flex: 0 40%;
-      padding-left: 10px;
-      padding-top: 15px;
-      padding-bottom: 20px;
-
-      &-inner {
-        width: 100%;
-
-        textarea {
-          margin-top: 5px;
-        }
-      }
-    }
-  }
-
-  .inner-select, .input-select .btn {
-    display: inline-block;
-    vertical-align: middle;
-  }
-
-  .inner-select, .input-select .btn {
-    height: 32px;
-  }
-
-  .bactery-selects {
-    position: sticky;
-    top: 80px;
-    background: #fff;
-    padding-bottom: 5px;
-    padding-top: 5px;
-    border-bottom: solid 1px lightgray;
-    z-index: 1;
-
-    .row {
-      max-width: 700px;
-    }
-
-    .two, .three {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: stretch;
-      align-content: stretch;
-      align-items: stretch;
-    }
-
-    .two {
-      padding-right: 5px;
-      border-right: 1px solid lightgray;
-    }
-
-    .three {
-      padding-left: 5px;
-    }
-
-    .inner-select, .btn {
-      align-self: stretch;
-      height: 32px;
-      margin: 0 5px;
-      max-width: 100%;
-    }
-
-    .inner-select {
-      flex: 1;
-    }
-
-    .btn {
-      flex: 0;
-    }
+  .btn {
+    border-radius: 0 !important;
+    height: 31px !important;
   }
 
   .inner-select {
-    background: #fff !important;
+    align-self: stretch;
+    &:first-child {
+      flex: 0 0 210px;
+      max-width: 210px;
+    }
+    &:last-child {
+      flex: 1;
+    }
+    margin-right: 5px;
+    height: 30px !important;
+
+    ::v-deep .vs__dropdown-toggle {
+      border-radius: 0 !important;
+    }
+  }
+}
+
+.table-row {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  align-content: stretch;
+  align-items: stretch;
+
+  .left,
+  .right {
+    align-self: stretch;
   }
 
-  .bactery {
-    margin: 10px 0;
-    border: 1px solid #048493;
-    border-radius: 5px;
-    overflow: visible;
+  .left {
+    flex: 1 60%;
+    max-width: 665px;
+  }
 
-    &-title {
-      z-index: 2;
-      position: sticky;
-      top: 60px;
-      color: #fff;
-      background: #048493;
-      line-height: 20px;
-      border-radius: 4px 4px 0 0;
-      overflow: hidden;
+  .right {
+    flex: 0 40%;
+    padding-left: 10px;
+    padding-top: 15px;
+    padding-bottom: 20px;
 
-      span {
-        display: inline-block;
+    &-inner {
+      width: 100%;
+
+      textarea {
+        margin-top: 5px;
       }
     }
+  }
+}
 
-    &-delete {
-      padding: 0 4px;
-      cursor: pointer;
+.inner-select,
+.input-select .btn {
+  display: inline-block;
+  vertical-align: middle;
+}
 
-      &:hover {
-        background: #0c7e8b;
-      }
+.inner-select,
+.input-select .btn {
+  height: 32px;
+}
+
+.bactery-selects {
+  position: sticky;
+  top: 80px;
+  background: #fff;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  border-bottom: solid 1px lightgray;
+  z-index: 1;
+
+  .row {
+    max-width: 700px;
+  }
+
+  .two,
+  .three {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    align-content: stretch;
+    align-items: stretch;
+  }
+
+  .two {
+    padding-right: 5px;
+    border-right: 1px solid lightgray;
+  }
+
+  .three {
+    padding-left: 5px;
+  }
+
+  .inner-select,
+  .btn {
+    align-self: stretch;
+    height: 32px;
+    margin: 0 5px;
+    max-width: 100%;
+  }
+
+  .inner-select {
+    flex: 1;
+  }
+
+  .btn {
+    flex: 0;
+  }
+}
+
+.inner-select {
+  background: #fff !important;
+}
+
+.bactery {
+  margin: 10px 0;
+  border: 1px solid #048493;
+  border-radius: 5px;
+  overflow: visible;
+
+  &-title {
+    z-index: 2;
+    position: sticky;
+    top: 60px;
+    color: #fff;
+    background: #048493;
+    line-height: 20px;
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+
+    span {
+      display: inline-block;
     }
   }
 
-  .bactery-body {
-    padding: 5px;
+  &-delete {
+    padding: 0 4px;
+    cursor: pointer;
 
-    hr {
-      margin: 5px 0;
+    &:hover {
+      background: #0c7e8b;
     }
   }
+}
 
-  .bactery-msg {
-    padding: 20px;
-    text-align: center;
+.bactery-body {
+  padding: 5px;
+
+  hr {
+    margin: 5px 0;
   }
+}
+
+.bactery-msg {
+  padding: 20px;
+  text-align: center;
+}
 </style>

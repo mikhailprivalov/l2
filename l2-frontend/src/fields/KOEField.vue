@@ -1,6 +1,6 @@
 <template>
   <div v-frag>
-    <select v-model="num" class="form-control" style="z-index: 0">
+    <select v-model="num" class="form-control" style="z-index: 0" :disabled="disabled">
       <option value="0">0</option>
       <option value="1">1</option>
       <option value="2">2</option>
@@ -15,7 +15,7 @@
     <span class="input-group-addon">
       &nbsp;×&nbsp;10^
     </span>
-    <select v-model="power" class="form-control" style="z-index: 0">
+    <select v-model="power" class="form-control" style="z-index: 0" :disabled="disabled">
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3">3</option>
@@ -32,13 +32,14 @@
       <option value="15">15</option>
     </select>
     <span class="input-group-addon">
-      ({{num}}&nbsp;×&nbsp;10<sup style="top: -.3em">{{power}}</sup>)
+      ({{ num }}&nbsp;×&nbsp;10<sup style="top: -.3em">{{ power }}</sup
+      >)
     </span>
   </div>
 </template>
 
 <script lang="ts">
-const valueToParts = (value) => {
+const valueToParts = value => {
   const [num, second] = value.split(' × ');
   const [, power] = (second || '').split('^');
 
