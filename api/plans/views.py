@@ -124,7 +124,6 @@ def get_plan_hospitalization_by_params(request):
     sex_female = 0
     all_patient = 0
     for i in result:
-        print(i)
         last_age_digit = i.ind_age[-1]
         if int(last_age_digit) in [2, 3, 4]:
             prefix_age = "года"

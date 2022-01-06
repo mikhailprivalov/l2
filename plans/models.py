@@ -135,16 +135,9 @@ class PlanHospitalization(models.Model):
             doc_who_create=doc_who_create,
             work_status=0,
             hospital_department_id=data['hospital_department_id'],
-            action=data['action']
+            action=data['action'],
         )
         plan_hospitalization.save()
-        print({
-                    "card_pk": patient_card.pk,
-                    "research": research_obj.title,
-                    "date": data['date'],
-                    "comment": data['comment'],
-                    "hospital_department_id": data['hospital_department_id'],
-                })
         slog.Log(
             key=plan_hospitalization.pk,
             type=80007,
@@ -160,7 +153,6 @@ class PlanHospitalization(models.Model):
             user=doc_who_create,
         ).save()
         return plan_hospitalization.pk
-
 
     @staticmethod
     def plan_hospitalization_change_status(data, doc_who_create):
@@ -199,6 +191,3 @@ class PlanHospitalization(models.Model):
             result = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date)).order_by("pk", "exec_at", "research")
 
         return result
-
-
-
