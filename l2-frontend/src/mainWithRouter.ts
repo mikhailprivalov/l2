@@ -195,7 +195,7 @@ const router = new Router({
       name: 'plan_hospitalization',
       component: () => import('@/pages/PlanHospitalization/index.vue'),
       meta: {
-        title: 'план госпитализации',
+        title: 'План госпитализации',
         groups: ['Лечащий врач', 'Оператор лечащего врача', 'Вызов врача'],
         narrowLayout: true,
       },
