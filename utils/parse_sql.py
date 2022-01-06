@@ -22,6 +22,14 @@ def death_form_result_parse(data, reserved=False):
         tmp_data["fio_patient"] = i.fio_patient
         tmp_data["sex"] = i.sex
         tmp_data["hosp_title"] = i.hosp_title
+        if i.hosp_okpo:
+            tmp_data["hosp_okpo"] = i.hosp_okpo
+        else:
+            tmp_data["hosp_okpo"] = ""
+        if i.hosp_okato:
+            tmp_data["hosp_okato"] = i.hosp_okato
+        else:
+            tmp_data["hosp_okato"] = ""
         if reserved:
             tmp_data["napravleniye_id"] = i.napravleniye_id or ""
             tmp_data["date_create"] = i.date_create or ""

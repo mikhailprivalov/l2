@@ -699,6 +699,9 @@ def statistic_research_death_base_card(ws1, d1, d2, research_titile):
         ('ДТП (1/0)', 12),
         ('Материнская смертность (1/0)', 15),
         ('ФИО выдавшего свидетельства', 20),
+        ('Тип места смерти', 25),
+        ('ОКПО', 16),
+        ('ОКАТО', 16),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -913,8 +916,15 @@ def statistic_research_death_data_card(ws1, researches):
         else:
             who_write = ""
         ws1.cell(row=r, column=30).value = who_write
+        try:
+            type_where_death = i["Типы мест наступления смерти"]["title"]
+        except:
+            type_where_death = "-"
+        ws1.cell(row=r, column=31).value = type_where_death
+        ws1.cell(row=r, column=32).value = i["hosp_okpo"]
+        ws1.cell(row=r, column=33).value = i["hosp_okato"]
 
-        rows = ws1[f'A{r}:AD{r}']
+        rows = ws1[f'A{r}:AG{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
