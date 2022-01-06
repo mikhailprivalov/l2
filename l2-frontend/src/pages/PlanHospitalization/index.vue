@@ -6,10 +6,6 @@
       <button class="btn btn-blue-nb" @click="load_data">
         Обновить
       </button>
-      <button @click="load_data" class="btn btn-blue-nb" type="button">
-        Печать
-      </button>
-      {{sex_male}} {{sex_female}} {{all_patient}}
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
@@ -69,9 +65,6 @@ import * as actions from '../../store/action-types';
       title: 'План госпитализации',
       pk_plan: '',
       data: [],
-      sex_male: '',
-      sex_female: '',
-      all_patient: '',
       departments: [],
       filters: {
         date: [
@@ -124,12 +117,6 @@ export default class PlanHospitalization extends Vue {
 
   data: any[];
 
-  sex_male: any;
-
-  sex_female: any;
-
-  all_patient: any;
-
   filters: any;
 
   dateRange: any;
@@ -149,9 +136,6 @@ export default class PlanHospitalization extends Vue {
       department_pk: this.filters.department_pk || -1,
     });
     this.data = result_data.result;
-    this.sex_male = result_data.sex_male;
-    this.sex_female = result_data.sex_female;
-    this.all_patient = result_data.all_patient;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 }

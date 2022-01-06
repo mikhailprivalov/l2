@@ -14,7 +14,6 @@ from utils.data_verification import data_parse
 
 @login_required
 def create(request):
-    print(request.body)
     data = data_parse(request.body, {'card_pk': 'card', 'comment': 'str_strip', 'date': str, 'researches': list, 'phone': 'str_strip'})
 
     card: Card = data[0]
@@ -31,21 +30,12 @@ def create(request):
     hospital_researches = [r for r in Researches.objects.filter(pk__in=researches) if r.is_hospital]
     if len(hospital_researches) > 1:
         return JsonResponse({"ok": False})
-    print(hospital_researches)
 
     if len(hospital_researches) == 1:
         if not hosp_department_id:
             hosp_department_id = hospital_researches[0].podrazdeleniye.pk
         PlanHospitalization.plan_hospitalization_save(
-            {
-                'card': card,
-                'research': hospital_researches[0].pk,
-                'date': date,
-                'comment': comment,
-                'phone': phone,
-                'action': 0,
-                'hospital_department_id': hosp_department_id
-            },
+            {'card': card, 'research': hospital_researches[0].pk, 'date': date, 'comment': comment, 'phone': phone, 'action': 0, 'hospital_department_id': hosp_department_id},
             request.user.doctorprofile,
         )
     else:
@@ -72,5 +62,10 @@ def actual_rows(request):
     date_from = datetime.datetime.combine(current_time(), datetime.time.min)
 
     rows = list(ListWait.objects.filter(client_id=card_pk, exec_at__gte=date_from).order_by('exec_at', 'pk').values('pk', 'exec_at', 'research__title', 'comment', 'work_status', 'phone'))
+    plan_hosp = list(
+        PlanHospitalization.objects.filter(client_id=card_pk, exec_at__gte=date_from).order_by('exec_at', 'pk').values('pk', 'exec_at', 'research__title', 'comment', 'work_status', 'phone')
+    )
+
+    rows.extend(plan_hosp)
 
     return JsonResponse(rows, safe=False)

@@ -2,15 +2,14 @@
   <table class="table" style="table-layout: fixed">
     <colgroup>
       <col width='201'/>
-      <col />
       <col width='510'/>
+      <col />
     </colgroup>
     <tbody>
     <tr>
       <td>
         <date-range v-model="filters.date"/>
       </td>
-      <td/>
       <td>
         <treeselect
           :multiple="false"
