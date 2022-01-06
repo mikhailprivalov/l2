@@ -156,7 +156,7 @@ class PlanHospitalization(models.Model):
 
     @staticmethod
     def plan_hospitalization_change_status(data, doc_who_create):
-        plan_hosp = PlanHospitalization.objects.filter(pk=data['pk_plan_hosp'])[0]
+        plan_hosp = PlanHospitalization.objects.get(pk=data['pk_plan_hosp'])
         plan_hosp.doc_who_create = doc_who_create
         plan_hosp.status = data['status']
         plan_hosp.save()
@@ -183,8 +183,7 @@ class PlanHospitalization(models.Model):
         start_date = datetime.combine(d1, datetime.time.min)
         end_date = datetime.combine(d2, datetime.time.max)
         if data.get('research', None):
-            research_obj = Researches.objects.filter(pk=data.get('research'))
-            result = PlanHospitalization.objects.filter(research=research_obj, exec_at__range=(start_date, end_date)).order_by("exec_at")
+            result = PlanHospitalization.objects.filter(research_id=data.get('research'), exec_at__range=(start_date, end_date)).order_by("exec_at")
         elif data.get('patient_pk', None):
             result = PlanHospitalization.objects.filter(client__pk=data.get('patient_pk')).order_by("exec_at")
         else:
