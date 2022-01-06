@@ -2020,7 +2020,7 @@ export default {
       if (this.data.has_gistology) {
         return [10003];
       }
-      return [];
+      return [1000000];
     },
     pk_c() {
       const lpk = this.pk.trim();

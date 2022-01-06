@@ -443,7 +443,10 @@ export default {
     },
     departments_of_type() {
       if (this.is_doc_ref) {
-        return this.$store.getters.ex_dep[this.type];
+        if (this.filter_sub_types.length === 0) {
+          return this.$store.getters.ex_dep[this.type];
+        }
+        return this.$store.getters.ex_dep[this.type].filter(t => this.filter_sub_types.includes(t.pk));
       }
       const r = [];
       for (const row of this.$store.getters.allDepartments) {
