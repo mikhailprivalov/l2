@@ -1,9 +1,13 @@
 from clients.models import Card
 from django.db import models
+
+from directory.models import Researches
+from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from datetime import datetime
 import slog.models as slog
 import simplejson as json
+from laboratory.utils import current_time
 
 
 class PlanOperations(models.Model):
@@ -90,3 +94,99 @@ class PlanOperations(models.Model):
         plan_obj.canceled = not plan_obj.canceled
         plan_obj.save()
         return plan_obj.canceled
+
+
+class PlanHospitalization(models.Model):
+    STATUS = (
+        (0, "Ожидает"),
+        (1, "Выполнено"),
+        (2, "Отменено"),
+    )
+    ACTION = (
+        (0, "Поступление"),
+        (1, "Выбытие"),
+    )
+    client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, null=True, blank=True, db_index=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
+    create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
+    exec_at = models.DateTimeField(help_text='Дата для записи', db_index=True)
+    comment = models.TextField()
+    work_status = models.PositiveSmallIntegerField(choices=STATUS, db_index=True, default=0, blank=True)
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель листа ожидания', on_delete=models.SET_NULL)
+    phone = models.CharField(max_length=20, blank=True, default='')
+    hospital_department = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
+    action = models.PositiveSmallIntegerField(choices=ACTION, db_index=True, default=0, blank=True)
+    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True)
+
+    class Meta:
+        verbose_name = 'План коечного фонда'
+        verbose_name_plural = 'План коечного фонда'
+
+    @staticmethod
+    def plan_hospitalization_save(data, doc_who_create):
+        patient_card = Card.objects.get(pk=data['card_pk']) if 'card' not in data else data['card']
+        research_obj = Researches.objects.get(pk=data['research'])
+        plan_hospitalization = PlanHospitalization(
+            client=patient_card,
+            research=research_obj,
+            exec_at=datetime.strptime(data['date'], '%Y-%m-%d'),
+            comment=data['comment'],
+            phone=data['phone'],
+            doc_who_create=doc_who_create,
+            work_status=0,
+            hospital_department_id=data['hospital_department_id'],
+            action=data['action'],
+        )
+        plan_hospitalization.save()
+        slog.Log(
+            key=plan_hospitalization.pk,
+            type=80007,
+            body=json.dumps(
+                {
+                    "card_pk": patient_card.pk,
+                    "research": research_obj.title,
+                    "date": data['date'],
+                    "comment": data['comment'],
+                    "hospital_department_id": data['hospital_department_id'],
+                }
+            ),
+            user=doc_who_create,
+        ).save()
+        return plan_hospitalization.pk
+
+    @staticmethod
+    def plan_hospitalization_change_status(data, doc_who_create):
+        plan_hosp = PlanHospitalization.objects.get(pk=data['pk_plan_hosp'])
+        plan_hosp.doc_who_create = doc_who_create
+        plan_hosp.status = data['status']
+        plan_hosp.save()
+
+        slog.Log(
+            key=plan_hosp.pk,
+            type=80008,
+            body=json.dumps({"card_pk": plan_hosp.client.pk, "status": plan_hosp.status, "action": data["action"]}),
+            user=doc_who_create,
+        ).save()
+        return plan_hosp.pk
+
+    @staticmethod
+    def plan_hosp_get(data):
+        if data.get('d1', None):
+            d1 = datetime.strptime(data.get('d1'), '%d.%m.%Y')
+        else:
+            d1 = current_time()
+        if data.get('d2', None):
+            d2 = datetime.strptime(data.get('d2'), '%d.%m.%Y')
+        else:
+            d2 = current_time()
+
+        start_date = datetime.combine(d1, datetime.time.min)
+        end_date = datetime.combine(d2, datetime.time.max)
+        if data.get('research', None):
+            result = PlanHospitalization.objects.filter(research_id=data.get('research'), exec_at__range=(start_date, end_date)).order_by("exec_at")
+        elif data.get('patient_pk', None):
+            result = PlanHospitalization.objects.filter(client__pk=data.get('patient_pk')).order_by("exec_at")
+        else:
+            result = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date)).order_by("pk", "exec_at", "research")
+
+        return result

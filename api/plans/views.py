@@ -6,7 +6,7 @@ from clients.models import Card
 from forms.forms_func import primary_reception_get_data
 from laboratory.utils import strdate, current_time, strfdatetime
 from plans.models import PlanOperations
-from .sql_func import get_plans_by_params_sql
+from .sql_func import get_plans_by_params_sql, get_plans_hospitalization_sql
 from ..sql_func import users_by_group
 from slog.models import Log
 from ..stationar.stationar_func import hosp_get_hosp_direction
@@ -106,6 +106,66 @@ def get_plan_operations_by_params(request):
         )
 
     return JsonResponse({"result": data})
+
+
+@login_required
+def get_plan_hospitalization_by_params(request):
+    request_data = json.loads(request.body)
+    start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
+    start_date = datetime.combine(start_date, dtime.min)
+    end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
+    end_date = datetime.combine(end_date, dtime.max)
+    department_pk = request_data.get('department_pk', -1)
+
+    result = get_plans_hospitalization_sql(start_date, end_date, department_pk)
+
+    data = []
+    sex_male = 0
+    sex_female = 0
+    all_patient = 0
+    for i in result:
+        last_age_digit = i.ind_age[-1]
+        if int(last_age_digit) in [2, 3, 4]:
+            prefix_age = "года"
+        elif last_age_digit == 1:
+            prefix_age = "год"
+        else:
+            prefix_age = "лет"
+        data_patient = f"{i.fio_patient} {i.ind_age} {prefix_age} ({i.born})"
+        update_date = Log.objects.filter(key=i.pk_plan, type=80008)
+        create_date = Log.objects.filter(key=i.pk_plan, type=80007)
+        tooltip_data = []
+        for c in create_date:
+            doctor = c.user.get_fio()
+            time = strfdatetime(c.time, '%d.%m.%y-%H:%M')
+            tooltip_data.append(f'Создал: {doctor} ({time})')
+        for u in update_date:
+            doctor = u.user.get_fio()
+            time = strfdatetime(u.time, '%d.%m.%y-%H:%M')
+            tooltip_data.append(f"Обновил: {doctor} ({time})")
+
+        data.append(
+            {
+                "pk_plan": i.pk_plan,
+                "date": i.exec_at_char,
+                "patient_card": i.client_id,
+                "fio_patient": data_patient,
+                "phone": i.phone,
+                "research_title": i.research_title,
+                "depart_title": i.depart_title,
+                "diagnos":i.diagnos,
+                "tooltip_data": '\n'.join(tooltip_data),
+                "sex": i.sex,
+                "comment": i.comment
+            }
+        )
+        if i.sex.lower() == "ж":
+            sex_female += 1
+        else:
+            sex_male += 1
+        all_patient += 1
+
+    return JsonResponse({"result": data, "sex_female": sex_female, "sex_male": sex_male, "all_patient": all_patient})
 
 
 @login_required

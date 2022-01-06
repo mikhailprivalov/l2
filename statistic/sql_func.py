@@ -275,7 +275,9 @@ def statistics_death_research(research_id: object, d_s: object, d_e: object) -> 
                 directions_napravleniya.client_id,
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as fio_patient,
                 clients_individual.sex,
-                hospitals_hospitals.title as hosp_title
+                hospitals_hospitals.title as hosp_title,
+                hospitals_hospitals.okpo as hosp_okpo,
+                hospitals_hospitals.okato as hosp_okato
                 FROM public.directions_paraclinicresult
                 LEFT JOIN directions_issledovaniya
                 ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
@@ -316,7 +318,9 @@ def statistics_reserved_number_death_research(research_id: object, d_s: object, 
                 to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_create,
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as fio_patient,
                 clients_individual.sex,
-                hospitals_hospitals.title as hosp_title
+                hospitals_hospitals.title as hosp_title,
+                hospitals_hospitals.okpo as hosp_okpo,
+                hospitals_hospitals.okato as hosp_okato
                 FROM public.directions_paraclinicresult
                 LEFT JOIN directions_issledovaniya
                 ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
@@ -970,7 +974,9 @@ def statistics_death_research_by_card(research_id, card_tuple):
                 directions_napravleniya.client_id,
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as fio_patient,
                 clients_individual.sex,
-                hospitals_hospitals.title as hosp_title
+                hospitals_hospitals.title as hosp_title,
+                hospitals_hospitals.okpo as hosp_okpo,
+                hospitals_hospitals.okato as hosp_okato
                 FROM public.directions_paraclinicresult
                 LEFT JOIN directions_issledovaniya
                 ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id

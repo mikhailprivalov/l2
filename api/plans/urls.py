@@ -9,4 +9,5 @@ urlpatterns = [
     path('departments-can-operate', views.get_departments_can_operate),
     path('change-anestesiolog', views.change_anestesiolog),
     path('plan-operations-cancel', views.plan_operations_cancel),
+    path('get-plan-hospitalization', views.get_plan_hospitalization_by_params),
 ]
