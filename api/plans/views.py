@@ -156,7 +156,8 @@ def get_plan_hospitalization_by_params(request):
                 "depart_title": i.depart_title,
                 "diagnos":i.diagnos,
                 "tooltip_data": '\n'.join(tooltip_data),
-                "sex": i.sex
+                "sex": i.sex,
+                "comment": i.comment
             }
         )
         if i.sex.lower() == "ж":

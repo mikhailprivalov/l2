@@ -18,15 +18,7 @@
     <td>
       {{data.diagnos}}
     </td>
-    <td></td>
-    <td>
-      <button title="Редактирование" class="btn btn-blue-nb" type="button" v-tippy
-              tabindex="-1"
-              :disabled="!can_edit_operations"
-              @click="edit_plan_operation = true">
-        <i class="fa fa-pencil"></i>
-      </button>
-    </td>
+    <td>{{data.comment}}}</td>
   </tr>
 </template>
 

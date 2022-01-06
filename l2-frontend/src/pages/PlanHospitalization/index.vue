@@ -20,7 +20,6 @@
         <col width="170" />
         <col width="170" />
         <col width="150" />
-        <col width="55" />
       </colgroup>
       <thead>
         <tr>
@@ -31,7 +30,6 @@
           <th>Отделение</th>
           <th>Диагноз</th>
           <th>Прим</th>
-          <th></th>
         </tr>
       </thead>
       <tbody>

@@ -25,6 +25,7 @@ class Hospitals(models.Model):
     research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
     current_manager = models.CharField(max_length=128, blank=True, default='', help_text="Руководитель/ИО учреждения")
     okpo = models.CharField(max_length=10, blank=True, default='', help_text="ОКПО")
+    okato = models.CharField(max_length=11, blank=True, default='', help_text="ОКАТО")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
     @staticmethod

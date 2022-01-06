@@ -4,7 +4,6 @@
       <col width='201'/>
       <col />
       <col width='510'/>
-      <col width='410'/>
     </colgroup>
     <tbody>
     <tr>
@@ -23,9 +22,6 @@
           class="treeselect-wide"
           :clearable="false"
         />
-      </td>
-      <td>
-        <h6 style="vertical-align: middle; float: right">Выбытие </h6>
       </td>
     </tr>
     </tbody>

@@ -119,7 +119,7 @@ def get_plans_hospitalization_sql(d_s, d_e, department):
         t_plans AS 
             (SELECT id as pk_plan, client_id,
             to_char(exec_at AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS exec_at_char, 
-            work_status, action, exec_at, hospital_department_id, phone, research_id, diagnos FROM plans_planhospitalization
+            work_status, action, exec_at, hospital_department_id, phone, research_id, diagnos, comment FROM plans_planhospitalization
             WHERE 
             CASE
             WHEN %(department_id)s > -1 THEN
@@ -139,7 +139,8 @@ def get_plans_hospitalization_sql(d_s, d_e, department):
         SELECT pk_plan, client_id, exec_at_char, work_status, action, hospital_department_id,
                concat_ws(' ', ind_family, ind_name, ind_twoname) as fio_patient, birthday, exec_at,
                to_char(EXTRACT(YEAR from age(t_plans.exec_at, t_patient.birthday)), '999') as ind_age,
-               t_patient.born, podrazdeleniya_podrazdeleniya.title as depart_title, phone, directory_researches.title as research_title, diagnos, t_patient.sex
+               t_patient.born, podrazdeleniya_podrazdeleniya.title as depart_title, phone, directory_researches.title as research_title, diagnos, 
+               t_patient.sex, comment
                 FROM t_plans
         LEFT JOIN t_patient ON t_plans.client_id = t_patient.card_id 
         LEFT JOIN podrazdeleniya_podrazdeleniya ON podrazdeleniya_podrazdeleniya.id = hospital_department_id
