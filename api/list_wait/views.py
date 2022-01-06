@@ -29,7 +29,7 @@ def create(request):
 
     hospital_researches = [r for r in Researches.objects.filter(pk__in=researches) if r.is_hospital]
     if len(hospital_researches) > 1:
-        return JsonResponse({"ok": False})
+        return JsonResponse({"ok": False, "message": "Выбрано больше одной услуги"})
 
     if len(hospital_researches) == 1:
         if not hosp_department_id:
