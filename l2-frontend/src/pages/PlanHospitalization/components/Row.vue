@@ -24,8 +24,6 @@
 
 <script lang="ts">
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import * as actions from '../../../store/action-types';
-import plansPoint from '../../../api/plans-point';
 
 export default {
   name: 'Row',

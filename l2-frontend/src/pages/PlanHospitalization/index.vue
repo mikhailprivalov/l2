@@ -46,10 +46,8 @@
 
 <script lang="ts">
 import moment from 'moment';
-import flatten from 'lodash/flatten';
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import { valuesToString } from '@/utils';
 import plansPoint from '../../api/plans-point';
 import Filters from './components/Filters.vue';
 import Row from './components/Row.vue';
