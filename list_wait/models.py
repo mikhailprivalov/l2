@@ -1,7 +1,6 @@
 from django.db import models
 from clients.models import Card
 from directory.models import Researches
-from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 import datetime
 from laboratory.utils import current_time
