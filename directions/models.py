@@ -1137,7 +1137,6 @@ class Napravleniya(models.Model):
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result
         card = Clients.Card.objects.get(pk=client_id)
-        client_days_age = card.individual.age(days_monthes_years=True)
 
         if finsource and isinstance(finsource, str) and not finsource.isdigit():
             f_obj: Optional[IstochnikiFinansirovaniya] = (
@@ -1161,6 +1160,7 @@ class Napravleniya(models.Model):
 
                 for vv in researches[v]:
                     if vv == PERINATAL_DEATH_RESEARCH_PK:
+                        client_days_age = card.individual.age(days_monthes_years=True)
                         if client_days_age[0] > 11 and client_days_age[1] == 0 and client_days_age[2] == 0:
                             result["message"] = "Св-во о перинатальной смерти оформляется до 7 дней"
                             return result
