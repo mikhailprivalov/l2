@@ -208,6 +208,8 @@ def get_researches(request):
                     deps[r.reversed_type].extend(tpls)    
             deps[r.reversed_type].append(research_data)
 
+        for dk in deps:
+            deps[dk] = list(sorted(deps[dk], key=lambda d: d['title']))
         k = 'get_researches:tubes'
         tubes = cache.get(k)
         if not tubes:
