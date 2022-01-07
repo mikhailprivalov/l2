@@ -91,7 +91,7 @@ export default {
     },
     selectValue(node) {
       const { label, ...nodeRest } = node;
-      this.content = node.label;
+      this.content = label;
       this.detailsData = nodeRest;
     },
     input(v) {
