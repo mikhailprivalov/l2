@@ -656,7 +656,7 @@ th:not(.nopd):not(.button-td) {
       border: none !important;
     }
 
-    &:not(.has_pacs):not(&-single) {
+    &:not(.has_pacs):not(.has_pacs_stationar):not(&-single) {
       .btn {
         flex: 0 0 50%;
       }
