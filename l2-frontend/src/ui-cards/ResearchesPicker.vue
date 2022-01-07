@@ -368,6 +368,9 @@ export default {
     },
   },
   computed: {
+    hide_grouped_researches() {
+      return this.autoselect !== 'directions' || this.oneselect;
+    },
     l2_only_doc_call() {
       return this.$store.getters.modules.l2_only_doc_call;
     },
@@ -494,7 +497,7 @@ export default {
           r.push(row);
         }
       }
-      return r.filter(x => !this.filter_researches.includes(x.pk));
+      return r.filter(x => !this.filter_researches.includes(x.pk) && (!this.hide_grouped_researches || !x.auto_deselect));
     },
     researches_dep_display(dep = this.dep) {
       let r = [];
@@ -515,7 +518,7 @@ export default {
       } else if (this.dep in this.$store.getters.researches) {
         r = this.$store.getters.researches[dep];
       }
-      return r.filter(x => !this.filter_researches.includes(x.pk));
+      return r.filter(x => !this.filter_researches.includes(x.pk) && (!this.hide_grouped_researches || !x.auto_deselect));
     },
     k(t) {
       let n = 0;
