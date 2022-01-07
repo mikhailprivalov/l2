@@ -257,6 +257,56 @@ class AssignmentTemplates(models.Model):
             return 'lab'
         return 'unknown'
 
+    @property
+    def reversed_type(self):
+        if self.is_treatment:
+            return -3
+        if self.is_stom:
+            return -4
+        if self.is_hospital:
+            return -5
+        if self.is_microbiology or self.is_citology or self.is_gistology:
+            return 2 - Podrazdeleniya.MORFOLOGY
+        return self.podrazdeleniye_id or -2
+
+    def get_site_type_id(self):
+        if self.is_microbiology:
+            return Podrazdeleniya.MORFOLOGY + 1
+        if self.is_citology:
+            return Podrazdeleniya.MORFOLOGY + 2
+        if self.is_gistology:
+            return Podrazdeleniya.MORFOLOGY + 3
+        return self.site_type_id
+
+    def as_research(self):
+        r = self
+        return {
+            "pk": f'template-{r.pk}',
+            "onlywith": -1,
+            "department_pk": r.reversed_type,
+            "title": r.title,
+            "full_title": r.title,
+            "doc_refferal": r.is_doc_refferal,
+            "treatment": r.is_treatment,
+            "is_hospital": r.is_hospital,
+            "is_form": False,
+            "is_application": False,
+            "stom": r.is_stom,
+            "need_vich_code": False,
+            "comment_variants": [],
+            "autoadd": list(AssignmentResearches.objects.filter(template=r).values_list('research_id', flat=True)),
+            "auto_deselect": True,
+            "addto": [],
+            "code": '',
+            "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
+            "site_type": r.get_site_type_id(),
+            "site_type_raw": r.site_type_id,
+            "localizations": [],
+            "service_locations": [],
+            "direction_params": -1,
+            "research_data": {'research': {'status': 'NOT_LOADED'}},
+        }
+
     def __str__(self):
         return (self.title + " | Шаблон для ") + (str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")
 

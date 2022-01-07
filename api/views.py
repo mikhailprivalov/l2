@@ -1115,7 +1115,7 @@ def update_template(request):
                 t.is_microbiology = tp == 'microbiology'
                 t.is_citology = tp == 'citology'
                 t.is_gistology = tp == 'gistology'
-                t.site_type = request_data.get('site_type') if tp in users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE else None
+                t.site_type_id = request_data.get('siteType') if tp in users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE else None
                 t.save()
                 users.AssignmentResearches.objects.filter(template=t).exclude(research__pk__in=researches).delete()
                 to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]

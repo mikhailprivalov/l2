@@ -27,7 +27,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from rmis_integration.client import get_md5
 from slog.models import Log
-from users.models import Speciality
+from users.models import AssignmentTemplates, Speciality
 from utils.nsi_directories import NSI
 from utils.response import status_response
 from hospitals.models import HospitalsGroup
@@ -178,6 +178,34 @@ def get_researches(request):
             else:
                 research_data = json.loads(research_data)
 
+            if r.reversed_type not in deps:
+                tpls = []
+                if r.reversed_type > 0:
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type):
+                        tpls.append(at.as_research())
+                elif r.is_doc_refferal:
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True):
+                        tpls.append(at.as_research())
+                elif r.is_treatment:
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True):
+                        tpls.append(at.as_research())
+                elif r.is_stom:
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True):
+                        tpls.append(at.as_research())
+                elif r.is_hospital:
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
+                        tpls.append(at.as_research())
+                elif r.is_microbiology:
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True):
+                        tpls.append(at.as_research())
+                elif r.is_citology:
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True):
+                        tpls.append(at.as_research())
+                elif r.is_gistology:
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True):
+                        tpls.append(at.as_research())
+                if tpls:
+                    deps[r.reversed_type].extend(tpls)    
             deps[r.reversed_type].append(research_data)
 
         k = 'get_researches:tubes'

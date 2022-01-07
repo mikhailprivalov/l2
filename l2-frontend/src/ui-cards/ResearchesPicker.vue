@@ -633,9 +633,13 @@ export default {
         return;
       }
       if (!this.research_selected(pk)) {
-        this.checked_researches.push(pk);
         const research = this.research_data(pk);
-        if (this.autoselect === 'directions' && 'autoadd' in research) {
+        if (!research.auto_deselect) {
+          this.checked_researches.push(pk);
+        } else {
+          this.$root.$emit('msg', 'ok', 'Применён шаблон');
+        }
+        if (this.autoselect === 'directions' && research.autoadd) {
           for (const autoadd_pk of research.autoadd) {
             this.select_research_ignore(autoadd_pk);
           }
