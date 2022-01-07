@@ -17,12 +17,12 @@
             type="text"
             class="form-control"
             v-model="pk"
-            @keyup.enter="load"
+            @keyup.enter="load()"
             autofocus
             :placeholder="iss_search ? 'Номер м/б анализа' : 'Номер направления'"
           />
           <span class="input-group-btn">
-            <button class="btn last btn-blue-nb nbr" type="button" @click="load" style="margin-right: -1px">
+            <button class="btn last btn-blue-nb nbr" type="button" @click="load()" style="margin-right: -1px">
               Поиск
             </button>
           </span>
