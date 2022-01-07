@@ -803,8 +803,9 @@ def statistic_research_death_data(ws1, researches):
         # Название стационара
         ws1.cell(row=r, column=27).value = ""
         # ДТП
-        ws1.cell(row=r, column=28).value = ""
-        ws1.cell(row=r, column=29).value = ""
+
+        ws1.cell(row=r, column=28).value = i["ДТП"]
+        ws1.cell(row=r, column=29).value = i["Беременность"]
 
         if i.get("Заполнил", None):
             who_write = i.get("Заполнил")
@@ -914,8 +915,8 @@ def statistic_research_death_data_card(ws1, researches):
         # Название стационара
         ws1.cell(row=r, column=27).value = ""
         # ДТП
-        ws1.cell(row=r, column=28).value = ""
-        ws1.cell(row=r, column=29).value = ""
+        ws1.cell(row=r, column=28).value = i["ДТП"]
+        ws1.cell(row=r, column=29).value = i["Беременность"]
 
         if i.get("Заполнил", None):
             who_write = i.get("Заполнил")
