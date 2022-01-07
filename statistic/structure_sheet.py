@@ -750,9 +750,12 @@ def statistic_research_death_data(ws1, researches):
         ws1.cell(row=r, column=9).value = i["fio_patient"]
         ws1.cell(row=r, column=10).value = i["sex"]
         d1 = du_parse(i["Дата смерти"])
-        d2 = du_parse(i["Дата рождения"])
-        delta = relativedelta(d1, d2)
-        ws1.cell(row=r, column=11).value = delta.years
+        try:
+            d2 = du_parse(i["Дата рождения"])
+            delta = relativedelta(d1, d2)
+            ws1.cell(row=r, column=11).value = delta.years
+        except:
+            ws1.cell(row=r, column=11).value = "-"
         # а)
         diag_data = get_table_diagnos(i, "а) Болезнь или состояние, непосредственно приведшее к смерти")
         ws1.cell(row=r, column=12).value = f'{diag_data[1]["code"]} {diag_data[1]["title"]}'
@@ -800,8 +803,9 @@ def statistic_research_death_data(ws1, researches):
         # Название стационара
         ws1.cell(row=r, column=27).value = ""
         # ДТП
-        ws1.cell(row=r, column=28).value = ""
-        ws1.cell(row=r, column=29).value = ""
+
+        ws1.cell(row=r, column=28).value = i["ДТП"]
+        ws1.cell(row=r, column=29).value = i["Беременность"]
 
         if i.get("Заполнил", None):
             who_write = i.get("Заполнил")
@@ -856,9 +860,12 @@ def statistic_research_death_data_card(ws1, researches):
         ws1.cell(row=r, column=9).value = i["fio_patient"]
         ws1.cell(row=r, column=10).value = i["sex"]
         d1 = du_parse(i["Дата смерти"])
-        d2 = du_parse(i["Дата рождения"])
-        delta = relativedelta(d1, d2)
-        ws1.cell(row=r, column=11).value = delta.years
+        try:
+            d2 = du_parse(i["Дата рождения"])
+            delta = relativedelta(d1, d2)
+            ws1.cell(row=r, column=11).value = delta.years
+        except:
+            ws1.cell(row=r, column=11).value = "-"
         # а)
         diag_data = get_table_diagnos(i, "а) Болезнь или состояние, непосредственно приведшее к смерти")
         ws1.cell(row=r, column=12).value = f'{diag_data[1]["code"]} {diag_data[1]["title"]}'
@@ -908,8 +915,8 @@ def statistic_research_death_data_card(ws1, researches):
         # Название стационара
         ws1.cell(row=r, column=27).value = ""
         # ДТП
-        ws1.cell(row=r, column=28).value = ""
-        ws1.cell(row=r, column=29).value = ""
+        ws1.cell(row=r, column=28).value = i["ДТП"]
+        ws1.cell(row=r, column=29).value = i["Беременность"]
 
         if i.get("Заполнил", None):
             who_write = i.get("Заполнил")

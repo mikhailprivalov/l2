@@ -233,7 +233,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     data["Имя матери"] = ""
     data["Отчество матери"] = ""
 
-    if data["Новорожденый"] == "от 168 час. до 1 года":
+    if data["Новорожденый"] in ["от 168 час. до 1 года", "от 168 час. до 1 месяца"]:
         data["Фамилия матери"] = mother_data['rows'][0][0]
         data["Имя матери"] = mother_data['rows'][0][1]
         data["Отчество матери"] = mother_data['rows'][0][2]

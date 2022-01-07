@@ -127,6 +127,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Родился",
         "Дата рождения",
         "Время рождения (известно)",
+        "Время рождения",
         "Дата смерти",
         "Время смерти (известно)",
         "Время смерти",
@@ -173,6 +174,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     if not data.get("Род причины смерти", None):
         data["Род причины смерти"] = '{"code": "", "title": ""}'
+
+    if not data.get("Время рождения", None):
+        data["Время рождения"] = ""
+
+    if not data.get("Время смерти", None):
+        data["Время смерти"] = ""
 
     hospital_obj: Hospitals = user.doctorprofile.get_hospital()
     data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data, "org_okpo": hospital_obj.okpo}
@@ -230,7 +237,7 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     mother_address = address_get(fields.get("Адрес матери", None))
     text.append(Paragraph("6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
     text.append(Paragraph(f"субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}", style))
-    text.append(Paragraph(f"район ______ город {mother_address['city']}", style))
+    text.append(Paragraph(f"район {mother_address['area']} город {mother_address['city']}", style))
     text.append(Paragraph(f"населенный пункт__________________ улица {mother_address['street']}", style))
     text.append(Paragraph(f"дом {mother_address['house']} стр.______корп. _____ кв. {mother_address['flat']}", style))
     text.append(Spacer(1, 2 * mm))
@@ -630,13 +637,13 @@ def mother_data(fields):
     house = f"{space_symbol * 5} дом {mother_address['house']} стр.______ корп.________ кв.{mother_address['flat']} {line_break}{line_break}"
     type_place = f"10. Местность: городская {digit_one} сельская {digit_two}{line_break}{line_break}"
 
-    is_married, not_married, not_known = "состоит в зарегистрированном браке", "не состоит в зарегистрированном брак", "неизвестно"
+    is_married, not_married, not_known = "состоит в зарегистрированном браке", "не состоит в зарегистрированном браке", "неизвестно"
     married_mother = json.loads(fields.get("Семейное положение", None))
-    if int(married_mother["code"]) == 4:
+    if int(married_mother["code"]) == 1:
         is_married = f"<u>{op_bold_tag}{is_married}{cl_bold_tag}</u>"
     elif int(married_mother["code"]) == 3:
         not_known = f"<u>{op_bold_tag}{not_known}{cl_bold_tag}</u>"
-    elif int(married_mother["code"]) == 5:
+    elif int(married_mother["code"]) == 2:
         not_married = f"<u>{op_bold_tag}{not_married}{cl_bold_tag}</u>"
     married_status = f"11. Семейное положение:{line_break} {is_married} {digit_one}{line_break}"
     married_other_status = f"{not_married} {digit_two} {not_known} {digit_three} {line_break}{line_break}"
@@ -695,7 +702,7 @@ def child_data_get(data_fields):
     child_place_death = f"16. Место смерти (рождения мертвого ребенка):{line_break}"
     child_address_death = address_get(data_fields.get("Место смерти (адрес)", None))
     child_region_country = f"{space_symbol * 5} субъект Российской Федерации {child_address_death['region_type']} {child_address_death['region']}{line_break}"
-    child_area_region = f"{space_symbol * 5} район {line_break}"
+    child_area_region = f"{space_symbol * 5} район {child_address_death['area']} {line_break}"
     child_city = f"{space_symbol * 5} город {child_address_death['city']}{line_break}"
     child_live_punkt = f"{space_symbol * 5} населенный пункт {line_break}"
     child_street = f"{space_symbol * 5} улица {child_address_death['street']} {line_break}"
@@ -1287,18 +1294,31 @@ def death_data_child(text, fields_data):
         death_date = death_date_result
         death_month = death_month_result
         death_year = death_year_result
+        if fields_data.get("Время смерти", None):
+            death_time = fields_data.get("Время смерти").split(":")
+            death_hour_def = f"<u>{space_symbol * 8}{death_time[0]}{space_symbol * 8}</u>"
+            death_min_def = f"<u>{space_symbol * 8}{death_time[1]}{space_symbol * 8}</u>"
     text.append(Paragraph(f"1. Рождение мертвого ребенка: {space_symbol * 5} число {death_date} месяц{death_month} год{death_year} час {death_hour_def} мин {death_min_def}", style))
     text.append(Spacer(1, 1.2 * mm))
     born_date, born_month, born_year = "__________", "______________", " ____________"
     born_hour, born_min = "__________", "____________"
+    death_hour, death_min = "__________", "____________"
     if fields_data.get("Дата рождения", None):
         born_data = fields_data["Дата рождения"].split(".")
         born_date = f"<u>{space_symbol * 8}{born_data[0]}{space_symbol * 8}</u>"
         born_month = f"<u>{space_symbol * 12}{born_data[1]}{space_symbol * 12}</u>"
         born_year = f"<u>{space_symbol * 8}{born_data[2]}{space_symbol * 8}</u>"
+        if fields_data.get("Время рождения", None):
+            born_time = fields_data.get("Время рождения").split(":")
+            born_hour = f"<u>{space_symbol * 8}{born_time[0]}{space_symbol * 8}</u>"
+            born_min = f"<u>{space_symbol * 8}{born_time[1]}{space_symbol * 8}</u>"
         death_date = death_date_result
         death_month = death_month_result
         death_year = death_year_result
+        if fields_data.get("Время смерти", None):
+            death_time = fields_data.get("Время смерти").split(":")
+            death_hour = f"<u>{space_symbol * 8}{death_time[0]}{space_symbol * 8}</u>"
+            death_min = f"<u>{space_symbol * 8}{death_time[1]}{space_symbol * 8}</u>"
     if fields_data.get("Дата рождения", None) is None:
         death_date = death_date_def
         death_month = death_month_def
@@ -1306,7 +1326,7 @@ def death_data_child(text, fields_data):
 
     text.append(Paragraph(f"2. Ребенок родился живым: {space_symbol * 11} число{born_date} месяц{born_month} год{born_year} час{born_hour} мин{born_min}", style))
     text.append(Spacer(1, 1.2 * mm))
-    text.append(Paragraph(f" {space_symbol * 6}и умер (дата): {space_symbol * 28} число {death_date} месяц{death_month} год{death_year} час{born_hour} мин{born_min}", style))
+    text.append(Paragraph(f" {space_symbol * 6}и умер (дата): {space_symbol * 28} число {death_date} месяц{death_month} год{death_year} час{death_hour} мин{death_min}", style))
     text.append(Spacer(1, 1.2 * mm))
 
     regarding_time = json.loads(fields_data["Наступление летального исхода относительно времени родов"])
