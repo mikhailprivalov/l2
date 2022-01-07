@@ -22,7 +22,7 @@
     "animate.css": "^4.1.1",
     "apexcharts": "^3.28.3",
     "autoprefixer": "^9.8.6",
-    "axios": "^0.21.2",
+    "axios": "^0.24.0",
     "bootflat": "^2.0.4",
     "bootstrap3": "^3.3.5",
     "core-js": "^3.18.2",
