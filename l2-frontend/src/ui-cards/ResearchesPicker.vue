@@ -369,7 +369,7 @@ export default {
   },
   computed: {
     hide_grouped_researches() {
-      return this.autoselect !== 'directions' || this.oneselect;
+      return Boolean(this.autoselect !== 'directions' || this.oneselect || this.hidetemplates);
     },
     l2_only_doc_call() {
       return this.$store.getters.modules.l2_only_doc_call;
