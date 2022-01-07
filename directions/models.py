@@ -1138,9 +1138,6 @@ class Napravleniya(models.Model):
             return result
         card = Clients.Card.objects.get(pk=client_id)
         client_days_age = card.individual.age(days_monthes_years=True)
-        forbiden_for_perinatal_mss = False
-        if client_days_age[0] > 11 and client_days_age[1] == 0 and client_days_age[2] == 0:
-            forbiden_for_perinatal_mss = True
 
         if finsource and isinstance(finsource, str) and not finsource.isdigit():
             f_obj: Optional[IstochnikiFinansirovaniya] = (
@@ -1163,9 +1160,10 @@ class Napravleniya(models.Model):
                 researches_grouped_by_lab.append({v: researches[v]})
 
                 for vv in researches[v]:
-                    if vv == PERINATAL_DEATH_RESEARCH_PK and forbiden_for_perinatal_mss:
-                        result["message"] = "Св-во о перинатальной смерти оформляется до 7 дней"
-                        return result
+                    if vv == PERINATAL_DEATH_RESEARCH_PK:
+                        if client_days_age[0] > 11 and client_days_age[1] == 0 and client_days_age[2] == 0:
+                            result["message"] = "Св-во о перинатальной смерти оформляется до 7 дней"
+                            return result
 
                     research_tmp = directory.Researches.objects.get(pk=vv)
                     if research_tmp.no_attach and research_tmp.no_attach > 0:
