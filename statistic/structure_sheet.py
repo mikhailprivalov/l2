@@ -801,9 +801,8 @@ def statistic_research_death_data(ws1, researches):
 
         ws1.cell(row=r, column=26).value = place_death_details
         # Название стационара
-        ws1.cell(row=r, column=27).value = ""
+        ws1.cell(row=r, column=27).value = i.get("МО", "")
         # ДТП
-
         ws1.cell(row=r, column=28).value = i["ДТП"]
         ws1.cell(row=r, column=29).value = i["Беременность"]
 
@@ -913,7 +912,7 @@ def statistic_research_death_data_card(ws1, researches):
 
         ws1.cell(row=r, column=26).value = place_death_details
         # Название стационара
-        ws1.cell(row=r, column=27).value = ""
+        ws1.cell(row=r, column=27).value = i.get("МО", "")
         # ДТП
         ws1.cell(row=r, column=28).value = i["ДТП"]
         ws1.cell(row=r, column=29).value = i["Беременность"]
