@@ -896,11 +896,7 @@ def doctorprofile_search(request):
 
     q = q.split()
 
-    d_qs = users.DoctorProfile.objects.filter(
-        hospital=request.user.doctorprofile.get_hospital(),
-        family__istartswith=q[0],
-        user__groups__name__in=["ЭЦП Медицинской организации"]
-    )
+    d_qs = users.DoctorProfile.objects.filter(hospital=request.user.doctorprofile.get_hospital(), family__istartswith=q[0], user__groups__name__in=["ЭЦП Медицинской организации"])
 
     if len(q) > 1:
         d_qs = d_qs.filter(name__istartswith=q[1])
@@ -912,12 +908,14 @@ def doctorprofile_search(request):
 
     d: users.DoctorProfile
     for d in d_qs.order_by('fio')[:15]:
-        data.append({
-            "id": d.pk,
-            "fio": str(d),
-            "department": d.podrazdeleniye.title if d.podrazdeleniye else "",
-            **d.dict_data,
-        })
+        data.append(
+            {
+                "id": d.pk,
+                "fio": str(d),
+                "department": d.podrazdeleniye.title if d.podrazdeleniye else "",
+                **d.dict_data,
+            }
+        )
 
     return JsonResponse({"data": data})
 
@@ -1039,12 +1037,49 @@ def get_template(request):
     researches = []
     global_template = False
     pk = request.GET.get('pk')
+    department = None
+    departments = []
+    departments_paraclinic = []
+    site_types = {}
+    show_in_research_picker = False
+    show_type = None
+    site_type = None
     if pk:
-        t = users.AssignmentTemplates.objects.get(pk=pk)
+        t: users.AssignmentTemplates = users.AssignmentTemplates.objects.get(pk=pk)
         title = t.title
         researches = [x.research_id for x in users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
         global_template = t.global_template
-    return JsonResponse({"title": title, "researches": researches, "global_template": global_template})
+        show_in_research_picker = t.show_in_research_picker
+        show_type = t.get_show_type()
+        site_type = t.site_type_id
+        department = t.podrazdeleniye_id
+
+    departments = [{"id": x["id"], "label": x["title"]} for x in Podrazdeleniya.objects.filter(hide=False, p_type=Podrazdeleniya.LABORATORY).values('id', 'title')]
+    departments_paraclinic = [{"id": x["id"], "label": x["title"]} for x in Podrazdeleniya.objects.filter(hide=False, p_type=Podrazdeleniya.PARACLINIC).values('id', 'title')]
+
+    for st in users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE:
+        site_types[st] = [
+            {"id": None, "label": 'Общие'},
+            *[
+                {"id": x["id"], "label": x["title"]}
+                for x in ResearchSite.objects.filter(site_type=users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE[st], hide=False).order_by('order', 'title').values('id', 'title')
+            ]
+        ]
+
+    return JsonResponse(
+        {
+            "title": title,
+            "researches": researches,
+            "global_template": global_template,
+            "department": department,
+            "departments": departments,
+            "departmentsParaclinic": departments_paraclinic,
+            "siteTypes": site_types,
+            "showInResearchPicker": show_in_research_picker,
+            "type": show_type,
+            "siteType": site_type,
+        }
+    )
 
 
 @login_required
@@ -1063,12 +1098,25 @@ def update_template(request):
                 t = users.AssignmentTemplates(title=title, global_template=global_template)
                 t.save()
                 pk = t.pk
-            if users.AssignmentTemplates.objects.filter(pk=pk).exists():
+            elif users.AssignmentTemplates.objects.filter(pk=pk).exists():
                 t = users.AssignmentTemplates.objects.get(pk=pk)
                 t.title = title
                 t.global_template = global_template
                 t.save()
             if t:
+                t.show_in_research_picker = bool(request_data.get('showInResearchPicker'))
+                tp = request_data.get('type')
+                t.podrazdeleniye_id = request_data.get('department') if tp in ('lab', 'paraclinic') else None
+                t.is_paraclinic = tp == 'paraclinic'
+                t.is_doc_refferal = tp == 'consult'
+                t.is_treatment = tp == 'treatment'
+                t.is_stom = tp == 'stom'
+                t.is_hospital = tp == 'hospital'
+                t.is_microbiology = tp == 'microbiology'
+                t.is_citology = tp == 'citology'
+                t.is_gistology = tp == 'gistology'
+                t.site_type_id = request_data.get('siteType') if tp in users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE else None
+                t.save()
                 users.AssignmentResearches.objects.filter(template=t).exclude(research__pk__in=researches).delete()
                 to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]
                 for ta in to_add:
@@ -1197,16 +1245,12 @@ def users_view(request):
             data.append(otd)
 
     spec = users.Speciality.objects.filter(hide=False).order_by("title")
-    spec_data = [
-        {"pk": -1, "title": "Не выбрано"}
-    ]
+    spec_data = [{"pk": -1, "title": "Не выбрано"}]
     for s in spec:
         spec_data.append({"pk": s.pk, "title": s.title})
 
     positions_qs = users.Position.objects.filter(hide=False).order_by("title")
-    positions = [
-        {"pk": -1, "title": "Не выбрано"}
-    ]
+    positions = [{"pk": -1, "title": "Не выбрано"}]
     for s in positions_qs:
         positions.append({"pk": s.pk, "title": s.title})
 
@@ -1814,18 +1858,7 @@ def current_org(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def current_org_update(request):
-    parse_params = {
-        'title': str,
-        'shortTitle': str,
-        'address': str,
-        'phones': str,
-        'ogrn': str,
-        'currentManager': str,
-        'licenseData': str,
-        'www': str,
-        'email': str,
-        'okpo': str
-    }
+    parse_params = {'title': str, 'shortTitle': str, 'address': str, 'phones': str, 'ogrn': str, 'currentManager': str, 'licenseData': str, 'www': str, 'email': str, 'okpo': str}
 
     data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
 

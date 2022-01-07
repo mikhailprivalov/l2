@@ -1075,7 +1075,7 @@ export default {
       return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar';
     },
     directions_params_enabled() {
-      return this.$store.getters.modules.directions_params && this.kk !== 'stationar';
+      return this.$store.getters.modules.directions_params && this.kk !== 'stationar' && !this.simple;
     },
     l2_user_data() {
       return this.$store.getters.user_data || {};

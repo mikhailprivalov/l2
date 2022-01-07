@@ -209,13 +209,103 @@ class DoctorProfile(models.Model):
 
 
 class AssignmentTemplates(models.Model):
+    SHOW_TYPES_SITE_TYPES_TYPE = {
+        'consult': 0,
+        'treatment': 1,
+        'stom': 2,
+        'hospital': 2,
+        'microbiology': 4,
+    }
+
     title = models.CharField(max_length=40)
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr', on_delete=models.CASCADE)
     global_template = models.BooleanField(default=True, blank=True)
+
     show_in_research_picker = models.BooleanField(default=False, blank=True)
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="template_department", help_text="Лаборатория",
+                                       db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклинический шаблон", db_index=True)
+    is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление шаблон к врачу", db_index=True)
+    is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение — шаблон", db_index=True)
+    is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология — шаблон", db_index=True)
+    is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар — шаблон", db_index=True)
+    is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологический шаблон", db_index=True)
+    is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологический шаблон", db_index=True)
+    is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологический шаблон", db_index=True)
     site_type = models.ForeignKey("directory.ResearchSite", related_name='site_type_in_template', default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL,
                                   db_index=True)
+
+    def get_show_type(self):
+        if self.is_paraclinic:
+            return 'paraclinic'
+        if self.is_doc_refferal:
+            return 'consult'
+        if self.is_treatment:
+            return 'treatment'
+        if self.is_stom:
+            return 'stom'
+        if self.is_hospital:
+            return 'hospital'
+        if self.is_microbiology:
+            return 'microbiology'
+        if self.is_citology:
+            return 'citology'
+        if self.is_gistology:
+            return 'gistology'
+        if self.podrazdeleniye:
+            return 'lab'
+        return 'unknown'
+
+    @property
+    def reversed_type(self):
+        if self.is_treatment:
+            return -3
+        if self.is_stom:
+            return -4
+        if self.is_hospital:
+            return -5
+        if self.is_microbiology or self.is_citology or self.is_gistology:
+            return 2 - Podrazdeleniya.MORFOLOGY
+        return self.podrazdeleniye_id or -2
+
+    def get_site_type_id(self):
+        if self.is_microbiology:
+            return Podrazdeleniya.MORFOLOGY + 1
+        if self.is_citology:
+            return Podrazdeleniya.MORFOLOGY + 2
+        if self.is_gistology:
+            return Podrazdeleniya.MORFOLOGY + 3
+        return self.site_type_id
+
+    def as_research(self):
+        r = self
+        return {
+            "pk": f'template-{r.pk}',
+            "onlywith": -1,
+            "department_pk": r.reversed_type,
+            "title": r.title,
+            "full_title": r.title,
+            "doc_refferal": r.is_doc_refferal,
+            "treatment": r.is_treatment,
+            "is_hospital": r.is_hospital,
+            "is_form": False,
+            "is_application": False,
+            "stom": r.is_stom,
+            "need_vich_code": False,
+            "comment_variants": [],
+            "autoadd": list(AssignmentResearches.objects.filter(template=r).values_list('research_id', flat=True)),
+            "auto_deselect": True,
+            "addto": [],
+            "code": '',
+            "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
+            "site_type": r.get_site_type_id(),
+            "site_type_raw": r.site_type_id,
+            "localizations": [],
+            "service_locations": [],
+            "direction_params": -1,
+            "research_data": {'research': {'status': 'NOT_LOADED'}},
+        }
 
     def __str__(self):
         return (self.title + " | Шаблон для ") + (str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")
