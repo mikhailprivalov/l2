@@ -35,7 +35,7 @@
     "moment": "^2.29.1",
     "plural-ru": "^2.0.2",
     "portal-vue": "^2.1.7",
-    "promise.prototype.finally": "^3.1.2",
+    "promise.prototype.finally": "^3.1.3",
     "split-grid": "^1.0.9",
     "split.js": "^1.6.4",
     "style-loader": "^2.0.0",
