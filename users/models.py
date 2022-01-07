@@ -209,13 +209,53 @@ class DoctorProfile(models.Model):
 
 
 class AssignmentTemplates(models.Model):
+    SHOW_TYPES_SITE_TYPES_TYPE = {
+        'consult': 0,
+        'treatment': 1,
+        'stom': 2,
+        'hospital': 2,
+        'microbiology': 4,
+    }
+
     title = models.CharField(max_length=40)
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr', on_delete=models.CASCADE)
     global_template = models.BooleanField(default=True, blank=True)
+
     show_in_research_picker = models.BooleanField(default=False, blank=True)
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="template_department", help_text="Лаборатория",
+                                       db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклинический шаблон", db_index=True)
+    is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление шаблон к врачу", db_index=True)
+    is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение — шаблон", db_index=True)
+    is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология — шаблон", db_index=True)
+    is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар — шаблон", db_index=True)
+    is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологический шаблон", db_index=True)
+    is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологический шаблон", db_index=True)
+    is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологический шаблон", db_index=True)
     site_type = models.ForeignKey("directory.ResearchSite", related_name='site_type_in_template', default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL,
                                   db_index=True)
+
+    def get_show_type(self):
+        if self.is_paraclinic:
+            return 'paraclinic'
+        if self.is_doc_refferal:
+            return 'consult'
+        if self.is_treatment:
+            return 'treatment'
+        if self.is_stom:
+            return 'stom'
+        if self.is_hospital:
+            return 'hospital'
+        if self.is_microbiology:
+            return 'microbiology'
+        if self.is_citology:
+            return 'citology'
+        if self.is_gistology:
+            return 'gistology'
+        if self.podrazdeleniye:
+            return 'lab'
+        return 'unknown'
 
     def __str__(self):
         return (self.title + " | Шаблон для ") + (str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")
