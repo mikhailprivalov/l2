@@ -1003,10 +1003,10 @@
   resolved "https://registry.yarnpkg.com/@openfonts/open-sans_all/-/open-sans_all-1.44.2.tgz#5365e8cbc5aee53684b86512b82f6b75dfadae59"
   integrity sha512-SuLQ9tKnow0+ur62tHif7/HQ530h0EkxJuwPFngP2xLJb+hrGqF6OZGjXCZSSbEEsTbk3VxgY+fSbdaOWUP9Yw==
 
-"@popperjs/core@^2.10.1":
-  version "2.10.1"
-  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.10.1.tgz#728ecd95ab207aab8a9a4e421f0422db329232be"
-  integrity sha512-HnUhk1Sy9IuKrxEMdIRCxpIqPw6BFsbYSEUO9p/hNw5sMld/+3OLMWQP80F8/db9qsv3qUjs7ZR5bS/R+iinXw==
+"@popperjs/core@^2.11.2":
+  version "2.11.2"
+  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.2.tgz#830beaec4b4091a9e9398ac50f865ddea52186b9"
+  integrity sha512-92FRmppjjqz29VMJ2dn+xdyXZBrMlE42AV6Kq6BwjWV7CNUW1hs2FtxSNLQE+gJhaZ6AAmYuO9y8dshhcBl7vA==
 
 "@riophae/vue-treeselect@^0.4.0":
   version "0.4.0"
@@ -9391,10 +9391,10 @@ uuid@^3.3.2, uuid@^3.4.0:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
 
-v-calendar@^2.3.0:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/v-calendar/-/v-calendar-2.3.2.tgz#bc45d1258001d6a061ad942eedacad39209604c1"
-  integrity sha512-F/gS1EiMUVf8yPPdUxvgPgq+rQ8cNlXoQHn0nzx36dHmyjd3SybPpzMnlQ9P4lzv8Fni1kSTvonDUS2gYYenkA==
+v-calendar@^2.3.4:
+  version "2.3.4"
+  resolved "https://registry.yarnpkg.com/v-calendar/-/v-calendar-2.3.4.tgz#3615602adf07764cb9b8e5cfb7f780015751c839"
+  integrity sha512-jH9cCuryt7++LWkHE4zvkqORQYUmmfLwhYxaDzndTrd3hWyLtm3WGyfanc++PEqchTkPP31VewFTXqlSf3Gk7Q==
   dependencies:
     core-js "^3.15.2"
     date-fns "^2.22.1"
@@ -9625,10 +9625,10 @@ vue2-collapse@^1.0.11:
   resolved "https://registry.yarnpkg.com/vue2-collapse/-/vue2-collapse-1.0.15.tgz#d80c242f7ba2f5c70515e00dfcfc298f5137cbea"
   integrity sha512-XLzUxkYKVZqmHRSdirgqXyUYeytsAKNJSjP1dLcVtEIhgP4xUHSbzU7ycuQm/egRgjMCsDzILv5wr0uhS9cXvQ==
 
-vue2-filters@^0.13.0:
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/vue2-filters/-/vue2-filters-0.13.0.tgz#43b56d952268a0636f81e45eeac78b1c3a0dae15"
-  integrity sha512-CQXLyG4YQMHxPkoLm+6rKcrcG/+zNtN+wtber99DiDO7DNwjcq8XTG9Gn6QKGL4OWcNmeITeUZXKS3mPMo4ERw==
+vue2-filters@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/vue2-filters/-/vue2-filters-0.14.0.tgz#f6cd4643f6af806d11d9eab8320c5b7eb2381d9c"
+  integrity sha512-2tFWC6gx1SVIr+6VXoufkL+bZa8Gn0/P09T/bnGjOEAGH1+eVT05bPm/VF2V/nL/HMyWkLdlvxKh9JNqpfFlyw==
 
 vue2-timepicker@^1.1.6:
   version "1.1.6"
