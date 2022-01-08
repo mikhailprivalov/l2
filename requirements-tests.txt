@@ -39,7 +39,7 @@ redis==4.1.0
 reportlab==3.6.5
 requests==2.27.1
 requests-toolbelt==0.9.1
-selenium==3.141.0
+selenium==4.1.0
 simplejson==3.17.6
 six==1.16.0
 # socketIO-client-nexus==0.7.6
