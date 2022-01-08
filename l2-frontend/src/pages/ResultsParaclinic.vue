@@ -782,7 +782,7 @@
             >
               Сброс подтверждения
             </button>
-            <template v-if="amd">
+            <template v-if="amd && data.researches.length === 1">
               <div class="amd amd-planned" v-if="data.direction.amd === 'planned'">АМД: запланировано</div>
               <div class="amd amd-error" v-if="data.direction.amd === 'error' && row.confirmed">АМД: ошибка</div>
               <div class="amd amd-need" v-if="data.direction.amd === 'need' && row.confirmed">АМД: не отправлено</div>
@@ -806,6 +806,7 @@
               :key="`${data.direction.pk}_${row.confirmed}`"
               :direction-pk="data.direction.pk"
               :all_confirmed="data.direction.all_confirmed"
+              v-if="data.researches.length === 1"
             />
             <div class="status-list" v-if="(!r(row) || needFillWorkBy(row)) && !row.confirmed">
               <div class="status status-none">Не верно:</div>
@@ -813,6 +814,34 @@
               <div class="status status-none" v-if="needFillWorkBy(row)">подтверждение от имени</div>
             </div>
           </div>
+        </div>
+        <div class="control-row" v-if="data && data.ok && data.researches.length > 1 && data.direction.all_confirmed">
+          <div class="res-title">Услуг в направлении: {{ data.researches.length }} шт.</div>
+          <template v-if="amd">
+            <div class="amd amd-planned" v-if="data.direction.amd === 'planned'">АМД: запланировано</div>
+            <div class="amd amd-error" v-if="data.direction.amd === 'error' && row.confirmed">АМД: ошибка</div>
+            <div class="amd amd-need" v-if="data.direction.amd === 'need' && row.confirmed">АМД: не отправлено</div>
+            <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено ({{ data.direction.amd_number }})</div>
+            <button
+              class="btn btn-blue-nb"
+              @click="reset_amd([data.direction.pk])"
+              v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'"
+            >
+              Сброс статуса АМД
+            </button>
+            <button
+              class="btn btn-blue-nb"
+              @click="send_to_amd([data.direction.pk])"
+              v-if="data.direction.amd === 'need' || data.direction.amd === 'error'"
+            >
+              Отправить в АМД
+            </button>
+          </template>
+          <EDSDirection
+            :key="`${data.direction.pk}_${data.direction.all_confirmed}`"
+            :direction-pk="data.direction.pk"
+            :all_confirmed="data.direction.all_confirmed"
+          />
         </div>
         <div class="group" v-if="show_additional">
           <div class="group-title">Дополнительные исследования</div>

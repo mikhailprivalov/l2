@@ -1242,12 +1242,14 @@ def get_cda_data(pk):
         data = get_json_protocol_data(pk)
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
+    else:
+        data = {}
     return {
         "title": n.get_eds_title(),
         "generatorName": n.get_eds_generator(),
         "rawResponse": True,
         "data": {
-            "oidMo": data["oidMo"],
+            "oidMo": data.get("oidMo"),
             "document": data,
             "patient": {
                 'id': card.number,
