@@ -1379,7 +1379,9 @@ def directions_paraclinic_form(request):
                             if field_type not in [1, 20]
                             else (get_default_for_field(field_type) if not result_field else result_field.value)
                         )
-                        if field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
+                        if field_type in [2, 32, 33, 34, 36] and isinstance(value, str) and value.startswith('%'):
+                            value = ''
+                        elif field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
                             value = values_to_input[0]
                         g["fields"].append(
                             {

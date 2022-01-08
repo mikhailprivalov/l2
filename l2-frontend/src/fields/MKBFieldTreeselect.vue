@@ -169,7 +169,7 @@ export default {
       return this.fpk?.startsWith('%');
     },
     fpk() {
-      return this.fpkInitial || this.fieldPk;
+      return this.disabled ? null : this.fpkInitial || this.fieldPk;
     },
   },
   watch: {
