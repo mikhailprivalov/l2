@@ -997,7 +997,7 @@ def form_07(c: Canvas, dir: Napravleniya):
         styleCenterBold.leading = 15
         styleCenterBold.fontName = 'PTAstraSerifBold'
 
-        styleBold =deepcopy(styleCenterBold)
+        styleBold = deepcopy(styleCenterBold)
         styleBold.alignment = TA_LEFT
 
         styleT = deepcopy(style)
