@@ -78,7 +78,7 @@
     "@types/promise.prototype.finally": "^2.0.4",
     "@types/vue-router": "^2.0.0",
     "@types/vue-select": "^3.11.2",
-    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.31.1",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",
