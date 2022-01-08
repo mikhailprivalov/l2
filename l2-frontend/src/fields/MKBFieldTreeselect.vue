@@ -28,6 +28,8 @@
 import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
+import directionsPoint from '@/api/directions-point';
+
 const replace = [
   'й',
   'ц',
@@ -127,6 +129,23 @@ export default {
       type: String,
       default: 'mkb10.4',
     },
+    fieldPk: {
+      type: String,
+      required: false,
+    },
+    fieldPkInitial: {
+      type: String,
+      required: false,
+    },
+    iss_pk: {
+      type: [String, Number],
+      required: false,
+    },
+    clientPk: {
+      type: Number,
+      required: false,
+      default: -1,
+    },
   },
   components: {
     Treeselect,
@@ -135,7 +154,23 @@ export default {
     return {
       content: '',
       detailsData: {},
+      fpkInitial: this.fieldPkInitial,
     };
+  },
+  mounted() {
+    if (this.isStaticLink) {
+      this.content = '';
+      this.detailsData = {};
+      this.loadLast();
+    }
+  },
+  computed: {
+    isStaticLink() {
+      return this.fpk?.startsWith('%');
+    },
+    fpk() {
+      return this.fpkInitial || this.fieldPk;
+    },
   },
   watch: {
     value: {
@@ -185,6 +220,20 @@ export default {
       if (!v) {
         this.content = '';
         this.detailsData = {};
+      }
+    },
+    async loadLast() {
+      const { result } = await directionsPoint.lastFieldResult(this, ['iss_pk', 'clientPk'], { fieldPk: this.fpk });
+      if (result?.isJson) {
+        try {
+          const jval = JSON.parse(result.value);
+          if (jval.code && jval.title) {
+            this.content = `${jval.code} ${jval.title}`;
+            this.detailsData = jval;
+          }
+        } catch (e) {
+          console.log(e);
+        }
       }
     },
   },

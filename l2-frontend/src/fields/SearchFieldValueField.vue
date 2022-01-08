@@ -77,7 +77,7 @@ export default {
       default: false,
     },
     iss_pk: {
-      type: Number,
+      type: [String, Number],
       required: false,
     },
     once: {

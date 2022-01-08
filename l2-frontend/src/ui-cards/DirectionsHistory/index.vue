@@ -221,7 +221,7 @@ export default {
       required: false,
     },
     iss_pk: {
-      type: Number,
+      type: [String, Number],
       default: null,
       required: false,
     },

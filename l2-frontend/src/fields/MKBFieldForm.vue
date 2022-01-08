@@ -21,11 +21,25 @@
 <script lang="ts">
 import TypeAhead from 'vue2-typeahead';
 
+import directionsPoint from '@/api/directions-point';
+
 export default {
   props: {
     value: String,
     classes: {
       type: String,
+      required: false,
+    },
+    fieldPk: {
+      type: String,
+      required: false,
+    },
+    fieldPkInitial: {
+      type: String,
+      required: false,
+    },
+    iss_pk: {
+      type: [String, Number],
       required: false,
     },
     short: {
@@ -36,6 +50,11 @@ export default {
       type: Boolean,
       default: false,
     },
+    clientPk: {
+      type: Number,
+      required: false,
+      default: -1,
+    },
   },
   components: {
     TypeAhead,
@@ -43,7 +62,22 @@ export default {
   data() {
     return {
       content: this.value,
+      fpkInitial: this.fieldPkInitial,
     };
+  },
+  mounted() {
+    if (this.isStaticLink) {
+      this.content = '';
+      this.loadLast();
+    }
+  },
+  computed: {
+    isStaticLink() {
+      return this.fpk?.startsWith('%');
+    },
+    fpk() {
+      return this.fpkInitial || this.fieldPk;
+    },
   },
   watch: {
     value() {
@@ -136,6 +170,21 @@ export default {
   methods: {
     onHit(item) {
       this.content = this.short ? item.split(' ')[0] || '' : item;
+    },
+    async loadLast() {
+      const { result } = await directionsPoint.lastFieldResult(this, ['iss_pk', 'clientPk'], { fieldPk: this.fpk });
+      if (result && !result.isJson) {
+        this.content = result.value || '';
+      } else if (result) {
+        try {
+          const jval = JSON.parse(result.value);
+          if (jval.code && jval.title) {
+            this.content = `${jval.code} ${jval.title}`;
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      }
     },
   },
 };
