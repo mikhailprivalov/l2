@@ -74,7 +74,7 @@
   },
   "devDependencies": {
     "@types/jquery": "^3.5.5",
-    "@types/lodash": "^4.14.173",
+    "@types/lodash": "^4.14.178",
     "@types/promise.prototype.finally": "^2.0.4",
     "@types/vue-router": "^2.0.0",
     "@types/vue-select": "^3.11.2",
