@@ -51,7 +51,7 @@ from directions.models import (
     IstochnikiFinansirovaniya,
     DirectionsHistory,
     MonitoringResult,
-    TubesRegistration,
+    TubesRegistration, DirectionParamsResult,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -2274,6 +2274,12 @@ def last_field_result(request):
         main_hosp_dir = hosp_get_hosp_direction(num_dir)[0]
         operations_data = hosp_get_operation_data(main_hosp_dir['direction'])
         field_is_aggregate_operation = True
+    elif request_data["fieldPk"].find('%directionparam') != -1:
+        id_field = request_data["fieldPk"].split(":")
+        current_iss = request_data["iss_pk"]
+        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()
+        result = {"value": val}
     elif request_data["fieldPk"].find('%proto_description') != -1 and 'iss_pk' in request_data:
         aggregate_data = hosp_get_text_iss(request_data['iss_pk'], True, 'desc')
         field_is_aggregate_proto_description = True
