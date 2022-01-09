@@ -1220,15 +1220,17 @@ export default {
           }
         }
       }
+      this.$root.$emit('checkTables');
     },
     append_fields_values(row, data) {
       for (const g of row.research.groups) {
         for (const f of g.fields) {
-          if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type) && data[f.pk]) {
+          if (![1, 3, 16, 17, 20, 13, 14, 11, 2, 32, 33, 36, 27, 28, 29, 30, 37, 35].includes(f.field_type) && data[f.pk]) {
             this.append_value(f, data[f.pk]);
           }
         }
       }
+      this.$root.$emit('checkTables');
     },
     clear_vals(row) {
       this.$dialog.confirm('Вы действительно хотите очистить результаты?').then(() => {

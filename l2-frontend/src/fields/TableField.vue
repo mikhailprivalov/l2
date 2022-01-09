@@ -194,6 +194,7 @@ export default {
   },
   mounted() {
     this.checkTable();
+    this.$root.$on('checkTables', () => setTimeout(() => this.checkTable(), 50));
   },
   beforeDestroy() {
     this.hasErrors = false;
