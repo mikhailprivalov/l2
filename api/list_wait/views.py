@@ -1,5 +1,5 @@
 import datetime
-from typing import List
+from typing import List, Optional
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -14,14 +14,19 @@ from utils.data_verification import data_parse
 
 @login_required
 def create(request):
-    data = data_parse(request.body, {'card_pk': 'card', 'comment': 'str_strip', 'date': str, 'researches': list, 'phone': 'str_strip'})
+    data = data_parse(
+        request.body,
+        {'card_pk': 'card', 'comment': 'str_strip', 'date': str, 'researches': list, 'phone': 'str_strip', 'hospitalDepartment': int, 'diagnosis': 'str_strip'},
+        {'hospitalDepartment': None, 'diagnosis': None},
+    )
 
     card: Card = data[0]
     comment: str = data[1]
     date: str = data[2]
     researches: List[int] = data[3]
     phone: str = data[4]
-    hosp_department_id = None
+    hosp_department_id: Optional[int] = data[5]
+    diagnosis: Optional[str] = data[6]
 
     if phone != card.phone:
         card.phone = phone
@@ -35,7 +40,16 @@ def create(request):
         if not hosp_department_id:
             hosp_department_id = hospital_researches[0].podrazdeleniye.pk
         PlanHospitalization.plan_hospitalization_save(
-            {'card': card, 'research': hospital_researches[0].pk, 'date': date, 'comment': comment, 'phone': phone, 'action': 0, 'hospital_department_id': hosp_department_id},
+            {
+                'card': card,
+                'research': hospital_researches[0].pk,
+                'date': date,
+                'comment': comment,
+                'phone': phone,
+                'action': 0,
+                'hospital_department_id': hosp_department_id,
+                'diagnos': diagnosis,
+            },
             request.user.doctorprofile,
         )
     else:
@@ -63,7 +77,9 @@ def actual_rows(request):
 
     rows = list(ListWait.objects.filter(client_id=card_pk, exec_at__gte=date_from).order_by('exec_at', 'pk').values('pk', 'exec_at', 'research__title', 'comment', 'work_status', 'phone'))
     plan_hosp = list(
-        PlanHospitalization.objects.filter(client_id=card_pk, exec_at__gte=date_from).order_by('exec_at', 'pk').values('pk', 'exec_at', 'research__title', 'comment', 'work_status', 'phone')
+        PlanHospitalization.objects.filter(client_id=card_pk, exec_at__gte=date_from, action=0)
+        .order_by('exec_at', 'pk')
+        .values('pk', 'exec_at', 'research__title', 'comment', 'work_status', 'phone', 'diagnos', 'hospital_department__title')
     )
 
     rows.extend(plan_hosp)

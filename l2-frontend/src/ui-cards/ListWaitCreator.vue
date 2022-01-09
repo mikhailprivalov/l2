@@ -12,11 +12,28 @@
         <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'" />
       </div>
       <div class="form-row sm-header">
-        Данные для листа ожидания
+        {{ hasOnlyHosp ? 'Данные записи на госпитализацию' : 'Данные для листа ожидания' }}
       </div>
       <div class="form-row sm-f">
         <div class="row-t">Дата</div>
         <input class="form-control" type="date" v-model="date" :min="td" />
+      </div>
+      <div class="form-row sm-f" v-if="hasOnlyHosp">
+        <div class="row-t">Отделение</div>
+        <treeselect
+          :multiple="false"
+          :disable-branch-nodes="true"
+          class="treeselect-noborder"
+          :options="hospitalDepartments"
+          :append-to-body="true"
+          placeholder="Отделение госпитализации"
+          :clearable="true"
+          v-model="hospitalDepartment"
+        />
+      </div>
+      <div class="form-row sm-f" v-if="hasOnlyHosp">
+        <div class="row-t">Диагноз</div>
+        <MKBField v-model="diagnosis" :short="false" />
       </div>
       <div class="form-row sm-f">
         <div class="row-t">Комментарий</div>
@@ -39,7 +56,15 @@
           />
         </div>
         <div class="controls">
-          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save">Создать записи в лист ожидания</button>
+          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save" :disabled="!valid">
+            {{
+              hasOnlyHosp
+                ? 'Записать на госпитализацию'
+                : hasMixedHosp
+                ? 'Госпитализация не может быть выбрана с не госпитализацией'
+                : 'Создать записи в лист ожидания'
+            }}
+          </button>
         </div>
       </template>
       <div v-else style="padding: 10px;color: gray;text-align: center">
@@ -70,8 +95,14 @@
           <tbody>
             <tr v-for="r in rows_mapped" :key="r.pk">
               <td>{{ r.date }}</td>
-              <td>{{ r.service }}</td>
-              <td style="white-space: pre-wrap">{{ r.comment }}</td>
+              <td>
+                {{ r.service }}
+                <template v-if="r.hospital">
+                  <hr />
+                  Отделение: {{ r.hospital }}
+                </template>
+              </td>
+              <td style="white-space: pre-wrap">{{ (r.diagnosis ? 'Диагноз: ' + r.diagnosis + '\n\n' : '') + r.comment }}</td>
               <td>{{ r.phone }}</td>
               <td>{{ STATUSES[r.status] }}</td>
             </tr>
@@ -84,9 +115,13 @@
 
 <script lang="ts">
 import moment from 'moment';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
 import * as actions from '@/store/action-types';
 import ResearchDisplay from '@/ui-cards/ResearchDisplay.vue';
 import patientsPoint from '@/api/patients-point';
+import MKBField from '@/fields/MKBField.vue';
 
 const STATUSES = { 0: 'ожидает', 1: 'выполнено', 2: 'отменено' };
 
@@ -94,6 +129,8 @@ export default {
   name: 'ListWaitCreator',
   components: {
     ResearchDisplay,
+    Treeselect,
+    MKBField,
   },
   props: {
     card_pk: {
@@ -111,12 +148,15 @@ export default {
       card: {
         phone: '',
       },
-      loaded: true,
+      loadCnt: 0,
       date: moment().format('YYYY-MM-DD'),
       td: moment().format('YYYY-MM-DD'),
       comment: '',
       rows: [],
       STATUSES,
+      hospitalDepartments: [],
+      hospitalDepartment: null,
+      diagnosis: '',
     };
   },
   watch: {
@@ -133,6 +173,14 @@ export default {
       },
       immediate: true,
     },
+    researches: {
+      handler() {
+        if (this.hospitalDepartments.length === 0 && this.hasHosp) {
+          this.load_stationar_deparments();
+        }
+      },
+      immediate: true,
+    },
     visible: {
       handler() {
         this.load_data();
@@ -143,11 +191,23 @@ export default {
     this.$root.$on('update_card_data', () => this.load_data());
   },
   methods: {
+    async load_stationar_deparments() {
+      this.loadCnt++;
+      const { data } = await this.$api('procedural-list/suitable-departments');
+      this.hospitalDepartments = data;
+      this.loadCnt--;
+    },
     async save() {
+      this.loadCnt++;
       await this.$store.dispatch(actions.INC_LOADING);
-      const result = await this.$api('list-wait/create', this, ['card_pk', 'researches', 'date', 'comment'], {
-        phone: this.card.phone,
-      });
+      const result = await this.$api(
+        'list-wait/create',
+        this,
+        ['card_pk', 'researches', 'date', 'comment', 'hospitalDepartment', 'diagnosis'],
+        {
+          phone: this.card.phone,
+        },
+      );
       await this.load_data();
       await this.$store.dispatch(actions.DEC_LOADING);
       if (result.ok) {
@@ -155,8 +215,11 @@ export default {
         this.date = moment().format('YYYY-MM-DD');
         this.td = this.date;
         this.comment = '';
+        this.hospitalDepartment = null;
+        this.diagnosis = '';
         this.$root.$emit('researches-picker:clear_all');
       }
+      this.loadCnt--;
     },
     async load_data() {
       if (this.card_pk === -1) {
@@ -166,12 +229,12 @@ export default {
         this.rows = await this.$api('list-wait/actual-rows', this, 'card_pk');
         return;
       }
-      this.loaded = false;
+      this.loadCnt++;
       await this.$store.dispatch(actions.INC_LOADING);
       this.card = await patientsPoint.getCard(this, 'card_pk');
-      this.loaded = true;
       this.rows = await this.$api('list-wait/actual-rows', this, 'card_pk');
       await this.$store.dispatch(actions.DEC_LOADING);
+      this.loadCnt--;
     },
   },
   computed: {
@@ -189,7 +252,37 @@ export default {
         comment: r.comment,
         status: r.work_status,
         phone: r.phone,
+        hospital: r.hospital_department__title || null,
+        diagnosis: r.diagnos || null,
       }));
+    },
+    researchesObjects() {
+      const r = [];
+      for (const pk of this.researches) {
+        const res = this.$store.getters.researches_obj[pk];
+        if (res) {
+          r.push(res);
+        }
+      }
+      return r;
+    },
+    hasHosp() {
+      return this.researchesObjects.length > 0 && this.researchesObjects.some(r => r.is_hospital);
+    },
+    hasNonHosp() {
+      return this.researchesObjects.length > 0 && this.researchesObjects.some(r => !r.is_hospital);
+    },
+    hasMixedHosp() {
+      return this.hasHosp && this.hasNonHosp;
+    },
+    hasOnlyHosp() {
+      return this.hasHosp && !this.hasNonHosp;
+    },
+    valid() {
+      return !this.hasHosp || (!this.hasNonHosp && !!this.hospitalDepartment && !!this.diagnosis.trim());
+    },
+    loaded() {
+      return this.loadCnt === 0;
     },
   },
 };
@@ -234,5 +327,9 @@ export default {
 
 .rows {
   margin-top: 5px;
+}
+
+td hr {
+  margin: 5px 0;
 }
 </style>
