@@ -136,6 +136,7 @@ class PlanHospitalization(models.Model):
             work_status=0,
             hospital_department_id=data['hospital_department_id'],
             action=data['action'],
+            diagnos=data.get('diagnos') or '',
         )
         plan_hospitalization.save()
         slog.Log(
