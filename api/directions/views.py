@@ -51,7 +51,8 @@ from directions.models import (
     IstochnikiFinansirovaniya,
     DirectionsHistory,
     MonitoringResult,
-    TubesRegistration, DirectionParamsResult,
+    TubesRegistration,
+    DirectionParamsResult,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -259,7 +260,7 @@ def directions_history(request):
                         'lab': lab_title,
                         'parent': parent_obj,
                         'is_expertise': is_expertise,
-                        'expertise_status': expertise_status
+                        'expertise_status': expertise_status,
                     }
                 )
             dir = i[0]
@@ -340,7 +341,7 @@ def directions_history(request):
                 'lab': lab_title,
                 'parent': parent_obj,
                 'is_expertise': is_expertise,
-                'expertise_status': expertise_status
+                'expertise_status': expertise_status,
             }
         )
 
@@ -1378,7 +1379,9 @@ def directions_paraclinic_form(request):
                             if field_type not in [1, 20]
                             else (get_default_for_field(field_type) if not result_field else result_field.value)
                         )
-                        if field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
+                        if field_type in [2, 32, 33, 34, 36] and isinstance(value, str) and value.startswith('%'):
+                            value = ''
+                        elif field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
                             value = values_to_input[0]
                         g["fields"].append(
                             {
@@ -2156,8 +2159,7 @@ def last_field_result(request):
         iss_parent = Napravleniya.objects.get(pk=num_dir).parent
         research = iss_parent.research.title
         direction_num = iss_parent.napravleniye_id
-        patient_data = f"Пациент-{data['fio']}. Д/р-{data['born']}. Полис-{data['enp']}. СНИЛС-{data['snils']}." \
-                       f"\nДокумент-{research} №-{direction_num}"
+        patient_data = f"Пациент-{data['fio']}. Д/р-{data['born']}. Полис-{data['enp']}. СНИЛС-{data['snils']}." f"\nДокумент-{research} №-{direction_num}"
         result = {"value": patient_data}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
@@ -2280,6 +2282,19 @@ def last_field_result(request):
         num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
         val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()
         result = {"value": val}
+    elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
+        _, field_id = request_data["fieldPk"].split(":")
+        current_iss = request_data["iss_pk"]
+        client_id = Issledovaniya.objects.get(pk=current_iss).napravleniye.client_id
+        val = (
+            ParaclinicResult.objects.filter(field_id=field_id, issledovaniye__napravleniye__client=client_id)
+            .exclude(issledovaniye_id=current_iss)
+            .exclude(issledovaniye__time_confirmation__isnull=True)
+            .order_by('issledovaniye__time_confirmation')
+            .values_list('value', flat=True)
+            .first()
+        )
+        result = {"value": val, "isJson": False if not val or not isinstance(val, str) else ((val.startswith("{") and val.endswith("}")) or (val.startswith("[") and val.endswith("]")))}
     elif request_data["fieldPk"].find('%proto_description') != -1 and 'iss_pk' in request_data:
         aggregate_data = hosp_get_text_iss(request_data['iss_pk'], True, 'desc')
         field_is_aggregate_proto_description = True

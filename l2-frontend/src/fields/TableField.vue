@@ -59,6 +59,9 @@
               :classes="errors[`${fieldPk}_${j}_${i}`] ? 'has-error-field' : ''"
               :short="false"
               v-model="r[i]"
+              :field-pk-initial="r[i]"
+              :iss_pk="iss_pk"
+              :client-pk="card_pk"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 34"
@@ -67,6 +70,9 @@
               @modified="changeCell(j, i, $event)"
               dictionary="mkb10.4"
               :disabled="disabled"
+              :field-pk-initial="r[i]"
+              :iss_pk="iss_pk"
+              :client-pk="card_pk"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 33"
@@ -75,6 +81,9 @@
               @modified="changeCell(j, i, $event)"
               dictionary="mkb10.5"
               :disabled="disabled"
+              :field-pk-initial="r[i]"
+              :iss_pk="iss_pk"
+              :client-pk="card_pk"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 32"
@@ -83,6 +92,9 @@
               @modified="changeCell(j, i, $event)"
               dictionary="mkb10.6"
               :disabled="disabled"
+              :field-pk-initial="r[i]"
+              :iss_pk="iss_pk"
+              :client-pk="card_pk"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 36"
@@ -91,6 +103,9 @@
               @modified="changeCell(j, i, $event)"
               dictionary="mkb10.combined"
               :disabled="disabled"
+              :field-pk-initial="r[i]"
+              :iss_pk="iss_pk"
+              :client-pk="card_pk"
             />
             <DoctorProfileTreeselectField
               v-else-if="settings[i].type === 35"
@@ -103,13 +118,13 @@
               v-else-if="settings[i].type === 23"
               :readonly="false"
               :field-pk-initial="r[i]"
+              :once="true"
               :client-pk="card_pk"
               :lines="1"
               :raw="true"
               :not_autoload_result="false"
               :iss_pk="iss_pk"
               v-model="r[i]"
-              :once="true"
             />
 
             <div v-if="errors[`${fieldPk}_${j}_${i}`]" class="has-error-message">

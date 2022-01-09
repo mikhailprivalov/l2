@@ -277,6 +277,10 @@
                     <strong>Формула:</strong>
                     <input v-model="row.default" class="form-control" />
                   </div>
+                  <div v-else-if="[2, 32, 33, 36].includes(row.field_type)">
+                    <strong>Ссылка на поле (%):</strong>
+                    <input v-model="row.default" class="form-control" />
+                  </div>
                   <div v-else-if="row.field_type === 30">
                     <strong>Тип номера:</strong>
                     <select v-model="row.default" class="form-control">

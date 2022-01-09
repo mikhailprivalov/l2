@@ -74,7 +74,14 @@
                 <input :readonly="confirmed" class="form-control" style="width: 160px" type="date" v-model="field.value" />
               </div>
               <div class="field-value mkb10" v-else-if="field.field_type === 2 && !confirmed">
-                <MKBFieldForm :short="false" @input="change_mkb(field)" v-model="field.value" />
+                <MKBFieldForm
+                  :short="false"
+                  @input="change_mkb(field)"
+                  v-model="field.value"
+                  :field-pk="field.default_value"
+                  :iss_pk="pk"
+                  :client-pk="patient.card_pk"
+                />
               </div>
               <div class="field-value mkb10" v-else-if="field.field_type === 3">
                 <FormulaField
@@ -196,19 +203,47 @@
                 <TfomsAttachmentField v-model="field.value" :disabled="confirmed" :client-pk="patient.card_pk" />
               </div>
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 32">
-                <MKBFieldTreeselect v-model="field.value" :disabled="confirmed" dictionary="mkb10.6" />
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.6"
+                  :field-pk="field.default_value"
+                  :iss_pk="pk"
+                  :client-pk="patient.card_pk"
+                />
               </div>
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 33">
-                <MKBFieldTreeselect v-model="field.value" :disabled="confirmed" dictionary="mkb10.5" />
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.5"
+                  :field-pk="field.default_value"
+                  :iss_pk="pk"
+                  :client-pk="patient.card_pk"
+                />
               </div>
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 34">
-                <MKBFieldTreeselect v-model="field.value" :disabled="confirmed" dictionary="mkb10.4" />
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.4"
+                  :field-pk="field.default_value"
+                  :iss_pk="pk"
+                  :client-pk="patient.card_pk"
+                />
               </div>
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 35">
                 <DoctorProfileTreeselectField v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 36">
-                <MKBFieldTreeselect v-model="field.value" :disabled="confirmed" dictionary="mkb10.combined" />
+                <MKBFieldTreeselect
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  dictionary="mkb10.combined"
+                  :field-pk="field.default_value"
+                  :iss_pk="pk"
+                  :client-pk="patient.card_pk"
+                />
               </div>
               <div
                 :title="field.helper"
