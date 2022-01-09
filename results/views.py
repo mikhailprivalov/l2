@@ -138,7 +138,7 @@ def result_print(request):
     )
     temp_iss = Issledovaniya.objects.filter(napravleniye_id=pk[0]).first()
     left_padding = 15
-    right_padding = 5
+    right_padding = 9
     top_padding = 5
     bottom_padding = 18
     if temp_iss.research.paddings_size:
