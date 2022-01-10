@@ -2086,7 +2086,7 @@ def directions_patient_history(request):
         filtered = filtered.filter(napravleniye__parent=iss.napravleniye.parent)
 
     for i in filtered.order_by('-time_confirmation').exclude(pk=request_data["pk"]):
-        data.append({"pk": i.pk, "direction": i.napravleniye_id, "date": strdate(i.time_confirmation) + ' ' + i.research.short_title + ' (' +i.doc_confirmation.get_fio() + ')'})
+        data.append({"pk": i.pk, "direction": i.napravleniye_id, "date": strdate(i.time_confirmation) + ' ' + i.research.short_title + ' (' + i.doc_confirmation.get_fio() + ')'})
 
     return JsonResponse({"data": data})
 
