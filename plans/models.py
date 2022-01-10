@@ -157,15 +157,19 @@ class PlanHospitalization(models.Model):
 
     @staticmethod
     def plan_hospitalization_change_status(data, doc_who_create):
-        plan_hosp = PlanHospitalization.objects.get(pk=data['pk_plan_hosp'])
+        plan_hosp = PlanHospitalization.objects.get(pk=data['pk_plan'])
         plan_hosp.doc_who_create = doc_who_create
-        plan_hosp.status = data['status']
+        if data["status"] == 2:
+            if plan_hosp.work_status == 2:
+                plan_hosp.work_status = 0
+            else:
+                plan_hosp.work_status = 2
         plan_hosp.save()
 
         slog.Log(
             key=plan_hosp.pk,
             type=80008,
-            body=json.dumps({"card_pk": plan_hosp.client.pk, "status": plan_hosp.status, "action": data["action"]}),
+            body=json.dumps({"card_pk": plan_hosp.client.pk, "status": plan_hosp.work_status, "action": data["action"]}),
             user=doc_who_create,
         ).save()
         return plan_hosp.pk
