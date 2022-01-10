@@ -476,9 +476,9 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     if who_get_born:
         if who_get_born["code"] == "1":
             doctor_get = f"{op_bold_tag}<u>{doctor_get}</u>{cl_bold_tag}"
-        elif type_happend["code"] == "2":
+        elif who_get_born["code"] == "2":
             midwife_get = f"{op_bold_tag}<u>{midwife_get}</u>{cl_bold_tag}"
-        elif type_happend["code"] == "3":
+        elif who_get_born["code"] == "3":
             other_get = f"{op_bold_tag}<u>{other_get}</u>{cl_bold_tag}"
 
     text.append(
@@ -668,7 +668,7 @@ def mother_data(fields):
     doc_snils = "________________"
     doc_data_snils = fields.get("СНИЛС матери", "")
     if doc_data_snils:
-        doc_snils = f"<u>{doc_snils}</u>"
+        doc_snils = f"<u>{doc_data_snils}</u>"
     snils = f"7. СНИЛС {doc_snils}{line_break}{line_break}"
     doc_polis = "________________"
     doc_data_polis = fields.get("Полис матери", "")
