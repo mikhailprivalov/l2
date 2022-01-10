@@ -1536,7 +1536,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_treatment=True)
             | Q(research__is_gistology=True)
             | Q(research__is_stom=True)
-            | Q(research__is_gistology=True)
+            | Q(research__is_microbiology=True)
             | Q(research__is_form=True)
             | Q(research__is_monitoring=True)
             | Q(research__is_expertise=True)
