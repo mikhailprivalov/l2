@@ -474,7 +474,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph(f"25.Лицо, принимавшее роды: врач {op_boxed_tag}1{cl_boxed_tag} фельдшер, акушерка {op_boxed_tag}2{cl_boxed_tag} другое {op_boxed_tag}3{cl_boxed_tag}", styleT))
     text = why_death(text, fields, '26')
 
-    only_doc, gin_doc,  = "врачом, только удостоверившим смерть", "врачом-акушером-гинекологом, принимавшим роды"
+    only_doc, gin_doc = "врачом, только удостоверившим смерть", "врачом-акушером-гинекологом, принимавшим роды"
     neonatolog_doc = "врачом-неонатологом (или врачом-педиатром), лечившим ребенка"
     patolog_doc, sme_doc, paramedic_doc = "врачом - патологоанатомом", "врачом - судебно-медицинским экспертом", "фельдшером, акушеркой"
     who_fact_death = json.loads(fields["Тип медицинского работника, установившего причины смерти"])
