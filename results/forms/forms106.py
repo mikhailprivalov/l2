@@ -98,8 +98,7 @@ line_break = "<br/>"
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/-2у
-    data = {"ФИО (получатель)": "", "Документ (получатель)": "", "Серия (получатель)": "", "Номер (получатель)": "", "Кем и когда выдан (получатель)": "",
-            "СНИЛС (получатель)": ""}
+    data = {"ФИО (получатель)": "", "Документ (получатель)": "", "Серия (получатель)": "", "Номер (получатель)": "", "Кем и когда выдан (получатель)": "", "СНИЛС (получатель)": ""}
 
     title_fields = [
         "Серия",
@@ -157,7 +156,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Кем и когда выдан (получатель)",
         "СНИЛС (получатель)",
         "Проверил",
-        "Главный врач"
+        "Главный врач",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
@@ -475,7 +474,8 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph(f"25.Лицо, принимавшее роды: врач {op_boxed_tag}1{cl_boxed_tag} фельдшер, акушерка {op_boxed_tag}2{cl_boxed_tag} другое {op_boxed_tag}3{cl_boxed_tag}", styleT))
     text = why_death(text, fields, '26')
 
-    only_doc, gin_doc, neonatolog_doc = "врачом, только удостоверившим смерть", "врачом-акушером-гинекологом, принимавшим роды", "врачом-неонатологом (или врачом-педиатром), лечившим ребенка"
+    only_doc, gin_doc,  = "врачом, только удостоверившим смерть", "врачом-акушером-гинекологом, принимавшим роды"
+    neonatolog_doc = "врачом-неонатологом (или врачом-педиатром), лечившим ребенка"
     patolog_doc, sme_doc, paramedic_doc = "врачом - патологоанатомом", "врачом - судебно-медицинским экспертом", "фельдшером, акушеркой"
     who_fact_death = json.loads(fields["Тип медицинского работника, установившего причины смерти"])
     if who_fact_death["code"] == "1":
@@ -756,8 +756,10 @@ def child_data_get(data_fields):
         town_death = f"<u>{op_bold_tag}{rural_death}{cl_bold_tag}</u>"
     child_type_place = f"17. Местность: {town_death} {digit_one} {rural_death} {digit_two}{line_break}{line_break}"
     data_place_death = place_death_get(data_fields)
-    where_death = f"18. Смерть (рождение мертвым) произошла(о):{line_break}{data_place_death['stationar']} {digit_one} {data_place_death['home']} {digit_two} " \
-                  f"{data_place_death['other_place']} {digit_three} {data_place_death['not_know']} {digit_four} {line_break}{line_break}"
+    where_death = (
+        f"18. Смерть (рождение мертвым) произошла(о):{line_break}{data_place_death['stationar']} {digit_one} {data_place_death['home']} {digit_two} "
+        f"{data_place_death['other_place']} {digit_three} {data_place_death['not_know']} {digit_four} {line_break}{line_break}"
+    )
     sex_men, sex_women = "мужской", "женский"
     if data_fields["Пол"].lower() == "женский":
         sex_women = f"<u>{op_bold_tag}{sex_women}{cl_bold_tag}</u>"
@@ -1097,16 +1099,12 @@ def diagnos_tbl(item, diag_data, diag_code):
     symbol_three = diag_code[2] if len(diag_code) >= 3 else space_symbol
     symbol_four = diag_code[4] if len(diag_code) >= 4 else ""
 
-    about_diag_code = Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),
+    about_diag_code = (Paragraph(f"{op_boxed_tagD}{space_symbol}{space_symbol}{space_symbol}{cl_boxed_tag} . {op_boxed_tagD}{space_symbol}{cl_boxed_tagD}", styleDiag),)
     if len(diag_code) > 0:
-        about_diag_code = Paragraph(f"{op_boxed_tagD}{symbol_one}{symbol_two}{symbol_three}{cl_boxed_tag} . {op_boxed_tagD}{symbol_four}{cl_boxed_tagD}", styleDiag),
+        about_diag_code = (Paragraph(f"{op_boxed_tagD}{symbol_one}{symbol_two}{symbol_three}{cl_boxed_tag} . {op_boxed_tagD}{symbol_four}{cl_boxed_tagD}", styleDiag),)
 
     opinion = [
-        [
-            Paragraph(f"{item}", styleT),
-            Paragraph(f"{diag_data}", styleOrgBold),
-            about_diag_code
-        ],
+        [Paragraph(f"{item}", styleT), Paragraph(f"{diag_data}", styleOrgBold), about_diag_code],
     ]
     col_width = (
         10 * mm,

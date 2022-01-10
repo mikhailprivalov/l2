@@ -1160,8 +1160,10 @@ class Napravleniya(models.Model):
 
                 for vv in researches[v]:
                     if vv == PERINATAL_DEATH_RESEARCH_PK:
+                        print("PERINATAL_DEATH_RESEARCH_PK", vv)
                         client_days_age = card.individual.age(days_monthes_years=True)
-                        if client_days_age[0] > 11 and client_days_age[1] == 0 and client_days_age[2] == 0:
+                        print(client_days_age)
+                        if client_days_age[0] > 11 and client_days_age[1] == 0 and client_days_age[2] == 0 or (client_days_age[1] > 0 or client_days_age[2] > 0):
                             result["message"] = "Св-во о перинатальной смерти оформляется до 7 дней"
                             return result
 
