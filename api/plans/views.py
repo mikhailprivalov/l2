@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from clients.models import Card
 from forms.forms_func import primary_reception_get_data
 from laboratory.utils import strdate, current_time, strfdatetime
-from plans.models import PlanOperations
+from plans.models import PlanOperations, PlanHospitalization
 from .sql_func import get_plans_by_params_sql, get_plans_hospitalization_sql
 from ..sql_func import users_by_group
 from slog.models import Log
@@ -156,7 +156,8 @@ def get_plan_hospitalization_by_params(request):
                 "diagnos":i.diagnos,
                 "tooltip_data": '\n'.join(tooltip_data),
                 "sex": i.sex,
-                "comment": i.comment
+                "comment": i.comment,
+                "canceled": i.work_status == 2
             }
         )
         if i.sex.lower() == "ж":
@@ -166,6 +167,15 @@ def get_plan_hospitalization_by_params(request):
         all_patient += 1
 
     return JsonResponse({"result": data, "sex_female": sex_female, "sex_male": sex_male, "all_patient": all_patient})
+
+
+@login_required
+def cancel_plan_hospitalization(request):
+    request_data = json.loads(request.body)
+    print(request_data)
+    ppk = PlanHospitalization.plan_hospitalization_change_status(request_data, request.user.doctorprofile)
+
+    return JsonResponse({"plan_pk": ppk})
 
 
 @login_required

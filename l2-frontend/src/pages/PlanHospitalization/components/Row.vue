@@ -1,5 +1,5 @@
 <template>
-  <tr :class="{'cancel-row': data.canceled && !edit_plan_operation}">
+  <tr :class="{'cancel-row': data.canceled}">
     <td>
       {{data.date}}
     </td>
@@ -18,12 +18,20 @@
     <td>
       {{data.diagnos}}
     </td>
-    <td>{{data.comment}}}</td>
+    <td>{{data.comment}}</td>
+    <td>
+      <button class="btn btn-blue-nb" type="button"
+        tabindex="-1"
+        @click="cancel_plan_hospitalization">
+        Отмена
+      </button>
+    </td>
   </tr>
 </template>
 
 <script lang="ts">
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import plansPoint from '@/api/plans-point';
 
 export default {
   name: 'Row',
@@ -33,16 +41,15 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      edit_plan_operation: false,
-    };
-  },
 
-  mounted() {
-    this.$root.$on('hide_plan_operations', () => {
-      this.edit_plan_operation = false;
-    });
+  methods: {
+    async cancel_plan_hospitalization() {
+      await plansPoint.cancelPlansHospitalization({
+        pk_plan: this.data.pk_plan,
+        status: 2,
+      });
+      this.$root.$emit('reload-hospplans');
+    },
   },
 };
 </script>
@@ -52,6 +59,7 @@ export default {
     td, th {
       opacity: .6;
       text-decoration: line-through;
+      background-color: linen;
     }
 
     &:hover {

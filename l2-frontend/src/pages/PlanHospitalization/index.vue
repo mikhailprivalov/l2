@@ -16,6 +16,7 @@
         <col width="170" />
         <col width="170" />
         <col width="150" />
+        <col width="95"  />
       </colgroup>
       <thead>
         <tr>
@@ -26,6 +27,7 @@
           <th>Отделение</th>
           <th>Диагноз</th>
           <th>Прим</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -77,7 +79,7 @@ import * as actions from '../../store/action-types';
   },
   async mounted() {
     this.init();
-    this.$root.$on('reload-plans', () => {
+    this.$root.$on('reload-hospplans', () => {
       this.load_data();
     });
   },
