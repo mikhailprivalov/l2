@@ -10,10 +10,22 @@ class ResPlanHospitalization(admin.ModelAdmin):
     list_display = (
         'hospital_department',
         'research',
+        'action',
+        'action',
+        'work_status',
+        'exec_at',
+        'exec_at',
+        'create_at',
     )
     list_display_links = (
         'hospital_department',
         'research',
+        'action',
+        'action',
+        'work_status',
+        'exec_at',
+        'exec_at',
+        'create_at',
     )
     search_fields = (
         'hospital_department',
