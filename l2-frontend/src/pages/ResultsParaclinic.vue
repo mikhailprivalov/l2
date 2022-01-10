@@ -359,7 +359,7 @@
                 <div class="results-history" :class="embedded && 'results-history-embedded'" slot="dropdown">
                   <ul>
                     <li v-for="r in research_history" :key="r.pk">
-                      Результат от {{ r.date }}
+                      от {{ r.date }}
                       <a href="#" @click.prevent="print_results(r.direction)">печать</a>
                       <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать</a>
                     </li>
@@ -2373,7 +2373,7 @@ export default {
 .results-history {
   margin-top: -95px;
   margin-left: -295px;
-  margin-right: -100px;
+  margin-right: -130px;
   padding: 8px;
   background: #fff;
   border-radius: 4px;
