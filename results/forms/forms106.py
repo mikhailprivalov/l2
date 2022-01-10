@@ -141,12 +141,13 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Рождение мертвым или живорождение произошло",
         "Которыми по счету",
         "Число родившихся (живыми или мертвыми) детей",
-        "Которым по счету ребенок был рожден у матери (заполняется, считая умерших и не считая мертворожденных при предыдущих родах)",
+        "Которым по счету ребенок был рожден у матери",
         "а) Основной заболевание (плода или ребенка)",
         "б) Другие заболевания плода или ребенка",
         "в) основное заболевание матери",
         "г) другие заболевания матери",
         "д) другие обстоятельства",
+        "Тип лица, принимавшего роды",
         "Тип медицинского работника, установившего причины смерти",
         "Род причины смерти",
         "ФИО (получатель)",
@@ -389,11 +390,7 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
         ],
     ]
 
-    col_width = (
-        93 * mm,
-        5 * mm,
-        93 * mm,
-    )
+    col_width = (93 * mm, 5 * mm, 93 * mm, )
     tbl_style = [
         ('GRID', (0, 0), (0, 0), 0.75, colors.white),
         ('GRID', (2, 0), (2, 0), 0.75, colors.white),
@@ -472,7 +469,9 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         )
     )
 
-    who_get_born = json.loads(fields.get("Тип лица, принимавшего роды", ""))
+    who_get_born = fields.get("Тип лица, принимавшего роды", None)
+    if who_get_born:
+        who_get_born = json.loads(who_get_born)
     doctor_get, midwife_get, other_get = "врач", "фельдшер, акушерка", "другое"
     if who_get_born:
         if who_get_born["code"] == "1":
@@ -490,8 +489,9 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     only_doc, gin_doc = "врачом, только удостоверившим смерть", "врачом-акушером-гинекологом, принимавшим роды"
     neonatolog_doc = "врачом-неонатологом (или врачом-педиатром), лечившим ребенка"
     patolog_doc, sme_doc, paramedic_doc = "врачом - патологоанатомом", "врачом - судебно-медицинским экспертом", "фельдшером, акушеркой"
-    who_fact_death = json.loads(fields.get("Тип медицинского работника, установившего причины смерти", ""))
+    who_fact_death = fields.get("Тип медицинского работника, установившего причины смерти", None)
     if who_fact_death:
+        who_fact_death = json.loads(who_fact_death)
         if who_fact_death["code"] == "1":
             only_doc = f"{op_bold_tag}<u>{only_doc}</u>{cl_bold_tag}"
         elif who_fact_death["code"] == "2":
@@ -517,7 +517,9 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         )
     )
     text.append(Spacer(1, 2 * mm))
-    reason_death = json.loads(fields.get("Основания для определения причины смерти", ""))
+    reason_death = fields.get("Основания для определения причины смерти", "")
+    if reason_death:
+        reason_death = json.loads(reason_death)
     examination_corpse, writer_document = 'осмотр трупа', 'записи в медицинской документации'
     prior_observation, autopsy = 'собственного предшествовавшего наблюдения', 'вскрытие'
     if reason_death:
@@ -1425,6 +1427,10 @@ def address_get(address_data):
         flat = address_details.get("flat", "_________")
         flat_type = address_details.get("flat_type", "")
         postal_code = address_details.get("postal_code", "")
+        settlement = address_details.get("settlement", None)
+        settlement_type = address_details.get("settlement_type", None)
+        if settlement and street == "":
+            street = f"{settlement} {settlement_type}"
 
     return {
         "region": region,
