@@ -183,25 +183,25 @@ def get_researches(request):
                 if r.reversed_type > 0:
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type):
                         tpls.append(at.as_research())
-                elif r.is_doc_refferal:
+                if r.is_doc_refferal:
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True):
                         tpls.append(at.as_research())
-                elif r.is_treatment:
+                if r.is_treatment:
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True):
                         tpls.append(at.as_research())
-                elif r.is_stom:
+                if r.is_stom:
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True):
                         tpls.append(at.as_research())
-                elif r.is_hospital:
+                if r.is_hospital:
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
                         tpls.append(at.as_research())
-                elif r.is_microbiology:
+                if r.is_microbiology:
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True):
                         tpls.append(at.as_research())
-                elif r.is_citology:
+                if r.is_citology:
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True):
                         tpls.append(at.as_research())
-                elif r.is_gistology:
+                if r.is_gistology:
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True):
                         tpls.append(at.as_research())
                 if tpls:
