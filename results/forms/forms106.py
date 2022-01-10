@@ -445,7 +445,7 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
 
 def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text = []
-    all_child_with_later = fields["Которым по счету ребенок был рожден у матери (заполняется, считая умерших и не считая мертворожденных при предыдущих родах)"]
+    all_child_with_later = fields.get("Которым по счету ребенок был рожден у матери", "")
     text.append(Paragraph(f"23. Которым по счету ребенок был рожден у матери (считая умерших и не считая мертворожденных) <u>{all_child_with_later}</u>", styleT))
     type_happend = json.loads(fields["Род причины смерти"])
     ill, unfortunate, kill, millitary, terrorist, not_know = "от заболевания", "несчастного случая", "убийства", "военных", "террористических", "род смерти не установлен"
@@ -471,25 +471,39 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
             styleT,
         )
     )
-    text.append(Paragraph(f"25.Лицо, принимавшее роды: врач {op_boxed_tag}1{cl_boxed_tag} фельдшер, акушерка {op_boxed_tag}2{cl_boxed_tag} другое {op_boxed_tag}3{cl_boxed_tag}", styleT))
+
+    who_get_born = json.loads(fields.get("Тип лица, принимавшего роды", ""))
+    doctor_get, midwife_get, other_get = "врач", "фельдшер, акушерка", "другое"
+    if who_get_born:
+        if who_get_born["code"] == "1":
+            doctor_get = f"{op_bold_tag}<u>{doctor_get}</u>{cl_bold_tag}"
+        elif type_happend["code"] == "2":
+            midwife_get = f"{op_bold_tag}<u>{midwife_get}</u>{cl_bold_tag}"
+        elif type_happend["code"] == "3":
+            other_get = f"{op_bold_tag}<u>{other_get}</u>{cl_bold_tag}"
+
+    text.append(
+        Paragraph(f"25.Лицо, принимавшее роды: {doctor_get} {op_boxed_tag}1{cl_boxed_tag} {midwife_get} {op_boxed_tag}2{cl_boxed_tag} {other_get} {op_boxed_tag}3{cl_boxed_tag}", styleT)
+    )
     text = why_death(text, fields, '26')
 
     only_doc, gin_doc = "врачом, только удостоверившим смерть", "врачом-акушером-гинекологом, принимавшим роды"
     neonatolog_doc = "врачом-неонатологом (или врачом-педиатром), лечившим ребенка"
     patolog_doc, sme_doc, paramedic_doc = "врачом - патологоанатомом", "врачом - судебно-медицинским экспертом", "фельдшером, акушеркой"
-    who_fact_death = json.loads(fields["Тип медицинского работника, установившего причины смерти"])
-    if who_fact_death["code"] == "1":
-        only_doc = f"{op_bold_tag}<u>{only_doc}</u>{cl_bold_tag}"
-    elif who_fact_death["code"] == "2":
-        gin_doc = f"{op_bold_tag}<u>{gin_doc}</u>{cl_bold_tag}"
-    elif who_fact_death["code"] == "3":
-        neonatolog_doc = f"{op_bold_tag}<u>{neonatolog_doc}</u>{cl_bold_tag}"
-    elif who_fact_death["code"] == "4":
-        patolog_doc = f"{op_bold_tag}<u>{patolog_doc}</u>{cl_bold_tag}"
-    elif who_fact_death["code"] == "5":
-        sme_doc = f"{op_bold_tag}<u>{sme_doc}</u>{cl_bold_tag}"
-    elif who_fact_death["code"] == "6":
-        paramedic_doc = f"{op_bold_tag}<u>{paramedic_doc}</u>{cl_bold_tag}"
+    who_fact_death = json.loads(fields.get("Тип медицинского работника, установившего причины смерти", ""))
+    if who_fact_death:
+        if who_fact_death["code"] == "1":
+            only_doc = f"{op_bold_tag}<u>{only_doc}</u>{cl_bold_tag}"
+        elif who_fact_death["code"] == "2":
+            gin_doc = f"{op_bold_tag}<u>{gin_doc}</u>{cl_bold_tag}"
+        elif who_fact_death["code"] == "3":
+            neonatolog_doc = f"{op_bold_tag}<u>{neonatolog_doc}</u>{cl_bold_tag}"
+        elif who_fact_death["code"] == "4":
+            patolog_doc = f"{op_bold_tag}<u>{patolog_doc}</u>{cl_bold_tag}"
+        elif who_fact_death["code"] == "5":
+            sme_doc = f"{op_bold_tag}<u>{sme_doc}</u>{cl_bold_tag}"
+        elif who_fact_death["code"] == "6":
+            paramedic_doc = f"{op_bold_tag}<u>{paramedic_doc}</u>{cl_bold_tag}"
 
     text.append(
         Paragraph(
@@ -503,18 +517,18 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         )
     )
     text.append(Spacer(1, 2 * mm))
-    reason_death = json.loads(fields["Основания для определения причины смерти"])
+    reason_death = json.loads(fields.get("Основания для определения причины смерти", ""))
     examination_corpse, writer_document = 'осмотр трупа', 'записи в медицинской документации'
     prior_observation, autopsy = 'собственного предшествовавшего наблюдения', 'вскрытие'
-
-    if reason_death["code"] == "1":
-        examination_corpse = f"{op_bold_tag}<u>{examination_corpse}</u>{cl_bold_tag}"
-    elif reason_death["code"] == "2":
-        writer_document = f"{op_bold_tag}<u>{writer_document}</u>{cl_bold_tag}"
-    elif who_fact_death["code"] == "3":
-        prior_observation = f"{op_bold_tag}<u>{prior_observation}</u>{cl_bold_tag}"
-    elif reason_death["code"] == "4":
-        autopsy = f"{op_bold_tag}<u>{autopsy}</u>{cl_bold_tag}"
+    if reason_death:
+        if reason_death["code"] == "1":
+            examination_corpse = f"{op_bold_tag}<u>{examination_corpse}</u>{cl_bold_tag}"
+        elif reason_death["code"] == "2":
+            writer_document = f"{op_bold_tag}<u>{writer_document}</u>{cl_bold_tag}"
+        elif who_fact_death["code"] == "3":
+            prior_observation = f"{op_bold_tag}<u>{prior_observation}</u>{cl_bold_tag}"
+        elif reason_death["code"] == "4":
+            autopsy = f"{op_bold_tag}<u>{autopsy}</u>{cl_bold_tag}"
 
     text.append(
         Paragraph(
