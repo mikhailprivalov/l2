@@ -4,7 +4,10 @@
       <ul class="list-group">
         <li class="list-group-item">
           <div class="row">
-            <div class="col-xs-12 col-md-3 col-lg-3">Вход выполнен как: {{ user_data.username }}</div>
+            <div class="col-xs-12 col-md-3 col-lg-3">
+              Вход выполнен как: {{ user_data.username }}<br />
+              <a href="#" class="a-under" @click="modalPassword = true" v-if="changePassword">сменить пароль</a>
+            </div>
             <div class="col-xs-12 col-md-6 col-lg-6 text-center text-left-xs">
               {{ fio_dep }}
             </div>
@@ -43,7 +46,8 @@
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info">
         <div class="panel-body">
           <span>
-            <span>{{system}}</span><br />
+            <span>{{ system }}</span>
+            <br />
             <span>{{ menu.version }}</span>
           </span>
         </div>
@@ -71,6 +75,11 @@ import { mapGetters } from 'vuex';
 import { Menu, Button } from '@/types/menu';
 
 @Component({
+  data() {
+    return {
+      modalPassword: false,
+    };
+  },
   computed: {
     ...mapGetters(['menu', 'user_data']),
     buttons() {
@@ -83,6 +92,9 @@ import { Menu, Button } from '@/types/menu';
     fio_dep() {
       return [this.user_data?.fio, this.user_data?.department.title].filter(Boolean).join(', ');
     },
+    changePassword() {
+      return this.$store.getters.modules.change_password;
+    },
   },
 })
 export default class MenuPage extends Vue {
@@ -91,6 +103,8 @@ export default class MenuPage extends Vue {
   buttons: Button[];
 
   fio_dep: string;
+
+  changePassword: boolean;
 
   get system() {
     return this.$systemTitle();
