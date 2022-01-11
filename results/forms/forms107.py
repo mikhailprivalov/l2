@@ -226,19 +226,26 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph("НАПРАВЛЕНИЕ НА МЕДИКО-СОЦИАЛЬНУЮ ЭКСПЕРТИЗУ МЕДИЦИНСКОЙ ОРГАНИЗАЦИЕЙ", styleCentreBold))
-    fwb.append(Paragraph(
+    fwb.append(
+        Paragraph(
             "1. Номер и дата протокола врачебной комиссии медицинской организации, содержащего решение о направлении гражданина на медико-социальную экспертизу: No 1112/s от 18.10.2021",
             styleText,
         )
     )
     fwb.append(Spacer(1, 2 * mm))
-    fwb.append(Paragraph(
+    fwb.append(
+        Paragraph(
             "2. Гражданин по состоянию здоровья не может явиться в бюро (главное бюро, Федеральное бюро) медико- социальной экспертизы: медико-социальную экспертизу необходимо проводить на дому",
             styleText,
         )
     )
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"3. Гражданин нуждается в оказании паллиативной медицинской помощи {op_boxed_tag}{space_symbol}{cl_boxed_tag} (при нуждаемости в оказании паллиативной медицинской помощи)", styleText))
+    fwb.append(
+        Paragraph(
+            f"3. Гражданин нуждается в оказании паллиативной медицинской помощи {op_boxed_tag}{space_symbol}{cl_boxed_tag} (при нуждаемости в оказании паллиативной медицинской помощи)",
+            styleText,
+        )
+    )
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph("4. Дата выдачи гражданину направления на медико-социальную экспертизу медицинской организацией: 18.10.2021", styleText))
     fwb.append(Spacer(1, 2 * mm))
@@ -246,33 +253,36 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     # Таблица Цели
 
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"5.1. {op_boxed_tag}X{cl_boxed_tag} установление группы инвалидности",
-            f'5.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} установление категории "ребенок-инвалид"',
-            f'5.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} установление причины инвалидности',
-         ],
-        [
-            f"5.4. {op_boxed_tag}X{cl_boxed_tag} установление времени наступления инвалидности",
-            f'5.5. {op_boxed_tag}{space_symbol}{cl_boxed_tag} установление срока инвалидности',
-            f'5.6. {op_boxed_tag}{space_symbol}{cl_boxed_tag}определение степени утраты профессиональной трудоспособности в процентах',
+            [
+                f"5.1. {op_boxed_tag}X{cl_boxed_tag} установление группы инвалидности",
+                f'5.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} установление категории "ребенок-инвалид"',
+                f'5.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} установление причины инвалидности',
+            ],
+            [
+                f"5.4. {op_boxed_tag}X{cl_boxed_tag} установление времени наступления инвалидности",
+                f'5.5. {op_boxed_tag}{space_symbol}{cl_boxed_tag} установление срока инвалидности',
+                f'5.6. {op_boxed_tag}{space_symbol}{cl_boxed_tag}определение степени утраты профессиональной трудоспособности в процентах',
+            ],
+            [
+                f"5.7. {op_boxed_tag}V{cl_boxed_tag} определение стойкой утраты трудоспособности сотрудника органа внутренних дел Российской Федерациии",
+                f'5.8. {op_boxed_tag}{space_symbol}{cl_boxed_tag} определение нуждаемости по состоянию здоровья в постоянном постороннем уходе (помощи, надзоре) отца, матери, жены, родного брата, родной сестры, дедушки, бабушки или усыновителя гражданина, призываемого на военную службу (военнослужащего, проходящего военную службу по контракту)',
+                f'5.9. {op_boxed_tag}{space_symbol}{cl_boxed_tag} определение причины смерти инвалида, а также лица, пострадавшего в результате несчастного случая на производстве, профессионального заболевания, катастрофы на Чернобыльской атомной электростанции (далее - АЭС) и других радиационных и техногенных катастроф либо в результате ранения, контузии, увечья или заболевания, полученных в период прохождения военной службы, в случаях, когда законодательством Российской Федерации предусматривается предоставление семье умершего мер социальной поддержки',
+            ],
+            [
+                f"5.10. {op_boxed_tag}V{cl_boxed_tag} разработка индивидуальной программы реабилитации или абилитации инвалида (ребенка-инвалида)",
+                f'5.11. {op_boxed_tag}{space_symbol}{cl_boxed_tag} разработка программы реабилитации лица, пострадавшего в результате несчастного случая на производстве и профессионального заболевания',
+                f'5.12. {op_boxed_tag}{space_symbol}{cl_boxed_tag} выдача дубликата справки, подтверждающей факт установления инвалидности, степени утраты профессиональной трудоспособности в процентах',
+            ],
+            [
+                f"5.13. {op_boxed_tag}V{cl_boxed_tag} выдача новой справки, подтверждающей факт установления инвалидности, в случае изменения фамилии, имени, отчества (при наличии), даты рождения гражданина",
+                f'5.14. {op_boxed_tag}{space_symbol}{cl_boxed_tag} иные цели, установленные законодательством Российской Федерации (указать):',
+                '',
+            ],
         ],
-        [
-            f"5.7. {op_boxed_tag}V{cl_boxed_tag} определение стойкой утраты трудоспособности сотрудника органа внутренних дел Российской Федерациии",
-            f'5.8. {op_boxed_tag}{space_symbol}{cl_boxed_tag} определение нуждаемости по состоянию здоровья в постоянном постороннем уходе (помощи, надзоре) отца, матери, жены, родного брата, родной сестры, дедушки, бабушки или усыновителя гражданина, призываемого на военную службу (военнослужащего, проходящего военную службу по контракту)',
-            f'5.9. {op_boxed_tag}{space_symbol}{cl_boxed_tag} определение причины смерти инвалида, а также лица, пострадавшего в результате несчастного случая на производстве, профессионального заболевания, катастрофы на Чернобыльской атомной электростанции (далее - АЭС) и других радиационных и техногенных катастроф либо в результате ранения, контузии, увечья или заболевания, полученных в период прохождения военной службы, в случаях, когда законодательством Российской Федерации предусматривается предоставление семье умершего мер социальной поддержки',
-        ],
-        [
-            f"5.10. {op_boxed_tag}V{cl_boxed_tag} разработка индивидуальной программы реабилитации или абилитации инвалида (ребенка-инвалида)",
-            f'5.11. {op_boxed_tag}{space_symbol}{cl_boxed_tag} разработка программы реабилитации лица, пострадавшего в результате несчастного случая на производстве и профессионального заболевания',
-            f'5.12. {op_boxed_tag}{space_symbol}{cl_boxed_tag} выдача дубликата справки, подтверждающей факт установления инвалидности, степени утраты профессиональной трудоспособности в процентах',
-        ],
-        [
-            f"5.13. {op_boxed_tag}V{cl_boxed_tag} выдача новой справки, подтверждающей факт установления инвалидности, в случае изменения фамилии, имени, отчества (при наличии), даты рождения гражданина",
-            f'5.14. {op_boxed_tag}{space_symbol}{cl_boxed_tag} иные цели, установленные законодательством Российской Федерации (указать):',
-            '',
-        ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -281,7 +291,11 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
         ('SPAN', (1, -1), (-1, -1)),
     ]
-    col_width = (62 * mm, 62 * mm, 62 * mm,)
+    col_width = (
+        62 * mm,
+        62 * mm,
+        62 * mm,
+    )
     tbl = gen_table(opinion, col_width, tbl_style)
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(tbl)
@@ -296,12 +310,15 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph("8. Пол (нужное отметить):", styleText))
 
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"8.1. {op_boxed_tag}X{cl_boxed_tag} мужской",
-            f'8.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} женский',
-         ],
-    ], styleT)
+            [
+                f"8.1. {op_boxed_tag}X{cl_boxed_tag} мужской",
+                f'8.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} женский',
+            ],
+        ],
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -316,13 +333,16 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(tbl)
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph("9. Гражданство (нужное отметить):", styleText))
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"9.1. {op_boxed_tag}X{cl_boxed_tag} гражданин Российской Федерации",
-            f'9.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} гражданин иностранного государства, находящийся на территории Российской Федерации',
-            f'9.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} лицо без гражданства, находящееся на территории Российской Федерации',
-         ],
-    ], styleT)
+            [
+                f"9.1. {op_boxed_tag}X{cl_boxed_tag} гражданин Российской Федерации",
+                f'9.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} гражданин иностранного государства, находящийся на территории Российской Федерации',
+                f'9.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} лицо без гражданства, находящееся на территории Российской Федерации',
+            ],
+        ],
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -331,23 +351,30 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
         ('SPAN', (1, -1), (-1, -1)),
     ]
-    col_width = (62 * mm, 62 * mm, 62 * mm,)
+    col_width = (
+        62 * mm,
+        62 * mm,
+        62 * mm,
+    )
     tbl = gen_table(opinion, col_width, tbl_style)
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(tbl)
 
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph("10. Отношение к воинской обязанности (нужное отметить):", styleText))
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"10.1. {op_boxed_tag}X{cl_boxed_tag} гражданин, состоящий на воинском учете",
-            f'10.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} гражданин, не состоящий на воинском учете, но обязанный состоять на воинском учете',
-         ],
-        [
-            f"10.3. {op_boxed_tag}X{cl_boxed_tag} гражданин, поступающий на воинской учет",
-            f'10.4. {op_boxed_tag}{space_symbol}{cl_boxed_tag} гражданин, не состоящий на воинском учете',
+            [
+                f"10.1. {op_boxed_tag}X{cl_boxed_tag} гражданин, состоящий на воинском учете",
+                f'10.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} гражданин, не состоящий на воинском учете, но обязанный состоять на воинском учете',
+            ],
+            [
+                f"10.3. {op_boxed_tag}X{cl_boxed_tag} гражданин, поступающий на воинской учет",
+                f'10.4. {op_boxed_tag}{space_symbol}{cl_boxed_tag} гражданин, не состоящий на воинском учете',
+            ],
         ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -362,7 +389,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(tbl)
 
     fwb.append(Spacer(1, 1.5 * mm))
-    fwb.append(Paragraph("11. Адрес места жительства (при отсутствии места жительства указывается адрес пребывания, фактического проживания на территории Российской Федерации, место нахождения пенсионного дела инвалида, выехавшего на постоянное жительство за пределы территории Российской Федерации):", styleText))
+    fwb.append(
+        Paragraph(
+            "11. Адрес места жительства (при отсутствии места жительства указывается адрес пребывания, фактического проживания на территории Российской Федерации, место нахождения пенсионного дела инвалида, выехавшего на постоянное жительство за пределы территории Российской Федерации):",
+            styleText,
+        )
+    )
     fwb.append(Paragraph("11.1. государство: Страна Российская Федерация", styleText))
     fwb.append(Paragraph("11.2. почтовый индекс: 664007", styleText))
     fwb.append(Paragraph("11.3. субъект Российской Федерации: Область Иркутская:", styleText))
@@ -373,36 +405,41 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Paragraph("11.8. квартира: 7", styleText))
 
     fwb.append(Spacer(1, -1 * mm))
-    fwb.append(Paragraph(f"12. Лицо без определенного места жительства {op_boxed_tag}{space_symbol}{cl_boxed_tag} (в случае если гражданин не имеет определенного места жительства)", styleText))
+    fwb.append(
+        Paragraph(f"12. Лицо без определенного места жительства {op_boxed_tag}{space_symbol}{cl_boxed_tag} (в случае если гражданин не имеет определенного места жительства)", styleText)
+    )
     fwb.append(Spacer(1, 4.5 * mm))
     fwb.append(Paragraph(f"13. Гражданин находится (нужное отметить и указать):", styleText))
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"13.1. {op_boxed_tag}X{cl_boxed_tag} в медицинской организации, оказывающей медицинскую помощь в стационарных условиях",
-            f'13.1.1. {op_boxed_tag}{space_symbol}{cl_boxed_tag} адрес медицинской организации:',
-            f'13.1.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} ОГРН медицинской организации',
+            [
+                f"13.1. {op_boxed_tag}X{cl_boxed_tag} в медицинской организации, оказывающей медицинскую помощь в стационарных условиях",
+                f'13.1.1. {op_boxed_tag}{space_symbol}{cl_boxed_tag} адрес медицинской организации:',
+                f'13.1.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} ОГРН медицинской организации',
+            ],
+            [
+                f"13.2. {op_boxed_tag}X{cl_boxed_tag}  организации социального обслуживания, оказывающей социальные услуги в стационарной форме социального обслуживания",
+                f'13.2.1 {op_boxed_tag}{space_symbol}{cl_boxed_tag} адрес организации социального обслуживания:',
+                f'13.2.2 {op_boxed_tag}{space_symbol}{cl_boxed_tag} ОГРН организации социального обслуживания:',
+            ],
+            [
+                f"13.3. {op_boxed_tag}X{cl_boxed_tag} в исправительном учреждении",
+                f'13.3.1 {op_boxed_tag}{space_symbol}{cl_boxed_tag} адрес исправительного учреждения:',
+                f'13.3.2 {op_boxed_tag}{space_symbol}{cl_boxed_tag} ОГРН исправительного учреждения:',
+            ],
+            [
+                f"13.4. {op_boxed_tag}X{cl_boxed_tag} Иная организация",
+                f'13.4.1 {op_boxed_tag}{space_symbol}{cl_boxed_tag} адрес организации:',
+                f'13.4.2 {op_boxed_tag}{space_symbol}{cl_boxed_tag} ОГРН организации:',
+            ],
+            [
+                f"13.5. {op_boxed_tag}X{cl_boxed_tag} по месту жительства (по месту пребывания, фактического проживания на территории Российской Федерации)",
+                f'',
+                f'',
+            ],
         ],
-        [
-            f"13.2. {op_boxed_tag}X{cl_boxed_tag}  организации социального обслуживания, оказывающей социальные услуги в стационарной форме социального обслуживания",
-            f'13.2.1 {op_boxed_tag}{space_symbol}{cl_boxed_tag} адрес организации социального обслуживания:',
-            f'13.2.2 {op_boxed_tag}{space_symbol}{cl_boxed_tag} ОГРН организации социального обслуживания:',
-        ],
-        [
-            f"13.3. {op_boxed_tag}X{cl_boxed_tag} в исправительном учреждении",
-            f'13.3.1 {op_boxed_tag}{space_symbol}{cl_boxed_tag} адрес исправительного учреждения:',
-            f'13.3.2 {op_boxed_tag}{space_symbol}{cl_boxed_tag} ОГРН исправительного учреждения:',
-        ],
-        [
-            f"13.4. {op_boxed_tag}X{cl_boxed_tag} Иная организация",
-            f'13.4.1 {op_boxed_tag}{space_symbol}{cl_boxed_tag} адрес организации:',
-            f'13.4.2 {op_boxed_tag}{space_symbol}{cl_boxed_tag} ОГРН организации:',
-        ],
-        [
-            f"13.5. {op_boxed_tag}X{cl_boxed_tag} по месту жительства (по месту пребывания, фактического проживания на территории Российской Федерации)",
-            f'',
-            f'',
-        ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -447,12 +484,15 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Paragraph(f"17.6.2. адрес:", styleText))
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph(f"18. Гражданин направляется на медико-социальную экспертизу (нужное отметить):", styleText))
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"18.1. {op_boxed_tag}X{cl_boxed_tag} первично",
-            f"18.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} повторно",
+            [
+                f"18.1. {op_boxed_tag}X{cl_boxed_tag} первично",
+                f"18.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} повторно",
+            ],
         ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -467,14 +507,17 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph(f"19. Сведения о результатах предыдущей медико-социальной экспертизы (в случае направления на медико- социальную экспертизу повторно):", styleText))
     fwb.append(Paragraph(f"19.1. наличие инвалидности на момент направления на медико-социальную экспертизу (нужное отметить):", styleText))
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"19.1.1. {op_boxed_tag}X{cl_boxed_tag} первая группа",
-            f"19.1.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} вторая группа",
-            f"19.1.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} третья группа",
-            f"19.1.4. {op_boxed_tag}{space_symbol}{cl_boxed_tag} категория ребенок-инвалид",
+            [
+                f"19.1.1. {op_boxed_tag}X{cl_boxed_tag} первая группа",
+                f"19.1.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} вторая группа",
+                f"19.1.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} третья группа",
+                f"19.1.4. {op_boxed_tag}{space_symbol}{cl_boxed_tag} категория ребенок-инвалид",
+            ],
         ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -488,14 +531,17 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(tbl)
     fwb.append(Paragraph(f"19.2. дата, до которой установлена инвалидность (день, месяц, год):", styleText))
     fwb.append(Paragraph(f"19.3. период, в течение которого гражданин находился на инвалидности на момент направления на медико-социальную экспертизу (нужное отметить):", styleText))
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"19.3.1. {op_boxed_tag}X{cl_boxed_tag} один год",
-            f"19.3.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} два года",
-            f"19.3.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} три года",
-            f"19.3.4. {op_boxed_tag}{space_symbol}{cl_boxed_tag} четыре и более лет",
+            [
+                f"19.3.1. {op_boxed_tag}X{cl_boxed_tag} один год",
+                f"19.3.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} два года",
+                f"19.3.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} три года",
+                f"19.3.4. {op_boxed_tag}{space_symbol}{cl_boxed_tag} четыре и более лет",
+            ],
         ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -508,38 +554,41 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(tbl)
     fwb.append(Paragraph(f"19.4. формулировка причины инвалидности, имеющейся на момент направления на медико-социальную экспертизу (нужное отметить):", styleText))
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"19.4.1. {op_boxed_tag}X{cl_boxed_tag} общее заболевание",
-            f"19.4.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} инвалидность с детства",
-            f"19.4.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} профессиональное заболевание",
-            f"19.4.4. {op_boxed_tag}{space_symbol}{cl_boxed_tag} трудовое увечье",
+            [
+                f"19.4.1. {op_boxed_tag}X{cl_boxed_tag} общее заболевание",
+                f"19.4.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} инвалидность с детства",
+                f"19.4.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} профессиональное заболевание",
+                f"19.4.4. {op_boxed_tag}{space_symbol}{cl_boxed_tag} трудовое увечье",
+            ],
+            [
+                f"19.4.5. {op_boxed_tag}X{cl_boxed_tag} военная травма",
+                f"19.4.6. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание получено в период военной службы",
+                f"19.4.7. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание, полученное при исполнении иных обязанностей военной службы (служебных обязанностей), связано с катастрофой на Чернобыльской АЭС",
+                f"19.4.8. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание радиационно обусловленное получено при исполнении обязанностей военной службы (служебных обязанностей) в связи с катастрофой на Чернобыльской АЭС",
+            ],
+            [
+                f"19.4.9. {op_boxed_tag}X{cl_boxed_tag} заболевание связано с катастрофой на Чернобыльской АЭС",
+                f'19.4.10. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание связано с аварией на производственном объединении "Маяк"',
+                f'19.4.11. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание, полученное при исполнении иных обязанностей военной службы (служебных обязанностей), связано с аварией на производственном объединении "Маяк"',
+                f"19.4.12. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание связано с последствиями радиационных воздействий",
+            ],
+            [
+                f"19.4.13. {op_boxed_tag}X{cl_boxed_tag} аболевание радиационно обусловленное получено при исполнении обязанностей военной службы (служебных обязанностей) в связи с непосредственным участием в действиях подразделений особого риска",
+                f"19.4.14. {op_boxed_tag}{space_symbol}{cl_boxed_tag} инвалидность с детства вследствие ранения (контузии, увечья), связанная с боевыми действиями в период Великой Отечественной войны 1941-1945 годов",
+                f"19.4.15. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание (ранение, контузия, увечье), полученное лицом, обслуживавшим действующие воинские части Вооруженных Сил СССР и Вооруженных Сил Российской Федерации, находившиеся на территориях других государств в период ведения в этих государствах боевых действий",
+                f"19.4.16. {op_boxed_tag}{space_symbol}{cl_boxed_tag} иные причины, установленные законодательством Российской Федерации (указать):",
+            ],
+            [
+                f"19.4.17. {op_boxed_tag}X{cl_boxed_tag} формулировки причин инвалидности, установленные в соответствии с законодательством, действовавшим на момент установления инвалидности (указать):",
+                "",
+                "",
+                "",
+            ],
         ],
-        [
-            f"19.4.5. {op_boxed_tag}X{cl_boxed_tag} военная травма",
-            f"19.4.6. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание получено в период военной службы",
-            f"19.4.7. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание, полученное при исполнении иных обязанностей военной службы (служебных обязанностей), связано с катастрофой на Чернобыльской АЭС",
-            f"19.4.8. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание радиационно обусловленное получено при исполнении обязанностей военной службы (служебных обязанностей) в связи с катастрофой на Чернобыльской АЭС",
-        ],
-        [
-            f"19.4.9. {op_boxed_tag}X{cl_boxed_tag} заболевание связано с катастрофой на Чернобыльской АЭС",
-            f'19.4.10. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание связано с аварией на производственном объединении "Маяк"',
-            f'19.4.11. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание, полученное при исполнении иных обязанностей военной службы (служебных обязанностей), связано с аварией на производственном объединении "Маяк"',
-            f"19.4.12. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание связано с последствиями радиационных воздействий",
-        ],
-        [
-            f"19.4.13. {op_boxed_tag}X{cl_boxed_tag} аболевание радиационно обусловленное получено при исполнении обязанностей военной службы (служебных обязанностей) в связи с непосредственным участием в действиях подразделений особого риска",
-            f"19.4.14. {op_boxed_tag}{space_symbol}{cl_boxed_tag} инвалидность с детства вследствие ранения (контузии, увечья), связанная с боевыми действиями в период Великой Отечественной войны 1941-1945 годов",
-            f"19.4.15. {op_boxed_tag}{space_symbol}{cl_boxed_tag} заболевание (ранение, контузия, увечье), полученное лицом, обслуживавшим действующие воинские части Вооруженных Сил СССР и Вооруженных Сил Российской Федерации, находившиеся на территориях других государств в период ведения в этих государствах боевых действий",
-            f"19.4.16. {op_boxed_tag}{space_symbol}{cl_boxed_tag} иные причины, установленные законодательством Российской Федерации (указать):",
-        ],
-        [
-            f"19.4.17. {op_boxed_tag}X{cl_boxed_tag} формулировки причин инвалидности, установленные в соответствии с законодательством, действовавшим на момент установления инвалидности (указать):",
-            "",
-            "",
-            "",
-        ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -555,7 +604,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Paragraph(f"19.5. степень утраты профессиональной трудоспособности в процентах на момент направления гражданина на медико-социальную экспертизу:", styleText))
     fwb.append(Paragraph(f"19.6. срок, на который установлена степень утраты профессиональной трудоспособности в процентах:", styleText))
     fwb.append(Paragraph(f"19.7. дата, до которой установлена степень утраты профессиональной трудоспособности в процентах (день, месяц, год):", styleText))
-    fwb.append(Paragraph(f"19.8. степени утраты профессиональной трудоспособности (в процентах), установленные по повторным несчастным случаям на производстве и профессиональным заболеваниям, и даты, до которых они установлены:", styleText))
+    fwb.append(
+        Paragraph(
+            f"19.8. степени утраты профессиональной трудоспособности (в процентах), установленные по повторным несчастным случаям на производстве и профессиональным заболеваниям, и даты, до которых они установлены:",
+            styleText,
+        )
+    )
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph(f"20. Сведения о получении образования (при получении образования):", styleText))
     fwb.append(Paragraph(f"20.1. наименование и адрес образовательной организации, в которой гражданин получает образование:", styleText))
@@ -583,21 +637,29 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Paragraph(f"25.2. No ЭЛН:", styleText))
     fwb.append(Paragraph(f"25.1. Наличие листка нетрудоспособности в форме электронного документа (далее - ЭЛН)25.2. No ЭЛН:", styleText))
     fwb.append(Spacer(1, 1.5 * mm))
-    fwb.append(Paragraph(f"26. Результаты и эффективность проведенных мероприятий медицинской реабилитации, рекомендованных индивидуальной программой реабилитации или абилитации инвалида (ребенка- инвалида) No к протоколу проведения медико-социальной экспертизы No от (нужное отметить):", styleText))
-    opinion = gen_opinion_2([
+    fwb.append(
+        Paragraph(
+            f"26. Результаты и эффективность проведенных мероприятий медицинской реабилитации, рекомендованных индивидуальной программой реабилитации или абилитации инвалида (ребенка- инвалида) No к протоколу проведения медико-социальной экспертизы No от (нужное отметить):",
+            styleText,
+        )
+    )
+    opinion = gen_opinion_2(
         [
-            f"26.1. {op_boxed_tag}X{cl_boxed_tag} востановление нарушенных функций",
-            f"26.1.1. {op_boxed_tag}{space_symbol}{cl_boxed_tag} полное",
-            f"26.1.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} частичное",
-            f"26.1.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} положительные результаты отсутствуют",
+            [
+                f"26.1. {op_boxed_tag}X{cl_boxed_tag} востановление нарушенных функций",
+                f"26.1.1. {op_boxed_tag}{space_symbol}{cl_boxed_tag} полное",
+                f"26.1.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} частичное",
+                f"26.1.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} положительные результаты отсутствуют",
+            ],
+            [
+                f"26.2. {op_boxed_tag}X{cl_boxed_tag} достижение компенсации утраченных либо отсутствующих функций",
+                f"26.2.1. {op_boxed_tag}{space_symbol}{cl_boxed_tag} полное",
+                f"26.2.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} частичное",
+                f"26.2.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} положительные результаты отсутствуют",
+            ],
         ],
-        [
-            f"26.2. {op_boxed_tag}X{cl_boxed_tag} достижение компенсации утраченных либо отсутствующих функций",
-            f"26.2.1. {op_boxed_tag}{space_symbol}{cl_boxed_tag} полное",
-            f"26.2.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} частичное",
-            f"26.2.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} положительные результаты отсутствуют",
-        ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -612,18 +674,21 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(tbl)
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph(f"27. Антропометрические данные и физиологические параметры:", styleText))
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"27.1. {op_boxed_tag}X{cl_boxed_tag} врост:",
-            f"27.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} вес:",
-            f"27.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} индекс массы тела:",
+            [
+                f"27.1. {op_boxed_tag}X{cl_boxed_tag} врост:",
+                f"27.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} вес:",
+                f"27.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} индекс массы тела:",
+            ],
+            [
+                f"27.4. {op_boxed_tag}X{cl_boxed_tag} телосложение:",
+                f"27.5. {op_boxed_tag}{space_symbol}{cl_boxed_tag} суточный объем физиологических отправлений (мл) (при наличии медицинских показаний в обеспечении абсорбирующим бельем):",
+                f"27.6. {op_boxed_tag}{space_symbol}{cl_boxed_tag} объем талии/бедер (при наличии медицинских показаний в обеспечении абсорбирующим бельем):",
+            ],
         ],
-        [
-            f"27.4. {op_boxed_tag}X{cl_boxed_tag} телосложение:",
-            f"27.5. {op_boxed_tag}{space_symbol}{cl_boxed_tag} суточный объем физиологических отправлений (мл) (при наличии медицинских показаний в обеспечении абсорбирующим бельем):",
-            f"27.6. {op_boxed_tag}{space_symbol}{cl_boxed_tag} объем талии/бедер (при наличии медицинских показаний в обеспечении абсорбирующим бельем):",
-        ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -635,12 +700,15 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     tbl = gen_table(opinion, col_width, tbl_style)
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(tbl)
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"27.7. {op_boxed_tag}X{cl_boxed_tag} масса тела при рождении (в отношении детей в в возрасте до 3 лет):",
-            f"27.8. {op_boxed_tag}{space_symbol}{cl_boxed_tag} физическое развитие (в отношении детей в в возрасте до 3 лет):",
+            [
+                f"27.7. {op_boxed_tag}X{cl_boxed_tag} масса тела при рождении (в отношении детей в в возрасте до 3 лет):",
+                f"27.8. {op_boxed_tag}{space_symbol}{cl_boxed_tag} физическое развитие (в отношении детей в в возрасте до 3 лет):",
+            ],
         ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -654,7 +722,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph(f"28. Состояние здоровья гражданина при направлении на медико-социальную экспертизу:", styleText))
     fwb.append(Spacer(1, 1.5 * mm))
-    fwb.append(Paragraph(f"29. Сведения о медицинских обследованиях, необходимых для получения клинико-функциональных данных в зависимости от заболевания при проведении медико-социальной экспертизы:", styleText))
+    fwb.append(
+        Paragraph(
+            f"29. Сведения о медицинских обследованиях, необходимых для получения клинико-функциональных данных в зависимости от заболевания при проведении медико-социальной экспертизы:",
+            styleText,
+        )
+    )
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph(f"30. Диагноз при направлении на медико-социальную экспертизу:", styleText))
     fwb.append(Paragraph(f"30.1. основное заболевание:", styleText))
@@ -678,22 +751,25 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph(f"37. Санаторно-курортное лечение:", styleText))
 
-    opinion = gen_opinion_2([
+    opinion = gen_opinion_2(
         [
-            f"Председатель врачебной комиссии:",
-            f"",
-            f"",
-            f"",
-            f"Иванов И.И.",
+            [
+                f"Председатель врачебной комиссии:",
+                f"",
+                f"",
+                f"",
+                f"Иванов И.И.",
+            ],
+            [
+                "",
+                "",
+                "(подпись)",
+                "",
+                f"(расшифровка подписи)",
+            ],
         ],
-        [
-            "",
-            "",
-            "(подпись)",
-            "",
-            f"(расшифровка подписи)",
-        ],
-    ], styleT)
+        styleT,
+    )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -711,22 +787,25 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     for k in range(4):
         fwb.append(Spacer(1, 3 * mm))
         members = "Члены врачебной комиссии:" if k == 0 else ""
-        opinion = gen_opinion_2([
+        opinion = gen_opinion_2(
             [
-                f"{members}",
-                f"",
-                f"",
-                f"",
-                f"первый{k}",
+                [
+                    f"{members}",
+                    f"",
+                    f"",
+                    f"",
+                    f"первый{k}",
+                ],
+                [
+                    "",
+                    "",
+                    "(подпись)",
+                    "",
+                    f"(расшифровка подписи)",
+                ],
             ],
-            [
-                "",
-                "",
-                "(подпись)",
-                "",
-                f"(расшифровка подписи)",
-            ],
-        ], styleT)
+            styleT,
+        )
         tbl_style = [
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
@@ -744,88 +823,17 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     return fwb
 
 
-def add_template(iss: Issledovaniya, direction, fields, offset=0):
-    # Мед. св-во о смерти 106-2/у
-    text = []
-    text = title_data(
-        "КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О ПЕРИНАТАЛЬНОЙ СМЕРТИ",
-        "К УЧЕТНОЙ ФОРМЕ № 106-2/У",
-        text,
-        fields.get("Серия", ""),
-        fields.get("Номер", ""),
-        fields.get("Дата выдачи", ""),
-        fields.get("Вид медицинского свидетельства о смерти", ""),
-        fields,
-    )
-    text.append(Spacer(1, 3 * mm))
-
-    text = death_data_child(text, fields)
-    text.append(Spacer(1, 3 * mm))
-    mother_fio = mother_fio_data(fields)
-    text.append(Paragraph(f"4. Фамилия, имя, отчество (при наличии) матери: {mother_fio}", style))
-    text.append(Spacer(1, 1.2 * mm))
-    mother_born_date, mother_born_month, mother_born_year = "_______", "_________", "__________"
-    mother_born_data = fields.get("Дата рождения матери", None)
-    if mother_born_data:
-        mother_born_data = mother_born_data.split(".")
-        if len(mother_born_data) == 3:
-            mother_born_date = f"<u>{space_symbol * 8}{mother_born_data[0]}{space_symbol * 8}</u>"
-            mother_born_month = f"<u>{space_symbol * 8}{mother_born_data[1]}{space_symbol * 8}</u>"
-            mother_born_year = f"<u>{space_symbol * 8}{mother_born_data[2]}{space_symbol * 8}</u>"
-
-    text.append(Paragraph(f"5.	Дата рождения матери:	число {mother_born_date} месяц {mother_born_month} год {mother_born_year}", style))
-    text.append(Spacer(1, 1.2 * mm))
-
-    mother_address = address_get(fields.get("Адрес матери", None))
-    text.append(Paragraph("6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
-    text.append(Paragraph(f"субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}", style))
-    text.append(Paragraph(f"район {mother_address['area']} город {mother_address['city']}", style))
-    text.append(Paragraph(f"населенный пункт__________________ улица {mother_address['street']}", style))
-    text.append(Paragraph(f"дом {mother_address['house']} стр.______корп. _____ кв. {mother_address['flat']}", style))
-    text.append(Spacer(1, 2 * mm))
-    type_live = json.loads(fields["Вид места жительства"])
-    town, rural = "городская", "сельская"
-    if type_live["title"].lower() == "город":
-        town = "<u>городская</u>"
-    else:
-        rural = "<u>сельская</u>"
-    text.append(Paragraph(f"7.	Местность: {town} {digit_one} {rural} {digit_two}", style))
-    text.append(Spacer(1, 4 * mm))
-    child_family = fields.get("Фамилия", "")
-    text.append(Paragraph(f"8.	Фамилия, имя, отчество (при наличии) умершего ребенка (фамилия ребенка, родившегося мертвым) {child_family}", style))
-    sex_child = fields.get("Пол", "")
-    sex_men, sex_woomen = "мужской", "женский"
-    if sex_child.lower() == "мужской":
-        sex_men = "<u>мужской</u>"
-    else:
-        sex_woomen = "<u>женский</u>"
-
-    text.append(Paragraph(f"9.	Пол: {sex_men} {digit_one} {sex_woomen} {digit_two}", style))
-    text.append(Spacer(1, 1.5 * mm))
-
-    data_place_death = place_death_get(fields)
-    text.append(
-        Paragraph(
-            f"10. Смерть   (мертворождение)  произошла(о):  {data_place_death['stationar']} {digit_one} {data_place_death['home']} {digit_two} "
-            f"{data_place_death['other_place']} {digit_three} {data_place_death['not_know']} {digit_four}",
-            style,
-        )
-    )
-
-    obj = []
-    obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
-    return obj
-
-
 def gen_opinion(data, type_style):
     opinion = [[Paragraph(f"{k}", type_style) for k in data]]
     return opinion
+
 
 def gen_opinion_2(data, type_style):
     opinion = []
     for element in data:
         opinion.append([Paragraph(f"{k}", type_style) for k in element])
     return opinion
+
 
 def gen_table(opinion, col_width, tbl_style, row_height=None):
     tbl = Table(
