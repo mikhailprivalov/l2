@@ -572,13 +572,174 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Paragraph(f"21.7. адрес места работы:", styleText))
     fwb.append(Spacer(1, 1.5 * mm))
     fwb.append(Paragraph("Раздел II. Клинико-функциональные данные гражданина", styleCentreBold))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"22. Наблюдается в медицинской организации с", styleText))
+    fwb.append(Paragraph(f"23. Анамнез заболевания:", styleText))
+    fwb.append(Paragraph(f"--------", styleText))
+    fwb.append(Paragraph(f"24. Анамнез жизни:", styleText))
+    fwb.append(Paragraph(f"---------", styleText))
+    fwb.append(Paragraph(f"25. Частота и длительность временной нетрудоспособности (сведения за последние 12 месяцев):", styleText))
+    fwb.append(Paragraph(f"25.1. Наличие листка нетрудоспособности в форме электронного документа (далее - ЭЛН):", styleText))
+    fwb.append(Paragraph(f"25.2. No ЭЛН:", styleText))
+    fwb.append(Paragraph(f"25.1. Наличие листка нетрудоспособности в форме электронного документа (далее - ЭЛН)25.2. No ЭЛН:", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"26. Результаты и эффективность проведенных мероприятий медицинской реабилитации, рекомендованных индивидуальной программой реабилитации или абилитации инвалида (ребенка- инвалида) No к протоколу проведения медико-социальной экспертизы No от (нужное отметить):", styleText))
+    opinion = gen_opinion_2([
+        [
+            f"26.1. {op_boxed_tag}X{cl_boxed_tag} востановление нарушенных функций",
+            f"26.1.1. {op_boxed_tag}{space_symbol}{cl_boxed_tag} полное",
+            f"26.1.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} частичное",
+            f"26.1.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} положительные результаты отсутствуют",
+        ],
+        [
+            f"26.2. {op_boxed_tag}X{cl_boxed_tag} достижение компенсации утраченных либо отсутствующих функций",
+            f"26.2.1. {op_boxed_tag}{space_symbol}{cl_boxed_tag} полное",
+            f"26.2.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} частичное",
+            f"26.2.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} положительные результаты отсутствуют",
+        ],
+    ], styleT)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -3 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5 * mm),
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+        ('SPAN', (0, -1), (-1, -1)),
+    ]
+    col_width = (46.5 * mm, 46.5 * mm, 46.5 * mm, 46.5 * mm)
+    tbl = gen_table(opinion, col_width, tbl_style)
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"27. Антропометрические данные и физиологические параметры:", styleText))
+    opinion = gen_opinion_2([
+        [
+            f"27.1. {op_boxed_tag}X{cl_boxed_tag} врост:",
+            f"27.2. {op_boxed_tag}{space_symbol}{cl_boxed_tag} вес:",
+            f"27.3. {op_boxed_tag}{space_symbol}{cl_boxed_tag} индекс массы тела:",
+        ],
+        [
+            f"27.4. {op_boxed_tag}X{cl_boxed_tag} телосложение:",
+            f"27.5. {op_boxed_tag}{space_symbol}{cl_boxed_tag} суточный объем физиологических отправлений (мл) (при наличии медицинских показаний в обеспечении абсорбирующим бельем):",
+            f"27.6. {op_boxed_tag}{space_symbol}{cl_boxed_tag} объем талии/бедер (при наличии медицинских показаний в обеспечении абсорбирующим бельем):",
+        ],
+    ], styleT)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -3 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5 * mm),
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+    ]
+    col_width = (62 * mm, 62 * mm, 62 * mm)
+    tbl = gen_table(opinion, col_width, tbl_style)
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(tbl)
+    opinion = gen_opinion_2([
+        [
+            f"27.7. {op_boxed_tag}X{cl_boxed_tag} масса тела при рождении (в отношении детей в в возрасте до 3 лет):",
+            f"27.8. {op_boxed_tag}{space_symbol}{cl_boxed_tag} физическое развитие (в отношении детей в в возрасте до 3 лет):",
+        ],
+    ], styleT)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), -3 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5 * mm),
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+    ]
+    col_width = (93 * mm, 93 * mm)
+    tbl = gen_table(opinion, col_width, tbl_style)
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"28. Состояние здоровья гражданина при направлении на медико-социальную экспертизу:", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"29. Сведения о медицинских обследованиях, необходимых для получения клинико-функциональных данных в зависимости от заболевания при проведении медико-социальной экспертизы:", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"30. Диагноз при направлении на медико-социальную экспертизу:", styleText))
+    fwb.append(Paragraph(f"30.1. основное заболевание:", styleText))
+    fwb.append(Paragraph(f"30.2. код основного заболевания по МКБ:", styleText))
+    fwb.append(Paragraph(f"30.3. осложнения основного заболевания:", styleText))
+    fwb.append(Paragraph(f"30.4. сопутствующие заболевания:", styleText))
+    fwb.append(Paragraph(f"30.5. коды сопутствующих заболеваний по МКБ:", styleText))
+    fwb.append(Paragraph(f"30.6. осложнения сопутствующих заболеваний:", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"31. Клинический прогноз: Благоприятный, Относительно благоприятный, Сомнительный (неопределенный), Неблагоприятный (нужное подчеркнуть).", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"32. Реабилитационный потенциал: Высокий, Удовлетворительный, Низкий (нужное подчеркнуть).", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"33. Реабилитационный прогноз: Благоприятный, Относительно благоприятный, Сомнительный (неопределенный), Неблагоприятный (нужное подчеркнуть).", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"34. Рекомендуемые мероприятия по медицинской реабилитации:", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"35. Рекомендуемые мероприятия по реконструктивной хирургии:", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"36. Рекомендуемые мероприятия по протезированию и ортезированию:", styleText))
+    fwb.append(Spacer(1, 1.5 * mm))
+    fwb.append(Paragraph(f"37. Санаторно-курортное лечение:", styleText))
 
+    opinion = gen_opinion_2([
+        [
+            f"Председатель врачебной комиссии:",
+            f"",
+            f"",
+            f"",
+            f"Иванов И.И.",
+        ],
+        [
+            "",
+            "",
+            "(подпись)",
+            "",
+            f"(расшифровка подписи)",
+        ],
+    ], styleT)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 1 * mm),
+        ('TOPPADDING', (1, 1), (-1, -1), -1 * mm),
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+        ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
+        ('LINEBELOW', (4, 0), (4, 0), 0.75, colors.black),
+    ]
+    col_width = (69 * mm, 5 * mm, 49 * mm, 5 * mm, 59 * mm)
+    tbl = gen_table(opinion, col_width, tbl_style)
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(tbl)
 
-
-
-
-
-
+    for k in range(4):
+        fwb.append(Spacer(1, 3 * mm))
+        members = "Члены врачебной комиссии:" if k == 0 else ""
+        opinion = gen_opinion_2([
+            [
+                f"{members}",
+                f"",
+                f"",
+                f"",
+                f"первый{k}",
+            ],
+            [
+                "",
+                "",
+                "(подпись)",
+                "",
+                f"(расшифровка подписи)",
+            ],
+        ], styleT)
+        tbl_style = [
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0.7 * mm),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 1 * mm),
+            ('TOPPADDING', (1, 1), (-1, -1), -1 * mm),
+            ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+            ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
+            ('LINEBELOW', (4, 0), (4, 0), 0.75, colors.black),
+        ]
+        col_width = (69 * mm, 5 * mm, 49 * mm, 5 * mm, 59 * mm)
+        tbl = gen_table(opinion, col_width, tbl_style)
+        fwb.append(Spacer(1, 3 * mm))
+        fwb.append(tbl)
 
     return fwb
 
