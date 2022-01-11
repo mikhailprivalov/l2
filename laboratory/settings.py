@@ -330,6 +330,13 @@ DEFAULT_N3_DOCTOR = {
 
 SYSTEM_AS_VI = False
 
+EMAIL_HOST = None
+EMAIL_PORT = 465
+EMAIL_HOST_USER = "your@yandex.ru"
+EMAIL_HOST_PASSWORD = "password"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
@@ -389,7 +396,6 @@ if DB_PORT:
 
 if ENV_SECRET_KEY:
     SECRET_KEY = ENV_SECRET_KEY
-
 
 
 # db = DATABASES.get('default', {})

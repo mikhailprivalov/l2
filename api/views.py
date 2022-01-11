@@ -1269,6 +1269,7 @@ def user_view(request):
             "patronymic": '',
             "username": '',
             "department": '',
+            "email": '',
             "groups": [],
             "restricted_to_direct": [],
             "users_services": [],
@@ -1294,6 +1295,7 @@ def user_view(request):
             "patronymic": fio_parts[2],
             "username": doc.user.username,
             "department": doc.podrazdeleniye_id,
+            "email": doc.email or '',
             "groups": [x.pk for x in doc.user.groups.all()],
             "restricted_to_direct": [x.pk for x in doc.restricted_to_direct.all()],
             "users_services": [x.pk for x in doc.users_services.all()],
@@ -1332,6 +1334,7 @@ def user_save_view(request):
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
     snils = ud.get("snils").strip() or ''
+    email = ud.get("email").strip() or None
     position = ud.get("position", -1)
     if position == -1:
         position = None
@@ -1402,6 +1405,7 @@ def user_save_view(request):
             doc.rmis_resource_id = rmis_resource_id
             doc.hospital_id = hospital_pk
             doc.snils = snils
+            doc.email = email
             doc.position_id = position
             if rmis_login:
                 doc.rmis_login = rmis_login

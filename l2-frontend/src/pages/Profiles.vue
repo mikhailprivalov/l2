@@ -103,7 +103,22 @@
                 </div>
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0">
+            <div class="col-xs-6" style="padding-left: 0;" v-if="modules.change_password">
+              <div class="input-group">
+                <span class="input-group-addon">Email</span>
+                <input
+                  placeholder="Email"
+                  class="form-control"
+                  type="email"
+                  :class="!validEmail && 'has-error-field'"
+                  v-model.trim="user.email"
+                />
+              </div>
+            </div>
+            <div
+              :class="modules.change_password ? 'col-xs-12' : 'col-xs-6'"
+              :style="modules.change_password ? '' : 'padding-left: 0'"
+            >
               <div class="input-group">
                 <span class="input-group-addon">Подразделение</span>
                 <select class="form-control" v-model="user.department">
@@ -317,6 +332,7 @@ export default {
       positions: [],
       user: {
         username: '',
+        email: '',
         rmis_location: '',
         rmis_login: '',
         rmis_password: '',
@@ -480,6 +496,9 @@ export default {
         !this.user.snils || (!this.user.snils.includes('-') && !this.user.snils.includes(' ') && validateSnils(this.user.snils))
       );
     },
+    validEmail() {
+      return Boolean(this.user?.email?.includes('@'));
+    },
     departmentFiltered() {
       const r = [];
       for (const x of this.departments) {
@@ -496,7 +515,14 @@ export default {
     valid() {
       const p = (this.open_pk > -1 && (this.user.password.length === 0 || this.user.password.length >= 3))
         || (this.open_pk === -1 && this.user.password.length >= 3);
-      return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '' && this.snilsValid;
+      return (
+        p
+        && this.user.username !== ''
+        && this.user.family !== ''
+        && this.user.name !== ''
+        && this.snilsValid
+        && (!this.modules.change_password || this.validEmail)
+      );
     },
     ...mapGetters({
       modules: 'modules',
