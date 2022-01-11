@@ -78,17 +78,15 @@
         >
           <span slot="header">Смена пароля</span>
           <div slot="body" class="popup-body" v-if="email">
-            <div class="alert-modal">
-              Ваш email: <strong>{{ email }}</strong>
-              <br />
-              Новый пароль будет отправлен вам на почту!<br />
-              После получения пароля войдите в систему заново.<br />
-              Все активные сессии будут прекращены (включая текущую).
-              <br /><br />
-              <button @click="doChangePassword" class="btn btn-blue-nb" :disabled="loading" type="button">
-                Сменить пароль
-              </button>
-            </div>
+            Ваш email: <strong>{{ email }}</strong>
+            <br />
+            Новый пароль будет отправлен вам на почту!<br />
+            После получения пароля войдите в систему заново.<br />
+            Все активные сессии будут прекращены (включая текущую).
+            <br /><br />
+            <button @click="doChangePassword" class="btn btn-blue-nb" :disabled="loading" type="button">
+              Сменить пароль
+            </button>
           </div>
           <div slot="body" class="popup-body" v-else>
             <div class="alert-modal">
