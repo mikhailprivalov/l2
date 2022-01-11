@@ -65,6 +65,50 @@
         </div>
       </div>
     </div>
+    <MountingPortal mountTo="#portal-place-modal" name="ChangePassword" append>
+      <transition name="fade">
+        <Modal
+          v-if="modalPassword"
+          @close="modalPassword = false"
+          show-footer="true"
+          white-bg="true"
+          max-width="710px"
+          width="100%"
+          marginLeftRight="auto"
+        >
+          <span slot="header">Смена пароля</span>
+          <div slot="body" class="popup-body" v-if="email">
+            <div class="alert-modal">
+              Ваш email: <strong>{{ email }}</strong>
+              <br />
+              Новый пароль будет отправлен вам на почту!<br />
+              После получения пароля войдите в систему заново.<br />
+              Все активные сессии будут прекращены (включая текущую).
+              <br /><br />
+              <button @click="doChangePassword" class="btn btn-blue-nb" :disabled="loading" type="button">
+                Сменить пароль
+              </button>
+            </div>
+          </div>
+          <div slot="body" class="popup-body" v-else>
+            <div class="alert-modal">
+              В вашем профиле не настроен <strong>email адрес</strong>!.<br />
+              Обратитесь к администратору для установки <strong>email адреса</strong>.<br />
+              Тогда вы сможете сменить пароль!
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-6">
+                <button @click="modalPassword = false" class="btn btn-blue-nb" :disabled="loading" type="button">
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
   </div>
 </template>
 
@@ -72,12 +116,15 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
+import Modal from '@/ui-cards/Modal.vue';
 import { Menu, Button } from '@/types/menu';
 
 @Component({
+  components: { Modal },
   data() {
     return {
       modalPassword: false,
+      loading: false,
     };
   },
   computed: {
@@ -91,6 +138,9 @@ import { Menu, Button } from '@/types/menu';
     },
     fio_dep() {
       return [this.user_data?.fio, this.user_data?.department.title].filter(Boolean).join(', ');
+    },
+    email() {
+      return this.user_data?.email;
     },
     changePassword() {
       return this.$store.getters.modules.change_password;
@@ -106,8 +156,23 @@ export default class MenuPage extends Vue {
 
   changePassword: boolean;
 
+  modalPassword: boolean;
+
+  loading: boolean;
+
+  email: string | null;
+
   get system() {
     return this.$systemTitle();
+  }
+
+  async doChangePassword() {
+    try {
+      await this.$dialog.confirm('Вы действительно хотите сменить пароль и выйти из системы?');
+    } catch (_) {
+      return;
+    }
+    this.loading = true;
   }
 }
 </script>
@@ -134,5 +199,12 @@ export default class MenuPage extends Vue {
 .menu.row.dash-buttons {
   margin-right: -2px;
   margin-left: -2px;
+}
+
+.alert-modal {
+  margin: 0 0 15px 0;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 8%);
+  border-radius: 4px;
 }
 </style>
