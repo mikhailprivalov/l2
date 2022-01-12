@@ -153,8 +153,9 @@ def menu(request):
                 {
                     "url": '/ui/some-links',
                     "title": "Ccылки",
-                    "nt": True,
+                    "nt": False,
                     "access": ["*"],
+                    "module": "l2_some_links",
                 },
                 # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]

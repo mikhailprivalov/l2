@@ -208,6 +208,7 @@ const router = new Router({
         title: 'Ссылки',
         groups: ['*'],
         narrowLayout: true,
+        module: 'l2_some_links',
       },
     },
     {
