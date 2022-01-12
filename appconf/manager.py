@@ -123,6 +123,7 @@ class SettingManager:
                     "expertise",
                     "l2vi",
                     "morfology_additional",
+                    "some_links",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

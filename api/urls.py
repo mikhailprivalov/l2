@@ -59,6 +59,7 @@ urlpatterns = [
     path('org-generators', views.org_generators),
     path('org-generators-add', views.org_generators_add),
     path('current-org-update', views.current_org_update),
+    path('get-links', views.get_links),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),

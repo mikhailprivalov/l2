@@ -150,6 +150,13 @@ def menu(request):
                     "nt": False,
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача",],
                 },
+                {
+                    "url": '/ui/some-links',
+                    "title": "Ccылки",
+                    "nt": False,
+                    "access": ["*"],
+                    "module": "l2_some_links",
+                },
                 # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 
