@@ -4,7 +4,9 @@ from django.contrib.auth.models import User, Group
 from django.db import models
 
 from appconf.manager import SettingManager
+from laboratory.settings import EMAIL_HOST
 from podrazdeleniya.models import Podrazdeleniya
+from users.tasks import send_new_password
 
 
 class Speciality(models.Model):
@@ -89,6 +91,27 @@ class DoctorProfile(models.Model):
     position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
     snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
+
+    def reset_password(self):
+        if not self.user or not self.email:
+            return False
+
+        if not EMAIL_HOST:
+            return False
+
+        new_password = User.objects.make_random_password()
+
+        self.user.set_password(new_password)
+        self.user.save()
+
+        send_new_password.delay(
+            self.email,
+            self.user.username,
+            new_password,
+            self.hospital_safe_title
+        )
+
+        return True
 
     @property
     def dict_data(self):

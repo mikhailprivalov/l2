@@ -75,6 +75,7 @@
           max-width="710px"
           width="100%"
           marginLeftRight="auto"
+          :noClose="!!loading"
         >
           <span slot="header">Смена пароля</span>
           <div slot="body" class="popup-body" v-if="email">
@@ -170,7 +171,22 @@ export default class MenuPage extends Vue {
     } catch (_) {
       return;
     }
+
     this.loading = true;
+
+    try {
+      const { ok, message } = await this.$api('/users/change-password');
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Успешно. Проверьте почту и повторите вход в систему!', 15000);
+        this.$router.push('login');
+        return;
+      }
+
+      this.$root.$emit('msg', 'error', message || 'Что-то пошло не так');
+    } catch (error) {
+      console.error(error);
+    }
+    this.loading = false;
   }
 }
 </script>

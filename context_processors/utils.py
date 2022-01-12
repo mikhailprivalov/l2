@@ -155,7 +155,7 @@ def menu(request):
 
             if settings.LDAP and settings.LDAP["enable"]:
                 pages.append({"url": "/mainmenu/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
-            if settings.RMQ_ENABLED:
+            if settings.DEPRECATED_RMQ_ENABLED:
                 pages.append({"url": "/mainmenu/rmq", "title": "Rabbit MQ", "nt": False, "access": []})
             if settings.PROFILING:
                 pages.append({"url": "/silk/", "title": "Профилирование", "nt": False, "access": []})

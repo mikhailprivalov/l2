@@ -1,8 +1,8 @@
-from laboratory.settings import RMQ_URL, RMQ_ENABLED
+from laboratory.settings import RMQ_URL, DEPRECATED_RMQ_ENABLED
 
 
 def mq_send(m_type, m_obj, m_pk, queue='l2_models_events'):
-    if not RMQ_ENABLED:
+    if not DEPRECATED_RMQ_ENABLED:
         return
     import pika
 
@@ -22,7 +22,7 @@ def mq_send(m_type, m_obj, m_pk, queue='l2_models_events'):
 
 
 def get_queue_messages_count(queue='l2_models_events'):
-    if not RMQ_ENABLED:
+    if not DEPRECATED_RMQ_ENABLED:
         return 0
     import pika
 
