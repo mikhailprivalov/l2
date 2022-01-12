@@ -1932,7 +1932,7 @@ def current_org_update(request):
 @login_required
 def get_links(request):
     if not SOME_LINKS:
-        return JsonResponse({"rows": ""})
+        return JsonResponse({"rows": []})
 
     return JsonResponse({"rows": SOME_LINKS})
 

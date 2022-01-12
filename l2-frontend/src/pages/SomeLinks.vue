@@ -2,8 +2,8 @@
   <div>
     <h5>{{ title }}</h5>
     <ul style="list-style-type: none">
-      <li v-for="r in link_rows" :key="r.title" style="padding-top: 7px; font-size: 14px;">
-        <a :href="`${r.link}`" target="_blank" :title=r.comment v-tippy>
+      <li v-for="r in link_rows" :key="r.title" style="padding-top: 9px; font-size: 16px;">
+        <a :href="`${r.link}`" target="_blank" :title="r.comment" v-tippy>
           {{ r.title }} - {{ r.link }}
         </a>
       </li>
