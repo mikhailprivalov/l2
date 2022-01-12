@@ -206,7 +206,6 @@ const router = new Router({
       component: () => import('@/pages/SomeLinks.vue'),
       meta: {
         title: 'Ссылки',
-        groups: ['*'],
         narrowLayout: true,
         module: 'l2_some_links',
       },
