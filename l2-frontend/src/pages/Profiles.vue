@@ -521,7 +521,6 @@ export default {
         && this.user.family !== ''
         && this.user.name !== ''
         && this.snilsValid
-        && (!this.modules.change_password || this.validEmail)
       );
     },
     ...mapGetters({
