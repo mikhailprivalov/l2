@@ -1,4 +1,4 @@
-from .celery import app as celery_app
+__version__ = (2022, 1, 12, '64174b0c')
 
 __all__ = ('celery_app',)
 
