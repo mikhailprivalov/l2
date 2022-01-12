@@ -15,6 +15,7 @@
 <script lang="ts">
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import * as actions from "@/store/action-types";
 
 @Component({
   data() {
@@ -31,8 +32,10 @@ export default class SomeLinks extends Vue {
   link_rows: any;
 
   async init() {
+    await this.$store.dispatch(actions.INC_LOADING);
     const result_data = await this.$api('get-links');
     this.link_rows = result_data.rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
   }
 }
 </script>
