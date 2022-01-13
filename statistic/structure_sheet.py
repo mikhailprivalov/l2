@@ -617,6 +617,10 @@ def statistic_research_death_base(ws1, d1, d2, research_titile):
         ('ДТП (1/0)', 12),
         ('Материнская смертность (1/0)', 15),
         ('ФИО выдавшего свидетельства', 20),
+        ('Тип места смерти', 25),
+        ('ОКПО', 16),
+        ('ОКАТО', 16),
+        ('Экспертиза', 35),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -702,6 +706,7 @@ def statistic_research_death_base_card(ws1, d1, d2, research_titile):
         ('Тип места смерти', 25),
         ('ОКПО', 16),
         ('ОКАТО', 16),
+        ('Экспертиза', 35),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -711,7 +716,7 @@ def statistic_research_death_base_card(ws1, d1, d2, research_titile):
     return ws1
 
 
-def statistic_research_death_data(ws1, researches):
+def statistic_research_death_data(ws1, researches, expertise_final_data):
     """
     :return:
     """
@@ -812,8 +817,15 @@ def statistic_research_death_data(ws1, researches):
         else:
             who_write = ""
         ws1.cell(row=r, column=30).value = who_write
+        ws1.cell(row=r, column=31).value = ""
+        ws1.cell(row=r, column=32).value = ""
+        ws1.cell(row=r, column=33).value = ""
+        experise = ""
+        if expertise_final_data.get(i.get('issledovaniye_id', ""), ""):
+            experise = expertise_final_data.get(i.get('issledovaniye_id', ""), "")
+        ws1.cell(row=r, column=34).value = experise
 
-        rows = ws1[f'A{r}:AD{r}']
+        rows = ws1[f'A{r}:AH{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
@@ -838,8 +850,9 @@ def statistic_research_death_data_card(ws1, researches):
         try:
             type_doc_death = i["Вид медицинского свидетельства о смерти"]["title"]
         except:
-            type_doc_death = i["Вид медицинского свидетельства о смерти"]
-
+            type_doc_death = i.get("Вид медицинского свидетельства о смерти", "")
+        if not type_doc_death:
+            continue
         r += 1
         ws1.cell(row=r, column=1).value = i["Серия"]
         ws1.cell(row=r, column=2).value = i["Номер"]
@@ -954,11 +967,13 @@ def statistic_reserved_research_death_data(ws1, researches):
         if not i:
             return ws1
         r += 1
-        ws1.cell(row=r, column=1).value = i["hosp_title"]
-        ws1.cell(row=r, column=2).value = i["Номер"]
-        ws1.cell(row=r, column=3).value = i["date_create"]
-        ws1.cell(row=r, column=4).value = i["fio_patient"]
-        ws1.cell(row=r, column=5).value = i["napravleniye_id"]
+        if not i.get("Номер", ""):
+            continue
+        ws1.cell(row=r, column=1).value = i.get("hosp_title", "")
+        ws1.cell(row=r, column=2).value = i.get("Номер", "")
+        ws1.cell(row=r, column=3).value = i.get("date_create", "")
+        ws1.cell(row=r, column=4).value = i.get("fio_patient", "")
+        ws1.cell(row=r, column=5).value = i.get("napravleniye_id", "")
         rows = ws1[f'A{r}:E{r}']
         for row in rows:
             for cell in row:

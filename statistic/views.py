@@ -19,10 +19,11 @@ from hospitals.models import Hospitals
 from laboratory import settings
 from laboratory import utils
 from researches.models import Tubes
+from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expertis_results_by_issledovaniya
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
-from utils.parse_sql import death_form_result_parse
+from utils.parse_sql import death_form_result_parse, get_unique_directions
 from . import sql_func
 from . import structure_sheet
 import datetime
@@ -688,11 +689,30 @@ def statistic_xls(request):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         if research_id == DEATH_RESEARCH_PK:
             researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
+            unique_issledovaniya = get_unique_directions(researches_sql)
+            child_iss = get_expertis_child_iss_by_issledovaniya(unique_issledovaniya)
+            expertise_final_data = {}
+            if child_iss:
+                data = {i.child_iss: i.parent_id for i in child_iss}
+                child_iss_tuple = tuple(set([i.child_iss for i in child_iss]))
+                result_expertise = get_expertis_results_by_issledovaniya(child_iss_tuple)
+                result_val = {}
+                for i in result_expertise:
+                    if not result_val.get(i.issledovaniye_id, ""):
+                        result_val[i.issledovaniye_id] = "Экспертиза;"
+                    if i.value.lower() == "да":
+                        result_val[i.issledovaniye_id] = f"{result_val[i.issledovaniye_id]} {i.title};"
+
+                for k, v in result_val.items():
+                    if not expertise_final_data.get(data.get(k, "")):
+                        expertise_final_data[data.get(k)] = ""
+                    expertise_final_data[data.get(k)] = f"{expertise_final_data[data.get(k)]} {v}"
+
             data_death = death_form_result_parse(researches_sql, reserved=False)
             wb.remove(wb.get_sheet_by_name('Отчет'))
             ws = wb.create_sheet("По документам")
             ws = structure_sheet.statistic_research_death_base(ws, d1, d2, research_title[0])
-            ws = structure_sheet.statistic_research_death_data(ws, data_death)
+            ws = structure_sheet.statistic_research_death_data(ws, data_death, expertise_final_data)
 
             reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date, end_date)
             data_death_reserved = death_form_result_parse(reserved_researches_sql, reserved=True)
