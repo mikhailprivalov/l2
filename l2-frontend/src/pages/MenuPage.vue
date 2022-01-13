@@ -4,14 +4,18 @@
       <ul class="list-group">
         <li class="list-group-item">
           <div class="row">
-            <div class="col-xs-12 col-md-3 col-lg-3">
-              Вход выполнен как: {{ user_data.username }}<br />
-              <a href="#" class="a-under" @click="modalPassword = true" v-if="changePassword">сменить пароль</a>
+            <div class="col-xs-12 col-md-6 col-lg-6">
+              Вход выполнен как: {{ user_data.username }}
+              <a href="#" class="a-under" @click="modalPassword = true" v-if="changePassword">сменить&nbsp;пароль</a>
+              <template v-if="changePassword">
+                <br />
+                Email: {{ email || '' }}
+                <a href="#" class="a-under" @click="modalEmail = true">{{ email ? 'ред.' : 'установить email' }}</a>
+              </template>
             </div>
-            <div class="col-xs-12 col-md-6 col-lg-6 text-center text-left-xs">
+            <div class="col-xs-12 col-md-6 col-lg-6 text-right text-left-xs">
               {{ fio_dep }}
-            </div>
-            <div class="col-xs-12 col-md-3 col-lg-3 text-right text-left-xs">
+              <br />
               <a href="/logout" class="btn btn-blue-nb">Выход</a>
             </div>
           </div>
@@ -123,6 +127,7 @@ import { Menu, Button } from '@/types/menu';
   data() {
     return {
       modalPassword: false,
+      modalEmail: false,
       loading: false,
     };
   },
@@ -156,6 +161,8 @@ export default class MenuPage extends Vue {
   changePassword: boolean;
 
   modalPassword: boolean;
+
+  modalEmail: boolean;
 
   loading: boolean;
 

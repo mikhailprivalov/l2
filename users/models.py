@@ -6,7 +6,7 @@ from django.db import models
 from appconf.manager import SettingManager
 from laboratory.settings import EMAIL_HOST
 from podrazdeleniya.models import Podrazdeleniya
-from users.tasks import send_new_password
+from users.tasks import send_login, send_new_password
 
 
 class Speciality(models.Model):
@@ -112,6 +112,20 @@ class DoctorProfile(models.Model):
         )
 
         return True
+
+    def register_login(self, ip: str):
+        if not self.user or not self.email:
+            return
+
+        if not EMAIL_HOST:
+            return
+
+        send_login.delay(
+            self.email,
+            self.user.username,
+            ip,
+            self.hospital_safe_title
+        )
 
     @property
     def dict_data(self):

@@ -14,3 +14,15 @@ def send_new_password(self, email: str, username: str, password: str, organizati
         [email],
         fail_silently=True,
     )
+
+
+@app.task(bind=True)
+def send_login(self, email: str, username: str, ip: str, organization: str):
+    send_mail(
+        'Вход в систему',
+        f"Успешная авторизация в системе L2.\n\n"
+        f"Имя пользователя: {username}\nIP адрес: {ip}\n\n\n{organization}",
+        f"L2 <{EMAIL_HOST_USER}>",
+        [email],
+        fail_silently=True,
+    )

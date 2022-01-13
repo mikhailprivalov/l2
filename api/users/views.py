@@ -20,6 +20,7 @@ def auth(request):
             login(request, user)
             log = slog.Log(key="", type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile)
             log.save()
+            request.user.doctorprofile.register_login(slog.Log.get_client_ip(request))
             return status_response(True, data={'fio': user.doctorprofile.get_full_fio()})
 
         return status_response(False, message="Ваш аккаунт отключен")
@@ -30,6 +31,7 @@ def auth(request):
             user = u.user
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             slog.Log(key='По штрих-коду', type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
+            request.user.doctorprofile.register_login(slog.Log.get_client_ip(request))
             return status_response(True, data={'fio': user.doctorprofile.get_full_fio()})
 
     return status_response(False, message="Неверное имя пользователя или пароль")
