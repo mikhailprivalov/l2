@@ -690,7 +690,7 @@ def statistic_xls(request):
         if research_id == DEATH_RESEARCH_PK:
             researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
             unique_issledovaniya = get_unique_directions(researches_sql)
-            child_iss = get_expertis_child_iss_by_issledovaniya(unique_issledovaniya)
+            child_iss = get_expertis_child_iss_by_issledovaniya(unique_issledovaniya) if unique_issledovaniya else None
             expertise_final_data = {}
             if child_iss:
                 data = {i.child_iss: i.parent_id for i in child_iss}

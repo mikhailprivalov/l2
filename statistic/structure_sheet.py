@@ -733,7 +733,9 @@ def statistic_research_death_data(ws1, researches, expertise_final_data):
         try:
             type_doc_death = i["Вид медицинского свидетельства о смерти"]["title"]
         except:
-            type_doc_death = i["Вид медицинского свидетельства о смерти"]
+            type_doc_death = i.get("Вид медицинского свидетельства о смерти", "")
+        if not type_doc_death:
+            continue
 
         r += 1
         ws1.cell(row=r, column=1).value = i["Серия"]
