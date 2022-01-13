@@ -2282,11 +2282,6 @@ def last_field_result(request):
         num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
         val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()
         result = {"value": val}
-    elif request_data["fieldPk"].find('%doctor') != -1:
-        id_field = request_data["fieldPk"].split("%doctor")
-        id_doc = json.loads(id_field)
-        print("id_doc", id_doc)
-        result = {"value": ""}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
         current_iss = request_data["iss_pk"]

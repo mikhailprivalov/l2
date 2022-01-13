@@ -277,7 +277,7 @@
                     <strong>Формула:</strong>
                     <input v-model="row.default" class="form-control" />
                   </div>
-                  <div v-else-if="[2, 32, 33, 36, 35].includes(row.field_type)">
+                  <div v-else-if="[2, 32, 33, 36].includes(row.field_type)">
                     <strong>Ссылка на поле (%):</strong>
                     <input v-model="row.default" class="form-control" />
                   </div>
