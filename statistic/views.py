@@ -691,21 +691,22 @@ def statistic_xls(request):
             researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
             unique_issledovaniya = get_unique_directions(researches_sql)
             child_iss = get_expertis_child_iss_by_issledovaniya(unique_issledovaniya)
-            data = {i.child_iss: i.parent_id for i in child_iss}
-            print(data)
-            child_iss_tuple = tuple(set([i.child_iss for i in child_iss]))
-            result_expertise = get_expertis_results_by_issledovaniya(child_iss_tuple)
-            result_val = {}
-            for i in result_expertise:
-                if not result_val.get(i.issledovaniye_id, ""):
-                    result_val[i.issledovaniye_id] = "Экспертиза;"
-                if i.value.lower() == "да":
-                    result_val[i.issledovaniye_id] = f"{result_val[i.issledovaniye_id]} {i.title};"
             expertise_final_data = {}
-            for k, v in result_val.items():
-                if not expertise_final_data.get(data.get(k, "")):
-                    expertise_final_data[data.get(k)] = ""
-                expertise_final_data[data.get(k)] = f"{expertise_final_data[data.get(k)]} {v}"
+            if child_iss:
+                data = {i.child_iss: i.parent_id for i in child_iss}
+                child_iss_tuple = tuple(set([i.child_iss for i in child_iss]))
+                result_expertise = get_expertis_results_by_issledovaniya(child_iss_tuple)
+                result_val = {}
+                for i in result_expertise:
+                    if not result_val.get(i.issledovaniye_id, ""):
+                        result_val[i.issledovaniye_id] = "Экспертиза;"
+                    if i.value.lower() == "да":
+                        result_val[i.issledovaniye_id] = f"{result_val[i.issledovaniye_id]} {i.title};"
+
+                for k, v in result_val.items():
+                    if not expertise_final_data.get(data.get(k, "")):
+                        expertise_final_data[data.get(k)] = ""
+                    expertise_final_data[data.get(k)] = f"{expertise_final_data[data.get(k)]} {v}"
 
             data_death = death_form_result_parse(researches_sql, reserved=False)
             wb.remove(wb.get_sheet_by_name('Отчет'))
