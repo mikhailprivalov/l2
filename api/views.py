@@ -890,20 +890,16 @@ def mkb10_dict(request):
 
 
 def doctorprofile_search(request):
-    print(request)
     q = request.GET["query"].strip()
     if not q:
         return JsonResponse({"data": []})
 
     q = q.split()
     sign_org = request.GET["signOrg"]
-    print(q)
-    print(sign_org)
     if sign_org == "true":
         d_qs = users.DoctorProfile.objects.filter(hospital=request.user.doctorprofile.get_hospital(), family__istartswith=q[0], user__groups__name__in=["ЭЦП Медицинской организации"])
     else:
         d_qs = users.DoctorProfile.objects.filter(hospital=request.user.doctorprofile.get_hospital(), family__istartswith=q[0])
-    print(d_qs)
     if len(q) > 1:
         d_qs = d_qs.filter(name__istartswith=q[1])
 

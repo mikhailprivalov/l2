@@ -525,7 +525,6 @@ def researches_update(request):
                     if g:
                         g.save()
                         for field in group["fields"]:
-                            print(field)
                             f = None
                             pk = field["pk"]
                             if pk == -1:
