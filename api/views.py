@@ -895,9 +895,11 @@ def doctorprofile_search(request):
         return JsonResponse({"data": []})
 
     q = q.split()
-
-    d_qs = users.DoctorProfile.objects.filter(hospital=request.user.doctorprofile.get_hospital(), family__istartswith=q[0], user__groups__name__in=["ЭЦП Медицинской организации"])
-
+    sign_org = request.GET.get("signOrg", "")
+    if sign_org == "true":
+        d_qs = users.DoctorProfile.objects.filter(hospital=request.user.doctorprofile.get_hospital(), family__istartswith=q[0], user__groups__name__in=["ЭЦП Медицинской организации"])
+    else:
+        d_qs = users.DoctorProfile.objects.filter(hospital=request.user.doctorprofile.get_hospital(), family__istartswith=q[0])
     if len(q) > 1:
         d_qs = d_qs.filter(name__istartswith=q[1])
 

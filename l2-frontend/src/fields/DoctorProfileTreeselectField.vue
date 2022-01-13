@@ -39,6 +39,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    sign_org: {
+      type: Boolean,
+      default: false,
+    },
   },
   components: {
     Treeselect,
@@ -82,7 +86,7 @@ export default {
     },
     async loadOptions({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
-        const { data } = await this.$api(`/doctorprofile-search?query=${searchQuery}`);
+        const { data } = await this.$api(`/doctorprofile-search?query=${searchQuery}&signOrg=${this.sign_org}`);
         callback(
           null,
           data.map(d => ({ ...d, label: d.fio })),
