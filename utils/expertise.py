@@ -31,6 +31,7 @@ def get_expertise(pk, with_check_available=False):
                 if i.date_confirm:
                     result_protocol = get_json_protocol_data(i.napravleniye_id)
                     content = result_protocol["content"]
+                    print(content)
                     if content and content.get("Наличие замечаний"):
                         if content["Наличие замечаний"].lower() == "нет":
                             without_remarks = True

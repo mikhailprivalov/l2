@@ -105,3 +105,45 @@ def get_paraclinic_results_by_direction(pk_dir):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_expertis_child_iss_by_issledovaniya(parent_iss_tuple):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                  directions_napravleniya.id, 
+                  directions_napravleniya.parent_id, 
+                  directions_issledovaniya.id as child_iss 
+                FROM public.directions_napravleniya
+                Left JOIN directions_issledovaniya ON
+                  directions_issledovaniya.napravleniye_id = directions_napravleniya.id 
+                where directions_napravleniya.parent_id in %(parent_iss_tuple)s
+                order by directions_napravleniya.parent_id
+        """,
+            params={'parent_iss_tuple': parent_iss_tuple},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_expertis_results_by_issledovaniya(issledovaniye_tuple):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_paraclinicresult.issledovaniye_id,
+                    directions_paraclinicresult.value,
+                    directions_paraclinicresult.field_id,
+                    directory_ParaclinicInputField.title
+                FROM directions_paraclinicresult
+                LEFT JOIN directory_paraclinicinputfield ON
+                    directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
+                WHERE directions_paraclinicresult.issledovaniye_id in %(issledovaniye_tuple)s
+                order by directions_paraclinicresult.issledovaniye_id
+
+        """,
+            params={'issledovaniye_tuple': issledovaniye_tuple},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
