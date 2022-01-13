@@ -422,6 +422,9 @@
                   <label> <input type="checkbox" v-model="row.for_talon" /> в талон </label>
                   <label> <input type="checkbox" v-model="row.for_extract_card" /> в выписку </label>
                   <label> <input type="checkbox" v-model="row.for_med_certificate" /> в справку </label>
+                  <label v-show="row.field_type === 35" >
+                    <input type="checkbox" v-model="row.sign_organization" /> ЭЦП-МО
+                  </label>
                   <label
                     style="line-height: 1"
                     v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14 || row.field_type === 23"
