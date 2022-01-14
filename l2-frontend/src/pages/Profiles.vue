@@ -486,6 +486,7 @@ export default {
         if (this.user.sendPassword && this.validEmail) {
           this.user.password = '';
         }
+        this.user.sendPassword = false;
       } else {
         this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
