@@ -4,7 +4,7 @@ import time
 import re
 from collections import defaultdict
 from typing import Optional, Union
-from laboratory.settings import SYSTEM_AS_VI
+from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS
 from utils.response import status_response
 
 from django.db.utils import IntegrityError
@@ -1932,6 +1932,14 @@ def current_org_update(request):
     )
 
     return status_response(True)
+
+
+@login_required
+def get_links(request):
+    if not SOME_LINKS:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": SOME_LINKS})
 
 
 @login_required

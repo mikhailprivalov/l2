@@ -201,6 +201,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/some-links',
+      name: 'some_links',
+      component: () => import('@/pages/SomeLinks.vue'),
+      meta: {
+        title: 'Ссылки',
+        narrowLayout: true,
+        module: 'l2_some_links',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
