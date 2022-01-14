@@ -535,6 +535,7 @@ def researches_update(request):
                                     lines=field["lines"],
                                     for_extract_card=field.get("for_extract_card", False),
                                     for_med_certificate=field.get("for_med_certificate", False),
+                                    sign_organization=field.get("sign_organization", False),
                                     hide=field["hide"],
                                     default_value=field["default"],
                                     visibility=field.get("visibility", ""),
@@ -552,6 +553,7 @@ def researches_update(request):
                                 f.order = field["order"]
                                 f.lines = field["lines"]
                                 f.for_extract_card = field.get("for_extract_card", False)
+                                f.sign_organization = field.get("sign_organization", False)
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
                                 f.visibility = field.get("visibility", "")
@@ -621,6 +623,7 @@ def researches_details(request):
                         "order": field.order,
                         "lines": field.lines,
                         "for_extract_card": field.for_extract_card,
+                        "sign_organization": field.sign_organization,
                         "title": field.title,
                         "default": field.default_value,
                         "visibility": field.visibility,

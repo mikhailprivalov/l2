@@ -233,7 +233,7 @@
                 />
               </div>
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 35">
-                <DoctorProfileTreeselectField v-model="field.value" :disabled="confirmed" />
+                <DoctorProfileTreeselectField v-model="field.value" :disabled="confirmed" :sign_org="field.sign_organization" />
               </div>
               <div class="field-value field-value-address mkb" v-else-if="field.field_type === 36">
                 <MKBFieldTreeselect
