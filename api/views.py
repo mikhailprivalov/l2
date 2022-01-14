@@ -7,6 +7,7 @@ from typing import Optional, Union
 from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS
 from utils.response import status_response
 
+from django.core.validators import validate_email
 from django.db.utils import IntegrityError
 from utils.data_verification import as_model, data_parse
 
@@ -1288,6 +1289,7 @@ def user_view(request):
             "rmis_service_id_time_table": '',
             "snils": '',
             "position": -1,
+            "sendPassword": False,
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1315,6 +1317,7 @@ def user_view(request):
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
             "snils": doc.snils,
             "position": doc.position_id or -1,
+            "sendPassword": False,
         }
 
     return JsonResponse({"user": data})
@@ -1339,6 +1342,7 @@ def user_save_view(request):
     snils = ud.get("snils").strip() or ''
     email = ud.get("email").strip() or None
     position = ud.get("position", -1)
+    send_password = ud.get("sendPassword", False)
     if position == -1:
         position = None
     user_hospital_pk = request.user.doctorprofile.get_hospital_id()
@@ -1376,6 +1380,17 @@ def user_save_view(request):
             else:
                 ok = False
                 message = "Имя пользователя уже занято"
+        if email:
+            email = email.strip()
+            try:
+                if email:
+                    validate_email(email)
+            except:
+                ok = False
+                message = f"Email {email} некорректный"
+            if users.DoctorProfile.objects.filter(email__iexact=email).exclude(pk=pk).exists():
+                ok = False
+                message = f"Email {email} уже занят"
 
         if ok:
             doc.user.groups.clear()
@@ -1418,6 +1433,8 @@ def user_save_view(request):
                 doc.rmis_login = None
                 doc.rmis_password = None
             doc.save()
+            if doc.email and send_password:
+                doc.reset_password()
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
 
 
