@@ -257,7 +257,7 @@ import usersPoint from '../api/user-point';
 import * as actions from '../store/action-types';
 import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '../ui-cards/SelectedResearches.vue';
-import { validateSnils } from '@/utils';
+import { validateSnils, validateEmail } from '@/utils';
 
 const toTranslit = function (text) {
   return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi, (all, ch, space, words) => {
@@ -497,7 +497,7 @@ export default {
       );
     },
     validEmail() {
-      return Boolean(this.user?.email?.includes('@'));
+      return validateEmail(this.user?.email);
     },
     departmentFiltered() {
       const r = [];
@@ -515,13 +515,7 @@ export default {
     valid() {
       const p = (this.open_pk > -1 && (this.user.password.length === 0 || this.user.password.length >= 3))
         || (this.open_pk === -1 && this.user.password.length >= 3);
-      return (
-        p
-        && this.user.username !== ''
-        && this.user.family !== ''
-        && this.user.name !== ''
-        && this.snilsValid
-      );
+      return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '' && this.snilsValid;
     },
     ...mapGetters({
       modules: 'modules',

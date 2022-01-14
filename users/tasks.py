@@ -26,3 +26,26 @@ def send_login(self, email: str, username: str, ip: str, organization: str):
         [email],
         fail_silently=True,
     )
+
+
+@app.task(bind=True)
+def send_new_email_code(self, email: str, username: str, code: str, organization: str):
+    send_mail(
+        'Установка нового email',
+        f"Имя пользователя: {username}\nКод подтверждения: {code}\n\n\n{organization}",
+        f"L2 <{EMAIL_HOST_USER}>",
+        [email],
+        fail_silently=True,
+    )
+
+
+@app.task(bind=True)
+def send_old_email_code(self, email: str, username: str, code: str, organization: str):
+    send_mail(
+        'Смена email в системе L2',
+        f"Запрошена смена адреса\n"
+        f"Имя пользователя: {username}\nКод подтверждения: {code}\n\n\n{organization}",
+        f"L2 <{EMAIL_HOST_USER}>",
+        [email],
+        fail_silently=True,
+    )

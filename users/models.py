@@ -6,7 +6,7 @@ from django.db import models
 from appconf.manager import SettingManager
 from laboratory.settings import EMAIL_HOST
 from podrazdeleniya.models import Podrazdeleniya
-from users.tasks import send_login, send_new_password
+from users.tasks import send_login, send_new_email_code, send_new_password, send_old_email_code
 
 
 class Speciality(models.Model):
@@ -93,10 +93,7 @@ class DoctorProfile(models.Model):
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
     def reset_password(self):
-        if not self.user or not self.email:
-            return False
-
-        if not EMAIL_HOST:
+        if not self.user or not self.email or not EMAIL_HOST:
             return False
 
         new_password = User.objects.make_random_password()
@@ -114,10 +111,7 @@ class DoctorProfile(models.Model):
         return True
 
     def register_login(self, ip: str):
-        if not self.user or not self.email:
-            return
-
-        if not EMAIL_HOST:
+        if not self.user or not self.email or not EMAIL_HOST:
             return
 
         send_login.delay(
@@ -126,6 +120,55 @@ class DoctorProfile(models.Model):
             ip,
             self.hospital_safe_title
         )
+
+    def old_email_send_code(self, request):
+        if not self.user or not EMAIL_HOST:
+            return
+        request.session['old_email_code'] = User.objects.make_random_password()
+
+        send_old_email_code.delay(
+            self.email,
+            self.user.username,
+            request.session['old_email_code'],
+            self.hospital_safe_title
+        )
+
+    def check_old_email_code(self, code: str, request):
+        if not self.user:
+            return False
+
+        if not self.email:
+            return True
+
+        if not code:
+            return False
+
+        return code == request.session.get('old_email_code')
+
+    def new_email_send_code(self, new_email: str, request):
+        if not self.user or not EMAIL_HOST:
+            return
+        request.session['new_email'] = new_email
+        request.session['new_email_code'] = User.objects.make_random_password()
+
+        send_new_email_code.delay(
+            new_email,
+            self.user.username,
+            request.session['new_email_code'],
+            self.hospital_safe_title
+        )
+
+    def new_email_check_code(self, new_email: str, code: str, request):
+        if not self.user or not code or not new_email:
+            return False
+
+        return request.session.get('new_email') == new_email and code == request.session.get('new_email_code')
+
+    def set_new_email(self, new_email: str,request):
+        self.email = new_email
+        self.save(update_fields=['email'])
+        request.session['new_email'] = None
+        request.session['new_email_code'] = None
 
     @property
     def dict_data(self):

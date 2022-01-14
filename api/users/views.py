@@ -42,3 +42,66 @@ def change_password(request):
     doc: DoctorProfile = request.user.doctorprofile
     doc.reset_password()
     return status_response(True)
+
+
+@login_required
+def set_new_email(request):
+    data = json.loads(request.body)
+    step = data.get('step')
+    new_email = data.get('newEmail')
+    confirmation_code = data.get('confirmationCode')
+    new_confirmation_code = data.get('newConfirmationCode')
+    doc: DoctorProfile = request.user.doctorprofile
+
+    if new_email:
+        new_email = new_email.strip()
+
+    def check_new_email_is_free():
+        return not DoctorProfile.objects.filter(email__iexact=new_email).exists()
+
+    def check_new_email_is_valid():
+        return bool(new_email)
+
+    def check_old_email_code():
+        return doc.check_old_email_code(confirmation_code, request)
+
+    def new_email_has_error():
+        if not check_old_email_code():
+            return 'Некорректный код со старого email'
+        if not check_new_email_is_valid():
+            return 'Некорректный адрес'
+        if not check_new_email_is_free():
+            return f'Адрес {new_email} занят'
+        return None
+
+    if step == 'set-new-email':
+        new_email_error = new_email_has_error()
+        if new_email_error:
+            return status_response(False, message=new_email_error)
+        else:
+            doc.new_email_send_code(new_email, request)
+            return status_response(True)
+
+    if step == 'confirm-new-email':
+        new_email_error = new_email_has_error()
+        if new_email_error:
+            return status_response(False, message=new_email_error)
+        check_new_email_code = doc.new_email_check_code(new_email, new_confirmation_code, request)
+        if check_new_email_code:
+            doc.set_new_email(new_email, request)
+            return status_response(True)
+        else:
+            return status_response(False, message='Некорректный код')
+
+    if step == 'request-code':
+        doc.old_email_send_code(request)
+        return status_response(True)
+
+    if step == 'check-code':
+        status = doc.check_old_email_code(confirmation_code, request)
+        if status:
+            return status_response(True)
+        else:
+            return status_response(False, message='Некорректный код со старого email')
+
+    return status_response(False)
