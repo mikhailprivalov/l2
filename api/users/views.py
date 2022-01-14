@@ -41,6 +41,7 @@ def auth(request):
 def change_password(request):
     doc: DoctorProfile = request.user.doctorprofile
     doc.reset_password()
+    slog.Log(key='', type=120000, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
     return status_response(True)
 
 
@@ -88,7 +89,13 @@ def set_new_email(request):
             return status_response(False, message=new_email_error)
         check_new_email_code = doc.new_email_check_code(new_email, new_confirmation_code, request)
         if check_new_email_code:
+            old_email = doc.email
             doc.set_new_email(new_email, request)
+            slog.Log(key=new_email, type=120001, body=json.dumps({
+                "ip": slog.Log.get_client_ip(request),
+                "old": old_email,
+                "new": new_email,
+            }), user=request.user.doctorprofile).save()
             return status_response(True)
         else:
             return status_response(False, message='Некорректный код')
