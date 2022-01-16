@@ -1,8 +1,10 @@
 from django.contrib.auth.decorators import login_required
 import simplejson as json
 import re
+from random import randint
 
 from django.contrib.auth import authenticate, login
+from users.tasks import send_password_reset_code
 
 from utils.response import status_response
 import slog.models as slog
@@ -35,6 +37,40 @@ def auth(request):
             return status_response(True, data={'fio': user.doctorprofile.get_full_fio()})
 
     return status_response(False, message="Неверное имя пользователя или пароль")
+
+
+def loose_password(request):
+    if request.user.is_authenticated:
+        return status_response(False)
+    data = json.loads(request.body)
+    step = data.get('step')
+    email = data.get('email')
+    code = data.get('code')
+    if email:
+        email = email.strip()
+    if code:
+        code = code.strip()
+    if step == 'request-code':
+        if email and DoctorProfile.objects.filter(email__iexact=email).exists():
+            doc: DoctorProfile = DoctorProfile.objects.filter(email__iexact=email)[0]
+            request.session['email'] = email
+            request.session['code'] = str(randint(10000, 999999))
+            send_password_reset_code.delay(
+                email,
+                request.session['code'],
+                doc.hospital_safe_title
+            )
+            slog.Log(key=email, type=121000, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=doc).save()
+        return status_response(True)
+    elif step == 'check-code':
+        if email and DoctorProfile.objects.filter(email__iexact=email).exists() and request.session.get('email') == email and code and request.session.get('code') == code:
+            doc: DoctorProfile = DoctorProfile.objects.filter(email__iexact=email)[0]
+            doc.reset_password()
+            slog.Log(key=email, type=121001, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=doc).save()
+            request.session['email'] = None
+            request.session['code'] = None
+            return status_response(True)
+    return status_response(False)
 
 
 @login_required
