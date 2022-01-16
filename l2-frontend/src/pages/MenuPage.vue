@@ -9,8 +9,11 @@
               <a href="#" class="a-under" @click="modalPassword = true" v-if="changePassword">сменить&nbsp;пароль</a>
               <template v-if="changePassword">
                 <br />
-                Email: {{ email || '' }}
-                <a href="#" class="a-under" @click="modalEmail = true">{{ email ? 'ред.' : 'установить email' }}</a>
+                Email:
+                <a href="#" class="a-under-reversed" @click="modalEmail = true" v-if="email" title="Редактировать адрес" v-tippy>
+                  <span class="a-internal">{{ email }}</span> <i class="fa fa-pencil"></i>
+                </a>
+                <a href="#" class="a-under" @click="modalEmail = true" v-else>установить email</a>
               </template>
             </div>
             <div class="col-xs-12 col-md-6 col-lg-6 text-right text-left-xs">
@@ -418,5 +421,12 @@ export default class MenuPage extends Vue {
   padding: 10px;
   background-color: rgba(0, 0, 0, 8%);
   border-radius: 4px;
+}
+
+.a-under:not(:hover),
+.a-under-reversed:not(:hover) {
+  .a-internal {
+    color: #000;
+  }
 }
 </style>
