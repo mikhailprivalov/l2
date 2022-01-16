@@ -4,7 +4,9 @@ from django.contrib.auth.models import User, Group
 from django.db import models
 
 from appconf.manager import SettingManager
+from laboratory.settings import EMAIL_HOST
 from podrazdeleniya.models import Podrazdeleniya
+from users.tasks import send_login, send_new_email_code, send_new_password, send_old_email_code
 
 
 class Speciality(models.Model):
@@ -67,6 +69,7 @@ class DoctorProfile(models.Model):
     family = models.CharField(max_length=255, help_text='Фамилия', blank=True, default=None, null=True)
     name = models.CharField(max_length=255, help_text='Имя', blank=True, default=None, null=True)
     patronymic = models.CharField(max_length=255, help_text='Отчество', blank=True, default=None, null=True)
+    email = models.EmailField(max_length=255, blank=True, default=None, null=True, help_text='Email пользователя')
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
     isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
     labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
@@ -88,6 +91,84 @@ class DoctorProfile(models.Model):
     position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
     snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
+
+    def reset_password(self):
+        if not self.user or not self.email or not EMAIL_HOST:
+            return False
+
+        new_password = User.objects.make_random_password()
+
+        self.user.set_password(new_password)
+        self.user.save()
+
+        send_new_password.delay(
+            self.email,
+            self.user.username,
+            new_password,
+            self.hospital_safe_title
+        )
+
+        return True
+
+    def register_login(self, ip: str):
+        if not self.user or not self.email or not EMAIL_HOST:
+            return
+
+        send_login.delay(
+            self.email,
+            self.user.username,
+            ip,
+            self.hospital_safe_title
+        )
+
+    def old_email_send_code(self, request):
+        if not self.user or not EMAIL_HOST:
+            return
+        request.session['old_email_code'] = User.objects.make_random_password()
+
+        send_old_email_code.delay(
+            self.email,
+            self.user.username,
+            request.session['old_email_code'],
+            self.hospital_safe_title
+        )
+
+    def check_old_email_code(self, code: str, request):
+        if not self.user:
+            return False
+
+        if not self.email:
+            return True
+
+        if not code:
+            return False
+
+        return code == request.session.get('old_email_code')
+
+    def new_email_send_code(self, new_email: str, request):
+        if not self.user or not EMAIL_HOST:
+            return
+        request.session['new_email'] = new_email
+        request.session['new_email_code'] = User.objects.make_random_password()
+
+        send_new_email_code.delay(
+            new_email,
+            self.user.username,
+            request.session['new_email_code'],
+            self.hospital_safe_title
+        )
+
+    def new_email_check_code(self, new_email: str, code: str, request):
+        if not self.user or not code or not new_email:
+            return False
+
+        return request.session.get('new_email') == new_email and code == request.session.get('new_email_code')
+
+    def set_new_email(self, new_email: str,request):
+        self.email = new_email
+        self.save(update_fields=['email'])
+        request.session['new_email'] = None
+        request.session['new_email_code'] = None
 
     @property
     def dict_data(self):

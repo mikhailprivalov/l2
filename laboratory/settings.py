@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'pharmacotherapy',
     'command_utils',
     'doctor_schedule',
+    'django_celery_results',
 )
 
 MIDDLEWARE = [
@@ -255,7 +256,7 @@ LOGOUT_REDIRECT_URL = '/'
 LOGTAIL_FILES = {'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')}
 
 RMQ_URL = "amqp://t:t@localhost:5672/"
-RMQ_ENABLED = False
+DEPRECATED_RMQ_ENABLED = False
 
 WS_BASE = "localhost"
 WS_PORT = 8822
@@ -331,6 +332,19 @@ DEFAULT_N3_DOCTOR = {
 
 SYSTEM_AS_VI = False
 
+EMAIL_HOST = None
+EMAIL_PORT = 465
+EMAIL_HOST_USER = "your@yandex.ru"
+EMAIL_HOST_PASSWORD = "password"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+
+CELERY_TIMEZONE = 'Asia/Irkutsk'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_BROKER_URL = 'redis://localhost:6379/4'
+CELERY_RESULT_BACKEND = 'django-db'
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
@@ -390,7 +404,6 @@ if DB_PORT:
 
 if ENV_SECRET_KEY:
     SECRET_KEY = ENV_SECRET_KEY
-
 
 
 # db = DATABASES.get('default', {})

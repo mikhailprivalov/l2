@@ -1222,6 +1222,7 @@ export default {
 
 .content-picker {
   align-content: flex-start;
+  overflow-x: hidden;
 }
 
 .top-inner-btn {

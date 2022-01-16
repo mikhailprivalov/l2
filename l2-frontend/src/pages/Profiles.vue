@@ -70,14 +70,24 @@
               <div class="input-group">
                 <span class="input-group-addon">Пароль</span>
                 <input
+                  placeholder="пароль будет отправлен на email"
+                  class="form-control"
+                  type="text"
+                  v-if="user.sendPassword && validEmail"
+                  key="no-passwd"
+                  readonly
+                />
+                <input
                   :placeholder="
                     'Минимальная длина пароля – 6 символов. ' + (open_pk === -1 ? '' : 'Для смены пароля введите новый')
                   "
                   class="form-control"
                   type="text"
                   v-model="user.password"
+                  key="passwd"
+                  v-else
                 />
-                <div class="input-group-btn">
+                <div class="input-group-btn" v-if="!user.sendPassword || !validEmail">
                   <button
                     @click="gen_passwd"
                     class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
@@ -103,7 +113,19 @@
                 </div>
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0">
+            <div class="col-xs-6" style="padding-left: 0;" v-if="modules.change_password">
+              <div class="input-group">
+                <span class="input-group-addon">Email</span>
+                <input
+                  placeholder="Email"
+                  class="form-control"
+                  type="email"
+                  :class="!validEmail && 'has-error-field'"
+                  v-model.trim="user.email"
+                />
+              </div>
+            </div>
+            <div class="col-xs-6" :style="modules.change_password ? 'padding-right: 0' : 'padding-left: 0'">
               <div class="input-group">
                 <span class="input-group-addon">Подразделение</span>
                 <select class="form-control" v-model="user.department">
@@ -112,6 +134,12 @@
                   </option>
                 </select>
               </div>
+            </div>
+            <div class="col-xs-6" style="padding-left: 0;" v-if="modules.change_password">
+              <label class="group-input-label">
+                <input type="checkbox" v-model="user.sendPassword" :disabled="!validEmail" />
+                Сгенерировать новый пароль и отправить на email
+              </label>
             </div>
           </div>
         </div>
@@ -242,7 +270,7 @@ import usersPoint from '../api/user-point';
 import * as actions from '../store/action-types';
 import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '../ui-cards/SelectedResearches.vue';
-import { validateSnils } from '@/utils';
+import { validateSnils, validateEmail } from '@/utils';
 
 const toTranslit = function (text) {
   return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi, (all, ch, space, words) => {
@@ -317,6 +345,8 @@ export default {
       positions: [],
       user: {
         username: '',
+        password: '',
+        email: '',
         rmis_location: '',
         rmis_login: '',
         rmis_password: '',
@@ -325,6 +355,7 @@ export default {
         rmis_resource_id: '',
         rmis_employee_id: '',
         rmis_service_id_time_table: '',
+        sendPassword: false,
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -452,6 +483,10 @@ export default {
         );
         this.open_pk = npk;
         this.load_users(true);
+        if (this.user.sendPassword && this.validEmail) {
+          this.user.password = '';
+        }
+        this.user.sendPassword = false;
       } else {
         this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
@@ -480,6 +515,9 @@ export default {
         !this.user.snils || (!this.user.snils.includes('-') && !this.user.snils.includes(' ') && validateSnils(this.user.snils))
       );
     },
+    validEmail() {
+      return validateEmail(this.user?.email);
+    },
     departmentFiltered() {
       const r = [];
       for (const x of this.departments) {
@@ -494,8 +532,9 @@ export default {
       return r.filter(d => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
     },
     valid() {
-      const p = (this.open_pk > -1 && (this.user.password.length === 0 || this.user.password.length >= 3))
-        || (this.open_pk === -1 && this.user.password.length >= 3);
+      const p = (this.open_pk > -1
+          && (this.user.password.length === 0 || this.user.password.length >= 3 || (this.user.sendPassword && this.validEmail)))
+        || (this.open_pk === -1 && (this.user.password.length >= 3 || (this.user.sendPassword && this.validEmail)));
       return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '' && this.snilsValid;
     },
     ...mapGetters({
@@ -673,5 +712,17 @@ li.selected {
 
 .form-control.wbr {
   border-right: 1px solid #646d78;
+}
+
+.group-input-label {
+  font-weight: 500;
+  height: 34px;
+  line-height: 34px;
+  padding-left: 10px;
+  width: 100%;
+  background: #fff;
+  border-left: 1px solid #a9b2bd;
+  border-bottom: 1px solid #a9b2bd;
+  margin-bottom: 0;
 }
 </style>

@@ -137,6 +137,7 @@ class SettingManager:
             "tfoms_attachment_field": SettingManager.get("tfoms_attachment_field", default='false', default_type='b'),
             "auto_clinical_examination_direct": SettingManager.get("auto_clinical_examination_direct", default='false', default_type='b'),
             "legal_authenticator": SettingManager.get("legal_authenticator", default='false', default_type='b'),
+            "change_password": SettingManager.get("change_password", default='false', default_type='b'),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 
