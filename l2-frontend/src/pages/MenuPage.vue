@@ -98,9 +98,9 @@
           </div>
           <div slot="footer">
             <div class="row">
-              <div class="col-xs-6">
+              <div class="col-xs-12 text-right">
                 <button @click="modalPassword = false" class="btn btn-blue-nb" :disabled="loading" type="button">
-                  Отмена
+                  Закрыть
                 </button>
               </div>
             </div>
@@ -194,9 +194,9 @@
           </div>
           <div slot="footer">
             <div class="row">
-              <div class="col-xs-6">
+              <div class="col-xs-12 text-right">
                 <button @click="modalEmail = false" class="btn btn-blue-nb" :disabled="loading" type="button">
-                  Отмена
+                  Закрыть
                 </button>
               </div>
             </div>
