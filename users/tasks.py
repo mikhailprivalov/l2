@@ -49,3 +49,14 @@ def send_old_email_code(self, email: str, username: str, code: str, organization
         [email],
         fail_silently=True,
     )
+
+
+@app.task(bind=True)
+def send_password_reset_code(self, email: str, code: str, organization: str):
+    send_mail(
+        'Сброс пароля в системе L2',
+        f"Код подтверждения: {code}\n\n\n{organization}",
+        f"L2 <{EMAIL_HOST_USER}>",
+        [email],
+        fail_silently=True,
+    )

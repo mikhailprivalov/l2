@@ -24,10 +24,89 @@
           <button class="btn btn-reset btn-block" @click.prevent="clear">
             Очистить форму
           </button>
+          <div v-if="changePassword" class="text-center password-reset-link">
+            <a href="#" class="a-under" @click="loosePassword = true" v-if="changePassword">восстановить пароль по email</a>
+          </div>
         </div>
       </div>
-      <div class="version">{{system}} {{ menu.version }}</div>
+      <div class="version">Система {{ system }} {{ menu.version }}</div>
     </form>
+    <MountingPortal mountTo="#portal-place-modal" name="ChangePassword" append>
+      <transition name="fade">
+        <Modal
+          v-if="loosePassword"
+          @close="loosePassword = false"
+          show-footer="true"
+          white-bg="true"
+          max-width="710px"
+          width="100%"
+          marginLeftRight="auto"
+          :noClose="!!loading"
+        >
+          <span slot="header">Восстановление пароля по email</span>
+          <div slot="body" class="popup-body" v-if="!hasCodeSend">
+            <div class="alert-modal">
+              Если в вашем профиле был указан email — мы можем отправить вам новый пароль после подтверждения адреса.
+            </div>
+            <input
+              type="email"
+              v-model.trim="email"
+              class="form-control"
+              placeholder="Ваш адрес"
+              style="margin-bottom: 5px;"
+              :readonly="loading"
+            />
+
+            <button
+              @click="sendEmail"
+              class="btn btn-blue-nb"
+              style="margin-top: 5px;"
+              :disabled="loading || !!emailIsNotValid"
+              type="button"
+            >
+              Отправить код для подтверждения
+            </button>
+          </div>
+          <div slot="body" class="popup-body" v-else>
+            <div class="alert-modal">
+              Был отправлен код на введённый email.
+              <br />
+              Если код не был получен — проверьте правильность ввода адреса или обратитесь к администратору.
+            </div>
+            <input
+              type="text"
+              v-model.trim="code"
+              class="form-control"
+              style="margin-bottom: 5px;"
+              :placeholder="`Код с ${email}`"
+              :readonly="loading"
+            />
+
+            <button @click="sendCode" class="btn btn-blue-nb" style="margin-top: 5px;" :disabled="loading || !code" type="button">
+              Получить новый пароль
+            </button>
+
+            <a
+              @click.prevent="hasCodeSend = loading"
+              class="a-under"
+              :style="loading ? 'opacity: 0' : 'margin-left: 5px;line-height: 34px;vertical-align: bottom;'"
+              href="#"
+            >
+              <i class="fa fa-arrow-left"></i> вернуться назад
+            </a>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-12 text-right">
+                <button @click="loosePassword = false" class="btn btn-blue-nb" :disabled="loading" type="button">
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
   </div>
 </template>
 
@@ -38,14 +117,32 @@ import { mapGetters } from 'vuex';
 import { POSITION } from 'vue-toastification/src/ts/constants';
 import * as actions from '@/store/action-types';
 import { Menu } from '@/types/menu';
+import { validateEmail } from '@/utils';
+import Modal from '@/ui-cards/Modal.vue';
 
 @Component({
+  components: { Modal },
   computed: mapGetters(['authenticated', 'menu']),
   data() {
     return {
       username: '',
       password: '',
+      email: '',
+      loosePassword: false,
+      loading: false,
+      hasCodeSend: false,
+      code: '',
     };
+  },
+  watch: {
+    loosePassword() {
+      this.hasCodeSend = false;
+      this.email = '';
+      this.code = '';
+    },
+    hasCodeSend() {
+      this.code = '';
+    },
   },
 })
 export default class LoginPage extends Vue {
@@ -57,8 +154,61 @@ export default class LoginPage extends Vue {
 
   password: string;
 
+  email: string;
+
+  code: string;
+
+  loosePassword: boolean;
+
+  loading: boolean;
+
+  hasCodeSend: boolean;
+
   get system() {
     return this.$systemTitle();
+  }
+
+  get changePassword() {
+    return !!this.$store.getters.modules.change_password;
+  }
+
+  get emailIsNotValid() {
+    if (!this.email) {
+      return 'Введите email';
+    }
+
+    if (!validateEmail(this.email)) {
+      return 'Некорректный email';
+    }
+
+    return false;
+  }
+
+  async sendEmail() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    this.loading = true;
+    await this.$api('/users/loose-password', this, ['email'], {
+      step: 'request-code',
+    });
+    this.hasCodeSend = true;
+    this.loading = false;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async sendCode() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    this.loading = true;
+    const { ok } = await this.$api('/users/loose-password', this, ['email', 'code'], {
+      step: 'check-code',
+    });
+    if (ok) {
+      this.loosePassword = false;
+      this.$root.$emit('msg', 'ok', 'На ваш email отправлен новый пароль', 10000);
+    } else {
+      this.$root.$emit('msg', 'error', 'Некорректный код или email');
+    }
+    this.loading = false;
+    await this.$store.dispatch(actions.DEC_LOADING);
   }
 
   created() {
@@ -173,5 +323,17 @@ export default class LoginPage extends Vue {
 .version {
   padding: 10px;
   text-align: center;
+}
+
+.password-reset-link {
+  margin-top: 8px;
+  margin-bottom: -3px;
+}
+
+.alert-modal {
+  margin: 0 0 15px 0;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 8%);
+  border-radius: 4px;
 }
 </style>
