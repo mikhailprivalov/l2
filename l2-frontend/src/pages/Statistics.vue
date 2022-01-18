@@ -25,7 +25,7 @@
           v-for="(r, id) in categoryReport"
           :key="id"
         >
-          {{ r.title }} {{ r.group }}
+          {{ r.title }}
         </div>
       </div>
     </div>
@@ -212,19 +212,19 @@ const STATS_CATEGORIES = {
     groups: ['Просмотр статистики', 'Врач-лаборант'],
     reports: {
       researches: {
-        groups: [],
+        groups: ['Просмотр статистики', 'Врач-лаборант'],
         title: 'Выполнено исследований',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.LABORATORY_WITH_ALL],
         url: '/statistic/xls?type=lab&pk=<lab>&date-start=<date-start>&date-end=<date-end>',
       },
       executors: {
-        groups: [],
+        groups: ['Просмотр статистики', 'Врач-лаборант'],
         title: 'Исполнители',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.LABORATORY],
         url: '/statistic/xls?type=lab-staff&pk=<lab>&date-start=<date-start>&date-end=<date-end>',
       },
       tubes: {
-        groups: [],
+        groups: ['Просмотр статистики', 'Врач-лаборант'],
         title: 'Принято ёмкостей',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.LABORATORY],
         url: '/statistic/xls?type=lab-receive&pk=<lab>&date-start=<date-start>&date-end=<date-end>',
@@ -233,10 +233,10 @@ const STATS_CATEGORIES = {
   },
   materialGet: {
     title: 'Забор биоматериала',
-    groups: ['Просмотр статистики', 'Врач-лаборант'],
+    groups: ['Просмотр статистики', 'Статистика-забор биоматериала'],
     reports: {
       executors: {
-        groups: [],
+        groups: ['Статистика-забор биоматериала'],
         title: 'Заборщики биоматериала',
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.USERS],
         url: '/statistic/xls?type=journal-get-material&users=<users>&date_type=<date-type>&values=<date-values>',
@@ -272,7 +272,7 @@ const STATS_CATEGORIES = {
   },
   prof: {
     title: 'Профосмотры',
-    groups: ['Просмотр статистики'],
+    groups: ['Статистика-профосмотры'],
     reports: {
       contragents: {
         groups: ['Статистика-профосмотры'],
@@ -296,7 +296,7 @@ const STATS_CATEGORIES = {
   },
   common: {
     title: 'Общая статистика',
-    groups: ['Просмотр статистики'],
+    groups: ['Статистика-вакцинация', 'Статистика-онкоподозрение'],
     reports: {
       vac: {
         groups: ['Статистика-вакцинация'],
