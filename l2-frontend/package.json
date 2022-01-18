@@ -77,7 +77,7 @@
     "@types/lodash": "^4.14.178",
     "@types/promise.prototype.finally": "^2.0.4",
     "@types/vue-router": "^2.0.0",
-    "@types/vue-select": "^3.11.2",
+    "@types/vue-select": "^3.16.0",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "@vue/cli-plugin-babel": "~4.5.15",
