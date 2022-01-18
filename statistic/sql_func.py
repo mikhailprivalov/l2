@@ -373,6 +373,40 @@ def statistics_sum_research_by_lab(podrazdeleniye: tuple, d_s: object, d_e: obje
     return rows
 
 
+def statistics_details_research_by_lab(podrazdeleniye: tuple, d_s: object, d_e: object) -> object:
+    """
+    на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.napravleniye_id,
+                    podrazdeleniya_podrazdeleniya.title as lab_title,
+                    directory_researches.title as research_title,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') AS time_confirm,
+                    api_application.name,
+                    directions_issledovaniya.time_confirmation
+                FROM public.directions_issledovaniya
+                LEFT JOIN directory_researches
+                ON directory_researches.id = directions_issledovaniya.research_id
+                LEFT JOIN api_application
+                ON api_application.id = directions_issledovaniya.api_app_id
+                LEFT JOIN podrazdeleniya_podrazdeleniya
+                ON podrazdeleniya_podrazdeleniya.id = directory_researches.podrazdeleniye_id
+                where research_id in (select id from directory_researches  WHERE podrazdeleniye_id in %(podrazdeleniye)s) and 
+                time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                ORDER BY podrazdeleniya_podrazdeleniya.title, directory_researches.title
+                            """,
+            params={'podrazdeleniye': podrazdeleniye, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def disp_diagnos(diagnos, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(

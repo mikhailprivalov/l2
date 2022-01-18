@@ -86,7 +86,7 @@ def statistic_xls(request):
 
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
-    if date_start and date_end and tp not in ["lab_sum", "covid_sum"]:
+    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details"]:
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -1072,6 +1072,21 @@ def statistic_xls(request):
         researches_by_sum = sql_func.statistics_sum_research_by_lab(lab_podr, start_date, end_date)
         ws = structure_sheet.statistic_research_by_sum_lab_base(ws, d1, d2, "Кол-во по лабораториям")
         ws = structure_sheet.statistic_research_by_sum_lab_data(ws, researches_by_sum)
+    elif tp == "lab_details":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_детали_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Детали по лаборатории")
+
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        lab_podr = get_lab_podr()
+        lab_podr = tuple([i[0] for i in lab_podr])
+        researches_deatails = sql_func.statistics_details_research_by_lab(lab_podr, start_date, end_date)
+        ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
+        ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
 
     elif tp == "covid_sum":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
