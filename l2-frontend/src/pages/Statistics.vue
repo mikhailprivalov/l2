@@ -22,10 +22,10 @@
           class="col-picker"
           :class="selectedReport === id && 'col-active'"
           @click="selectedReport = id"
-          v-for="(r, id) in currentCategory.reports"
+          v-for="(r, id) in categoryReport"
           :key="id"
         >
-          {{ r.title }}
+          {{ r.title }} {{ r.group }}
         </div>
       </div>
     </div>
@@ -212,16 +212,19 @@ const STATS_CATEGORIES = {
     groups: ['Просмотр статистики', 'Врач-лаборант'],
     reports: {
       researches: {
+        groups: [],
         title: 'Выполнено исследований',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.LABORATORY_WITH_ALL],
         url: '/statistic/xls?type=lab&pk=<lab>&date-start=<date-start>&date-end=<date-end>',
       },
       executors: {
+        groups: [],
         title: 'Исполнители',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.LABORATORY],
         url: '/statistic/xls?type=lab-staff&pk=<lab>&date-start=<date-start>&date-end=<date-end>',
       },
       tubes: {
+        groups: [],
         title: 'Принято ёмкостей',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.LABORATORY],
         url: '/statistic/xls?type=lab-receive&pk=<lab>&date-start=<date-start>&date-end=<date-end>',
@@ -230,9 +233,10 @@ const STATS_CATEGORIES = {
   },
   materialGet: {
     title: 'Забор биоматериала',
-    groups: ['Просмотр статистики'],
+    groups: ['Просмотр статистики', 'Врач-лаборант'],
     reports: {
       executors: {
+        groups: [],
         title: 'Заборщики биоматериала',
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.USERS],
         url: '/statistic/xls?type=journal-get-material&users=<users>&date_type=<date-type>&values=<date-values>',
@@ -241,10 +245,11 @@ const STATS_CATEGORIES = {
   },
   researches: {
     title: 'Оказанные услуги',
-    groups: ['Просмотр статистики'],
+    groups: ['Просмотр статистики', 'Статистика-статталоны', 'Статистика-посещения', 'Статистика-по услуге'],
     reports: {
       executors: {
         title: 'По врачу (нагрузка) – статталоны',
+        groups: ['Статистика-статталоны'],
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.USER_OR_DEP, PARAMS_TYPES.FIN_SOURCE],
         url: [
           '/statistic/xls?type=statistics-tickets-print&user=<user>',
@@ -252,11 +257,13 @@ const STATS_CATEGORIES = {
         ].join(''),
       },
       visits: {
+        groups: ['Статистика-посещения'],
         title: 'Посещения',
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-passed&date-start=<date-start>&date-end=<date-end>',
       },
       research: {
+        groups: ['Статистика-по услуге'],
         title: 'По услуге',
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>',
@@ -268,6 +275,7 @@ const STATS_CATEGORIES = {
     groups: ['Просмотр статистики'],
     reports: {
       contragents: {
+        groups: ['Статистика-профосмотры'],
         title: 'Контрагенты',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.COMPANY],
         url: '/forms/pdf?type=200.01&company=<company>&date1=<date-start>&date2=<date-end>',
@@ -279,6 +287,7 @@ const STATS_CATEGORIES = {
     groups: ['Статистика скрининга'],
     reports: {
       screening: {
+        groups: ['Статистика-скрининг'],
         title: 'Отчёт по скринингу',
         params: [PARAMS_TYPES.MONTH_YEAR],
         url: '/statistic/screening?month=<month>&year=<year>',
@@ -290,11 +299,13 @@ const STATS_CATEGORIES = {
     groups: ['Просмотр статистики'],
     reports: {
       vac: {
+        groups: ['Статистика-вакцинация'],
         title: 'Вакцинация',
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=vac&pk=0&date-start=<date-start>&date-end=<date-end>',
       },
       onco: {
+        groups: ['Статистика-онкоподозрение'],
         title: 'Онкоподозрение',
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-onco&date-start=<date-start>&date-end=<date-end>',
@@ -411,6 +422,14 @@ export default class Statistics extends Vue {
     return Object.keys(this.STATS_CATEGORIES)
       .filter(id => this.STATS_CATEGORIES[id].groups.some(g => this.userGroups.includes(g)))
       .map(id => ({ id, label: this.STATS_CATEGORIES[id].title }));
+  }
+
+  get categoryReport() {
+    return Object.fromEntries(
+      Object.keys(this.currentCategory.reports)
+        .filter(id => this.currentCategory.reports[id].groups.some(g => this.userGroups.includes(g)))
+        .map(id => [id, this.currentCategory.reports[id]]),
+    );
   }
 
   get currentCategory() {
