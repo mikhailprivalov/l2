@@ -1262,11 +1262,9 @@ export default {
     },
 
     async get_phones_transfer() {
-      await this.$store.dispatch(actions.INC_LOADING);
       const rows = await this.$api('external-system/phones-transfers');
       this.phones_tranfer = rows.org_phones;
       this.extrenal_phones = rows.extrenal_phones;
-      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
 };
