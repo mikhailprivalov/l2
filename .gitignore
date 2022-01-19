@@ -230,5 +230,7 @@ venv*
 newrelic.ini
 make-*.sh
 forms/contract.json
+external_system/settings/extrenal_phones.json
+external_system/settings/phones_org.json
 
 **/.vscode/
