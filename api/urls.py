@@ -75,4 +75,5 @@ urlpatterns = [
     path('parse-file/', include('api.parse_file.urls')),
     path('users/', include('api.users.urls')),
     path('schedule/', include('api.schedule.urls')),
+    path('external-system/', include('api.external_system.urls')),
 ]
