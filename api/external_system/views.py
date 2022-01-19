@@ -30,5 +30,4 @@ def get_phones_transfers(request):
         except Exception:
             extrenal_phones = []
 
-
     return JsonResponse({"org_phones": list(org_phones), "extrenal_phones": list(extrenal_phones)})
