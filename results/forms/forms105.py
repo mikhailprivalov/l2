@@ -1297,7 +1297,7 @@ def diagnos_tbl(data):
             elements.insert(element, "")
 
     opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', elements[0], elements[1], elements[2], '.', elements[4]])
-    col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
+    col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 8 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
     tbl_style = [
         ('GRID', (5, 0), (5, 0), 0.75, colors.black),
         ('GRID', (6, 0), (6, 0), 0.75, colors.black),
