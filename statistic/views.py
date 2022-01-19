@@ -667,6 +667,8 @@ def statistic_xls(request):
     elif tp == "statistics-research":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
         pk = request_data.get("research")
+        user_groups = request.user.groups.values_list('name', flat=True)
+
         research_id = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
@@ -687,8 +689,15 @@ def statistic_xls(request):
         research_title = Researches.objects.values_list('title').get(pk=research_id)
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
+        hospital_id = request.user.doctorprofile.hospital_id
+        if 'Статистика-все МО' in user_groups:
+            hospital_id = -1
         if research_id == DEATH_RESEARCH_PK:
-            researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
+            if 'Свидетельство о смерти-доступ' not in user_groups:
+                return JsonResponse({"error": "Нет доступа к данному отчету"})
+            if 'Статистика свидетельство о смерти-все МО' in user_groups:
+                hospital_id = -1
+            researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date, hospital_id)
             unique_issledovaniya = get_unique_directions(researches_sql)
             child_iss = get_expertis_child_iss_by_issledovaniya(unique_issledovaniya) if unique_issledovaniya else None
             expertise_final_data = {}
@@ -714,7 +723,7 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_death_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_death_data(ws, data_death, expertise_final_data)
 
-            reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date, end_date)
+            reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date, end_date, hospital_id)
             data_death_reserved = death_form_result_parse(reserved_researches_sql, reserved=True)
             ws2 = wb.create_sheet("Номера в резерве")
             ws2 = structure_sheet.statistic_reserved_research_death_base(ws2, d1, d2, research_title[0])
@@ -723,7 +732,7 @@ def statistic_xls(request):
             card_has_death_date = sql_func.card_has_death_date(research_id, start_date, end_date)
             card_tuple = tuple(set([i.id for i in card_has_death_date]))
             if card_tuple:
-                temp_data = sql_func.statistics_death_research_by_card(research_id, card_tuple)
+                temp_data = sql_func.statistics_death_research_by_card(research_id, card_tuple, hospital_id)
                 prev_card = None
                 prev_direction = None
                 final_data = []
@@ -743,7 +752,7 @@ def statistic_xls(request):
                 ws3 = structure_sheet.statistic_research_death_data_card(ws3, data_death_card)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
-            researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
+            researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
     elif tp == "journal-get-material":

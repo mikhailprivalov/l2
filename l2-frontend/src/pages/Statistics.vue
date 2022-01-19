@@ -233,7 +233,7 @@ const STATS_CATEGORIES = {
   },
   materialGet: {
     title: 'Забор биоматериала',
-    groups: ['Просмотр статистики', 'Статистика-забор биоматериала'],
+    groups: ['Статистика-забор биоматериала'],
     reports: {
       executors: {
         groups: ['Статистика-забор биоматериала'],
@@ -245,7 +245,8 @@ const STATS_CATEGORIES = {
   },
   researches: {
     title: 'Оказанные услуги',
-    groups: ['Просмотр статистики', 'Статистика-статталоны', 'Статистика-посещения', 'Статистика-по услуге'],
+    groups: ['Просмотр статистики', 'Свидетельство о смерти-доступ', 'Статистика-статталоны', 'Статистика-посещения',
+      'Статистика-по услуге'],
     reports: {
       executors: {
         title: 'По врачу (нагрузка) – статталоны',
@@ -263,7 +264,7 @@ const STATS_CATEGORIES = {
         url: '/statistic/xls?type=statistics-passed&date-start=<date-start>&date-end=<date-end>',
       },
       research: {
-        groups: ['Статистика-по услуге'],
+        groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
         title: 'По услуге',
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>',
