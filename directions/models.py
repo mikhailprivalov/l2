@@ -1377,10 +1377,10 @@ class Napravleniya(models.Model):
                         monitoring.type_period = research.type_period
 
                         if type_period == "PERIOD_HOUR" or type_period == "PERIOD_DAY":
-                            monitoring.period_date = datetime.date(period_param_year, period_param_month, period_param_day)
+                            monitoring.period_date = datetime.date(int(period_param_year), int(period_param_month), int(period_param_day))
                         if type_period == "PERIOD_MONTH":
-                            last_day_month = calendar.monthrange(period_param_year, period_param_month)[1]
-                            monitoring.period_date = datetime.date(period_param_year, period_param_month, last_day_month)
+                            last_day_month = calendar.monthrange(int(period_param_year), int(period_param_month))[1]
+                            monitoring.period_date = datetime.date(int(period_param_year), int(period_param_month), int(last_day_month))
                         monitoring.save()
 
                     if issledovaniye.pk not in childrens:
