@@ -258,7 +258,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter):
     return row
 
 
-def statistics_death_research(research_id: object, d_s: object, d_e: object, hospital_id) -> object:
+def statistics_death_research(research_id: object, d_s: object, d_e: object, filter_hospital_id) -> object:
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
@@ -293,24 +293,31 @@ def statistics_death_research(research_id: object, d_s: object, d_e: object, hos
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
-                WHERE issledovaniye_id in (
-                    SELECT id FROM public.directions_issledovaniya
+                WHERE
+                CASE
+                WHEN %(filter_hospital_id)s > 0 THEN
+                    issledovaniye_id in (
+                        SELECT id FROM public.directions_issledovaniya
                         WHERE research_id = %(death_research_id)s and (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
-                    )
-                AND 
-                CASE WHEN %(hospital_id)s > 0 THEN
-                    directions_napravleniya.hospital_id = %(hospital_id)s 
+                        )
+                    AND
+                    directions_napravleniya.hospital_id = %(filter_hospital_id)s
+                WHEN %(filter_hospital_id)s = -1 THEN
+                    issledovaniye_id in (
+                        SELECT id FROM public.directions_issledovaniya
+                        WHERE research_id = %(death_research_id)s and (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
+                        )
                 END
                 order by issledovaniye_id
             """,
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK, 'hospital_id': hospital_id},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK, 'filter_hospital_id': filter_hospital_id},
         )
 
         rows = namedtuplefetchall(cursor)
     return rows
 
 
-def statistics_reserved_number_death_research(research_id: object, d_s: object, d_e: object, hospital_id) -> object:
+def statistics_reserved_number_death_research(research_id: object, d_s: object, d_e: object, filter_hospital_id) -> object:
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
@@ -342,17 +349,25 @@ def statistics_reserved_number_death_research(research_id: object, d_s: object, 
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
-                where issledovaniye_id in (
+                where
+                CASE
+                WHEN %(filter_hospital_id)s > 0 THEN
+                    issledovaniye_id in (
+                        SELECT id FROM public.directions_issledovaniya
+                        WHERE research_id = %(death_research_id)s and (time_confirmation is Null) and directory_paraclinicinputfield.title='Номер' and
+                directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                        )
+                    AND
+                    directions_napravleniya.hospital_id = %(filter_hospital_id)s
+                WHEN %(filter_hospital_id)s = -1 THEN
+                    issledovaniye_id in (
                 SELECT id FROM public.directions_issledovaniya
                 where research_id = %(death_research_id)s and time_confirmation is Null) and directory_paraclinicinputfield.title='Номер' and
                 directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                AND 
-                CASE WHEN %(hospital_id)s > 0 THEN
-                    directions_napravleniya.hospital_id = %(hospital_id)s 
-                END
+                END                                
                 order by hospitals_hospitals.title, directions_napravleniya.data_sozdaniya
             """,
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK, 'hospital_id': hospital_id},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK, 'filter_hospital_id': filter_hospital_id},
         )
 
         rows = namedtuplefetchall(cursor)
@@ -1006,7 +1021,7 @@ def card_has_death_date(research_id: object, d_s: object, d_e: object) -> object
     return rows
 
 
-def statistics_death_research_by_card(research_id, card_tuple, hospital_id):
+def statistics_death_research_by_card(research_id, card_tuple, hospital_id_filter):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -1037,15 +1052,19 @@ def statistics_death_research_by_card(research_id, card_tuple, hospital_id):
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
-                where directions_napravleniya.client_id in %(cards)s and (directions_issledovaniya.time_confirmation NOTNULL) and 
-                directions_issledovaniya.research_id=%(death_research_id)s
-                AND 
-                CASE WHEN %(hospital_id)s > 0 THEN
-                    directions_napravleniya.hospital_id = %(hospital_id)s 
+                where 
+                CASE 
+                WHEN %(hospital_id_filter)s = -1 THEN
+                    directions_napravleniya.client_id in %(cards)s and (directions_issledovaniya.time_confirmation NOTNULL) and 
+                    directions_issledovaniya.research_id=%(death_research_id)s
+                WHEN %(hospital_id_filter)s > 0 THEN
+                    directions_napravleniya.client_id in %(cards)s and (directions_issledovaniya.time_confirmation NOTNULL) and 
+                    directions_issledovaniya.research_id=%(death_research_id)s AND
+                    directions_napravleniya.hospital_id = %(hospital_id_filter)s 
                 END
                 order by directions_napravleniya.client_id, directions_issledovaniya.time_confirmation DESC
             """,
-            params={'cards': card_tuple, 'research_id': research_id, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK, 'hospital_id': hospital_id},
+            params={'cards': card_tuple, 'research_id': research_id, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK, 'hospital_id_filter': hospital_id_filter},
         )
 
         rows = namedtuplefetchall(cursor)
