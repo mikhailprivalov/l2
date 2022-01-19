@@ -366,16 +366,17 @@
               <a href="#"><i class="glyphicon glyphicon-phone" /> Звонок</a>
             </div>
             <div class="fastlinks hovershow2" style="margin-top: 1px">
-              <a :href="'sip:' + current_transfer" style="display: inline-block; padding-right: 15px;">
+              <a :href="'sip:' + current_transfer" style="display: inline-block;">
                 <i class="glyphicon glyphicon-phone" /> {{ current_transfer }}
               </a>
             </div>
          </div>
         </div>
-        <div v-if="extrenal_phones.length > 0 && !hide_card_editor" class="hovershow" style="padding-top: 25px;">
+        <div v-if="extrenal_phones.length > 0 && !hide_card_editor" class="hovershow call-padding-top">
           <h5>Экстренные службы</h5>
           <div style="margin-top: 2px" class="fastlinks">
-            <a :href="'sip:' + p.id" v-for="p in extrenal_phones" style="display: inline-block; padding-right: 20px;" :key="p.id">
+            <a :href="'sip:' + p.id" v-for="p in extrenal_phones" style="display: inline-block;" :key="p.id"
+            class="call-padding-right">
               <i class="glyphicon glyphicon-phone" /> {{ p.label }}
             </a>
           </div>
@@ -1376,6 +1377,14 @@ td:not(.select-td):not(.cl-td) {
 </style>
 
 <style lang="scss">
+.call-padding-right {
+  padding-right: 15px;
+}
+
+.call-padding-top {
+  padding-top: 20px;
+}
+
 .select-td {
   padding: 0 !important;
 
