@@ -239,7 +239,14 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     mother_address = address_get(fields.get("Адрес матери", None))
     text.append(Paragraph("6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
     text.append(Paragraph(f"субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}", style))
-    text.append(Paragraph(f"район {mother_address['area']} {mother_address['city']}", style))
+    city_mother = " город _____________"
+    area_mother = "_______"
+    if mother_address['area']:
+        area_mother = mother_address['area']
+    if mother_address['city']:
+        city_mother = f"город {mother_address['city']}"
+
+    text.append(Paragraph(f"район {area_mother} {city_mother}", style))
     locality_part = "________________"
     if mother_address['settlement_type'] and mother_address['settlement']:
         locality_part = f"{mother_address['settlement_type']} {mother_address['settlement']}"
@@ -682,7 +689,7 @@ def mother_data(fields):
     address_title = f"9. Регистрация по месту жительства (пребывания):{line_break}"
     mother_address = address_get(fields.get("Адрес матери", None))
     region_country = f"{space_symbol * 5}субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}{line_break}"
-    area_region = f"{space_symbol * 5} район {line_break}"
+    area_region = f"{space_symbol * 5} район {mother_address['area']} {line_break}"
     city = f"{space_symbol * 5} город {mother_address['city']} {line_break}"
     live_punkt = f"{space_symbol * 5} населенный пункт {mother_address['settlement_type']} {mother_address['settlement']} {line_break}"
     street = f"{space_symbol * 5} улица {mother_address['street']}{line_break}"
