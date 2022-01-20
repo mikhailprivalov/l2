@@ -4,7 +4,7 @@ import time
 import re
 from collections import defaultdict
 from typing import Optional, Union
-from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS
+from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS
 from utils.response import status_response
 
 from django.core.validators import validate_email
@@ -1959,6 +1959,17 @@ def get_links(request):
         return JsonResponse({"rows": []})
 
     return JsonResponse({"rows": SOME_LINKS})
+
+
+@login_required
+def get_disabled_forms(request):
+    user_disabled_forms = request.user.doctorprofile.disabled_forms.split(",")
+    user_disabled_forms.extend(DISABLED_FORMS)
+    result_disabled_forms = set(user_disabled_forms)
+    if len(result_disabled_forms) == 0:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": list(result_disabled_forms)})
 
 
 @login_required

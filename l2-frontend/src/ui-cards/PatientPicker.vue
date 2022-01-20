@@ -354,7 +354,6 @@
         </div>
         <div v-if="phones_tranfer.length > 0">
           <treeselect
-            class="treeselect-noborder"
             :multiple="false"
             :disable-branch-nodes="true"
             :options="phones_tranfer"

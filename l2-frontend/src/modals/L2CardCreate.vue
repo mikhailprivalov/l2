@@ -824,6 +824,7 @@ export default {
         medbookTypePrev: MEDBOOK_TYPES[0].type,
         isArchive: false,
       },
+      disabled_forms: [],
       individuals: [],
       document_to_edit: -2,
       document: {
@@ -840,6 +841,7 @@ export default {
   },
   created() {
     this.load_data();
+    this.get_disabled_forms();
     this.$root.$on('reload_editor', () => {
       this.load_data();
     });
@@ -983,6 +985,10 @@ export default {
     },
   },
   methods: {
+    async get_disabled_forms() {
+      const result_data = await this.$api('disabled-forms');
+      this.disabled_forms = result_data.rows;
+    },
     makeForms(formsBase) {
       return formsBase
         .map(f => {
@@ -1000,7 +1006,7 @@ export default {
             }),
           };
         })
-        .filter(f => !f.not_internal);
+        .filter(f => !f.not_internal && !this.disabled_forms.includes(f.type));
     },
     companiesTreeselect(companies) {
       return companies.map(c => ({ id: c.id, label: c.short_title || c.title }));
