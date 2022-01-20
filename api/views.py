@@ -1963,10 +1963,13 @@ def get_links(request):
 
 @login_required
 def get_disabled_forms(request):
-    if len(DISABLED_FORMS) == 0:
+    user_disabled_forms = request.user.doctorprofile.disabled_forms.split(",")
+    user_disabled_forms.extend(DISABLED_FORMS)
+    result_disabled_forms = set(user_disabled_forms)
+    if len(result_disabled_forms) == 0:
         return JsonResponse({"rows": []})
 
-    return JsonResponse({"rows": DISABLED_FORMS})
+    return JsonResponse({"rows": list(result_disabled_forms)})
 
 
 @login_required
