@@ -239,8 +239,11 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     mother_address = address_get(fields.get("Адрес матери", None))
     text.append(Paragraph("6.	Регистрация по месту жительства (пребывания) матери умершего (мертворожденного) ребенка:", style))
     text.append(Paragraph(f"субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}", style))
-    text.append(Paragraph(f"район {mother_address['area']} город {mother_address['city']}", style))
-    text.append(Paragraph(f"населенный пункт__________________ улица {mother_address['street']}", style))
+    text.append(Paragraph(f"район {mother_address['area']} {mother_address['city']}", style))
+    locality_part = "________________"
+    if mother_address['settlement_type'] and mother_address['settlement']:
+        locality_part = f"{mother_address['settlement_type']} {mother_address['settlement']}"
+    text.append(Paragraph(f"населенный пункт {locality_part}  улица {mother_address['street']}", style))
     text.append(Paragraph(f"дом {mother_address['house']} стр.______корп. _____ кв. {mother_address['flat']}", style))
     text.append(Spacer(1, 2 * mm))
     type_live = json.loads(fields["Вид места жительства"])
@@ -681,7 +684,7 @@ def mother_data(fields):
     region_country = f"{space_symbol * 5}субъект Российской Федерации {mother_address['region_type']} {mother_address['region']}{line_break}"
     area_region = f"{space_symbol * 5} район {line_break}"
     city = f"{space_symbol * 5} город {mother_address['city']} {line_break}"
-    live_punkt = f"{space_symbol * 5} населенный пункт {line_break}"
+    live_punkt = f"{space_symbol * 5} населенный пункт {mother_address['settlement_type']} {mother_address['settlement']} {line_break}"
     street = f"{space_symbol * 5} улица {mother_address['street']}{line_break}"
     house = f"{space_symbol * 5} дом {mother_address['house']} стр.______ корп.________ кв.{mother_address['flat']} {line_break}{line_break}"
 
@@ -761,7 +764,7 @@ def child_data_get(data_fields):
     child_region_country = f"{space_symbol * 5} субъект Российской Федерации {child_address_death['region_type']} {child_address_death['region']}{line_break}"
     child_area_region = f"{space_symbol * 5} район {child_address_death['area']} {line_break}"
     child_city = f"{space_symbol * 5} город {child_address_death['city']}{line_break}"
-    child_live_punkt = f"{space_symbol * 5} населенный пункт {line_break}"
+    child_live_punkt = f"{space_symbol * 5} населенный пункт {child_address_death['settlement_type']} {child_address_death['settlement']}{line_break}"
     child_street = f"{space_symbol * 5} улица {child_address_death['street']} {line_break}"
     child_house = f"{space_symbol * 5} дом {child_address_death['house']} стр.______ корп.________ кв.{child_address_death['flat']} {line_break}{line_break}"
 
@@ -1412,7 +1415,7 @@ def address_get(address_data):
     street = "____________________"
     house = "______"
     flat = "_________"
-    region, region_type, area_type, city_type, street_type, house_type, flat_type, postal_code = "", "", "", "", "", "", "", ""
+    region, region_type, area_type, city_type, street_type, house_type, flat_type, postal_code, settlement, settlement_type = "", "", "", "", "", "", "", "", "", ""
     if address_data:
         address_details = address_data.get("details", None)
         region = address_details.get("region", "")
@@ -1432,6 +1435,7 @@ def address_get(address_data):
         settlement_type = address_details.get("settlement_type", None)
         if settlement and street == "":
             street = f"{settlement} {settlement_type}"
+            settlement, settlement_type = "", ""
 
     return {
         "region": region,
@@ -1446,6 +1450,8 @@ def address_get(address_data):
         "house_type": house_type,
         "flat": flat,
         "flat_type": flat_type,
+        "settlement": settlement,
+        "settlement_type": settlement_type,
         "postal_code": postal_code,
     }
 
