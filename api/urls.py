@@ -60,6 +60,7 @@ urlpatterns = [
     path('org-generators-add', views.org_generators_add),
     path('current-org-update', views.current_org_update),
     path('get-links', views.get_links),
+    path('disabled-forms', views.get_disabled_forms),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),

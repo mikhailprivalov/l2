@@ -306,6 +306,8 @@ REGION = ""
 EXCLUDE_HOSP_SEND_EPGU = []
 SOME_LINKS = []
 
+DISABLED_FORMS = []
+
 
 SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 

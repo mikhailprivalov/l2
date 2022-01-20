@@ -4,7 +4,7 @@ import time
 import re
 from collections import defaultdict
 from typing import Optional, Union
-from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS
+from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS
 from utils.response import status_response
 
 from django.core.validators import validate_email
@@ -1959,6 +1959,14 @@ def get_links(request):
         return JsonResponse({"rows": []})
 
     return JsonResponse({"rows": SOME_LINKS})
+
+
+@login_required
+def get_disabled_forms(request):
+    if len(DISABLED_FORMS) == 0:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": DISABLED_FORMS})
 
 
 @login_required
