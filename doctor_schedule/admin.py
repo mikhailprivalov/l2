@@ -3,9 +3,9 @@ from .models import ScheduleResource, SlotPlan, SlotFact
 
 
 class ScheduleResourceAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'executor', 'service', 'room', 'department', 'speciality')
-    autocomplete_fields = ('executor', 'service', 'room', 'department',)
-    search_fields = ('pk', 'executor', 'service', 'room', 'department', 'speciality')
+    list_display = ('pk', 'executor', 'room', 'department', 'speciality')
+    autocomplete_fields = ('executor', 'room', 'department',)
+    search_fields = ('pk', 'executor', 'room', 'department', 'speciality')
 
 
 class SlotPlanAdmin(admin.ModelAdmin):
@@ -16,7 +16,7 @@ class SlotPlanAdmin(admin.ModelAdmin):
 
 class SlotFactAdmin(admin.ModelAdmin):
     list_display = ('pk', 'plan', 'patient', 'status', 'external_slot_id')
-    autocomplete_fields = ('plan', 'patient', 'service')
+    autocomplete_fields = ('plan', 'patient', 'research')
     search_fields = ('pk', 'plan', 'patient', 'status', 'external_slot_id')
     raw_id_fields = ('direction',)
 

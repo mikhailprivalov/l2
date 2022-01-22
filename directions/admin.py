@@ -134,6 +134,11 @@ class ResPersonContract(admin.ModelAdmin):
         'dir_list',
         'protect_code',
     )
+
+    raw_id_fields = (
+        'patient_card',
+    )
+
     search_fields = ('num_contract',)
 
 
