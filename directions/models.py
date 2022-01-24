@@ -1645,8 +1645,10 @@ class PersonContract(models.Model):
     sum_contract = models.CharField(max_length=255, null=False, db_index=True, help_text="Итоговая сумма контракта")
     patient_data = models.CharField(max_length=255, null=False, db_index=True, help_text="Фамилия инициалы Заказчика-Пациента")
     patient_card = models.ForeignKey(Clients.Card, related_name='patient_card', null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
-    payer_card = models.ForeignKey(Clients.Card, related_name='payer_card', null=True, help_text='Карта плательщика', db_index=False, on_delete=models.SET_NULL)
-    agent_card = models.ForeignKey(Clients.Card, related_name='agent_card', null=True, help_text='Карта Представителя', db_index=False, on_delete=models.SET_NULL)
+    payer_card = models.ForeignKey(Clients.Card, related_name='payer_card', null=True, default=None, blank=True, help_text='Карта плательщика', db_index=False, on_delete=models.SET_NULL)
+    agent_card = models.ForeignKey(Clients.Card, related_name='agent_card', null=True, default=None, blank=True, help_text='Карта Представителя', db_index=False, on_delete=models.SET_NULL)
+    create_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
+    cancel = models.BooleanField(default=False, blank=True, help_text='Отмена контракта')
 
     class Meta:
         unique_together = ("num_contract", "protect_code")
