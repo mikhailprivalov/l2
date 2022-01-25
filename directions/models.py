@@ -1452,6 +1452,9 @@ class Napravleniya(models.Model):
             if not res_children["r"]:
                 return res_children
             result['list_id'].extend(res_children['list_id'])
+        if finsource.title.lower() == "платно":
+            from forms.forms_func import create_empty_contract
+            k = create_empty_contract(result['list_id'], client_id)
         return result
 
     def has_save(self):
