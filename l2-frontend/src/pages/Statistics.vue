@@ -313,6 +313,31 @@ const STATS_CATEGORIES = {
       },
     },
   },
+  covid19: {
+    title: 'covid19',
+    groups: ['Просмотр статистики', 'Свидетельство о смерти-доступ', 'Статистика-статталоны', 'Статистика-посещения',
+      'Статистика-по услуге'],
+    reports: {
+      who_call: {
+        title: 'Позвонить пациенту',
+        groups: ['Просмотр статистики'],
+        params: [PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-passed&date-start=<date-start>&date-end=<date-end>',
+      },
+      get_biomaterial: {
+        groups: ['Просмотр статистики'],
+        title: 'Мазок взять',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-passed&date-start=<date-start>&date-end=<date-end>',
+      },
+      cert_not_work: {
+        groups: ['Просмотр статистики'],
+        title: 'Больничный оформить',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-passed&date-start=<date-start>&date-end=<date-end>',
+      },
+    },
+  },
 };
 
 const getVaues = () => ({
@@ -358,6 +383,8 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       },
       users: [],
       companies: [],
+      disabled_categories: [],
+      disabled_reports: [],
     };
   },
   watch: {
@@ -376,6 +403,8 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
   mounted() {
     this.loadUsers();
     this.loadCompanies();
+    this.get_disabled_categories();
+    this.get_disabled_reports();
   },
 })
 export default class Statistics extends Vue {
@@ -394,6 +423,10 @@ export default class Statistics extends Vue {
   users: any[];
 
   companies: any[];
+
+  disabled_categories: any[];
+
+  disabled_reports: any[];
 
   research: number | null;
 
@@ -421,14 +454,16 @@ export default class Statistics extends Vue {
 
   get categories() {
     return Object.keys(this.STATS_CATEGORIES)
-      .filter(id => this.STATS_CATEGORIES[id].groups.some(g => this.userGroups.includes(g)))
+      .filter(id => this.STATS_CATEGORIES[id].groups.some(g => this.userGroups.includes(g)
+        && !this.disabled_categories.includes(this.STATS_CATEGORIES[id].title)))
       .map(id => ({ id, label: this.STATS_CATEGORIES[id].title }));
   }
 
   get categoryReport() {
     return Object.fromEntries(
       Object.keys(this.currentCategory.reports)
-        .filter(id => this.currentCategory.reports[id].groups.some(g => this.userGroups.includes(g)))
+        .filter(id => this.currentCategory.reports[id].groups.some(g => this.userGroups.includes(g))
+          && !this.disabled_reports.includes(`${this.currentCategory.title}-${this.currentCategory.reports[id].title}`))
         .map(id => [id, this.currentCategory.reports[id]]),
     );
   }
@@ -560,6 +595,16 @@ export default class Statistics extends Vue {
       }
     }
     return false;
+  }
+
+  async get_disabled_categories() {
+    const result_data = await this.$api('disabled-categories');
+    this.disabled_categories = result_data.rows;
+  }
+
+  async get_disabled_reports() {
+    const result_data = await this.$api('disabled-reports');
+    this.disabled_reports = result_data.rows;
   }
 }
 </script>

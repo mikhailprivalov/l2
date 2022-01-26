@@ -92,6 +92,8 @@ class DoctorProfile(models.Model):
     snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     disabled_forms = models.CharField(max_length=255, help_text='Отключеные формы перчислить ч/з запятую', blank=True, default="")
+    disabled_statistic_categories = models.CharField(max_length=255, help_text='Отключить доступ к статистике-категории ч/з запятую', blank=True, default="")
+    disabled_statistic_reports = models.CharField(max_length=255, help_text='Отключить доступ к статистике категории-отчету ч/з запятую', blank=True, default="")
 
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:
