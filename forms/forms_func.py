@@ -897,7 +897,7 @@ def closed_bl(hosp_num_dir):
 
 
 
-def create_empty_contract(ind_dir, card_pk):
+def create_contract(ind_dir, card_pk):
     ind_card = Card.objects.get(pk=card_pk)
     # exec_person = request_data['user'].doctorprofile.get_full_fio()
 

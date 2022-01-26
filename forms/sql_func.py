@@ -74,8 +74,6 @@ def get_extra_notification_data_for_pdf(directions, extra_master_research_id, ex
     return rows
 
 
-
-
 def get_covid_to_json(researches, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
@@ -176,6 +174,25 @@ def get_covid_to_json(researches, d_s, d_e):
                 AND directions_issledovaniya.research_id = any(ARRAY[%(researches_pk)s]) 
         """,
             params={'researches_pk': researches, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sort_direction_by_file_name_contract(directions, ):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT directions_issledovaniya.research_id,
+            directory_researches.file_name_contract,
+            directions_issledovaniya.napravleniye_id
+            FROM public.directions_issledovaniya
+            LEFT JOIN directory_researches on
+            directory_researches.id = directions_issledovaniya.research_id
+            where napravleniye_id in %(directions)s
+            order by directory_researches.file_name_contract, directions_issledovaniya.napravleniye_id       
+        """,
+            params={'directions': directions},
         )
         rows = namedtuplefetchall(cursor)
     return rows

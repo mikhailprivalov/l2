@@ -21,6 +21,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
+from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
@@ -1453,8 +1454,16 @@ class Napravleniya(models.Model):
                 return res_children
             result['list_id'].extend(res_children['list_id'])
         if finsource.title.lower() == "платно":
-            from forms.forms_func import create_empty_contract
-            k = create_empty_contract(result['list_id'], client_id)
+            from forms.forms_func import create_contract
+            sorted_direction = sort_direction_by_file_name_contract(tuple(result['list_id']))
+            result_sorted = {}
+            for i in sorted_direction:
+                if not result_sorted.get(i.file_name_contract):
+                    result_sorted[i.file_name_contract] = [i.napravleniye_id]
+                else:
+                    result_sorted[i.file_name_contract].append(i.napravleniye_id)
+            for k, v in result_sorted.items():
+                k = create_contract(v, client_id)
         return result
 
     def has_save(self):
