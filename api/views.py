@@ -4,7 +4,7 @@ import time
 import re
 from collections import defaultdict
 from typing import Optional, Union
-from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS
+from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS
 from utils.response import status_response
 
 from django.core.validators import validate_email
@@ -1970,6 +1970,28 @@ def get_disabled_forms(request):
         return JsonResponse({"rows": []})
 
     return JsonResponse({"rows": list(result_disabled_forms)})
+
+
+@login_required
+def get_disabled_categories(request):
+    disabled_statistic_categories = request.user.doctorprofile.disabled_statistic_categories.split(",")
+    disabled_statistic_categories.extend(DISABLED_STATISTIC_CATEGORIES)
+    result_disabled_statistic_categories = set(disabled_statistic_categories)
+    if len(result_disabled_statistic_categories) == 0:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": list(result_disabled_statistic_categories)})
+
+
+@login_required
+def get_disabled_reports(request):
+    disabled_statistic_reports = request.user.doctorprofile.disabled_statistic_reports.split(",")
+    disabled_statistic_reports.extend(DISABLED_STATISTIC_REPORTS)
+    result_disabled_statistic_reports = set(disabled_statistic_reports)
+    if len(result_disabled_statistic_reports) == 0:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": list(result_disabled_statistic_reports)})
 
 
 @login_required
