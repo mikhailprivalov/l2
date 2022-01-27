@@ -30,6 +30,7 @@ import datetime
 import calendar
 import openpyxl
 
+from .report import call_patient
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -42,7 +43,7 @@ from .sql_func import (
     sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value, sql_get_result_by_direction, sql_get_documents_by_card_id,
 )
 
-from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK
+from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK, COVID_QUESTION_ID
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -645,6 +646,9 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename=\"Движения.xlsx\"", tr)
         wb.save(response)
         return response
+
+    elif tp == "call-patient":
+        return call_patient.call_patient(request_data, response, tr, COVID_QUESTION_ID)
 
     elif tp == "statistics-onco":
         d_s = request_data.get("date-start")
