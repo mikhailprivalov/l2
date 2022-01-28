@@ -94,6 +94,7 @@ class DoctorProfile(models.Model):
     disabled_forms = models.CharField(max_length=255, help_text='Отключеные формы перчислить ч/з запятую', blank=True, default="")
     disabled_statistic_categories = models.CharField(max_length=255, help_text='Отключить доступ к статистике-категории ч/з запятую', blank=True, default="")
     disabled_statistic_reports = models.CharField(max_length=255, help_text='Отключить доступ к статистике категории-отчету ч/з запятую', blank=True, default="")
+    disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещеные источники финансирвоания')
 
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:
@@ -193,6 +194,11 @@ class DoctorProfile(models.Model):
             "role": self.position.n3_id if self.position else None,
             **self.dict_data,
         }
+
+    @property
+    def get_disabled_fin_source(self):
+        print(self.disabled_fin_source)
+        return self.disabled_fin_source
 
     def get_eds_allowed_sign(self):
         ret = []

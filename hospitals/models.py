@@ -102,3 +102,15 @@ class HospitalsGroup(models.Model):
     class Meta:
         verbose_name = 'Группа больница'
         verbose_name_plural = 'Группы больницы'
+
+
+class DisableIstochnikiFinansirovaniya(models.Model):
+    hospital = models.ForeignKey(Hospitals, blank=False, null=False, help_text="Больница", on_delete=models.CASCADE)
+    fin_source = models.ForeignKey("directions.IstochnikiFinansirovaniya", blank=False, null=False, help_text="Больница", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.hospital.title}-{self.fin_source}"
+
+    class Meta:
+        verbose_name = 'Запрещенные источники оплаты для Больницы'
+        verbose_name_plural = 'Запрещенные источники оплаты для Больницы'
