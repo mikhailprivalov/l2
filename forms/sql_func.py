@@ -179,18 +179,21 @@ def get_covid_to_json(researches, d_s, d_e):
     return rows
 
 
-def sort_direction_by_file_name_contract(directions, ):
+def sort_direction_by_file_name_contract(directions):
     with connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT directions_issledovaniya.research_id,
             directory_researches.file_name_contract,
-            directions_issledovaniya.napravleniye_id
+            directions_issledovaniya.napravleniye_id,
+            directions_napravleniya.num_contract
             FROM public.directions_issledovaniya
             LEFT JOIN directory_researches on
             directory_researches.id = directions_issledovaniya.research_id
-            where napravleniye_id in %(directions)s
-            order by directory_researches.file_name_contract, directions_issledovaniya.napravleniye_id       
+            LEFT JOIN directions_napravleniya on
+            directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+            where directions_issledovaniya.napravleniye_id in %(directions)s and directions_napravleniya.num_contract is not Null
+            order by directions_napravleniya.num_contract, directory_researches.file_name_contract, directions_issledovaniya.napravleniye_id       
         """,
             params={'directions': directions},
         )
