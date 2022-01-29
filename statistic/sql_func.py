@@ -317,6 +317,75 @@ def statistics_death_research(research_id: object, d_s: object, d_e: object, fil
     return rows
 
 
+def temp_statistics_covid_call_patient(research_id, d_s, d_e, field_title, search_date):
+    """
+    на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_paraclinicresult.issledovaniye_id
+                FROM public.directions_paraclinicresult
+                LEFT JOIN directions_issledovaniya
+                ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
+                LEFT JOIN directory_paraclinicinputfield
+                ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
+                WHERE
+                issledovaniye_id in (
+                        SELECT id FROM public.directions_issledovaniya
+                        WHERE research_id = %(research_id)s and (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
+                        )
+                AND 
+                directory_paraclinicinputfield.title=%(field_title)s AND directions_paraclinicresult.value = %(search_date)s 
+                order by issledovaniye_id
+            """,
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'field_title': field_title, 'search_date': search_date},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def statistics_covid_call_patient(research_id, d_s, d_e, field_title, iss_tuple):
+    """
+    на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_paraclinicresult.issledovaniye_id,
+                directions_paraclinicresult.field_id,
+                directory_paraclinicinputfield.title,
+                directions_paraclinicresult.value,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm_time,
+                directions_issledovaniya.napravleniye_id,
+                directions_napravleniya.client_id,
+                concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as fio_patient,
+                clients_card.number
+                FROM public.directions_paraclinicresult
+                LEFT JOIN directions_issledovaniya
+                ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
+                LEFT JOIN directory_paraclinicinputfield
+                ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
+                LEFT JOIN directions_napravleniya
+                ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
+                LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
+                WHERE
+                issledovaniye_id in %(iss_tuple)s AND directory_paraclinicinputfield.title in %(field_title)s
+                order by issledovaniye_id
+            """,
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'field_title': field_title, 'iss_tuple': iss_tuple},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def statistics_reserved_number_death_research(research_id: object, d_s: object, d_e: object, filter_hospital_id) -> object:
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон

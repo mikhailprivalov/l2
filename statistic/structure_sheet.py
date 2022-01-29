@@ -162,6 +162,61 @@ def passed_research_data(ws1, data):
     return ws1
 
 
+def covid_call_patient_base(ws1):
+    """
+    :param ws1:
+    :return:
+    """
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=19)
+    ws1.cell(row=1, column=1).value = 'Обзвон'
+    ws1.cell(row=1, column=1).style = style_border
+
+    # габариты ячеек
+    ws1.row_dimensions[2].height = 15
+    columns = [
+        ('ФИО', 25),
+        ('№ карты', 15),
+        ('Телефон', 20),
+        ('Оператор', 25),
+        ('Дата', 25),
+    ]
+
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=2, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=2, column=idx).style = style_border
+
+    return ws1
+
+
+def covid_call_patient_data(ws1, data):
+    r = 3
+
+    style_border1 = NamedStyle(name="style_border1")
+    bd = Side(style='thin', color="000000")
+    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border1.font = Font(bold=False, size=11)
+    style_border1.alignment = Alignment(wrap_text=True, horizontal='left', vertical='center')
+
+    for i in data:
+        ws1.cell(row=r, column=1).value = i["fio_patient"]
+        ws1.cell(row=r, column=2).value = i["number"]
+        ws1.cell(row=r, column=3).value = i["Контактный телефон"]
+        ws1.cell(row=r, column=4).value = i["Оператор"]
+        ws1.cell(row=r, column=5).value = normalize_dash_date(i["Дата следующего звонка"])
+
+        for j in range(1, 6):
+            ws1.cell(row=r, column=j).style = style_border1
+
+    return ws1
+
+
 def onco_base(ws1, d_s, d_e):
     """
     :param ws1:
