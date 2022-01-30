@@ -474,12 +474,7 @@ def form_01(request_data):
         )
     )
 
-    objs.append(tbl)
-    objs.append(Spacer(1, 1 * mm))
-    objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
-    objs.append(Spacer(1, 2 * mm))
-    objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('(далее - "медицинские услуги"), а Заказчик уплачивает Исполнителю вознаграждение в размере, ' 'порядке и сроки, которые установлены настоящим Договором.', style))
+    # objs.append(Paragraph('(далее - "медицинские услуги"), а Заказчик уплачивает Исполнителю вознаграждение в размере, ' 'порядке и сроки, которые установлены настоящим Договором.', style))
 
     s = pytils.numeral.rubles(float(sum_research_decimal))
     end_date = date.today() + relativedelta(days=+10)
@@ -502,6 +497,13 @@ def form_01(request_data):
                         styles_obj[section['style']],
                     )
                 )
+            elif section.get('is_researches'):
+                print("is_reserches")
+                objs.append(tbl)
+                objs.append(Spacer(1, 1 * mm))
+                objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
+                objs.append(Spacer(1, 2 * mm))
+                objs.append(Spacer(1, 3 * mm))
             else:
                 objs.append(Paragraph(section['text'], styles_obj[section['style']]))
     else:
@@ -1173,12 +1175,11 @@ def form_02(request_data):
     styleTR = deepcopy(style)
     styleTR.alignment = TA_RIGHT
 
-
+    objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
     for contract in sorted_contract_result:
         person_contract_data = PersonContract.objects.get(num_contract=contract["num_contract"])
         exec_person = request_data['user'].doctorprofile.get_full_fio()
 
-        # patient_data = ind_card.get_data_individual()
         patient_data = person_contract_data.patient_card.get_data_individual()
         p_agent = person_contract_data.agent_card
         agent_status = None
@@ -1225,8 +1226,6 @@ def form_02(request_data):
         date_now1 = datetime.datetime.strftime(today, '%y%m%d%H%M%S%f')[:-3]
         date_now_str = str(ind_card.pk) + str(date_now1)
 
-
-        objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
         barcode128 = code128.Code128(date_now_str, barHeight=6 * mm, barWidth=1.25)
         objs.append(Spacer(1, 11 * mm))
         objs.append(Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str), styleCenter))
@@ -1266,10 +1265,14 @@ def form_02(request_data):
 
         contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
 
-        contract_file = os.path.join(BASE_DIR, 'forms', 'contract.json')
 
+        if not os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"]):
+            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', "default")
+        else:
+            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"])
 
         executor = None
+        print(contract_file)
         if contract_from_file:
             with open(contract_file) as json_file:
                 data = json.load(json_file)
@@ -1409,8 +1412,6 @@ def form_02(request_data):
 
         objs.append(Paragraph('{}'.format(them_contract), styleFL))
         objs.append(Spacer(1, 2 * mm))
-        objs.append(Paragraph('1. ПРЕДМЕТ ДОГОВОРА', styleCenter))
-        objs.append(Paragraph('1.1. Исполнитель на основании обращения Заказчика обязуется оказать ему медицинские услуги в соответствие с лицензией:', style))
 
         template_research = "Перечень услуг"
 
@@ -1418,7 +1419,7 @@ def form_02(request_data):
         if template_research:
             tr = template_research
         objs.append(Spacer(1, 2 * mm))
-        objs.append(Paragraph('{}'.format(tr), style))
+        # objs.append(Paragraph('{}'.format(tr), style))
 
         styleTB = deepcopy(style)
         styleTB.firstLineIndent = 0
@@ -1493,21 +1494,15 @@ def form_02(request_data):
             )
         )
 
-        objs.append(tbl)
-        objs.append(Spacer(1, 1 * mm))
-        objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
-        objs.append(Spacer(1, 2 * mm))
-        objs.append(Spacer(1, 3 * mm))
-        objs.append(Paragraph('(далее - "медицинские услуги"), а Заказчик уплачивает Исполнителю вознаграждение в размере, ' 'порядке и сроки, которые установлены настоящим Договором.', style))
+        # objs.append(tbl)
+        # objs.append(Spacer(1, 1 * mm))
+        # objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
+        # objs.append(Spacer(1, 2 * mm))
+        # objs.append(Spacer(1, 3 * mm))
 
         s = pytils.numeral.rubles(float(sum_research_decimal))
         end_date = date.today() + relativedelta(days=+10)
         end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
-        objs.append(
-            Paragraph(
-                'Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1), style
-            )
-        )
         if contract_from_file:
             for section in body_paragraphs:
                 if section.get('is_price'):
@@ -1521,203 +1516,16 @@ def form_02(request_data):
                             styles_obj[section['style']],
                         )
                     )
+                elif section.get('is_researches'):
+                    print("is_reserches")
+                    objs.append(tbl)
+                    objs.append(Spacer(1, 1 * mm))
+                    objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
+                    objs.append(Spacer(1, 2 * mm))
+                    objs.append(Spacer(1, 3 * mm))
+
                 else:
                     objs.append(Paragraph(section['text'], styles_obj[section['style']]))
-        else:
-            objs.append(
-                Paragraph(
-                    '1.2. Исполнитель оказывает услуги по месту своего нахождения по адресу: '
-                    'г. Иркутск, Байкальская, 201, в соответствии с установленными Правилами предоставления платных медицинских услуг.',
-                    style,
-                )
-            )
-            objs.append(Spacer(1, 2 * mm))
-            objs.append(Paragraph('2. ПРАВА И ОБЯЗАННОСТИ СТОРОН', styleCenter))
-            objs.append(Paragraph('<u>2.1. Исполнитель обязуется:</u>', style))
-            objs.append(Paragraph('2.1.1. Обеспечить Пациента бесплатной, доступной и достоверной информацией о платных медицинских услугах, ' 'содержащей следующие сведения о:', style))
-            objs.append(Paragraph('а) порядках оказания медицинской помощи и стандартах медицинской помощи, применяемых при предоставлении платных медицинских услуг;', style))
-            objs.append(
-                Paragraph('б) данных о конкретном медицинском работнике, предоставляющем соответствующую платную медицинскую услугу (его профессиональном образовании и квалификации);', style)
-            )
-            objs.append(
-                Paragraph(
-                    'в) данных о методах оказания медицинской помощи, связанных с ними рисках, возможных видах медицинского вмешательства, их последствиях и '
-                    'ожидаемых результатах оказания медицинской помощи;',
-                    style,
-                )
-            )
-            objs.append(Paragraph('г) других сведениях, относящихся к предмету настоящего Договора.', style))
-            objs.append(Paragraph('2.1.2.Оказывать Пациенту услуги, предусмотренные п. 1.1 настоящего Договора, а при необходимости и дополнительные услуги.', style))
-            objs.append(
-                Paragraph(
-                    '2.1.3.Давать при необходимости по просьбе Пациента разъяснения о ходе оказания услуг ему и ' 'предоставлять по требованию Пациента необходимую медицинскую документацию.',
-                    style,
-                )
-            )
-            objs.append(
-                Paragraph(
-                    '2.1.4.Предоставить в доступной форме информацию о возможности получения соответствующих видов '
-                    'и объемов медицинской помощи без взимания платы в рамках Программы государственных гарантий '
-                    'бесплатного оказания гражданам медицинской помощи и территориальной программы государственных гарантий '
-                    'бесплатного оказания гражданам медицинской помощи.',
-                    style,
-                )
-            )
-            objs.append(Paragraph('2.15. Соблюдать порядки оказания медицинской помощи, утвержденные Министерством здравоохранения ' 'Российской Федерации.', style))
-            objs.append(Paragraph('<u>2.2. Заказчик обязуется:</u>', style))
-            objs.append(Paragraph('2.2.1. Соблюдать назначение и рекомендации лечащих врачей.', style))
-            objs.append(Paragraph('2.2.3. Оплачивать услуги Исполнителя в порядке, сроки и на условиях, которые установлены настоящим Договором.', style))
-            objs.append(Paragraph('2.2.4. Подписывать своевременно акты об оказании услуг Исполнителем.', style))
-            objs.append(Paragraph('2.2.5. Кроме того Пациент обязан:', style))
-            objs.append(Paragraph('- информировать врача о перенесенных заболеваниях, известных ему аллергических реакциях, противопоказаниях;', style))
-            objs.append(Paragraph('- соблюдать правила поведения пациентов в медицинском учреждении, режим работы медицинского учреждения;', style))
-            objs.append(
-                Paragraph(
-                    '- выполнять все рекомендации медицинского персонала и третьих лиц, оказывающих ему по настоящему Договору'
-                    'медицинские услуги, по лечению, в том числе соблюдать указания медицинского учреждения, предписанные на период после оказания услуг.',
-                    style,
-                )
-            )
-            objs.append(Paragraph('2.3. Предоставление Исполнителем дополнительных услуг оформляется дополнительным соглашением Сторон и оплачивается дополнительно.', style))
-            objs.append(
-                Paragraph(
-                    '2.4. Стороны обязуются хранить в тайне лечебную, финансовую и иную конфиденциальную информацию, ' 'полученную от другой Стороны при исполнении настоящего Договора.', style
-                )
-            )
-            objs.append(Spacer(1, 2 * mm))
-            objs.append(Paragraph('3. ПОРЯДОК ИСПОЛНЕНИЯ ДОГОВОРА', styleCenter))
-            objs.append(
-                Paragraph(
-                    '3.1. Условия получения Пациентом медицинских услуг: (вне медицинской организации; амбулаторно; '
-                    'в дневном стационаре; стационарно; указать,организационные моменты, связанные с оказанием медицинских услуг)',
-                    style,
-                )
-            )
-            objs.append(
-                Paragraph(
-                    '3.2. В случае если при предоставлении платных медицинских услуг требуется предоставление '
-                    'на возмездной основе дополнительных медицинских услуг, не предусмотренных настоящим Договором, '
-                    'Исполнитель обязан предупредить об этом Пациента.',
-                    style,
-                )
-            )
-            objs.append(Paragraph('Без согласия Пациента Исполнитель не вправе предоставлять дополнительные медицинские услуги на возмездной основе.', style))
-            objs.append(
-                Paragraph(
-                    '3.3. В случае, если при предоставлении платных медицинских услуг потребуется предоставление '
-                    'дополнительных медицинских услуг по экстренным показаниям для устранения угрозы жизни Пациента'
-                    ' при внезапных острых заболеваниях, состояниях, обострениях хронических заболеваний, такие '
-                    'медицинские услуги оказываются без взимания платы в соответствии с Федеральным загоном '
-                    'от 21.11.2011N 323-ФЗ "Об основах охраны здоровья граждан в Российской Федерации".',
-                    style,
-                )
-            )
-            objs.append(
-                Paragraph(
-                    '3.4. В случае отказа Пациента после заключения Договора от получения медицинских услуг Договор '
-                    'расторгается. При этом Пациент оплачивает Исполнителю фактически понесенные Исполнителем расходы,'
-                    'связанные с исполнением обязательств по Договору. ',
-                    style,
-                )
-            )
-            objs.append(
-                Paragraph(
-                    '3.5. К отношениям, связанным с исполнением настоящего Договора, применяются положения Закона '
-                    'Российской Федерации от 7 февраля 1992 г. N 2300-1 "О защите прав потребителей".',
-                    style,
-                )
-            )
-            objs.append(Spacer(1, 2 * mm))
-            objs.append(Paragraph('4. ПОРЯДОК ОПЛАТЫ', styleCenter))
-            objs.append(Paragraph('4.1. Стоимость медицинских услуг составляет:<font fontname ="PTAstraSerifBold"> <u>{}</u> </font> '.format(s.capitalize()), style))
-            end_date = date.today() + relativedelta(days=+10)
-            end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
-            objs.append(
-                Paragraph(
-                    'Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1),
-                    style,
-                )
-            )
-            objs.append(Paragraph('Предоплата 100%.', style))
-            objs.append(Paragraph('4.2. Оплата услуг производится путем перечисления суммы на расчетный счет Исполнителя или путем внесения в кассу Исполнителя.', style))
-            objs.append(
-                Paragraph(
-                    'Заказчику в соответствии с законодательством Российской Федерации выдается документ; '
-                    'подтверждающий произведенную оплату предоставленных медицинских услуг (кассовый чек, квитанция '
-                    'или иные документы).',
-                    style,
-                )
-            )
-            objs.append(Paragraph('4.3. Дополнительные услуги оплачиваются на основании акта об оказанных услугах, подписанного Сторонами.', style))
-            objs.append(Spacer(1, 2 * mm))
-            objs.append(Paragraph('5. ОТВЕТСТВЕННОСТЬ СТОРОН', styleCenter))
-            objs.append(
-                Paragraph(
-                    '5.1. Исполнитель несет ответственность перед Пациентом за неисполнение или ненадлежащее '
-                    'исполнение условий настоящего Договора, несоблюдение требований, предъявляемых к методам '
-                    'диагностики, профилактики и лечения, разрешенным на территории Российской Федерации, а также '
-                    'в случае причинения вреда здоровью и жизни Пациента.',
-                    style,
-                )
-            )
-            objs.append(Paragraph('5.2. При несоблюдении Исполнителем обязательств по срокам исполнения услуг Заказчик вправе по своему выбору:', style))
-            objs.append(Paragraph('- назначить новый срок оказания услуги;', style))
-            objs.append(Paragraph('- потребовать уменьшения стоимости предоставленной услуги;', style))
-            objs.append(Paragraph('- потребовать исполнения услуги другим специалистом;', style))
-            objs.append(Paragraph('- расторгнуть настоящий Договор и потребовать возмещения убытков.', style))
-            objs.append(
-                Paragraph(
-                    '5.3. Ни одна из Сторон не будет нести ответственности за полное или частичное неисполнение другой '
-                    'Стороной своих обязанностей, если, неисполнение будет являться следствием обстоятельств непреодолимой '
-                    'силы, таких как, пожар, наводнение, землетрясение, забастовки и другие стихийные бедствия; '
-                    'война и военные действия или другие обстоятельства, находящиеся вне контроля Сторон, '
-                    'препятствующие выполнению настоящего Договора, возникшие после заключения Договора, а также по '
-                    'иным основаниям, предусмотренным законом',
-                    style,
-                )
-            )
-            objs.append(
-                Paragraph(
-                    'Если любое из таких обстоятельств непосредственно повлияло на неисполнение обязательства в '
-                    'срок, указанный в Договоре, то этот срок соразмерно отодвигается на время действия соответствующего '
-                    'обстоятельства.',
-                    style,
-                )
-            )
-            objs.append(
-                Paragraph(
-                    '5.4. Вред, причиненный жизни или здоровью Пациента в результате предоставления некачественной '
-                    'платной медицинской услуги, подлежит возмещению Исполнителем в соответствии с законодательством '
-                    'Российской Федерации.',
-                    style,
-                )
-            )
-            objs.append(Spacer(1, 2 * mm))
-            objs.append(Paragraph('6. ПОРЯДОК РАССМОТРЕНИЯ СПОРОВ', styleCenter))
-            objs.append(Paragraph('6.1. Все споры, претензии и разногласия, которые могут возникнуть между Сторонами, будут ' 'разрешаться путем переговоров.', style))
-            objs.append(Paragraph('6.2. При не урегулировании в процессе переговоров спорных вопросов споры подлежат рассмотрению ' 'в судебном порядке.', style))
-            objs.append(Spacer(1, 2 * mm))
-            objs.append(Paragraph('7. СРОК ДЕЙСТВИЯ ДОГОВОРА', styleCenter))
-            objs.append(Paragraph('7.1. Срок действия настоящего Договора: с «  »    201  г. по «  »    201  г.', style))
-            objs.append(Paragraph('7.2. Настоящий Договор, может быть, расторгнут по обоюдному согласию Сторон или в порядке, ' 'предусмотренном действующим законодательством.', style))
-            objs.append(
-                Paragraph(
-                    '7.3. Все изменения и дополнения к настоящему Договору, а также его расторжение считаются '
-                    'действительными при условии, если они совершены в письменной форме и подписаны уполномоченными'
-                    ' на то представителями обеих Сторон.',
-                    style,
-                )
-            )
-            objs.append(Spacer(1, 2 * mm))
-            objs.append(Paragraph('8. ИНЫЕ УСЛОВИЯ', styleCenter))
-            objs.append(
-                Paragraph(
-                    '8.1. Все дополнительные соглашения Сторон, акты и иные приложения к настоящему Договору, '
-                    'подписываемые Сторонами при исполнении настоящего Договора, являются его неотъемлемой частью.',
-                    style,
-                )
-            )
-            objs.append(Paragraph('8.2. Настоящий Договор составлен в 2 (двух) экземплярах, имеющих одинаковую юридическую силу, ' 'по одному для каждой из Сторон', style))
 
         styleAtr = deepcopy(style)
         styleAtr.firstLineIndent = 0
@@ -1942,85 +1750,6 @@ def form_02(request_data):
         if npf != p_npf:
             qr_value = protect_code + ',' + npf + '-' + p_npf + '(' + qr_napr + ')' + protect_val
 
-        def first_pages(canvas, document):
-            canvas.saveState()
-            canvas.setFont("PTAstraSerifReg", 9)
-            # вывести интерактивную форму "текст"
-            form = canvas.acroForm
-            # canvas.drawString(25, 780, '')
-            form.textfield(
-                name='comment',
-                tooltip='comment',
-                fontName='Times-Roman',
-                fontSize=10,
-                x=57,
-                y=750,
-                borderStyle='underlined',
-                borderColor=black,
-                fillColor=white,
-                width=515,
-                height=13,
-                textColor=black,
-                forceBorder=False,
-            )
-
-            # Вывести на первой странице код-номер договора
-            barcode128.drawOn(canvas, 120 * mm, 283 * mm)
-
-            # вывести внизу QR-code (ФИО, (номера направлений))
-            qr_code = qr.QrCodeWidget(qr_value)
-            qr_code.barWidth = 70
-            qr_code.barHeight = 70
-            qr_code.qrVersion = 1
-            d = Drawing()
-            d.add(qr_code)
-            renderPDF.draw(d, canvas, 90 * mm, 7)
-            # вывести атрибуты для подписей
-            canvas.setFont('PTAstraSerifReg', 10)
-            canvas.drawString(40 * mm, 10 * mm, '____________________________')
-            canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
-            canvas.setFont('Symbola', 18)
-            canvas.drawString(195 * mm, 10 * mm, '\u2713')
-
-            canvas.setFont('PTAstraSerifReg', 8)
-            canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
-            canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
-
-            # вывестии защитны вертикальный мелкий текст
-            canvas.rotate(90)
-            canvas.setFillColor(HexColor(0x4F4B4B))
-            canvas.setFont('PTAstraSerifReg', 5.2)
-            canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
-
-            canvas.restoreState()
-
-        def later_pages(canvas, document):
-            canvas.saveState()
-            # вывести внизу QR-code (ФИО, (номера направлений))
-            qr_code = qr.QrCodeWidget(qr_value)
-            qr_code.barWidth = 70
-            qr_code.barHeight = 70
-            qr_code.qrVersion = 1
-            d = Drawing()
-            d.add(qr_code)
-            renderPDF.draw(d, canvas, 90 * mm, 7)
-            # вывести атрибуты для подписей
-            canvas.setFont('PTAstraSerifReg', 10)
-            canvas.drawString(40 * mm, 10 * mm, '____________________________')
-            canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
-
-            canvas.setFont('Symbola', 18)
-            canvas.drawString(195 * mm, 10 * mm, '\u2713')
-
-            canvas.setFont('PTAstraSerifReg', 8)
-            canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
-            canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
-            canvas.rotate(90)
-            canvas.setFillColor(HexColor(0x4F4B4B))
-            canvas.setFont('PTAstraSerifReg', 5.2)
-            canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
-            canvas.restoreState()
-
         if contract_from_file and appendix_paragraphs:
             for section in appendix_paragraphs:
                 if section.get('page_break'):
@@ -2068,6 +1797,87 @@ def form_02(request_data):
 
             objs.append(Spacer(1, 5 * mm))
             objs.append(tbl)
+        objs.append(PageBreak())
+        print(contract)
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.setFont("PTAstraSerifReg", 9)
+        # вывести интерактивную форму "текст"
+        form = canvas.acroForm
+        # canvas.drawString(25, 780, '')
+        form.textfield(
+            name='comment',
+            tooltip='comment',
+            fontName='Times-Roman',
+            fontSize=10,
+            x=57,
+            y=750,
+            borderStyle='underlined',
+            borderColor=black,
+            fillColor=white,
+            width=515,
+            height=13,
+            textColor=black,
+            forceBorder=False,
+        )
+
+        # Вывести на первой странице код-номер договора
+        barcode128.drawOn(canvas, 120 * mm, 283 * mm)
+
+        # вывести внизу QR-code (ФИО, (номера направлений))
+        qr_code = qr.QrCodeWidget(qr_value)
+        qr_code.barWidth = 70
+        qr_code.barHeight = 70
+        qr_code.qrVersion = 1
+        d = Drawing()
+        d.add(qr_code)
+        renderPDF.draw(d, canvas, 90 * mm, 7)
+        # вывести атрибуты для подписей
+        canvas.setFont('PTAstraSerifReg', 10)
+        canvas.drawString(40 * mm, 10 * mm, '____________________________')
+        canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
+        canvas.setFont('Symbola', 18)
+        canvas.drawString(195 * mm, 10 * mm, '\u2713')
+
+        canvas.setFont('PTAstraSerifReg', 8)
+        canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
+        canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
+
+        # вывестии защитны вертикальный мелкий текст
+        canvas.rotate(90)
+        canvas.setFillColor(HexColor(0x4F4B4B))
+        canvas.setFont('PTAstraSerifReg', 5.2)
+        canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
+
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        # вывести внизу QR-code (ФИО, (номера направлений))
+        qr_code = qr.QrCodeWidget(qr_value)
+        qr_code.barWidth = 70
+        qr_code.barHeight = 70
+        qr_code.qrVersion = 1
+        d = Drawing()
+        d.add(qr_code)
+        renderPDF.draw(d, canvas, 90 * mm, 7)
+        # вывести атрибуты для подписей
+        canvas.setFont('PTAstraSerifReg', 10)
+        canvas.drawString(40 * mm, 10 * mm, '____________________________')
+        canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
+
+        canvas.setFont('Symbola', 18)
+        canvas.drawString(195 * mm, 10 * mm, '\u2713')
+
+        canvas.setFont('PTAstraSerifReg', 8)
+        canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
+        canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
+        canvas.rotate(90)
+        canvas.setFillColor(HexColor(0x4F4B4B))
+        canvas.setFont('PTAstraSerifReg', 5.2)
+        canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
+        canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvasPartitionAll)
 
