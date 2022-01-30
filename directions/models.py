@@ -1455,7 +1455,7 @@ class Napravleniya(models.Model):
             result['list_id'].extend(res_children['list_id'])
         if finsource.title.lower() == "платно":
             from forms.forms_func import create_contract
-            sorted_direction = sort_direction_by_file_name_contract(tuple(result['list_id']))
+            sorted_direction = sort_direction_by_file_name_contract(tuple(result['list_id']), '1')
             result_sorted = {}
             for i in sorted_direction:
                 if not result_sorted.get(i.file_name_contract):

@@ -1083,7 +1083,14 @@ def form_02(request_data):
     if not dir_temp:
         return False
 
-    result_contract = sort_direction_by_file_name_contract(tuple(dir_temp))
+    result_contract = sort_direction_by_file_name_contract(tuple(dir_temp), '0')
+
+    # получить уникальные номера контрактов
+    unique_num_contract = list(set([i.num_contract for i in result_contract]))
+    get_directions_list = PersonContract.objects.filter(num_contract__in=unique_num_contract)
+    temp_directions_list = [i.dir_list.split(',') for i in get_directions_list]
+    unique_directions_list = list(set([data for i in temp_directions_list for data in i]))
+    result_contract = sort_direction_by_file_name_contract(tuple(unique_directions_list), '0')
 
     # получить структуру: [{"num_contract": "номера контракта", "file_name_contract": "шаблон контракта, "directions_contract": [направления контракта]}]
     temp_contract = {"file_name_contract": "", "num_contract": "", "directions_contract": []}
