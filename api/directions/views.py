@@ -217,7 +217,7 @@ def directions_history(request):
         temp_data = {'pk': "", 'status': "", 'researches': "", "researches_pks": "", 'date': "", 'cancel': False, 'checked': False, 'pacs': False, 'has_hosp': False,
                      'has_descriptive': False, 'maybe_onco': False, 'is_application': False, 'lab': "", 'parent': parent_obj, 'is_expertise': False,
                      'expertise_status': False, 'person_contract_pk': "", 'person_contract_dirs': "", "status": 0,
-        }
+                     }
         for i in patient_contract:
             if i.id != last_contract and count != 0:
                 final_result.append(

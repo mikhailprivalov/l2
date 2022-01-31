@@ -6,7 +6,6 @@ from decimal import Decimal
 
 from django.db.models import Q
 
-from appconf.manager import SettingManager
 from clients.models import Document, DispensaryReg, Card
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult, IstochnikiFinansirovaniya, PersonContract
 from directory.models import Researches
@@ -901,7 +900,6 @@ def create_contract(ind_dir, card_pk):
     # exec_person = request_data['user'].doctorprofile.get_full_fio()
 
     patient_data = ind_card.get_data_individual()
-    agent_status = None
     p_agent = None
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)

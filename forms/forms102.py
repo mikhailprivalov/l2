@@ -474,8 +474,6 @@ def form_01(request_data):
         )
     )
 
-    # objs.append(Paragraph('(далее - "медицинские услуги"), а Заказчик уплачивает Исполнителю вознаграждение в размере, ' 'порядке и сроки, которые установлены настоящим Договором.', style))
-
     s = pytils.numeral.rubles(float(sum_research_decimal))
     end_date = date.today() + relativedelta(days=+10)
     end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
