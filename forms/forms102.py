@@ -498,7 +498,6 @@ def form_01(request_data):
                     )
                 )
             elif section.get('is_researches'):
-                print("is_reserches")
                 objs.append(tbl)
                 objs.append(Spacer(1, 1 * mm))
                 objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
@@ -1074,8 +1073,6 @@ def form_02(request_data):
         work_dir = PersonContract.objects.values_list("dir_list", flat=True).get(pk=int(contract_id))
     napr = Napravleniya.objects.filter(pk__in=work_dir.split(","))
 
-
-    print(contract_id, type(contract_id))
     dir_temp = []
 
     # Получить все источники, у которых title-ПЛАТНО
@@ -1120,7 +1117,6 @@ def form_02(request_data):
         count += 1
     temp_contract["directions_contract"] = list(set(temp_contract["directions_contract"]))
     sorted_contract_result.append(temp_contract.copy())
-    print(sorted_contract_result)
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -1286,7 +1282,6 @@ def form_02(request_data):
             contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"])
 
         executor = None
-        print(contract_file)
         if contract_from_file:
             with open(contract_file) as json_file:
                 data = json.load(json_file)
@@ -1812,7 +1807,6 @@ def form_02(request_data):
             objs.append(Spacer(1, 5 * mm))
             objs.append(tbl)
         objs.append(PageBreak())
-        print(contract)
 
     def first_pages(canvas, document):
         canvas.saveState()
