@@ -30,7 +30,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient
+from .report import call_patient, swab_covid, cert_notwork
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -649,6 +649,10 @@ def statistic_xls(request):
 
     elif tp == "call-patient":
         return call_patient.call_patient(request_data, response, tr, COVID_QUESTION_ID)
+    elif tp == "swab-covidt":
+        return swab_covid.swab_covid(request_data, response, tr, COVID_QUESTION_ID)
+    elif tp == "cert-not-workt":
+        return cert_notwork.cert_notwork(request_data, response, tr, COVID_QUESTION_ID)
 
     elif tp == "statistics-onco":
         d_s = request_data.get("date-start")
