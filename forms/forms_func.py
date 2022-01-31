@@ -896,7 +896,6 @@ def closed_bl(hosp_num_dir):
     return {'is_closed': False, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}
 
 
-
 def create_contract(ind_dir, card_pk):
     ind_card = Card.objects.get(pk=card_pk)
     # exec_person = request_data['user'].doctorprofile.get_full_fio()
@@ -906,25 +905,10 @@ def create_contract(ind_dir, card_pk):
     p_agent = None
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = bool(p_agent)
-
-    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
-    who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
-        return False
-    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
-        who_patient = 'ребёнка'
-
-    if p_agent:
-        person_data = p_agent.get_data_individual()
-    else:
-        person_data = patient_data
 
     p_payer = None
-    payer_data = None
     if ind_card.payer:
         p_payer = ind_card.payer
-        payer_data = p_payer.get_data_individual()
 
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))

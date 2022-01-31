@@ -1275,7 +1275,6 @@ def form_02(request_data):
 
         contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
 
-
         if not os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"]):
             contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', "default")
         else:
@@ -1422,11 +1421,6 @@ def form_02(request_data):
         objs.append(Paragraph('{}'.format(them_contract), styleFL))
         objs.append(Spacer(1, 2 * mm))
 
-        template_research = "Перечень услуг"
-
-        tr = ""
-        if template_research:
-            tr = template_research
         objs.append(Spacer(1, 2 * mm))
         # objs.append(Paragraph('{}'.format(tr), style))
 
@@ -1526,7 +1520,6 @@ def form_02(request_data):
                         )
                     )
                 elif section.get('is_researches'):
-                    print("is_reserches")
                     objs.append(tbl)
                     objs.append(Spacer(1, 1 * mm))
                     objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
@@ -1583,7 +1576,8 @@ def form_02(request_data):
                 [
                     Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
                     Paragraph('', styleAtr),
-                    Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(payer_data['fio'], payer_data['passport_serial'], payer_data['passport_num'], payer_data['main_address']), styleAtr),
+                    Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(payer_data['fio'], payer_data['passport_serial'], payer_data['passport_num'], payer_data['main_address']),
+                              styleAtr),
                 ],
                 [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
                 [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
@@ -1708,7 +1702,8 @@ def form_02(request_data):
                     Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
                     Paragraph('', styleAtr),
                     Paragraph(
-                        '{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['passport_serial'], patient_data['passport_num'], patient_data['main_address']), styleAtr
+                        '{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['passport_serial'], patient_data['passport_num'], patient_data['main_address']),
+                        styleAtr
                     ),
                 ],
                 [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],

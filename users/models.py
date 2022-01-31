@@ -197,7 +197,6 @@ class DoctorProfile(models.Model):
 
     @property
     def get_disabled_fin_source(self):
-        print(self.disabled_fin_source)
         return self.disabled_fin_source
 
     def get_eds_allowed_sign(self):

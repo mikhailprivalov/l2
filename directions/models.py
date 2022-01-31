@@ -1463,7 +1463,7 @@ class Napravleniya(models.Model):
                 else:
                     result_sorted[i.file_name_contract].append(i.napravleniye_id)
             for k, v in result_sorted.items():
-                k = create_contract(v, client_id)
+                create_contract(v, client_id)
         return result
 
     def has_save(self):
