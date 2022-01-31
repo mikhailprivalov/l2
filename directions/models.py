@@ -21,6 +21,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
+from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
@@ -1452,6 +1453,17 @@ class Napravleniya(models.Model):
             if not res_children["r"]:
                 return res_children
             result['list_id'].extend(res_children['list_id'])
+        if finsource.title.lower() == "платно":
+            from forms.forms_func import create_contract
+            sorted_direction = sort_direction_by_file_name_contract(tuple(result['list_id']), '1')
+            result_sorted = {}
+            for i in sorted_direction:
+                if not result_sorted.get(i.file_name_contract):
+                    result_sorted[i.file_name_contract] = [i.napravleniye_id]
+                else:
+                    result_sorted[i.file_name_contract].append(i.napravleniye_id)
+            for k, v in result_sorted.items():
+                create_contract(v, client_id)
         return result
 
     def has_save(self):
@@ -1645,8 +1657,10 @@ class PersonContract(models.Model):
     sum_contract = models.CharField(max_length=255, null=False, db_index=True, help_text="Итоговая сумма контракта")
     patient_data = models.CharField(max_length=255, null=False, db_index=True, help_text="Фамилия инициалы Заказчика-Пациента")
     patient_card = models.ForeignKey(Clients.Card, related_name='patient_card', null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
-    payer_card = models.ForeignKey(Clients.Card, related_name='payer_card', null=True, help_text='Карта плательщика', db_index=False, on_delete=models.SET_NULL)
-    agent_card = models.ForeignKey(Clients.Card, related_name='agent_card', null=True, help_text='Карта Представителя', db_index=False, on_delete=models.SET_NULL)
+    payer_card = models.ForeignKey(Clients.Card, related_name='payer_card', null=True, default=None, blank=True, help_text='Карта плательщика', db_index=False, on_delete=models.SET_NULL)
+    agent_card = models.ForeignKey(Clients.Card, related_name='agent_card', null=True, default=None, blank=True, help_text='Карта Представителя', db_index=False, on_delete=models.SET_NULL)
+    create_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
+    cancel = models.BooleanField(default=False, blank=True, help_text='Отмена контракта')
 
     class Meta:
         unique_together = ("num_contract", "protect_code")

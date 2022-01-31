@@ -21,5 +21,19 @@ class ResHospitalsGroup(admin.ModelAdmin):
     filter_horizontal = ('hospital', 'research')
 
 
+class ResDisableIstochnikiFinansirovaniya(admin.ModelAdmin):
+    list_display = (
+        'hospital',
+        'fin_source',
+    )
+    list_display_links = (
+        'hospital',
+        'fin_source',
+    )
+    search_fields = ('hospital__title',)
+    autocomplete_fields = ('hospital',)
+
+
 admin.site.register(models.Hospitals, RefHospitals)
 admin.site.register(models.HospitalsGroup, ResHospitalsGroup)
+admin.site.register(models.DisableIstochnikiFinansirovaniya, ResDisableIstochnikiFinansirovaniya)

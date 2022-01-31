@@ -4,7 +4,8 @@
       <span v-show="checked.length > 0">Отмечено: {{checked.length}}</span>
     </div>
     <div class="bottom-inner">
-      <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%" v-show="checked.length > 0">
+      <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%" v-show="checked.length > 0 &&
+        active_type !== 5">
         <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
                 style="text-align: right!important;border-radius: 0;width: 100%">
           Действие с отмеченными <span class="caret"></span>
@@ -69,10 +70,12 @@ export default {
   data() {
     return {
       isOpenChangeParent: false,
+      disabled_forms: [],
     };
   },
   mounted() {
     this.$root.$on('hide_pe', this.change_parent_hide);
+    this.get_disabled_forms();
   },
   methods: {
     callAsThis(handler) {
@@ -80,6 +83,10 @@ export default {
     },
     change_parent_hide() {
       this.isOpenChangeParent = false;
+    },
+    async get_disabled_forms() {
+      const result_data = await this.$api('disabled-forms');
+      this.disabled_forms = result_data.rows;
     },
   },
   computed: {
@@ -90,7 +97,7 @@ export default {
           card: this.card_pk,
           dir: JSON.stringify(this.checked),
         }),
-      }));
+      })).filter(f => (!this.disabled_forms.includes(f.type)));
     },
     formsFiltered() {
       return this.forms.filter(f => this.card_pk !== -1 && (!f.need_dirs || this.checked.length > 0));
