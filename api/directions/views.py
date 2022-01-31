@@ -211,7 +211,7 @@ def directions_history(request):
         # for i in contracts:
         #     print(i.dir_list, i.pk, i.patient_card_id, i.num_contract, i.create_at)
 
-        patient_contract = get_patient_contract(date_start,date_end, patient_card)
+        patient_contract = get_patient_contract(date_start, date_end, patient_card)
         count = 0
         last_contract = None
         temp_data = {'pk': "", 'status': "", 'researches': "", "researches_pks": "", 'date': "", 'cancel': False, 'checked': False, 'pacs': False, 'has_hosp': False,
@@ -235,7 +235,7 @@ def directions_history(request):
                 temp_data['researches'] = f"{i.title}"
             temp_data['cancel'] = i.cancel
             temp_data['date'] = i.date_create
-            temp_data['status'] = "15000,00"
+            temp_data['status'] = i.sum_contract
             temp_data['person_contract_dirs'] = i.dir_list
             last_contract = i.id
             count += 1

@@ -1066,9 +1066,16 @@ def form_02(request_data):
     Договор, включающий услуги на оплату и необходимые реквизиты. С Учетом представителей и Заказчиков(Плательщиков)
     у пациента
     """
+    contract_id = json.loads(request_data.get("contract_id", None))
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-    work_dir = json.loads(request_data["napr_id"])
-    napr = Napravleniya.objects.filter(pk__in=work_dir)
+    if not contract_id:
+        work_dir = json.loads(request_data["napr_id"])
+    else:
+        work_dir = PersonContract.objects.values_list("dir_list", flat=True).get(pk=int(contract_id))
+    napr = Napravleniya.objects.filter(pk__in=work_dir.split(","))
+
+
+    print(contract_id, type(contract_id))
     dir_temp = []
 
     # Получить все источники, у которых title-ПЛАТНО
@@ -1235,7 +1242,7 @@ def form_02(request_data):
 
         barcode128 = code128.Code128(date_now_str, barHeight=6 * mm, barWidth=1.25)
         objs.append(Spacer(1, 11 * mm))
-        objs.append(Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str), styleCenter))
+        objs.append(Paragraph(f'ДОГОВОР &nbsp;&nbsp; № <u>{date_now_str}-{person_contract_data.pk}</u>', styleCenter))
         objs.append(Spacer(1, 1 * mm))
         objs.append(Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter))
 

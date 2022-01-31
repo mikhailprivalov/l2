@@ -176,7 +176,7 @@
                 <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Заявление</button>
               </div>
               <div v-else-if="active_type===5" class="button-td-inner button-td-inner-single">
-                <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Договор</button>
+                <button class="btn btn-blue-nb" @click="print_contract(row.pk, patient_pk)">Договор</button>
               </div>
             </td>
             <td class="nopd"><input v-model="row.checked" type="checkbox" /></td>
@@ -314,6 +314,9 @@ export default {
     this.$root.$on(`researches-picker:refresh${this.kk}`, this.load_history_safe);
   },
   methods: {
+    print_contract(pk, card) {
+      window.open(`/forms/pdf?type=102.02&card_pk=${card}&contract_id=${pk}`, '_blank');
+    },
     async load_history_safe() {
       await this.load_history(true);
     },
