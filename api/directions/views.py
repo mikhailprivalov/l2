@@ -216,7 +216,7 @@ def directions_history(request):
         last_contract = None
         temp_data = {'pk': "", 'status': "", 'researches': "", "researches_pks": "", 'date': "", 'cancel': False, 'checked': False, 'pacs': False, 'has_hosp': False,
                      'has_descriptive': False, 'maybe_onco': False, 'is_application': False, 'lab': "", 'parent': parent_obj, 'is_expertise': False,
-                     'expertise_status': False, 'person_contract_pk': "", 'person_contract_dirs': "", "status": 0,
+                     'expertise_status': False, 'person_contract_pk': "", 'person_contract_dirs': "",
                      }
         for i in patient_contract:
             if i.id != last_contract and count != 0:
@@ -226,7 +226,7 @@ def directions_history(request):
                 temp_data = {'pk': "", 'status': "", 'researches': "", "researches_pks": "", 'date': "", 'cancel': False, 'checked': False, 'pacs': False, 'has_hosp': False,
                              'has_descriptive': False,
                              'maybe_onco': False, 'is_application': False, 'lab': "", 'parent': parent_obj, 'is_expertise': False, 'expertise_status': False, 'person_contract_pk': "",
-                             'person_contract_dirs': "", "status": 0
+                             'person_contract_dirs': "",
                              }
             temp_data['pk'] = i.id
             if temp_data['researches']:
