@@ -1,11 +1,13 @@
+import datetime
+import zlib
 from collections import OrderedDict
 from copy import deepcopy
 from decimal import Decimal
 
 from django.db.models import Q
 
-from clients.models import Document, DispensaryReg
-from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
+from clients.models import Document, DispensaryReg, Card
+from directions.models import Napravleniya, Issledovaniya, ParaclinicResult, IstochnikiFinansirovaniya, PersonContract
 from directory.models import Researches
 from laboratory import utils
 from laboratory.utils import strdate
@@ -891,3 +893,75 @@ def closed_bl(hosp_num_dir):
             return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}
 
     return {'is_closed': False, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}
+
+
+def create_contract(ind_dir, card_pk):
+    ind_card = Card.objects.get(pk=card_pk)
+    # exec_person = request_data['user'].doctorprofile.get_full_fio()
+
+    patient_data = ind_card.get_data_individual()
+    p_agent = None
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+
+    p_payer = None
+    if ind_card.payer:
+        p_payer = ind_card.payer
+
+    # Получить все источники, у которых title-ПЛАТНО
+    ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
+    ist_f_list = [int(x[0]) for x in ist_f]
+
+    napr = Napravleniya.objects.filter(pk__in=ind_dir)
+    dir_temp = []
+
+    # Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
+    num_contract_set = set()
+    for n in napr:
+        if n.istochnik_f_id in ist_f_list and n.client == ind_card:
+            num_contract_set.add(n.num_contract)
+            dir_temp.append(n.pk)
+
+    if not dir_temp:
+        return False
+
+    # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
+    research_direction = get_research_by_dir(dir_temp)
+
+    if not research_direction:
+        return False
+
+    # получить по направлению-услугам цену из Issledovaniya
+    research_price = get_coast_from_issledovanie(research_direction)
+
+    # Получить Итоговую стр-ру данных
+    result_data = get_final_data(research_price)
+
+    sum_research = result_data[1]
+
+    # Контрольная сумма расчет: послдеовательность направлений+Итоговая сумма (стоимость денежная)
+    qr_napr = ','.join([str(elem) for elem in result_data[3]])
+    protect_val = sum_research.replace(' ', '')
+    bstr = (qr_napr + protect_val).encode()
+    protect_code = str(zlib.crc32(bstr))
+
+    today = utils.current_time()
+    date_now1 = datetime.datetime.strftime(today, '%y%m%d%H%M%S%f')[:-3]
+    date_now_str = str(ind_card.pk) + str(date_now1)
+
+    # Проверить записан ли номер контракта в направлениях, и контрольная сумма
+    # ПереЗаписать номер контракта Если в наборе направлений значение None, или в направлениях разные контракты,
+    # а также разные контрольные суммы, все перезаписать.
+    num_contract_set = set()
+    protect_code_set = set()
+    napr_end = Napravleniya.objects.filter(id__in=result_data[3])
+    for n in napr_end:
+        num_contract_set.add(n.num_contract)
+        protect_code_set.add(n.protect_code)
+
+    if len(num_contract_set) == 1 and None in num_contract_set or None in protect_code_set:
+        PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'], ind_card, p_payer, p_agent)
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
+
+    return PersonContract.pk
+

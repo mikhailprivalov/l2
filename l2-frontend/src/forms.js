@@ -26,7 +26,12 @@ export default [
 ];
 
 export const forDirs = [
-  { url: '/forms/pdf?type=102.01&card_pk={card}&napr_id={dir}', title: 'Договор', need_dirs: true },
+  {
+    url: '/forms/pdf?type=102.01&card_pk={card}&napr_id={dir}', title: 'Договор', need_dirs: true, type: '102.01',
+  },
+  {
+    url: '/forms/pdf?type=102.02&card_pk={card}&napr_id={dir}', title: 'Договор-печать', need_dirs: true, type: '102.02',
+  },
 ];
 
 export const form112 = [

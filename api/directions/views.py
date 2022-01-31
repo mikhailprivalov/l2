@@ -52,7 +52,7 @@ from directions.models import (
     DirectionsHistory,
     MonitoringResult,
     TubesRegistration,
-    DirectionParamsResult,
+    DirectionParamsResult, PersonContract,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -71,7 +71,7 @@ from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid, short_fio_dots
-from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year
+from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year, get_patient_contract
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
@@ -197,11 +197,55 @@ def directions_history(request):
     date_end = datetime.combine(date_end, dtime.max)
     user_creater = -1
     patient_card = -1
+    final_result = []
+    parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
+
     # status: 4 - выписано пользователем,   0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
     if req_status == 4:
         user_creater = request.user.doctorprofile.pk
-    if req_status in [0, 1, 2, 3]:
+    if req_status in [0, 1, 2, 3, 5]:
         patient_card = pk
+
+    if req_status == 5:
+        # contracts = PersonContract.objects.filter(patient_card_id=pk, create_at__gte=date_start, create_at__lte=date_end).order_by('-create_at')
+        # for i in contracts:
+        #     print(i.dir_list, i.pk, i.patient_card_id, i.num_contract, i.create_at)
+
+        patient_contract = get_patient_contract(date_start, date_end, patient_card)
+        count = 0
+        last_contract = None
+        temp_data = {'pk': "", 'status': "", 'researches': "", "researches_pks": "", 'date': "", 'cancel': False, 'checked': False, 'pacs': False, 'has_hosp': False,
+                     'has_descriptive': False, 'maybe_onco': False, 'is_application': False, 'lab': "", 'parent': parent_obj, 'is_expertise': False,
+                     'expertise_status': False, 'person_contract_pk': "", 'person_contract_dirs': "",
+                     }
+        for i in patient_contract:
+            if i.id != last_contract and count != 0:
+                final_result.append(
+                    temp_data.copy()
+                )
+                temp_data = {'pk': "", 'status': "", 'researches': "", "researches_pks": "", 'date': "", 'cancel': False, 'checked': False, 'pacs': False, 'has_hosp': False,
+                             'has_descriptive': False,
+                             'maybe_onco': False, 'is_application': False, 'lab': "", 'parent': parent_obj, 'is_expertise': False, 'expertise_status': False, 'person_contract_pk': "",
+                             'person_contract_dirs': "",
+                             }
+            temp_data['pk'] = i.id
+            if temp_data['researches']:
+                temp_data['researches'] = f"{temp_data['researches']} | {i.title}"
+            else:
+                temp_data['researches'] = f"{i.title}"
+            temp_data['cancel'] = i.cancel
+            temp_data['date'] = i.date_create
+            temp_data['status'] = i.sum_contract
+            temp_data['person_contract_dirs'] = i.dir_list
+            last_contract = i.id
+            count += 1
+        final_result.append(
+            temp_data.copy()
+        )
+        res['directions'] = final_result
+
+        return JsonResponse(res)
+
 
     is_service = False
     if services:
@@ -220,13 +264,15 @@ def directions_history(request):
     # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id
     researches_pks = []
     researches_titles = ''
-    final_result = []
+
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco, is_application, is_expertise, expertise_status = False, False, False, False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
+    person_contract_pk = -1
     status_set = {-2}
     lab = set()
     lab_title = None
+    person_contract_dirs = ""
 
     type_service = request_data.get("type_service", None)
     for i in result_sql:
@@ -261,8 +307,12 @@ def directions_history(request):
                         'parent': parent_obj,
                         'is_expertise': is_expertise,
                         'expertise_status': expertise_status,
+                        'person_contract_pk': person_contract_pk,
+                        'person_contract_dirs': person_contract_dirs,
                     }
                 )
+                person_contract_pk = -1
+                person_contract_dirs = ""
             dir = i[0]
             expertise_data = get_expertise(dir)
             is_expertise = False
@@ -319,6 +369,9 @@ def directions_history(request):
             has_descriptive = True
         if i[24]:
             is_application = True
+        if i[26]:
+            person_contract_pk = i[26]
+            person_contract_dirs = i[27]
 
     status = min(status_set)
     if len(lab) > 0:
@@ -342,6 +395,8 @@ def directions_history(request):
                 'parent': parent_obj,
                 'is_expertise': is_expertise,
                 'expertise_status': expertise_status,
+                'person_contract_pk': person_contract_pk,
+                'person_contract_dirs': person_contract_dirs,
             }
         )
 

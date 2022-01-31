@@ -34,7 +34,7 @@ from context_processors.utils import menu
 from directory.models import Fractions, ParaclinicInputField, ParaclinicUserInputTemplateField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
-from hospitals.models import Hospitals
+from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from pharmacotherapy.models import Drugs
@@ -511,6 +511,9 @@ def laboratory_journal_params(request):
 
 def bases(request):
     k = f'view:bases:{request.user.pk}'
+    disabled_fin_source = [i.fin_source.pk for i in DisableIstochnikiFinansirovaniya.objects.filter(hospital_id=request.user.doctorprofile.hospital_id)]
+    user_disabled_fin_source = [x for x in users.DoctorProfile.objects.values_list('disabled_fin_source', flat=True).filter(pk=request.user.doctorprofile.pk) if x is not None]
+    disabled_fin_source.extend(user_disabled_fin_source)
     ret = cache.get(k)
     if not ret:
         ret = {
@@ -525,10 +528,12 @@ def bases(request):
                     "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in x.istochnikifinansirovaniya_set.all()],
                 }
                 for x in CardBase.objects.all()
-                .prefetch_related(Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).order_by('-order_weight')))
+                .prefetch_related(Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).
+                                           exclude(pk__in=disabled_fin_source).order_by('-order_weight')))
                 .order_by('-order_weight')
             ]
         }
+
         cache.set(k, ret, 100)
     if hasattr(request, 'plain_response') and request.plain_response:
         return ret
