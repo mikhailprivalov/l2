@@ -387,7 +387,7 @@ def endpoint(request):
                     result["body"] = "pk '{}' is not exists".format(pk_s)
             elif message_type == "Q":
                 result["answer"] = True
-                pks = [int(x) for x in data.get("query", []) if isinstance(x, str) and x.isdigit()]
+                pks = [int(x) for x in data.get("query", []) if isinstance(x, int) or (isinstance(x, str) and x.isdigit())]
                 researches = defaultdict(list)
                 for row in app.get_issledovaniya(pks):
                     k = row["pk"]
