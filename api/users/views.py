@@ -4,6 +4,8 @@ import re
 from random import randint
 
 from django.contrib.auth import authenticate, login
+
+from laboratory.utils import current_time
 from users.tasks import send_password_reset_code
 
 from utils.response import status_response
@@ -147,4 +149,14 @@ def set_new_email(request):
         else:
             return status_response(False, message='Некорректный код со старого email')
 
+    return status_response(False)
+
+
+def check_employee(request):
+    data = json.loads(request.body)
+    snils = data.get('snils')
+    date_now = current_time(only_date=True)
+    doctor_profile = DoctorProfile.objects.filter(snils=snils, external_access=True, date_stop_external_access__gte=date_now).first()
+    if doctor_profile:
+        return status_response(True)
     return status_response(False)
