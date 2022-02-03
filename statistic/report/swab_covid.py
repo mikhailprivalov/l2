@@ -27,6 +27,7 @@ def swab_covid(request_data, response, tr, covid_question_id):
     iss_statistics_covid = sql_func.temp_statistics_covid_call_patient(covid_question_id, d1, d2, "Сдача повторного мазка на COVID", search_date)
     iss_tuple = tuple(set([i.issledovaniye_id for i in iss_statistics_covid]))
     statistics_covid = sql_func.statistics_covid_call_patient(covid_question_id, d1, d2, tuple(["Адрес", "Контактный телефон", "Оператор", "Сдача повторного мазка на COVID"]), iss_tuple)
+    print(statistics_covid)
     wb = openpyxl.Workbook()
     wb.remove(wb.get_sheet_by_name('Sheet'))
     ws = wb.create_sheet('мазок')

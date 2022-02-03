@@ -270,6 +270,7 @@ def covid_swab_data(ws1, data):
 
         for j in range(1, 6):
             ws1.cell(row=r, column=j).style = style_border1
+        r += 1
 
     return ws1
 

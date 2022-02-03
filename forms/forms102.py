@@ -1063,13 +1063,17 @@ def form_02(request_data):
     Договор, включающий услуги на оплату и необходимые реквизиты. С Учетом представителей и Заказчиков(Плательщиков)
     у пациента
     """
-    contract_id = json.loads(request_data.get("contract_id", None))
+    contract_id_param = request_data.get("contract_id", None)
+    contract_id = None
+    if contract_id_param:
+        contract_id = json.loads(request_data.get("contract_id"))
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-    if not contract_id:
+    if not contract_id_param:
         work_dir = json.loads(request_data["napr_id"])
     else:
         work_dir = PersonContract.objects.values_list("dir_list", flat=True).get(pk=int(contract_id))
-    napr = Napravleniya.objects.filter(pk__in=work_dir.split(","))
+        work_dir = work_dir.split(",")
+    napr = Napravleniya.objects.filter(pk__in=work_dir)
 
     dir_temp = []
 
@@ -1241,9 +1245,10 @@ def form_02(request_data):
         objs.append(Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter))
 
         date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+        date_contract = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=person_contract_data.create_at)
 
         opinion = [
-            [Paragraph('г. Иркутск', style), Paragraph('{} года'.format(date_now), styleTR)],
+            [Paragraph('г. Иркутск', style), Paragraph('{} года'.format(date_contract), styleTR)],
         ]
 
         tbl = Table(opinion, colWidths=(95 * mm, 95 * mm))
@@ -1260,7 +1265,7 @@ def form_02(request_data):
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
 
-        objs.append(Spacer(1, 4.5 * mm))
+        objs.append(Spacer(1, 0.5 * mm))
 
         hospital: Hospitals = request_data["hospital"]
 
@@ -1572,13 +1577,13 @@ def form_02(request_data):
                     Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(client_who), styleAtr),
                 ],
                 [
-                    Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
+                    Paragraph('{} <br/>{}'.format("", hospital_address), styleAtr),
                     Paragraph('', styleAtr),
                     Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(payer_data['fio'], payer_data['passport_serial'], payer_data['passport_num'], payer_data['main_address']),
                               styleAtr),
                 ],
                 [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
-                [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+                [Paragraph('Сотрудник {}'.format(""), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
                 [
                     Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
                     Paragraph('', styleAtr),
@@ -1651,14 +1656,14 @@ def form_02(request_data):
                     Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_agent_who), styleAtr),
                 ],
                 [
-                    Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
+                    Paragraph('{} <br/>{}'.format("", hospital_address), styleAtr),
                     Paragraph('', styleAtr),
                     Paragraph(
                         '{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(person_data['fio'], person_data['passport_serial'], person_data['passport_num'], person_data['main_address']), styleAtr
                     ),
                 ],
                 [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
-                [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+                [Paragraph('Сотрудник {}'.format(""), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
                 [
                     Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
                     Paragraph('', styleAtr),
@@ -1697,7 +1702,7 @@ def form_02(request_data):
                     Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_who), styleAtr),
                 ],
                 [
-                    Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
+                    Paragraph('{} <br/>{}'.format("", hospital_address), styleAtr),
                     Paragraph('', styleAtr),
                     Paragraph(
                         '{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['passport_serial'], patient_data['passport_num'], patient_data['main_address']),
@@ -1705,7 +1710,7 @@ def form_02(request_data):
                     ),
                 ],
                 [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
-                [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+                [Paragraph('Сотрудник {}'.format(""), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
                 [
                     Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
                     Paragraph('', styleAtr),
@@ -1737,7 +1742,7 @@ def form_02(request_data):
 
         # Заголовок Адреса и реквизиты + сами реквизиты всегда вместе, если разрыв на странице
 
-        objs.append(KeepTogether([Paragraph('9. АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), tbl]))
+        objs.append(KeepTogether([Paragraph('АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), tbl]))
         objs.append(Spacer(1, 7 * mm))
 
         styleRight = deepcopy(style)
@@ -1880,7 +1885,7 @@ def form_02(request_data):
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
         canvas.restoreState()
 
-    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvasPartitionAll)
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
 
     pdf = buffer.getvalue()
 
