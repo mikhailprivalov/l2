@@ -52,7 +52,7 @@ from directions.models import (
     DirectionsHistory,
     MonitoringResult,
     TubesRegistration,
-    DirectionParamsResult, PersonContract,
+    DirectionParamsResult,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings

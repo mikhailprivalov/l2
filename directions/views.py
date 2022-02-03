@@ -31,7 +31,6 @@ import directory.models as directory
 import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
-from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strtime, strdate
