@@ -89,12 +89,14 @@ class DoctorProfile(models.Model):
     white_list_monitoring = models.ManyToManyField('directory.Researches', related_name='white_list_monitoring', blank=True, help_text='Доступные для просмотра мониторинги')
     black_list_monitoring = models.ManyToManyField('directory.Researches', related_name='black_list_monitoring', blank=True, help_text='Запрещены для просмотра мониторинги')
     position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
-    snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="")
+    snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="", db_index=True)
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     disabled_forms = models.CharField(max_length=255, help_text='Отключеные формы перчислить ч/з запятую', blank=True, default="")
     disabled_statistic_categories = models.CharField(max_length=255, help_text='Отключить доступ к статистике-категории ч/з запятую', blank=True, default="")
     disabled_statistic_reports = models.CharField(max_length=255, help_text='Отключить доступ к статистике категории-отчету ч/з запятую', blank=True, default="")
     disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещеные источники финансирвоания')
+    external_access = models.BooleanField(default=False, blank=True, help_text='Разрешен внешний доступ')
+    date_stop_external_access = models.DateField(help_text='Окончание внешнего доступа', db_index=True, default=None, blank=True, null=True)
 
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:

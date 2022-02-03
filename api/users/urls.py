@@ -7,4 +7,5 @@ urlpatterns = [
     path('change-password', views.change_password),
     path('set-new-email', views.set_new_email),
     path('loose-password', views.loose_password),
+    path('check-employee', views.check_employee),
 ]
