@@ -606,6 +606,7 @@ def check_enp(request):
 
 @api_view(['POST'])
 def patient_results_covid19(request):
+    return Response({"ok": False})
     days = 15
     results = []
     p_enp = data_parse(request.body, {'enp': str}, {'enp': ''})[0]

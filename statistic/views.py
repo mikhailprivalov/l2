@@ -1137,7 +1137,6 @@ def statistic_xls(request):
 
         ws = structure_sheet.statistic_research_by_covid_base(ws, d1, d2, "Кол-во по ковид")
         ws = structure_sheet.statistic_research_by_covid_data(ws, result_patient, patient_docs)
-
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         researches = list(directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by("sort_weight").order_by("direction_id"))

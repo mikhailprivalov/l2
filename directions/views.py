@@ -322,7 +322,11 @@ def gen_pdf_dir(request):
     if request.GET.get("contract") and internal_type:
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
             if len(card_pk_set) == 1 and fin_status:
-                from forms.forms102 import form_01 as f_contract
+                new_form_contract = SettingManager.get("new_form_contract", default='True', default_type='b')
+                if new_form_contract:
+                    from forms.forms102 import form_02 as f_contract
+                else:
+                    from forms.forms102 import form_01 as f_contract
 
                 fc = f_contract(
                     request_data={

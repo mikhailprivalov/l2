@@ -1466,6 +1466,7 @@ class Napravleniya(models.Model):
                 create_contract(v, client_id)
         return result
 
+
     def has_save(self):
         """
         Есть ли подтверждение у одного или более исследований в направлении
