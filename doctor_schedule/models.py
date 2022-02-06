@@ -17,7 +17,7 @@ class ScheduleResource(models.Model):
         'podrazdeleniya.Podrazdeleniya', null=True, blank=True, verbose_name='Подразделение', db_index=True, related_name='scheduleresourcedepartment', on_delete=models.CASCADE
     )
     speciality = models.ForeignKey(Speciality, null=True, blank=True, verbose_name='Специальность', db_index=True, on_delete=models.CASCADE)
-    hile = models.BooleanField(default=False, blank=True, help_text='Скрытие ресурса', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие ресурса', db_index=True)
 
     def __str__(self):
         return f"{self.pk} — {self.executor} — {self.service} {self.room}, {self.department}, {self.speciality}"

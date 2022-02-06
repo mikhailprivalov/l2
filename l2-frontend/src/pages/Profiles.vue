@@ -266,6 +266,15 @@
               <selected-researches :researches="user.users_services" :simple="true" />
             </div>
           </div>
+          <div class="row" style="padding-top: 5px">
+            <div class="col-xs-12" style="padding-right: 0">
+              <div class="input-group" style="width: 100%">
+                <label class="input-group-addon" style="height: 34px;text-align: center;">
+                  Р Е С У Р С Ы
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="right-bottom">
