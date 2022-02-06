@@ -488,6 +488,7 @@ def statistics_details_research_by_lab(podrazdeleniye: tuple, d_s: object, d_e: 
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') AS time_confirm,
                     api_application.name,
                     directions_issledovaniya.time_confirmation,
+                    directions_issledovaniya.id,
                     tubes.date_tubes,
                     tubes.time_tubes
                 FROM public.directions_issledovaniya
