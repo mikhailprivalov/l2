@@ -487,7 +487,9 @@ def statistics_details_research_by_lab(podrazdeleniye: tuple, d_s: object, d_e: 
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') AS time_confirm,
                     api_application.name,
-                    directions_issledovaniya.time_confirmation
+                    directions_issledovaniya.time_confirmation,
+                    tubes.date_tubes,
+                    tubes.time_tubes
                 FROM public.directions_issledovaniya
                 LEFT JOIN directory_researches
                 ON directory_researches.id = directions_issledovaniya.research_id
@@ -495,6 +497,16 @@ def statistics_details_research_by_lab(podrazdeleniye: tuple, d_s: object, d_e: 
                 ON api_application.id = directions_issledovaniya.api_app_id
                 LEFT JOIN podrazdeleniya_podrazdeleniya
                 ON podrazdeleniya_podrazdeleniya.id = directory_researches.podrazdeleniye_id
+                LEFT JOIN (
+                SELECT issledovaniya_id,
+                tubesregistration_id,
+                to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_tubes,
+                to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'HH24:MI') AS time_tubes
+                FROM directions_issledovaniya_tubes
+                LEFT JOIN directions_tubesregistration
+                ON directions_tubesregistration.id = directions_issledovaniya_tubes.tubesregistration_id
+                ) as tubes
+                ON tubes.issledovaniya_id = directions_issledovaniya.id
                 where research_id in (select id from directory_researches  WHERE podrazdeleniye_id in %(podrazdeleniye)s) and 
                 time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
                 ORDER BY podrazdeleniya_podrazdeleniya.title, directory_researches.title
