@@ -83,7 +83,7 @@ export default class CheckBackend extends Vue {
         },
       },
     })
-      .fail(jqXHR => {
+      .fail((jqXHR) => {
         if (jqXHR.status === 502 || jqXHR.status === 500) return;
         this.$toast.clear();
         this.$toast.error('Сервер недоступен. Ошибка связи с сервером. Сообщите администратору о проблеме', {
@@ -98,7 +98,7 @@ export default class CheckBackend extends Vue {
         }
         window.$('input').blur();
       })
-      .done(data => {
+      .done((data) => {
         const [status, login, version] = String(data).split(':');
         const isOk = status === 'OK';
 
@@ -118,6 +118,7 @@ export default class CheckBackend extends Vue {
         }
 
         if (this.authenticated && this.version && this.version !== version) {
+          console.log({ uiVersion: this.version, newVersion: version });
           this.$store.dispatch(actions.HAS_NEW_VERSION);
         }
 

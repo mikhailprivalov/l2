@@ -26,5 +26,9 @@ urlpatterns = [
     path('eds/get-user-data', views.eds_get_user_data),
     path('eds/get-cda-data', views.eds_get_cda_data),
     path('external/check-result', views.external_check_result),
-    path('external/check-employee', views.check_employee),
+    path('get-hosp-services', views.get_hosp_services),
+    path('mkb10', views.mkb10),
+    path('hosp-record', views.hosp_record),
+    path('hosp-record-list', views.hosp_record_list),
+    path('check-employee', views.check_employee),
 ]
