@@ -1341,6 +1341,8 @@ def statistic_research_by_details_lab_base(ws1, d1, d2, research_titile):
         ('дата', 15),
         ('время', 15),
         ('аппарат', 15),
+        ('дата взятия', 15),
+        ('время взятия', 15),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -1371,8 +1373,10 @@ def statistic_research_by_details_lab_data(ws1, researches):
         ws1.cell(row=r, column=4).value = i.date_confirm if i.date_confirm else ""
         ws1.cell(row=r, column=5).value = i.time_confirm if i.time_confirm else ""
         ws1.cell(row=r, column=6).value = i.name if i.name else ""
+        ws1.cell(row=r, column=7).value = i.date_tubes if i.date_tubes else ""
+        ws1.cell(row=r, column=8).value = i.time_tubes if i.time_tubes else ""
 
-        rows = ws1[f'A{r}:F{r}']
+        rows = ws1[f'A{r}:H{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
