@@ -231,6 +231,21 @@
               <option v-for="g in user.groups_list" :value="g.pk" :key="g.pk">{{ g.title }}</option>
             </select>
           </div>
+          <div class="row">
+            <div class="col-xs-2" style="padding-right: 0">
+              <div class="input-group" style="width: 100%">
+                <label class="input-group-addon" style="height: 34px;text-align: left;">
+                  <input type="checkbox" v-model="user.external_access" /> Внешний доступ до
+                </label>
+              </div>
+            </div>
+            <div class="col-xs-2" style="padding-left: 0">
+              <div class="input-group" style="width: 100%">
+                <input v-if="user.external_access" class="form-control" type="date" v-model="user.date_stop_external_access"/>
+              </div>
+            </div>
+            <div class="col-xs-8"></div>
+          </div>
           <div class="more-title">Запрет на создание направлений с назначениями:</div>
           <div class="row" style="margin-right: 0">
             <div class="col-xs-6" style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
@@ -356,6 +371,8 @@ export default {
         rmis_employee_id: '',
         rmis_service_id_time_table: '',
         sendPassword: false,
+        external_access: false,
+        date_stop_external_access: '',
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -402,6 +419,11 @@ export default {
         .join(' ');
       if (this.open_pk === -1) {
         this.deb_gu();
+      }
+    },
+    'user.external_access': function () {
+      if (!this.user.external_access) {
+        this.user.date_stop_external_access = '';
       }
     },
     user_hospital: {
