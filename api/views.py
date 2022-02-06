@@ -858,13 +858,18 @@ def mkb10(request):
     return JsonResponse({"data": data})
 
 
-def mkb10_dict(request):
-    q = request.GET["query"].strip()
+def mkb10_dict(request, raw_response=False):
+    q = (request.GET.get("query", '') or '').strip()
     if not q:
+        if raw_response:
+            return []
         return JsonResponse({"data": []})
 
     if q == '-':
-        return JsonResponse({"data": [{"code": '-', "title": '', "id": '-'}]})
+        empty = {"code": '-', "title": '', "id": '-'}
+        if raw_response:
+            return [empty]
+        return JsonResponse({"data": [empty]})
 
     d = request.GET.get("dictionary", "mkb10.4")
     parts = q.split(' ', 1)
@@ -893,6 +898,8 @@ def mkb10_dict(request):
     data = []
     for d in diag_query:
         data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
+    if raw_response:
+        return data
     return JsonResponse({"data": data})
 
 

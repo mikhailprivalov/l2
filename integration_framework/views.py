@@ -3,8 +3,10 @@ import datetime
 import logging
 
 import pytz
+from api.views import mkb10_dict
 
 from laboratory import settings
+from plans.models import PlanHospitalization
 from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
@@ -28,8 +30,15 @@ from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
-from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY, REGION, DEATH_RESEARCH_PK, DEF_LABORATORY_AUTH_PK, \
-    DEF_LABORATORY_LEGAL_AUTH_PK
+from laboratory.settings import (
+    AFTER_DATE,
+    CENTRE_GIGIEN_EPIDEMIOLOGY,
+    MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY,
+    REGION,
+    DEATH_RESEARCH_PK,
+    DEF_LABORATORY_AUTH_PK,
+    DEF_LABORATORY_LEGAL_AUTH_PK,
+)
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
@@ -176,11 +185,13 @@ def direction_data(request):
             }
 
             for s in DocumentSign.objects.filter(document=d):
-                document['signatures'].append({
-                    "content": s.sign_value.replace('\n', ''),
-                    "type": s.sign_type,
-                    "executor": s.executor.uploading_data,
-                })
+                document['signatures'].append(
+                    {
+                        "content": s.sign_value.replace('\n', ''),
+                        "type": s.sign_type,
+                        "executor": s.executor.uploading_data,
+                    }
+                )
 
             signed_documents.append(document)
 
@@ -1255,15 +1266,11 @@ def get_cda_data(pk):
             "patient": {
                 'id': card.number,
                 'snils': card.get_data_individual()["snils"],
-                'name': {
-                    'family': ind.family,
-                    'name': ind.name,
-                    'patronymic': ind.patronymic
-                },
+                'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
                 'gender': ind.sex.lower(),
                 'birthdate': ind.birthday.strftime("%Y%m%d"),
             },
-        }
+        },
     }
 
 
@@ -1400,49 +1407,200 @@ def get_protocol_result(request):
     ind = n.client.individual
     if check_type_research(pk) == "is_refferal":
         data = get_json_protocol_data(pk)
-        return Response({
-            "title": n.get_eds_title(),
-            "generatorName": n.get_eds_generator(),
-            "data": {
-                "oidMo": data["oidMo"],
-                "document": data,
-                "patient": {
-                    'id': card.number,
-                    'snils': card.get_data_individual()["snils"],
-                    'name': {
-                        'family': ind.family,
-                        'name': ind.name,
-                        'patronymic': ind.patronymic
+        return Response(
+            {
+                "title": n.get_eds_title(),
+                "generatorName": n.get_eds_generator(),
+                "data": {
+                    "oidMo": data["oidMo"],
+                    "document": data,
+                    "patient": {
+                        'id': card.number,
+                        'snils': card.get_data_individual()["snils"],
+                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                        'gender': ind.sex.lower(),
+                        'birthdate': ind.birthday.strftime("%Y%m%d"),
                     },
-                    'gender': ind.sex.lower(),
-                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    "organization": data["organization"],
                 },
-                "organization": data["organization"]
             }
-        })
+        )
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
-        return Response({
-            "generatorName": "Laboratory_min",
-            "data": {
-                "oidMo": data["oidMo"],
-                "document": data,
-                "patient": {
-                    'id': card.number,
-                    'snils': card.get_data_individual()["snils"],
-                    'name': {
-                        'family': ind.family,
-                        'name': ind.name,
-                        'patronymic': ind.patronymic
+        return Response(
+            {
+                "generatorName": "Laboratory_min",
+                "data": {
+                    "oidMo": data["oidMo"],
+                    "document": data,
+                    "patient": {
+                        'id': card.number,
+                        'snils': card.get_data_individual()["snils"],
+                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                        'gender': ind.sex.lower(),
+                        'birthdate': ind.birthday.strftime("%Y%m%d"),
                     },
-                    'gender': ind.sex.lower(),
-                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    "organization": data["organization"],
                 },
-                "organization": data["organization"]
             }
-        })
+        )
 
     return Response({})
+
+
+@api_view(['POST', 'GET'])
+def get_hosp_services(request):
+    services = []
+    r: Researches
+    for r in Researches.objects.filter(is_hospital=True):
+        services.append(
+            {
+                "pk": r.pk,
+                "title": r.get_title(),
+            }
+        )
+    return Response({"services": services})
+
+
+@api_view(['GET'])
+def mkb10(request):
+    return Response({"rows": mkb10_dict(request, True)})
+
+
+@api_view(['POST'])
+def hosp_record(request):
+    data = data_parse(
+        request.body,
+        {
+            'snils': 'str_strip',
+            'enp': 'str_strip',
+            'family': 'str_strip',
+            'name': 'str_strip',
+            'patronymic': 'str_strip',
+            'sex': 'str_strip',
+            'birthdate': 'str_strip',
+            'comment': 'str_strip',
+            'date': 'str_strip',
+            'service': int,
+            'phone': 'str_strip',
+            'diagnosis': 'str_strip',
+        },
+    )
+    snils: str = data[0]
+    enp: str = data[1]
+    family: str = data[2]
+    name: str = data[3]
+    patronymic: str = data[4]
+    sex: str = data[5].lower()
+    birthdate: str = data[6]
+    comment: str = data[7]
+    date: str = data[8]
+    service: int = data[9]
+    phone: str = data[10]
+    diagnosis: str = data[11]
+
+    snils = ''.join(ch for ch in snils if ch.isdigit())
+
+    individual = None
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        individual = individuals.first()
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual and family and name:
+        individual = Individual.import_from_tfoms(
+            {
+                "family": family,
+                "given": name,
+                "patronymic": patronymic,
+                "gender": sex,
+                "birthdate": birthdate,
+                "enp": enp,
+                "snils": snils,
+            },
+            need_return_individual=True,
+        )
+    if not individual:
+        return Response({"ok": False, 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    if not card:
+        card = Card.add_l2_card(individual)
+
+    if not card:
+        return Response({"ok": False, 'message': 'Карта не найдена'})
+
+    hospital_research: Researches = Researches.objects.filter(pk=service, is_hospital=True).first()
+
+    if not hospital_research:
+        return Response({"ok": False, 'message': 'Услуга не найдена'})
+
+    hosp_department_id = hospital_research.podrazdeleniye.pk
+    PlanHospitalization.plan_hospitalization_save(
+        {
+            'card': card,
+            'research': hospital_research.pk,
+            'date': date,
+            'comment': comment[:256],
+            'phone': phone,
+            'action': 0,
+            'hospital_department_id': hosp_department_id,
+            'diagnos': diagnosis,
+        },
+        None
+    )
+
+    return Response({"ok": True})
+
+
+@api_view(['POST'])
+def hosp_record_list(request):
+    data = data_parse(
+        request.body,
+        {
+            'snils': 'str_strip',
+            'enp': 'str_strip',
+        },
+    )
+    snils: str = data[0]
+    enp: str = data[1]
+
+    snils = ''.join(ch for ch in snils if ch.isdigit())
+
+    individual = None
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        individual = individuals.first()
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual:
+        return Response({"rows": [], 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+
+    if not card:
+        return Response({"rows": [], 'message': 'Карта не найдена'})
+
+    rows = []
+
+    plan: PlanHospitalization
+    for plan in PlanHospitalization.objects.filter(client=card, research__isnull=False, action=0).order_by('-exec_at'):
+        rows.append({
+            "pk": plan.pk,
+            "service": plan.research.get_title(),
+            "date": plan.exec_at.strftime('%d.%m.%Y'),
+            "phone": plan.phone,
+            "diagnosis": plan.diagnos,
+            "comment": plan.comment,
+        })
+
+    return Response({"rows": rows})
 
 
 def get_json_protocol_data(pk):
@@ -1548,7 +1706,7 @@ def get_json_labortory_data(pk):
         flsi_param = {"code": frac_obj.fsli, "title": frac_obj.title}
         result_val = k.value.replace(",", ".") if k.value else ""
         confirmed_at = f"{confirmed_time}+0800"
-        date_reiceve = normalize_dots_date(k.date_confirm).replace("-","")
+        date_reiceve = normalize_dots_date(k.date_confirm).replace("-", "")
         date_reiceve = f"{date_reiceve}0800+0800"
         tests.append({"unit_val": unit_val, "flsi_param": flsi_param, "result_val": result_val})
         prev_research_title = next_research_title
@@ -1566,7 +1724,7 @@ def get_json_labortory_data(pk):
     document["content"] = {}
     document["content"]["Лаборатория"] = data
     document["content"]["Код ОКПО"] = hosp_obj.okpo
-    document["content"]["payment"] = {"code":"1", "title":"Средства обязательного медицинского страхования"}
+    document["content"]["payment"] = {"code": "1", "title": "Средства обязательного медицинского страхования"}
     document["oidMo"] = hosp_oid
     document["orgName"] = hosp_obj.title
     direction_obj = Napravleniya.objects.get(pk=pk)
@@ -1588,7 +1746,7 @@ def organization_get(hosp_obj_f):
             "text": hosp_obj_f.address if hosp_obj_f.address else "г. Иркутск",
             "subjectCode": "38",
             "subjectName": "Иркутская область",
-        }
+        },
     }
 
 
@@ -1626,8 +1784,14 @@ def legal_auth_get(legal_auth_doc, is_recursion=False):
 
 def start_pathological_process(date_death, time_data, type_period):
     dt = datetime.datetime.strptime(date_death, '%Y-%m-%d %H:%M')
-    period = {"часов": relativedelta(hours=-time_data), "минут": relativedelta(minutes=-time_data), "дней": relativedelta(days=-time_data), "суток": relativedelta(days=-time_data),
-              "месяцев": relativedelta(months=-time_data), "лет": relativedelta(years=-time_data)}
+    period = {
+        "часов": relativedelta(hours=-time_data),
+        "минут": relativedelta(minutes=-time_data),
+        "дней": relativedelta(days=-time_data),
+        "суток": relativedelta(days=-time_data),
+        "месяцев": relativedelta(months=-time_data),
+        "лет": relativedelta(years=-time_data),
+    }
     delta = dt + period[type_period]
     delta.strftime("%Y%m%d%H:%M:%S")
     return f"{delta.strftime('%Y%m%d%H%M')}+0800"
