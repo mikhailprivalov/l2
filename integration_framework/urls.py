@@ -30,5 +30,5 @@ urlpatterns = [
     path('mkb10', views.mkb10),
     path('hosp-record', views.hosp_record),
     path('hosp-record-list', views.hosp_record_list),
-    path('external/check-employee', views.check_employee),
+    path('check-employee', views.check_employee),
 ]

@@ -49,7 +49,6 @@ from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, matc
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date, normalize_dots_date
-from utils.response import status_response
 from utils.xh import check_type_research
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
@@ -1805,5 +1804,5 @@ def check_employee(request):
     date_now = current_time(only_date=True)
     doctor_profile = DoctorProfile.objects.filter(snils=snils, external_access=True, date_stop_external_access__gte=date_now).first()
     if doctor_profile:
-        return status_response(True)
-    return status_response(False)
+        return Response({"ok": True})
+    return Response({"ok": False})
