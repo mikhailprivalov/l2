@@ -1797,7 +1797,7 @@ def start_pathological_process(date_death, time_data, type_period):
     return f"{delta.strftime('%Y%m%d%H%M')}+0800"
 
 
-@api_view()
+@api_view(['POST'])
 def check_employee(request):
     data = json.loads(request.body)
     snils = data.get('snils')
