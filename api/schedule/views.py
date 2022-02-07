@@ -1,11 +1,16 @@
+from django.contrib.auth.models import User
+
 from clients.models import Card, CardBase
 import math
 import datetime
 from datetime import timedelta
+
+from directory.models import Researches
 from doctor_schedule.models import ScheduleResource, SlotFact, SlotPlan
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
+from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from laboratory.utils import localtime
 from utils.response import status_response
@@ -215,3 +220,22 @@ def save(request):
         return status_response(True)
 
     return status_response(False, 'Слот не найден')
+
+
+@login_required
+def save_resource(request):
+    data = data_parse(request.body, {'pk': int, 'resource_researches': list, 'res_pk': int})
+    print(data)
+    user = User.objects.get(pk=data[0])
+    executor = DoctorProfile.objects.get(user=user)
+    researches = Researches.objects.filter(pk__in=data[1])
+    if data[2] == -1:
+        doc_resource = ScheduleResource(executor=executor, department=executor.podrazdeleniye, speciality=executor.specialities)
+        doc_resource.save()
+    else:
+        doc_resource = ScheduleResource.objects.get(pk=data[2])
+        doc_resource.service.clear()
+    for r in researches:
+        doc_resource.service.add(r)
+    return JsonResponse({"message": "dfdf", "ok": True})
+

@@ -246,8 +246,16 @@
             </div>
             <div class="col-xs-8"></div>
           </div>
-          <div class="more-title">Запрет на создание направлений с назначениями:</div>
-          <div class="row" style="margin-right: 0">
+          <div class="more-title">
+            Запрет на создание направлений с назначениями:
+            <button class="btn btn-blue-nb sidebar-btn" style="font-size: 13px">
+              <i v-if="setup_forbidden" class="glyphicon glyphicon-circle-arrow-up"
+                 @click="change_setup_forbidden" v-tippy="{ placement : 'bottom'}" title="Скрыть"/>
+              <i v-else class="glyphicon glyphicon-circle-arrow-down"
+                 @click="change_setup_forbidden" v-tippy="{ placement : 'bottom'}" title="Редактировать"/>
+            </button>
+          </div>
+          <div v-if="setup_forbidden" class="row" style="margin-right: 0">
             <div class="col-xs-6" style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
               <researches-picker :hidetemplates="true" :just_search="true" v-model="user.restricted_to_direct" />
             </div>
@@ -266,13 +274,30 @@
               <selected-researches :researches="user.users_services" :simple="true" />
             </div>
           </div>
-          <div class="row" style="padding-top: 5px">
-            <div class="col-xs-12" style="padding-right: 0">
-              <div class="input-group" style="width: 100%">
-                <label class="input-group-addon" style="height: 34px;text-align: center;">
-                  Р Е С У Р С Ы
-                </label>
-              </div>
+          <div class="more-title">Расписание-ресурсы:
+           <button class="btn btn-blue-nb sidebar-btn" style="font-size: 13px">
+              <i v-if="setup_resource" class="glyphicon glyphicon-circle-arrow-up"
+                 @click="change_setup_resource" v-tippy="{ placement : 'bottom'}" title="Скрыть"/>
+              <i v-else class="glyphicon glyphicon-circle-arrow-down"
+                 @click="change_setup_resource" v-tippy="{ placement : 'bottom'}" title="Редактировать"/>
+            </button>
+          </div>
+          <div v-if="setup_resource" class="row" style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
+            <div class="col-xs-6" style="height: 100%">
+              <ResearchesPicker v-model="resource_researches" autoselect="none" :hidetemplates="true" />
+            </div>
+            <div class="col-xs-6" style="height: 100%">
+              <SelectedResearches :researches="resource_researches || []" :simple="true" />
+            </div>
+            <div style="float: right; padding-right: 20px">
+              <button :disabled="!valid" @click="save_resource" class="btn btn-blue-nb">Сохранить ресурс</button>
+            </div>
+          </div>
+          <div v-if="setup_resource" style="padding-top: 25px">
+            <div class="research" :key="row.pk" v-for="row in rows" @click="current_resource_researches(row.pk)">
+              <span v-for="res in row.researches" :key="res.pk" class="t-r">
+                {{ res.title }}
+              </span>
             </div>
           </div>
         </div>
@@ -367,6 +392,11 @@ export default {
       departments: [],
       specialities: [],
       positions: [],
+      resource_researches: [],
+      setup_forbidden: false,
+      setup_resource: false,
+      resource_templates_list: [],
+      current_resource_pk: -1,
       user: {
         username: '',
         password: '',
@@ -382,6 +412,7 @@ export default {
         sendPassword: false,
         external_access: false,
         date_stop_external_access: '',
+        resource_schedule: [],
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -451,8 +482,33 @@ export default {
 
       this.load_users();
     },
+    resource_researches() {
+      if (this.resource_researches.length === 0) {
+        this.current_resource_pk = -1;
+      }
+    },
   },
   methods: {
+    current_resource_researches(pk) {
+      for (const res of this.resource_templates_list) {
+        if (pk === res.pk) {
+          this.resource_researches = res.researches;
+          this.current_resource_pk = pk;
+        }
+      }
+    },
+    async save_resource() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('schedule/save-resource',
+        { pk: this.user.doc_pk, resource_researches: this.resource_researches, res_pk: this.current_resource_pk });
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    change_setup_forbidden() {
+      this.setup_forbidden = !this.setup_forbidden;
+    },
+    change_setup_resource() {
+      this.setup_resource = !this.setup_resource;
+    },
     deb_gu: debounce(function () {
       this.gen_username();
     }, 500),
@@ -496,6 +552,7 @@ export default {
         this.user.department = dep;
         this.gen_passwd();
       }
+      this.resource_templates_list = this.user.resource_schedule;
       await this.$store.dispatch(actions.DEC_LOADING);
       this.open_pk = pk;
     },
@@ -532,6 +589,7 @@ export default {
         groups: [],
         groups_list: [],
         restricted_to_direct: [],
+        resource_schedule: [],
         users_services: [],
         username: '',
         password: '',
@@ -541,6 +599,12 @@ export default {
     },
   },
   computed: {
+    rows() {
+      return this.resource_templates_list.map(r => ({
+        ...r,
+        researches: r.researches.map(rpk => this.$store.getters.researches_obj[rpk]).filter(Boolean),
+      }));
+    },
     snilsValid() {
       return (
         !this.user.snils || (!this.user.snils.includes('-') && !this.user.snils.includes(' ') && validateSnils(this.user.snils))
@@ -754,6 +818,74 @@ li.selected {
   background: #fff;
   border-left: 1px solid #a9b2bd;
   border-bottom: 1px solid #a9b2bd;
+  margin-bottom: 0;
+}
+
+.sidebar-btn {
+  border-radius: 1px;
+
+  &:not(.text-center) {
+    text-align: left;
+  }
+
+  border-top: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  border-bottom: none !important;
+  padding: 4px;
+  height: 23px;
+
+  &:not(:hover), &.active-btn:hover {
+    cursor: default;
+    background-color: rgba(#737373, .01) !important;
+    color: #37BC9B;
+  }
+}
+.sidebar-content {
+  height: 100%;
+  overflow-y: auto;
+  background-color: hsla(30, 3%, 97%, 1);
+}
+
+.sidebar-content:not(.fcenter) {
+  padding-bottom: 10px;
+}
+
+.t-r {
+  font-size: 80%;
+  padding-left: 5px;
+}
+
+.research {
+  background-color: #fff;
+  padding: 5px;
+  margin: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+
+  &.rhide {
+    background-image: linear-gradient(#6c7a89, #56616c);
+    color: #fff;
+  }
+
+  hr {
+  }
+
+  &:hover {
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    z-index: 1;
+    transform: scale(1.008);
+  }
+}
+
+.research:not(:first-child) {
+  margin-top: 0;
+}
+
+.research:last-child {
   margin-bottom: 0;
 }
 </style>

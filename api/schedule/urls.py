@@ -6,4 +6,5 @@ urlpatterns = [
     path('days', views.days),
     path('details', views.details),
     path('save', views.save),
+    path('save-resource', views.save_resource),
 ]
