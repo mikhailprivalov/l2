@@ -1231,14 +1231,21 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
         ws1.cell(row=r, column=7).value = ""
         ws1.cell(row=r, column=8).value = i.date_reciev
         ws1.cell(row=r, column=9).value = i.date_confirm
-        ws1.cell(row=r, column=10).value = i.value
+        if i.value == "Положительный":           # Результаты – «отрицательный»  цифра 0, «положительный»  1
+         ws1.cell(row=r, column=10).value = 1
+        else:
+         ws1.cell(row=r, column=10).value = 0
+
         ws1.cell(row=r, column=11).value = ""
         ws1.cell(row=r, column=12).value = ""
         ws1.cell(row=r, column=13).value = i.family
         ws1.cell(row=r, column=14).value = i.name
         ws1.cell(row=r, column=15).value = i.patronymic
-        ws1.cell(row=r, column=16).value = i.sex
-        ws1.cell(row=r, column=17).value = i.born
+        if i.sex == "м":
+         ws1.cell(row=r, column=16).value = 1    #Пол – мужской  1, женский  2
+        else:
+         ws1.cell(row=r, column=16).value = 2
+         ws1.cell(row=r, column=17).value = i.born
         ws1.cell(row=r, column=18).value = ""
         ws1.cell(row=r, column=19).value = ""
 
@@ -1251,18 +1258,18 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
                         snils = v
                     elif k == "полис":
                         polis = v
-                    elif k in ["паспорт", "рождение"]:
+                   elif k in ["Паспорт гражданина РФ", "рождение"]: # Паспорт изменён на Паспорт гражданина РФ
                         type = k
                         data = v.split("@")
                         serial = data[0]
                         number = data[1]
         ws1.cell(row=r, column=20).value = type
-        ws1.cell(row=r, column=21).value = serial
-        ws1.cell(row=r, column=22).value = number
+        ws1.cell(row=r, column=21).value = number  #  Серия и номер поменял местами
+        ws1.cell(row=r, column=22).value = serial   
 
         ws1.cell(row=r, column=23).value = snils
         ws1.cell(row=r, column=24).value = polis
-
+        ws1.cell(row=r, column=25).value = "иркутская область" # Добаил В Адрес регистрации регион
         ws1.cell(row=r, column=39).value = i.hosp_title
         ws1.cell(row=r, column=40).value = i.hosp_ogrn
 
