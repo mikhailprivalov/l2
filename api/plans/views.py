@@ -136,11 +136,11 @@ def get_plan_hospitalization_by_params(request):
         create_date = Log.objects.filter(key=i.pk_plan, type=80007)
         tooltip_data = []
         for c in create_date:
-            doctor = c.user.get_fio()
+            doctor = c.user.get_fio() if c.user else 'Личный кабинет'
             time = strfdatetime(c.time, '%d.%m.%y-%H:%M')
             tooltip_data.append(f'Создал: {doctor} ({time})')
         for u in update_date:
-            doctor = u.user.get_fio()
+            doctor = u.user.get_fio() if c.user else 'Личный кабинет'
             time = strfdatetime(u.time, '%d.%m.%y-%H:%M')
             tooltip_data.append(f"Обновил: {doctor} ({time})")
 
