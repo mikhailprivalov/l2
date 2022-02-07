@@ -225,7 +225,6 @@ def save(request):
 @login_required
 def save_resource(request):
     data = data_parse(request.body, {'pk': int, 'resource_researches': list, 'res_pk': int})
-    print(data)
     user = User.objects.get(pk=data[0])
     executor = DoctorProfile.objects.get(user=user)
     researches = Researches.objects.filter(pk__in=data[1])

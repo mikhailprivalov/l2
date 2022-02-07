@@ -1323,7 +1323,7 @@ def user_view(request):
                     temp_result = resource_researches_temp[i.scheduleresource_id]
                     temp_result.append(i.researches_id)
                     resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
-        resource_researches = [{"pk": k, "researches": v } for k, v in resource_researches_temp.items()]
+        resource_researches = [{"pk": k, "researches": v} for k, v in resource_researches_temp.items()]
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
