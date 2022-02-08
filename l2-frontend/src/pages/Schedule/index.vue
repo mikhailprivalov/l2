@@ -146,12 +146,12 @@ export default class Schedule extends Vue {
   }
 
   async nextDate() {
-    this.date = moment(this.date).add(7, 'weeks');
+    this.date = moment(this.date).add(this.displayDays, 'days');
     await this.getScheduleWeek();
   }
 
   async previousDate() {
-    this.date = moment(this.date).subtract(7, 'weeks');
+    this.date = moment(this.date).subtract(this.displayDays, 'days');
     await this.getScheduleWeek();
   }
 
