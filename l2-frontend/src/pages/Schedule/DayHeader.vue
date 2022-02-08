@@ -8,7 +8,7 @@
     </div>
     <div class="week-day-name">{{ weekDayName }}</div>
 
-    <MountingPortal mountTo="#portal-place-modal" name="DayHeaderPopupSlotsGenerate" append>
+    <MountingPortal mountTo="#portal-place-modal" :name="`DayHeaderPopupSlotsGenerate-${day.date}`" append>
       <transition name="fade">
         <modal
           v-if="open"
