@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <MountingPortal mountTo="#portal-place-modal" name="TimeSlotPopup" append>
+    <MountingPortal mountTo="#portal-place-modal" :name="`TimeSlotPopup-${smallTime(data.time)}—${data.date}`" append>
       <transition name="fade">
         <modal
           v-if="isOpened"
