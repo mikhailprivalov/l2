@@ -1231,21 +1231,28 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
         ws1.cell(row=r, column=7).value = ""
         ws1.cell(row=r, column=8).value = i.date_reciev
         ws1.cell(row=r, column=9).value = i.date_confirm
-        if i.value == "Положительный":           # Результаты – «отрицательный»  цифра 0, «положительный»  1
-         ws1.cell(row=r, column=10).value = 1
-        else:
-         ws1.cell(row=r, column=10).value = 0
-
+        
+        st = if i.value
+        if st == "Положительный":           # Результаты – «отрицательный»  цифра 0, «положительный»  1
+            ws1.cell(row=r, column=10).value = 1
+        if st == "Отрицательный":
+            ws1.cell(row=r, column=10).value = 0
+            
+        if st.find(";") != -1: # Результаты IgG к SARS CoV-2 «отрицательный» < 10 цифра 0, «положительный» > 10 цифра 1 (&gt;500)
+            ws1.cell(row=r, column=12).value = (st[st.find(";") + 1 : ])
+            if int(st[st.find(";") + 1 : ]) > 10:
+                ws1.cell(row=r, column=10).value = 1     
+            else:
+                ws1.cell(row=r, column=10).value = 0
         ws1.cell(row=r, column=11).value = ""
-        ws1.cell(row=r, column=12).value = ""
         ws1.cell(row=r, column=13).value = i.family
         ws1.cell(row=r, column=14).value = i.name
         ws1.cell(row=r, column=15).value = i.patronymic
         if i.sex == "м":
-         ws1.cell(row=r, column=16).value = 1    #Пол – мужской  1, женский  2
+            ws1.cell(row=r, column=16).value = 1    #Пол – мужской  1, женский  2
         else:
-         ws1.cell(row=r, column=16).value = 2
-         ws1.cell(row=r, column=17).value = i.born
+            ws1.cell(row=r, column=16).value = 2
+            ws1.cell(row=r, column=17).value = i.born
         ws1.cell(row=r, column=18).value = ""
         ws1.cell(row=r, column=19).value = ""
 
@@ -1258,7 +1265,7 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
                         snils = v
                     elif k == "полис":
                         polis = v
-                   elif k in ["Паспорт гражданина РФ", "рождение"]: # Паспорт изменён на Паспорт гражданина РФ
+                    elif k in ["паспорт", "рождение"]:
                         type = k
                         data = v.split("@")
                         serial = data[0]
