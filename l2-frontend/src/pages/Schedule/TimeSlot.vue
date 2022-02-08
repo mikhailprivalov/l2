@@ -1,9 +1,16 @@
 <template>
-  <div class="slot" :class="`slot-status-${data.status}`" :style="`top: ${offset}; min-height: ${minHeight};`">
+  <div
+    class="slot"
+    :class="[`slot-status-${data.status}`, mode === 'list' ? 'slot-list' : 'slot-natural']"
+    :style="mode === 'list' ? '' : `top: ${offset}; min-height: ${minHeight};`"
+  >
     <div class="slot-inner" @click="open">
       <div v-if="data.patient" class="patient-row">{{ data.patient.fio }}</div>
       <div v-if="data.service" class="service-row">{{ data.service.title }}</div>
-      <div class="param-row"><i class="far fa-circle"></i> {{ data.duration }} мин</div>
+      <div class="param-row">
+        <span v-if="mode === 'list'">{{ smallTime(data.time) }}</span>
+        <i class="far fa-circle"></i> {{ data.duration }} мин
+      </div>
     </div>
 
     <MountingPortal mountTo="#portal-place-modal" name="TimeSlotPopup" append>
@@ -29,14 +36,10 @@
           <div slot="footer">
             <div class="row">
               <div class="col-xs-6">
-                <button @click="close" class="btn btn-blue-nb" type="button">
-                  Закрыть
-                </button>
+                <button @click="close" class="btn btn-blue-nb" type="button">Закрыть</button>
               </div>
               <div class="col-xs-6">
-                <button @click="save" class="btn btn-blue-nb" type="button">
-                  Сохранить
-                </button>
+                <button @click="save" class="btn btn-blue-nb" type="button">Сохранить</button>
               </div>
             </div>
           </div>
@@ -67,6 +70,9 @@ import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
       type: Array,
       required: true,
     },
+    mode: {
+      type: String,
+    },
   },
   data() {
     return {
@@ -86,6 +92,8 @@ export default class TimeSlot extends Vue {
   allHoursValues: any[];
 
   isOpened: boolean;
+
+  mode: string | null;
 
   get offset() {
     const offset = this.data.minute * 2 + this.allHoursValues.indexOf(this.data.hourValue) * 120 + 51;
@@ -114,6 +122,12 @@ export default class TimeSlot extends Vue {
     }
 
     await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  smallTime(t) {
+    const [h, m] = t.split(':');
+    return `${h}:${m}`;
   }
 
   open() {
@@ -190,12 +204,15 @@ $slot-padding: 1px;
 }
 
 .slot {
-  position: absolute;
   cursor: pointer;
 
-  left: $slot-left-offset;
-  right: 0;
-  z-index: 1;
+  &.slot-natural {
+    position: absolute;
+
+    left: $slot-left-offset;
+    right: 0;
+    z-index: 1;
+  }
 
   &-inner {
     position: absolute;
@@ -213,11 +230,19 @@ $slot-padding: 1px;
   background: linear-gradient(to bottom, rgb(250, 250, 250) 0%, rgb(219, 219, 219) 100%);
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 
+  &-list {
+    min-height: $slot-minimal-height * 3;
+    margin-bottom: 3px;
+    position: relative;
+  }
+
   &:hover {
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
     z-index: 2;
     transform: scale(1.008);
-    min-height: $slot-minimal-height-opened;
+    &.slot-natural {
+      min-height: $slot-minimal-height-opened;
+    }
 
     .patient-row,
     .service-row,

@@ -20,7 +20,7 @@ class ScheduleResource(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие ресурса', db_index=True)
 
     def __str__(self):
-        return f"{self.pk} — {self.executor} — {self.service} {self.room}, {self.department}, {self.speciality}"
+        return f"{self.pk} — {self.executor} — {', '.join([x.get_title() for x in self.service.all()[:5]])} {self.room}, {self.department}, {self.speciality}"
 
     class Meta:
         verbose_name = 'Ресурс'

@@ -16,6 +16,7 @@ import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
 // @ts-ignore
 import plural from 'plural-ru';
+import moment from 'moment';
 import VueFormulate from '@braid/vue-formulate';
 import { ru } from '@braid/vue-formulate-i18n';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
@@ -57,9 +58,10 @@ export default (): void => {
     locale: 'ru',
   });
   Vue.prototype.$api = api;
-  Vue.filter('pluralAge', amount => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
-  Vue.filter('pluralRecords', amount => `${amount} ${plural(amount, 'запись', 'записи', 'записей')}`);
-  Vue.filter('pluralCount', amount => `${amount} ${plural(amount, 'штука', 'штуки', 'штук')}`);
+  Vue.filter('pluralAge', (amount) => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
+  Vue.filter('pluralRecords', (amount) => `${amount} ${plural(amount, 'запись', 'записи', 'записей')}`);
+  Vue.filter('pluralCount', (amount) => `${amount} ${plural(amount, 'штука', 'штуки', 'штук')}`);
+  Vue.filter('formatDate', (s) => moment(s).format('DD.MM.YYYY'));
 
   Vue.directive('click-outside', {
     bind(el, binding, vnode) {

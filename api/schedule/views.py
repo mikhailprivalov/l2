@@ -1,3 +1,5 @@
+from collections import defaultdict
+from typing import List
 from django.contrib.auth.models import User
 
 from clients.models import Card, CardBase
@@ -9,27 +11,31 @@ from directory.models import Researches
 from doctor_schedule.models import ScheduleResource, SlotFact, SlotPlan
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.db import transaction
 
+from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from laboratory.utils import localtime
+from utils.dates import try_strptime
 from utils.response import status_response
 
 
 def delta_to_string(d):
-    return None if not d else ':'.join([x.rjust(2, '0') for x in str(d).split(':')[:2]])
+    return None if d is None else ':'.join([x.rjust(2, '0') for x in str(d).split(':')[:2]])
 
 
 @login_required
 def days(request):
-    day = data_parse(request.body, {'date': str})[0]
+    day, resource_pk, display_days = data_parse(request.body, {'date': str, 'resource': int, 'displayDays': int}, {'displayDays': 7})
     rows = []
 
     start_time = None
     end_time = None
+    display_days = min(display_days, 21)
 
     date_start = datetime.datetime.strptime(day, '%Y-%m-%d')
-    for i in range(7):
+    for i in range(display_days):
         date = date_start + datetime.timedelta(days=i)
         date_end = date + datetime.timedelta(days=1)
         date_s = datetime.datetime.strftime(date, '%Y-%m-%d')
@@ -39,7 +45,7 @@ def days(request):
             'month': date.month - 1,
             'slots': [],
         }
-        resource = ScheduleResource.objects.filter(executor=request.user.doctorprofile).first()
+        resource = ScheduleResource.objects.filter(pk=resource_pk).first()
         if resource:
             slots = SlotPlan.objects.filter(resource=resource, datetime__gte=date, datetime__lt=date_end).order_by('datetime')
             for s in slots:
@@ -50,10 +56,10 @@ def days(request):
                 hours_duration = int(math.ceil(duration / 60))
                 current_slot_end_time = timedelta(hours=min(slot_datetime.hour + hours_duration, 24))
 
-                if not start_time or start_time > current_slot_time:
+                if start_time is None or start_time > current_slot_time:
                     start_time = current_slot_time
 
-                if not end_time or end_time < current_slot_end_time:
+                if end_time is None or end_time < current_slot_end_time:
                     end_time = current_slot_end_time
 
                 slot_fact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
@@ -109,7 +115,7 @@ def days(request):
                 )
         rows.append(date_data)
 
-    if end_time and end_time >= timedelta(hours=24):
+    if end_time is not None and end_time >= timedelta(hours=24):
         end_time = timedelta(hours=23)
 
     start_calendar_time = delta_to_string(start_time)
@@ -238,3 +244,62 @@ def save_resource(request):
         doc_resource.service.add(r)
     return JsonResponse({"message": "dfdf", "ok": True})
 
+
+@login_required
+def search_resource(request):
+    rows = []
+    q = request.GET.get('query') or ''
+    departments = defaultdict(list)
+    for r in ScheduleResource.objects.filter(executor__fio__istartswith=q)[:15]:
+        departments[r.executor.podrazdeleniye_id].append({"id": r.pk, "label": str(r)})
+    for dep_pk in departments:
+        rows.append(
+            {
+                "id": f"dep-{dep_pk}",
+                "label": Podrazdeleniya.objects.get(pk=dep_pk).get_title(),
+                "children": departments[dep_pk],
+            }
+        )
+    return JsonResponse({"rows": rows})
+
+
+@login_required
+def get_first_user_resource(request):
+    resources = ScheduleResource.objects.filter(executor=request.user.doctorprofile)
+    if resources.exists():
+        options = []
+        departments = defaultdict(list)
+        for r in resources:
+            departments[r.executor.podrazdeleniye_id].append({"id": r.pk, "label": str(r)})
+        for dep_pk in departments:
+            options.append(
+                {
+                    "id": f"dep-{dep_pk}",
+                    "label": Podrazdeleniya.objects.get(pk=dep_pk).get_title(),
+                    "children": departments[dep_pk],
+                }
+            )
+        return JsonResponse({"pk": resources[0].pk, "title": str(resources[0]), "options": options})
+    return JsonResponse({"pk": None, "title": None, "options": []})
+
+
+@login_required
+def create_slots(request):
+    data = data_parse(request.body, {'slots': list, 'sources': list, 'duration': int, 'date': str, 'resource': int})
+    slots: List[str] = data[0]
+    sources: List[str] = data[1]
+    duration: int = data[2]
+    date: str = data[3]
+    resource: int = data[4]
+    with transaction.atomic():
+        for s in slots:
+            time = s.split(' ')[0]
+            datetime_str = f"{date} {time}"
+            dt = try_strptime(datetime_str, formats=('%Y-%m-%d %H:%M',))
+            SlotPlan.objects.create(
+                resource_id=resource,
+                datetime=dt,
+                duration_minutes=duration,
+                available_systems=sources,
+            )
+    return status_response(True)
