@@ -51,6 +51,7 @@ class SlotPlan(models.Model):
         return f"{self.pk} — {self.datetime} {self.duration_minutes} мин, {self.resource}"
 
     class Meta:
+        unique_together = ('id', 'resource',)
         verbose_name = 'Слот'
         verbose_name_plural = 'Слоты'
         ordering = ['-id']
@@ -77,6 +78,7 @@ class SlotFact(models.Model):
         return f"{self.pk} — {self.patient} {self.get_status_display()} {self.plan}"
 
     class Meta:
+        unique_together = ('id', 'plan',)
         verbose_name = 'Запись на слот'
         verbose_name_plural = 'Записи на слоты'
         ordering = ['-id']
