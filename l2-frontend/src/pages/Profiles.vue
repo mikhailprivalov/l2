@@ -314,11 +314,17 @@
               <button :disabled="!valid" @click="save_resource" class="btn btn-blue-nb">Сохранить ресурс</button>
             </div>
           </div>
-          <div v-if="setup_resource" style="padding-top: 25px">
-            <div class="research" :key="row.pk" v-for="row in rows" @click="current_resource_researches(row.pk)">
+          <div v-if="setup_resource" style="padding-top: 30px">
+            <div class="research" :key="row.pk" v-for="row in rows">
               <span v-for="res in row.researches" :key="res.pk" class="t-r">
                 {{ res.title }}
               </span>
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="current_resource_researches(row.pk)">
+                Редактирвоать
+              </button>
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="open_schedule">
+                Расписание
+              </button>
             </div>
           </div>
         </div>
@@ -510,6 +516,9 @@ export default {
     },
   },
   methods: {
+    open_schedule() {
+      window.open('/ui/schedule', '_blank');
+    },
     current_resource_researches(pk) {
       for (const res of this.resource_templates_list) {
         if (pk === res.pk) {
@@ -847,7 +856,7 @@ li.selected {
 }
 
 .sidebar-btn {
-  border-radius: 1px;
+  border-radius: 5px;
 
   &:not(.text-center) {
     text-align: left;
@@ -887,7 +896,6 @@ li.selected {
   padding: 5px;
   margin: 10px;
   border-radius: 4px;
-  cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
@@ -900,11 +908,6 @@ li.selected {
   hr {
   }
 
-  &:hover {
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-    z-index: 1;
-    transform: scale(1.008);
-  }
 }
 
 .research:not(:first-child) {
