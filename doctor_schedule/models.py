@@ -23,6 +23,7 @@ class ScheduleResource(models.Model):
         return f"{self.pk} — {self.executor} — {self.service} {self.room}, {self.department}, {self.speciality}"
 
     class Meta:
+        unique_together = ('id', 'executor',)
         verbose_name = 'Ресурс'
         verbose_name_plural = 'Ресурсы'
         ordering = ['-id']
