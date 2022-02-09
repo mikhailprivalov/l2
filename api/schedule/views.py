@@ -290,7 +290,6 @@ def get_first_user_resource(request):
 def create_slots(request):
     data = data_parse(request.body, {'slots': list, 'sources': list, 'duration': int, 'date': str, 'resource': int})
     slots: List[str] = data[0]
-    print(slots)
     sources: List[str] = data[1]
     duration: int = data[2]
     date: str = data[3]
