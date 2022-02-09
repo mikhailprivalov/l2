@@ -306,7 +306,6 @@ def create_slots(request):
             b1 = try_strptime(f"{date} {ds.start_slot}", formats=('%Y-%m-%d %H:%M',))
             b2 = try_strptime(f"{date} {ds.end_slot}", formats=('%Y-%m-%d %H:%M',))
             # проерка на не пересечение
-            print(a1, a2, b1, b2)
             if not (a1 >= b2 or a2 <= b1):
                 remove_element.append(s)
     for r in remove_element:
@@ -318,7 +317,6 @@ def create_slots(request):
             datetime_str = f"{date} {time}"
             dt = try_strptime(datetime_str, formats=('%Y-%m-%d %H:%M',))
             end_date = dt + relativedelta(minutes=duration)
-            print(dt, " - ", end_date)
             SlotPlan.objects.create(
                 resource_id=resource,
                 datetime=dt,
