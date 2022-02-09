@@ -8,6 +8,7 @@ from directions.models import Napravleniya
 
 
 class ScheduleResource(models.Model):
+    title = models.CharField(max_length=255, default="", help_text='Название ресурса', db_index=True)
     executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, verbose_name='Исполнитель', on_delete=models.SET_NULL)
     service = models.ManyToManyField(Researches, verbose_name='Услуга', db_index=True)  # TODO: может быть несколько
     room = models.ForeignKey(
@@ -41,6 +42,7 @@ class SlotPlan(models.Model):
 
     resource = models.ForeignKey(ScheduleResource, db_index=True, verbose_name='Ресурс', on_delete=models.CASCADE)
     datetime = models.DateTimeField(db_index=True, verbose_name='Дата/время слота')
+    datetime_end = models.DateTimeField(db_index=True, verbose_name='Дата/время окончания слота')
     duration_minutes = models.PositiveSmallIntegerField(verbose_name='Длительность в мин')
     available_systems = ChoiceArrayField(models.CharField(max_length=16, choices=AVAILABLE_RECORDS), verbose_name='Источник записи')
     disabled = models.BooleanField(default=False, blank=True, verbose_name='Не доступно для записи', db_index=True)

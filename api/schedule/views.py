@@ -1,7 +1,10 @@
 from collections import defaultdict
 from typing import List
+
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
 
+from api.schedule.sql_func import get_date_slots
 from clients.models import Card, CardBase
 import math
 import datetime
@@ -290,15 +293,33 @@ def create_slots(request):
     sources: List[str] = data[1]
     duration: int = data[2]
     date: str = data[3]
+    date_start = f"{date} 00:00:00"
+    date_end = f"{date} 23:59:59"
+    date_slots = get_date_slots(date_start, date_end)
+    remove_element = []
+    for s in slots:
+        start_end = s.split(" — ")
+        a1 = try_strptime(f"{date} {start_end[0]}", formats=('%Y-%m-%d %H:%M',))
+        a2 = try_strptime(f"{date} {start_end[1]}", formats=('%Y-%m-%d %H:%M',))
+        for ds in date_slots:
+            b1 = try_strptime(f"{date} {ds.start_slot}", formats=('%Y-%m-%d %H:%M',))
+            b2 = try_strptime(f"{date} {ds.end_slot}", formats=('%Y-%m-%d %H:%M',))
+            # проерка на не пересечение
+            if not (a1 >= b2 or a2 <= b1):
+                remove_element.append(s)
+    for r in remove_element:
+        slots.remove(r)
     resource: int = data[4]
     with transaction.atomic():
         for s in slots:
             time = s.split(' ')[0]
             datetime_str = f"{date} {time}"
             dt = try_strptime(datetime_str, formats=('%Y-%m-%d %H:%M',))
+            end_date = dt + relativedelta(minutes=duration)
             SlotPlan.objects.create(
                 resource_id=resource,
                 datetime=dt,
+                datetime_end=end_date,
                 duration_minutes=duration,
                 available_systems=sources,
             )
