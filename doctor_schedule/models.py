@@ -24,6 +24,7 @@ class ScheduleResource(models.Model):
         return f"{self.pk} — {self.executor} — {', '.join([x.get_title() for x in self.service.all()[:5]])} {self.room}, {self.department}, {self.speciality}"
 
     class Meta:
+        unique_together = ('id', 'executor',)
         verbose_name = 'Ресурс'
         verbose_name_plural = 'Ресурсы'
         ordering = ['-id']
@@ -52,6 +53,7 @@ class SlotPlan(models.Model):
         return f"{self.pk} — {self.datetime} {self.duration_minutes} мин, {self.resource}"
 
     class Meta:
+        unique_together = ('id', 'resource',)
         verbose_name = 'Слот'
         verbose_name_plural = 'Слоты'
         ordering = ['-id']
@@ -78,6 +80,7 @@ class SlotFact(models.Model):
         return f"{self.pk} — {self.patient} {self.get_status_display()} {self.plan}"
 
     class Meta:
+        unique_together = ('id', 'plan',)
         verbose_name = 'Запись на слот'
         verbose_name_plural = 'Записи на слоты'
         ordering = ['-id']
