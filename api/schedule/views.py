@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
 
-from plans.models import LimitDatePlanHospitalization, PlanHospitalization
+from plans.models import PlanHospitalization
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
@@ -340,7 +340,7 @@ def get_limit_plans(research_pk):
         d1 = try_strptime(current_date, formats=('%Y-%m-%d',))
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d1, datetime.time.max)
-        current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status=0, action=0, research_id=research_pk).order_by("exec_at", "research").count()
+        current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status=0, action=0, research_id=research_pk).order_by("exec_at").count()
         date_counts.append({"date": current_date, "max_count": r.max_count, "current_plan_count": current_plan_count})
 
     return JsonResponse({"date_counts": date_counts})
