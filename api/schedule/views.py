@@ -4,7 +4,7 @@ from typing import List
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
 
-from api.schedule.sql_func import get_date_slots
+from api.schedule.sql_func import get_date_slots, limit_plan_hosp_get
 from clients.models import Card, CardBase
 import math
 import datetime
@@ -16,10 +16,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
 
+from plans.models import PlanHospitalization
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
-from laboratory.utils import localtime
+from laboratory.utils import localtime, current_time
 from utils.dates import try_strptime
 from utils.response import status_response
 
@@ -323,4 +324,23 @@ def create_slots(request):
                 duration_minutes=duration,
                 available_systems=sources,
             )
+
     return status_response(True)
+
+
+def get_limit_plans(research_pk):
+    d1 = current_time(only_date=True)
+    d2 = d1 + relativedelta(days=30)
+    start_date = datetime.datetime.combine(d1, datetime.time.min)
+    end_date = datetime.datetime.combine(d2, datetime.time.max)
+    result = limit_plan_hosp_get(start_date, end_date, research_pk)
+    date_counts = []
+    for r in result:
+        current_date = r.date_char
+        d1 = try_strptime(current_date, formats=('%Y-%m-%d',))
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d1, datetime.time.max)
+        current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status=0, action=0, research_id=research_pk).order_by("exec_at").count()
+        date_counts.append({"date": current_date, "max_count": r.max_count, "current_plan_count": current_plan_count})
+
+    return JsonResponse({"date_counts": date_counts})

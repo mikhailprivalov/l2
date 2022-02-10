@@ -1,3 +1,5 @@
+from dateutil.relativedelta import relativedelta
+
 from clients.models import Card
 from django.db import models
 
@@ -193,5 +195,50 @@ class PlanHospitalization(models.Model):
             result = PlanHospitalization.objects.filter(client__pk=data.get('patient_pk')).order_by("exec_at")
         else:
             result = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date)).order_by("pk", "exec_at", "research")
+
+        return result
+
+
+class LimitDatePlanHospitalization(models.Model):
+    research = models.ForeignKey(Researches, null=True, blank=True, db_index=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
+    date = models.DateTimeField(help_text='Дата создания')
+    hospital_department = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
+    max_count = models.SmallIntegerField(default=0, help_text='Квота для планирования', blank=True)
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель плана', on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = 'Лимит на дату плана госпитализации'
+        verbose_name_plural = 'Лимиты плана госпитализация'
+
+    @staticmethod
+    def limit_date_hospitalization_save(data, doc_who_create):
+        research_obj = Researches.objects.get(pk=data['research'])
+        limit_plan_hospitalization = LimitDatePlanHospitalization(
+            research=research_obj,
+            date=datetime.strptime(data['date'], '%Y-%m-%d'),
+            doc_who_create=doc_who_create,
+            hospital_department_id=data['hospital_department_id'],
+            count=data['count'],
+        )
+        limit_plan_hospitalization.save()
+        slog.Log(
+            key=limit_plan_hospitalization.pk,
+            type=80009,
+            body=json.dumps(
+                {
+                    "research": research_obj.title,
+                    "date": data['date'],
+                    "hospital_department_id": data['hospital_department_id'],
+                }
+            ),
+            user=doc_who_create,
+        ).save()
+        return limit_plan_hospitalization.pk
+
+    @staticmethod
+    def limit_plan_hosp_get(research_pk):
+        start_date = current_time()
+        end_date = start_date + relativedelta(days=30)
+        result = LimitDatePlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), research_pk=research_pk).order_by("date")
 
         return result
