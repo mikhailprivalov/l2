@@ -1824,4 +1824,3 @@ def available_hospitalization_plan(request):
 
     result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
     return Response({"data": result})
-
