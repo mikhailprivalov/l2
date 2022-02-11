@@ -104,6 +104,7 @@ class PlanHospitalization(models.Model):
         (0, "Ожидает"),
         (1, "Выполнено"),
         (2, "Отменено"),
+        (3, "Утверждено"),
     )
     ACTION = (
         (0, "Поступление"),
@@ -121,6 +122,7 @@ class PlanHospitalization(models.Model):
     action = models.PositiveSmallIntegerField(choices=ACTION, db_index=True, default=0, blank=True)
     diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True)
     slot_fact = models.ForeignKey(SlotFact, blank=True, null=True, default=None, help_text="Время фактической госпитализации", on_delete=models.SET_NULL)
+    why_cancel = models.CharField(max_length=500, blank=True, default='')
 
     class Meta:
         verbose_name = 'План коечного фонда'

@@ -16,6 +16,7 @@ from django.http import JsonResponse
 from django.db import transaction
 
 from doctor_schedule.sql_func import get_date_slots
+from plans.models import PlanHospitalization
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
@@ -202,11 +203,12 @@ def details(request):
 
 @login_required
 def save(request):
-    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str})
+    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str, 'context': str})
 
     pk: int = data[0]
     card_pk: int = data[1]
     status: str = data[2]
+    context: str = data[3]
 
     s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
 
@@ -223,9 +225,7 @@ def save(request):
 
         slot_fact.patient_id = card_pk
         slot_fact.status = status
-
         slot_fact.save(update_fields=['patient', 'status'])
-
         return status_response(True)
 
     return status_response(False, 'Слот не найден')
