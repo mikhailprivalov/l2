@@ -223,9 +223,7 @@ def save(request):
 
         slot_fact.patient_id = card_pk
         slot_fact.status = status
-
         slot_fact.save(update_fields=['patient', 'status'])
-
         return status_response(True)
 
     return status_response(False, 'Слот не найден')

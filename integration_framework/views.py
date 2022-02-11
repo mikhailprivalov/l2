@@ -1592,6 +1592,12 @@ def hosp_record_list(request):
 
     plan: PlanHospitalization
     for plan in PlanHospitalization.objects.filter(client=card, research__isnull=False, action=0).order_by('-exec_at'):
+        status_description = ""
+        if plan.work_status == 2:
+            status_description = plan.why_cancel
+        if plan.work_status == 3:
+            slot_plan = plan.slot_fact.plan
+            status_description = slot_plan.datetime.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%d.%m.%Y-время %H%M')
         rows.append({
             "pk": plan.pk,
             "service": plan.research.get_title(),
@@ -1599,6 +1605,8 @@ def hosp_record_list(request):
             "phone": plan.phone,
             "diagnosis": plan.diagnos,
             "comment": plan.comment,
+            "status": plan.get_work_status_display(),
+            "status_description": status_description
         })
 
     return Response({"rows": rows})
