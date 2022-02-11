@@ -4,6 +4,7 @@ import logging
 
 import pytz
 from api.views import mkb10_dict
+from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans
 
 from laboratory import settings
 from plans.models import PlanHospitalization
@@ -1806,3 +1807,21 @@ def check_employee(request):
     if doctor_profile:
         return Response({"ok": True})
     return Response({"ok": False})
+
+
+@api_view(['POST'])
+def hospitalization_plan_research(request):
+    return get_hospital_resource()
+
+
+@api_view(['POST'])
+def available_hospitalization_plan(request):
+    data = json.loads(request.body)
+    research_pk = data.get('research_pk')
+    resource_id = data.get('resource_id')
+    date_start = data.get('date_start', None)
+    date_end = data.get('date_end', None)
+
+    result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
+    return Response({"data": result})
+

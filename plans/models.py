@@ -4,6 +4,7 @@ from clients.models import Card
 from django.db import models
 
 from directory.models import Researches
+from doctor_schedule.models import SlotFact
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from datetime import datetime
@@ -119,6 +120,7 @@ class PlanHospitalization(models.Model):
     hospital_department = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
     action = models.PositiveSmallIntegerField(choices=ACTION, db_index=True, default=0, blank=True)
     diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True)
+    slot_fact = models.ForeignKey(SlotFact, blank=True, null=True, default=None, help_text="Время фактической госпитализации", on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'План коечного фонда'
@@ -201,7 +203,7 @@ class PlanHospitalization(models.Model):
 
 class LimitDatePlanHospitalization(models.Model):
     research = models.ForeignKey(Researches, null=True, blank=True, db_index=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
-    date = models.DateTimeField(help_text='Дата создания')
+    date = models.DateTimeField(help_text='Планируемая дата госпитализации')
     hospital_department = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
     max_count = models.SmallIntegerField(default=0, help_text='Квота для планирования', blank=True)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель плана', on_delete=models.SET_NULL)
