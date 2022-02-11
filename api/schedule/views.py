@@ -203,12 +203,11 @@ def details(request):
 
 @login_required
 def save(request):
-    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str, 'context': str})
+    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str})
 
     pk: int = data[0]
     card_pk: int = data[1]
     status: str = data[2]
-    context: str = data[3]
 
     s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
 
