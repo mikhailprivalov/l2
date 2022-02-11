@@ -1810,7 +1810,7 @@ def check_employee(request):
 
 
 @api_view(['POST'])
-def hospitalization_plan_research(request):
+def hospitalization_plan_researches(request):
     return get_hospital_resource()
 
 
@@ -1821,7 +1821,5 @@ def available_hospitalization_plan(request):
     resource_id = data.get('resource_id')
     date_start = data.get('date_start', None)
     date_end = data.get('date_end', None)
-
     result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
     return Response({"data": result})
-
