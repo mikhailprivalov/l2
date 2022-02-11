@@ -857,7 +857,6 @@ def table_part_result(value):
         for value_raw in t:
             try:
                 row_data = json.loads(value_raw)
-                print(row_data)
                 if row_data.get('fio', None):
                     result = f"{row_data.get('family')} {row_data.get('name')} {row_data.get('patronymic')}"
                 if row_data.get('id', None):
@@ -866,7 +865,6 @@ def table_part_result(value):
                     result = f"{result} ({position})"
             except:
                 result = value_raw
-            print(result)
             temp_data.append(Paragraph(f"{result}", style))
         opinion.append(temp_data)
 

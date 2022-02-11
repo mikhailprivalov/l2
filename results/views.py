@@ -1060,7 +1060,7 @@ def result_print(request):
                     fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
 
                 fwb.append(Spacer(1, 3 * mm))
-                if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result:
+                if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result and not iss.research.is_form:
                     if iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
                     else:
@@ -1068,7 +1068,7 @@ def result_print(request):
                             fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
 
-                if not iss.research.has_own_form_result:
+                if not iss.research.has_own_form_result and not iss.research.is_form:
                     if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                         fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                     else:
