@@ -16,7 +16,6 @@ from django.http import JsonResponse
 from django.db import transaction
 
 from doctor_schedule.sql_func import get_date_slots
-from plans.models import PlanHospitalization
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
