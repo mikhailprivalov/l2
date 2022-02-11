@@ -1226,26 +1226,35 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
         ws1.cell(row=r, column=2).value = i.hosp_title
         ws1.cell(row=r, column=3).value = i.hosp_ogrn
         ws1.cell(row=r, column=4).value = i.date_create
-        ws1.cell(row=r, column=5).value = "A26.08.027.001"
-        ws1.cell(row=r, column=6).value = "Определение РНК коронавируса ТОРС (SARS-cov) в мазках со слизистой оболочки носоглотки методом ПЦР"
         ws1.cell(row=r, column=7).value = ""
         ws1.cell(row=r, column=8).value = i.date_reciev
         ws1.cell(row=r, column=9).value = i.date_confirm
-        if i.value == "Положительный":           # Результаты – «отрицательный»  цифра 0, «положительный»  1
-         ws1.cell(row=r, column=10).value = 1
+        st = i.value
+        if st.find(".") != -1:
+            ws1.cell(row=r, column=5).value = "А26.06.0050.003"
+            ws1.cell(row=r, column=6).value = "Иммуноферментный анализ на наличие антител Ig G к  SARS-CoV-2 количественный"
+            if float(st)>10:
+                ws1.cell(row=r, column=10).value = 1
+            else:
+                ws1.cell(row=r, column=10).value = 0
         else:
-         ws1.cell(row=r, column=10).value = 0
-
+            ws1.cell(row=r, column=5).value = "A26.08.027.001"
+            ws1.cell(row=r, column=6).value = "Определение РНК коронавируса ТОРС (SARS-cov) в мазках со слизистой оболочки носоглотки методом ПЦР"      
+            if st == "Положительный":           
+                ws1.cell(row=r, column=10).value = 1
+            if st == "Отрицательный":
+                ws1.cell(row=r, column=10).value = 0
+            
         ws1.cell(row=r, column=11).value = ""
-        ws1.cell(row=r, column=12).value = ""
         ws1.cell(row=r, column=13).value = i.family
         ws1.cell(row=r, column=14).value = i.name
         ws1.cell(row=r, column=15).value = i.patronymic
         if i.sex == "м":
-         ws1.cell(row=r, column=16).value = 1    #Пол – мужской  1, женский  2
+            ws1.cell(row=r, column=16).value = 1    
         else:
-         ws1.cell(row=r, column=16).value = 2
-         ws1.cell(row=r, column=17).value = i.born
+            ws1.cell(row=r, column=16).value = 2
+            
+        ws1.cell(row=r, column=17).value = i.born
         ws1.cell(row=r, column=18).value = ""
         ws1.cell(row=r, column=19).value = ""
 
@@ -1258,18 +1267,21 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
                         snils = v
                     elif k == "полис":
                         polis = v
-                   elif k in ["Паспорт гражданина РФ", "рождение"]: # Паспорт изменён на Паспорт гражданина РФ
+                    elif k in ["паспорт", "рождение"]:
                         type = k
                         data = v.split("@")
                         serial = data[0]
                         number = data[1]
+
+        if type == "паспорт":
+            type = "Паспорт гражданина РФ"     
         ws1.cell(row=r, column=20).value = type
-        ws1.cell(row=r, column=21).value = number  #  Серия и номер поменял местами
+        ws1.cell(row=r, column=21).value = number  
         ws1.cell(row=r, column=22).value = serial   
 
         ws1.cell(row=r, column=23).value = snils
         ws1.cell(row=r, column=24).value = polis
-        ws1.cell(row=r, column=25).value = "иркутская область" # Добаил В Адрес регистрации регион
+        ws1.cell(row=r, column=25).value = "иркутская область" 
         ws1.cell(row=r, column=39).value = i.hosp_title
         ws1.cell(row=r, column=40).value = i.hosp_ogrn
 
