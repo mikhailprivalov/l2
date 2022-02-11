@@ -349,6 +349,8 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_BROKER_URL = 'redis://localhost:6379/4'
 CELERY_RESULT_BACKEND = 'django-db'
 
+FORWARD_DAYS_SCHEDULE = -1
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

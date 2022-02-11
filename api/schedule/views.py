@@ -4,7 +4,6 @@ from typing import List
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
 
-from api.schedule.sql_func import get_date_slots, limit_plan_hosp_get
 from clients.models import Card, CardBase
 import math
 import datetime
@@ -16,11 +15,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
 
-from plans.models import PlanHospitalization
+from doctor_schedule.sql_func import get_date_slots
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
-from laboratory.utils import localtime, current_time
+from laboratory.utils import localtime
 from utils.dates import try_strptime
 from utils.response import status_response
 
@@ -294,9 +293,10 @@ def create_slots(request):
     sources: List[str] = data[1]
     duration: int = data[2]
     date: str = data[3]
+    resource: int = data[4]
     date_start = f"{date} 00:00:00"
     date_end = f"{date} 23:59:59"
-    date_slots = get_date_slots(date_start, date_end)
+    date_slots = get_date_slots(date_start, date_end, resource)
     remove_element = []
     for s in slots:
         start_end = s.split(" — ")
@@ -310,7 +310,7 @@ def create_slots(request):
                 remove_element.append(s)
     for r in remove_element:
         slots.remove(r)
-    resource: int = data[4]
+
     with transaction.atomic():
         for s in slots:
             time = s.split(' ')[0]
@@ -326,21 +326,3 @@ def create_slots(request):
             )
 
     return status_response(True)
-
-
-def get_limit_plans(research_pk):
-    d1 = current_time(only_date=True)
-    d2 = d1 + relativedelta(days=30)
-    start_date = datetime.datetime.combine(d1, datetime.time.min)
-    end_date = datetime.datetime.combine(d2, datetime.time.max)
-    result = limit_plan_hosp_get(start_date, end_date, research_pk)
-    date_counts = []
-    for r in result:
-        current_date = r.date_char
-        d1 = try_strptime(current_date, formats=('%Y-%m-%d',))
-        start_date = datetime.datetime.combine(d1, datetime.time.min)
-        end_date = datetime.datetime.combine(d1, datetime.time.max)
-        current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status=0, action=0, research_id=research_pk).order_by("exec_at").count()
-        date_counts.append({"date": current_date, "max_count": r.max_count, "current_plan_count": current_plan_count})
-
-    return JsonResponse({"date_counts": date_counts})

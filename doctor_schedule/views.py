@@ -1,0 +1,63 @@
+import datetime
+from dateutil.relativedelta import relativedelta
+
+from laboratory.utils import current_time
+from doctor_schedule.sql_func import get_resource_by_research_hospital, get_slot_plan_by_hosp_research
+from laboratory.settings import FORWARD_DAYS_SCHEDULE
+from plans.models import PlanHospitalization
+from utils.dates import try_strptime
+
+
+def get_hospital_resource():
+    hospital_resource = get_resource_by_research_hospital()
+    hospital_resource_pk = [i.scheduleresource_id for i in hospital_resource]
+    resource_researches = {}
+    for i in hospital_resource:
+        if not resource_researches.get(i.scheduleresource_id, None):
+            resource_researches[i.scheduleresource_id] = {"researches_id": i.researches_id, "title": i.title, "short_title": i.short_title}
+
+    d1 = current_time(only_date=True)
+    d2 = d1 + relativedelta(days=FORWARD_DAYS_SCHEDULE)
+    date_start = datetime.datetime.combine(d1, datetime.time.min)
+    date_end = datetime.datetime.combine(d2, datetime.time.max)
+    slot_plan_for_hospital = get_slot_plan_by_hosp_research(date_start, date_end, tuple(hospital_resource_pk))
+    resource_has_slot = set([sl.resource_id for sl in slot_plan_for_hospital])
+    final_hosp_researches_has_slot = []
+    for rslot in resource_has_slot:
+        if resource_researches.get(rslot):
+            temp_data = resource_researches.get(rslot)
+            temp_data["resource_id"] = rslot
+            final_hosp_researches_has_slot.append(temp_data.copy())
+
+    return final_hosp_researches_has_slot
+
+
+def get_available_hospital_plans(research_pk, resource_id, date_start=None, date_end=None):
+    if date_start and date_end:
+        d1 = try_strptime(f"{date_start}", formats=('%Y-%m-%d',))
+        d2 = try_strptime(f"{date_end}", formats=('%Y-%m-%d',))
+    else:
+        d1 = current_time(only_date=True)
+        d2 = d1 + relativedelta(days=30)
+
+    start_date = datetime.datetime.combine(d1, datetime.time.min)
+    end_date = datetime.datetime.combine(d2, datetime.time.max)
+    result_slot = get_slot_plan_by_hosp_research(start_date, end_date, tuple(resource_id))
+    date_slots = {}
+    for rslots in result_slot:
+        if not date_slots.get(rslots.date_char, None):
+            date_slots[rslots.date_char] = [rslots.datetime]
+        else:
+            temp_date_slots = date_slots.get(rslots.date_char, None)
+            temp_date_slots.append(rslots.datetime)
+            date_slots[rslots.date_char] = temp_date_slots.copy()
+
+    date_counts = {}
+    for current_date, slots_in_date in date_slots.items():
+        d1 = try_strptime(current_date, formats=('%Y-%m-%d',))
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d1, datetime.time.max)
+        current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status=0, action=0, research_id=research_pk).order_by("exec_at").count()
+        date_counts[current_date] = len(slots_in_date) > current_plan_count
+
+    return date_counts
