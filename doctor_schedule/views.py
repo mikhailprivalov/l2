@@ -43,9 +43,16 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
         d2 = d1 + relativedelta(days=30)
 
     if resource_id is None:
-        resource_id = ScheduleResource.objects.filter(service_id=research_pk).values_list('pk', flat=True)
+        resource_id = tuple(ScheduleResource.objects.filter(service__in=[research_pk]).values_list('pk', flat=True))
+    elif isinstance(resource_id, tuple):
+        resource_id = resource_id
+    elif isinstance(resource_id, list):
+        resource_id = tuple(resource_id)
     else:
-        resource_id = [resource_id]
+        resource_id = tuple([resource_id])
+
+    if not resource_id:
+        return {}
 
     start_date = datetime.datetime.combine(d1, datetime.time.min)
     end_date = datetime.datetime.combine(d2, datetime.time.max)
