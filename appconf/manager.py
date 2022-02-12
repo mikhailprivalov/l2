@@ -124,6 +124,7 @@ class SettingManager:
                     "l2vi",
                     "morfology_additional",
                     "some_links",
+                    "without_lab_and_paraclinic"
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

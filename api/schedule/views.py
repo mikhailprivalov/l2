@@ -16,6 +16,7 @@ from django.http import JsonResponse
 from django.db import transaction
 
 from doctor_schedule.sql_func import get_date_slots
+from doctor_schedule.views import get_available_hospital_resource_slot
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
@@ -324,3 +325,13 @@ def create_slots(request):
             )
 
     return status_response(True)
+
+
+@login_required
+def available_slots(request):
+    data = data_parse(request.body, {'research_pk': int, 'date_start': str, 'date_end': str})
+    research_pk: int = data[0]
+    date_start: str = data[1]
+    date_end: str = data[2]
+    result = get_available_hospital_resource_slot(research_pk, date_start, date_end)
+    return JsonResponse({"result": result})

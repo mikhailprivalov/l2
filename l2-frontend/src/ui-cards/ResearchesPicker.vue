@@ -382,7 +382,7 @@ export default {
           && (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk, 10)))
           && (!this.l2_only_doc_call || row.pk === '4' || row.pk === '14')
           && (!this.$asVI() || row.pk !== '2')
-          && row.pk !== '13',
+          && row.pk !== '13' && (!this.l2_without_lab_and_paraclinic || (row.pk !== '2' && row.pk !== '3')),
       );
 
       if (this.typesOnly && this.typesOnly.length > 0) {

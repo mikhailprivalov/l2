@@ -1597,7 +1597,7 @@ def hosp_record_list(request):
             status_description = plan.why_cancel
         if plan.work_status == 3:
             slot_plan = plan.slot_fact.plan
-            status_description = slot_plan.datetime.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%d.%m.%Y-время %H%M')
+            status_description = slot_plan.datetime.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
         rows.append({
             "pk": plan.pk,
             "service": plan.research.get_title(),
