@@ -99,7 +99,6 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
                 temp_slot_resource_date[slotplan.date_char] = temp_slot_resource_data.copy()
             temp_data_slot_resource[slotplan.resource_id] = temp_slot_resource_date.copy()
 
-
     for k, v in temp_data_slot_resource.items():
         for date, slots in v.items():
             temp_data = data.get(date)
