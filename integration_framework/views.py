@@ -1817,9 +1817,9 @@ def check_employee(request):
     return Response({"ok": False})
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 def hospitalization_plan_research(request):
-    return get_hospital_resource()
+    return Response({"services": get_hospital_resource()})
 
 
 @api_view(['POST'])
