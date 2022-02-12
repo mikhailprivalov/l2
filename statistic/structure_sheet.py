@@ -1501,6 +1501,7 @@ def statistic_screening_month_data(ws1, data, month, year, style_border_res):
         ('Тяжелое интраэпителиальное поражение CIN II-III, III', size),
         ('cr in situ', size),
         ('Подозрение на ЗНО шейки матки', size),
+        ('Всего по Папа-Николау', size),
     ]
 
     for idx, column in enumerate(columns, 1):
@@ -1556,6 +1557,9 @@ def statistic_screening_month_data(ws1, data, month, year, style_border_res):
         if k == "pass_pap_cr_in_situ_result_value":
             ws1.cell(row=6, column=17).value = v
             ws1.cell(row=6, column=17).style = style_border_res
+        if k == "count_pap_analysys":
+            ws1.cell(row=6, column=18).value = v
+            ws1.cell(row=6, column=18).style = style_border_res
 
     return ws1
 
