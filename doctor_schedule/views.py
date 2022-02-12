@@ -73,7 +73,7 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
     resource_hosp = get_hospital_resource_by_research(research_pk)
     structure_resource = {rh.scheduleresource_id: rh.resource_title for rh in resource_hosp}
 
-    resource_tuple = tuple([i.scheduleresource_id for i in resource_hosp])
+    resource_tuple = tuple(structure_resource.keys())
     slot_plans = get_date_slots_for_many_resource(start_date, end_date, resource_tuple)
     slot_plan_pks = tuple([slplan.slot_id for slplan in slot_plans])
     slot_plan_busy_slot_fact = get_slot_fact(slot_plan_pks)
@@ -82,6 +82,7 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
     dates = set([slotplan.date_char for slotplan in slot_plans])
     for d in dates:
         data[d] = []
+
     temp_data_slot_resource = {}
     for slotplan in slot_plans:
         if slotplan.slot_id in slot_plan_busy_slot_fact:
@@ -97,6 +98,7 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
                 temp_slot_resource_data.append({"pk": slotplan.slot_id, "title": f"{slotplan.start_slot} - {slotplan.end_slot}"})
                 temp_slot_resource_date[slotplan.date_char] = temp_slot_resource_data.copy()
             temp_data_slot_resource[slotplan.resource_id] = temp_slot_resource_date.copy()
+
 
     for k, v in temp_data_slot_resource.items():
         for date, slots in v.items():
