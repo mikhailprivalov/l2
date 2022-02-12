@@ -1,5 +1,6 @@
 import datetime
 from dateutil.relativedelta import relativedelta
+from doctor_schedule.models import ScheduleResource
 
 from laboratory.utils import current_time
 from doctor_schedule.sql_func import get_resource_by_research_hospital, get_slot_plan_by_hosp_resource, get_hospital_resource_by_research, get_slot_fact
@@ -33,7 +34,7 @@ def get_hospital_resource():
     return final_hosp_researches_has_slot
 
 
-def get_available_hospital_plans(research_pk, resource_id, date_start=None, date_end=None):
+def get_available_hospital_plans(research_pk, resource_id=None, date_start=None, date_end=None):
     if date_start and date_end:
         d1 = try_strptime(f"{date_start}", formats=('%Y-%m-%d',))
         d2 = try_strptime(f"{date_end}", formats=('%Y-%m-%d',))
@@ -41,9 +42,14 @@ def get_available_hospital_plans(research_pk, resource_id, date_start=None, date
         d1 = current_time(only_date=True)
         d2 = d1 + relativedelta(days=30)
 
+    if resource_id is None:
+        resource_id = ScheduleResource.objects.filter(service_id=research_pk).values_list('pk', flat=True)
+    else:
+        resource_id = [resource_id]
+
     start_date = datetime.datetime.combine(d1, datetime.time.min)
     end_date = datetime.datetime.combine(d2, datetime.time.max)
-    result_slot = get_slot_plan_by_hosp_resource(start_date, end_date, tuple(resource_id))
+    result_slot = get_slot_plan_by_hosp_resource(start_date, end_date, resource_id)
     date_slots = {}
     for rslots in result_slot:
         if not date_slots.get(rslots.date_char, None):

@@ -1827,8 +1827,8 @@ def available_hospitalization_plan(request):
     data = json.loads(request.body)
     research_pk = data.get('research_pk')
     resource_id = data.get('resource_id')
-    date_start = data.get('date_start', None)
-    date_end = data.get('date_end', None)
+    date_start = data.get('date_start')
+    date_end = data.get('date_end')
 
     result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
     return Response({"data": result})
