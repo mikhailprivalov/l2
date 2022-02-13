@@ -3,43 +3,31 @@
     <h3>{{ title }}</h3>
     <Filters :filters="filters" :departments="departments" />
     <div class="buttons">
-      <button class="btn btn-blue-nb" @click="load_data">
-        Обновить
-      </button>
+      <button class="btn btn-blue-nb" @click="load_data">Обновить</button>
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
         <col width="85" />
         <col />
-        <col width="135" />
-        <col width="115" />
-        <col width="170" />
+        <col width="180" />
         <col width="170" />
         <col width="150" />
-        <col width="95"  />
+        <col width="170" />
       </colgroup>
       <thead>
         <tr>
           <th>Дата</th>
           <th>Пациент</th>
-          <th>Телефон</th>
-          <th>Профиль</th>
-          <th>Отделение</th>
+          <th>Профиль, отделение</th>
           <th>Диагноз</th>
-          <th>Прим</th>
+          <th>Примечания</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        <Row
-          :data="row"
-          :key="row.pk_plan"
-          v-for="row in data"
-          v-tippy="{ placement: 'top', arrow: true, interactive: true, theme: 'dark longread' }"
-          :title="row.tooltip_data"
-        />
+        <Row :data="row" :key="row.pk_plan" v-for="row in data" />
         <tr v-if="data.length === 0">
-          <td colspan="8" style="text-align: center">нет данных</td>
+          <td colspan="7" style="text-align: center">нет данных</td>
         </tr>
       </tbody>
     </table>
@@ -67,12 +55,7 @@ import * as actions from '../../store/action-types';
       data: [],
       departments: [],
       filters: {
-        date: [
-          moment().format('DD.MM.YYYY'),
-          moment()
-            .add(7, 'days')
-            .format('DD.MM.YYYY'),
-        ],
+        date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')],
         department_pk: -1,
       },
     };

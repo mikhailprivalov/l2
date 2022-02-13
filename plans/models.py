@@ -166,6 +166,7 @@ class PlanHospitalization(models.Model):
         plan_hosp = PlanHospitalization.objects.get(pk=data['pk_plan'])
         plan_hosp.doc_who_create = doc_who_create
         if data["status"] == 2:
+            plan_hosp.why_cancel = data.get('cancelReason') or ''
             if plan_hosp.work_status == 2:
                 plan_hosp.work_status = 0
             else:
