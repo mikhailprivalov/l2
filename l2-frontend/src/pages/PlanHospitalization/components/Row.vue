@@ -16,8 +16,12 @@
     </td>
     <td v-tippy="vtp" :title="data.tooltip_data" class="td-comment">{{ data.comment }}</td>
     <td>
-      <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="hosp_record">Записать на время</button>
-      <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="cancelModal = true">Отмена</button>
+      <template v-if="!data.canceled">
+        <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="hosp_record">
+          Записать на время
+        </button>
+        <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="cancelModal = true">Отмена</button>
+      </template>
     </td>
     <MountingPortal mountTo="#portal-place-modal" :name="`PlanCancel_${data.pk_plan}`" append>
       <transition name="fade">
