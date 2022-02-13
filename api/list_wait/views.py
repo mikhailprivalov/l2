@@ -83,7 +83,7 @@ def actual_rows(request):
     plan_hosp = list(
         PlanHospitalization.objects.filter(client_id=card_pk, exec_at__gte=date_from, action=0)
         .order_by('exec_at', 'pk')
-        .values('pk', 'exec_at', 'research__title', 'comment', 'work_status', 'phone', 'diagnos', 'hospital_department__title')
+        .values('pk', 'exec_at', 'research_id', 'research__title', 'comment', 'work_status', 'phone', 'diagnos', 'hospital_department__title')
     )
 
     rows.extend(plan_hosp)

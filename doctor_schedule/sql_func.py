@@ -94,6 +94,8 @@ def get_hospital_resource_by_research(research_pk):
 
 
 def get_slot_fact(plan_pk_tuple):
+    if not plan_pk_tuple:
+        return []
     with connection.cursor() as cursor:
         cursor.execute(
             """

@@ -106,6 +106,10 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
     d2 = try_strptime(f"{date_end}", formats=('%Y-%m-%d',))
     start_date = datetime.datetime.combine(d1, datetime.time.min)
     end_date = datetime.datetime.combine(d2, datetime.time.max)
+    result = {"dates": {}}
+
+    if end_date < datetime.datetime.combine(try_strptime(current_time().strftime("%Y-%m-%d"), formats=('%Y-%m-%d',)), datetime.time.max):
+        return result
 
     resource_hosp = get_hospital_resource_by_research(research_pk)
     structure_resource = {rh.scheduleresource_id: rh.resource_title for rh in resource_hosp}
@@ -114,7 +118,6 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
     slot_plans = get_date_slots_for_many_resource(start_date, end_date, resource_tuple)
     slot_plan_pks = tuple([slplan.slot_id for slplan in slot_plans])
     slot_plan_busy_slot_fact = get_slot_fact(slot_plan_pks)
-    result = {"dates": {}}
     data = result["dates"]
     dates = set([slotplan.date_char for slotplan in slot_plans])
     for d in dates:
@@ -142,3 +145,33 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
             temp_data.append({"resourcePk": k, "resourceTitle": structure_resource.get(k, ""), "slots": slots})
             data[date] = temp_data.copy()
     return result
+
+
+def get_available_slots_of_dates(research_pk, date_start, date_end):
+    d1 = try_strptime(f"{date_start}", formats=('%Y-%m-%d',))
+    d2 = try_strptime(f"{date_end}", formats=('%Y-%m-%d',))
+    current_date = try_strptime(current_time().strftime("%Y-%m-%d"), formats=('%Y-%m-%d',))
+    start_date = datetime.datetime.combine(d1, datetime.time.min)
+    end_date = datetime.datetime.combine(d2, datetime.time.max)
+
+    if end_date < datetime.datetime.combine(current_date, datetime.time.max):
+        return {}
+
+    if start_date < datetime.datetime.combine(current_date, datetime.time.min):
+        start_date = datetime.datetime.combine(current_date, datetime.time.min) + datetime.timedelta(days=1)
+
+    resource_hosp = get_hospital_resource_by_research(research_pk)
+    structure_resource = {rh.scheduleresource_id: rh.resource_title for rh in resource_hosp}
+
+    resource_tuple = tuple(structure_resource.keys())
+    slot_plans = get_date_slots_for_many_resource(start_date, end_date, resource_tuple)
+    slot_plan_pks = tuple([slplan.slot_id for slplan in slot_plans])
+    slot_plan_busy_slot_fact = get_slot_fact(slot_plan_pks)
+    data = {}
+
+    for slotplan in slot_plans:
+        if slotplan.slot_id in slot_plan_busy_slot_fact or slotplan.date_char in data:
+            continue
+        data[slotplan.date_char] = True
+
+    return data

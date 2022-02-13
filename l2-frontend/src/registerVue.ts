@@ -62,6 +62,7 @@ export default (): void => {
   Vue.filter('pluralRecords', (amount) => `${amount} ${plural(amount, 'запись', 'записи', 'записей')}`);
   Vue.filter('pluralCount', (amount) => `${amount} ${plural(amount, 'штука', 'штуки', 'штук')}`);
   Vue.filter('formatDate', (s) => moment(s).format('DD.MM.YYYY'));
+  Vue.filter('formatDateShort', (s) => moment(s).format('DD.MM'));
 
   Vue.directive('click-outside', {
     bind(el, binding, vnode) {

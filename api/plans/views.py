@@ -152,12 +152,14 @@ def get_plan_hospitalization_by_params(request):
                 "fio_patient": data_patient,
                 "phone": i.phone,
                 "research_title": i.research_title,
+                "research_id": i.research_id,
                 "depart_title": i.depart_title,
                 "diagnos":i.diagnos,
                 "tooltip_data": '\n'.join(tooltip_data),
                 "sex": i.sex,
                 "comment": i.comment,
-                "canceled": i.work_status == 2
+                "canceled": i.work_status == 2,
+                "status": i.work_status,
             }
         )
         if i.sex.lower() == "ж":

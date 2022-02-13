@@ -1500,6 +1500,12 @@ def hosp_record(request):
     phone: str = data[10]
     diagnosis: str = data[11]
 
+    if sex == 'm':
+        sex = 'м'
+
+    if sex == 'f':
+        sex = 'ж'
+
     snils = ''.join(ch for ch in snils if ch.isdigit())
 
     individual = None

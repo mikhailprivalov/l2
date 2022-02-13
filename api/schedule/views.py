@@ -16,7 +16,8 @@ from django.http import JsonResponse
 from django.db import transaction
 
 from doctor_schedule.sql_func import get_date_slots
-from doctor_schedule.views import get_available_hospital_plans, get_available_hospital_resource_slot, check_available_hospital_slot_before_save
+from doctor_schedule.views import get_available_hospital_plans, get_available_hospital_resource_slot, check_available_hospital_slot_before_save, get_available_slots_of_dates
+from plans.models import PlanHospitalization
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
@@ -78,7 +79,7 @@ def days(request):
                     status = {
                         0: 'reserved',
                         1: 'cancelled',
-                        2: 'succes',
+                        2: 'success',
                     }[slot_fact.status]
 
                     if slot_fact.patient:
@@ -159,7 +160,7 @@ def details(request):
             status = {
                 0: 'reserved',
                 1: 'cancelled',
-                2: 'succes',
+                2: 'success',
             }[slot_fact.status]
 
             if slot_fact.patient:
@@ -203,11 +204,13 @@ def details(request):
 
 @login_required
 def save(request):
-    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str})
+    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int}, {'planId': None, 'serviceId': None, 'status': 'reserved'})
 
     pk: int = data[0]
     card_pk: int = data[1]
     status: str = data[2]
+    plan_id: int = data[3]
+    service_id: int = data[4]
 
     s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
 
@@ -215,7 +218,7 @@ def save(request):
         status = {
             'reserved': 0,
             'cancelled': 1,
-            'succes': 2,
+            'success': 2,
         }.get(status, 0)
         slot_fact: SlotFact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
 
@@ -224,7 +227,13 @@ def save(request):
 
         slot_fact.patient_id = card_pk
         slot_fact.status = status
-        slot_fact.save(update_fields=['patient', 'status'])
+        slot_fact.service_id = service_id
+        slot_fact.save(update_fields=['patient', 'status', 'service_id'])
+        if plan_id:
+            ph: PlanHospitalization = PlanHospitalization.objects.get(pk=plan_id)
+            ph.slot_fact = slot_fact
+            ph.work_status = 3
+            ph.save()
         return status_response(True)
 
     return status_response(False, 'Слот не найден')
@@ -366,3 +375,13 @@ def check_hosp_slot_before_save(request):
     date = data[2]
     result = check_available_hospital_slot_before_save(research_pk, resource_id, date)
     return JsonResponse({"result": result})
+
+
+@login_required
+def available_slots_of_dates(request):
+    data = data_parse(request.body, {'research_pk': int, 'date_start': str, 'date_end': str})
+    research_pk = data[0]
+    date_start = data[1]
+    date_end = data[2]
+    result = get_available_slots_of_dates(research_pk, date_start, date_end)
+    return JsonResponse({"data": result})

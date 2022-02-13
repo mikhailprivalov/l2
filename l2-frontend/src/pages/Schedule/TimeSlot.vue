@@ -5,12 +5,13 @@
     :style="mode === 'list' ? '' : `top: ${offset}; min-height: ${minHeight};`"
   >
     <div class="slot-inner" @click="open">
-      <div v-if="data.patient" class="patient-row">{{ data.patient.fio }}</div>
-      <div v-if="data.service" class="service-row">{{ data.service.title }}</div>
-      <div class="param-row">
-        <span v-if="mode === 'list'">{{ smallTime(data.time) }}</span>
+      <div class="param-row" v-if="mode === 'list'">
+        <span>{{ smallTime(data.time) }}</span>
         <i class="far fa-circle"></i> {{ data.duration }} мин
       </div>
+      <div v-if="data.patient" class="patient-row">{{ data.patient.fio }}</div>
+      <div v-if="data.service" class="service-row">{{ data.service.title }}</div>
+      <div class="param-row" v-if="mode !== 'list'"><i class="far fa-circle"></i> {{ data.duration }} мин</div>
     </div>
 
     <MountingPortal mountTo="#portal-place-modal" :name="`TimeSlotPopup-${smallTime(data.time)}—${data.date}`" append>
@@ -185,7 +186,10 @@ $slot-padding: 1px;
 }
 
 .patient-row + .param-row,
-.service-row + .param-row {
+.service-row + .param-row,
+.param-row + .param-row,
+.param-row + .patient-row,
+.param-row + .service-row {
   margin-top: 2px;
   border-top: 1px solid #bbb;
 }
@@ -231,7 +235,7 @@ $slot-padding: 1px;
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 
   &-list {
-    min-height: $slot-minimal-height * 3;
+    min-height: 45px;
     margin-bottom: 3px;
     position: relative;
   }
@@ -248,6 +252,13 @@ $slot-padding: 1px;
     .service-row,
     .param-row {
       white-space: unset;
+    }
+
+    .slot-inner {
+      border: 1px solid rgb(176, 176, 176);
+      background: linear-gradient(to bottom, #dddddd 0%, #cccccc 100%);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      bottom: unset;
     }
   }
 }

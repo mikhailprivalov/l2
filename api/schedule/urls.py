@@ -13,4 +13,5 @@ urlpatterns = [
     path('available-slots', views.available_slots),
     path('available-hospitalization-plan', views.available_hospitalization_plan),
     path('check-hosp-slot-before-save', views.check_hosp_slot_before_save),
+    path('available-slots-of-dates', views.available_slots_of_dates),
 ]
