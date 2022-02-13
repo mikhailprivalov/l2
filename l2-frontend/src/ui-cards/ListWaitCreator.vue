@@ -14,9 +14,22 @@
       <div class="form-row sm-header">
         {{ hasOnlyHosp ? 'Данные записи на госпитализацию' : 'Данные для листа ожидания' }}
       </div>
-      <div class="form-row sm-f">
+      <div class="form-row sm-f" v-if="!hasOnlyHosp">
         <div class="row-t">Дата</div>
         <input class="form-control" type="date" v-model="date" :min="td" />
+      </div>
+      <div v-else class="form-row sm-f">
+        <div class="row-t">Дата госпитализации</div>
+        <DatePicker
+          v-model="date"
+          mode="date"
+          :available-dates="availableDates"
+          :masks="masks"
+          :model-config="modelConfig"
+          trim-weeks
+          is-dark
+          color="teal"
+        />
       </div>
       <div class="form-row sm-f" v-if="hasOnlyHosp">
         <div class="row-t">Отделение</div>
@@ -40,9 +53,7 @@
         <textarea class="form-control" v-model="comment"></textarea>
       </div>
       <template v-if="researches.length > 0">
-        <div class="form-row sm-header">
-          Услуги
-        </div>
+        <div class="form-row sm-header">Услуги</div>
         <div class="researches">
           <research-display
             v-for="(res, idx) in disp_researches"
@@ -55,6 +66,7 @@
             :nof="disp_researches.length"
           />
         </div>
+        <div v-if="!validDate" class="alert alert-warning">Выбранная дата недоступна для записи на госпитализацию</div>
         <div class="controls">
           <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save" :disabled="!valid">
             {{
@@ -62,19 +74,19 @@
                 ? 'Записать на госпитализацию'
                 : hasMixedHosp
                 ? 'Госпитализация не может быть выбрана с не госпитализацией'
+                : hasManyHosp
+                ? 'Нужно выбрать только одну стационарную услугу'
                 : 'Создать записи в лист ожидания'
             }}
           </button>
         </div>
       </template>
-      <div v-else style="padding: 10px;color: gray;text-align: center">
-        Услуги не выбраны
-      </div>
+      <div v-else style="padding: 10px; color: gray; text-align: center">Услуги не выбраны</div>
 
       <div class="rows" v-if="rows_count > 0">
         <table
           class="table table-bordered table-condensed table-sm-pd"
-          style="table-layout: fixed; font-size: 12px; margin-top: 0;"
+          style="table-layout: fixed; font-size: 12px; margin-top: 0"
         >
           <colgroup>
             <col width="75" />
@@ -115,6 +127,7 @@
 
 <script lang="ts">
 import moment from 'moment';
+import DatePicker from 'v-calendar/lib/components/date-picker.umd';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
@@ -131,6 +144,7 @@ export default {
     ResearchDisplay,
     Treeselect,
     MKBField,
+    DatePicker,
   },
   props: {
     card_pk: {
@@ -149,7 +163,7 @@ export default {
         phone: '',
       },
       loadCnt: 0,
-      date: moment().format('YYYY-MM-DD'),
+      date: '',
       td: moment().format('YYYY-MM-DD'),
       comment: '',
       rows: [],
@@ -157,6 +171,16 @@ export default {
       hospitalDepartments: [],
       hospitalDepartment: null,
       diagnosis: '',
+      availableHospDates: {},
+      masks: {
+        iso: 'DD.MM.YYYY',
+        data: ['DD.MM.YYYY'],
+        input: ['DD.MM.YYYY'],
+      },
+      modelConfig: {
+        type: 'string',
+        mask: 'YYYY-MM-DD',
+      },
     };
   },
   watch: {
@@ -178,19 +202,44 @@ export default {
         if (this.hospitalDepartments.length === 0 && this.hasHosp) {
           this.load_stationar_deparments();
         }
+        this.actualizeHospDates();
       },
       immediate: true,
     },
     visible: {
       handler() {
         this.load_data();
+        this.actualizeHospDates();
       },
+    },
+    date() {
+      this.actualizeHospDates();
     },
   },
   mounted() {
     this.$root.$on('update_card_data', () => this.load_data());
   },
   methods: {
+    async actualizeHospDates() {
+      if (!this.visible) {
+        return true;
+      }
+      if (!this.hasOnlyHosp) {
+        this.availableHospDates = {};
+        return true;
+      }
+      this.loadCnt++;
+      const { data } = await this.$api('schedule/available-hospitalization-plan', {
+        research_pk: this.researches[0],
+      });
+      this.loadCnt--;
+      this.availableHospDates = data;
+      if (!this.availableHospDates[this.date] && this.date) {
+        this.$root.$emit('msg', 'error', `Дата ${moment(this.date, 'YYYY-MM-DD').format('DD.MM.YYYY')} недоступна`, 2500);
+        this.date = '';
+      }
+      return !!this.date;
+    },
     async load_stationar_deparments() {
       this.loadCnt++;
       const { data } = await this.$api('procedural-list/suitable-departments');
@@ -198,6 +247,11 @@ export default {
       this.loadCnt--;
     },
     async save() {
+      const isValidDate = await this.actualizeHospDates();
+      if (!isValidDate) {
+        return;
+      }
+      const hasHosp = this.hasOnlyHosp;
       this.loadCnt++;
       await this.$store.dispatch(actions.INC_LOADING);
       const result = await this.$api(
@@ -211,8 +265,9 @@ export default {
       await this.load_data();
       await this.$store.dispatch(actions.DEC_LOADING);
       if (result.ok) {
-        this.$root.$emit('msg', 'ok', 'Записи в лист ожидания созданы');
-        this.date = moment().format('YYYY-MM-DD');
+        this.$root.$emit('msg', 'ok', hasHosp ? 'Запись на госпитализацию успешно создана' : 'Записи в лист ожидания созданы');
+        this.date = '';
+        this.availableHospDates = {};
         this.td = this.date;
         this.comment = '';
         this.hospitalDepartment = null;
@@ -239,13 +294,13 @@ export default {
   },
   computed: {
     disp_researches() {
-      return this.researches.map(id => this.$store.getters.researches_obj[id]).filter(Boolean);
+      return this.researches.map((id) => this.$store.getters.researches_obj[id]).filter(Boolean);
     },
     rows_count() {
       return this.rows.length;
     },
     rows_mapped() {
-      return this.rows.map(r => ({
+      return this.rows.map((r) => ({
         pk: r.pk,
         date: moment(r.exec_at).format('DD.MM.YYYY'),
         service: r.research__title,
@@ -267,22 +322,40 @@ export default {
       return r;
     },
     hasHosp() {
-      return this.researchesObjects.length > 0 && this.researchesObjects.some(r => r.is_hospital);
+      return this.researchesObjects.length > 0 && this.researchesObjects.some((r) => r.is_hospital);
     },
     hasNonHosp() {
-      return this.researchesObjects.length > 0 && this.researchesObjects.some(r => !r.is_hospital);
+      return this.researchesObjects.length > 0 && this.researchesObjects.some((r) => !r.is_hospital);
     },
     hasMixedHosp() {
       return this.hasHosp && this.hasNonHosp;
     },
+    hasManyHosp() {
+      return this.researchesObjects.filter((r) => r.is_hospital).length > 1;
+    },
     hasOnlyHosp() {
-      return this.hasHosp && !this.hasNonHosp;
+      return this.hasHosp && !this.hasNonHosp && !this.hasManyHosp;
+    },
+    validDate() {
+      return !this.hasOnlyHosp || (!!this.date && !!this.availableHospDates[this.date]);
     },
     valid() {
-      return !this.hasHosp || (!this.hasNonHosp && !!this.hospitalDepartment && !!this.diagnosis.trim());
+      return !this.hasHosp || (!this.hasNonHosp && !!this.hospitalDepartment && !!this.diagnosis.trim() && this.validDate);
     },
     loaded() {
       return this.loadCnt === 0;
+    },
+    availableDates() {
+      return Object.keys(this.availableHospDates)
+        .filter((d) => !!this.availableHospDates[d])
+        .map((d) => {
+          const md = moment(d, 'YYYY-MM-DD').toDate();
+
+          return {
+            start: md,
+            end: md,
+          };
+        });
     },
   },
 };

@@ -11,4 +11,5 @@ urlpatterns = [
     path('get-first-user-resource', views.get_first_user_resource),
     path('create-slots', views.create_slots),
     path('available-slots', views.available_slots),
+    path('available-hospitalization-plan', views.available_hospitalization_plan),
 ]

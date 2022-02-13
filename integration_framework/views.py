@@ -1553,8 +1553,8 @@ def hosp_record(request):
         },
         None
     )
-
-    return Response({"ok": True})
+    y, m, d = date.split('-')
+    return Response({"ok": True, "message": f"Запись создана — {hospital_research.get_title()} {d}.{m}.{y}"})
 
 
 @api_view(['POST'])
