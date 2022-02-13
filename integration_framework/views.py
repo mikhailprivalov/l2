@@ -1539,6 +1539,10 @@ def hosp_record(request):
     if not hospital_research:
         return Response({"ok": False, 'message': 'Услуга не найдена'})
 
+    has_free_slots = check_available_hospital_slot_before_save(hospital_research.pk, None, date)
+    if not has_free_slots:
+        return JsonResponse({"ok": False, "message": "Нет свободных слотов"})
+
     hosp_department_id = hospital_research.podrazdeleniye.pk
     PlanHospitalization.plan_hospitalization_save(
         {

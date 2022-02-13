@@ -78,14 +78,25 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
 
 
 def check_available_hospital_slot_before_save(research_pk, resource_id, date):
-    if not resource_id or not research_pk or not date:
-        return {}
+    if not research_pk or not date:
+        return False
     d = try_strptime(f"{date}", formats=('%Y-%m-%d',))
     start_date = datetime.datetime.combine(d, datetime.time.min)
     end_date = datetime.datetime.combine(d, datetime.time.max)
-    resource_id = tuple(resource_id)
+    if resource_id is None:
+        resource_id = tuple(ScheduleResource.objects.filter(service__in=[research_pk]).values_list('pk', flat=True))
+    elif isinstance(resource_id, tuple):
+        resource_id = resource_id
+    elif isinstance(resource_id, list):
+        resource_id = tuple(resource_id)
+    else:
+        resource_id = tuple([resource_id])
+
+    if not resource_id:
+        return False
+
     result_slot = get_slot_plan_by_hosp_resource(start_date, end_date, resource_id)
-    date_slots = [i. hhmm_char for i in result_slot]
+    date_slots = [i.hhmm_char for i in result_slot]
     current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status=0, action=0, research_id=research_pk).order_by("exec_at").count()
     return len(date_slots) > current_plan_count
 

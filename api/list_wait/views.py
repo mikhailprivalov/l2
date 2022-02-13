@@ -6,6 +6,7 @@ from django.http import JsonResponse
 
 from clients.models import Card
 from directory.models import Researches
+from doctor_schedule.views import check_available_hospital_slot_before_save
 from laboratory.utils import current_time
 from list_wait.models import ListWait
 from plans.models import PlanHospitalization
@@ -39,6 +40,9 @@ def create(request):
     if len(hospital_researches) == 1:
         if not hosp_department_id:
             hosp_department_id = hospital_researches[0].podrazdeleniye.pk
+        has_free_slots = check_available_hospital_slot_before_save(hospital_researches[0].pk, None, date)
+        if not has_free_slots:
+            return JsonResponse({"ok": False, "message": "Нет свободных слотов"})
         PlanHospitalization.plan_hospitalization_save(
             {
                 'card': card,
