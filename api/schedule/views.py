@@ -16,7 +16,7 @@ from django.http import JsonResponse
 from django.db import transaction
 
 from doctor_schedule.sql_func import get_date_slots
-from doctor_schedule.views import get_available_hospital_plans, get_available_hospital_resource_slot
+from doctor_schedule.views import get_available_hospital_plans, get_available_hospital_resource_slot, check_available_hospital_slot_before_save
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
@@ -352,3 +352,17 @@ def available_hospitalization_plan(request):
 
     result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
     return JsonResponse({"data": result})
+
+
+@login_required
+def check_hosp_slot_before_save(request):
+    data = data_parse(request.body, {'research_pk': int, 'resource_id': int, 'date': str}, {
+        'research_pk': None,
+        'resource_id': None,
+        'date': None,
+    })
+    research_pk = data[0]
+    resource_id = data[1]
+    date = data[2]
+    result = check_available_hospital_slot_before_save(research_pk, resource_id, date)
+    return JsonResponse({"result": result})

@@ -4,7 +4,7 @@ import logging
 
 import pytz
 from api.views import mkb10_dict
-from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans
+from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 
 from laboratory import settings
 from plans.models import PlanHospitalization
@@ -1832,3 +1832,14 @@ def available_hospitalization_plan(request):
 
     result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
     return Response({"data": result})
+
+
+@api_view(['POST'])
+def check_hosp_slot_before_save(request):
+    data = json.loads(request.body)
+    research_pk = data.get('research_pk')
+    resource_id = data.get('resource_id')
+    date = data.get('date')
+
+    result = check_available_hospital_slot_before_save(research_pk, resource_id, date)
+    return JsonResponse({"result": result})

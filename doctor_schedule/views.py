@@ -77,6 +77,19 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
     return date_counts
 
 
+def check_available_hospital_slot_before_save(research_pk, resource_id, date):
+    if not resource_id or not research_pk or not date:
+        return {}
+    d = try_strptime(f"{date}", formats=('%Y-%m-%d',))
+    start_date = datetime.datetime.combine(d, datetime.time.min)
+    end_date = datetime.datetime.combine(d, datetime.time.max)
+    resource_id = tuple(resource_id)
+    result_slot = get_slot_plan_by_hosp_resource(start_date, end_date, resource_id)
+    date_slots = [i. hhmm_char for i in result_slot]
+    current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status=0, action=0, research_id=research_pk).order_by("exec_at").count()
+    return len(date_slots) > current_plan_count
+
+
 def get_available_hospital_resource_slot(research_pk, date_start, date_end):
     d1 = try_strptime(f"{date_start}", formats=('%Y-%m-%d',))
     d2 = try_strptime(f"{date_end}", formats=('%Y-%m-%d',))
