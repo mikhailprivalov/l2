@@ -16,7 +16,7 @@ def get_hospital_resource():
     resource_researches = {}
     for i in hospital_resource:
         if not resource_researches.get(i.scheduleresource_id, None):
-            resource_researches[i.scheduleresource_id] = {"researches_id": i.researches_id, "title": i.schedule_title, "short_title": i.short_title}
+            resource_researches[i.scheduleresource_id] = {"researches_id": i.researches_id, "title": i.schedule_title or i.title, "short_title": i.short_title}
 
     d1 = current_time(only_date=True)
     d2 = d1 + relativedelta(days=FORWARD_DAYS_SCHEDULE)
