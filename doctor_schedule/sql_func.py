@@ -7,7 +7,7 @@ def get_resource_by_research_hospital():
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT scheduleresource_id, researches_id, dr.title, dr.short_title
+            SELECT scheduleresource_id, researches_id, dr.title, dr.short_title, dr.schedule_title
             FROM public.doctor_schedule_scheduleresource_service
             LEFT JOIN directory_researches dr on dr.id = doctor_schedule_scheduleresource_service.researches_id
             where researches_id in 

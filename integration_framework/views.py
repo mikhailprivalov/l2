@@ -1469,7 +1469,12 @@ def mkb10(request):
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 def hosp_record(request):
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        forbidden_result_check
     data = data_parse(
         request.body,
         {
@@ -1568,7 +1573,12 @@ def hosp_record(request):
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 def hosp_record_list(request):
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        return forbidden_result_check
     data = data_parse(
         request.body,
         {
@@ -1817,7 +1827,12 @@ def start_pathological_process(date_death, time_data, type_period):
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 def check_employee(request):
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        return forbidden_result_check
     data = json.loads(request.body)
     snils = data.get('snils')
     date_now = current_time(only_date=True)
@@ -1828,12 +1843,22 @@ def check_employee(request):
 
 
 @api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
 def hospitalization_plan_research(request):
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        return forbidden_result_check
     return Response({"services": get_hospital_resource()})
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 def available_hospitalization_plan(request):
+    forbidden_forbidden_result_check = check_rights(request)
+    if forbidden_forbidden_result_check:
+        return forbidden_forbidden_result_check
     data = json.loads(request.body)
     research_pk = data.get('research_pk')
     resource_id = data.get('resource_id')
@@ -1845,7 +1870,12 @@ def available_hospitalization_plan(request):
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 def check_hosp_slot_before_save(request):
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        return forbidden_result_check
     data = json.loads(request.body)
     research_pk = data.get('research_pk')
     resource_id = data.get('resource_id')
@@ -1853,3 +1883,40 @@ def check_hosp_slot_before_save(request):
 
     result = check_available_hospital_slot_before_save(research_pk, resource_id, date)
     return JsonResponse({"result": result})
+
+
+def check_rights(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    token = token.replace('Bearer ', '')
+    external_service = ExternalService.objects.filter(token=token).first()
+
+    if not token or not external_service:
+        return Response(
+            {
+                "ok": False,
+                "message": "Передан некорректный токен в заголовке HTTP_AUTHORIZATION",
+            },
+            status=403,
+        )
+
+    extension_right = external_service.extension_right
+
+    external_service: ExternalService = external_service
+    if not external_service.is_active:
+        return Response(
+            {
+                "ok": False,
+                "message": "Доступ отключен",
+            },
+            status=403,
+        )
+
+    if extension_right != external_service.external_service_rights.title:
+        return Response(
+            {
+                "ok": False,
+                "message": "Нет доступа",
+            },
+            status=403,
+        )
+    return False

@@ -39,7 +39,8 @@
           </select>
         </div>
         <div class="col-xs-5 text-right" v-if="hasResource">
-          <label> <input type="checkbox" v-model="editingMode" /> режим редактирования </label>
+          <label v-if="userGroups.includes('Редактирование расписания')"> <input type="checkbox" v-model="editingMode"/> режим
+            редактирования </label>
           <button class="btn btn-blue-nb nbr" @click="previousDate"><i class="fa fa-arrow-left"></i> Назад</button>
           <button class="btn btn-blue-nb nbr" @click="nextDate">Вперёд <i class="fa fa-arrow-right"></i></button>
         </div>
@@ -87,6 +88,7 @@ import DaysGridNatural from './DaysGridNatural.vue';
       mode: 'natural',
       defaultResourceOptions: [],
       loaded: false,
+      userGroups: [],
     };
   },
   watch: {
@@ -118,6 +120,8 @@ export default class Schedule extends Vue {
 
   displayDays: number;
 
+  userGroups: any[];
+
   async loadCurrentUserInfo() {
     const { pk, title, options } = await this.$api('/schedule/get-first-user-resource');
     if (pk) {
@@ -127,6 +131,7 @@ export default class Schedule extends Vue {
     if (options) {
       this.defaultResourceOptions = options;
     }
+    this.userGroups = this.$store.getters.user_data.groups || [];
   }
 
   async getScheduleWeek() {

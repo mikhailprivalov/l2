@@ -208,6 +208,10 @@
           placeholder="Отделение не выбрано"
           v-model="hospital_research_department_pk"
         />
+         <div class="input-group">
+          <span class="input-group-addon">Наименование для расписания</span>
+          <input type="text" class="form-control" v-model="schedule_title" />
+        </div>
       </div>
       <template v-if="ex_dep !== 7">
         <div v-for="(group, gi) in orderBy(groups, 'order')" :key="gi" class="ed-group">
@@ -597,6 +601,7 @@ export default {
   data() {
     return {
       title: '',
+      schedule_title: '',
       short_title: '',
       is_global_direction_params: false,
       code: '',
@@ -888,6 +893,7 @@ export default {
     load() {
       this.title = '';
       this.short_title = '';
+      this.schedule_title = '';
       this.is_global_direction_params = false;
       this.code = '';
       this.info = '';
@@ -906,6 +912,7 @@ export default {
           .then(data => {
             this.title = data.title;
             this.short_title = data.short_title;
+            this.schedule_title = data.schedule_title;
             this.is_global_direction_params = data.is_global_direction_params;
             this.code = data.code;
             this.internal_code = data.internal_code;
@@ -955,6 +962,7 @@ export default {
         'department',
         'title',
         'short_title',
+        'schedule_title',
         'is_global_direction_params',
         'code',
         'hide',
