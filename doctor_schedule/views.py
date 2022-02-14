@@ -118,6 +118,7 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
     slot_plans = get_date_slots_for_many_resource(start_date, end_date, resource_tuple)
     slot_plan_pks = tuple([slplan.slot_id for slplan in slot_plans])
     slot_plan_busy_slot_fact = get_slot_fact(slot_plan_pks)
+    slot_plan_busy_slot_fact = [i.plan_id for i in slot_plan_busy_slot_fact]
     data = result["dates"]
     dates = set([slotplan.date_char for slotplan in slot_plans])
     for d in dates:
@@ -167,6 +168,7 @@ def get_available_slots_of_dates(research_pk, date_start, date_end):
     slot_plans = get_date_slots_for_many_resource(start_date, end_date, resource_tuple)
     slot_plan_pks = tuple([slplan.slot_id for slplan in slot_plans])
     slot_plan_busy_slot_fact = get_slot_fact(slot_plan_pks)
+    slot_plan_busy_slot_fact = [i.plan_id for i in slot_plan_busy_slot_fact]
     data = {}
 
     for slotplan in slot_plans:

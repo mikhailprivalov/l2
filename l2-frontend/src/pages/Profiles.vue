@@ -310,7 +310,13 @@
             <div class="col-xs-6" style="height: 100%">
               <SelectedResearches :researches="resource_researches || []" :simple="true" />
             </div>
-            <div style="float: right; padding-right: 20px">
+            <div class="col-xs-10" style="padding-right: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">Наименование ресурса</span>
+                <input class="form-control" v-model="current_resource_title"/>
+              </div>
+            </div>
+            <div style="float: right; padding-right: 20px" class="col-xs-2">
               <button :disabled="!valid" @click="save_resource" class="btn btn-blue-nb">Сохранить ресурс</button>
             </div>
           </div>
@@ -319,8 +325,8 @@
               <span v-for="res in row.researches" :key="res.pk" class="t-r">
                 {{ res.title }}
               </span>
-              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="current_resource_researches(row.pk)">
-                Редактирвоать
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="current_resource_researches(row)">
+                Редактировать
               </button>
               <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="open_schedule">
                 Расписание
@@ -424,6 +430,7 @@ export default {
       setup_resource: false,
       resource_templates_list: [],
       current_resource_pk: -1,
+      current_resource_title: '',
       user: {
         username: '',
         password: '',
@@ -447,6 +454,9 @@ export default {
   },
   created() {
     this.load_users();
+    this.current_resource_pk = -1;
+    this.resource_researches = [];
+    this.current_resource_title = '';
   },
   watch: {
     'user.family': function () {
@@ -512,6 +522,7 @@ export default {
     resource_researches() {
       if (this.resource_researches.length === 0) {
         this.current_resource_pk = -1;
+        this.resource_researches = [];
       }
     },
   },
@@ -519,11 +530,12 @@ export default {
     open_schedule() {
       window.open('/ui/schedule', '_blank');
     },
-    current_resource_researches(pk) {
+    current_resource_researches(row) {
       for (const res of this.resource_templates_list) {
-        if (pk === res.pk) {
+        if (row.pk === res.pk) {
           this.resource_researches = res.researches;
-          this.current_resource_pk = pk;
+          this.current_resource_pk = row.pk;
+          this.current_resource_title = res.title;
         }
       }
     },
@@ -533,6 +545,7 @@ export default {
         pk: this.user.doc_pk,
         resource_researches: this.resource_researches,
         res_pk: this.current_resource_pk,
+        res_title: this.current_resource_title,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -585,6 +598,9 @@ export default {
         this.user.department = dep;
         this.gen_passwd();
       }
+      this.current_resource_pk = -1;
+      this.current_resource_title = '';
+      this.resource_researches = [];
       this.resource_templates_list = this.user.resource_schedule;
       await this.$store.dispatch(actions.DEC_LOADING);
       this.open_pk = pk;
@@ -629,6 +645,9 @@ export default {
         department: null,
         rmis_resource_id: '',
       };
+      this.current_resource_pk = -1;
+      this.current_resource_title = '';
+      this.resource_researches = [];
     },
   },
   computed: {

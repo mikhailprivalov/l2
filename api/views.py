@@ -1314,9 +1314,11 @@ def user_view(request):
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
         fio_parts = doc.get_fio_parts()
-        doc_schedule = ScheduleResource.objects.values_list('pk', flat=True).filter(executor=doc)
+        doc_schedule_obj = ScheduleResource.objects.filter(executor=doc)
         resource_researches_temp = {}
-        if doc_schedule:
+        doc_resource_pk_title = {k.pk: k.title for k in doc_schedule_obj}
+        doc_schedule = [i.pk for i in doc_schedule_obj]
+        if doc_schedule_obj:
             researches_pks = get_resource_researches(tuple(doc_schedule))
             for i in researches_pks:
                 if not resource_researches_temp.get(i.scheduleresource_id, None):
@@ -1325,7 +1327,7 @@ def user_view(request):
                     temp_result = resource_researches_temp[i.scheduleresource_id]
                     temp_result.append(i.researches_id)
                     resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
-        resource_researches = [{"pk": k, "researches": v} for k, v in resource_researches_temp.items()]
+        resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],

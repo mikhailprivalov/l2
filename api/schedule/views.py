@@ -205,7 +205,6 @@ def details(request):
 @login_required
 def save(request):
     data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int}, {'planId': None, 'serviceId': None, 'status': 'reserved'})
-
     pk: int = data[0]
     card_pk: int = data[1]
     status: str = data[2]
@@ -228,11 +227,12 @@ def save(request):
         slot_fact.patient_id = card_pk
         slot_fact.status = status
         slot_fact.service_id = service_id
-        slot_fact.save(update_fields=['patient', 'status', 'service_id'])
+        slot_fact.save()
         if plan_id:
             ph: PlanHospitalization = PlanHospitalization.objects.get(pk=plan_id)
             ph.slot_fact = slot_fact
             ph.work_status = 3
+            ph.exec_at = s.datetime
             ph.save()
         return status_response(True)
 
@@ -241,18 +241,19 @@ def save(request):
 
 @login_required
 def save_resource(request):
-    data = data_parse(request.body, {'pk': int, 'resource_researches': list, 'res_pk': int})
+    data = data_parse(request.body, {'pk': int, 'resource_researches': list, 'res_pk': int, 'res_title': str})
     user = User.objects.get(pk=data[0])
     executor = DoctorProfile.objects.get(user=user)
     researches = Researches.objects.filter(pk__in=data[1])
     if data[2] == -1:
-        doc_resource = ScheduleResource(executor=executor, department=executor.podrazdeleniye, speciality=executor.specialities)
-        doc_resource.save()
+        doc_resource = ScheduleResource(executor=executor, department=executor.podrazdeleniye, speciality=executor.specialities, title=data[3])
     else:
         doc_resource = ScheduleResource.objects.get(pk=data[2])
+        doc_resource.title = data[3]
         doc_resource.service.clear()
     for r in researches:
         doc_resource.service.add(r)
+    doc_resource.save()
     return JsonResponse({"message": "dfdf", "ok": True})
 
 
