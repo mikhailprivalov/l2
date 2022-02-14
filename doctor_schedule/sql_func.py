@@ -106,7 +106,7 @@ def get_slot_fact(plan_pk_tuple):
         """,
             params={'plan_pk_tuple': plan_pk_tuple, },
         )
-        rows = cursor.fetchall()
+        rows = namedtuplefetchall(cursor)
     return rows
 
 
