@@ -59,7 +59,6 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
     result_slot = get_slot_plan_by_hosp_resource(start_date, end_date, resource_id)
     date_slots = {}
     for rslots in result_slot:
-        print(rslots)
         if not date_slots.get(rslots.date_char, None):
             date_slots[rslots.date_char] = [rslots.datetime]
         else:
