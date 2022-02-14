@@ -48,7 +48,6 @@ def data_parse(data: Union[dict, str, bytes], keys_types: Dict[str, Union[Callab
                     typed_vars.append(Card.objects.get(pk=var))
                 else:
                     typed_vars.append(var_type(var))
-                    print(var, var_type)
         except TypeError or ValueError:
             raise Http404('Cannot cast type Key: {}, Value: {}, Type: {}'.format(key, var, var_type))
     return typed_vars
