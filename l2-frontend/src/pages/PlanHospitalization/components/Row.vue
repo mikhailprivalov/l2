@@ -22,6 +22,7 @@
         </button>
         <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="cancelModal = true">Отмена</button>
       </template>
+      <template v-else-if="data.slot"> Запись:<br />{{ data.slot }} </template>
     </td>
     <MountingPortal mountTo="#portal-place-modal" :name="`PlanCancel_${data.pk_plan}`" append>
       <transition name="fade">

@@ -144,6 +144,8 @@ def get_plan_hospitalization_by_params(request):
             time = strfdatetime(u.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f"Обновил: {doctor} ({time})")
 
+        slot_datetime = None  # TODO slot
+
         data.append(
             {
                 "pk_plan": i.pk_plan,
@@ -160,6 +162,7 @@ def get_plan_hospitalization_by_params(request):
                 "comment": i.comment,
                 "canceled": i.work_status == 2,
                 "status": i.work_status,
+                "slot": slot_datetime,
             }
         )
         if i.sex.lower() == "ж":
