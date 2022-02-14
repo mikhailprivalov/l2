@@ -3,6 +3,7 @@ from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
+from api.schedule.utils import can_access_user_to_modify_resource
 
 from clients.models import Card, CardBase
 import math
@@ -17,9 +18,11 @@ from django.db import transaction
 
 from doctor_schedule.sql_func import get_date_slots
 from doctor_schedule.views import get_available_hospital_plans, get_available_hospital_resource_slot, check_available_hospital_slot_before_save, get_available_slots_of_dates
+from laboratory.decorators import group_required
 from plans.models import PlanHospitalization
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
+from utils.auth import has_group
 from utils.data_verification import data_parse
 from laboratory.utils import localtime
 from utils.dates import try_strptime
@@ -30,7 +33,13 @@ def delta_to_string(d):
     return None if d is None else ':'.join([x.rjust(2, '0') for x in str(d).split(':')[:2]])
 
 
+COMMON_SCHEDULE_GROUPS = ['Лечащий врач', 'Оператор лечащего врача', 'Врач консультаций', 'Врач стационара',
+                          'Врач параклиники', 'Управление расписанием', 'Создание и редактирование пользователей']
+ADMIN_SCHEDULE_GROUPS = ['Управление расписанием', 'Создание и редактирование пользователей']
+
+
 @login_required
+@group_required(*COMMON_SCHEDULE_GROUPS)
 def days(request):
     day, resource_pk, display_days = data_parse(request.body, {'date': str, 'resource': int, 'displayDays': int}, {'displayDays': 7})
     rows = []
@@ -136,6 +145,7 @@ def days(request):
 
 
 @login_required
+@group_required(*COMMON_SCHEDULE_GROUPS)
 def details(request):
     pk = data_parse(request.body, {'id': int})[0]
 
@@ -203,6 +213,7 @@ def details(request):
 
 
 @login_required
+@group_required(*COMMON_SCHEDULE_GROUPS)
 def save(request):
     data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int}, {'planId': None, 'serviceId': None, 'status': 'reserved'})
     pk: int = data[0]
@@ -240,6 +251,7 @@ def save(request):
 
 
 @login_required
+@group_required(*ADMIN_SCHEDULE_GROUPS)
 def save_resource(request):
     data = data_parse(request.body, {'pk': int, 'resource_researches': list, 'res_pk': int, 'res_title': str})
     user = User.objects.get(pk=data[0])
@@ -258,6 +270,7 @@ def save_resource(request):
 
 
 @login_required
+@group_required(*COMMON_SCHEDULE_GROUPS)
 def search_resource(request):
     rows = []
     q = request.GET.get('query') or ''
@@ -276,6 +289,7 @@ def search_resource(request):
 
 
 @login_required
+@group_required(*COMMON_SCHEDULE_GROUPS)
 def get_first_user_resource(request):
     resources = ScheduleResource.objects.filter(executor=request.user.doctorprofile)
     if resources.exists():
@@ -305,6 +319,11 @@ def create_slots(request):
     resource: int = data[4]
     date_start = f"{date} 00:00:00"
     date_end = f"{date} 23:59:59"
+
+    has_rights = can_edit_resource(request, resource)
+    if not has_rights:
+        return status_response(False, 'У вас недостаточно прав')
+
     date_slots = get_date_slots(date_start, date_end, resource)
     remove_element = []
     for s in slots:
@@ -386,3 +405,15 @@ def available_slots_of_dates(request):
     date_end = data[2]
     result = get_available_slots_of_dates(research_pk, date_start, date_end)
     return JsonResponse({"data": result})
+
+
+@login_required
+def schedule_access(request):
+    resource_pk = data_parse(request.body, {'resourcePk': int}, {'resourcePk': None})[0]
+    return status_response(can_edit_resource(request, resource_pk))
+
+
+def can_edit_resource(request, resource_pk):
+    if has_group(request.user, *ADMIN_SCHEDULE_GROUPS):
+        return True
+    return status_response(can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk))

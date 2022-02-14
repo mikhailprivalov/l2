@@ -2,6 +2,7 @@ from django.db import models
 
 from clients.models import Card
 from directory.models import Researches
+from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile, Speciality
 from utils.models import ChoiceArrayField
 from directions.models import Napravleniya
@@ -10,7 +11,7 @@ from directions.models import Napravleniya
 class ScheduleResource(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название ресурса', db_index=True)
     executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, verbose_name='Исполнитель', on_delete=models.SET_NULL)
-    service = models.ManyToManyField(Researches, verbose_name='Услуга', db_index=True)  # TODO: может быть несколько
+    service = models.ManyToManyField(Researches, verbose_name='Услуга', db_index=True)
     room = models.ForeignKey(
         'podrazdeleniya.Room', related_name='scheduleresourceroom', verbose_name='Кабинет', db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
@@ -84,3 +85,15 @@ class SlotFact(models.Model):
         verbose_name = 'Запись на слот'
         verbose_name_plural = 'Записи на слоты'
         ordering = ['-id']
+
+
+class UserResourceModifyRights(models.Model):
+    resources = models.ManyToManyField(ScheduleResource, verbose_name='Ресурсы', db_index=True)
+    departments = models.ManyToManyField(Podrazdeleniya, verbose_name='Подразделения', db_index=True)
+    services = models.ManyToManyField(Researches, verbose_name='Услуга', db_index=True)
+
+    user = models.OneToOneField(DoctorProfile, unique=True, null=True, verbose_name='Исполнитель', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Права доступа к управлению расписанием'
+        verbose_name_plural = 'Права доступа к управлению расписанием'

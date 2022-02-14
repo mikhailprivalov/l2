@@ -39,8 +39,7 @@
           </select>
         </div>
         <div class="col-xs-5 text-right" v-if="hasResource">
-          <label v-if="userGroups.includes('Редактирование расписания')"> <input type="checkbox" v-model="editingMode"/> режим
-            редактирования </label>
+          <label v-if="canChangeSchedule"> <input type="checkbox" v-model="editingMode" /> режим редактирования </label>
           <button class="btn btn-blue-nb nbr" @click="previousDate"><i class="fa fa-arrow-left"></i> Назад</button>
           <button class="btn btn-blue-nb nbr" @click="nextDate">Вперёд <i class="fa fa-arrow-right"></i></button>
         </div>
@@ -89,11 +88,15 @@ import DaysGridNatural from './DaysGridNatural.vue';
       defaultResourceOptions: [],
       loaded: false,
       userGroups: [],
+      canChangeSchedule: false,
     };
   },
   watch: {
-    resourceSelected() {
-      this.getScheduleWeek();
+    async resourceSelected() {
+      this.canChangeSchedule = false;
+      await this.getScheduleWeek();
+      const { ok } = await this.$api('schedule/schedule-access', { resourcePk: this.resourceSelected });
+      this.canChangeSchedule = !!ok;
     },
     displayDays() {
       this.getScheduleWeek();
@@ -121,6 +124,8 @@ export default class Schedule extends Vue {
   displayDays: number;
 
   userGroups: any[];
+
+  canChangeSchedule: boolean;
 
   async loadCurrentUserInfo() {
     const { pk, title, options } = await this.$api('/schedule/get-first-user-resource');

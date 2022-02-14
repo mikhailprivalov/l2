@@ -40,6 +40,7 @@ from laboratory.settings import (
     DEATH_RESEARCH_PK,
     DEF_LABORATORY_AUTH_PK,
     DEF_LABORATORY_LEGAL_AUTH_PK,
+    SCHEDULE_AGE_LIMIT_LTE,
 )
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -1543,6 +1544,11 @@ def hosp_record(request):
 
     if not card:
         return Response({"ok": False, 'message': 'Карта не найдена'})
+
+    if SCHEDULE_AGE_LIMIT_LTE:
+        age = card.individual.age()
+        if age > SCHEDULE_AGE_LIMIT_LTE:
+            return Response({"ok": False, 'message': f'Пациент должен быть не старше {SCHEDULE_AGE_LIMIT_LTE} лет'})
 
     hospital_research: Researches = Researches.objects.filter(pk=service, is_hospital=True).first()
 
