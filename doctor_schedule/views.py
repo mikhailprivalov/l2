@@ -59,20 +59,23 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
     result_slot = get_slot_plan_by_hosp_resource(start_date, end_date, resource_id)
     date_slots = {}
     for rslots in result_slot:
+        print(rslots)
         if not date_slots.get(rslots.date_char, None):
             date_slots[rslots.date_char] = [rslots.datetime]
         else:
             temp_date_slots = date_slots.get(rslots.date_char, None)
             temp_date_slots.append(rslots.datetime)
             date_slots[rslots.date_char] = temp_date_slots.copy()
-
+    print(date_slots)
     date_counts = {}
     for current_date, slots_in_date in date_slots.items():
         d1 = try_strptime(current_date, formats=('%Y-%m-%d',))
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d1, datetime.time.max)
-        current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status=0, action=0, research_id=research_pk).order_by("exec_at").count()
+        current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status__in=[0, 1, 3], action=0, research_id=research_pk).order_by("exec_at").count()
+        print(current_plan_count)
         date_counts[current_date] = len(slots_in_date) > current_plan_count
+    print(date_counts)
 
     return date_counts
 
