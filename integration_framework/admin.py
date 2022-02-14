@@ -25,6 +25,7 @@ class ExternalServiceAdmin(admin.ModelAdmin):
         'is_active',
     )
 
+
 class ExternalServiceRights(admin.ModelAdmin):
     list_display = (
         'title',
