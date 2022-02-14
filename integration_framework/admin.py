@@ -48,3 +48,4 @@ class CrieOrderAdmin(admin.ModelAdmin):
 admin.site.register(models.IntegrationResearches, ResIntertationResearches)
 admin.site.register(models.ExternalService, ExternalServiceAdmin)
 admin.site.register(models.CrieOrder, CrieOrderAdmin)
+admin.site.register(models.ExternalServiceRights)

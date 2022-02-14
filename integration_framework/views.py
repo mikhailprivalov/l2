@@ -1472,7 +1472,9 @@ def mkb10(request):
 @authentication_classes([])
 @permission_classes([])
 def hosp_record(request):
-    check_rights(request)
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        forbidden_result_check
     data = data_parse(
         request.body,
         {
@@ -1574,7 +1576,9 @@ def hosp_record(request):
 @authentication_classes([])
 @permission_classes([])
 def hosp_record_list(request):
-    check_rights(request)
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        return forbidden_result_check
     data = data_parse(
         request.body,
         {
@@ -1826,7 +1830,9 @@ def start_pathological_process(date_death, time_data, type_period):
 @authentication_classes([])
 @permission_classes([])
 def check_employee(request):
-    check_rights(request)
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        return forbidden_result_check
     data = json.loads(request.body)
     snils = data.get('snils')
     date_now = current_time(only_date=True)
@@ -1840,7 +1846,9 @@ def check_employee(request):
 @authentication_classes([])
 @permission_classes([])
 def hospitalization_plan_research(request):
-    check_rights(request)
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        return forbidden_result_check
     return Response({"services": get_hospital_resource()})
 
 
@@ -1848,7 +1856,9 @@ def hospitalization_plan_research(request):
 @authentication_classes([])
 @permission_classes([])
 def available_hospitalization_plan(request):
-    check_rights(request)
+    forbidden_forbidden_result_check = check_rights(request)
+    if forbidden_forbidden_result_check:
+        return forbidden_forbidden_result_check
     data = json.loads(request.body)
     research_pk = data.get('research_pk')
     resource_id = data.get('resource_id')
@@ -1863,7 +1873,9 @@ def available_hospitalization_plan(request):
 @authentication_classes([])
 @permission_classes([])
 def check_hosp_slot_before_save(request):
-    check_rights(request)
+    forbidden_result_check = check_rights(request)
+    if forbidden_result_check:
+        return forbidden_result_check
     data = json.loads(request.body)
     research_pk = data.get('research_pk')
     resource_id = data.get('resource_id')
@@ -1907,3 +1919,4 @@ def check_rights(request):
             },
             status=403,
         )
+    return False
