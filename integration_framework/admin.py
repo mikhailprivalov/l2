@@ -25,6 +25,11 @@ class ExternalServiceAdmin(admin.ModelAdmin):
         'is_active',
     )
 
+class ExternalServiceRights(admin.ModelAdmin):
+    list_display = (
+        'title',
+    )
+
 
 class CrieOrderAdmin(admin.ModelAdmin):
     raw_id_fields = ('local_direction',)
