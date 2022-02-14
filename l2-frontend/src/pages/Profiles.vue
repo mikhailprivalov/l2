@@ -313,7 +313,7 @@
             <div class="col-xs-10" style="padding-right: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">Наименование ресурса</span>
-                <input class="form-control" v-model="current_resource_title"/>
+                <input class="form-control" v-model="current_resource_title" />
               </div>
             </div>
             <div style="float: right; padding-right: 20px" class="col-xs-2">
@@ -328,9 +328,7 @@
               <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="current_resource_researches(row)">
                 Редактировать
               </button>
-              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="open_schedule">
-                Расписание
-              </button>
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="open_schedule">Расписание</button>
             </div>
           </div>
         </div>
@@ -541,7 +539,7 @@ export default {
     },
     async save_resource() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('schedule/save-resource', {
+      await this.$api('schedule/save-resource', {
         pk: this.user.doc_pk,
         resource_researches: this.resource_researches,
         res_pk: this.current_resource_pk,
@@ -926,7 +924,6 @@ li.selected {
 
   hr {
   }
-
 }
 
 .research:not(:first-child) {
