@@ -49,6 +49,7 @@ def days(request):
     display_days = min(display_days, 21)
 
     date_start = datetime.datetime.strptime(day, '%Y-%m-%d')
+    resource = ScheduleResource.objects.filter(pk=resource_pk).first()
     for i in range(display_days):
         date = date_start + datetime.timedelta(days=i)
         date_end = date + datetime.timedelta(days=1)
@@ -59,7 +60,6 @@ def days(request):
             'month': date.month - 1,
             'slots': [],
         }
-        resource = ScheduleResource.objects.filter(pk=resource_pk).first()
         if resource:
             slots = SlotPlan.objects.filter(resource=resource, datetime__gte=date, datetime__lt=date_end).order_by('datetime')
             for s in slots:
@@ -83,6 +83,7 @@ def days(request):
                 patient = None
                 service = None
                 direction = None
+                is_cito = s.is_cito
 
                 if slot_fact:
                     status = {
@@ -91,6 +92,9 @@ def days(request):
                         2: 'success',
                     }[slot_fact.status]
 
+                    if slot_fact.is_cito:
+                        is_cito = True
+
                     if slot_fact.patient:
                         card: Card = slot_fact.patient
                         patient = {
@@ -98,6 +102,7 @@ def days(request):
                             'base': card.base_id,
                             'number': card.number_with_type(),
                             'fio': card.individual.fio(full=True),
+                            'fioShort': card.individual.fio(dots=True, short=True),
                             'birthday': card.individual.bd(),
                         }
 
@@ -116,7 +121,8 @@ def days(request):
                     {
                         'id': s.pk,
                         'date': datetime.datetime.strftime(slot_datetime, '%Y-%m-%d'),
-                        'time': datetime.datetime.strftime(slot_datetime, '%X'),
+                        'time': datetime.datetime.strftime(slot_datetime, '%H:%M'),
+                        'timeEnd': datetime.datetime.strftime(slot_datetime + timedelta(minutes=duration), '%H:%M'),
                         'hour': delta_to_string(current_slot_time),
                         'hourValue': slot_datetime.hour,
                         'minute': slot_datetime.minute,
@@ -125,6 +131,7 @@ def days(request):
                         'patient': patient,
                         'service': service,
                         'direction': direction,
+                        'cito': is_cito,
                     }
                 )
         rows.append(date_data)
@@ -135,11 +142,17 @@ def days(request):
     start_calendar_time = delta_to_string(start_time)
     end_calendar_time = delta_to_string(end_time)
 
+    services = []
+
+    if resource:
+        services = [{'id': x['pk'], 'label': x['short_title'] or x['title']} for x in resource.service.all().values('pk', 'title', 'short_title').order_by('short_title', 'title')]
+
     return JsonResponse(
         {
             'days': rows,
             'startTime': start_calendar_time,
             'endTime': end_calendar_time,
+            'services': services,
         }
     )
 
@@ -162,7 +175,9 @@ def details(request):
         status = 'empty'
 
         card_pk = None
-        service = None
+        service = {
+            'id': None,
+        }
         direction = None
         base_pk = CardBase.objects.filter(internal_type=True)[0].pk
 
@@ -215,12 +230,49 @@ def details(request):
 @login_required
 @group_required(*COMMON_SCHEDULE_GROUPS)
 def save(request):
-    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int}, {'planId': None, 'serviceId': None, 'status': 'reserved'})
+    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int, 'date': str, 'resource': str},
+                      {'planId': None, 'cardId': None, 'serviceId': None, 'status': 'reserved', 'date': None, 'resource': None})
     pk: int = data[0]
     card_pk: int = data[1]
     status: str = data[2]
     plan_id: int = data[3]
     service_id: int = data[4]
+    date: str = data[5]
+    resource: int = data[6]
+
+    if not card_pk:
+        return status_response(False, 'Пациен не выбран')
+
+    is_cito = False
+
+    if has_group(request.user, 'Цито-запись в расписании') and pk == -10 and date and resource:
+        d = try_strptime(f"{date}", formats=('%Y-%m-%d',))
+        start_date = datetime.datetime.combine(d, datetime.time.min)
+        end_date = datetime.datetime.combine(d, datetime.time.max)
+        slots = SlotPlan.objects.filter(datetime__range=(start_date, end_date))
+        free_slot: SlotPlan = slots.filter(slotfact__isnull=True).order_by('datetime').first()
+        if not free_slot:
+            last_any_slot: SlotPlan = slots.order_by('-datetime').first()
+            if last_any_slot:
+                next_time = last_any_slot.datetime + datetime.timedelta(minutes=last_any_slot.duration_minutes)
+                duration = last_any_slot.duration_minutes
+            else:
+                next_time = try_strptime(f"{date} 08:00", formats=('%Y-%m-%d',))
+                duration = 3
+            end_time = next_time + datetime.timedelta(minutes=duration)
+            new_slot_plan = SlotPlan.objects.create(
+                resource_id=resource,
+                datetime=next_time,
+                datetime_end=end_time,
+                duration_minutes=duration,
+                available_systems=[SlotPlan.LOCAL],
+                disabled=False,
+                is_cito=True,
+            )
+            pk = new_slot_plan.pk
+        else:
+            pk = free_slot.pk
+        is_cito = True
 
     s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
 
@@ -238,6 +290,7 @@ def save(request):
         slot_fact.patient_id = card_pk
         slot_fact.status = status
         slot_fact.service_id = service_id
+        slot_fact.is_cito = is_cito
         slot_fact.save()
         if plan_id:
             ph: PlanHospitalization = PlanHospitalization.objects.get(pk=plan_id)
@@ -362,7 +415,7 @@ def available_slots(request):
     research_pk: int = data[0]
     date_start: str = data[1]
     date_end: str = data[2]
-    result = get_available_hospital_resource_slot(research_pk, date_start, date_end)
+    result = get_available_hospital_resource_slot(research_pk, date_start, date_end, allow_cito=has_group(request.user, 'Цито-запись в расписании'))
     return JsonResponse({"result": result})
 
 
@@ -403,7 +456,7 @@ def available_slots_of_dates(request):
     research_pk = data[0]
     date_start = data[1]
     date_end = data[2]
-    result = get_available_slots_of_dates(research_pk, date_start, date_end)
+    result = get_available_slots_of_dates(research_pk, date_start, date_end, allow_cito=has_group(request.user, 'Цито-запись в расписании'))
     return JsonResponse({"data": result})
 
 

@@ -76,6 +76,7 @@ class SlotFact(models.Model):
     external_slot_id = models.CharField(max_length=255, default='', blank=True, verbose_name='Внешний ИД')
     service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
     direction = models.ForeignKey(Napravleniya, verbose_name='Направление', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
+    is_cito = models.BooleanField(default=False, blank=True, verbose_name='ЦИТО', db_index=True)
 
     def __str__(self):
         return f"{self.pk} — {self.patient} {self.get_status_display()} {self.plan}"

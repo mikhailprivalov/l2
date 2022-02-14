@@ -43,7 +43,7 @@ export default {
   props: {
     value: {
       type: Number,
-      required: true,
+      required: false,
     },
     servicePk: {
       type: Number,
@@ -55,6 +55,14 @@ export default {
     },
     initialDate: {
       type: String,
+      required: false,
+    },
+    slotDate: {
+      type: String,
+      required: false,
+    },
+    slotResource: {
+      type: Number,
       required: false,
     },
   },
@@ -101,7 +109,11 @@ export default {
           return;
         }
         this.loadSlots();
+        this.$emit('update:slotDate', this.activeDate);
       },
+    },
+    activeSlotResource() {
+      this.$emit('update:slotResource', this.activeSlotResource);
     },
     slots() {
       let sameSlot = null;

@@ -11,6 +11,7 @@
       :mode="mode"
       :is-editing="isEditing"
       :resource="resource"
+      :services="services"
     />
   </div>
 </template>
@@ -41,6 +42,10 @@ import Day from './Day.vue';
     },
     resource: {
       type: Number,
+      required: true,
+    },
+    services: {
+      type: Array,
       required: true,
     },
   },

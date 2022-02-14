@@ -83,6 +83,8 @@
               :service-pk="data.research_id"
               :service-title="data.research_title"
               :initial-date="data.date"
+              :slot-date.sync="slotDate"
+              :slot-resource.sync="slotResource"
             />
           </div>
           <div slot="footer">
@@ -130,6 +132,8 @@ export default {
       cancelReason: '',
       openSchedule: false,
       selectedSlot: null,
+      slotDate: null,
+      slotResource: null,
     };
   },
   methods: {
@@ -151,6 +155,8 @@ export default {
         planId: this.data.pk_plan,
         serviceId: this.data.research_id,
         cardId: this.data.patient_card,
+        date: this.slotDate,
+        resource: this.slotResource,
       });
       this.openSchedule = false;
       this.selectedSlot = null;

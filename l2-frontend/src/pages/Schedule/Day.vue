@@ -12,7 +12,7 @@
         <div class="hour-border"></div>
       </div>
     </div>
-    <TimeSlot v-for="s in day.slots" :key="s.id" :data="s" :mode="mode" :allHoursValues="allHoursValues" />
+    <TimeSlot v-for="s in day.slots" :key="s.id" :data="s" :mode="mode" :services="services" :allHoursValues="allHoursValues" />
     <TimeMarker v-if="currentDate === day.date && mode !== 'list'" :time="currentTime" :allHoursValues="allHoursValues" />
     <button class="btn btn-blue-nb btn-sm btn-block nbr" v-if="isEditing" @click.prevent="createSlot()">Создать слот</button>
   </div>
@@ -62,6 +62,10 @@ import DayHeader from './DayHeader.vue';
       type: Number,
       required: true,
     },
+    services: {
+      type: Array,
+      required: true,
+    },
   },
 })
 export default class Day extends Vue {
@@ -78,6 +82,8 @@ export default class Day extends Vue {
   mode: string | null;
 
   resource: number;
+
+  services: any[];
 
   getOffset(s) {
     const offset = s.minute * 2 + this.allHoursValues.indexOf(s.hourValue) * 120 + 51;

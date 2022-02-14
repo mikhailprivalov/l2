@@ -101,7 +101,7 @@ def check_available_hospital_slot_before_save(research_pk, resource_id, date):
     return len(date_slots) > current_plan_count
 
 
-def get_available_hospital_resource_slot(research_pk, date_start, date_end):
+def get_available_hospital_resource_slot(research_pk, date_start, date_end, allow_cito=False):
     d1 = try_strptime(f"{date_start}", formats=('%Y-%m-%d',))
     d2 = try_strptime(f"{date_end}", formats=('%Y-%m-%d',))
     start_date = datetime.datetime.combine(d1, datetime.time.min)
@@ -145,10 +145,27 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end):
             temp_data = data.get(date)
             temp_data.append({"resourcePk": k, "resourceTitle": structure_resource.get(k, ""), "slots": slots})
             data[date] = temp_data.copy()
+
+    if allow_cito:
+        dates = []
+        date_i = start_date
+        while date_i < end_date:
+            date = date_i.strftime("%Y-%m-%d")
+            if date not in data:
+                data[date] = []
+            has_resources = {x['resourcePk']: x for x in data[date]}
+            for rpk in resource_tuple:
+                if rpk in has_resources:
+                    has_resources[rpk]['slots'].append({"pk": -10, "title": "CITO"})
+                    continue
+                temp_data = {"resourcePk": rpk, "resourceTitle": structure_resource.get(rpk, ""), "slots": [{"pk": -10, "title": "CITO"}]}
+                data[date].append(temp_data)
+
+            date_i += datetime.timedelta(days=1)
     return result
 
 
-def get_available_slots_of_dates(research_pk, date_start, date_end):
+def get_available_slots_of_dates(research_pk, date_start, date_end, allow_cito=False):
     d1 = try_strptime(f"{date_start}", formats=('%Y-%m-%d',))
     d2 = try_strptime(f"{date_end}", formats=('%Y-%m-%d',))
     current_date = try_strptime(current_time().strftime("%Y-%m-%d"), formats=('%Y-%m-%d',))
@@ -160,6 +177,15 @@ def get_available_slots_of_dates(research_pk, date_start, date_end):
 
     if start_date < datetime.datetime.combine(current_date, datetime.time.min):
         start_date = datetime.datetime.combine(current_date, datetime.time.min) + datetime.timedelta(days=1)
+
+    if allow_cito:
+        data = {}
+        date_i = start_date - datetime.timedelta(days=1)  # ЦИТО можно записать на сегодня
+        while date_i < end_date:
+            date_s = date_i.strftime("%Y-%m-%d")
+            data[date_s] = True
+            date_i += datetime.timedelta(days=1)
+        return data
 
     resource_hosp = get_hospital_resource_by_research(research_pk)
     structure_resource = {rh.scheduleresource_id: rh.resource_title for rh in resource_hosp}

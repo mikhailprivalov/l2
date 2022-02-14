@@ -38,8 +38,9 @@
             <option :value="21">21 день</option>
           </select>
         </div>
-        <div class="col-xs-5 text-right" v-if="hasResource">
-          <label v-if="canChangeSchedule"> <input type="checkbox" v-model="editingMode" /> режим редактирования </label>
+        <div class="col-xs-5 text-right no-wrap" v-if="hasResource">
+          <label v-if="canChangeSchedule"> <input type="checkbox" v-model="editingMode" /> редактирование </label>
+          <button class="btn btn-blue-nb nbr" @click="refresh"><i class="fa fa-refresh"></i></button>
           <button class="btn btn-blue-nb nbr" @click="previousDate"><i class="fa fa-arrow-left"></i> Назад</button>
           <button class="btn btn-blue-nb nbr" @click="nextDate">Вперёд <i class="fa fa-arrow-right"></i></button>
         </div>
@@ -54,6 +55,7 @@
           :end-time="endTime"
           :is-editing="editingMode"
           :resource="resourceSelected"
+          :services="services"
         />
       </template>
       <div class="days-message" v-else>не выбран ресурс</div>
@@ -79,6 +81,7 @@ import DaysGridNatural from './DaysGridNatural.vue';
     return {
       date: moment().startOf('isoWeek'),
       days: [],
+      services: [],
       startTime: null,
       endTime: null,
       resourceSelected: null,
@@ -127,8 +130,10 @@ export default class Schedule extends Vue {
 
   canChangeSchedule: boolean;
 
+  services: any[];
+
   async loadCurrentUserInfo() {
-    const { pk, title, options } = await this.$api('/schedule/get-first-user-resource');
+    const { pk, options } = await this.$api('/schedule/get-first-user-resource');
     if (pk) {
       this.resourceSelected = pk;
     }
@@ -144,7 +149,9 @@ export default class Schedule extends Vue {
       return;
     }
     await this.$store.dispatch(actions.INC_LOADING);
-    const { days, startTime, endTime } = await this.$api('/schedule/days', this, ['displayDays'], {
+    const {
+      days, startTime, endTime, services,
+    } = await this.$api('/schedule/days', this, ['displayDays'], {
       date: this.date.format('YYYY-MM-DD'),
       resource: this.resourceSelected,
     });
@@ -152,6 +159,7 @@ export default class Schedule extends Vue {
     this.days = days;
     this.startTime = startTime;
     this.endTime = endTime;
+    this.services = services;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -163,6 +171,10 @@ export default class Schedule extends Vue {
   async previousDate() {
     this.date = moment(this.date).subtract(this.displayDays, 'days');
     await this.getScheduleWeek();
+  }
+
+  refresh() {
+    this.getScheduleWeek();
   }
 
   async loadOptions({ action, searchQuery, callback }) {
@@ -202,5 +214,9 @@ export default class Schedule extends Vue {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.no-wrap {
+  white-space: nowrap;
 }
 </style>
