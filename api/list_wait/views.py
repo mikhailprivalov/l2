@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from clients.models import Card
 from directory.models import Researches
 from doctor_schedule.views import check_available_hospital_slot_before_save
-from laboratory.utils import current_time
+from laboratory.utils import current_time, localtime
 from list_wait.models import ListWait
 from plans.models import PlanHospitalization
 from utils.data_verification import data_parse
@@ -80,12 +80,31 @@ def actual_rows(request):
     date_from = datetime.datetime.combine(current_time(), datetime.time.min)
 
     rows = list(ListWait.objects.filter(client_id=card_pk, exec_at__gte=date_from).order_by('exec_at', 'pk').values('pk', 'exec_at', 'research__title', 'comment', 'work_status', 'phone'))
-    plan_hosp = list(
-        PlanHospitalization.objects.filter(client_id=card_pk, exec_at__gte=date_from, action=0)
-        .order_by('exec_at', 'pk')
-        .values('pk', 'exec_at', 'research_id', 'research__title', 'comment', 'work_status', 'phone', 'diagnos', 'hospital_department__title')
-    )
-
-    rows.extend(plan_hosp)
+    p: PlanHospitalization
+    for p in PlanHospitalization.objects.filter(client_id=card_pk, exec_at__gte=date_from, action=0).order_by('exec_at', 'pk'):
+        if p.slot_fact:
+            slot_datetime = f"{datetime.datetime.strftime(localtime(p.slot_fact.plan.datetime), '%d.%m.%Y %H:%M')}, {p.slot_fact.plan.duration_minutes} мин."
+        elif p.why_cancel:
+            slot_datetime = p.why_cancel
+        else:
+            slot_datetime = "Ожидает решение"
+        rows.append({
+            "pk": p.pk,
+            "pk_plan": p.pk,
+            "exec_at": p.exec_at,
+            "date": p.exec_at,
+            "research_id": p.research_id,
+            "research__title": p.research.title,
+            "research_title": p.research.title,
+            "comment": p.comment,
+            "work_status": p.work_status,
+            "phone": p.phone,
+            "diagnos": p.diagnos,
+            "hospital_department__title": p.hospital_department.title,
+            "slot": slot_datetime,
+            "patient_card": card_pk,
+            "fio_patient": p.client.individual.fio(),
+            "canceled": p.work_status == 2,
+        })
 
     return JsonResponse(rows, safe=False)

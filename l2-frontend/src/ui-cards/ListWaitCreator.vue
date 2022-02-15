@@ -93,7 +93,7 @@
             <col />
             <col />
             <col width="100" />
-            <col width="75" />
+            <col width="80" />
           </colgroup>
           <thead>
             <tr>
@@ -116,7 +116,17 @@
               </td>
               <td style="white-space: pre-wrap">{{ (r.diagnosis ? 'Диагноз: ' + r.diagnosis + '\n\n' : '') + r.comment }}</td>
               <td>{{ r.phone }}</td>
-              <td>{{ STATUSES[r.status] }}</td>
+              <td>
+                <template v-if="!r.hospital">
+                  {{ STATUSES[r.status] }}
+                </template>
+                <template v-else-if="!r.canceled && r.status !== 3">
+                  <HospPlanScheduleButton :data="r" />
+                  <div class="spacer" />
+                  <HospPlanCancelButton :data="r" />
+                </template>
+                <template v-else-if="r.slot"> {{ r.slot }} </template>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -135,6 +145,8 @@ import * as actions from '@/store/action-types';
 import ResearchDisplay from '@/ui-cards/ResearchDisplay.vue';
 import patientsPoint from '@/api/patients-point';
 import MKBField from '@/fields/MKBField.vue';
+import HospPlanScheduleButton from '@/ui-cards/HospPlanScheduleButton.vue';
+import HospPlanCancelButton from '@/ui-cards/HospPlanCancelButton.vue';
 
 const STATUSES = { 0: 'ожидает', 1: 'выполнено', 2: 'отменено' };
 
@@ -142,6 +154,8 @@ export default {
   name: 'ListWaitCreator',
   components: {
     ResearchDisplay,
+    HospPlanScheduleButton,
+    HospPlanCancelButton,
     Treeselect,
     MKBField,
     DatePicker,
@@ -218,6 +232,7 @@ export default {
   },
   mounted() {
     this.$root.$on('update_card_data', () => this.load_data());
+    this.$root.$on('reload-list-wait-data', () => this.load_data());
   },
   methods: {
     async actualizeHospDates() {
@@ -301,7 +316,7 @@ export default {
     },
     rows_mapped() {
       return this.rows.map((r) => ({
-        pk: r.pk,
+        ...r,
         date: moment(r.exec_at).format('DD.MM.YYYY'),
         service: r.research__title,
         comment: r.comment,
