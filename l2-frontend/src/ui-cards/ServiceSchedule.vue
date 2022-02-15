@@ -220,18 +220,20 @@ export default {
 
     &.active {
       font-weight: bold;
-      background: rgba(0, 0, 0, 0.03);
+      background-color: rgba(#048493, 0.65);
     }
   }
 }
 
 .unavailableDate {
   color: #000;
-  opacity: 0.8;
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .availableDate {
-  color: green;
+  color: black;
+  font-weight: bold;
+  background-color: rgba(#048493, 0.16);
 }
 
 .resource {

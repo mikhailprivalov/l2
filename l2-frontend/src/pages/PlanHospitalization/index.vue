@@ -10,7 +10,7 @@
         <col width="85" />
         <col />
         <col width="180" />
-        <col width="170" />
+        <col width="260" />
         <col width="150" />
         <col width="170" />
       </colgroup>
@@ -21,7 +21,7 @@
           <th>Профиль, отделение</th>
           <th>Диагноз</th>
           <th>Примечания</th>
-          <th></th>
+          <th>Статус</th>
         </tr>
       </thead>
       <tbody>

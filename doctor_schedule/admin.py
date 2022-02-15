@@ -26,6 +26,7 @@ class UserResourceModifyRightsAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user')
     autocomplete_fields = ('user',)
     search_fields = ('pk', 'user')
+    filter_horizontal = ('resources', 'departments', 'services')
 
 
 admin.site.register(ScheduleResource, ScheduleResourceAdmin)

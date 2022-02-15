@@ -117,9 +117,17 @@ def get_plans_hospitalization_sql(d_s, d_e, department):
         cursor.execute(
             """WITH 
         t_plans AS 
-            (SELECT id as pk_plan, client_id,
+            (SELECT plans_planhospitalization.id as pk_plan, client_id,
             to_char(exec_at AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS exec_at_char, 
-            work_status, action, exec_at, hospital_department_id, phone, research_id, diagnos, comment FROM plans_planhospitalization
+            work_status, action, exec_at, hospital_department_id, phone, research_id, diagnos, comment, 
+            why_cancel,
+            to_char(dsplan.datetime AT TIME ZONE %(tz)s, 'DD.MM') AS date_char,
+            to_char(dsplan.datetime AT TIME ZONE %(tz)s, 'HH.MI') AS hhmm_start,
+            to_char(dsplan.datetime_end AT TIME ZONE %(tz)s, 'HH.MI') AS hhmm_end
+            FROM plans_planhospitalization
+            LEFT JOIN doctor_schedule_slotfact dsfact on dsfact.id = plans_planhospitalization.slot_fact_id
+            Left join doctor_schedule_slotplan dsplan on dsplan.id = dsfact.plan_id 
+            
             WHERE 
             CASE
             WHEN %(department_id)s > -1 THEN
@@ -140,7 +148,7 @@ def get_plans_hospitalization_sql(d_s, d_e, department):
                concat_ws(' ', ind_family, ind_name, ind_twoname) as fio_patient, birthday, exec_at,
                to_char(EXTRACT(YEAR from age(t_plans.exec_at, t_patient.birthday)), '999') as ind_age,
                t_patient.born, podrazdeleniya_podrazdeleniya.title as depart_title, phone, research_id, directory_researches.title as research_title, diagnos, 
-               t_patient.sex, comment
+               t_patient.sex, comment, why_cancel, date_char, hhmm_start, hhmm_end
                 FROM t_plans
         LEFT JOIN t_patient ON t_plans.client_id = t_patient.card_id 
         LEFT JOIN podrazdeleniya_podrazdeleniya ON podrazdeleniya_podrazdeleniya.id = hospital_department_id

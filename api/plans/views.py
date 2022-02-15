@@ -135,8 +135,11 @@ def get_plan_hospitalization_by_params(request):
         update_date = Log.objects.filter(key=i.pk_plan, type=80008)
         create_date = Log.objects.filter(key=i.pk_plan, type=80007)
         tooltip_data = []
+        patient_created = False
         for c in create_date:
             doctor = c.user.get_fio() if c.user else 'Личный кабинет'
+            if not c.user:
+                patient_created = True
             time = strfdatetime(c.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f'Создал: {doctor} ({time})')
         for u in update_date:
@@ -144,7 +147,12 @@ def get_plan_hospitalization_by_params(request):
             time = strfdatetime(u.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f"Обновил: {doctor} ({time})")
 
-        slot_datetime = None  # TODO slot
+        if i.date_char:
+            slot_datetime = f'{i.date_char} на {i.hhmm_start}-{i.hhmm_end}'
+        elif i.why_cancel:
+            slot_datetime = i.why_cancel
+        else:
+            slot_datetime = "Ожидает решение"
 
         data.append(
             {
@@ -163,6 +171,7 @@ def get_plan_hospitalization_by_params(request):
                 "canceled": i.work_status == 2,
                 "status": i.work_status,
                 "slot": slot_datetime,
+                "created_by_patient": patient_created
             }
         )
         if i.sex.lower() == "ж":
