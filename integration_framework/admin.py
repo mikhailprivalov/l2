@@ -26,6 +26,12 @@ class ExternalServiceAdmin(admin.ModelAdmin):
     )
 
 
+class ExternalServiceRights(admin.ModelAdmin):
+    list_display = (
+        'title',
+    )
+
+
 class CrieOrderAdmin(admin.ModelAdmin):
     raw_id_fields = ('local_direction',)
     list_display = (
@@ -43,3 +49,4 @@ class CrieOrderAdmin(admin.ModelAdmin):
 admin.site.register(models.IntegrationResearches, ResIntertationResearches)
 admin.site.register(models.ExternalService, ExternalServiceAdmin)
 admin.site.register(models.CrieOrder, CrieOrderAdmin)
+admin.site.register(models.ExternalServiceRights)

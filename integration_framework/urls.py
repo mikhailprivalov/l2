@@ -31,4 +31,7 @@ urlpatterns = [
     path('hosp-record', views.hosp_record),
     path('hosp-record-list', views.hosp_record_list),
     path('check-employee', views.check_employee),
+    path('schedule/hospitalization-plan-research', views.hospitalization_plan_research),
+    path('schedule/available-hospitalization-plan', views.available_hospitalization_plan),
+    path('schedule/check-hosp-slot-before-save', views.check_hosp_slot_before_save),
 ]

@@ -4,6 +4,8 @@ import logging
 
 import pytz
 from api.views import mkb10_dict
+from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
+from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
 from plans.models import PlanHospitalization
@@ -38,6 +40,7 @@ from laboratory.settings import (
     DEATH_RESEARCH_PK,
     DEF_LABORATORY_AUTH_PK,
     DEF_LABORATORY_LEGAL_AUTH_PK,
+    SCHEDULE_AGE_LIMIT_LTE,
 )
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -1468,6 +1471,9 @@ def mkb10(request):
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+@can_use_schedule_only
 def hosp_record(request):
     data = data_parse(
         request.body,
@@ -1498,6 +1504,12 @@ def hosp_record(request):
     service: int = data[9]
     phone: str = data[10]
     diagnosis: str = data[11]
+
+    if sex == 'm':
+        sex = 'м'
+
+    if sex == 'f':
+        sex = 'ж'
 
     snils = ''.join(ch for ch in snils if ch.isdigit())
 
@@ -1533,10 +1545,19 @@ def hosp_record(request):
     if not card:
         return Response({"ok": False, 'message': 'Карта не найдена'})
 
+    if SCHEDULE_AGE_LIMIT_LTE:
+        age = card.individual.age()
+        if age > SCHEDULE_AGE_LIMIT_LTE:
+            return Response({"ok": False, 'message': f'Пациент должен быть не старше {SCHEDULE_AGE_LIMIT_LTE} лет'})
+
     hospital_research: Researches = Researches.objects.filter(pk=service, is_hospital=True).first()
 
     if not hospital_research:
         return Response({"ok": False, 'message': 'Услуга не найдена'})
+
+    has_free_slots = check_available_hospital_slot_before_save(hospital_research.pk, None, date)
+    if not has_free_slots:
+        return JsonResponse({"ok": False, "message": "Нет свободных слотов"})
 
     hosp_department_id = hospital_research.podrazdeleniye.pk
     PlanHospitalization.plan_hospitalization_save(
@@ -1552,11 +1573,14 @@ def hosp_record(request):
         },
         None
     )
-
-    return Response({"ok": True})
+    y, m, d = date.split('-')
+    return Response({"ok": True, "message": f"Запись создана — {hospital_research.get_title()} {d}.{m}.{y}"})
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+@can_use_schedule_only
 def hosp_record_list(request):
     data = data_parse(
         request.body,
@@ -1591,6 +1615,12 @@ def hosp_record_list(request):
 
     plan: PlanHospitalization
     for plan in PlanHospitalization.objects.filter(client=card, research__isnull=False, action=0).order_by('-exec_at'):
+        status_description = ""
+        if plan.work_status == 2:
+            status_description = plan.why_cancel
+        if plan.work_status == 3:
+            slot_plan = plan.slot_fact.plan
+            status_description = slot_plan.datetime.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
         rows.append({
             "pk": plan.pk,
             "service": plan.research.get_title(),
@@ -1598,6 +1628,8 @@ def hosp_record_list(request):
             "phone": plan.phone,
             "diagnosis": plan.diagnos,
             "comment": plan.comment,
+            "status": plan.get_work_status_display(),
+            "status_description": status_description
         })
 
     return Response({"rows": rows})
@@ -1798,6 +1830,9 @@ def start_pathological_process(date_death, time_data, type_period):
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+@can_use_schedule_only
 def check_employee(request):
     data = json.loads(request.body)
     snils = data.get('snils')
@@ -1806,3 +1841,40 @@ def check_employee(request):
     if doctor_profile:
         return Response({"ok": True})
     return Response({"ok": False})
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+@can_use_schedule_only
+def hospitalization_plan_research(request):
+    return Response({"services": get_hospital_resource()})
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+@can_use_schedule_only
+def available_hospitalization_plan(request):
+    data = json.loads(request.body)
+    research_pk = data.get('research_pk')
+    resource_id = data.get('resource_id')
+    date_start = data.get('date_start')
+    date_end = data.get('date_end')
+
+    result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
+    return Response({"data": result})
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+@can_use_schedule_only
+def check_hosp_slot_before_save(request):
+    data = json.loads(request.body)
+    research_pk = data.get('research_pk')
+    resource_id = data.get('resource_id')
+    date = data.get('date')
+
+    result = check_available_hospital_slot_before_save(research_pk, resource_id, date)
+    return JsonResponse({"result": result})

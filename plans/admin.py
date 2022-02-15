@@ -36,4 +36,22 @@ class ResPlanHospitalization(admin.ModelAdmin):
     )
 
 
+class ResLimitDatePlanHospitalization(admin.ModelAdmin):
+    list_filter = (
+        'hospital_department',
+    )
+    list_display = (
+        'hospital_department',
+        'research',
+        'date',
+        'max_count',
+        'doc_who_create',
+    )
+
+    search_fields = (
+        'hospital_department',
+        'research',
+    )
+
 admin.site.register(models.PlanHospitalization, ResPlanHospitalization)
+admin.site.register(models.LimitDatePlanHospitalization, ResLimitDatePlanHospitalization)

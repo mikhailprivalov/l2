@@ -552,6 +552,12 @@ class Individual(models.Model):
         gender = data.get('gender', '').lower().strip()
         bdate = data.get('birthdate', '').split(' ')[0]
 
+        if gender == 'm':
+            gender = 'м'
+
+        if gender == 'f':
+            gender = 'ж'
+
         i = None
         card = None
 

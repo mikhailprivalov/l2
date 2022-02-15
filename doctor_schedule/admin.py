@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import ScheduleResource, SlotPlan, SlotFact
+from .models import ScheduleResource, SlotPlan, SlotFact, UserResourceModifyRights
 
 
 class ScheduleResourceAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'executor', 'room', 'department', 'speciality')
+    list_display = ('title', 'executor', 'room', 'department', 'speciality')
     autocomplete_fields = ('executor', 'room', 'department',)
-    search_fields = ('pk', 'executor', 'service', 'room', 'department', 'speciality')
+    search_fields = ('title', 'executor', 'service', 'room', 'department', 'speciality')
     filter_horizontal = ('service',)
 
 
@@ -22,6 +22,13 @@ class SlotFactAdmin(admin.ModelAdmin):
     raw_id_fields = ('direction',)
 
 
+class UserResourceModifyRightsAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'user')
+    autocomplete_fields = ('user',)
+    search_fields = ('pk', 'user')
+
+
 admin.site.register(ScheduleResource, ScheduleResourceAdmin)
 admin.site.register(SlotPlan, SlotPlanAdmin)
 admin.site.register(SlotFact, SlotFactAdmin)
+admin.site.register(UserResourceModifyRights, UserResourceModifyRightsAdmin)

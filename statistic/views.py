@@ -1733,7 +1733,7 @@ def sreening_xls(request):
     styles_obj = structure_sheet.style_sheet()
     wb.add_named_style(styles_obj[0])
     hospital_id = request.user.doctorprofile.hospital_id
-    researches_sql = sql_func.statistics_research(PAP_ANALYSIS_ID, datetime_start, datetime_end, hospital_id)
+    researches_sql = sql_func.statistics_research(PAP_ANALYSIS_ID[0], datetime_start, datetime_end, hospital_id)
     screening_data['count_pap_analysys'] = len(researches_sql)
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
     wb.save(response)

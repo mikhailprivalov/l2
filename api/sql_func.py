@@ -195,3 +195,18 @@ def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1", limit=100):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_resource_researches(resource_pks):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT scheduleresource_id, researches_id FROM doctor_schedule_scheduleresource_service
+        WHERE scheduleresource_id in %(resource_pks)s 
+        ORDER BY scheduleresource_id
+        """,
+            params={"resource_pks": resource_pks},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+

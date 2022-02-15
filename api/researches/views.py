@@ -377,6 +377,7 @@ def researches_update(request):
         department_pk = request_data.get("department")
         title = request_data.get("title", "").strip()
         short_title = request_data.get("short_title", "").strip()
+        schedule_title = request_data.get("schedule_title", "").strip()
         is_global_direction_params = request_data.get("is_global_direction_params", False)
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
@@ -421,6 +422,7 @@ def researches_update(request):
                 res = DResearches(
                     title=title,
                     short_title=short_title,
+                    schedule_title=schedule_title,
                     podrazdeleniye=department,
                     code=code,
                     is_paraclinic=not desc and department.p_type == 3,
@@ -460,6 +462,7 @@ def researches_update(request):
                     return JsonResponse(response)
                 res.title = title
                 res.short_title = short_title
+                res.schedule_title = schedule_title
                 res.podrazdeleniye = department
                 res.code = code
                 res.is_paraclinic = not desc and department.p_type == 3
@@ -593,6 +596,7 @@ def researches_details(request):
         response["department"] = res.podrazdeleniye_id or (-2 if not res.is_hospital else -1)
         response["title"] = res.title
         response["short_title"] = res.short_title
+        response["schedule_title"] = res.schedule_title
         response["code"] = res.code
         response["info"] = res.paraclinic_info or ""
         response["hide"] = res.hide

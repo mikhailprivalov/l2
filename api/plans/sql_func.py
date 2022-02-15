@@ -139,7 +139,7 @@ def get_plans_hospitalization_sql(d_s, d_e, department):
         SELECT pk_plan, client_id, exec_at_char, work_status, action, hospital_department_id,
                concat_ws(' ', ind_family, ind_name, ind_twoname) as fio_patient, birthday, exec_at,
                to_char(EXTRACT(YEAR from age(t_plans.exec_at, t_patient.birthday)), '999') as ind_age,
-               t_patient.born, podrazdeleniya_podrazdeleniya.title as depart_title, phone, directory_researches.title as research_title, diagnos, 
+               t_patient.born, podrazdeleniya_podrazdeleniya.title as depart_title, phone, research_id, directory_researches.title as research_title, diagnos, 
                t_patient.sex, comment
                 FROM t_plans
         LEFT JOIN t_patient ON t_plans.client_id = t_patient.card_id 

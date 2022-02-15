@@ -80,11 +80,11 @@ def get_plan_operations_by_params(request):
         tooltip_data = []
         for c in create_date:
             doctor = c.user.get_fio()
-            time = strfdatetime(c.time, '%d.%m.%y-%H:%M')
+            time = strfdatetime(c.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f'Создал: {doctor} ({time})')
         for u in update_date:
             doctor = u.user.get_fio()
-            time = strfdatetime(u.time, '%d.%m.%y-%H:%M')
+            time = strfdatetime(u.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f"Обновил: {doctor} ({time})")
 
         data.append(
@@ -137,12 +137,14 @@ def get_plan_hospitalization_by_params(request):
         tooltip_data = []
         for c in create_date:
             doctor = c.user.get_fio() if c.user else 'Личный кабинет'
-            time = strfdatetime(c.time, '%d.%m.%y-%H:%M')
+            time = strfdatetime(c.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f'Создал: {doctor} ({time})')
         for u in update_date:
             doctor = u.user.get_fio() if c.user else 'Личный кабинет'
-            time = strfdatetime(u.time, '%d.%m.%y-%H:%M')
+            time = strfdatetime(u.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f"Обновил: {doctor} ({time})")
+
+        slot_datetime = None  # TODO slot
 
         data.append(
             {
@@ -152,12 +154,15 @@ def get_plan_hospitalization_by_params(request):
                 "fio_patient": data_patient,
                 "phone": i.phone,
                 "research_title": i.research_title,
+                "research_id": i.research_id,
                 "depart_title": i.depart_title,
                 "diagnos":i.diagnos,
                 "tooltip_data": '\n'.join(tooltip_data),
                 "sex": i.sex,
                 "comment": i.comment,
-                "canceled": i.work_status == 2
+                "canceled": i.work_status == 2,
+                "status": i.work_status,
+                "slot": slot_datetime,
             }
         )
         if i.sex.lower() == "ж":
@@ -172,7 +177,6 @@ def get_plan_hospitalization_by_params(request):
 @login_required
 def cancel_plan_hospitalization(request):
     request_data = json.loads(request.body)
-    print(request_data)
     ppk = PlanHospitalization.plan_hospitalization_change_status(request_data, request.user.doctorprofile)
 
     return JsonResponse({"plan_pk": ppk})

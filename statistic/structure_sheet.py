@@ -1558,8 +1558,8 @@ def statistic_screening_month_data(ws1, data, month, year, style_border_res):
             ws1.cell(row=6, column=17).value = v
             ws1.cell(row=6, column=17).style = style_border_res
         if k == "count_pap_analysys":
-            ws1.cell(row=6, column=18).value = v
-            ws1.cell(row=6, column=18).style = style_border_res
+            ws1.cell(row=6, column=19).value = v
+            ws1.cell(row=6, column=19).style = style_border_res
 
     return ws1
 

@@ -4,7 +4,11 @@ import time
 import re
 from collections import defaultdict
 from typing import Optional, Union
-from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS
+
+import pytz
+
+from doctor_schedule.models import ScheduleResource
+from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS, TIME_ZONE
 from utils.response import status_response
 
 from django.core.validators import validate_email
@@ -46,7 +50,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all, get_diagnoses
+from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -1278,6 +1282,7 @@ def users_view(request):
 def user_view(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
+    resource_researches = []
     if pk == -1:
         data = {
             "family": '',
@@ -1304,10 +1309,25 @@ def user_view(request):
             "sendPassword": False,
             "external_access": False,
             "date_stop_external_access": None,
+            "resource_schedule": resource_researches,
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
         fio_parts = doc.get_fio_parts()
+        doc_schedule_obj = ScheduleResource.objects.filter(executor=doc)
+        resource_researches_temp = {}
+        doc_resource_pk_title = {k.pk: k.title for k in doc_schedule_obj}
+        doc_schedule = [i.pk for i in doc_schedule_obj]
+        if doc_schedule_obj:
+            researches_pks = get_resource_researches(tuple(doc_schedule))
+            for i in researches_pks:
+                if not resource_researches_temp.get(i.scheduleresource_id, None):
+                    resource_researches_temp[i.scheduleresource_id] = [i.researches_id]
+                else:
+                    temp_result = resource_researches_temp[i.scheduleresource_id]
+                    temp_result.append(i.researches_id)
+                    resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
+        resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
@@ -1334,6 +1354,7 @@ def user_view(request):
             "sendPassword": False,
             "external_access": doc.external_access,
             "date_stop_external_access": doc.date_stop_external_access,
+            "resource_schedule": resource_researches,
         }
 
     return JsonResponse({"user": data})
@@ -2080,3 +2101,11 @@ def org_generators_add(request):
         )
 
     return status_response(True)
+
+
+def current_time(request):
+    now = timezone.now().astimezone(pytz.timezone(TIME_ZONE))
+    return JsonResponse({
+        "date": now.strftime('%Y-%m-%d'),
+        "time": now.strftime('%X'),
+    })

@@ -1,38 +1,46 @@
 <template>
-  <div class="day-root" :class="today === day.date && 'day-today'">
+  <div class="day-root" :class="[currentDate === day.date && 'day-today', mode === 'list' ? 'day-list' : 'day-natural']">
     <div class="day-header">
-      <div class="date-display">{{ dateDisplay }}</div>
-      <div class="week-day-name">{{ weekDayName }}</div>
+      <DayHeader :day="day" :is-editing="isEditing" :resource="resource" />
     </div>
-    <div class="hours">
+    <div class="hours" v-if="mode !== 'list'">
       <div class="hour" v-for="h in allHours" :key="h">
         <div class="hour-label">{{ h }}</div>
+        <div class="hour-buttons" v-if="isEditing">
+          <a href="#" class="a-under" title="Создать слот" @click.prevent="createSlot(h)" v-tippy><i class="fa fa-plus"></i></a>
+        </div>
         <div class="hour-border"></div>
       </div>
     </div>
-    <TimeSlot v-for="s in day.slots" :key="s.id" :data="s" :allHoursValues="allHoursValues" />
+    <TimeSlot v-for="s in day.slots" :key="s.id" :data="s" :mode="mode" :services="services" :allHoursValues="allHoursValues" />
+    <TimeMarker v-if="currentDate === day.date && mode !== 'list'" :time="currentTime" :allHoursValues="allHoursValues" />
+    <button class="btn btn-blue-nb btn-sm btn-block nbr" v-if="isEditing" @click.prevent="createSlot()">Создать слот</button>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import moment from 'moment';
 import TimeSlot from './TimeSlot.vue';
-
-const WEEK_DAY_NAMES = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
-const MONTH_LABELS = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+import TimeMarker from './TimeMarker.vue';
+import DayHeader from './DayHeader.vue';
 
 @Component({
   components: {
     TimeSlot,
+    TimeMarker,
+    DayHeader,
   },
   props: {
     day: {
       type: Object,
       required: true,
     },
-    today: {
+    currentDate: {
+      type: String,
+      required: true,
+    },
+    currentTime: {
       type: String,
       required: true,
     },
@@ -41,6 +49,20 @@ const MONTH_LABELS = ['янв', 'фев', 'мар', 'апр', 'май', 'июн'
       required: true,
     },
     allHoursValues: {
+      type: Array,
+      required: true,
+    },
+    mode: {
+      type: String,
+    },
+    isEditing: {
+      type: Boolean,
+    },
+    resource: {
+      type: Number,
+      required: true,
+    },
+    services: {
       type: Array,
       required: true,
     },
@@ -53,22 +75,23 @@ export default class Day extends Vue {
 
   allHoursValues: any[];
 
-  today: string;
+  currentDate: string;
 
-  get weekDayName() {
-    return WEEK_DAY_NAMES[this.day.weekDay];
-  }
+  currentTime: string;
 
-  get dateDisplay() {
-    const m = moment(this.day.date, 'YYYY-MM-DD');
-    const dd = m.format('DD');
-    const mm = MONTH_LABELS[m.month()];
-    return `${dd} ${mm}`;
-  }
+  mode: string | null;
+
+  resource: number;
+
+  services: any[];
 
   getOffset(s) {
     const offset = s.minute * 2 + this.allHoursValues.indexOf(s.hourValue) * 120 + 51;
     return `${offset}px`;
+  }
+
+  createSlot(time) {
+    this.$root.$emit('schedule:create-one-slot', this.day.date, time);
   }
 }
 </script>
@@ -79,6 +102,7 @@ $hour-height: 120px;
 
 .day-root {
   width: calc(100% / 7);
+  min-height: 100%;
   flex: 0 calc(100% / 7);
   border-right: 1px solid $border-color;
   position: relative;
@@ -104,10 +128,6 @@ $hour-height: 120px;
   height: 51px;
 }
 
-.date-display {
-  font-weight: bold;
-}
-
 .hour {
   position: relative;
   height: $hour-height;
@@ -130,6 +150,13 @@ $hour-height: 120px;
   &-label {
     position: absolute;
     top: 3px;
+    left: 3px;
+    font-size: 12px;
+  }
+
+  &-buttons {
+    position: absolute;
+    top: 18px;
     left: 3px;
     font-size: 12px;
   }

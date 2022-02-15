@@ -89,7 +89,7 @@ export default {
         const { data } = await this.$api(`/doctorprofile-search?query=${searchQuery}&signOrg=${this.sign_org}`);
         callback(
           null,
-          data.map(d => ({ ...d, label: d.fio })),
+          data.map((d) => ({ ...d, label: d.fio })),
         );
       }
     },

@@ -11,7 +11,7 @@
         :disabled="open_pk !== -2"
         :clearable="false"
       />
-      <input class="form-control" placeholder="Фильтр" v-model="filter" style="margin-top: 5px;" />
+      <input class="form-control" placeholder="Фильтр" v-model="filter" style="margin-top: 5px" />
       <div class="left-wrapper">
         <ul>
           <li v-for="d in departmentFiltered" :key="d.pk">
@@ -35,12 +35,12 @@
             <div class="col-xs-6" style="padding-right: 0">
               <div class="input-group">
                 <input class="form-control wbr" type="text" v-model="user.family" placeholder="Фамилия" />
-                <span class="input-group-btn" style="width:0"></span>
+                <span class="input-group-btn" style="width: 0"></span>
                 <input class="form-control wbr" type="text" v-model="user.name" placeholder="Имя" />
-                <span class="input-group-btn" style="width:0"></span>
+                <span class="input-group-btn" style="width: 0"></span>
                 <input
                   class="form-control"
-                  style="margin-right: -1px;"
+                  style="margin-right: -1px"
                   type="text"
                   v-model="user.patronymic"
                   placeholder="Отчество"
@@ -48,7 +48,7 @@
               </div>
             </div>
             <div class="col-xs-6" style="padding-left: 0">
-              <div class="input-group" style="margin-right: -1px;">
+              <div class="input-group" style="margin-right: -1px">
                 <span class="input-group-addon">Имя пользователя</span>
                 <input class="form-control" type="text" v-model="user.username" />
                 <div class="input-group-btn">
@@ -113,7 +113,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0;" v-if="modules.change_password">
+            <div class="col-xs-6" style="padding-left: 0" v-if="modules.change_password">
               <div class="input-group">
                 <span class="input-group-addon">Email</span>
                 <input
@@ -135,7 +135,7 @@
                 </select>
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0;" v-if="modules.change_password">
+            <div class="col-xs-6" style="padding-left: 0" v-if="modules.change_password">
               <label class="group-input-label">
                 <input type="checkbox" v-model="user.sendPassword" :disabled="!validEmail" />
                 Сгенерировать новый пароль и отправить на email
@@ -151,13 +151,13 @@
                 <input class="form-control" v-model="user.rmis_login" />
               </div>
             </div>
-            <div class="col-xs-4" style="padding-left: 0; padding-right: 0;">
+            <div class="col-xs-4" style="padding-left: 0; padding-right: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС пароль</span>
                 <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password" />
               </div>
             </div>
-            <div class="col-xs-4" style="padding-left: 0;">
+            <div class="col-xs-4" style="padding-left: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">ID ресурса РМИС</span>
                 <input class="form-control" v-model="user.rmis_resource_id" />
@@ -171,7 +171,7 @@
                 <input class="form-control" v-model="user.rmis_location" />
               </div>
             </div>
-            <div class="col-xs-4" style="padding-left: 0; padding-right: 0;">
+            <div class="col-xs-4" style="padding-left: 0; padding-right: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС employee</span>
                 <input class="form-control" v-model="user.rmis_employee_id" />
@@ -227,31 +227,49 @@
           </div>
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Группы</span>
-            <select class="form-control" multiple style="height: 136px;" v-model="user.groups">
+            <select class="form-control" multiple style="height: 136px" v-model="user.groups">
               <option v-for="g in user.groups_list" :value="g.pk" :key="g.pk">{{ g.title }}</option>
             </select>
           </div>
           <div class="row">
             <div class="col-xs-2" style="padding-right: 0">
               <div class="input-group" style="width: 100%">
-                <label class="input-group-addon" style="height: 34px;text-align: left;">
+                <label class="input-group-addon" style="height: 34px; text-align: left">
                   <input type="checkbox" v-model="user.external_access" /> Внешний доступ до
                 </label>
               </div>
             </div>
             <div class="col-xs-2" style="padding-left: 0">
               <div class="input-group" style="width: 100%">
-                <input v-if="user.external_access" class="form-control" type="date" v-model="user.date_stop_external_access"/>
+                <input v-if="user.external_access" class="form-control" type="date" v-model="user.date_stop_external_access" />
               </div>
             </div>
             <div class="col-xs-8"></div>
           </div>
-          <div class="more-title">Запрет на создание направлений с назначениями:</div>
-          <div class="row" style="margin-right: 0">
-            <div class="col-xs-6" style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
+          <div class="more-title">
+            Запрет на создание направлений с назначениями:
+            <button class="btn btn-blue-nb sidebar-btn" style="font-size: 13px">
+              <i
+                v-if="setup_forbidden"
+                class="glyphicon glyphicon-circle-arrow-up"
+                @click="change_setup_forbidden"
+                v-tippy="{ placement: 'bottom' }"
+                title="Скрыть"
+              />
+              <i
+                v-else
+                class="glyphicon glyphicon-circle-arrow-down"
+                @click="change_setup_forbidden"
+                v-tippy="{ placement: 'bottom' }"
+                title="Редактировать"
+              />
+            </button>
+          </div>
+          <div v-if="setup_forbidden" class="row" style="margin-right: 0">
+            <div class="col-xs-6" style="height: 300px; border-right: 1px solid #eaeaea; padding-right: 0">
               <researches-picker :hidetemplates="true" :just_search="true" v-model="user.restricted_to_direct" />
             </div>
-            <div class="col-xs-6" style="height: 300px;padding-left: 0;padding-right: 0;">
+            <div class="col-xs-6" style="height: 300px; padding-left: 0; padding-right: 0">
               <selected-researches :researches="user.restricted_to_direct" :simple="true" />
             </div>
           </div>
@@ -259,11 +277,58 @@
             Услуги, оказываемые пользователем:
           </div>
           <div class="row" style="margin-right: 0" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">
-            <div class="col-xs-6" style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
+            <div class="col-xs-6" style="height: 300px; border-right: 1px solid #eaeaea; padding-right: 0">
               <researches-picker :hidetemplates="true" :filter_types="[2]" :just_search="true" v-model="user.users_services" />
             </div>
-            <div class="col-xs-6" style="height: 300px;padding-left: 0;padding-right: 0;">
+            <div class="col-xs-6" style="height: 300px; padding-left: 0; padding-right: 0">
               <selected-researches :researches="user.users_services" :simple="true" />
+            </div>
+          </div>
+          <div class="more-title">
+            Расписание-ресурсы:
+            <button class="btn btn-blue-nb sidebar-btn" style="font-size: 13px">
+              <i
+                v-if="setup_resource"
+                class="glyphicon glyphicon-circle-arrow-up"
+                @click="change_setup_resource"
+                v-tippy="{ placement: 'bottom' }"
+                title="Скрыть"
+              />
+              <i
+                v-else
+                class="glyphicon glyphicon-circle-arrow-down"
+                @click="change_setup_resource"
+                v-tippy="{ placement: 'bottom' }"
+                title="Редактировать"
+              />
+            </button>
+          </div>
+          <div v-if="setup_resource" class="row" style="height: 200px; border-right: 1px solid #eaeaea; padding-right: 0">
+            <div class="col-xs-6" style="height: 100%">
+              <ResearchesPicker v-model="resource_researches" autoselect="none" :hidetemplates="true" />
+            </div>
+            <div class="col-xs-6" style="height: 100%">
+              <SelectedResearches :researches="resource_researches || []" :simple="true" />
+            </div>
+            <div class="col-xs-10" style="padding-right: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">Наименование ресурса</span>
+                <input class="form-control" v-model="current_resource_title" />
+              </div>
+            </div>
+            <div style="float: right; padding-right: 20px" class="col-xs-2">
+              <button :disabled="!valid" @click="save_resource" class="btn btn-blue-nb">Сохранить ресурс</button>
+            </div>
+          </div>
+          <div v-if="setup_resource" style="padding-top: 30px">
+            <div class="research" :key="row.pk" v-for="row in rows">
+              <span v-for="res in row.researches" :key="res.pk" class="t-r">
+                {{ res.title }}
+              </span>
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="current_resource_researches(row)">
+                Редактировать
+              </button>
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="open_schedule">Расписание</button>
             </div>
           </div>
         </div>
@@ -358,6 +423,12 @@ export default {
       departments: [],
       specialities: [],
       positions: [],
+      resource_researches: [],
+      setup_forbidden: false,
+      setup_resource: false,
+      resource_templates_list: [],
+      current_resource_pk: -1,
+      current_resource_title: '',
       user: {
         username: '',
         password: '',
@@ -373,6 +444,7 @@ export default {
         sendPassword: false,
         external_access: false,
         date_stop_external_access: '',
+        resource_schedule: [],
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -380,15 +452,18 @@ export default {
   },
   created() {
     this.load_users();
+    this.current_resource_pk = -1;
+    this.resource_researches = [];
+    this.current_resource_title = '';
   },
   watch: {
     'user.family': function () {
       this.user.family = this.user.family
         .replace(/\s\s+/g, ' ')
         .split(' ')
-        .map(s => s
+        .map((s) => s
           .split('-')
-          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
           .join('-'))
         .join(' ');
       if (this.open_pk === -1) {
@@ -399,9 +474,9 @@ export default {
       this.user.name = this.user.name
         .replace(/\s\s+/g, ' ')
         .split(' ')
-        .map(s => s
+        .map((s) => s
           .split('-')
-          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
           .join('-'))
         .join(' ');
       if (this.open_pk === -1) {
@@ -412,9 +487,9 @@ export default {
       this.user.patronymic = this.user.patronymic
         .replace(/\s\s+/g, ' ')
         .split(' ')
-        .map(s => s
+        .map((s) => s
           .split('-')
-          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
           .join('-'))
         .join(' ');
       if (this.open_pk === -1) {
@@ -442,8 +517,42 @@ export default {
 
       this.load_users();
     },
+    resource_researches() {
+      if (this.resource_researches.length === 0) {
+        this.current_resource_pk = -1;
+        this.resource_researches = [];
+      }
+    },
   },
   methods: {
+    open_schedule() {
+      window.open('/ui/schedule', '_blank');
+    },
+    current_resource_researches(row) {
+      for (const res of this.resource_templates_list) {
+        if (row.pk === res.pk) {
+          this.resource_researches = res.researches;
+          this.current_resource_pk = row.pk;
+          this.current_resource_title = res.title;
+        }
+      }
+    },
+    async save_resource() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await this.$api('schedule/save-resource', {
+        pk: this.user.doc_pk,
+        resource_researches: this.resource_researches,
+        res_pk: this.current_resource_pk,
+        res_title: this.current_resource_title,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    change_setup_forbidden() {
+      this.setup_forbidden = !this.setup_forbidden;
+    },
+    change_setup_resource() {
+      this.setup_resource = !this.setup_resource;
+    },
     deb_gu: debounce(function () {
       this.gen_username();
     }, 500),
@@ -487,6 +596,10 @@ export default {
         this.user.department = dep;
         this.gen_passwd();
       }
+      this.current_resource_pk = -1;
+      this.current_resource_title = '';
+      this.resource_researches = [];
+      this.resource_templates_list = this.user.resource_schedule;
       await this.$store.dispatch(actions.DEC_LOADING);
       this.open_pk = pk;
     },
@@ -523,15 +636,25 @@ export default {
         groups: [],
         groups_list: [],
         restricted_to_direct: [],
+        resource_schedule: [],
         users_services: [],
         username: '',
         password: '',
         department: null,
         rmis_resource_id: '',
       };
+      this.current_resource_pk = -1;
+      this.current_resource_title = '';
+      this.resource_researches = [];
     },
   },
   computed: {
+    rows() {
+      return this.resource_templates_list.map((r) => ({
+        ...r,
+        researches: r.researches.map((rpk) => this.$store.getters.researches_obj[rpk]).filter(Boolean),
+      }));
+    },
     snilsValid() {
       return (
         !this.user.snils || (!this.user.snils.includes('-') && !this.user.snils.includes(' ') && validateSnils(this.user.snils))
@@ -546,12 +669,12 @@ export default {
         r.push({
           ...x,
           users: x.users.filter(
-            y => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
+            (y) => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
               || y.username.toLowerCase().startsWith(this.filter.toLowerCase()),
           ),
         });
       }
-      return r.filter(d => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
+      return r.filter((d) => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
     },
     valid() {
       const p = (this.open_pk > -1
@@ -719,6 +842,7 @@ li.selected {
     height: calc(100% - 68px);
     overflow-y: auto;
     overflow-x: hidden;
+    padding-bottom: 68px;
   }
 
   &-title {
@@ -745,6 +869,68 @@ li.selected {
   background: #fff;
   border-left: 1px solid #a9b2bd;
   border-bottom: 1px solid #a9b2bd;
+  margin-bottom: 0;
+}
+
+.sidebar-btn {
+  border-radius: 5px;
+
+  &:not(.text-center) {
+    text-align: left;
+  }
+
+  border-top: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  border-bottom: none !important;
+  padding: 4px;
+  height: 23px;
+
+  &:not(:hover),
+  &.active-btn:hover {
+    cursor: default;
+    background-color: rgba(#737373, 0.01) !important;
+    color: #37bc9b;
+  }
+}
+.sidebar-content {
+  height: 100%;
+  overflow-y: auto;
+  background-color: hsla(30, 3%, 97%, 1);
+}
+
+.sidebar-content:not(.fcenter) {
+  padding-bottom: 10px;
+}
+
+.t-r {
+  font-size: 80%;
+  padding-left: 5px;
+}
+
+.research {
+  background-color: #fff;
+  padding: 5px;
+  margin: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+
+  &.rhide {
+    background-image: linear-gradient(#6c7a89, #56616c);
+    color: #fff;
+  }
+
+  hr {
+  }
+}
+
+.research:not(:first-child) {
+  margin-top: 0;
+}
+
+.research:last-child {
   margin-bottom: 0;
 }
 </style>
