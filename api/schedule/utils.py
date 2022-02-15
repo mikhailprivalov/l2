@@ -5,7 +5,7 @@ from users.models import DoctorProfile
 
 def can_access_user_to_modify_resource(user: DoctorProfile, resource_param: ScheduleResource = None, resource_pk: int = None):
     if resource_param:
-        resource: ScheduleResource = resource_param
+        resource: ScheduleResource = ScheduleResource.objects.filter(pk=resource_param).first()
     else:
         resource: ScheduleResource = ScheduleResource.objects.filter(pk=resource_pk).first()
 

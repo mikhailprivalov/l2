@@ -469,4 +469,4 @@ def schedule_access(request):
 def can_edit_resource(request, resource_pk):
     if has_group(request.user, *ADMIN_SCHEDULE_GROUPS):
         return True
-    return status_response(can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk))
+    return can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk)
