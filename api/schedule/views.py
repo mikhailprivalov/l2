@@ -304,7 +304,7 @@ def save(request):
 
 
 @login_required
-# @group_required(*ADMIN_SCHEDULE_GROUPS)
+@group_required(*ADMIN_SCHEDULE_GROUPS)
 def save_resource(request):
     data = data_parse(request.body, {'pk': int, 'resource_researches': list, 'res_pk': int, 'res_title': str})
     user_pk = data[0]
@@ -475,4 +475,4 @@ def schedule_access(request):
 def can_edit_resource(request, resource_pk):
     if has_group(request.user, *ADMIN_SCHEDULE_GROUPS):
         return True
-    return can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk)
+    return can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk=resource_pk)
