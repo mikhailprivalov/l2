@@ -1277,7 +1277,7 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
             type = "Паспорт гражданина РФ"     
         ws1.cell(row=r, column=20).value = type
         ws1.cell(row=r, column=21).value = number  
-        ws1.cell(row=r, column=22).value = serial   
+        ws1.cell(row=r, column=22).value = serial
 
         ws1.cell(row=r, column=23).value = snils
         ws1.cell(row=r, column=24).value = polis
