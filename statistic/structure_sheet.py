@@ -1231,7 +1231,11 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
         ws1.cell(row=r, column=7).value = ""
         ws1.cell(row=r, column=8).value = i.date_reciev
         ws1.cell(row=r, column=9).value = i.date_confirm
-        ws1.cell(row=r, column=10).value = 0 if 'отриц' in i.value.lower() else 1
+        if i.value:
+            val_param = 0 if 'отриц' in i.value.lower() else 1
+        else:
+            val_param = ""
+        ws1.cell(row=r, column=10).value = val_param
         ws1.cell(row=r, column=11).value = ""
         ws1.cell(row=r, column=12).value = ""
         ws1.cell(row=r, column=13).value = i.family
