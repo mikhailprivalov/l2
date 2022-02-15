@@ -1471,8 +1471,6 @@ def mkb10(request):
 
 
 @api_view(['POST'])
-@authentication_classes([])
-@permission_classes([])
 @can_use_schedule_only
 def hosp_record(request):
     data = data_parse(
@@ -1578,8 +1576,6 @@ def hosp_record(request):
 
 
 @api_view(['POST'])
-@authentication_classes([])
-@permission_classes([])
 @can_use_schedule_only
 def hosp_record_list(request):
     data = data_parse(
@@ -1830,8 +1826,6 @@ def start_pathological_process(date_death, time_data, type_period):
 
 
 @api_view(['POST'])
-@authentication_classes([])
-@permission_classes([])
 @can_use_schedule_only
 def check_employee(request):
     data = json.loads(request.body)
@@ -1844,16 +1838,12 @@ def check_employee(request):
 
 
 @api_view(['GET'])
-@authentication_classes([])
-@permission_classes([])
 @can_use_schedule_only
 def hospitalization_plan_research(request):
     return Response({"services": get_hospital_resource()})
 
 
 @api_view(['POST'])
-@authentication_classes([])
-@permission_classes([])
 @can_use_schedule_only
 def available_hospitalization_plan(request):
     data = json.loads(request.body)
@@ -1867,8 +1857,6 @@ def available_hospitalization_plan(request):
 
 
 @api_view(['POST'])
-@authentication_classes([])
-@permission_classes([])
 @can_use_schedule_only
 def check_hosp_slot_before_save(request):
     data = json.loads(request.body)
