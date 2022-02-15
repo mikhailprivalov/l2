@@ -1001,7 +1001,9 @@ def sql_get_result_by_direction(pk, d_s, d_e):
                     directions_result.value,
                     directions_result.fraction_id,
                     hospitals_hospitals.title as hosp_title,
-                    hospitals_hospitals.ogrn as hosp_ogrn
+                    hospitals_hospitals.ogrn as hosp_ogrn,
+                    dr.title as research_title,
+                    dr.code as research_code
                     FROM directions_issledovaniya
                     LEFT JOIN directions_napravleniya
                     ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -1010,6 +1012,7 @@ def sql_get_result_by_direction(pk, d_s, d_e):
                     LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                     LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                     LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
+                    LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
                     WHERE
                         directions_issledovaniya.research_id = %(pk)s
                     AND
