@@ -1281,7 +1281,7 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
 
         ws1.cell(row=r, column=23).value = snils
         ws1.cell(row=r, column=24).value = polis
-        ws1.cell(row=r, column=25).value = "иркутская область" 
+        ws1.cell(row=r, column=25).value = "Иркутская область" 
         ws1.cell(row=r, column=39).value = i.hosp_title
         ws1.cell(row=r, column=40).value = i.hosp_ogrn
 
