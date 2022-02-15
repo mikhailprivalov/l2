@@ -1,5 +1,5 @@
 <template>
-  <tr :class="{ 'cancel-row': data.canceled, 'approved-row': data.status === 3 }">
+  <tr :class="{ 'cancel-row': data.canceled, 'approved-row': data.status === 3, 'patient-created': data.created_by_patient }">
     <td v-tippy="vtp" :title="data.tooltip_data">
       {{ data.date }}
     </td>
@@ -22,7 +22,7 @@
         </button>
         <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="cancelModal = true">Отмена</button>
       </template>
-      <template v-else-if="data.slot"> Запись:<br />{{ data.slot }} </template>
+      <template v-else-if="data.slot"> {{ data.slot }} </template>
     </td>
     <MountingPortal mountTo="#portal-place-modal" :name="`PlanCancel_${data.pk_plan}`" append>
       <transition name="fade">
@@ -189,7 +189,15 @@ export default {
 .approved-row {
   td,
   th {
-    background-color: rgb(232, 250, 230);
+    background-color: #a9cfbb;
+  }
+}
+
+.patient-created {
+  td,
+  th {
+    background-color: #e2effb;
+    opacity: 0.8;
   }
 }
 

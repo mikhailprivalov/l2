@@ -307,19 +307,25 @@ def save(request):
 @group_required(*ADMIN_SCHEDULE_GROUPS)
 def save_resource(request):
     data = data_parse(request.body, {'pk': int, 'resource_researches': list, 'res_pk': int, 'res_title': str})
-    user = User.objects.get(pk=data[0])
+    user_pk = data[0]
+    resource_researches = data[1]
+    res_pk = data[2]
+    res_title = data[3]
+
+    user = User.objects.get(pk=user_pk)
     executor = DoctorProfile.objects.get(user=user)
-    researches = Researches.objects.filter(pk__in=data[1])
-    if data[2] == -1:
-        doc_resource = ScheduleResource(executor=executor, department=executor.podrazdeleniye, speciality=executor.specialities, title=data[3])
+    researches = Researches.objects.filter(pk__in=resource_researches)
+    if res_pk == -1:
+        doc_resource = ScheduleResource(executor=executor, department=executor.podrazdeleniye, speciality=executor.specialities, title=res_title)
+        doc_resource.save()
     else:
-        doc_resource = ScheduleResource.objects.get(pk=data[2])
-        doc_resource.title = data[3]
+        doc_resource = ScheduleResource.objects.get(pk=res_pk)
+        doc_resource.title = res_title
         doc_resource.service.clear()
     for r in researches:
         doc_resource.service.add(r)
     doc_resource.save()
-    return JsonResponse({"message": "dfdf", "ok": True})
+    return JsonResponse({"message": "Ресурс создан", "ok": True})
 
 
 @login_required
@@ -469,4 +475,4 @@ def schedule_access(request):
 def can_edit_resource(request, resource_pk):
     if has_group(request.user, *ADMIN_SCHEDULE_GROUPS):
         return True
-    return status_response(can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk))
+    return can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk=resource_pk)
