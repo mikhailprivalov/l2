@@ -90,8 +90,8 @@ class SlotFact(models.Model):
 
 class UserResourceModifyRights(models.Model):
     resources = models.ManyToManyField(ScheduleResource, verbose_name='Ресурсы', db_index=True)
-    departments = models.ManyToManyField(Podrazdeleniya, verbose_name='Подразделения', db_index=True)
-    services = models.ManyToManyField(Researches, verbose_name='Услуга', db_index=True)
+    departments = models.ManyToManyField(Podrazdeleniya, blank=True, default=None, verbose_name='Подразделения', db_index=True)
+    services = models.ManyToManyField(Researches, blank=True, default=None, verbose_name='Услуга', db_index=True)
 
     user = models.OneToOneField(DoctorProfile, unique=True, null=True, verbose_name='Исполнитель', on_delete=models.CASCADE)
 
