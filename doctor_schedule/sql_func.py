@@ -19,6 +19,8 @@ def get_resource_by_research_hospital():
 
 
 def get_slot_plan_by_hosp_resource(date_start, date_end, resource_tuple):
+    if not resource_tuple:
+        return []
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -57,6 +59,8 @@ def get_date_slots(date_start, date_end, resource_id):
 
 
 def get_date_slots_for_many_resource(date_start, date_end, resource_tuple):
+    if not resource_tuple:
+        return []
     with connection.cursor() as cursor:
         cursor.execute(
             """
