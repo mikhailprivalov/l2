@@ -109,6 +109,17 @@ class ServiceLocation(models.Model):
         verbose_name_plural = 'Места оказания услуг'
 
 
+class MethodLaboratoryAnalisis(models.Model):
+    title = models.CharField(max_length=64, help_text="Методика выполнения")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Методика анализа'
+        verbose_name_plural = 'Методика анализа'
+
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -245,6 +256,7 @@ class Researches(models.Model):
     generator_name = models.CharField(max_length=60, null=True, blank=True, default=None, help_text="Название для xml-generator")
     expertise_params = models.ForeignKey('self', related_name='expertise_params_p', help_text="Экспертиза ", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     file_name_contract = models.CharField(max_length=60, null=True, blank=True, default="default", help_text="Название ф-ла контракта")
+    method_lab_default = models.ForeignKey(MethodLaboratoryAnalisis, db_index=True, blank=True, default=None, null=True, help_text='Методика анализа по умолчанию', on_delete=models.SET_NULL)
 
     @staticmethod
     def filter_type(t):
