@@ -28,8 +28,8 @@ export default {
   computed: {
     card() {
       return {
-        card_pk: selected_card.pk,
-        ...selected_card,
+        card_pk: this.selected_card.pk,
+        ...this.selected_card,
       };
     },
   },
