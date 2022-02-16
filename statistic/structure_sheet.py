@@ -1231,13 +1231,16 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
         ws1.cell(row=r, column=7).value = ""
         ws1.cell(row=r, column=8).value = i.date_reciev
         ws1.cell(row=r, column=9).value = i.date_confirm
-        if i.value:
+        if i.value and i.method_title != "ИФА":
             val_param = 0 if 'отриц' in i.value.lower() else 1
+            result_val = ""
         else:
+            result_val = i.value
             val_param = ""
         ws1.cell(row=r, column=10).value = val_param
-        ws1.cell(row=r, column=11).value = ""
-        ws1.cell(row=r, column=12).value = ""
+        method_val = 2 if i.method_title == "ИФА" else 1
+        ws1.cell(row=r, column=11).value = method_val
+        ws1.cell(row=r, column=12).value = result_val
         ws1.cell(row=r, column=13).value = i.family
         ws1.cell(row=r, column=14).value = i.name
         ws1.cell(row=r, column=15).value = i.patronymic
