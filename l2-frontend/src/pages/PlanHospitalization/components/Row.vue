@@ -1,5 +1,6 @@
 <template>
-  <tr :class="{ 'cancel-row': data.canceled, 'approved-row': data.status === 3, 'patient-created': data.created_by_patient }">
+  <tr :class="{ 'cancel-row': data.canceled, 'approved-row': data.status === 3,
+          'patient-created': data.created_by_patient && data.status !== 3 }">
     <td v-tippy="vtp" :title="data.tooltip_data">
       {{ data.date }}
     </td>
