@@ -520,7 +520,6 @@ export default {
     resource_researches() {
       if (this.resource_researches.length === 0) {
         this.current_resource_pk = -1;
-        this.resource_researches = [];
       }
     },
   },
