@@ -20,7 +20,6 @@
         <HospPlanScheduleButton :data="data" />
         <div class="spacer" />
         <HospPlanCancelButton :data="data" />
-        <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="cancelModal = true">Отмена</button>
       </template>
       <template v-else-if="data.slot"> {{ data.slot }} </template>
     </td>

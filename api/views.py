@@ -515,8 +515,10 @@ def laboratory_journal_params(request):
 
 def bases(request):
     k = f'view:bases:{request.user.pk}'
-    disabled_fin_source = [i.fin_source.pk for i in DisableIstochnikiFinansirovaniya.objects.filter(hospital_id=request.user.doctorprofile.hospital_id)]
-    user_disabled_fin_source = [x for x in users.DoctorProfile.objects.values_list('disabled_fin_source', flat=True).filter(pk=request.user.doctorprofile.pk) if x is not None]
+    disabled_fin_source = [i.fin_source.pk for i in DisableIstochnikiFinansirovaniya.objects.filter(
+        hospital_id=request.user.doctorprofile.hospital_id)] if request.user.is_authenticated else []
+    user_disabled_fin_source = [x for x in users.DoctorProfile.objects.values_list('disabled_fin_source', flat=True).filter(
+        pk=request.user.doctorprofile.pk) if x is not None] if request.user.is_authenticated else []
     disabled_fin_source.extend(user_disabled_fin_source)
     ret = cache.get(k)
     if not ret:
