@@ -1256,7 +1256,8 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
                     elif k == "полис":
                         polis = v
                     elif "паспорт" in k.lower() or "рождение" in k.lower():
-                        type = k
+                        k_value = "Паспорт гражданина РФ" if "паспорт" in k.lower() else k
+                        type = k_value
                         data = v.split("@")
                         serial = data[0]
                         number = data[1]
