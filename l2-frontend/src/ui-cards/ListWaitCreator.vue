@@ -27,8 +27,6 @@
           :masks="masks"
           :model-config="modelConfig"
           trim-weeks
-          is-dark
-          color="teal"
         />
       </div>
       <div class="form-row sm-f" v-if="hasOnlyHosp">
