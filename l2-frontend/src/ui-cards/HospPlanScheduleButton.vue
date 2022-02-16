@@ -1,7 +1,7 @@
 <template>
   <div v-frag>
     <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="openSchedule = true">
-      Записать на время
+      Записать
     </button>
     <MountingPortal mountTo="#portal-place-modal" :name="`PlanSchedule_${data.pk_plan}`" append>
       <transition name="fade">
