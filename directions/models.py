@@ -1139,7 +1139,7 @@ class Napravleniya(models.Model):
             return result
         card = Clients.Card.objects.get(pk=client_id)
 
-        if finsource and isinstance(finsource, str) and not finsource.isdigit():
+        if (finsource and isinstance(finsource, str) and not finsource.isdigit()) or not finsource:
             f_obj: Optional[IstochnikiFinansirovaniya] = (
                 IstochnikiFinansirovaniya.objects.filter(base=card.base, title="ОМС", hide=False).first()
                 or IstochnikiFinansirovaniya.objects.filter(base=card.base, hide=False).order_by('-order_weight').first()
@@ -1432,7 +1432,7 @@ class Napravleniya(models.Model):
             res_children = Napravleniya.gen_napravleniya_by_issledovaniya(
                 client_id,
                 diagnos,
-                finsource.pk,
+                finsource.pk if finsource else None,
                 history_num,
                 ofname_id,
                 doc_current,
@@ -1453,7 +1453,7 @@ class Napravleniya(models.Model):
             if not res_children["r"]:
                 return res_children
             result['list_id'].extend(res_children['list_id'])
-        if finsource.title.lower() == "платно":
+        if finsource and finsource.title.lower() == "платно":
             from forms.forms_func import create_contract
             sorted_direction = sort_direction_by_file_name_contract(tuple(result['list_id']), '1')
             result_sorted = {}
@@ -1465,7 +1465,6 @@ class Napravleniya(models.Model):
             for k, v in result_sorted.items():
                 create_contract(v, client_id)
         return result
-
 
     def has_save(self):
         """
