@@ -116,8 +116,8 @@ class MethodLaboratoryAnalisis(models.Model):
         return "%s" % self.title
 
     class Meta:
-        verbose_name = 'Место оказания услуги'
-        verbose_name_plural = 'Места оказания услуг'
+        verbose_name = 'Методика анализа'
+        verbose_name_plural = 'Методика анализа'
 
 
 class Researches(models.Model):
