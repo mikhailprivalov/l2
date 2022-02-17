@@ -1648,7 +1648,7 @@ def direction_records(request):
     )
     snils: str = data[0]
     enp: str = data[1]
-    date_year: int = data[1]
+    date_year: int = data[2]
 
     card: Card = find_patient(snils, enp)
     if not card:
