@@ -1732,9 +1732,10 @@ def directions_by_category_result_year(request):
 @api_view(['POST'])
 def results_by_direction(request):
     request_data = json.loads(request.body)
-    is_lab = request_data.get('isLab', False)
-    is_paraclinic = request_data.get('isParaclinic', False)
-    is_doc_refferal = request_data.get('isDocReferral', False)
+    mode = request_data.get('mode')
+    is_lab = request_data.get('isLab', mode == 'laboratory')
+    is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
+    is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
     direction = request_data.get('pk')
 
     directions = request_data.get('directions', [])
