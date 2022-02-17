@@ -354,3 +354,29 @@ def direction_by_card(d_s, d_e, card_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_type_confirm_direction(directions_tuple):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+        SELECT 
+            DISTINCT (directions_issledovaniya.napravleniye_id) as napravleniye_id,
+            directory_researches.podrazdeleniye_id,
+            directory_researches.is_stom,
+            directory_researches.is_doc_refferal,
+            directory_researches.is_paraclinic,
+            directory_researches.is_form,
+            directory_researches.is_microbiology,
+            directory_researches.is_application
+        FROM directions_issledovaniya
+        LEFT JOIN directory_researches
+        ON directions_issledovaniya.research_id = directory_researches.id
+        WHERE directions_issledovaniya.napravleniye_id in %(directions_tuple)s
+        ORDER BY directions_issledovaniya.napravleniye_id DESC""",
+            params={
+                'directions_tuple': directions_tuple,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
