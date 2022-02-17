@@ -183,7 +183,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     if not data.get("Время смерти", None):
         data["Время смерти"] = ""
 
-    hospital_obj: Hospitals = user.doctorprofile.get_hospital()
+    if iss.doc_confirmation:
+        hospital_obj: Hospitals = iss.doc_confirmation.get_hospital()
+    else:
+        hospital_obj: Hospitals = user.doctorprofile.get_hospital()
     data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data, "org_okpo": hospital_obj.okpo}
 
     template = add_template(iss, direction, data, 5 * mm)

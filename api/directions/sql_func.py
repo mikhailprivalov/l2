@@ -312,6 +312,7 @@ def direction_by_card(d_s, d_e, card_id):
             directions_issledovaniya.id as iss_id, 
             directions_issledovaniya.napravleniye_id,
             directions_issledovaniya.time_confirmation, 
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') date_confirm, 
             to_char(directions_issledovaniya.time_save AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') as ch_time_save,
             directions_issledovaniya.study_instance_uid,
             directory_researches.title as research_title, 

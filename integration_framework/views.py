@@ -1659,7 +1659,6 @@ def direction_records(request):
         # {номер направления: {createAt: "", titleResearches: [], "status": "", confirmAt: ""}}
         collect_direction = direction_by_card(start_date, end_date, card.pk)
         prev_direction = None
-        count = 0
         unique_direction = set([i.napravleniye_id for i in collect_direction])
         not_confirm_direction = get_not_confirm_direction(list(unique_direction))
         not_confirm_direction = [i[0] for i in not_confirm_direction]
@@ -1667,21 +1666,19 @@ def direction_records(request):
         for dr in collect_direction:
             if dr.napravleniye_id in confirm_direction:
                 status = 2
+                date_confirm = dr.date_confirm
             elif dr.cancel:
+                date_confirm = ""
                 status = -1
             else:
+                date_confirm = ""
                 status = 0
-
-            if count == 0:
-                rows[dr.napravleniye_id] = {"createAt": dr.date_create, "titleResearches": [dr.research_title], "status": status}
-
-            if dr.napravleniye_id != prev_direction and count != 0:
-                rows[dr.napravleniye_id] = {"createAt": dr.date_create, "titleResearches": [dr.research_title], "status": status}
-            temp_research = rows.get(dr.napravleniye_id)
+            if dr.napravleniye_id != prev_direction:
+                rows[dr.napravleniye_id] = {"createAt": dr.date_create, "titleResearches": [], "status": status, "dateConfirm": date_confirm}
+            temp_research = rows.get(dr.napravleniye_id, None)
             temp_research["titleResearches"].append(dr.research_title)
             rows[dr.napravleniye_id] = temp_research.copy()
             prev_direction = dr.napravleniye_id
-            count += 1
 
     return Response({"rows": rows})
 
