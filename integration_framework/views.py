@@ -1643,12 +1643,12 @@ def direction_records(request):
         {
             'snils': 'str_strip',
             'enp': 'str_strip',
-            'date_year': 'str_strip'
+            'date_year': int
         },
     )
     snils: str = data[0]
     enp: str = data[1]
-    date_year: str = data[1]
+    date_year: int = data[1]
 
     card: Card = find_patient(snils, enp)
     if not card:
