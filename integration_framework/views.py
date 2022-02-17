@@ -1675,9 +1675,9 @@ def direction_records(request):
             date_confirm = ""
             status = 0
         if dr.napravleniye_id != prev_direction:
-            rows[dr.napravleniye_id] = {"createdAt": dr.date_create, "titleServices": [], "status": status, "confirmedAt": date_confirm}
+            rows[dr.napravleniye_id] = {"createdAt": dr.date_create, "services": [], "status": status, "confirmedAt": date_confirm}
         temp_research = rows.get(dr.napravleniye_id, None)
-        temp_research["titleServices"].append(dr.research_title)
+        temp_research["services"].append(dr.research_title)
         rows[dr.napravleniye_id] = temp_research.copy()
         prev_direction = dr.napravleniye_id
 
