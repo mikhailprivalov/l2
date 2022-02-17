@@ -5,7 +5,6 @@ import logging
 import pytz
 
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year
-from api.directions.views import directions_result_year, results_by_direction, values_from_structure_data
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
 from clients.utils import find_patient
@@ -55,6 +54,7 @@ from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
+from utils.common import values_from_structure_data
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date, normalize_dots_date, try_strptime
 from utils.xh import check_type_research, short_fio_dots
