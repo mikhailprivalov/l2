@@ -67,7 +67,7 @@ from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
 from users.models import DoctorProfile
-from utils.common import non_selected_visible_type, none_if_minus_1
+from utils.common import non_selected_visible_type, none_if_minus_1, values_from_structure_data
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid, short_fio_dots
@@ -2692,21 +2692,6 @@ def results_by_direction(request):
             objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]]["fractions"].append({'value': values})
 
     return JsonResponse({"results": list(objs_result.values())})
-
-
-def values_from_structure_data(data):
-    s = ''
-    for v in data:
-        if v['group_title']:
-            s = f"{s} [{v['group_title']}]:"
-        for field in v['fields']:
-            if field['field_type'] in [24, 25, 26]:
-                continue
-            if field['value']:
-                if field['title_field']:
-                    s = f"{s} {field['title_field']}"
-                s = f"{s} {field['value']};"
-    return s.strip()
 
 
 def get_research_for_direction_params(pk):

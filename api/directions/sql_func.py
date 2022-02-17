@@ -171,7 +171,6 @@ def get_patient_contract(d_s, d_e, card_pk,):
     return rows
 
 
-
 def get_lab_podr():
     with connection.cursor() as cursor:
         cursor.execute(
@@ -299,6 +298,58 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
                 'is_doc_refferal': is_doc_refferal,
                 'lab_podr': lab_podr,
                 'card_pk': card_pk1,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def direction_by_card(d_s, d_e, card_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+        SELECT 
+            directions_issledovaniya.id as iss_id, 
+            directions_issledovaniya.napravleniye_id,
+            directions_issledovaniya.time_confirmation, 
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') date_confirm, 
+            to_char(directions_issledovaniya.time_save AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') as ch_time_save,
+            directions_issledovaniya.study_instance_uid,
+            directory_researches.title as research_title, 
+            directory_researches.id as research_id,  
+            directory_researches.is_hospital,
+            directory_researches.is_slave_hospital,
+            directory_researches.is_treatment,
+            directory_researches.is_stom,
+            directory_researches.is_doc_refferal,
+            directory_researches.is_paraclinic,
+            directory_researches.is_form,
+            directory_researches.is_microbiology,
+            directory_researches.is_application,
+            directory_researches.is_expertise,
+            directory_researches.podrazdeleniye_id,
+            directions_napravleniya.parent_slave_hosp_id,
+            directions_napravleniya.client_id, 
+            directions_napravleniya.parent_id,
+            directions_napravleniya.data_sozdaniya,
+            to_char(data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_create,
+            directions_napravleniya.cancel
+        FROM directions_issledovaniya
+        LEFT JOIN directory_researches
+        ON directions_issledovaniya.research_id = directory_researches.id
+        LEFT JOIN directions_napravleniya
+        ON directions_issledovaniya.napravleniye_id = directions_napravleniya.id
+        WHERE directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+        AND directions_napravleniya.client_id = %(card_id)s
+        AND NOT directory_researches.is_expertise AND NOT directory_researches.is_hospital AND NOT
+            directory_researches.is_slave_hospital AND NOT directory_researches.is_application
+
+        ORDER BY directions_issledovaniya.napravleniye_id DESC""",
+            params={
+                'd_start': d_s,
+                'd_end': d_e,
+                'card_id': card_id,
+                'tz': TIME_ZONE,
             },
         )
         rows = namedtuplefetchall(cursor)

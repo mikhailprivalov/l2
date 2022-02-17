@@ -238,7 +238,11 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         data["Имя матери"] = mother_data['rows'][0][1]
         data["Отчество матери"] = mother_data['rows'][0][2]
 
-    hospital_obj: Hospitals = user.doctorprofile.get_hospital()
+    if iss.doc_confirmation:
+        hospital_obj: Hospitals = iss.doc_confirmation.get_hospital()
+    else:
+        hospital_obj: Hospitals = user.doctorprofile.get_hospital()
+
     data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data,
                    "org_okpo": hospital_obj.okpo}
 

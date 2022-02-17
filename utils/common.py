@@ -38,3 +38,18 @@ def none_if_minus_1(v):
 
 def get_system_name():
     return 'VI' if SYSTEM_AS_VI else 'L2'
+
+
+def values_from_structure_data(data):
+    s = ''
+    for v in data:
+        if v['group_title']:
+            s = f"{s} [{v['group_title']}]:"
+        for field in v['fields']:
+            if field['field_type'] in [24, 25, 26]:
+                continue
+            if field['value']:
+                if field['title_field']:
+                    s = f"{s} {field['title_field']}"
+                s = f"{s} {field['value']};"
+    return s.strip()

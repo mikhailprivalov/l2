@@ -3,7 +3,11 @@ import datetime
 import logging
 
 import pytz
+
+from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year
+from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
+from clients.utils import find_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from integration_framework.authentication import can_use_schedule_only
 
@@ -45,14 +49,15 @@ from laboratory.settings import (
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
-from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
+from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions, get_not_confirm_direction
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
+from utils.common import values_from_structure_data
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date, normalize_dots_date
-from utils.xh import check_type_research
+from utils.dates import normalize_date, valid_date, normalize_dots_date, try_strptime
+from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
@@ -1629,6 +1634,139 @@ def hosp_record_list(request):
         })
 
     return Response({"rows": rows})
+
+
+@api_view(['POST'])
+def direction_records(request):
+    data = data_parse(
+        request.body,
+        {
+            'snils': 'str_strip',
+            'enp': 'str_strip',
+            'date_year': 'str_strip'
+        },
+    )
+    snils: str = data[0]
+    enp: str = data[1]
+    date_year: str = data[1]
+
+    card: Card = find_patient(snils, enp)
+    if not card:
+        return Response({"rows": [], 'message': 'Карта не найдена'})
+    d1 = try_strptime(f"{date_year}-01-01", formats=('%Y-%m-%d',))
+    d2 = try_strptime(f"{date_year}-12-31", formats=('%Y-%m-%d',))
+    start_date = datetime.datetime.combine(d1, datetime.time.min)
+    end_date = datetime.datetime.combine(d2, datetime.time.max)
+    rows = {}
+    collect_direction = direction_by_card(start_date, end_date, card.pk)
+    prev_direction = None
+    unique_direction = set([i.napravleniye_id for i in collect_direction])
+    not_confirm_direction = get_not_confirm_direction(list(unique_direction))
+    not_confirm_direction = [i[0] for i in not_confirm_direction]
+    confirm_direction = list(unique_direction - set(not_confirm_direction))
+    for dr in collect_direction:
+        if dr.napravleniye_id in confirm_direction:
+            status = 2
+            date_confirm = dr.date_confirm
+        elif dr.cancel:
+            date_confirm = ""
+            status = -1
+        else:
+            date_confirm = ""
+            status = 0
+        if dr.napravleniye_id != prev_direction:
+            rows[dr.napravleniye_id] = {"createdAt": dr.date_create, "titleServices": [], "status": status, "dateConfirm": date_confirm}
+        temp_research = rows.get(dr.napravleniye_id, None)
+        temp_research["titleServices"].append(dr.research_title)
+        rows[dr.napravleniye_id] = temp_research.copy()
+        prev_direction = dr.napravleniye_id
+
+    return Response({"rows": rows})
+
+
+@api_view(['POST'])
+def directions_by_category_result_year(request):
+    request_data = json.loads(request.body)
+    is_lab = request_data.get('isLab', False)
+    is_paraclinic = request_data.get('isParaclinic', False)
+    is_doc_refferal = request_data.get('isDocReferral', False)
+    year = request_data['current_year']
+    d1 = datetime.datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
+    start_date = datetime.datetime.combine(d1, datetime.time.min)
+    d2 = datetime.datetime.strptime(f'31.12.{year}', '%d.%m.%Y')
+    end_date = datetime.datetime.combine(d2, datetime.time.max)
+    card_pk = request_data.get('card_pk', -1)
+
+    if not is_lab and not is_doc_refferal and not is_paraclinic or card_pk == -1:
+        return JsonResponse({"results": []})
+
+    if is_lab:
+        lab_podr = get_lab_podr()
+        lab_podr = [i[0] for i in lab_podr]
+    else:
+        lab_podr = [-1]
+
+    card_pk = int(card_pk)
+    confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card_pk, is_lab, is_paraclinic, is_doc_refferal)
+    if not confirmed_directions:
+        return JsonResponse({"results": []})
+
+    directions = {}
+
+    for d in confirmed_directions:
+        if d.direction not in directions:
+            directions[d.direction] = {
+                'dir': d.direction,
+                'date': d.ch_time_confirmation,
+                'researches': [],
+            }
+
+        directions[d.direction]['researches'].append(d.research_title)
+    return JsonResponse({"results": list(directions.values())})
+
+
+@api_view(['POST'])
+def results_by_direction(request):
+    request_data = json.loads(request.body)
+    is_lab = request_data.get('isLab', False)
+    is_paraclinic = request_data.get('isParaclinic', False)
+    is_doc_refferal = request_data.get('isDocReferral', False)
+    direction = request_data.get('dir')
+
+    directions = request_data.get('directions', [])
+    if not directions and direction:
+        directions = [direction]
+    objs_result = {}
+    if is_lab:
+        direction_result = get_laboratory_results_by_directions(directions)
+
+        for r in direction_result:
+            if r.direction not in objs_result:
+                objs_result[r.direction] = {'dir': r.direction, 'date': r.date_confirm, 'researches': {}}
+
+            if r.iss_id not in objs_result[r.direction]['researches']:
+                objs_result[r.direction]['researches'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.fio), 'dateConfirm': r.date_confirm, 'fractions': []}
+
+            objs_result[r.direction]['researches'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+
+    if is_paraclinic or is_doc_refferal:
+        results = desc_to_data(directions, force_all_fields=True)
+        for i in results:
+            direction_data = i['result'][0]["date"].split(' ')
+            if direction_data[1] not in objs_result:
+                objs_result[direction_data[1]] = {'dir': direction_data[1], 'date': direction_data[0], 'researches': {}}
+            if i['result'][0]["iss_id"] not in objs_result[direction_data[1]]['researches']:
+                objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]] = {
+                    'title': i['title_research'],
+                    'fio': short_fio_dots(i['result'][0]["docConfirm"]),
+                    'dateConfirm': direction_data[0],
+                    'fractions': [],
+                }
+
+            values = values_from_structure_data(i['result'][0]["data"])
+            objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]]["fractions"].append({'value': values})
+
+    return JsonResponse({"results": list(objs_result.values())})
 
 
 def get_json_protocol_data(pk):
