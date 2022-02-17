@@ -10,6 +10,7 @@ from doctor_schedule.views import check_available_hospital_slot_before_save
 from laboratory.utils import current_time, localtime
 from list_wait.models import ListWait
 from plans.models import PlanHospitalization
+from utils.auth import has_group
 from utils.data_verification import data_parse
 
 
@@ -41,7 +42,8 @@ def create(request):
         if not hosp_department_id:
             hosp_department_id = hospital_researches[0].podrazdeleniye.pk
         has_free_slots = check_available_hospital_slot_before_save(hospital_researches[0].pk, None, date)
-        if not has_free_slots:
+        is_cito = has_group(request.user, 'Цито-запись в расписании')
+        if not has_free_slots and not is_cito:
             return JsonResponse({"ok": False, "message": "Нет свободных слотов"})
         PlanHospitalization.plan_hospitalization_save(
             {

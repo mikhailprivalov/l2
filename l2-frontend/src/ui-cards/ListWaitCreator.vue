@@ -24,9 +24,11 @@
           v-model="date"
           mode="date"
           :available-dates="availableDates"
+          :attributes="attributes"
           :masks="masks"
           :model-config="modelConfig"
           trim-weeks
+          color="teal"
         />
       </div>
       <div class="form-row sm-f" v-if="hasOnlyHosp">
@@ -64,7 +66,9 @@
             :nof="disp_researches.length"
           />
         </div>
-        <div v-if="!validDate" class="alert alert-warning">Выбранная дата недоступна для записи на госпитализацию</div>
+        <div v-if="!date" />
+        <div v-else-if="!validDate && cito" class="alert alert-warning">Запись будет произведена как CITO сверх лимита</div>
+        <div v-else-if="!validDate" class="alert alert-warning">Выбранная дата недоступна для записи на госпитализацию</div>
         <div class="controls">
           <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save" :disabled="!valid">
             {{
@@ -193,6 +197,8 @@ export default {
         type: 'string',
         mask: 'YYYY-MM-DD',
       },
+      cito: false,
+      counts: {},
     };
   },
   watch: {
@@ -242,14 +248,18 @@ export default {
         return true;
       }
       this.loadCnt++;
-      const { data } = await this.$api('schedule/available-hospitalization-plan', {
+      const { data, counts, cito } = await this.$api('schedule/available-hospitalization-plan', {
         research_pk: this.researches[0],
       });
+      this.counts = counts || {};
+      this.cito = !!cito;
       this.loadCnt--;
       this.availableHospDates = data;
       if (!this.availableHospDates[this.date] && this.date) {
-        this.$root.$emit('msg', 'error', `Дата ${moment(this.date, 'YYYY-MM-DD').format('DD.MM.YYYY')} недоступна`, 2500);
-        this.date = '';
+        if (!cito) {
+          this.$root.$emit('msg', 'error', `Дата ${moment(this.date, 'YYYY-MM-DD').format('DD.MM.YYYY')} недоступна`, 2500);
+          this.date = '';
+        }
       }
       return !!this.date;
     },
@@ -353,14 +363,23 @@ export default {
       return !this.hasOnlyHosp || (!!this.date && !!this.availableHospDates[this.date]);
     },
     valid() {
-      return !this.hasHosp || (!this.hasNonHosp && !!this.hospitalDepartment && !!this.diagnosis.trim() && this.validDate);
+      return (
+        !this.hasHosp
+        || (!this.hasNonHosp
+          && !!this.hospitalDepartment
+          && !!this.diagnosis.trim()
+          && (this.validDate
+            || (!!this.date && this.cito && Object.prototype.hasOwnProperty.call(this.availableHospDates, this.date))))
+      );
     },
     loaded() {
       return this.loadCnt === 0;
     },
     availableDates() {
       return Object.keys(this.availableHospDates)
-        .filter((d) => !!this.availableHospDates[d])
+        .filter(
+          (d) => (this.cito && Object.prototype.hasOwnProperty.call(this.availableHospDates, d)) || !!this.availableHospDates[d],
+        )
         .map((d) => {
           const md = moment(d, 'YYYY-MM-DD').toDate();
 
@@ -369,6 +388,19 @@ export default {
             end: md,
           };
         });
+    },
+    attributes() {
+      return Object.keys(this.availableHospDates).map((k) => {
+        const c = this.counts[k];
+
+        return {
+          dates: moment(k, 'YYYY-MM-DD').toDate(),
+          popover: {
+            label: c ? `Занято ${c.used} / ${c.available}` : 'на этот день нет запланированных слотов',
+          },
+          dot: this.availableHospDates[k] ? 'green' : 'red',
+        };
+      });
     },
   },
 };

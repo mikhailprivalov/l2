@@ -481,8 +481,10 @@ class Napravleniya(models.Model):
         if SettingManager.l2('l2vi'):
             data = {
                 "needCda": (
-                    Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False).exclude(
-                        research__generator_name="").exclude(research__podrazdeleniye__p_type=2).exists()
+                    Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False)
+                    .exclude(research__generator_name="")
+                    .exclude(research__podrazdeleniye__p_type=2)
+                    .exists()
                     or Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False, research__podrazdeleniye__p_type=2).exists(),
                 ),
                 "signsRequired": None,
@@ -717,7 +719,7 @@ class Napravleniya(models.Model):
                         self.istochnik_f.get_n3_code() if self.istochnik_f else '6',
                         iss.research.nsi_id,
                         self.diagnos,
-                        self.doc.uploading_data
+                        self.doc.uploading_data,
                     )
 
                     acsn = None
@@ -782,6 +784,7 @@ class Napravleniya(models.Model):
         if self.is_all_confirm():
             try:
                 from results.views import result_print
+
                 request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
                 req = {
                     'GET': {
@@ -835,7 +838,7 @@ class Napravleniya(models.Model):
                     iss.research.odii_type or ('' if not iss.research.podrazdeleniye else iss.research.podrazdeleniye.odii_type),
                     iss.doc_confirmation.uploading_data if iss.doc_confirmation else self.doc.uploading_data,
                     iss.time_confirmation_local.isoformat() if iss.time_confirmation else timezone.now().isoformat(),
-                    pdf_content
+                    pdf_content,
                 )
 
                 task_resp = None
@@ -1455,6 +1458,7 @@ class Napravleniya(models.Model):
             result['list_id'].extend(res_children['list_id'])
         if finsource and finsource.title.lower() == "платно":
             from forms.forms_func import create_contract
+
             sorted_direction = sort_direction_by_file_name_contract(tuple(result['list_id']), '1')
             result_sorted = {}
             for i in sorted_direction:
@@ -1591,6 +1595,7 @@ class AdditionNapravleniya(models.Model):
     """
     Направления для добавления исполнителем услуги
     """
+
     target_direction = models.ForeignKey(Napravleniya, related_name='main_of_doctor', null=True, help_text='Направление врача', db_index=True, on_delete=models.CASCADE)
     addition_direction = models.ForeignKey(Napravleniya, related_name='additional_direction', null=True, help_text='Направление от исполнителя', db_index=True, on_delete=models.CASCADE)
 
@@ -1710,8 +1715,9 @@ class Issledovaniya(models.Model):
     co_executor_uet = models.DecimalField(max_digits=6, null=True, blank=True, default=None, decimal_places=3)
     co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2", default=None, null=True, blank=True, on_delete=models.SET_NULL)
     co_executor2_uet = models.DecimalField(max_digits=6, null=True, blank=True, default=None, decimal_places=3)
-    legal_authenticator = models.ForeignKey(DoctorProfile, related_name="legal_authenticator", help_text="Подпись организации",
-                                            default=None, null=True, blank=True, on_delete=models.SET_NULL)
+    legal_authenticator = models.ForeignKey(
+        DoctorProfile, related_name="legal_authenticator", help_text="Подпись организации", default=None, null=True, blank=True, on_delete=models.SET_NULL
+    )
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     fin_source = models.ForeignKey(IstochnikiFinansirovaniya, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Перезаписать источник финансирования из направления")
     first_time = models.BooleanField(default=False, help_text="Впервые")
@@ -2162,6 +2168,15 @@ class ParaclinicResult(models.Model):
                     return getattr(ParaclinicResult.JsonParser, func)(field)
 
             return field.value
+
+        @staticmethod
+        def from_static_json_to_string_value(value: str, t: int):
+            if t in ParaclinicResult.JsonParser.PARSERS:
+                func = f"{ParaclinicResult.JsonParser.PARSERS[t]}_parser"
+                if hasattr(ParaclinicResult.JsonParser, func):
+                    return getattr(ParaclinicResult.JsonParser, func)(ParaclinicResult(field_type=t, value=value, field=directory.ParaclinicInputField.objects.all()[0]))
+
+            return value
 
         @staticmethod
         def address_parser(field: Union['ParaclinicResult', 'DirectionParamsResult']):
