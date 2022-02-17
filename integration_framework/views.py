@@ -4,7 +4,7 @@ import logging
 
 import pytz
 
-from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year
+from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
 from clients.utils import find_patient
@@ -1681,7 +1681,21 @@ def direction_records(request):
         rows[dr.napravleniye_id] = temp_research.copy()
         prev_direction = dr.napravleniye_id
 
-    return Response({"rows": rows})
+    category_directions = get_type_confirm_direction(tuple(confirm_direction))
+    lab_podr = get_lab_podr()
+    lab_podr = [i[0] for i in lab_podr]
+    count_paraclinic = 0
+    count_doc_refferal = 0
+    count_laboratory = 0
+    for dr in category_directions:
+        if dr.is_doc_refferal:
+            count_paraclinic += 1
+        elif dr.is_paraclinic:
+            count_doc_refferal += 1
+        elif dr.podrazdeleniye_id in lab_podr:
+            count_laboratory += 1
+
+    return Response({"rows": rows, "count_paraclinic": count_paraclinic, "count_doc_refferal": count_doc_refferal, "count_laboratory": count_laboratory})
 
 
 @api_view(['POST'])
