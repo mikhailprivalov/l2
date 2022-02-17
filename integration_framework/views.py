@@ -3,6 +3,8 @@ import datetime
 import logging
 
 import pytz
+
+from api.directions.sql_func import direction_by_card
 from api.views import mkb10_dict
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from integration_framework.authentication import can_use_schedule_only
@@ -45,13 +47,13 @@ from laboratory.settings import (
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
-from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
+from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions, get_not_confirm_direction
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date, normalize_dots_date
+from utils.dates import normalize_date, valid_date, normalize_dots_date, try_strptime
 from utils.xh import check_type_research
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
@@ -1631,6 +1633,59 @@ def hosp_record_list(request):
     return Response({"rows": rows})
 
 
+@api_view(['POST'])
+def direction_records(request):
+    data = data_parse(
+        request.body,
+        {
+            'snils': 'str_strip',
+            'enp': 'str_strip',
+            'date_year': 'str_strip'
+        },
+    )
+    snils: str = data[0]
+    enp: str = data[1]
+    date_year: str = data[1]
+
+    card: Card = find_patient(snils, enp)
+    if not card:
+        return Response({"rows": [], 'message': 'Карта не найдена'})
+    d1 = try_strptime(f"{date_year}-01-01", formats=('%Y-%m-%d',))
+    d2 = try_strptime(f"{date_year}-12-31", formats=('%Y-%m-%d',))
+    start_date = datetime.datetime.combine(d1, datetime.time.min)
+    end_date = datetime.datetime.combine(d2, datetime.time.max)
+    rows = {}
+    if card:
+        # {номер направления: {createAt: "", titleResearches: [], "status": "", confirmAt: ""}}
+        collect_direction = direction_by_card(start_date, end_date, card.pk)
+        prev_direction = None
+        count = 0
+        unique_direction = set([i.napravleniye_id for i in collect_direction])
+        not_confirm_direction = get_not_confirm_direction(list(unique_direction))
+        not_confirm_direction = [i[0] for i in not_confirm_direction]
+        confirm_direction = list(unique_direction - set(not_confirm_direction))
+        for dr in collect_direction:
+            if dr.napravleniye_id in confirm_direction:
+                status = 2
+            elif dr.cancel:
+                status = -1
+            else:
+                status = 0
+
+            if count == 0:
+                rows[dr.napravleniye_id] = {"createAt": dr.date_create, "titleResearches": [dr.research_title], "status": status}
+
+            if dr.napravleniye_id != prev_direction and count != 0:
+                rows[dr.napravleniye_id] = {"createAt": dr.date_create, "titleResearches": [dr.research_title], "status": status}
+            temp_research = rows.get(dr.napravleniye_id)
+            temp_research["titleResearches"].append(dr.research_title)
+            rows[dr.napravleniye_id] = temp_research.copy()
+            prev_direction = dr.napravleniye_id
+            count += 1
+
+    return Response({"rows": rows})
+
+
 def get_json_protocol_data(pk):
     result_protocol = get_paraclinic_results_by_direction(pk)
     data = {}
@@ -1866,3 +1921,22 @@ def check_hosp_slot_before_save(request):
 
     result = check_available_hospital_slot_before_save(research_pk, resource_id, date)
     return JsonResponse({"result": result})
+
+
+def find_patient(snils, enp):
+    snils = ''.join(ch for ch in snils if ch.isdigit())
+
+    individual = None
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        individual = individuals.first()
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual:
+        return Response({"rows": [], 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    return card
