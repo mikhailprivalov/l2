@@ -1675,7 +1675,7 @@ def direction_records(request):
             date_confirm = ""
             status = 0
         if dr.napravleniye_id != prev_direction:
-            rows[dr.napravleniye_id] = {"createdAt": dr.date_create, "titleServices": [], "status": status, "dateConfirm": date_confirm}
+            rows[dr.napravleniye_id] = {"createdAt": dr.date_create, "titleServices": [], "status": status, "confirmedAt": date_confirm}
         temp_research = rows.get(dr.napravleniye_id, None)
         temp_research["titleServices"].append(dr.research_title)
         rows[dr.napravleniye_id] = temp_research.copy()
@@ -1687,17 +1687,22 @@ def direction_records(request):
 @api_view(['POST'])
 def directions_by_category_result_year(request):
     request_data = json.loads(request.body)
-    is_lab = request_data.get('isLab', False)
-    is_paraclinic = request_data.get('isParaclinic', False)
-    is_doc_refferal = request_data.get('isDocReferral', False)
-    year = request_data['current_year']
+    mode = request_data.get('mode')
+    is_lab = request_data.get('isLab', mode == 'laboratory')
+    is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
+    is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
+    year = request_data['year']
+
+    card: Card = find_patient(request_data.get('snils'), request_data.get('enp'))
+    if not card:
+        return Response({"results": [], 'message': 'Карта не найдена'})
+
     d1 = datetime.datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
     start_date = datetime.datetime.combine(d1, datetime.time.min)
     d2 = datetime.datetime.strptime(f'31.12.{year}', '%d.%m.%Y')
     end_date = datetime.datetime.combine(d2, datetime.time.max)
-    card_pk = request_data.get('card_pk', -1)
 
-    if not is_lab and not is_doc_refferal and not is_paraclinic or card_pk == -1:
+    if not is_lab and not is_doc_refferal and not is_paraclinic:
         return JsonResponse({"results": []})
 
     if is_lab:
@@ -1706,8 +1711,7 @@ def directions_by_category_result_year(request):
     else:
         lab_podr = [-1]
 
-    card_pk = int(card_pk)
-    confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card_pk, is_lab, is_paraclinic, is_doc_refferal)
+    confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card.pk, is_lab, is_paraclinic, is_doc_refferal)
     if not confirmed_directions:
         return JsonResponse({"results": []})
 
@@ -1716,12 +1720,12 @@ def directions_by_category_result_year(request):
     for d in confirmed_directions:
         if d.direction not in directions:
             directions[d.direction] = {
-                'dir': d.direction,
-                'date': d.ch_time_confirmation,
-                'researches': [],
+                'pk': d.direction,
+                'confirmedAt': d.ch_time_confirmation,
+                'services': [],
             }
 
-        directions[d.direction]['researches'].append(d.research_title)
+        directions[d.direction]['services'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})
 
 
@@ -1731,7 +1735,7 @@ def results_by_direction(request):
     is_lab = request_data.get('isLab', False)
     is_paraclinic = request_data.get('isParaclinic', False)
     is_doc_refferal = request_data.get('isDocReferral', False)
-    direction = request_data.get('dir')
+    direction = request_data.get('pk')
 
     directions = request_data.get('directions', [])
     if not directions and direction:
@@ -1742,29 +1746,29 @@ def results_by_direction(request):
 
         for r in direction_result:
             if r.direction not in objs_result:
-                objs_result[r.direction] = {'dir': r.direction, 'date': r.date_confirm, 'researches': {}}
+                objs_result[r.direction] = {'pk': r.direction, 'confirmedAt': r.date_confirm, 'services': {}}
 
-            if r.iss_id not in objs_result[r.direction]['researches']:
-                objs_result[r.direction]['researches'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.fio), 'dateConfirm': r.date_confirm, 'fractions': []}
+            if r.iss_id not in objs_result[r.direction]['services']:
+                objs_result[r.direction]['services'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.fio), 'confirmedAt': r.date_confirm, 'fractions': []}
 
-            objs_result[r.direction]['researches'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+            objs_result[r.direction]['services'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
 
     if is_paraclinic or is_doc_refferal:
         results = desc_to_data(directions, force_all_fields=True)
         for i in results:
             direction_data = i['result'][0]["date"].split(' ')
             if direction_data[1] not in objs_result:
-                objs_result[direction_data[1]] = {'dir': direction_data[1], 'date': direction_data[0], 'researches': {}}
-            if i['result'][0]["iss_id"] not in objs_result[direction_data[1]]['researches']:
-                objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]] = {
+                objs_result[direction_data[1]] = {'pk': direction_data[1], 'confirmedAt': direction_data[0], 'services': {}}
+            if i['result'][0]["iss_id"] not in objs_result[direction_data[1]]['services']:
+                objs_result[direction_data[1]]['services'][i['result'][0]["iss_id"]] = {
                     'title': i['title_research'],
                     'fio': short_fio_dots(i['result'][0]["docConfirm"]),
-                    'dateConfirm': direction_data[0],
+                    'confirmedAt': direction_data[0],
                     'fractions': [],
                 }
 
             values = values_from_structure_data(i['result'][0]["data"])
-            objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]]["fractions"].append({'value': values})
+            objs_result[direction_data[1]]['services'][i['result'][0]["iss_id"]]["fractions"].append({'value': values})
 
     return JsonResponse({"results": list(objs_result.values())})
 
