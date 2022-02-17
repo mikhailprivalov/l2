@@ -55,6 +55,7 @@ from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, matc
 from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date, normalize_dots_date, try_strptime
+from utils.patient import find_patient
 from utils.xh import check_type_research
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
@@ -1656,30 +1657,28 @@ def direction_records(request):
     start_date = datetime.datetime.combine(d1, datetime.time.min)
     end_date = datetime.datetime.combine(d2, datetime.time.max)
     rows = {}
-    if card:
-        # {номер направления: {createAt: "", titleResearches: [], "status": "", confirmAt: ""}}
-        collect_direction = direction_by_card(start_date, end_date, card.pk)
-        prev_direction = None
-        unique_direction = set([i.napravleniye_id for i in collect_direction])
-        not_confirm_direction = get_not_confirm_direction(list(unique_direction))
-        not_confirm_direction = [i[0] for i in not_confirm_direction]
-        confirm_direction = list(unique_direction - set(not_confirm_direction))
-        for dr in collect_direction:
-            if dr.napravleniye_id in confirm_direction:
-                status = 2
-                date_confirm = dr.date_confirm
-            elif dr.cancel:
-                date_confirm = ""
-                status = -1
-            else:
-                date_confirm = ""
-                status = 0
-            if dr.napravleniye_id != prev_direction:
-                rows[dr.napravleniye_id] = {"createAt": dr.date_create, "titleResearches": [], "status": status, "dateConfirm": date_confirm}
-            temp_research = rows.get(dr.napravleniye_id, None)
-            temp_research["titleResearches"].append(dr.research_title)
-            rows[dr.napravleniye_id] = temp_research.copy()
-            prev_direction = dr.napravleniye_id
+    collect_direction = direction_by_card(start_date, end_date, card.pk)
+    prev_direction = None
+    unique_direction = set([i.napravleniye_id for i in collect_direction])
+    not_confirm_direction = get_not_confirm_direction(list(unique_direction))
+    not_confirm_direction = [i[0] for i in not_confirm_direction]
+    confirm_direction = list(unique_direction - set(not_confirm_direction))
+    for dr in collect_direction:
+        if dr.napravleniye_id in confirm_direction:
+            status = 2
+            date_confirm = dr.date_confirm
+        elif dr.cancel:
+            date_confirm = ""
+            status = -1
+        else:
+            date_confirm = ""
+            status = 0
+        if dr.napravleniye_id != prev_direction:
+            rows[dr.napravleniye_id] = {"createdAt": dr.date_create, "titleServices": [], "status": status, "dateConfirm": date_confirm}
+        temp_research = rows.get(dr.napravleniye_id, None)
+        temp_research["titleServices"].append(dr.research_title)
+        rows[dr.napravleniye_id] = temp_research.copy()
+        prev_direction = dr.napravleniye_id
 
     return Response({"rows": rows})
 
@@ -1929,22 +1928,3 @@ def check_hosp_slot_before_save(request):
 
     result = check_available_hospital_slot_before_save(research_pk, resource_id, date)
     return JsonResponse({"result": result})
-
-
-def find_patient(snils, enp):
-    snils = ''.join(ch for ch in snils if ch.isdigit())
-
-    individual = None
-    if enp:
-        individuals = Individual.objects.filter(tfoms_enp=enp)
-        individual = individuals.first()
-
-    if not individual and snils:
-        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
-        individual = individuals.first()
-
-    if not individual:
-        return Response({"rows": [], 'message': 'Физлицо не найдено'})
-
-    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
-    return card
