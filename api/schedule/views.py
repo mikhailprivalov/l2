@@ -257,7 +257,7 @@ def save(request):
                 next_time = last_any_slot.datetime + datetime.timedelta(minutes=last_any_slot.duration_minutes)
                 duration = last_any_slot.duration_minutes
             else:
-                next_time = try_strptime(f"{date} 08:00", formats=('%Y-%m-%d',))
+                next_time = try_strptime(f"{date} 08:00", formats=('%Y-%m-%d %H:%M',))
                 duration = 3
             end_time = next_time + datetime.timedelta(minutes=duration)
             new_slot_plan = SlotPlan.objects.create(
@@ -438,8 +438,10 @@ def available_hospitalization_plan(request):
     date_start = data[2]
     date_end = data[3]
 
-    result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
-    return JsonResponse({"data": result})
+    is_cito = has_group(request.user, 'Цито-запись в расписании')
+
+    result, counts = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
+    return JsonResponse({"data": result, "counts": counts, "cito": is_cito})
 
 
 @login_required

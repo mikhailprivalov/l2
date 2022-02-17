@@ -1990,7 +1990,7 @@ def available_hospitalization_plan(request):
     date_start = data.get('date_start')
     date_end = data.get('date_end')
 
-    result = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
+    result, _ = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
     return Response({"data": result})
 
 

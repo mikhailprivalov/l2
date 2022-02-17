@@ -52,7 +52,9 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
         resource_id = tuple([resource_id])
 
     if not resource_id:
-        return {}
+        return {}, {}
+
+    counts = {}
 
     start_date = datetime.datetime.combine(d1, datetime.time.min)
     end_date = datetime.datetime.combine(d2, datetime.time.max)
@@ -65,16 +67,27 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
             temp_date_slots = date_slots.get(rslots.date_char, None)
             temp_date_slots.append(rslots.datetime)
             date_slots[rslots.date_char] = temp_date_slots.copy()
-    date_counts = {}
+    date_available_status = {}
+
+    date_i = start_date - datetime.timedelta(days=1)  # ЦИТО можно записать на сегодня
+    while date_i < end_date:
+        date_s = date_i.strftime("%Y-%m-%d")
+        date_available_status[date_s] = False
+        date_i += datetime.timedelta(days=1)
+
     for current_date, slots_in_date in date_slots.items():
         d1 = try_strptime(current_date, formats=('%Y-%m-%d',))
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d1, datetime.time.max)
         current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status__in=[0, 1, 3], action=0, research_id=research_pk).order_by(
             "exec_at").count()
-        date_counts[current_date] = len(slots_in_date) > current_plan_count
+        counts[current_date] = {
+            "available": len(slots_in_date),
+            "used": current_plan_count,
+        }
+        date_available_status[current_date] = counts[current_date]["available"] > counts[current_date]["used"]
 
-    return date_counts
+    return date_available_status, counts
 
 
 def check_available_hospital_slot_before_save(research_pk, resource_id, date):
