@@ -5,6 +5,7 @@ import logging
 import pytz
 
 from api.directions.sql_func import direction_by_card
+from api.directions.views import directions_result_year, results_by_direction
 from api.views import mkb10_dict
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from integration_framework.authentication import can_use_schedule_only
@@ -1681,6 +1682,16 @@ def direction_records(request):
             prev_direction = dr.napravleniye_id
 
     return Response({"rows": rows})
+
+
+@api_view(['POST'])
+def directions_result_category(request):
+    return directions_result_year(request)
+
+
+@api_view(['POST'])
+def results_direction(request):
+    return results_by_direction(request)
 
 
 def get_json_protocol_data(pk):
