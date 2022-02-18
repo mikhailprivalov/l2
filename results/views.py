@@ -53,7 +53,7 @@ from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range, try_strptime
-from utils.flowable import InteractiveTextField
+from utils.flowable import InteractiveTextField, QrCodeSite
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
@@ -494,6 +494,9 @@ def result_print(request):
             t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
+            lk_address = SettingManager.get("lk_address", default='', default_type='s')
+            if lk_address:
+                fwb.append(QrCodeSite(lk_address, 174 * mm, 6.5 * mm, 13 * mm))
         if not has_paraclinic:
             fwb.append(Spacer(1, 4 * mm))
             fwb.append(InteractiveTextField())
