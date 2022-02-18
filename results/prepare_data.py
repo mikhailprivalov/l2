@@ -24,6 +24,7 @@ from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes
 from users.models import DoctorProfile
 from utils.dates import normalize_date
+from utils.flowable import QrCodeSite
 from utils.xh import check_valid_square_brackets
 from reportlab.platypus.flowables import HRFlowable
 
