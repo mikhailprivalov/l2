@@ -357,6 +357,8 @@ def direction_by_card(d_s, d_e, card_id):
 
 
 def get_type_confirm_direction(directions_tuple):
+    if not directions_tuple:
+        return []
     with connection.cursor() as cursor:
         cursor.execute(
             """ 
