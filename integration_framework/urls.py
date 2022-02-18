@@ -9,6 +9,8 @@ urlpatterns = [
     path('result/resend-l2', views.resend_dir_l2),
     path('result/resend-crie', views.resend_dir_crie),
     path('result/sendamd', views.result_amd_send),
+    path('result/pdf', views.get_pdf_result),
+    path('direction/pdf', views.get_pdf_direction),
     path('direction/data', views.direction_data),
     path('direction/records', views.direction_records),
     path('direction/category-confirm', views.directions_by_category_result_year),
