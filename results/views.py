@@ -47,7 +47,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import DEATH_RESEARCH_PK, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE
+from laboratory.settings import DEATH_RESEARCH_PK, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -496,7 +496,11 @@ def result_print(request):
             fwb.append(Spacer(1, 5 * mm))
             lk_address = SettingManager.get("lk_address", default='', default_type='s')
             if lk_address:
-                fwb.append(QrCodeSite(lk_address, QRCODE_OFFSET_SIZE))
+                if leftnone:
+                    qr_code_param = LEFT_QRCODE_OFFSET_SIZE
+                else:
+                    qr_code_param = QRCODE_OFFSET_SIZE
+                fwb.append(QrCodeSite(lk_address, qr_code_param))
         if not has_paraclinic:
             fwb.append(Spacer(1, 4 * mm))
             fwb.append(InteractiveTextField())
