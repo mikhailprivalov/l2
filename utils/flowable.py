@@ -141,13 +141,13 @@ class LaterPagesTable(Table):
 
 
 class QrCodeSite(Flowable):
-    def __init__(self, qr_value, x_offset, y_offset, size):
+    def __init__(self, qr_value, params):
         # init and store rendering value
         Flowable.__init__(self)
         self.qr_value = qr_value
-        self.x_offset = x_offset
-        self.y_offset = y_offset
-        self.size = size
+        self.x_offset = params.get("x", 0) * mm
+        self.y_offset = params.get("y", 0) * mm
+        self.size = params.get("size", 0) * mm
 
     def draw(self):
         qr_code = qr.QrCodeWidget(self.qr_value)
