@@ -40,7 +40,7 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
         d2 = try_strptime(f"{date_end}", formats=('%Y-%m-%d',))
     else:
         d1 = current_time(only_date=True) + relativedelta(days=1)
-        d2 = d1 + relativedelta(days=30)
+        d2 = d1 + relativedelta(days=FORWARD_DAYS_SCHEDULE)
 
     if resource_id is None:
         resource_id = tuple(ScheduleResource.objects.filter(service__in=[research_pk]).values_list('pk', flat=True))
