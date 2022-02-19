@@ -352,6 +352,7 @@ CELERY_RESULT_BACKEND = 'django-db'
 FORWARD_DAYS_SCHEDULE = -1
 
 SCHEDULE_AGE_LIMIT_LTE = None
+QRCODE_OFFSET_SIZE = {}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
