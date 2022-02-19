@@ -381,6 +381,8 @@ def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
             date = f'{i[1]} {i[2]}'
             link_dicom = search_dicom_study(i[2]) if not force_all_fields else None
             group = i[3]
+            if not i[5]:
+                continue
             fields = {'title_field': i[4], 'value': i[5], 'field_type': i[8]}
 
             if date != last_date:
