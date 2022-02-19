@@ -1,20 +1,31 @@
 <template>
-  <div class="root-c" @click.left="update_comment"
-       v-tippy="no_tooltip ? null : {html: '#research-display-' + pk, reactive: true, interactive: true, theme: 'light',
-                arrow: true,
-                placement: 'bottom',
-                popperOptions: {
-                  modifiers: {
-                    preventOverflow: {
-                      boundariesElement: 'window'
-                    },
-                    hide: {
-                      enabled: false
-                    }
-                  }
+  <div
+    class="root-c"
+    @click.left="update_comment"
+    v-tippy="
+      no_tooltip
+        ? null
+        : {
+            html: '#research-display-' + pk,
+            reactive: true,
+            interactive: true,
+            theme: 'light',
+            arrow: true,
+            placement: 'bottom',
+            popperOptions: {
+              modifiers: {
+                preventOverflow: {
+                  boundariesElement: 'window',
                 },
-              }"
-       @click.right.prevent="update_comment">
+                hide: {
+                  enabled: false,
+                },
+              },
+            },
+          }
+    "
+    @click.right.prevent="update_comment"
+  >
     <div class="root-in">
       <span class="category" v-if="category">[{{ category }}]</span>
       {{ title }}
@@ -30,7 +41,7 @@
         <div class="param"><strong>Назначение:</strong> {{ title }}</div>
         <div class="param"><strong>Количество:</strong> {{ count }}</div>
         <button class="btn btn-blue-nb btn-sm" @click.stop="update_comment" v-if="!simple && !readonly">Настройка</button>
-        <button class="btn btn-blue-nb btn-sm" @click.stop="remove" v-if="!readonly">Убрать</button>
+        <button class="btn btn-blue-nb btn-sm" @click.stop="remove" v-if="!readonly && !hideClear">Убрать</button>
         <div v-if="has_not_filled && !simple">
           <div><strong>Незаполенные поля:</strong></div>
           <ul>
@@ -90,6 +101,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    hideClear: {
+      type: Boolean,
+      default: false,
+    },
     count: {
       type: Number,
       default: 1,
@@ -122,7 +137,8 @@ export default {
   text-overflow: ellipsis;
 }
 
-.root-in, .root-div {
+.root-in,
+.root-div {
   display: inline-block;
 }
 

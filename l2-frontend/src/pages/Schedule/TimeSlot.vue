@@ -14,6 +14,7 @@
       </div>
       <div v-if="data.service && data.service.id" class="service-row">{{ data.service.title }}</div>
       <div class="param-row"><i class="far fa-circle"></i> {{ data.duration }} мин</div>
+      <div class="param-row" v-if="data.direction">Направление {{ data.direction }}</div>
     </div>
 
     <MountingPortal mountTo="#portal-place-modal" :name="`TimeSlotPopup-${smallTime(data.time)}—${data.date}`" append>
@@ -27,12 +28,16 @@
           width="100%"
           marginLeftRight="auto"
         >
-          <span slot="header">{{ data.date }} {{ data.time }}</span>
-          <div slot="body" class="popup-body">
+          <span slot="header">Слот {{ data.date | formatDate }} {{ data.time }}</span>
+          <div slot="body" class="popup-body" v-if="!creatingDirection">
             <div class="preloader" v-if="!details"><i class="fa fa-spinner"></i> загрузка</div>
             <div v-else>
               <div class="patient-root">
-                <PatientSmallPicker v-model="details.cardId" :base_pk="details.baseId" />
+                <PatientSmallPicker
+                  v-model="details.cardId"
+                  :base_pk="details.baseId"
+                  :readonly="details.directions.length > 0"
+                />
               </div>
               <div class="form-row" v-if="details.cardId">
                 <div class="row-t">Услуга</div>
@@ -44,9 +49,40 @@
                     :options="services"
                     placeholder="Услуга не выбрана"
                     v-model="details.service.id"
+                    v-if="!serviceOther"
+                    :readonly="details.directions.length > 0"
                   />
+                  <input type="text" class="form-control" readonly v-else :value="serviceOther.title" />
                 </div>
               </div>
+
+              <div v-for="d in details.directions" :key="d" class="alert alert-info" style="margin-top: 10px">
+                Направление <strong>{{ d }}</strong>
+              </div>
+
+              <div v-if="selectedService && cardId && !saved" class="alert alert-warning" style="margin-top: 10px">
+                Изменения не сохранены
+              </div>
+            </div>
+          </div>
+          <div v-else slot="body" class="popup-body">
+            <a
+              @click.prevent="creatingDirection = false"
+              class="a-under"
+              style="margin-left: 5px; line-height: 34px; vertical-align: bottom"
+              href="#"
+            >
+              <i class="fa fa-arrow-left"></i> вернуться назад
+            </a>
+            <div style="height: 200px; padding-left: 0">
+              <SelectedResearches
+                :researches="servicesArray"
+                :card_pk="cardId"
+                :base="internalBase"
+                :hide-clear="true"
+                :slot-fact="details.factId"
+                :kk="kk"
+              />
             </div>
           </div>
           <div slot="footer">
@@ -54,7 +90,16 @@
               <div class="col-xs-6">
                 <button @click="close" class="btn btn-blue-nb" type="button">Закрыть</button>
               </div>
-              <div class="col-xs-6">
+              <div class="col-xs-6 text-right">
+                <button
+                  @click="creatingDirection = true"
+                  class="btn btn-blue-nb"
+                  v-if="selectedService && cardId && !details.direction"
+                  :disabled="!saved"
+                  type="button"
+                >
+                  Создать направление
+                </button>
                 <button @click="save" class="btn btn-blue-nb" type="button">Сохранить</button>
               </div>
             </div>
@@ -73,11 +118,13 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
+import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 
 @Component({
   components: {
     Modal,
     PatientSmallPicker,
+    SelectedResearches,
     Treeselect,
   },
   props: {
@@ -102,6 +149,8 @@ import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
       isOpened: false,
       details: null,
       selectedCard: {},
+      saved: true,
+      creatingDirection: false,
     };
   },
   watch: {
@@ -109,7 +158,24 @@ import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
       if (n && !p && this.services?.length === 1) {
         this.details.service.id = this.services[0].id;
       }
+      if (!this.details) {
+        return;
+      }
+      this.saved = false;
     },
+    selectedService() {
+      if (!this.details) {
+        return;
+      }
+      this.saved = false;
+    },
+  },
+  mounted() {
+    this.$root.$on(`researches-picker:directions_created${this.kk}`, () => {
+      this.creatingDirection = false;
+      this.loadData();
+      this.$root.$emit('reload-slots');
+    });
   },
 })
 export default class TimeSlot extends Vue {
@@ -123,9 +189,47 @@ export default class TimeSlot extends Vue {
 
   isOpened: boolean;
 
+  saved: boolean;
+
+  creatingDirection: boolean;
+
   mode: string | null;
 
   services: any[];
+
+  get selectedService() {
+    return this.details?.service?.id;
+  }
+
+  get servicesArray() {
+    return this.selectedService ? [this.selectedService] : [];
+  }
+
+  get serviceOther() {
+    if (!this.selectedService || !this.services) {
+      return null;
+    }
+    return this.services.find((s) => s.id === this.selectedService)
+      ? null
+      : this.$store.getters.researches_obj[this.selectedService];
+  }
+
+  get bases() {
+    return this.$store.getters.bases;
+  }
+
+  get kk() {
+    return `-ts-${this.data.id}`;
+  }
+
+  get internalBase() {
+    for (const b of this.bases) {
+      if (b.internal_type) {
+        return b;
+      }
+    }
+    return {};
+  }
 
   get cardId() {
     return this.details?.cardId;
@@ -143,8 +247,13 @@ export default class TimeSlot extends Vue {
   async loadData() {
     this.details = null;
     await this.$store.dispatch(actions.INC_LOADING);
+    await this.$store.dispatch(actions.GET_RESEARCHES);
     const { ok, data } = await this.$api('/schedule/details', this.data, 'id');
     this.details = data;
+    this.creatingDirection = false;
+    setTimeout(() => {
+      this.saved = true;
+    }, 10);
 
     if (!ok) {
       this.close();
@@ -173,6 +282,7 @@ export default class TimeSlot extends Vue {
 
   close() {
     this.isOpened = false;
+    this.creatingDirection = false;
   }
 
   async save() {

@@ -452,6 +452,7 @@ class Napravleniya(models.Model):
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
+    slot_fact = models.ForeignKey('doctor_schedule.SlotFact', related_name='slot_fact_drection', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -898,6 +899,7 @@ class Napravleniya(models.Model):
         rmis_slot=None,
         direction_purpose="NONE",
         external_organization="NONE",
+        slot_fact=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -954,9 +956,14 @@ class Napravleniya(models.Model):
             dir.purpose = direction_purpose
         if external_organization != "NONE":
             dir.external_organization_id = int(external_organization)
+        if slot_fact:
+            dir.slot_fact = slot_fact
         if save:
             dir.save()
         dir.set_polis()
+        if slot_fact and not slot_fact.direction:
+            slot_fact.direction = dir
+            slot_fact.save(update_fields=['direction'])
         return dir
 
     @staticmethod
@@ -1111,6 +1118,7 @@ class Napravleniya(models.Model):
         direction_form_params=None,
         current_global_direction_params=None,
         hospital_department_override=-1,
+        slot_fact=None,
     ):
         if not visited:
             visited = []
@@ -1287,6 +1295,7 @@ class Napravleniya(models.Model):
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
+                            slot_fact=slot_fact,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1313,6 +1322,7 @@ class Napravleniya(models.Model):
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
+                            slot_fact=slot_fact,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1452,6 +1462,7 @@ class Napravleniya(models.Model):
                 localizations=localizations,
                 service_locations=service_locations,
                 visited=visited,
+                slot_fact=slot_fact,
             )
             if not res_children["r"]:
                 return res_children

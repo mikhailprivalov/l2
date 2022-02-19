@@ -9,6 +9,7 @@ from clients.models import Card, CardBase
 import math
 import datetime
 from datetime import timedelta
+from directions.models import Napravleniya
 
 from directory.models import Researches
 from doctor_schedule.models import ScheduleResource, SlotFact, SlotPlan
@@ -113,9 +114,7 @@ def days(request):
                         }
 
                     if slot_fact.direction:
-                        direction = {
-                            'id': slot_fact.direction_id,
-                        }
+                        direction = slot_fact.direction_id
 
                 date_data['slots'].append(
                     {
@@ -178,7 +177,7 @@ def details(request):
         service = {
             'id': None,
         }
-        direction = None
+        directions = []
         base_pk = CardBase.objects.filter(internal_type=True)[0].pk
 
         if slot_fact:
@@ -199,16 +198,18 @@ def details(request):
                     'title': slot_fact.service.get_title(),
                 }
 
-            if slot_fact.direction:
-                direction = {
-                    'id': slot_fact.direction_id,
-                }
+            for d in Napravleniya.objects.filter(slot_fact=slot_fact):
+                directions.append(d.pk)
+
+            if slot_fact.direction_id and slot_fact.direction_id not in directions:
+                directions.append(slot_fact.direction_id)
 
         return status_response(
             True,
             data={
                 'data': {
                     'id': s.pk,
+                    'factId': slot_fact.pk if slot_fact else None,
                     'date': datetime.datetime.strftime(slot_datetime, '%Y-%m-%d'),
                     'time': datetime.datetime.strftime(slot_datetime, '%X'),
                     'hour': delta_to_string(current_slot_time),
@@ -219,7 +220,7 @@ def details(request):
                     'cardId': card_pk,
                     'baseId': base_pk,
                     'service': service,
-                    'direction': direction,
+                    'directions': directions,
                 },
             },
         )

@@ -3,6 +3,7 @@ import os
 
 from django.core.paginator import Paginator
 from cda.integration import render_cda
+from doctor_schedule.models import SlotFact
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
 
@@ -114,6 +115,14 @@ def directions_generate(request):
             return JsonResponse(result)
         fin_source = p.get("fin_source", -1)
         fin_source_pk = int(fin_source) if (isinstance(fin_source, int) or str(fin_source).isdigit()) else fin_source
+
+        slot_fact_pk = p.get("slotFact", None)
+
+        if slot_fact_pk:
+            slot_fact = SlotFact.objects.filter(pk=slot_fact_pk).first()
+        else:
+            slot_fact = None
+
         args = [
             card_pk,
             p.get("diagnos"),
@@ -140,6 +149,7 @@ def directions_generate(request):
             direction_form_params=p.get("direction_form_params", {}),
             current_global_direction_params=p.get("current_global_direction_params", {}),
             hospital_department_override=p.get("hospital_department_override", -1),
+            slot_fact=slot_fact,
         )
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
@@ -245,7 +255,6 @@ def directions_history(request):
         res['directions'] = final_result
 
         return JsonResponse(res)
-
 
     is_service = False
     if services:

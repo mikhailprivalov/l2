@@ -1,5 +1,5 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative" :class="[pay_source && !create_and_open && 'pay_source']">
+  <div style="height: 100%; width: 100%; position: relative" :class="[pay_source && !create_and_open && 'pay_source']">
     <div :class="['top-picker', need_vich_code && 'need-vich-code', hide_diagnosis && 'hide_diagnosis']" v-if="!simple">
       <button
         class="btn btn-blue-nb top-inner-btn"
@@ -43,11 +43,11 @@
     <div :class="['content-picker', simple ? 'simple' : '']" style="margin: 5px">
       <div
         v-if="Object.keys(researches_departments).length === 0"
-        style="padding: 10px;color: gray;text-align: center;width: 100%;"
+        style="padding: 10px; color: gray; text-align: center; width: 100%"
       >
         Услуги не выбраны
       </div>
-      <table class="table table-bordered table-condensed" style="table-layout: fixed; margin-bottom: 10px;">
+      <table class="table table-bordered table-condensed" style="table-layout: fixed; margin-bottom: 10px">
         <colgroup>
           <col width="130" />
           <col />
@@ -57,7 +57,7 @@
           <tr v-for="(row, key) in researches_departments" :key="key">
             <td>{{ row.title }}</td>
             <td class="pb0">
-              <research-display
+              <ResearchDisplay
                 v-for="(res, idx) in row.researches"
                 :simple="simple"
                 :key="`${res.pk}_${hasNotFilled(res.pk)}`"
@@ -73,10 +73,11 @@
                 :has_params="Boolean(form_params[res.pk])"
                 :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
                 :readonly="readonly"
+                :hide-clear="hideClear"
                 :nof="row.researches.length"
               />
             </td>
-            <td v-if="!readonly" class="cl-td clean-btn-td">
+            <td v-if="!readonly && !hideClear" class="cl-td clean-btn-td">
               <button
                 class="btn last btn-blue-nb nbr"
                 type="button"
@@ -88,7 +89,7 @@
               </button>
             </td>
           </tr>
-          <tr v-if="Object.keys(researches_departments).length > 1 && !readonly">
+          <tr v-if="Object.keys(researches_departments).length > 1 && !readonly && !hideClear">
             <td colspan="2"></td>
             <td class="cl-td clean-btn-td">
               <button
@@ -116,7 +117,7 @@
               <SelectFieldTitled v-model="direction_purpose" :variants="purposes" />
             </td>
           </tr>
-          <tr v-if="external_organizations_enabled && !hide_params">
+          <tr v-if="external_organizations_enabled && !hide_params && !hideClear">
             <th>Внешняя организация:</th>
             <td class="cl-td">
               <SelectFieldTitled v-model="external_organization" :variants="externalOrganizations" />
@@ -129,7 +130,7 @@
                 v-model="directions_count"
                 min="1"
                 max="10"
-                style="max-width: 165px;display: inline-block;"
+                style="max-width: 165px; display: inline-block"
                 class="form-control"
                 type="number"
                 step="1"
@@ -162,9 +163,7 @@
                 Заполнить параметры
               </button>
             </td>
-            <th v-else>
-              Параметры:
-            </th>
+            <th v-else>Параметры:</th>
             <td class="cl-td">
               <treeselect
                 :multiple="false"
@@ -292,14 +291,14 @@
         <table
           v-if="!show_global_direction_params"
           class="table table-bordered table-responsive"
-          style="table-layout: fixed;background-color: #fff;margin: 0 auto;"
+          style="table-layout: fixed; background-color: #fff; margin: 0 auto"
         >
           <colgroup>
-            <col style="width: 40px;" />
+            <col style="width: 40px" />
             <col />
             <col />
             <col />
-            <col style="width: 80px;" />
+            <col style="width: 80px" />
           </colgroup>
           <thead>
             <tr>
@@ -314,7 +313,7 @@
               <!-- eslint-disable-next-line vue/require-v-for-key -->
               <tr>
                 <td class="cl-td" :colspan="need_update_object.length > 1 && i === 0 ? 1 : 2">
-                  <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
+                  <div style="width: 100%; overflow: hidden; text-overflow: ellipsis" :title="row.title">
                     <span v-if="row.direction_params > -1" title="Параметры направления" v-tippy>
                       <button
                         type="button"
@@ -325,7 +324,7 @@
                         <i v-else class="glyphicon glyphicon-arrow-down"></i>
                       </button>
                     </span>
-                    <div style="display: inline-block; margin: 0 5px;">
+                    <div style="display: inline-block; margin: 0 5px">
                       {{ row.title }}
                     </div>
                     <div class="status-list empty-block" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
@@ -366,9 +365,7 @@
                     v-if="row.service_locations && row.service_locations.length > 0"
                     v-model="service_locations[row.pk]"
                   />
-                  <div class="empty-variants" v-else-if="row.site_type_raw !== -13">
-                    нет доступных вариантов
-                  </div>
+                  <div class="empty-variants" v-else-if="row.site_type_raw !== -13">нет доступных вариантов</div>
                 </td>
                 <td class="cl-td">
                   <input
@@ -510,6 +507,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    hideClear: {
+      type: Boolean,
+      default: false,
+    },
+    slotFact: {
+      type: Number,
+      required: false,
+    },
   },
   data() {
     return {
@@ -581,10 +586,10 @@ export default {
       const service_locations = {};
       const localizations = {};
       const counts = {};
-      this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1);
-      this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1);
-      this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1);
-      this.need_update_direction_params = this.need_update_direction_params.filter(e => this.researches.indexOf(e) !== -1);
+      this.need_update_comment = this.need_update_comment.filter((e) => this.researches.indexOf(e) !== -1);
+      this.need_update_localization = this.need_update_localization.filter((e) => this.researches.indexOf(e) !== -1);
+      this.need_update_service_location = this.need_update_service_location.filter((e) => this.researches.indexOf(e) !== -1);
+      this.need_update_direction_params = this.need_update_direction_params.filter((e) => this.researches.indexOf(e) !== -1);
       let needShowWindow = false;
       for (const pk of this.researches) {
         if (!this.comments[pk] && !this.localizations[pk] && !this.service_locations[pk] && !this.form_params[pk]) {
@@ -737,7 +742,7 @@ export default {
 
         for (let i = 0; i < replace.length; i++) {
           const reg = new RegExp(replace[i], 'mig');
-          this.diagnos = this.diagnos.replace(reg, a => (a === a.toLowerCase() ? search[i] : search[i].toUpperCase()));
+          this.diagnos = this.diagnos.replace(reg, (a) => (a === a.toLowerCase() ? search[i] : search[i].toUpperCase()));
         }
       }
       this.$root.$emit('update_diagnos', this.diagnos);
@@ -809,7 +814,7 @@ export default {
       const data = await this.$api('researches/by-direction-params');
       this.global_direction_params = [
         { id: -1, label: 'Не выбрано' },
-        ...Object.keys(data).map(id => ({ id, label: data[id].title })),
+        ...Object.keys(data).map((id) => ({ id, label: data[id].title })),
       ];
       this.researches_direction_params = data;
     },
@@ -874,7 +879,7 @@ export default {
     getResponse(resp) {
       return [...resp.data.data];
     },
-    renderItems: items => items.map(i => `${i.code} ${i.title}`),
+    renderItems: (items) => items.map((i) => `${i.code} ${i.title}`),
     get_def_diagnosis(finOrig) {
       const fin = finOrig || this.fin;
       return `${this.main_diagnosis} ${this.get_fin_obj(fin).default_diagnos}`.trim();
@@ -976,6 +981,7 @@ export default {
         current_global_direction_params: this.global_research_direction_param,
         hospital_department_override: this.hospital_department_override,
         monitoring: this.monitoring,
+        slotFact: this.slotFact,
       });
     },
     clear_all() {
@@ -1143,7 +1149,7 @@ export default {
     },
     can_save() {
       if (this.monitoring) {
-        if (this.researches.filter(r => r !== -1).length === 0) {
+        if (this.researches.filter((r) => r !== -1).length === 0) {
           return false;
         }
       } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1 || this.selected_card?.isArchive) {
@@ -1154,7 +1160,7 @@ export default {
         return false;
       }
 
-      return !this.researches.find(pk => {
+      return !this.researches.find((pk) => {
         if (!this.form_params[pk]) {
           return false;
         }

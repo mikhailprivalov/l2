@@ -12,29 +12,29 @@ function printForm(tpl: string, pks: number[]) {
 }
 
 export default (instance: Vue): void => {
-  instance.$root.$on('no-loader-in-header', status => instance.$store.dispatch(actions.SET_LOADER_IN_HEADER, !status));
+  instance.$root.$on('no-loader-in-header', (status) => instance.$store.dispatch(actions.SET_LOADER_IN_HEADER, !status));
 
-  instance.$root.$on('print:directions', pks => printForm('/directions/pdf?napr_id={pks}', pks));
+  instance.$root.$on('print:directions', (pks) => printForm('/directions/pdf?napr_id={pks}', pks));
 
-  instance.$root.$on('print:hosp', pks => printForm('/barcodes/hosp?napr_id={pks}', pks));
+  instance.$root.$on('print:hosp', (pks) => printForm('/barcodes/hosp?napr_id={pks}', pks));
 
-  instance.$root.$on('print:directions:contract', pks => printForm('/directions/pdf?napr_id={pks}&contract=1', pks));
+  instance.$root.$on('print:directions:contract', (pks) => printForm('/directions/pdf?napr_id={pks}&contract=1', pks));
 
-  instance.$root.$on('print:barcodes', pks => printForm('/barcodes/tubes?napr_id={pks}', pks));
+  instance.$root.$on('print:barcodes', (pks) => printForm('/barcodes/tubes?napr_id={pks}', pks));
 
-  instance.$root.$on('print:barcodes:iss', pks => printForm('/barcodes/tubes?iss_ids={pks}', pks));
+  instance.$root.$on('print:barcodes:iss', (pks) => printForm('/barcodes/tubes?iss_ids={pks}', pks));
 
-  instance.$root.$on('print:results', pks => {
+  instance.$root.$on('print:results', (pks) => {
     const url = `/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}`;
     printForm(url, pks);
   });
 
-  instance.$root.$on('print:example', pks => {
+  instance.$root.$on('print:example', (pks) => {
     const url = '/results/preview?pk={pks}&portion=1';
     printForm(url, pks);
   });
 
-  instance.$root.$on('print:directions_list', pks => printForm('/statistic/xls?pk={pks}&type=directions_list', pks));
+  instance.$root.$on('print:directions_list', (pks) => printForm('/statistic/xls?pk={pks}&type=directions_list', pks));
 
   instance.$root.$on('msg', (type, message, timeout: number | void) => {
     let t = TYPE.DEFAULT;
@@ -91,6 +91,7 @@ export default (instance: Vue): void => {
       current_global_direction_params: currentGlobalDirectionParams = {},
       hospital_department_override: hospitalDepartmentOverride = -1,
       monitoring = false,
+      slotFact = null,
     }) => {
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
@@ -134,8 +135,9 @@ export default (instance: Vue): void => {
           direction_form_params: directionFormParams,
           current_global_direction_params: currentGlobalDirectionParams,
           hospital_department_override: hospitalDepartmentOverride,
+          slotFact,
         })
-        .then(data => {
+        .then((data) => {
           instance.$store.dispatch(actions.DEC_LOADING);
 
           if (data.ok) {

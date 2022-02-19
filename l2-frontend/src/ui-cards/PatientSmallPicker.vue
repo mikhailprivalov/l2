@@ -1,13 +1,13 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative">
+  <div style="height: 100%; width: 100%; position: relative">
     <div class="top-picker" :class="{ internalType: selected_base.internal_type }">
       <div class="input-group">
-        <div class="input-group-btn" v-if="bases.length > 1">
+        <div class="input-group-btn" v-if="bases.length > 1 && !readonly">
           <button
             class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
             type="button"
             data-toggle="dropdown"
-            style="width: 200px;text-align: left!important;"
+            style="width: 200px; text-align: left !important"
           >
             <span class="caret"></span> {{ selected_base.title }}
           </button>
@@ -22,7 +22,7 @@
             class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
             type="button"
             data-toggle="dropdown"
-            style="max-width: 200px;text-align: left!important;"
+            style="max-width: 200px; text-align: left !important"
           >
             {{ selected_base.title }}
           </button>
@@ -35,9 +35,10 @@
           ref="q"
           maxlength="255"
           @keyup.enter="search"
+          :readonly="readonly"
         />
-        <span v-if="selected_base.internal_type" class="rmis-search input-group-btn">
-          <label class="btn btn-blue-nb nbr" style="padding: 5px 12px;">
+        <span v-if="selected_base.internal_type && !readonly" class="rmis-search input-group-btn">
+          <label class="btn btn-blue-nb nbr" style="padding: 5px 12px">
             <input type="checkbox" v-model="inc_rmis" /> Вкл. РМИС
           </label>
         </span>
@@ -46,7 +47,7 @@
             style="margin-right: -2px"
             class="btn last btn-blue-nb nbr"
             type="button"
-            :disabled="!query_valid || inLoading"
+            :disabled="!query_valid || inLoading || readonly"
             @click="search"
           >
             Поиск
@@ -55,7 +56,7 @@
       </div>
     </div>
     <div class="content-picker scrolldown">
-      <div style="padding-left: 5px;padding-right: 5px;">
+      <div style="padding-left: 5px; padding-right: 5px">
         <table class="table table-bordered">
           <colgroup>
             <col width="124" />
@@ -65,12 +66,12 @@
           </colgroup>
           <tbody>
             <tr>
-              <td style="max-width: 124px;" class="table-header-row">ФИО:</td>
-              <td style="max-width: 99%;" class="table-content-row">
+              <td style="max-width: 124px" class="table-header-row">ФИО:</td>
+              <td style="max-width: 99%" class="table-content-row">
                 {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }}
               </td>
-              <td style="max-width: 54px;" class="table-header-row">{{ selected_card.is_rmis ? 'ID' : 'Карта' }}:</td>
-              <td style="max-width: 99%;" class="table-content-row">{{ selected_card.num }}</td>
+              <td style="max-width: 54px" class="table-header-row">{{ selected_card.is_rmis ? 'ID' : 'Карта' }}:</td>
+              <td style="max-width: 99%" class="table-content-row">{{ selected_card.num }}</td>
             </tr>
             <tr>
               <td class="table-header-row">Дата рождения:</td>
@@ -125,6 +126,10 @@ export default {
       required: false,
     },
     value: {},
+    readonly: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -151,7 +156,7 @@ export default {
     this.check_base();
 
     this.$store.watch(
-      state => state.bases,
+      (state) => state.bases,
       () => {
         this.check_base();
       },
@@ -162,7 +167,7 @@ export default {
     query() {
       this.query = this.query
         .split(' ')
-        .map(s => s.charAt(0).toUpperCase() + s.substring(1))
+        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
         .join(' ');
     },
     bases() {
@@ -176,10 +181,10 @@ export default {
   },
   computed: {
     bases() {
-      return this.$store.getters.bases.filter(b => b.pk === this.base_pk);
+      return this.$store.getters.bases.filter((b) => b.pk === this.base_pk);
     },
     basesFiltered() {
-      return this.bases.filter(row => !row.hide && row.pk !== this.selected_base.pk);
+      return this.bases.filter((row) => !row.hide && row.pk !== this.selected_base.pk);
     },
     selected_base() {
       for (const b of this.bases) {
@@ -317,8 +322,7 @@ export default {
       }
     },
     emit_input() {
-      let pk = null;
-      if ('pk' in this.selected_card) pk = this.selected_card.pk;
+      const pk = this.selected_card.pk || this.value || null;
       this.$emit('input', pk);
       if (this.card) {
         this.$emit('update:card', this.selected_card);
@@ -344,7 +348,7 @@ export default {
           type: this.base,
           list_all_cards: false,
         })
-        .then(result => {
+        .then((result) => {
           if (result.results) {
             this.founded_cards = result.results;
             if (this.founded_cards.length > 1) {
@@ -358,7 +362,7 @@ export default {
             this.$root.$emit('msg', 'error', 'Ошибка на сервере');
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
         })
         .finally(() => {
