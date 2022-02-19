@@ -1835,7 +1835,7 @@ def get_pdf_result(request):
     pk = data.get('pk')
     localclient = TC(enforce_csrf_checks=False)
     addr = "/results/pdf"
-    params = {"pk": json.dumps([pk]), 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
+    params = {"pk": json.dumps([pk]), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
     result = localclient.get(addr, params).content
     pdf_content = base64.b64encode(result).decode('utf-8')
     return JsonResponse({"result": pdf_content})
