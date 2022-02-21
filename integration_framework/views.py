@@ -64,7 +64,7 @@ from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
-from .utils import get_json_protocol_data, get_json_labortory_data
+from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
 from django.contrib.auth.models import User
 
 logger = logging.getLogger("IF")
@@ -1920,16 +1920,22 @@ def add_file_hospital_plan(request):
     with transaction.atomic():
         plan: PlanHospitalization = PlanHospitalization.objects.select_for_update().get(pk=pk)
 
+        if file and file.size > 3145728:
+            return JsonResponse({
+                "ok": False,
+                "message": "Файл слишком большой",
+            })
+
         if file and PlanHospitalizationFiles.objects.filter(plan=plan, uploaded_file__isnull=False).count() >= 3:
             return JsonResponse({
                 "ok": False,
                 "message": "Вы добавили слишком много файлов в одну заявку",
             })
 
-        if file and file.size > 3145728:
+        if not check_type_file(file):
             return JsonResponse({
                 "ok": False,
-                "message": "Файл слишком большой",
+                "message": "Поддерживаются PDF и JPEG файлы",
             })
 
         plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan=plan)

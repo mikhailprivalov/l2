@@ -1,4 +1,6 @@
 import datetime
+
+import magic
 import pytz
 from laboratory import settings
 import simplejson as json
@@ -210,3 +212,11 @@ def start_pathological_process(date_death, time_data, type_period):
     delta = dt + period[type_period]
     delta.strftime("%Y%m%d%H:%M:%S")
     return f"{delta.strftime('%Y%m%d%H%M')}+0800"
+
+
+def check_type_file(file):
+    type_file = magic.from_buffer(open(file).read(2048))
+    if "pdf" in type_file.lower() or "jpeg" in type_file.lower():
+        return True
+    return False
+
