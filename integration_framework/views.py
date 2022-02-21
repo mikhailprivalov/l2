@@ -4,6 +4,7 @@ import datetime
 import logging
 
 import pytz
+from django.utils.module_loading import import_string
 
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction
 from api.stationar.stationar_func import desc_to_data
@@ -43,7 +44,7 @@ from laboratory.settings import (
     CENTRE_GIGIEN_EPIDEMIOLOGY,
     MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY,
     REGION,
-    SCHEDULE_AGE_LIMIT_LTE,
+    SCHEDULE_AGE_LIMIT_LTE, LK_FORMS, LK_USER,
 )
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -62,6 +63,7 @@ from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 from .utils import get_json_protocol_data, get_json_labortory_data
+from django.contrib.auth.models import User
 
 logger = logging.getLogger("IF")
 
@@ -1861,9 +1863,37 @@ def documents_lk(request):
 
 @api_view(['POST'])
 def details_document_lk(request):
-    data = json.loads(request.body)
-    pk = data.get('pk')
+    data = data_parse(request.body, {'pk': int},)
+    pk: int = data[0]
     response = get_researches_details(pk)
     return JsonResponse(response)
 
 
+@api_view(['POST'])
+def forms_lk(request):
+    response = {"forms": LK_FORMS}
+    return JsonResponse(response)
+
+
+@api_view(['POST'])
+def pdf_form_lk(request):
+    data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str}, )
+    type_form: str = data[0]
+    snils: str = data[1]
+    enp: str = data[2]
+
+    card: Card = find_patient(snils, enp)
+    if not card:
+        return Response({"results": [], 'message': 'Карта не найдена'})
+
+    f = import_string('forms.forms' + type_form[0:3] + '.form_' + type_form[4:6])
+    user = User.objects.get(pk=LK_USER)
+    result = f(
+            request_data={
+                "card_pk": card,
+                "user": user,
+                "hospital": user.doctorprofile.get_hospital(),
+            }
+        )
+    pdf_content = base64.b64encode(result).decode('utf-8')
+    return JsonResponse({"result": pdf_content})
