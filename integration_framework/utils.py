@@ -219,4 +219,3 @@ def check_type_file(file):
     if "pdf" in type_file.lower() or "jpeg" in type_file.lower():
         return True
     return False
-
