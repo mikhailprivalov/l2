@@ -1,4 +1,6 @@
 import base64
+import os
+
 from django.test import Client as TC
 import datetime
 import logging
@@ -1623,6 +1625,15 @@ def hosp_record_list(request):
         if plan.work_status == 3:
             slot_plan = plan.slot_fact.plan
             status_description = slot_plan.datetime.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
+        rows_files = []
+        row_file: PlanHospitalizationFiles
+        for row_file in PlanHospitalizationFiles.objects.filter(plan=plan).order_by('-created_at'):
+            rows_files.append({
+                'pk': row_file.pk,
+                'createdAt': strfdatetime(row_file.created_at, "%d.%m.%Y %X"),
+                'file': row_file.uploaded_file.url if row_file.uploaded_file else None,
+                'fileName': os.path.basename(row_file.uploaded_file.name) if row_file.uploaded_file else None,
+            })
         rows.append({
             "pk": plan.pk,
             "service": plan.research.get_title(),
@@ -1631,7 +1642,8 @@ def hosp_record_list(request):
             "diagnosis": plan.diagnos,
             "comment": plan.comment,
             "status": plan.get_work_status_display(),
-            "status_description": status_description
+            "status_description": status_description,
+            "files": rows_files
         })
 
     return Response({"rows": rows})
