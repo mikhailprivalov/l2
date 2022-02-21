@@ -1889,7 +1889,7 @@ def forms_lk(request):
 
 @api_view(['POST'])
 def pdf_form_lk(request):
-    data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str, 'agent': {'snils': str, 'enp': str}},)
+    data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str, 'agent': {'snils': str, 'enp': str}}, )
     type_form: str = data[0]
     snils: str = data[1]
     enp: str = data[2]
@@ -1901,12 +1901,12 @@ def pdf_form_lk(request):
     f = import_string('forms.forms' + type_form[0:3] + '.form_' + type_form[4:6])
     user = User.objects.get(pk=LK_USER)
     result = f(
-            request_data={
-                "card_pk": card,
-                "user": user,
-                "hospital": user.doctorprofile.get_hospital(),
-            }
-        )
+        request_data={
+            "card_pk": card,
+            "user": user,
+            "hospital": user.doctorprofile.get_hospital(),
+        }
+    )
     pdf_content = base64.b64encode(result).decode('utf-8')
     return JsonResponse({"result": pdf_content})
 
