@@ -15,7 +15,7 @@ from doctor_schedule.views import get_hospital_resource, get_available_hospital_
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
-from plans.models import PlanHospitalization
+from plans.models import PlanHospitalization, PlanHospitalizationFiles
 from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
@@ -1877,7 +1877,7 @@ def forms_lk(request):
 
 @api_view(['POST'])
 def pdf_form_lk(request):
-    data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str}, )
+    data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str, 'agent': {'snils': str, 'enp': str}},)
     type_form: str = data[0]
     snils: str = data[1]
     enp: str = data[2]
@@ -1897,3 +1897,35 @@ def pdf_form_lk(request):
         )
     pdf_content = base64.b64encode(result).decode('utf-8')
     return JsonResponse({"result": pdf_content})
+
+
+@api_view(['POST'])
+def add_file_hospital_plan(request):
+    file = request.FILES.get('file')
+    data = data_parse(request.body, {'pk': int})
+    pk: int = data[0]
+
+    with transaction.atomic():
+        plan: PlanHospitalization = PlanHospitalization.objects.select_for_update().get(pk=pk)
+
+        if file and PlanHospitalizationFiles.objects.filter(plan=plan, uploaded_file__isnull=False).count() >= 3:
+            return JsonResponse({
+                "ok": False,
+                "message": "Вы добавили слишком много файлов в одну заявку",
+            })
+
+        if file and file.size > 3145728:
+            return JsonResponse({
+                "ok": False,
+                "message": "Файл слишком большой",
+            })
+
+        plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan=plan)
+
+        plan_files.uploaded_file = file
+        plan_files.save()
+
+    return JsonResponse({
+        "ok": True,
+        "message": "Файл добавлен",
+    })

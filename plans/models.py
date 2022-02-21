@@ -1,3 +1,6 @@
+import os
+import uuid
+
 from dateutil.relativedelta import relativedelta
 
 from clients.models import Card
@@ -202,6 +205,16 @@ class PlanHospitalization(models.Model):
             result = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date)).order_by("pk", "exec_at", "research")
 
         return result
+
+
+def get_file_path(instance: 'PlanHospitalization', filename):
+    return os.path.join('plan_hospitalization_uploads', str(instance.pk), str(uuid.uuid4()), filename)
+
+
+class PlanHospitalizationFiles(models.Model):
+    plan = models.ForeignKey(PlanHospitalization, db_index=True, on_delete=models.CASCADE)
+    uploaded_file = models.FileField(upload_to=get_file_path, blank=True, null=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class LimitDatePlanHospitalization(models.Model):
