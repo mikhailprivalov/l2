@@ -257,6 +257,7 @@ class Researches(models.Model):
     expertise_params = models.ForeignKey('self', related_name='expertise_params_p', help_text="Экспертиза ", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     file_name_contract = models.CharField(max_length=60, null=True, blank=True, default="default", help_text="Название ф-ла контракта")
     method_lab_default = models.ForeignKey(MethodLaboratoryAnalisis, db_index=True, blank=True, default=None, null=True, help_text='Методика анализа по умолчанию', on_delete=models.SET_NULL)
+    can_created_patient = models.BooleanField(blank=True, default=False, help_text="Может создаваться пациентом")
 
     @staticmethod
     def filter_type(t):

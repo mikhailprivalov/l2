@@ -39,4 +39,5 @@ urlpatterns = [
     path('schedule/hospitalization-plan-research', views.hospitalization_plan_research),
     path('schedule/available-hospitalization-plan', views.available_hospitalization_plan),
     path('schedule/check-hosp-slot-before-save', views.check_hosp_slot_before_save),
+    path('documents-lk', views.documents_lk),
 ]

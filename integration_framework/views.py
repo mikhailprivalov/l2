@@ -9,6 +9,7 @@ from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
 from clients.utils import find_patient
+from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from integration_framework.authentication import can_use_schedule_only
 
@@ -1851,5 +1852,18 @@ def get_pdf_direction(request):
     result = localclient.get(addr, params).content
     pdf_content = base64.b64encode(result).decode('utf-8')
     return JsonResponse({"result": pdf_content})
+
+
+@api_view(['POST'])
+def documents_lk(request):
+    return Response({"documents": get_can_created_patient()})
+
+
+@api_view(['POST'])
+def details_document_lk(request):
+    data = json.loads(request.body)
+    pk = data.get('pk')
+    response = get_researches_details(pk)
+    return JsonResponse(response)
 
 
