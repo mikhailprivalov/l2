@@ -46,7 +46,7 @@ from laboratory.settings import (
     CENTRE_GIGIEN_EPIDEMIOLOGY,
     MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY,
     REGION,
-    SCHEDULE_AGE_LIMIT_LTE, LK_FORMS, LK_USER,
+    SCHEDULE_AGE_LIMIT_LTE, LK_FORMS, LK_USER, LK_FILE_SIZE_BYTES, LK_FILE_COUNT,
 )
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -1920,13 +1920,13 @@ def add_file_hospital_plan(request):
     with transaction.atomic():
         plan: PlanHospitalization = PlanHospitalization.objects.select_for_update().get(pk=pk)
 
-        if file and file.size > 3145728:
+        if file and file.size > LK_FILE_SIZE_BYTES:
             return JsonResponse({
                 "ok": False,
                 "message": "Файл слишком большой",
             })
 
-        if file and PlanHospitalizationFiles.objects.filter(plan=plan, uploaded_file__isnull=False).count() >= 3:
+        if file and PlanHospitalizationFiles.get_count_files_by_plan(plan) >= LK_FILE_COUNT:
             return JsonResponse({
                 "ok": False,
                 "message": "Вы добавили слишком много файлов в одну заявку",

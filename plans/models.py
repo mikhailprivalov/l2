@@ -216,6 +216,10 @@ class PlanHospitalizationFiles(models.Model):
     uploaded_file = models.FileField(upload_to=get_file_path, blank=True, null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @staticmethod
+    def get_count_files_by_plan(plan):
+        return PlanHospitalizationFiles.objects.filter(plan=plan, uploaded_file__isnull=False).count()
+
 
 class LimitDatePlanHospitalization(models.Model):
     research = models.ForeignKey(Researches, null=True, blank=True, db_index=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)

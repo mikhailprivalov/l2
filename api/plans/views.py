@@ -6,7 +6,7 @@ from clients.models import Card
 from forms.forms_func import primary_reception_get_data
 from laboratory.utils import strdate, current_time, strfdatetime
 from plans.models import PlanOperations, PlanHospitalization
-from .sql_func import get_plans_by_params_sql, get_plans_hospitalization_sql
+from .sql_func import get_plans_by_params_sql, get_plans_hospitalization_sql, get_plans_hospitalizationfiles
 from ..sql_func import users_by_group
 from slog.models import Log
 from ..stationar.stationar_func import hosp_get_hosp_direction
@@ -119,6 +119,17 @@ def get_plan_hospitalization_by_params(request):
 
     result = get_plans_hospitalization_sql(start_date, end_date, department_pk)
 
+    pk_plans = tuple(set([i.pk_plan for i in result]))
+    pk_plans_files = get_plans_hospitalizationfiles(pk_plans)
+    plan_files_data = {}
+    for pf in pk_plans_files:
+        if not plan_files_data.get(pf.plan_id, None):
+            plan_files_data[pf.plan_id] = [pf.uploaded_file]
+        else:
+            temp_files = plan_files_data.get(pf.plan_id, None)
+            temp_files.append(pf.uploaded_file)
+            plan_files_data[pf.plan_id] = temp_files.copy()
+
     data = []
     sex_male = 0
     sex_female = 0
@@ -171,7 +182,8 @@ def get_plan_hospitalization_by_params(request):
                 "canceled": i.work_status == 2,
                 "status": i.work_status,
                 "slot": slot_datetime,
-                "created_by_patient": patient_created
+                "created_by_patient": patient_created,
+                "uploaded_file": plan_files_data.get(i.pk_plan, "")
             }
         )
         if i.sex.lower() == "ж":

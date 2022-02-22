@@ -1054,7 +1054,7 @@ def result_print(request):
                     br = ""
                     if not protocol_plain_text:
                         br = '<br/>'
-                    if napr_child:
+                    if len(napr_child) > 0:
                         fwb.append(Paragraph("Назначено:", styleBold))
                         s_napr = ""
                         for n_child in napr_child:
