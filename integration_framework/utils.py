@@ -214,8 +214,8 @@ def start_pathological_process(date_death, time_data, type_period):
     return f"{delta.strftime('%Y%m%d%H%M')}+0800"
 
 
-def check_type_file(file):
-    type_file = magic.from_buffer(open(file).read(2048)).lower()
+def check_type_file(file_path):
+    type_file = magic.from_buffer(open(file_path).read(2048)).lower()
     if "pdf" in type_file or "jpeg" in type_file:
         return True
     return False
