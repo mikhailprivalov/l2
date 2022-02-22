@@ -311,7 +311,9 @@ DISABLED_STATISTIC_CATEGORIES = []
 DISABLED_STATISTIC_REPORTS = []
 COVID_QUESTION_ID = None
 
+# Пример указания формы: [{'title': 'Согласие на обработку персональных данных', 'type': '101.02'}, {'title': 'Согласие на медицинское вмешательство', 'type': '101.03'}]
 LK_FORMS = []
+# Суррогатный юзер - подразделение "Личный кабинет" пользлватель "Личный кабинет"
 LK_USER = -1
 LK_FILE_SIZE_BYTES = -1
 LK_FILE_COUNT = -1
