@@ -42,4 +42,5 @@ urlpatterns = [
     path('documents-lk', views.documents_lk),
     path('forms-lk', views.forms_lk),
     path('pdf-forms-lk', views.pdf_form_lk),
+    path('files-params', views.get_limit_download_files),
 ]

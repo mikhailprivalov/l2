@@ -1947,3 +1947,8 @@ def add_file_hospital_plan(request):
         "ok": True,
         "message": "Файл добавлен",
     })
+
+
+@api_view(['POST'])
+def get_limit_download_files(request):
+    return JsonResponse({"lk_file_count": LK_FILE_COUNT, "lk_file_size_bytes": LK_FILE_SIZE_BYTES})
