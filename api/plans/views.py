@@ -7,6 +7,7 @@ from forms.forms_func import primary_reception_get_data
 from laboratory.settings import LK_FILE_COUNT, LK_FILE_SIZE_BYTES
 from laboratory.utils import strdate, current_time, strfdatetime
 from plans.models import PlanOperations, PlanHospitalization
+from plans.sql_func import get_messages_by_plan_hospitalization
 from .sql_func import get_plans_by_params_sql, get_plans_hospitalization_sql, get_plans_hospitalizationfiles
 from ..sql_func import users_by_group
 from slog.models import Log
@@ -123,13 +124,23 @@ def get_plan_hospitalization_by_params(request):
     pk_plans = tuple(set([i.pk_plan for i in result]))
     pk_plans_files = get_plans_hospitalizationfiles(pk_plans)
     plan_files_data = {}
-    for pf in pk_plans_files:
-        if not plan_files_data.get(pf.plan_id, None):
-            plan_files_data[pf.plan_id] = [pf.uploaded_file]
+    for p in pk_plans_files:
+        if not plan_files_data.get(p.plan_id, None):
+            plan_files_data[p.plan_id] = [p.uploaded_file]
         else:
-            temp_files = plan_files_data.get(pf.plan_id, None)
-            temp_files.append(pf.uploaded_file)
-            plan_files_data[pf.plan_id] = temp_files.copy()
+            temp_files = plan_files_data.get(p.plan_id, None)
+            temp_files.append(p.uploaded_file)
+            plan_files_data[p.plan_id] = temp_files.copy()
+
+    plans_messages_data = {}
+    pk_plans_messages = get_messages_by_plan_hospitalization(pk_plans)
+    for p in pk_plans_messages:
+        if not plans_messages_data.get(p.plan_id, None):
+            plans_messages_data[p.plan_id] = [{"message": p.message, "date": p.date_create, "time": p.time_creat}]
+        else:
+            temp_files = plans_messages_data.get(p.plan_id, None)
+            temp_files.append({"message": p.message, "date": p.date_create, "time": p.time_creat})
+            plans_messages_data[p.plan_id] = temp_files.copy()
 
     data = []
     sex_male = 0
@@ -176,7 +187,7 @@ def get_plan_hospitalization_by_params(request):
                 "research_title": i.research_title,
                 "research_id": i.research_id,
                 "depart_title": i.depart_title,
-                "diagnos":i.diagnos,
+                "diagnos": i.diagnos,
                 "tooltip_data": '\n'.join(tooltip_data),
                 "sex": i.sex,
                 "comment": i.comment,
@@ -184,7 +195,8 @@ def get_plan_hospitalization_by_params(request):
                 "status": i.work_status,
                 "slot": slot_datetime,
                 "created_by_patient": patient_created,
-                "uploaded_file": plan_files_data.get(i.pk_plan, "")
+                "uploaded_file": plan_files_data.get(i.pk_plan, ""),
+                "messages": plans_messages_data.get(i.pk_plan, "")
             }
         )
         if i.sex.lower() == "ж":

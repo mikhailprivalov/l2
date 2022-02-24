@@ -17,7 +17,7 @@ from doctor_schedule.views import get_hospital_resource, get_available_hospital_
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
-from plans.models import PlanHospitalization, PlanHospitalizationFiles
+from plans.models import PlanHospitalization, PlanHospitalizationFiles, Messages
 from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
@@ -1634,6 +1634,7 @@ def hosp_record_list(request):
                 'file': row_file.uploaded_file.url if row_file.uploaded_file else None,
                 'fileName': os.path.basename(row_file.uploaded_file.name) if row_file.uploaded_file else None,
             })
+        messages_data = Messages.get_messages_by_plan_hosp(plan.pk)
         rows.append({
             "pk": plan.pk,
             "service": plan.research.get_title(),
@@ -1643,7 +1644,8 @@ def hosp_record_list(request):
             "comment": plan.comment,
             "status": plan.get_work_status_display(),
             "status_description": status_description,
-            "files": rows_files
+            "files": rows_files,
+            "messages": messages_data
         })
 
     return Response({"rows": rows})

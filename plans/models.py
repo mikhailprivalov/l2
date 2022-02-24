@@ -8,6 +8,7 @@ from django.db import models
 
 from directory.models import Researches
 from doctor_schedule.models import SlotFact
+from plans.sql_func import get_messages_by_plan_hospitalization, get_messages_by_card_id
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from datetime import datetime
@@ -263,4 +264,42 @@ class LimitDatePlanHospitalization(models.Model):
         end_date = start_date + relativedelta(days=30)
         result = LimitDatePlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), research_pk=research_pk).order_by("date")
 
+        return result
+
+
+class Messages(models.Model):
+    message = models.TextField(default=None, blank=True, null=True, help_text="Вид операции")
+    client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель сообщения', on_delete=models.SET_NULL)
+    plan = models.ForeignKey(PlanHospitalization, db_index=True, default=None, blank=True, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Сообщения'
+        verbose_name_plural = 'Сообщения'
+
+    @staticmethod
+    def message_save(data, doc_who_create):
+        patient_card = Card.objects.get(pk=data['card_pk'])
+        pk_plan = data.get("pk_plan", None)
+        plan = PlanHospitalization.objects.get(pk=data) if pk_plan else None
+        message = Messages(
+            client=patient_card,
+            message=data['message'],
+            doc_who_create=doc_who_create,
+            plan=plan
+        )
+        message.save()
+        return message.pk
+
+    @staticmethod
+    def get_messages_by_plan_hosp(pk_plan):
+        messages_obj = get_messages_by_plan_hospitalization(tuple(pk_plan))
+        result = [{"message": i.message, "date": i.date_create, "time": i.time_creat} for i in messages_obj]
+        return result
+
+    @staticmethod
+    def get_message_by_card(card_id):
+        messages_obj = get_messages_by_card_id(card_id)
+        result = [{"message": i.message, "date": i.date_create, "time": i.time_creat} for i in messages_obj]
         return result
