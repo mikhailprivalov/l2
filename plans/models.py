@@ -293,9 +293,11 @@ class Messages(models.Model):
         return message.pk
 
     @staticmethod
-    def get_messages_by_plan_hosp(pk_plan):
+    def get_messages_by_plan_hosp(pk_plan, last=True):
         messages_obj = get_messages_by_plan_hospitalization(tuple(pk_plan))
         result = [{"message": i.message, "date": i.date_create, "time": i.time_creat} for i in messages_obj]
+        if last:
+            return {"last": result[0], "count": len(result)}
         return result
 
     @staticmethod
@@ -303,3 +305,5 @@ class Messages(models.Model):
         messages_obj = get_messages_by_card_id(card_id)
         result = [{"message": i.message, "date": i.date_create, "time": i.time_creat} for i in messages_obj]
         return result
+
+

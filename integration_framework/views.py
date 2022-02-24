@@ -1634,7 +1634,7 @@ def hosp_record_list(request):
                 'file': row_file.uploaded_file.url if row_file.uploaded_file else None,
                 'fileName': os.path.basename(row_file.uploaded_file.name) if row_file.uploaded_file else None,
             })
-        messages_data = Messages.get_messages_by_plan_hosp(plan.pk)
+        messages_data = Messages.get_messages_by_plan_hosp(plan.pk, last=True)
         rows.append({
             "pk": plan.pk,
             "service": plan.research.get_title(),
@@ -1649,6 +1649,14 @@ def hosp_record_list(request):
         })
 
     return Response({"rows": rows})
+
+
+@api_view(['POST'])
+def get_messages_by_plan_id(request):
+    data = data_parse(request.body, {'pk': int})
+    pk: int = data[0]
+    messages = Messages.get_messages_by_plan_hosp(pk, last=True)
+    return Response({"rows": messages})
 
 
 @api_view(['POST'])
