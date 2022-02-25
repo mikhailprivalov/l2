@@ -22,7 +22,9 @@
     <td v-tippy="vtp" :title="data.tooltip_data">
       {{ data.diagnos }}
     </td>
-    <td v-tippy="vtp" :title="data.tooltip_data" class="td-comment">{{ data.comment }}</td>
+    <td v-tippy="vtp" :title="data.tooltip_data" class="td-comment">
+      {{ data.comment }}
+    </td>
     <td>
       <template v-if="!data.canceled && data.status !== 3">
         <HospPlanScheduleButton :data="data" />
@@ -30,6 +32,10 @@
         <HospPlanCancelButton :data="data" />
       </template>
       <template v-else-if="data.slot"> {{ data.slot }} </template>
+      <div v-if="data.messages[0].count > 0">
+        <a href="#" class="a-under" @click.prevent="open_messages_data">
+          Сообщения: {{ data.messages[0].count }}</a>
+      </div>
     </td>
   </tr>
 </template>
@@ -58,7 +64,13 @@ export default {
         interactive: true,
         theme: 'dark longread',
       },
+      messages_data: false,
     };
+  },
+  methods: {
+    open_messages_data() {
+      this.messages_data = true;
+    },
   },
 };
 </script>

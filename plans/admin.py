@@ -88,6 +88,32 @@ class ResPlanHospitalizationFiles(admin.ModelAdmin):
         else:
             return ""
 
+
+class ResMessages(admin.ModelAdmin):
+    list_display = (
+        'created_at',
+        'plan_client',
+        'plan',
+    )
+
+    list_display_links = (
+        'created_at',
+        'plan_client',
+        'plan',
+
+    )
+
+    raw_id_fields = (
+        'client',
+    )
+
+    def plan_client(self, obj):
+        if obj.plan:
+            return obj.plan.client.get_fio_w_card()
+        else:
+            return ""
+
 admin.site.register(models.PlanHospitalization, ResPlanHospitalization)
 admin.site.register(models.LimitDatePlanHospitalization, ResLimitDatePlanHospitalization)
 admin.site.register(models.PlanHospitalizationFiles, ResPlanHospitalizationFiles)
+admin.site.register(models.Messages, ResMessages)

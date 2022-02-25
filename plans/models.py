@@ -297,7 +297,9 @@ class Messages(models.Model):
         messages_obj = get_messages_by_plan_hospitalization(pk_plan)
         result = [{"message": i.message, "date": i.date_create, "time": i.time_create} for i in messages_obj]
         if last and len(result) > 0:
-            return {"last": result[0], "count": len(result)}
+            return [{"count": len(result)}]
+        if last and len(result) == 0:
+            return [{"count": 0}]
         return result
 
     @staticmethod
