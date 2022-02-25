@@ -12,4 +12,5 @@ urlpatterns = [
     path('get-plan-hospitalization', views.get_plan_hospitalization_by_params),
     path('cancel-plan-hospitalization', views.cancel_plan_hospitalization),
     path('files-params', views.get_limit_download_files),
+    path('plan-messages', views.get_all_messages_by_plan_id),
 ]

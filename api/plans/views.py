@@ -1,12 +1,13 @@
+import os
 from datetime import datetime, time as dtime
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from clients.models import Card
 from forms.forms_func import primary_reception_get_data
-from laboratory.settings import LK_FILE_COUNT, LK_FILE_SIZE_BYTES
+from laboratory.settings import LK_FILE_COUNT, LK_FILE_SIZE_BYTES, MEDIA_URL
 from laboratory.utils import strdate, current_time, strfdatetime
-from plans.models import PlanOperations, PlanHospitalization
+from plans.models import PlanOperations, PlanHospitalization, Messages, PlanHospitalizationFiles
 from plans.sql_func import get_messages_by_plan_hospitalization
 from .sql_func import get_plans_by_params_sql, get_plans_hospitalization_sql, get_plans_hospitalizationfiles
 from ..sql_func import users_by_group
@@ -120,92 +121,91 @@ def get_plan_hospitalization_by_params(request):
     department_pk = request_data.get('department_pk', -1)
 
     result = get_plans_hospitalization_sql(start_date, end_date, department_pk)
-
     pk_plans = tuple(set([i.pk_plan for i in result]))
-    pk_plans_files = get_plans_hospitalizationfiles(pk_plans)
-    plan_files_data = {}
-    for p in pk_plans_files:
-        if not plan_files_data.get(p.plan_id, None):
-            plan_files_data[p.plan_id] = [p.uploaded_file]
-        else:
-            temp_files = plan_files_data.get(p.plan_id, None)
-            temp_files.append(p.uploaded_file)
-            plan_files_data[p.plan_id] = temp_files.copy()
-
-    plans_messages_data = {}
-    pk_plans_messages = get_messages_by_plan_hospitalization(pk_plans)
-    for p in pk_plans_messages:
-        if not plans_messages_data.get(p.plan_id, None):
-            plans_messages_data[p.plan_id] = [{"message": p.message, "date": p.date_create, "time": p.time_creat}]
-        else:
-            temp_files = plans_messages_data.get(p.plan_id, None)
-            temp_files.append({"message": p.message, "date": p.date_create, "time": p.time_creat})
-            plans_messages_data[p.plan_id] = temp_files.copy()
-
     data = []
     sex_male = 0
     sex_female = 0
     all_patient = 0
-    for i in result:
-        last_age_digit = i.ind_age[-1]
-        if int(last_age_digit) in [2, 3, 4]:
-            prefix_age = "года"
-        elif last_age_digit == 1:
-            prefix_age = "год"
-        else:
-            prefix_age = "лет"
-        data_patient = f"{i.fio_patient} {i.ind_age} {prefix_age} ({i.born})"
-        update_date = Log.objects.filter(key=i.pk_plan, type=80008)
-        create_date = Log.objects.filter(key=i.pk_plan, type=80007)
-        tooltip_data = []
-        patient_created = False
-        for c in create_date:
-            doctor = c.user.get_fio() if c.user else 'Личный кабинет'
-            if not c.user:
-                patient_created = True
-            time = strfdatetime(c.time, '%d.%m.%y %H:%M')
-            tooltip_data.append(f'Создал: {doctor} ({time})')
-        for u in update_date:
-            doctor = u.user.get_fio() if c.user else 'Личный кабинет'
-            time = strfdatetime(u.time, '%d.%m.%y %H:%M')
-            tooltip_data.append(f"Обновил: {doctor} ({time})")
+    if len(pk_plans) > 0:
+        pk_plans_files = get_plans_hospitalizationfiles(pk_plans)
+        plan_files_data = {}
+        for p in pk_plans_files:
+            if not plan_files_data.get(p.plan_id, None):
+                plan_files_data[p.plan_id] = [
+                    {'file': f"{MEDIA_URL}{p.uploaded_file}" if p.uploaded_file else None,
+                     'fileName': p.uploaded_file.split("/")[-1] if p.uploaded_file else None}]
+            else:
+                temp_files = plan_files_data.get(p.plan_id, None)
+                temp_files.append({'file': f"{MEDIA_URL}{p.uploaded_file}" if p.uploaded_file else None, 'fileName': p.uploaded_file.split("/")[-1] if p.uploaded_file else None})
+                plan_files_data[p.plan_id] = temp_files.copy()
+        for i in result:
+            last_age_digit = i.ind_age[-1]
+            if int(last_age_digit) in [2, 3, 4]:
+                prefix_age = "года"
+            elif last_age_digit == 1:
+                prefix_age = "год"
+            else:
+                prefix_age = "лет"
+            data_patient = f"{i.fio_patient} {i.ind_age} {prefix_age} ({i.born})"
+            update_date = Log.objects.filter(key=i.pk_plan, type=80008)
+            create_date = Log.objects.filter(key=i.pk_plan, type=80007)
+            tooltip_data = []
+            patient_created = False
+            for c in create_date:
+                doctor = c.user.get_fio() if c.user else 'Личный кабинет'
+                if not c.user:
+                    patient_created = True
+                time = strfdatetime(c.time, '%d.%m.%y %H:%M')
+                tooltip_data.append(f'Создал: {doctor} ({time})')
+            for u in update_date:
+                doctor = u.user.get_fio() if c.user else 'Личный кабинет'
+                time = strfdatetime(u.time, '%d.%m.%y %H:%M')
+                tooltip_data.append(f"Обновил: {doctor} ({time})")
 
-        if i.date_char:
-            slot_datetime = f'{i.date_char} на {i.hhmm_start}-{i.hhmm_end}'
-        elif i.why_cancel:
-            slot_datetime = i.why_cancel
-        else:
-            slot_datetime = "Ожидает решение"
+            if i.date_char:
+                slot_datetime = f'{i.date_char} на {i.hhmm_start}-{i.hhmm_end}'
+            elif i.why_cancel:
+                slot_datetime = i.why_cancel
+            else:
+                slot_datetime = "Ожидает решение"
 
-        data.append(
-            {
-                "pk_plan": i.pk_plan,
-                "date": i.exec_at_char,
-                "patient_card": i.client_id,
-                "fio_patient": data_patient,
-                "phone": i.phone,
-                "research_title": i.research_title,
-                "research_id": i.research_id,
-                "depart_title": i.depart_title,
-                "diagnos": i.diagnos,
-                "tooltip_data": '\n'.join(tooltip_data),
-                "sex": i.sex,
-                "comment": i.comment,
-                "canceled": i.work_status == 2,
-                "status": i.work_status,
-                "slot": slot_datetime,
-                "created_by_patient": patient_created,
-                "uploaded_file": plan_files_data.get(i.pk_plan, ""),
-                "messages": plans_messages_data.get(i.pk_plan, "")
-            }
-        )
-        if i.sex.lower() == "ж":
-            sex_female += 1
-        else:
-            sex_male += 1
-        all_patient += 1
+            messages_data = Messages.get_messages_by_plan_hosp(i.pk_plan, last=True)
+            data.append(
+                {
+                    "pk_plan": i.pk_plan,
+                    "date": i.exec_at_char,
+                    "patient_card": i.client_id,
+                    "fio_patient": data_patient,
+                    "phone": i.phone,
+                    "research_title": i.research_title,
+                    "research_id": i.research_id,
+                    "depart_title": i.depart_title,
+                    "diagnos": i.diagnos,
+                    "tooltip_data": '\n'.join(tooltip_data),
+                    "sex": i.sex,
+                    "comment": i.comment,
+                    "canceled": i.work_status == 2,
+                    "status": i.work_status,
+                    "slot": slot_datetime,
+                    "created_by_patient": patient_created,
+                    "uploaded_file": plan_files_data.get(i.pk_plan, ""),
+                    "messages": messages_data
+                }
+            )
+            if i.sex.lower() == "ж":
+                sex_female += 1
+            else:
+                sex_male += 1
+            all_patient += 1
 
     return JsonResponse({"result": data, "sex_female": sex_female, "sex_male": sex_male, "all_patient": all_patient})
+
+@login_required
+def get_all_messages_by_plan_id(request):
+    request_data = json.loads(request.body)
+    plan_pk = request_data['plan_pk']
+    messages = Messages.get_messages_by_plan_hosp(plan_pk, last=False)
+    return JsonResponse({"rows": messages})
 
 
 @login_required

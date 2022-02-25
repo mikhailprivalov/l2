@@ -7,6 +7,13 @@
     <td v-tippy="vtp" :title="data.tooltip_data">
       {{ data.fio_patient }}<br />
       {{ data.phone }}
+      <span v-for="row of data.uploaded_file" :key="row.file" >
+        <i class="fas fa-file-download"/>
+        <a :href="row.file" target="_blank" class="a-under">
+          {{ row.fileName }}
+        </a>
+        &nbsp;
+      </span>
     </td>
     <td v-tippy="vtp" :title="data.tooltip_data">
       <div>{{ data.research_title }}</div>

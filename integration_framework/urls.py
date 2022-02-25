@@ -43,4 +43,5 @@ urlpatterns = [
     path('forms-lk', views.forms_lk),
     path('pdf-forms-lk', views.pdf_form_lk),
     path('files-params', views.get_limit_download_files),
+    path('plan-messages', views.get_all_messages_by_plan_id),
 ]

@@ -1652,10 +1652,10 @@ def hosp_record_list(request):
 
 
 @api_view(['POST'])
-def get_messages_by_plan_id(request):
+def get_all_messages_by_plan_id(request):
     data = data_parse(request.body, {'pk': int})
     pk: int = data[0]
-    messages = Messages.get_messages_by_plan_hosp(pk, last=True)
+    messages = Messages.get_messages_by_plan_hosp(pk, last=False)
     return Response({"rows": messages})
 
 

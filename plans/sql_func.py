@@ -14,7 +14,7 @@ def get_messages_by_plan_hospitalization(plan_id):
             to_char(created_at AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_create,
             to_char(created_at AT TIME ZONE %(tz)s, 'HH24:MI') AS time_create
         FROM plans_messages
-        WHERE plan_id in %(plan_id)s
+        WHERE plan_id = %(plan_id)s
         ORDER BY created_at DESC """,
             params={'plan_id': plan_id, 'tz': TIME_ZONE},
         )

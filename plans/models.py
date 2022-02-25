@@ -294,16 +294,16 @@ class Messages(models.Model):
 
     @staticmethod
     def get_messages_by_plan_hosp(pk_plan, last=True):
-        messages_obj = get_messages_by_plan_hospitalization(tuple(pk_plan))
-        result = [{"message": i.message, "date": i.date_create, "time": i.time_creat} for i in messages_obj]
-        if last:
+        messages_obj = get_messages_by_plan_hospitalization(pk_plan)
+        result = [{"message": i.message, "date": i.date_create, "time": i.time_create} for i in messages_obj]
+        if last and len(result) > 0:
             return {"last": result[0], "count": len(result)}
         return result
 
     @staticmethod
     def get_message_by_card(card_id):
         messages_obj = get_messages_by_card_id(card_id)
-        result = [{"message": i.message, "date": i.date_create, "time": i.time_creat} for i in messages_obj]
+        result = [{"message": i.message, "date": i.date_create, "time": i.time_create} for i in messages_obj]
         return result
 
 
