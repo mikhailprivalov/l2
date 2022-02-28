@@ -7,11 +7,11 @@
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
-        <col width="85" />
+        <col width="115" />
         <col />
         <col width="180" />
         <col width="260" />
-        <col width="150" />
+        <col width="140" />
         <col width="170" />
       </colgroup>
       <thead>
@@ -31,7 +31,7 @@
         </tr>
       </tbody>
     </table>
-    <messages-data v-if="messages_data && plan_pk !== -1" :plan_pk="plan_pk"/>
+    <messages-data v-if="messages_data && plan_pk !== -1" :plan_pk="plan_pk" :card_pk="card_pk"/>
   </div>
 </template>
 
@@ -55,6 +55,7 @@ import * as actions from '../../store/action-types';
     return {
       title: 'План госпитализации',
       plan_pk: -1,
+      card_pk: -1,
       data: [],
       departments: [],
       filters: {
@@ -72,10 +73,12 @@ import * as actions from '../../store/action-types';
     this.$root.$on('hide_messages_data', () => {
       this.messages_data = false;
       this.plan_pk = -1;
+      this.card_pk = -1;
     });
-    this.$root.$on('open_messages_data', pk => {
+    this.$root.$on('open_messages_data', data => {
       this.messages_data = true;
-      this.plan_pk = pk;
+      this.plan_pk = data.pk;
+      this.card_pk = data.card;
     });
   },
   computed: {

@@ -207,6 +207,18 @@ def get_all_messages_by_plan_id(request):
     messages = Messages.get_messages_by_plan_hosp(plan_pk, last=False)
     return JsonResponse({"rows": messages})
 
+@login_required
+def save_masseges(request):
+    request_data = json.loads(request.body)
+    plan_pk = request_data.get('plan_pk', "")
+    card_pk = request_data.get("card_pk", -1)
+    data = request_data.get("data", "")
+    user = request.user.doctorprofile
+    data = {"card_pk": card_pk, "plan_pk": plan_pk, "message": data}
+    message_pk = Messages.message_save(data, user)
+
+    return JsonResponse({"rows": message_pk})
+
 
 @login_required
 def cancel_plan_hospitalization(request):

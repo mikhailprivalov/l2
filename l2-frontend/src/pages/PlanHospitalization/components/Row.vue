@@ -3,6 +3,8 @@
           'patient-created': data.created_by_patient && data.status !== 3 }">
     <td v-tippy="vtp" :title="data.tooltip_data">
       {{ data.date }}
+      <a href="#" class="a-under" @click.prevent="open_messages_data(data.pk_plan, data.patient_card)">
+          Сообщения: {{ data.messages[0].count }}</a>
     </td>
     <td v-tippy="vtp" :title="data.tooltip_data">
       {{ data.fio_patient }}<br />
@@ -32,10 +34,6 @@
         <HospPlanCancelButton :data="data" />
       </template>
       <template v-else-if="data.slot"> {{ data.slot }} </template>
-      <div>
-        <a href="#" class="a-under" @click.prevent="open_messages_data(data.pk_plan)">
-          Сообщения: {{ data.messages[0].count }}</a>
-      </div>
     </td>
   </tr>
 </template>
@@ -67,8 +65,8 @@ export default {
     };
   },
   methods: {
-    open_messages_data(pk) {
-      this.$root.$emit('open_messages_data', pk);
+    open_messages_data(pk, card) {
+      this.$root.$emit('open_messages_data', { pk, card });
     },
   },
 };

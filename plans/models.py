@@ -281,8 +281,8 @@ class Messages(models.Model):
     @staticmethod
     def message_save(data, doc_who_create):
         patient_card = Card.objects.get(pk=data['card_pk'])
-        pk_plan = data.get("pk_plan", None)
-        plan = PlanHospitalization.objects.get(pk=data) if pk_plan else None
+        pk_plan = data.get("plan_pk", None)
+        plan = PlanHospitalization.objects.get(pk=pk_plan) if pk_plan else None
         message = Messages(
             client=patient_card,
             message=data['message'],
