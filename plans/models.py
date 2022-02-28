@@ -208,8 +208,8 @@ class PlanHospitalization(models.Model):
         return result
 
 
-def get_file_path(instance: 'PlanHospitalization', filename):
-    return os.path.join('plan_hospitalization_uploads', str(instance.pk), str(uuid.uuid4()), filename)
+def get_file_path(instance: 'PlanHospitalizationFiles', filename):
+    return os.path.join('plan_hospitalization_uploads', str(instance.plan.pk), str(uuid.uuid4()), filename)
 
 
 class PlanHospitalizationFiles(models.Model):
