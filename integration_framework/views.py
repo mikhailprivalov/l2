@@ -1480,21 +1480,17 @@ def mkb10(request):
 
 
 @api_view(['POST', 'PUT'])
-@parser_classes([JSONParser, FormParser, MultiPartParser])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
 @can_use_schedule_only
 def hosp_record(request):
     files = []
-    print(request.FILES)
     if request.method == 'PUT':
-        print(request.FILES)
-        for kf in request.FILES:
+        for kf in request.data:
             if kf != 'document':
-                files.append(request.FILES[kf])
-        form = request.FILES['document'].read()
+                files.append(request.data[kf])
+        form = request.data['document']
     else:
         form = request.body
-    print(files)
-    print(form)
 
     data = data_parse(
         form,
@@ -1513,6 +1509,19 @@ def hosp_record(request):
             'diagnosis': 'str_strip',
         },
     )
+
+    if len(files) > LK_FILE_COUNT:
+        return Response({"ok": False, 'message': 'Слишком много файлов'})
+
+    for f in files:
+        if f.size > LK_FILE_SIZE_BYTES:
+            return Response({"ok": False, 'message': 'Файл слишком большой'})
+        if not check_type_file(file_in_memory=f):
+            return JsonResponse({
+                "ok": False,
+                "message": "Поддерживаются PDF и JPEG файлы",
+            })
+
     snils: str = data[0]
     enp: str = data[1]
     family: str = data[2]
@@ -1533,7 +1542,6 @@ def hosp_record(request):
         sex = 'ж'
 
     snils = ''.join(ch for ch in snils if ch.isdigit())
-    return Response({"ok": False})
 
     individual = None
     if enp:
@@ -1582,19 +1590,26 @@ def hosp_record(request):
         return JsonResponse({"ok": False, "message": "Нет свободных слотов"})
 
     hosp_department_id = hospital_research.podrazdeleniye.pk
-    PlanHospitalization.plan_hospitalization_save(
-        {
-            'card': card,
-            'research': hospital_research.pk,
-            'date': date,
-            'comment': comment[:256],
-            'phone': phone,
-            'action': 0,
-            'hospital_department_id': hosp_department_id,
-            'diagnos': diagnosis,
-        },
-        None
-    )
+    with transaction.atomic():
+        plan_pk = PlanHospitalization.plan_hospitalization_save(
+            {
+                'card': card,
+                'research': hospital_research.pk,
+                'date': date,
+                'comment': comment[:256],
+                'phone': phone,
+                'action': 0,
+                'hospital_department_id': hosp_department_id,
+                'diagnos': diagnosis,
+                'files': files,
+            },
+            None
+        )
+        for f in files:
+            plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan_id=plan_pk)
+
+            plan_files.uploaded_file = f
+            plan_files.save()
     y, m, d = date.split('-')
     return Response({"ok": True, "message": f"Запись создана — {hospital_research.get_title()} {d}.{m}.{y}"})
 
@@ -1646,8 +1661,6 @@ def hosp_record_list(request):
         for row_file in PlanHospitalizationFiles.objects.filter(plan=plan).order_by('-created_at'):
             rows_files.append({
                 'pk': row_file.pk,
-                'createdAt': strfdatetime(row_file.created_at, "%d.%m.%Y %X"),
-                'file': row_file.uploaded_file.url if row_file.uploaded_file else None,
                 'fileName': os.path.basename(row_file.uploaded_file.name) if row_file.uploaded_file else None,
             })
         messages_data = Messages.get_messages_by_plan_hosp(plan.pk, last=True)
@@ -1871,6 +1884,7 @@ def check_hosp_slot_before_save(request):
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def get_pdf_result(request):
     data = json.loads(request.body)
     pk = data.get('pk')
@@ -1883,6 +1897,7 @@ def get_pdf_result(request):
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def get_pdf_direction(request):
     data = json.loads(request.body)
     pk = data.get('pk')
@@ -1895,25 +1910,29 @@ def get_pdf_direction(request):
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def documents_lk(request):
     return Response({"documents": get_can_created_patient()})
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def details_document_lk(request):
     data = data_parse(request.body, {'pk': int},)
     pk: int = data[0]
     response = get_researches_details(pk)
-    return JsonResponse(response)
+    return Response(response)
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def forms_lk(request):
     response = {"forms": LK_FORMS}
-    return JsonResponse(response)
+    return Response(response)
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def pdf_form_lk(request):
     data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str, 'agent': {'snils': str, 'enp': str}}, )
     type_form: str = data[0]
@@ -1934,31 +1953,33 @@ def pdf_form_lk(request):
         }
     )
     pdf_content = base64.b64encode(result).decode('utf-8')
-    return JsonResponse({"result": pdf_content})
+    return Response({"result": pdf_content})
 
 
-@api_view(['POST'])
+@api_view(['POST', 'PUT'])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
+@can_use_schedule_only
 def add_file_hospital_plan(request):
-    file = request.FILES.get('file')
-    data = data_parse(request.body, {'pk': int})
+    file = request.data.get('file-add')
+    data = data_parse(request.data.get('document'), {'pk': int})
     pk: int = data[0]
 
     with transaction.atomic():
         plan: PlanHospitalization = PlanHospitalization.objects.select_for_update().get(pk=pk)
 
-        if file and file.size > LK_FILE_SIZE_BYTES:
+        if file.size > LK_FILE_SIZE_BYTES:
             return JsonResponse({
                 "ok": False,
                 "message": "Файл слишком большой",
             })
 
-        if file and PlanHospitalizationFiles.get_count_files_by_plan(plan) >= LK_FILE_COUNT:
+        if PlanHospitalizationFiles.get_count_files_by_plan(plan) >= LK_FILE_COUNT:
             return JsonResponse({
                 "ok": False,
                 "message": "Вы добавили слишком много файлов в одну заявку",
             })
 
-        if not check_type_file(file):
+        if not check_type_file(file_in_memory=file):
             return JsonResponse({
                 "ok": False,
                 "message": "Поддерживаются PDF и JPEG файлы",
@@ -1969,12 +1990,13 @@ def add_file_hospital_plan(request):
         plan_files.uploaded_file = file
         plan_files.save()
 
-    return JsonResponse({
+    return Response({
         "ok": True,
         "message": "Файл добавлен",
     })
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def get_limit_download_files(request):
-    return JsonResponse({"lk_file_count": LK_FILE_COUNT, "lk_file_size_bytes": LK_FILE_SIZE_BYTES})
+    return Response({"lk_file_count": LK_FILE_COUNT, "lk_file_size_bytes": LK_FILE_SIZE_BYTES})
