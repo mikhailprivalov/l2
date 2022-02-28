@@ -34,6 +34,7 @@ urlpatterns = [
     path('get-hosp-services', views.get_hosp_services),
     path('mkb10', views.mkb10),
     path('hosp-record', views.hosp_record),
+    path('hosp-record-add-file', views.add_file_hospital_plan),
     path('hosp-record-list', views.hosp_record_list),
     path('check-employee', views.check_employee),
     path('schedule/hospitalization-plan-research', views.hospitalization_plan_research),

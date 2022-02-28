@@ -31,7 +31,7 @@
         </tr>
       </tbody>
     </table>
-    <messages-data v-if="messages_data && plan_pk !== -1" :plan_pk="plan_pk" :card_pk="card_pk"/>
+    <MessagesData v-if="messages_data && plan_pk !== -1" :plan_pk="plan_pk" :card_pk="card_pk" />
   </div>
 </template>
 
@@ -75,7 +75,7 @@ import * as actions from '../../store/action-types';
       this.plan_pk = -1;
       this.card_pk = -1;
     });
-    this.$root.$on('open_messages_data', data => {
+    this.$root.$on('open_messages_data', (data) => {
       this.messages_data = true;
       this.plan_pk = data.pk;
       this.card_pk = data.card;

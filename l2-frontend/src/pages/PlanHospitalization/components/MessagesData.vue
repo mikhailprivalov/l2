@@ -1,55 +1,67 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
-         marginLeftRight="auto" margin-top>
+  <modal
+    ref="modal"
+    @close="hide_modal"
+    show-footer="true"
+    white-bg="true"
+    max-width="680px"
+    width="100%"
+    marginLeftRight="auto"
+    margin-top
+  >
     <span slot="header">Сообщения</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
       <table class="table table-bordered table-condensed table-sm-pd layout">
         <colgroup>
-          <col width="100"/>
-          <col width="160"/>
-          <col width="370"/>
+          <col width="100" />
+          <col width="160" />
+          <col width="370" />
         </colgroup>
         <thead>
-        <tr>
-          <th>Дата</th>
-          <th>Создатель</th>
-          <th>Сообщение</th>
-        </tr>
+          <tr>
+            <th>Дата</th>
+            <th>Создатель</th>
+            <th>Сообщение</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows" :key="r.date">
-          <td>{{r.createdAt}}</td>
-          <td>{{r.who_create}}</td>
-          <td><span v-html="r.message.replace(/\n/g, '<br/>')"></span></td>
-        </tr>
+          <tr v-for="r in rows" :key="r.date">
+            <td>{{ r.createdAt }}</td>
+            <td>{{ r.who_create }}</td>
+            <td><span v-html="r.message.replace(/\n/g, '<br/>')"></span></td>
+          </tr>
         </tbody>
       </table>
       <div style="margin: 0 auto; width: 200px">
-        <button class="btn btn-primary-nb btn-blue-nb"
-                @click="edit(-1)"
-                type="button"><i class="fa fa-plus"></i> Создать сообщение
+        <button class="btn btn-primary-nb btn-blue-nb" @click="edit(-1)" type="button">
+          <i class="fa fa-plus"></i> Создать сообщение
         </button>
       </div>
-      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
-             width="100%" marginLeftRight="auto" margin-top>
+      <modal
+        v-if="edit_pk > -2"
+        ref="modalEdit"
+        @close="hide_edit"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        marginLeftRight="auto"
+        margin-top
+      >
         <span slot="header">Создание записи</span>
-        <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
+        <div slot="body" style="min-height: 200px; padding: 10px" class="registry-body">
           <div class="form-group">
             <label>Введите текст:</label>
-            <textarea class="form-control" rows="10" v-model="data"/>
+            <textarea class="form-control" rows="10" v-model="data" />
           </div>
         </div>
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Отмена
-              </button>
+              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">Отмена</button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Сохранить
-              </button>
+              <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">Сохранить</button>
             </div>
           </div>
         </div>
@@ -58,11 +70,9 @@
     <div slot="footer">
       <div class="row">
         <div class="col-xs-12">
-          <div class="col-xs-4"/>
+          <div class="col-xs-4" />
           <div class="col-xs-4">
-            <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
-              Закрыть
-            </button>
+            <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">Закрыть</button>
           </div>
         </div>
       </div>
@@ -132,43 +142,43 @@ export default {
       this.$root.$emit('msg', 'ok', 'Сохранено');
       this.hide_edit();
       this.load_data(this.plan_pk);
+      this.$root.$emit('reload-hospplans');
     },
   },
 };
 </script>
 
 <style scoped lang="scss">
-  .align-button {
-    float: right;
-  }
+.align-button {
+  float: right;
+}
 
-  .layout {
-    table-layout: fixed;
-    font-size: 12px
-  }
+.layout {
+  table-layout: fixed;
+  font-size: 12px;
+}
 
-  .date {
-    width: 200px;
-  }
+.date {
+  width: 200px;
+}
 
-  .modal-mask {
-    align-items: stretch !important;
-    justify-content: stretch !important;
-  }
+.modal-mask {
+  align-items: stretch !important;
+  justify-content: stretch !important;
+}
 
-  ::v-deep .panel-flt {
-    margin: 41px;
-    align-self: stretch !important;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
+::v-deep .panel-flt {
+  margin: 41px;
+  align-self: stretch !important;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
-  ::v-deep .panel-body {
-    flex: 1;
-    padding: 0;
-    height: calc(100% - 91px);
-    min-height: 200px;
-  }
-
+::v-deep .panel-body {
+  flex: 1;
+  padding: 0;
+  height: calc(100% - 91px);
+  min-height: 200px;
+}
 </style>
