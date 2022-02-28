@@ -1,4 +1,4 @@
-import os
+
 from datetime import datetime, time as dtime
 import simplejson as json
 from django.contrib.auth.decorators import login_required
@@ -7,8 +7,7 @@ from clients.models import Card
 from forms.forms_func import primary_reception_get_data
 from laboratory.settings import LK_FILE_COUNT, LK_FILE_SIZE_BYTES, MEDIA_URL
 from laboratory.utils import strdate, current_time, strfdatetime
-from plans.models import PlanOperations, PlanHospitalization, Messages, PlanHospitalizationFiles
-from plans.sql_func import get_messages_by_plan_hospitalization
+from plans.models import PlanOperations, PlanHospitalization, Messages
 from .sql_func import get_plans_by_params_sql, get_plans_hospitalization_sql, get_plans_hospitalizationfiles
 from ..sql_func import users_by_group
 from slog.models import Log
@@ -200,12 +199,26 @@ def get_plan_hospitalization_by_params(request):
 
     return JsonResponse({"result": data, "sex_female": sex_female, "sex_male": sex_male, "all_patient": all_patient})
 
+
 @login_required
 def get_all_messages_by_plan_id(request):
     request_data = json.loads(request.body)
     plan_pk = request_data['plan_pk']
     messages = Messages.get_messages_by_plan_hosp(plan_pk, last=False)
     return JsonResponse({"rows": messages})
+
+
+@login_required
+def save_masseges(request):
+    request_data = json.loads(request.body)
+    plan_pk = request_data.get('plan_pk', "")
+    card_pk = request_data.get("card_pk", -1)
+    data = request_data.get("data", "")
+    user = request.user.doctorprofile
+    data = {"card_pk": card_pk, "plan_pk": plan_pk, "message": data}
+    message_pk = Messages.message_save(data, user)
+
+    return JsonResponse({"rows": message_pk})
 
 
 @login_required

@@ -76,6 +76,7 @@ class ResPlanHospitalizationFiles(admin.ModelAdmin):
         'plan_research',
         'plan_client'
     )
+
     def plan_research(self, obj):
         if obj.plan:
             return obj.plan.research.title

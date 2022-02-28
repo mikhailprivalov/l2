@@ -36,7 +36,7 @@
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
             <label>Введите текст:</label>
-            <textarea class="form-control" rows="10" v-model="edit_data.data"/>
+            <textarea class="form-control" rows="10" v-model="data"/>
           </div>
         </div>
         <div slot="footer">
@@ -71,7 +71,6 @@
 </template>
 
 <script lang="ts">
-import moment from 'moment';
 import Modal from '@/ui-cards/Modal.vue';
 import * as actions from '@/store/action-types';
 
@@ -83,16 +82,16 @@ export default {
       type: Number,
       required: false,
     },
+    card_pk: {
+      type: Number,
+      required: false,
+    },
   },
   data() {
     return {
       rows: [],
       edit_pk: -2,
-      td: moment().format('YYYY-MM'),
-      edit_data: {
-        date: '',
-        data: '',
-      },
+      data: '',
     };
   },
   created() {
@@ -100,16 +99,12 @@ export default {
   },
   computed: {
     valid() {
-      return this.edit_data.date !== '' && this.edit_data.data !== '';
+      return this.data !== '';
     },
   },
   methods: {
     async edit(pk) {
-      this.td = moment().format('YYYY-MM');
-      this.edit_data = {
-        date: this.td,
-        data: '',
-      };
+      this.data = '';
       this.edit_pk = pk;
     },
     hide_modal() {
@@ -132,11 +127,11 @@ export default {
 
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      // await patientsPoint.saveAmbulatoryData({ card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
+      await this.$api('plans/save-message', { card_pk: this.card_pk, plan_pk: this.plan_pk, data: this.data });
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit('msg', 'ok', 'Сохранено');
       this.hide_edit();
-      this.load_data();
+      this.load_data(this.plan_pk);
     },
   },
 };
