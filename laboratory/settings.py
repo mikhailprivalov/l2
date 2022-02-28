@@ -86,7 +86,9 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.RemoteUserBackend',
 ]
 
-REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication']}
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication'],
+}
 
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
@@ -310,6 +312,13 @@ DISABLED_FORMS = []
 DISABLED_STATISTIC_CATEGORIES = []
 DISABLED_STATISTIC_REPORTS = []
 COVID_QUESTION_ID = None
+
+# Пример указания формы: [{'title': 'Согласие на обработку персональных данных', 'type': '101.02'}, {'title': 'Согласие на медицинское вмешательство', 'type': '101.03'}]
+LK_FORMS = []
+# Суррогатный юзер - подразделение "Личный кабинет" пользлватель "Личный кабинет"
+LK_USER = -1
+LK_FILE_SIZE_BYTES = -1
+LK_FILE_COUNT = -1
 
 SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 

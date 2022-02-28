@@ -1,3 +1,6 @@
+import os
+import uuid
+
 from dateutil.relativedelta import relativedelta
 
 from clients.models import Card
@@ -5,6 +8,7 @@ from django.db import models
 
 from directory.models import Researches
 from doctor_schedule.models import SlotFact
+from plans.sql_func import get_messages_by_plan_hospitalization, get_messages_by_card_id
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from datetime import datetime
@@ -204,6 +208,20 @@ class PlanHospitalization(models.Model):
         return result
 
 
+def get_file_path(instance: 'PlanHospitalizationFiles', filename):
+    return os.path.join('plan_hospitalization_uploads', str(instance.plan.pk), str(uuid.uuid4()), filename)
+
+
+class PlanHospitalizationFiles(models.Model):
+    plan = models.ForeignKey(PlanHospitalization, db_index=True, on_delete=models.CASCADE)
+    uploaded_file = models.FileField(upload_to=get_file_path, blank=True, null=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @staticmethod
+    def get_count_files_by_plan(plan):
+        return PlanHospitalizationFiles.objects.filter(plan=plan, uploaded_file__isnull=False).count()
+
+
 class LimitDatePlanHospitalization(models.Model):
     research = models.ForeignKey(Researches, null=True, blank=True, db_index=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
     date = models.DateTimeField(help_text='Планируемая дата госпитализации')
@@ -246,4 +264,46 @@ class LimitDatePlanHospitalization(models.Model):
         end_date = start_date + relativedelta(days=30)
         result = LimitDatePlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), research_pk=research_pk).order_by("date")
 
+        return result
+
+
+class Messages(models.Model):
+    message = models.TextField(default=None, blank=True, null=True, help_text="Вид операции")
+    client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель сообщения', on_delete=models.SET_NULL)
+    plan = models.ForeignKey(PlanHospitalization, db_index=True, default=None, blank=True, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Сообщения'
+        verbose_name_plural = 'Сообщения'
+
+    @staticmethod
+    def message_save(data, doc_who_create):
+        patient_card = Card.objects.get(pk=data['card_pk'])
+        pk_plan = data.get("plan_pk", None)
+        plan = PlanHospitalization.objects.get(pk=pk_plan) if pk_plan else None
+        message = Messages(
+            client=patient_card,
+            message=data['message'],
+            doc_who_create=doc_who_create,
+            plan=plan
+        )
+        message.save()
+        return message.pk
+
+    @staticmethod
+    def get_messages_by_plan_hosp(pk_plan, last=True):
+        messages_obj = get_messages_by_plan_hospitalization(pk_plan)
+        result = [{"message": i.message, "createdAt": f"{i.date_create}:{i.time_create}", "who_create": i.fio_create} for i in messages_obj]
+        if last and len(result) > 0:
+            return {"count": len(result), "last": result[-1]['message']}
+        if last and len(result) == 0:
+            return {"count": 0, "last": None}
+        return result
+
+    @staticmethod
+    def get_message_by_card(card_id):
+        messages_obj = get_messages_by_card_id(card_id)
+        result = [{"message": i.message, "date": i.date_create, "time": i.time_create} for i in messages_obj]
         return result

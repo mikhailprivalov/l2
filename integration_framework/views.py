@@ -1,9 +1,12 @@
 import base64
+import os
+
 from django.test import Client as TC
 import datetime
 import logging
 
 import pytz
+from django.utils.module_loading import import_string
 
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction
 from api.stationar.stationar_func import desc_to_data
@@ -14,7 +17,7 @@ from doctor_schedule.views import get_hospital_resource, get_available_hospital_
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
-from plans.models import PlanHospitalization
+from plans.models import PlanHospitalization, PlanHospitalizationFiles, Messages
 from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
@@ -28,7 +31,8 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from rest_framework.response import Response
 
 import directions.models as directions
@@ -43,7 +47,7 @@ from laboratory.settings import (
     CENTRE_GIGIEN_EPIDEMIOLOGY,
     MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY,
     REGION,
-    SCHEDULE_AGE_LIMIT_LTE,
+    SCHEDULE_AGE_LIMIT_LTE, LK_FORMS, LK_USER, LK_FILE_SIZE_BYTES, LK_FILE_COUNT,
 )
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -61,7 +65,8 @@ from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
-from .utils import get_json_protocol_data, get_json_labortory_data
+from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
+from django.contrib.auth.models import User
 
 logger = logging.getLogger("IF")
 
@@ -1474,11 +1479,21 @@ def mkb10(request):
     return Response({"rows": mkb10_dict(request, True)})
 
 
-@api_view(['POST'])
+@api_view(['POST', 'PUT'])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
 @can_use_schedule_only
 def hosp_record(request):
+    files = []
+    if request.method == 'PUT':
+        for kf in request.data:
+            if kf != 'document':
+                files.append(request.data[kf])
+        form = request.data['document']
+    else:
+        form = request.body
+
     data = data_parse(
-        request.body,
+        form,
         {
             'snils': 'str_strip',
             'enp': 'str_strip',
@@ -1494,6 +1509,19 @@ def hosp_record(request):
             'diagnosis': 'str_strip',
         },
     )
+
+    if len(files) > LK_FILE_COUNT:
+        return Response({"ok": False, 'message': 'Слишком много файлов'})
+
+    for f in files:
+        if f.size > LK_FILE_SIZE_BYTES:
+            return Response({"ok": False, 'message': 'Файл слишком большой'})
+        if not check_type_file(file_in_memory=f):
+            return JsonResponse({
+                "ok": False,
+                "message": "Поддерживаются PDF и JPEG файлы",
+            })
+
     snils: str = data[0]
     enp: str = data[1]
     family: str = data[2]
@@ -1562,19 +1590,26 @@ def hosp_record(request):
         return JsonResponse({"ok": False, "message": "Нет свободных слотов"})
 
     hosp_department_id = hospital_research.podrazdeleniye.pk
-    PlanHospitalization.plan_hospitalization_save(
-        {
-            'card': card,
-            'research': hospital_research.pk,
-            'date': date,
-            'comment': comment[:256],
-            'phone': phone,
-            'action': 0,
-            'hospital_department_id': hosp_department_id,
-            'diagnos': diagnosis,
-        },
-        None
-    )
+    with transaction.atomic():
+        plan_pk = PlanHospitalization.plan_hospitalization_save(
+            {
+                'card': card,
+                'research': hospital_research.pk,
+                'date': date,
+                'comment': comment[:256],
+                'phone': phone,
+                'action': 0,
+                'hospital_department_id': hosp_department_id,
+                'diagnos': diagnosis,
+                'files': files,
+            },
+            None
+        )
+        for f in files:
+            plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan_id=plan_pk)
+
+            plan_files.uploaded_file = f
+            plan_files.save()
     y, m, d = date.split('-')
     return Response({"ok": True, "message": f"Запись создана — {hospital_research.get_title()} {d}.{m}.{y}"})
 
@@ -1621,6 +1656,14 @@ def hosp_record_list(request):
         if plan.work_status == 3:
             slot_plan = plan.slot_fact.plan
             status_description = slot_plan.datetime.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
+        rows_files = []
+        row_file: PlanHospitalizationFiles
+        for row_file in PlanHospitalizationFiles.objects.filter(plan=plan).order_by('-created_at'):
+            rows_files.append({
+                'pk': row_file.pk,
+                'fileName': os.path.basename(row_file.uploaded_file.name) if row_file.uploaded_file else None,
+            })
+        messages_data = Messages.get_messages_by_plan_hosp(plan.pk, last=True)
         rows.append({
             "pk": plan.pk,
             "service": plan.research.get_title(),
@@ -1629,10 +1672,20 @@ def hosp_record_list(request):
             "diagnosis": plan.diagnos,
             "comment": plan.comment,
             "status": plan.get_work_status_display(),
-            "status_description": status_description
+            "status_description": status_description,
+            "files": rows_files,
+            "messages": messages_data
         })
 
     return Response({"rows": rows})
+
+
+@api_view(['POST'])
+def get_all_messages_by_plan_id(request):
+    data = data_parse(request.body, {'pk': int})
+    pk: int = data[0]
+    messages = Messages.get_messages_by_plan_hosp(pk, last=False)
+    return Response({"rows": messages})
 
 
 @api_view(['POST'])
@@ -1831,6 +1884,7 @@ def check_hosp_slot_before_save(request):
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def get_pdf_result(request):
     data = json.loads(request.body)
     pk = data.get('pk')
@@ -1843,6 +1897,7 @@ def get_pdf_result(request):
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def get_pdf_direction(request):
     data = json.loads(request.body)
     pk = data.get('pk')
@@ -1855,15 +1910,93 @@ def get_pdf_direction(request):
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def documents_lk(request):
     return Response({"documents": get_can_created_patient()})
 
 
 @api_view(['POST'])
+@can_use_schedule_only
 def details_document_lk(request):
-    data = json.loads(request.body)
-    pk = data.get('pk')
+    data = data_parse(request.body, {'pk': int},)
+    pk: int = data[0]
     response = get_researches_details(pk)
-    return JsonResponse(response)
+    return Response(response)
 
 
+@api_view(['POST'])
+@can_use_schedule_only
+def forms_lk(request):
+    response = {"forms": LK_FORMS}
+    return Response(response)
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def pdf_form_lk(request):
+    data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str, 'agent': {'snils': str, 'enp': str}}, )
+    type_form: str = data[0]
+    snils: str = data[1]
+    enp: str = data[2]
+
+    card: Card = find_patient(snils, enp)
+    if not card:
+        return Response({"results": [], 'message': 'Карта не найдена'})
+
+    f = import_string('forms.forms' + type_form[0:3] + '.form_' + type_form[4:6])
+    user = User.objects.get(pk=LK_USER)
+    result = f(
+        request_data={
+            "card_pk": card,
+            "user": user,
+            "hospital": user.doctorprofile.get_hospital(),
+        }
+    )
+    pdf_content = base64.b64encode(result).decode('utf-8')
+    return Response({"result": pdf_content})
+
+
+@api_view(['POST', 'PUT'])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
+@can_use_schedule_only
+def add_file_hospital_plan(request):
+    file = request.data.get('file-add')
+    data = data_parse(request.data.get('document'), {'pk': int})
+    pk: int = data[0]
+
+    with transaction.atomic():
+        plan: PlanHospitalization = PlanHospitalization.objects.select_for_update().get(pk=pk)
+
+        if file.size > LK_FILE_SIZE_BYTES:
+            return JsonResponse({
+                "ok": False,
+                "message": "Файл слишком большой",
+            })
+
+        if PlanHospitalizationFiles.get_count_files_by_plan(plan) >= LK_FILE_COUNT:
+            return JsonResponse({
+                "ok": False,
+                "message": "Вы добавили слишком много файлов в одну заявку",
+            })
+
+        if not check_type_file(file_in_memory=file):
+            return JsonResponse({
+                "ok": False,
+                "message": "Поддерживаются PDF и JPEG файлы",
+            })
+
+        plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan=plan)
+
+        plan_files.uploaded_file = file
+        plan_files.save()
+
+    return Response({
+        "ok": True,
+        "message": "Файл добавлен",
+    })
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def get_limit_download_files(request):
+    return Response({"lk_file_count": LK_FILE_COUNT, "lk_file_size_bytes": LK_FILE_SIZE_BYTES})

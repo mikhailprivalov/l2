@@ -149,15 +149,28 @@ def get_plans_hospitalization_sql(d_s, d_e, department):
                to_char(EXTRACT(YEAR from age(t_plans.exec_at, t_patient.birthday)), '999') as ind_age,
                t_patient.born, podrazdeleniya_podrazdeleniya.title as depart_title, phone, research_id, directory_researches.title as research_title, diagnos, 
                t_patient.sex, comment, why_cancel, date_char, hhmm_start, hhmm_end
-                FROM t_plans
-        LEFT JOIN t_patient ON t_plans.client_id = t_patient.card_id 
+               FROM t_plans
+        LEFT JOIN t_patient ON t_plans.client_id = t_patient.card_id
         LEFT JOIN podrazdeleniya_podrazdeleniya ON podrazdeleniya_podrazdeleniya.id = hospital_department_id
-        LEFT JOIN directory_researches ON t_plans.research_id = directory_researches.id 
-        
+        LEFT JOIN directory_researches ON t_plans.research_id = directory_researches.id
         ORDER BY hospital_department_id, exec_at
         
         """,
             params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'department_id': department},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_plans_hospitalizationfiles(plan_pk_tuple):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT plan_id, uploaded_file FROM plans_planhospitalizationfiles
+            WHERE plan_id in %(plan_pk_tuple)s
+            ORDER BY plan_id""",
+            params={'plan_pk_tuple': plan_pk_tuple},
         )
 
         rows = namedtuplefetchall(cursor)

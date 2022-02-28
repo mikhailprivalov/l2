@@ -731,7 +731,7 @@ def procedural_text_for_result(direction, fwb, napr_child):
 
     procedurals_diary = ProcedureList.objects.filter(diary=direction)
     text = ''
-    if not napr_child:
+    if not napr_child and procedurals_diary.count() > 0:
         fwb.append(Paragraph("Назначено:", style))
     for p in procedurals_diary:
         text = f"{text} <font face=\"FreeSansBold\"> {p.drug.mnn} {p.form_release.title} {p.method.title} {p.dosage} {p.units}: </font>"

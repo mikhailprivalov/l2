@@ -1,8 +1,11 @@
 import datetime
+
+import magic
 import pytz
 from laboratory import settings
 import simplejson as json
 from dateutil.relativedelta import relativedelta
+from django.core.files.uploadedfile import InMemoryUploadedFile
 import directions.models as directions
 from directory.models import Fractions
 from laboratory.settings import (
@@ -210,3 +213,13 @@ def start_pathological_process(date_death, time_data, type_period):
     delta = dt + period[type_period]
     delta.strftime("%Y%m%d%H:%M:%S")
     return f"{delta.strftime('%Y%m%d%H%M')}+0800"
+
+
+def check_type_file(file_path=None, file_in_memory: InMemoryUploadedFile = None):
+    first_bytes = b''
+    if file_path:
+        first_bytes = open(file_path).read(2048)
+    elif file_in_memory:
+        first_bytes = file_in_memory.open().read(2048)
+    type_file = magic.from_buffer(first_bytes).lower()
+    return "pdf" in type_file or "jpeg" in type_file

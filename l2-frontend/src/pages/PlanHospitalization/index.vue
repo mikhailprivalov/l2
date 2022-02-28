@@ -7,11 +7,11 @@
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
-        <col width="85" />
+        <col width="115" />
         <col />
         <col width="180" />
         <col width="260" />
-        <col width="150" />
+        <col width="140" />
         <col width="170" />
       </colgroup>
       <thead>
@@ -31,6 +31,7 @@
         </tr>
       </tbody>
     </table>
+    <MessagesData v-if="messages_data && plan_pk !== -1" :plan_pk="plan_pk" :card_pk="card_pk" />
   </div>
 </template>
 
@@ -38,6 +39,7 @@
 import moment from 'moment';
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import MessagesData from '@/pages/PlanHospitalization/components/MessagesData.vue';
 import plansPoint from '../../api/plans-point';
 import Filters from './components/Filters.vue';
 import Row from './components/Row.vue';
@@ -45,25 +47,38 @@ import * as actions from '../../store/action-types';
 
 @Component({
   components: {
+    MessagesData,
     Filters,
     Row,
   },
   data() {
     return {
       title: 'План госпитализации',
-      pk_plan: '',
+      plan_pk: -1,
+      card_pk: -1,
       data: [],
       departments: [],
       filters: {
         date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')],
         department_pk: -1,
       },
+      messages_data: false,
     };
   },
   async mounted() {
     this.init();
     this.$root.$on('reload-hospplans', () => {
       this.load_data();
+    });
+    this.$root.$on('hide_messages_data', () => {
+      this.messages_data = false;
+      this.plan_pk = -1;
+      this.card_pk = -1;
+    });
+    this.$root.$on('open_messages_data', (data) => {
+      this.messages_data = true;
+      this.plan_pk = data.pk;
+      this.card_pk = data.card;
     });
   },
   computed: {
