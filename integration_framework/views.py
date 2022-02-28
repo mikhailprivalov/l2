@@ -31,7 +31,8 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from rest_framework.response import Response
 
 import directions.models as directions
@@ -1478,11 +1479,25 @@ def mkb10(request):
     return Response({"rows": mkb10_dict(request, True)})
 
 
-@api_view(['POST'])
+@api_view(['POST', 'PUT'])
+@parser_classes([JSONParser, FormParser, MultiPartParser])
 @can_use_schedule_only
 def hosp_record(request):
+    files = []
+    print(request.FILES)
+    if request.method == 'PUT':
+        print(request.FILES)
+        for kf in request.FILES:
+            if kf != 'document':
+                files.append(request.FILES[kf])
+        form = request.FILES['document'].read()
+    else:
+        form = request.body
+    print(files)
+    print(form)
+
     data = data_parse(
-        request.body,
+        form,
         {
             'snils': 'str_strip',
             'enp': 'str_strip',
@@ -1518,6 +1533,7 @@ def hosp_record(request):
         sex = 'ж'
 
     snils = ''.join(ch for ch in snils if ch.isdigit())
+    return Response({"ok": False})
 
     individual = None
     if enp:
