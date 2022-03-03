@@ -258,6 +258,7 @@ class Researches(models.Model):
     file_name_contract = models.CharField(max_length=60, null=True, blank=True, default="default", help_text="Название ф-ла контракта")
     method_lab_default = models.ForeignKey(MethodLaboratoryAnalisis, db_index=True, blank=True, default=None, null=True, help_text='Методика анализа по умолчанию', on_delete=models.SET_NULL)
     can_created_patient = models.BooleanField(blank=True, default=False, help_text="Может создаваться пациентом")
+    enabled_add_files = models.BooleanField(blank=True, default=False, help_text="Можно добавить файлы")
 
     @staticmethod
     def filter_type(t):

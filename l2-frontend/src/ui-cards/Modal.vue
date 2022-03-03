@@ -9,6 +9,7 @@
           alignSelf,
           marginTop,
           width,
+          height,
           marginLeft: marginLeftRight,
           marginRight: marginLeftRight,
           withoutFooter: showFooter === 'true',
@@ -69,6 +70,10 @@ export default {
       default: '100%',
     },
     width: {
+      required: false,
+      default: 'auto',
+    },
+    height: {
       required: false,
       default: 'auto',
     },

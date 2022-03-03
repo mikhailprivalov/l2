@@ -245,6 +245,7 @@
               </dropdown>
             </div>
             <div class="research-right">
+              <file-add v-if="row.research.enabled_add_files"/>
               <template v-if="row.confirmed">
                 <a
                   :href="`/forms/pdf?type=105.02&napr_id=[${opened_form_pk}]`"
@@ -620,6 +621,7 @@ export default {
     IssStatus,
     PatientCard,
     AmbulatoryData,
+    FileAdd: () => import('@/ui-cards/FileAdd.vue'),
     DirectionsHistory: () => import('@/ui-cards/DirectionsHistory/index.vue'),
     AggregateTADP: () => import('@/fields/AggregateTADP.vue'),
     AggregateDesc: () => import('@/fields/AggregateDesc.vue'),
@@ -636,6 +638,7 @@ export default {
   },
   data() {
     return {
+      file: '',
       pk: '',
       every: false,
       direction: null,

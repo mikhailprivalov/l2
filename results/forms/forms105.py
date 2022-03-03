@@ -135,6 +135,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Главный врач",
         "Должность",
         "Время известно",
+        "Только год",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
@@ -142,17 +143,21 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     data['fio'] = data_individual["fio"]
     data['sex'] = data_individual["sex"]
+    diff = None
+    if data.get("Только год", "") != "Да":
+        ends = datetime.datetime.strptime(data["Дата рождения"], '%d.%m.%Y')
+        start = datetime.datetime.strptime(data["Дата смерти"], '%d.%m.%Y')
+        diff = relativedelta(start, ends)
 
-    ends = datetime.datetime.strptime(data["Дата рождения"], '%d.%m.%Y')
-    start = datetime.datetime.strptime(data["Дата смерти"], '%d.%m.%Y')
-    diff = relativedelta(start, ends)
-
-    if diff.years == 0:
+    if diff and diff.years == 0:
         data['число месяцев жизни'] = diff.months
         data['число дней жизни'] = diff.days
     else:
         data['число месяцев жизни'] = ""
         data['число дней жизни'] = ""
+
+    if not data.get("Только год", None):
+        data["Только год"] = "Нет"
 
     if not data.get("Место рождения", None):
         data[
@@ -298,9 +303,9 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Paragraph('Для детей, умерших в возрасте до 1 года:', styleBold))
     text.append(Spacer(1, 0.5 * mm))
 
-    opinion = gen_opinion(['7. Дата рождения', 'число', fields['Дата рождения'].split('.')[0],
-                           ', месяц', fields['Дата рождения'].split('.')[1],
-                           ', год', fields['Дата рождения'].split('.')[2],
+    opinion = gen_opinion(['7. Дата рождения', 'число', fields['Дата рождения'].split('.')[0] if fields["Только год"] != "Да" else "",
+                           ', месяц', fields['Дата рождения'].split('.')[1] if fields["Только год"] != "Да" else "",
+                           ', год', fields['Дата рождения'].split('.')[2] if fields["Только год"] != "Да" else fields['Дата рождения'].split('.')[0],
                            ', число месяцев', fields["число месяцев жизни"],
                            ', число дней', fields["число дней жизни"], 'жизни'])
     col_width = (29 * mm, 17 * mm, 8 * mm, 15 * mm, 8 * mm, 10 * mm, 12 * mm, 24 * mm, 8 * mm, 20 * mm, 8 * mm, 15 * mm)
@@ -533,9 +538,15 @@ def sex_tbl(text, sex):
 def born_tbl(text, born_data):
     # Дата рождения
     born = born_data.split('.')
-    born_day = born[0]
-    born_month = born[1]
-    born_year = born[2]
+    born_day = ""
+    born_month = ""
+    born_year = ""
+    if len(born) > 1:
+        born_day = born[0]
+        born_month = born[1]
+        born_year = born[2]
+    if len(born) == 1:
+        born_year = born[0]
 
     opinion = gen_opinion(['3.Дата рождения:', 'число', born_day, 'месяц', born_month, 'год', born_year])
 

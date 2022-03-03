@@ -2,6 +2,7 @@ import base64
 import calendar
 import collections
 import logging
+import uuid
 
 from cda.integration import get_required_signatures
 import datetime
@@ -1893,6 +1894,16 @@ class Issledovaniya(models.Model):
     class Meta:
         verbose_name = 'Назначение на исследование'
         verbose_name_plural = 'Назначения на исследования'
+
+
+def get_file_path(instance: 'IssledovaniyaFiles', filename):
+    return os.path.join('issledovaniya_files', str(instance.issledovaniye.pk), str(uuid.uuid4()), filename)
+
+
+class IssledovaniyaFiles(models.Model):
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, on_delete=models.CASCADE)
+    uploaded_file = models.FileField(upload_to=get_file_path, blank=True, null=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class MonitoringResult(models.Model):

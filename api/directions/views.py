@@ -1262,6 +1262,7 @@ def directions_paraclinic_form(request):
                         "transfer_direction_iss": [] if not transfer_d else [r.research.title for r in Issledovaniya.objects.filter(napravleniye=transfer_d.pk)],
                         "r_type": i.research.r_type,
                         "show_more_services": i.research.show_more_services and not i.research.is_form and not i.research.is_microbiology,
+                        "enabled_add_files": i.research.enabled_add_files
                     },
                     "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else search_dicom_study(d.pk),
                     "examination_date": i.get_medical_examination(),
