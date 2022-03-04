@@ -52,7 +52,7 @@ from directions.models import (
     DirectionsHistory,
     MonitoringResult,
     TubesRegistration,
-    DirectionParamsResult,
+    DirectionParamsResult, IssledovaniyaFiles,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -1294,6 +1294,7 @@ def directions_paraclinic_form(request):
                     "whoSaved": None if not i.doc_save or not i.time_save else f"{i.doc_save}, {strdatetime(i.time_save)}",
                     "whoConfirmed": (None if not i.doc_confirmation or not i.time_confirmation else f"{i.doc_confirmation}, {strdatetime(i.time_confirmation)}"),
                     "whoExecuted": None if not i.time_confirmation or not i.executor_confirmation else str(i.executor_confirmation),
+                    "countFiles": IssledovaniyaFiles.objects.filter(issledovaniye_id=i.pk).count()
                 }
 
                 if i.research.is_microbiology:
@@ -3422,3 +3423,51 @@ def send_to_l2vi(request):
         res = send_cda_xml(doc.direction_id, doc.file.read().decode('utf-8'))
 
     return JsonResponse({"ok": True, "data": res})
+
+
+@login_required
+def add_file(request):
+    file = request.FILES.get('file')
+    form = request.FILES['form'].read()
+    request_data = json.loads(form)
+    pk = request_data["pk"]
+
+    iss_files = IssledovaniyaFiles.objects.filter(issledovaniye_id=pk)
+
+    if file and iss_files.count() >= 5:
+        return JsonResponse({
+            "ok": False,
+            "message": "Вы добавили слишком много файлов в одну заявку",
+        })
+
+    if file and file.size > 5242880:
+        return JsonResponse({
+            "ok": False,
+            "message": "Файл слишком большой",
+        })
+
+    iss = IssledovaniyaFiles(issledovaniye_id=pk, uploaded_file=file, who_add_files=request.user.doctorprofile)
+    iss.save()
+
+    return JsonResponse({
+        "ok": True,
+    })
+
+
+@login_required
+def file_log(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    rows = []
+    for row in IssledovaniyaFiles.objects.filter(issledovaniye_id=pk).order_by('-created_at'):
+        rows.append({
+            'pk': row.pk,
+            'author': row.who_add_files.get_fio(),
+            'createdAt': strfdatetime(row.created_at, "%d.%m.%Y %X"),
+            'file': row.uploaded_file.url if row.uploaded_file else None,
+            'fileName': os.path.basename(row.uploaded_file.name) if row.uploaded_file else None,
+        })
+    print(rows)
+    return JsonResponse({
+        "rows": rows,
+    })

@@ -1,7 +1,7 @@
 <template>
   <div v-frag>
-    <a href="`http://ya.ru`" @click.prevent="show_modal" class="btn btn-blue-nb n-r">Файлы</a>
-    <file-add-modal v-if="showModal"/>
+    <a href="#" @click.prevent="show_modal" class="btn btn-blue-nb n-r">Файлы-{{count_files}}</a>
+    <file-add-modal v-if="showModal" :iss_pk="iss_pk"/>
   </div>
 </template>
 
@@ -12,11 +12,11 @@ export default {
   name: 'FileAdd',
   components: { FileAddModal },
   props: {
-    med_certificates: {
-      type: Array,
+    iss_pk: {
+      type: Number,
       required: false,
     },
-    direction: {
+    count_files: {
       type: Number,
       required: false,
     },
@@ -25,6 +25,11 @@ export default {
     return {
       showModal: false,
     };
+  },
+  mounted() {
+    this.$root.$on('file-add:modal:hide', () => {
+      this.showModal = false;
+    });
   },
   methods: {
     show_modal() {

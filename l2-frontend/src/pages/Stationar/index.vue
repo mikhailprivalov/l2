@@ -245,7 +245,7 @@
               </dropdown>
             </div>
             <div class="research-right">
-              <file-add v-if="row.research.enabled_add_files"/>
+              <file-add v-if="row.research.enabled_add_files" :iss_pk="row.pk" :count_files="row.countFiles"/>
               <template v-if="row.confirmed">
                 <a
                   :href="`/forms/pdf?type=105.02&napr_id=[${opened_form_pk}]`"

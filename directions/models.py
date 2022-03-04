@@ -1904,6 +1904,11 @@ class IssledovaniyaFiles(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, on_delete=models.CASCADE)
     uploaded_file = models.FileField(upload_to=get_file_path, blank=True, null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
+    who_add_files = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="who_add_files", help_text='Создатель направления', on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = 'Файлы на исследование'
+        verbose_name_plural = 'Файлы на исследования'
 
 
 class MonitoringResult(models.Model):
