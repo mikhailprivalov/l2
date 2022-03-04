@@ -3467,7 +3467,6 @@ def file_log(request):
             'file': row.uploaded_file.url if row.uploaded_file else None,
             'fileName': os.path.basename(row.uploaded_file.name) if row.uploaded_file else None,
         })
-    print(rows)
     return JsonResponse({
         "rows": rows,
     })
