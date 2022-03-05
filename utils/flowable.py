@@ -3,6 +3,9 @@ from reportlab.lib.colors import white, black
 from reportlab.lib.units import mm
 from reportlab.pdfbase.acroform import AcroForm
 from reportlab.platypus import Flowable, Table
+from reportlab.graphics.barcode import qr
+from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing
 
 
 class InteractiveTextField(Flowable):
@@ -135,3 +138,22 @@ class LaterPagesTable(Table):
 
         if self._later_style:
             T.setStyle(self._later_style)
+
+
+class QrCodeSite(Flowable):
+    def __init__(self, qr_value, params):
+        # init and store rendering value
+        Flowable.__init__(self)
+        self.qr_value = qr_value
+        self.x_offset = params.get("x", 0) * mm
+        self.y_offset = params.get("y", 0) * mm
+        self.size = params.get("size", 0) * mm
+
+    def draw(self):
+        qr_code = qr.QrCodeWidget(self.qr_value)
+        qr_code.barWidth = self.size
+        qr_code.barHeight = self.size
+        qr_code.qrVersion = 1
+        d = Drawing()
+        d.add(qr_code)
+        renderPDF.draw(d, self.canv, self.x_offset, self.y_offset)

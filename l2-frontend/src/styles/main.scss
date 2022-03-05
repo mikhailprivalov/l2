@@ -1637,6 +1637,7 @@ body > .container-fluid {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 2;
 }
 
 .field-title {
@@ -2723,4 +2724,12 @@ input[type="date"].form-control {
 .formulate-input[data-classification="button"] button {
   border-color: #049372;
   background-color: #049372;
+}
+
+.table-fixed {
+  table-layout: fixed;
+}
+
+.spacer {
+  height: 2px;
 }

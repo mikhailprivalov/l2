@@ -1,4 +1,5 @@
 import math
+from typing import Union
 import uuid
 
 from django.db import models
@@ -33,8 +34,9 @@ class Application(models.Model):
     hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True)
     is_superuser = False
     tube_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами пробирок")
+    can_access_schedule = models.BooleanField(default=False, help_text="У приложения есть доступ к расписанию")
 
-    def auto_set_places(self, rel: "RelationFractionASTM", value: [str, float, int]) -> str:
+    def auto_set_places(self, rel: "RelationFractionASTM", value: Union[str, float, int]) -> str:
         if rel.full_round:
             return str(round(value))
         if self.places_type != Application.PLACES_AS_IS:

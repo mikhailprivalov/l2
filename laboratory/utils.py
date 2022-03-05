@@ -12,7 +12,13 @@ from laboratory.settings import TIME_ZONE
 def localtime(d: datetime):
     if not d:
         return None
-    return timezone.localtime(d)
+    return timezone.localtime(d, pytz.timezone(TIME_ZONE))
+
+
+def replace_tz(d: datetime):
+    if not d:
+        return None
+    return d.replace(tzinfo=pytz.timezone(TIME_ZONE))
 
 
 def strfdatetime(d, format: str = '%d.%m.%Y %X'):

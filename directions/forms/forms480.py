@@ -132,7 +132,7 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
         descriptive_values = []
-        laboratory_value, purpose, table_value, main_diagnos, mkb10_code, clinical_data, method_get_material = None, None, None, None, None, None, None
+        laboratory_value, purpose, table_value, main_diagnos, mkb10_code, clinical_data, method_get_material, doc_get_material = None, None, None, None, None, None, None, None
         date_get_material = '_________________________'
         time_get_material = '______________'
         is_aqua_material = '(да/нет)___________'
@@ -161,6 +161,8 @@ def form_01(c: Canvas, dir: Napravleniya):
                 date_get_material = normalize_dash_date(param.value)
             elif param.title == 'Время забора материала':
                 time_get_material = param.value
+            elif param.title == 'ФИО врача':
+                doc_get_material = param.value
 
         if main_diagnos:
             diagnos_after_operation = main_diagnos
@@ -238,7 +240,9 @@ def form_01(c: Canvas, dir: Napravleniya):
                 objs.append(table_value_result)
 
         objs.append(Spacer(1, 5 * mm))
-        objs.append(Paragraph(f'19. Фамилия, инициалы врача: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))
+        if not doc_get_material:
+            doc_get_material = dir.doc.get_fio()
+        objs.append(Paragraph(f'19. Фамилия, инициалы врача: {doc_get_material} {space_symbol * 5} подпись _________', style))
         objs.append(Paragraph(f'20. Дата направления:  {strdate(dir.data_sozdaniya)}', style))
 
         gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)

@@ -352,6 +352,35 @@
             </a>
           </div>
         </div>
+        <div v-if="phones_tranfer.length > 0">
+          <treeselect
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="phones_tranfer"
+            placeholder="Выбрать куда позвонить"
+            v-model="current_transfer"
+          />
+          <div v-if="current_transfer > 0 && !hide_card_editor" class="hovershow">
+            <div class="fastlinks hovershow1">
+              <a href="#"><i class="glyphicon glyphicon-phone" /> Звонок</a>
+            </div>
+            <div class="fastlinks hovershow2" style="margin-top: 1px">
+              <a :href="'sip:' + current_transfer" style="display: inline-block;">
+                <i class="glyphicon glyphicon-phone" /> {{ current_transfer }}
+              </a>
+            </div>
+         </div>
+        </div>
+        <div v-if="extrenal_phones.length > 0 && !hide_card_editor" class="hovershow call-padding-top">
+          <h5>Экстренные службы</h5>
+          <div style="margin-top: 2px" class="fastlinks">
+            <a :href="'sip:' + p.id" v-for="p in extrenal_phones" style="display: inline-block;" :key="p.id"
+            class="call-padding-right">
+              <i class="glyphicon glyphicon-phone" /> {{ p.label }}
+            </a>
+          </div>
+        </div>
+
         <slot name="for_card" v-if="loaded" style="margin-top: 5px" />
         <slot name="for_all" style="margin-top: 5px" />
       </div>
@@ -518,6 +547,10 @@ export default {
         loading: false,
         data: [],
       },
+      phones_tranfer: [],
+      current_transfer: -1,
+      extrenal_phones: [],
+      current_extrenal_phones: -1,
     };
   },
   created() {
@@ -573,6 +606,7 @@ export default {
   },
   mounted() {
     this.inited();
+    this.get_phones_transfer();
   },
   watch: {
     force_rmis_search: {
@@ -1226,6 +1260,12 @@ export default {
     show_results(pk) {
       this.$root.$emit('print:results', pk);
     },
+
+    async get_phones_transfer() {
+      const rows = await this.$api('external-system/phones-transfers');
+      this.phones_tranfer = rows.org_phones;
+      this.extrenal_phones = rows.extrenal_phones;
+    },
   },
 };
 </script>
@@ -1336,6 +1376,14 @@ td:not(.select-td):not(.cl-td) {
 </style>
 
 <style lang="scss">
+.call-padding-right {
+  padding-right: 15px;
+}
+
+.call-padding-top {
+  padding-top: 20px;
+}
+
 .select-td {
   padding: 0 !important;
 

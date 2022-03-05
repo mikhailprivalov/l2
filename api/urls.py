@@ -59,6 +59,11 @@ urlpatterns = [
     path('org-generators', views.org_generators),
     path('org-generators-add', views.org_generators_add),
     path('current-org-update', views.current_org_update),
+    path('get-links', views.get_links),
+    path('disabled-forms', views.get_disabled_forms),
+    path('disabled-categories', views.get_disabled_categories),
+    path('disabled-reports', views.get_disabled_reports),
+    path('current-time', views.current_time),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),
@@ -74,4 +79,5 @@ urlpatterns = [
     path('parse-file/', include('api.parse_file.urls')),
     path('users/', include('api.users.urls')),
     path('schedule/', include('api.schedule.urls')),
+    path('external-system/', include('api.external_system.urls')),
 ]

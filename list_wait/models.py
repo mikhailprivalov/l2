@@ -23,6 +23,7 @@ class ListWait(models.Model):
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель листа ожидания', on_delete=models.SET_NULL)
     phone = models.CharField(max_length=20, blank=True, default='')
 
+
     class Meta:
         verbose_name = 'Лист ожидания'
         verbose_name_plural = 'Лист ожидания'

@@ -4,7 +4,9 @@ from django.contrib.auth.models import User, Group
 from django.db import models
 
 from appconf.manager import SettingManager
+from laboratory.settings import EMAIL_HOST
 from podrazdeleniya.models import Podrazdeleniya
+from users.tasks import send_login, send_new_email_code, send_new_password, send_old_email_code
 
 
 class Speciality(models.Model):
@@ -67,6 +69,7 @@ class DoctorProfile(models.Model):
     family = models.CharField(max_length=255, help_text='Фамилия', blank=True, default=None, null=True)
     name = models.CharField(max_length=255, help_text='Имя', blank=True, default=None, null=True)
     patronymic = models.CharField(max_length=255, help_text='Отчество', blank=True, default=None, null=True)
+    email = models.EmailField(max_length=255, blank=True, default=None, null=True, help_text='Email пользователя')
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
     isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
     labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
@@ -86,8 +89,92 @@ class DoctorProfile(models.Model):
     white_list_monitoring = models.ManyToManyField('directory.Researches', related_name='white_list_monitoring', blank=True, help_text='Доступные для просмотра мониторинги')
     black_list_monitoring = models.ManyToManyField('directory.Researches', related_name='black_list_monitoring', blank=True, help_text='Запрещены для просмотра мониторинги')
     position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
-    snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="")
+    snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="", db_index=True)
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
+    disabled_forms = models.CharField(max_length=255, help_text='Отключеные формы перчислить ч/з запятую', blank=True, default="")
+    disabled_statistic_categories = models.CharField(max_length=255, help_text='Отключить доступ к статистике-категории ч/з запятую', blank=True, default="")
+    disabled_statistic_reports = models.CharField(max_length=255, help_text='Отключить доступ к статистике категории-отчету ч/з запятую', blank=True, default="")
+    disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещеные источники финансирвоания')
+    external_access = models.BooleanField(default=False, blank=True, help_text='Разрешен внешний доступ')
+    date_stop_external_access = models.DateField(help_text='Окончание внешнего доступа', db_index=True, default=None, blank=True, null=True)
+
+    def reset_password(self):
+        if not self.user or not self.email or not EMAIL_HOST:
+            return False
+
+        new_password = User.objects.make_random_password()
+
+        self.user.set_password(new_password)
+        self.user.save()
+
+        send_new_password.delay(
+            self.email,
+            self.user.username,
+            new_password,
+            self.hospital_safe_title
+        )
+
+        return True
+
+    def register_login(self, ip: str):
+        if not self.user or not self.email or not EMAIL_HOST:
+            return
+
+        send_login.delay(
+            self.email,
+            self.user.username,
+            ip,
+            self.hospital_safe_title
+        )
+
+    def old_email_send_code(self, request):
+        if not self.user or not EMAIL_HOST:
+            return
+        request.session['old_email_code'] = User.objects.make_random_password()
+
+        send_old_email_code.delay(
+            self.email,
+            self.user.username,
+            request.session['old_email_code'],
+            self.hospital_safe_title
+        )
+
+    def check_old_email_code(self, code: str, request):
+        if not self.user:
+            return False
+
+        if not self.email:
+            return True
+
+        if not code:
+            return False
+
+        return code == request.session.get('old_email_code')
+
+    def new_email_send_code(self, new_email: str, request):
+        if not self.user or not EMAIL_HOST:
+            return
+        request.session['new_email'] = new_email
+        request.session['new_email_code'] = User.objects.make_random_password()
+
+        send_new_email_code.delay(
+            new_email,
+            self.user.username,
+            request.session['new_email_code'],
+            self.hospital_safe_title
+        )
+
+    def new_email_check_code(self, new_email: str, code: str, request):
+        if not self.user or not code or not new_email:
+            return False
+
+        return request.session.get('new_email') == new_email and code == request.session.get('new_email_code')
+
+    def set_new_email(self, new_email: str,request):
+        self.email = new_email
+        self.save(update_fields=['email'])
+        request.session['new_email'] = None
+        request.session['new_email_code'] = None
 
     @property
     def dict_data(self):
@@ -109,6 +196,10 @@ class DoctorProfile(models.Model):
             "role": self.position.n3_id if self.position else None,
             **self.dict_data,
         }
+
+    @property
+    def get_disabled_fin_source(self):
+        return self.disabled_fin_source
 
     def get_eds_allowed_sign(self):
         ret = []
@@ -209,10 +300,103 @@ class DoctorProfile(models.Model):
 
 
 class AssignmentTemplates(models.Model):
+    SHOW_TYPES_SITE_TYPES_TYPE = {
+        'consult': 0,
+        'treatment': 1,
+        'stom': 2,
+        'hospital': 2,
+        'microbiology': 4,
+    }
+
     title = models.CharField(max_length=40)
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr', on_delete=models.CASCADE)
     global_template = models.BooleanField(default=True, blank=True)
+
+    show_in_research_picker = models.BooleanField(default=False, blank=True)
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="template_department", help_text="Лаборатория",
+                                       db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклинический шаблон", db_index=True)
+    is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление шаблон к врачу", db_index=True)
+    is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение — шаблон", db_index=True)
+    is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология — шаблон", db_index=True)
+    is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар — шаблон", db_index=True)
+    is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологический шаблон", db_index=True)
+    is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологический шаблон", db_index=True)
+    is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологический шаблон", db_index=True)
+    site_type = models.ForeignKey("directory.ResearchSite", related_name='site_type_in_template', default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL,
+                                  db_index=True)
+
+    def get_show_type(self):
+        if self.is_paraclinic:
+            return 'paraclinic'
+        if self.is_doc_refferal:
+            return 'consult'
+        if self.is_treatment:
+            return 'treatment'
+        if self.is_stom:
+            return 'stom'
+        if self.is_hospital:
+            return 'hospital'
+        if self.is_microbiology:
+            return 'microbiology'
+        if self.is_citology:
+            return 'citology'
+        if self.is_gistology:
+            return 'gistology'
+        if self.podrazdeleniye:
+            return 'lab'
+        return 'unknown'
+
+    @property
+    def reversed_type(self):
+        if self.is_treatment:
+            return -3
+        if self.is_stom:
+            return -4
+        if self.is_hospital:
+            return -5
+        if self.is_microbiology or self.is_citology or self.is_gistology:
+            return 2 - Podrazdeleniya.MORFOLOGY
+        return self.podrazdeleniye_id or -2
+
+    def get_site_type_id(self):
+        if self.is_microbiology:
+            return Podrazdeleniya.MORFOLOGY + 1
+        if self.is_citology:
+            return Podrazdeleniya.MORFOLOGY + 2
+        if self.is_gistology:
+            return Podrazdeleniya.MORFOLOGY + 3
+        return self.site_type_id
+
+    def as_research(self):
+        r = self
+        return {
+            "pk": f'template-{r.pk}',
+            "onlywith": -1,
+            "department_pk": r.reversed_type,
+            "title": r.title,
+            "full_title": r.title,
+            "doc_refferal": r.is_doc_refferal,
+            "treatment": r.is_treatment,
+            "is_hospital": r.is_hospital,
+            "is_form": False,
+            "is_application": False,
+            "stom": r.is_stom,
+            "need_vich_code": False,
+            "comment_variants": [],
+            "autoadd": list(AssignmentResearches.objects.filter(template=r).values_list('research_id', flat=True)),
+            "auto_deselect": True,
+            "addto": [],
+            "code": '',
+            "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
+            "site_type": r.get_site_type_id(),
+            "site_type_raw": r.site_type_id,
+            "localizations": [],
+            "service_locations": [],
+            "direction_params": -1,
+            "research_data": {'research': {'status': 'NOT_LOADED'}},
+        }
 
     def __str__(self):
         return (self.title + " | Шаблон для ") + (str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")

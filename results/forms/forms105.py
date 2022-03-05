@@ -233,12 +233,16 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     data["Имя матери"] = ""
     data["Отчество матери"] = ""
 
-    if data["Новорожденый"] == "от 168 час. до 1 года":
+    if data["Новорожденый"] in ["от 168 час. до 1 года", "от 168 час. до 1 месяца"]:
         data["Фамилия матери"] = mother_data['rows'][0][0]
         data["Имя матери"] = mother_data['rows'][0][1]
         data["Отчество матери"] = mother_data['rows'][0][2]
 
-    hospital_obj: Hospitals = user.doctorprofile.get_hospital()
+    if iss.doc_confirmation:
+        hospital_obj: Hospitals = iss.doc_confirmation.get_hospital()
+    else:
+        hospital_obj: Hospitals = user.doctorprofile.get_hospital()
+
     data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data,
                    "org_okpo": hospital_obj.okpo}
 
@@ -1297,7 +1301,7 @@ def diagnos_tbl(data):
             elements.insert(element, "")
 
     opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', elements[0], elements[1], elements[2], '.', elements[4]])
-    col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
+    col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 8 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
     tbl_style = [
         ('GRID', (5, 0), (5, 0), 0.75, colors.black),
         ('GRID', (6, 0), (6, 0), 0.75, colors.black),

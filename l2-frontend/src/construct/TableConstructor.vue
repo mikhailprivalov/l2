@@ -60,9 +60,15 @@
             <MKBFieldForm v-else-if="columns.settings[i].type === 2" :short="false" v-model="r[i]" />
             <input
               class="form-control"
-              v-else-if="columns.settings[i].type === 23"
+              v-else-if="[23].includes(columns.settings[i].type)"
               v-model="r[i]"
               placeholder="Ссылка на значение"
+            />
+            <input
+              class="form-control"
+              v-else-if="[32, 33, 34, 36].includes(columns.settings[i].type)"
+              v-model="r[i]"
+              placeholder="Ссылка на поле (%)"
             />
             <div v-else-if="columns.settings[i].type === 'rowNumber'" style="padding: 5px;">
               <strong>{{ r[i] }}</strong>

@@ -109,6 +109,17 @@ class ServiceLocation(models.Model):
         verbose_name_plural = 'Места оказания услуг'
 
 
+class MethodLaboratoryAnalisis(models.Model):
+    title = models.CharField(max_length=64, help_text="Методика выполнения")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Методика анализа'
+        verbose_name_plural = 'Методика анализа'
+
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -122,6 +133,7 @@ class Researches(models.Model):
         (38004, '38004. ИО - Направление на Микробиологию'),
         (38005, '38005. ИО - Напрвление в др. организацию'),
         (38006, '38006. ИО - Заявление на ВМП'),
+        (38007, '38007. ИО - С параметрами по умолчанию'),
 
         (48001, '48001. ИО - Направление на Гистологию'),
 
@@ -141,6 +153,7 @@ class Researches(models.Model):
         (10403, '104.03 - Рапорт на ВМП'),
         (10501, '105.01 - Свидетельство о смерти'),
         (10601, '106.01 - Свидетельство о о перинатальной смерти'),
+        (10701, '107.01 - МСЭ'),
     )
 
     CO_EXECUTOR_MODES = (
@@ -174,6 +187,7 @@ class Researches(models.Model):
 
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования', db_index=True)
+    schedule_title = models.CharField(max_length=255, default="", help_text='Название для расписания', db_index=True)
     short_title = models.CharField(max_length=255, default='', blank=True)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС', blank=True)
@@ -241,6 +255,9 @@ class Researches(models.Model):
                                                  help_text="Оказываемые виды инструментальных услуг (перезатирает из подразделения, если оно там указано)")
     generator_name = models.CharField(max_length=60, null=True, blank=True, default=None, help_text="Название для xml-generator")
     expertise_params = models.ForeignKey('self', related_name='expertise_params_p', help_text="Экспертиза ", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    file_name_contract = models.CharField(max_length=60, null=True, blank=True, default="default", help_text="Название ф-ла контракта")
+    method_lab_default = models.ForeignKey(MethodLaboratoryAnalisis, db_index=True, blank=True, default=None, null=True, help_text='Методика анализа по умолчанию', on_delete=models.SET_NULL)
+    can_created_patient = models.BooleanField(blank=True, default=False, help_text="Может создаваться пациентом")
 
     @staticmethod
     def filter_type(t):
@@ -502,7 +519,7 @@ class ParaclinicInputField(models.Model):
         (32, 'МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)'),
         (33, 'МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)'),
         (34, 'МКБ-обычный (1.2.643.5.1.13.13.11.1005)'),
-        (35, 'Лицо от организации придавшее юр. силу документу'),
+        (35, 'Врач'),
         (36, 'МКБ-10(комбинация 1489, 692)'),
         (37, 'Генератор номера перинатального МСС'),
     )
@@ -517,6 +534,7 @@ class ParaclinicInputField(models.Model):
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
     for_talon = models.BooleanField(default=False, blank=True)
+    sign_organization = models.BooleanField(default=False, blank=True, help_text='Подпись от организации')
     visibility = models.TextField(default='', blank=True)
     helper = models.CharField(max_length=999, blank=True, default='')
     for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)

@@ -8,7 +8,7 @@ class DocAdmin(admin.ModelAdmin):
     list_display = ('fio', 'podrazdeleniye', 'isLDAP_user')
     list_display_links = ('fio',)
     search_fields = ('fio',)
-    filter_horizontal = ('white_list_monitoring', 'black_list_monitoring')
+    filter_horizontal = ('white_list_monitoring', 'black_list_monitoring', 'disabled_fin_source')
 
 
 admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке

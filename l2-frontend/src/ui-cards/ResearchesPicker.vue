@@ -245,6 +245,13 @@ export default {
       type: Array,
       required: false,
     },
+    filter_sub_types: {
+      default() {
+        return [];
+      },
+      type: Array,
+      required: false,
+    },
     filter_researches: {
       default() {
         return [];
@@ -361,6 +368,9 @@ export default {
     },
   },
   computed: {
+    hide_grouped_researches() {
+      return Boolean(this.autoselect !== 'directions' || this.oneselect || this.hidetemplates);
+    },
     l2_only_doc_call() {
       return this.$store.getters.modules.l2_only_doc_call;
     },
@@ -372,7 +382,7 @@ export default {
           && (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk, 10)))
           && (!this.l2_only_doc_call || row.pk === '4' || row.pk === '14')
           && (!this.$asVI() || row.pk !== '2')
-          && row.pk !== '13',
+          && row.pk !== '13' && (!this.l2_without_lab_and_paraclinic || (row.pk !== '2' && row.pk !== '3')),
       );
 
       if (this.typesOnly && this.typesOnly.length > 0) {
@@ -436,11 +446,14 @@ export default {
     },
     departments_of_type() {
       if (this.is_doc_ref) {
-        return this.$store.getters.ex_dep[this.type];
+        if (this.filter_sub_types.length === 0) {
+          return this.$store.getters.ex_dep[this.type];
+        }
+        return this.$store.getters.ex_dep[this.type].filter(t => this.filter_sub_types.includes(t.pk));
       }
       const r = [];
       for (const row of this.$store.getters.allDepartments) {
-        if (row.type === this.type) {
+        if (row.type === this.type && (this.filter_sub_types.length === 0 || this.filter_sub_types.includes(row.pk))) {
           r.push(row);
         }
       }
@@ -484,7 +497,7 @@ export default {
           r.push(row);
         }
       }
-      return r.filter(x => !this.filter_researches.includes(x.pk));
+      return r.filter(x => !this.filter_researches.includes(x.pk) && (!this.hide_grouped_researches || !x.auto_deselect));
     },
     researches_dep_display(dep = this.dep) {
       let r = [];
@@ -505,7 +518,7 @@ export default {
       } else if (this.dep in this.$store.getters.researches) {
         r = this.$store.getters.researches[dep];
       }
-      return r.filter(x => !this.filter_researches.includes(x.pk));
+      return r.filter(x => !this.filter_researches.includes(x.pk) && (!this.hide_grouped_researches || !x.auto_deselect));
     },
     k(t) {
       let n = 0;
@@ -623,9 +636,13 @@ export default {
         return;
       }
       if (!this.research_selected(pk)) {
-        this.checked_researches.push(pk);
         const research = this.research_data(pk);
-        if (this.autoselect === 'directions' && 'autoadd' in research) {
+        if (!research.auto_deselect) {
+          this.checked_researches.push(pk);
+        } else {
+          this.$root.$emit('msg', 'ok', 'Применён шаблон');
+        }
+        if (this.autoselect === 'directions' && research.autoadd) {
           for (const autoadd_pk of research.autoadd) {
             this.select_research_ignore(autoadd_pk);
           }

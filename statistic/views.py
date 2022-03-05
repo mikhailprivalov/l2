@@ -19,16 +19,18 @@ from hospitals.models import Hospitals
 from laboratory import settings
 from laboratory import utils
 from researches.models import Tubes
+from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expertis_results_by_issledovaniya
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
-from utils.parse_sql import death_form_result_parse
+from utils.parse_sql import death_form_result_parse, get_unique_directions
 from . import sql_func
 from . import structure_sheet
 import datetime
 import calendar
 import openpyxl
 
+from .report import call_patient, swab_covid, cert_notwork
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -41,7 +43,7 @@ from .sql_func import (
     sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value, sql_get_result_by_direction, sql_get_documents_by_card_id,
 )
 
-from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK
+from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK, COVID_QUESTION_ID
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -85,7 +87,7 @@ def statistic_xls(request):
 
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
-    if date_start and date_end and tp not in ["lab_sum", "covid_sum"]:
+    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details"]:
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -645,6 +647,13 @@ def statistic_xls(request):
         wb.save(response)
         return response
 
+    elif tp == "call-patient":
+        return call_patient.call_patient(request_data, response, tr, COVID_QUESTION_ID)
+    elif tp == "swab-covidt":
+        return swab_covid.swab_covid(request_data, response, tr, COVID_QUESTION_ID)
+    elif tp == "cert-not-workt":
+        return cert_notwork.cert_notwork(request_data, response, tr, COVID_QUESTION_ID)
+
     elif tp == "statistics-onco":
         d_s = request_data.get("date-start")
         d_e = request_data.get("date-end")
@@ -666,6 +675,8 @@ def statistic_xls(request):
     elif tp == "statistics-research":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
         pk = request_data.get("research")
+        user_groups = request.user.groups.values_list('name', flat=True)
+
         research_id = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
@@ -686,15 +697,41 @@ def statistic_xls(request):
         research_title = Researches.objects.values_list('title').get(pk=research_id)
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
+        hospital_id = request.user.doctorprofile.hospital_id
+        if 'Статистика-все МО' in user_groups:
+            hospital_id = -1
         if research_id == DEATH_RESEARCH_PK:
-            researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
+            if 'Свидетельство о смерти-доступ' not in user_groups:
+                return JsonResponse({"error": "Нет доступа к данному отчету"})
+            if 'Статистика свидетельство о смерти-все МО' in user_groups:
+                hospital_id = -1
+            researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date, hospital_id)
+            unique_issledovaniya = get_unique_directions(researches_sql)
+            child_iss = get_expertis_child_iss_by_issledovaniya(unique_issledovaniya) if unique_issledovaniya else None
+            expertise_final_data = {}
+            if child_iss:
+                data = {i.child_iss: i.parent_id for i in child_iss}
+                child_iss_tuple = tuple(set([i.child_iss for i in child_iss]))
+                result_expertise = get_expertis_results_by_issledovaniya(child_iss_tuple)
+                result_val = {}
+                for i in result_expertise:
+                    if not result_val.get(i.issledovaniye_id, ""):
+                        result_val[i.issledovaniye_id] = "Экспертиза;"
+                    if i.value.lower() == "да":
+                        result_val[i.issledovaniye_id] = f"{result_val[i.issledovaniye_id]} {i.title};"
+
+                for k, v in result_val.items():
+                    if not expertise_final_data.get(data.get(k, "")):
+                        expertise_final_data[data.get(k)] = ""
+                    expertise_final_data[data.get(k)] = f"{expertise_final_data[data.get(k)]} {v}"
+
             data_death = death_form_result_parse(researches_sql, reserved=False)
             wb.remove(wb.get_sheet_by_name('Отчет'))
             ws = wb.create_sheet("По документам")
             ws = structure_sheet.statistic_research_death_base(ws, d1, d2, research_title[0])
-            ws = structure_sheet.statistic_research_death_data(ws, data_death)
+            ws = structure_sheet.statistic_research_death_data(ws, data_death, expertise_final_data)
 
-            reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date, end_date)
+            reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date, end_date, hospital_id)
             data_death_reserved = death_form_result_parse(reserved_researches_sql, reserved=True)
             ws2 = wb.create_sheet("Номера в резерве")
             ws2 = structure_sheet.statistic_reserved_research_death_base(ws2, d1, d2, research_title[0])
@@ -703,7 +740,7 @@ def statistic_xls(request):
             card_has_death_date = sql_func.card_has_death_date(research_id, start_date, end_date)
             card_tuple = tuple(set([i.id for i in card_has_death_date]))
             if card_tuple:
-                temp_data = sql_func.statistics_death_research_by_card(research_id, card_tuple)
+                temp_data = sql_func.statistics_death_research_by_card(research_id, card_tuple, hospital_id)
                 prev_card = None
                 prev_direction = None
                 final_data = []
@@ -723,7 +760,7 @@ def statistic_xls(request):
                 ws3 = structure_sheet.statistic_research_death_data_card(ws3, data_death_card)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
-            researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
+            researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
     elif tp == "journal-get-material":
@@ -1052,6 +1089,21 @@ def statistic_xls(request):
         researches_by_sum = sql_func.statistics_sum_research_by_lab(lab_podr, start_date, end_date)
         ws = structure_sheet.statistic_research_by_sum_lab_base(ws, d1, d2, "Кол-во по лабораториям")
         ws = structure_sheet.statistic_research_by_sum_lab_data(ws, researches_by_sum)
+    elif tp == "lab_details":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_детали_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Детали по лаборатории")
+
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        lab_podr = get_lab_podr()
+        lab_podr = tuple([i[0] for i in lab_podr])
+        researches_deatails = sql_func.statistics_details_research_by_lab(lab_podr, start_date, end_date)
+        ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
+        ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
 
     elif tp == "covid_sum":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
@@ -1085,7 +1137,6 @@ def statistic_xls(request):
 
         ws = structure_sheet.statistic_research_by_covid_base(ws, d1, d2, "Кол-во по ковид")
         ws = structure_sheet.statistic_research_by_covid_data(ws, result_patient, patient_docs)
-
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         researches = list(directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by("sort_weight").order_by("direction_id"))
@@ -1681,6 +1732,9 @@ def sreening_xls(request):
     ws = wb.create_sheet("Обращения")
     styles_obj = structure_sheet.style_sheet()
     wb.add_named_style(styles_obj[0])
+    hospital_id = request.user.doctorprofile.hospital_id
+    researches_sql = sql_func.statistics_research(PAP_ANALYSIS_ID[0], datetime_start, datetime_end, hospital_id)
+    screening_data['count_pap_analysys'] = len(researches_sql)
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
     wb.save(response)
 

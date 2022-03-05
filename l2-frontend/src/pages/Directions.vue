@@ -170,6 +170,7 @@ export default {
         [DIRECTION_MODE_CALL]: 0,
         [DIRECTION_MODE_WAIT]: 0,
       },
+      disabled_forms: [],
     };
   },
   watch: {
@@ -235,6 +236,7 @@ export default {
       });
     }
     window.$(window).on('beforeunload', this.unload);
+    this.get_disabled_forms();
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
@@ -254,6 +256,10 @@ export default {
     next();
   },
   methods: {
+    async get_disabled_forms() {
+      const result_data = await this.$api('disabled-forms');
+      this.disabled_forms = result_data.rows;
+    },
     unload() {
       if (
         this.selected_card.pk === -1
@@ -292,7 +298,7 @@ export default {
             }),
           };
         })
-        .filter(f => this.selected_card.base.internal_type || f.not_internal);
+        .filter(f => ((this.selected_card.base.internal_type || f.not_internal) && !this.disabled_forms.includes(f.type)));
     },
   },
   computed: {

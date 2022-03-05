@@ -407,6 +407,7 @@
 import vSelect from 'vue-select';
 import _ from 'lodash';
 import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 // @ts-ignore
 import TypeAhead from 'vue2-typeahead';
 import { vField, vGroup } from '@/components/visibility-triggers';
@@ -418,7 +419,6 @@ import 'vue-select/dist/vue-select.css';
 import MKBField from '../fields/MKBField.vue';
 import SelectFieldTitled from '../fields/SelectFieldTitled.vue';
 import SelectedResearchesParams from './SelectedResearchesParams.vue';
-import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 export default {
   name: 'selected-researches',
@@ -447,12 +447,15 @@ export default {
     },
     base: {
       type: Object,
+      default: null,
     },
     card_pk: {
       type: Number,
+      default: null,
     },
     selected_card: {
       type: Object,
+      default: null,
     },
     visible: {
       type: Boolean,
@@ -1072,7 +1075,7 @@ export default {
       return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar';
     },
     directions_params_enabled() {
-      return this.$store.getters.modules.directions_params && this.kk !== 'stationar';
+      return this.$store.getters.modules.directions_params && this.kk !== 'stationar' && !this.simple;
     },
     l2_user_data() {
       return this.$store.getters.user_data || {};
@@ -1219,6 +1222,7 @@ export default {
 
 .content-picker {
   align-content: flex-start;
+  overflow-x: hidden;
 }
 
 .top-inner-btn {

@@ -6,12 +6,12 @@ import directory.models as directory
 import podrazdeleniya.models as podrazdeleniya
 import researches.models as researches
 import users.models as users
-from laboratory.settings import RMQ_ENABLED
+from laboratory.settings import DEPRECATED_RMQ_ENABLED
 from mq.publisher import mq_send
 
 
 def post_save_l2(sender, instance, created, **kwargs):
-    if not RMQ_ENABLED:
+    if not DEPRECATED_RMQ_ENABLED:
         return
     s_name = str(sender).split("'")
     s_name = s_name[1]
@@ -19,7 +19,7 @@ def post_save_l2(sender, instance, created, **kwargs):
 
 
 def post_delete_l2(sender, instance, **kwargs):
-    if not RMQ_ENABLED:
+    if not DEPRECATED_RMQ_ENABLED:
         return
     s_name = str(sender).split("'")
     s_name = s_name[1]

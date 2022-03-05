@@ -4,9 +4,14 @@ import time
 import re
 from collections import defaultdict
 from typing import Optional, Union
-from laboratory.settings import SYSTEM_AS_VI
+
+import pytz
+
+from doctor_schedule.models import ScheduleResource
+from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS, TIME_ZONE
 from utils.response import status_response
 
+from django.core.validators import validate_email
 from django.db.utils import IntegrityError
 from utils.data_verification import as_model, data_parse
 
@@ -33,7 +38,7 @@ from context_processors.utils import menu
 from directory.models import Fractions, ParaclinicInputField, ParaclinicUserInputTemplateField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
-from hospitals.models import Hospitals
+from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from pharmacotherapy.models import Drugs
@@ -45,7 +50,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all, get_diagnoses
+from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -386,7 +391,7 @@ def endpoint(request):
                     result["body"] = "pk '{}' is not exists".format(pk_s)
             elif message_type == "Q":
                 result["answer"] = True
-                pks = [int(x) for x in data.get("query", [])]
+                pks = [int(x) for x in data.get("query", []) if isinstance(x, int) or (isinstance(x, str) and x.isdigit())]
                 researches = defaultdict(list)
                 for row in app.get_issledovaniya(pks):
                     k = row["pk"]
@@ -510,6 +515,11 @@ def laboratory_journal_params(request):
 
 def bases(request):
     k = f'view:bases:{request.user.pk}'
+    disabled_fin_source = [i.fin_source.pk for i in DisableIstochnikiFinansirovaniya.objects.filter(
+        hospital_id=request.user.doctorprofile.hospital_id)] if request.user.is_authenticated else []
+    user_disabled_fin_source = [x for x in users.DoctorProfile.objects.values_list('disabled_fin_source', flat=True).filter(
+        pk=request.user.doctorprofile.pk) if x is not None] if request.user.is_authenticated else []
+    disabled_fin_source.extend(user_disabled_fin_source)
     ret = cache.get(k)
     if not ret:
         ret = {
@@ -524,10 +534,12 @@ def bases(request):
                     "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in x.istochnikifinansirovaniya_set.all()],
                 }
                 for x in CardBase.objects.all()
-                .prefetch_related(Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).order_by('-order_weight')))
+                .prefetch_related(Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).
+                                           exclude(pk__in=disabled_fin_source).order_by('-order_weight')))
                 .order_by('-order_weight')
             ]
         }
+
         cache.set(k, ret, 100)
     if hasattr(request, 'plain_response') and request.plain_response:
         return ret
@@ -568,6 +580,7 @@ def current_user_info(request):
             )
 
             ret["fio"] = doctorprofile.get_full_fio()
+            ret["email"] = doctorprofile.email or ''
             ret["doc_pk"] = doctorprofile.pk
             ret["rmis_location"] = doctorprofile.rmis_location
             ret["rmis_login"] = doctorprofile.rmis_login
@@ -851,13 +864,18 @@ def mkb10(request):
     return JsonResponse({"data": data})
 
 
-def mkb10_dict(request):
-    q = request.GET["query"].strip()
+def mkb10_dict(request, raw_response=False):
+    q = (request.GET.get("query", '') or '').strip()
     if not q:
+        if raw_response:
+            return []
         return JsonResponse({"data": []})
 
     if q == '-':
-        return JsonResponse({"data": [{"code": '-', "title": '', "id": '-'}]})
+        empty = {"code": '-', "title": '', "id": '-'}
+        if raw_response:
+            return [empty]
+        return JsonResponse({"data": [empty]})
 
     d = request.GET.get("dictionary", "mkb10.4")
     parts = q.split(' ', 1)
@@ -886,6 +904,8 @@ def mkb10_dict(request):
     data = []
     for d in diag_query:
         data.append({"code": d.code, "title": d.title, "id": d.nsi_id})
+    if raw_response:
+        return data
     return JsonResponse({"data": data})
 
 
@@ -895,13 +915,11 @@ def doctorprofile_search(request):
         return JsonResponse({"data": []})
 
     q = q.split()
-
-    d_qs = users.DoctorProfile.objects.filter(
-        hospital=request.user.doctorprofile.get_hospital(),
-        family__istartswith=q[0],
-        user__groups__name__in=["ЭЦП Медицинской организации"]
-    )
-
+    sign_org = request.GET.get("signOrg", "")
+    if sign_org == "true":
+        d_qs = users.DoctorProfile.objects.filter(hospital=request.user.doctorprofile.get_hospital(), family__istartswith=q[0], user__groups__name__in=["ЭЦП Медицинской организации"])
+    else:
+        d_qs = users.DoctorProfile.objects.filter(hospital=request.user.doctorprofile.get_hospital(), family__istartswith=q[0])
     if len(q) > 1:
         d_qs = d_qs.filter(name__istartswith=q[1])
 
@@ -912,12 +930,14 @@ def doctorprofile_search(request):
 
     d: users.DoctorProfile
     for d in d_qs.order_by('fio')[:15]:
-        data.append({
-            "id": d.pk,
-            "fio": str(d),
-            "department": d.podrazdeleniye.title if d.podrazdeleniye else "",
-            **d.dict_data,
-        })
+        data.append(
+            {
+                "id": d.pk,
+                "fio": str(d),
+                "department": d.podrazdeleniye.title if d.podrazdeleniye else "",
+                **d.dict_data,
+            }
+        )
 
     return JsonResponse({"data": data})
 
@@ -1039,12 +1059,49 @@ def get_template(request):
     researches = []
     global_template = False
     pk = request.GET.get('pk')
+    department = None
+    departments = []
+    departments_paraclinic = []
+    site_types = {}
+    show_in_research_picker = False
+    show_type = None
+    site_type = None
     if pk:
-        t = users.AssignmentTemplates.objects.get(pk=pk)
+        t: users.AssignmentTemplates = users.AssignmentTemplates.objects.get(pk=pk)
         title = t.title
         researches = [x.research_id for x in users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
         global_template = t.global_template
-    return JsonResponse({"title": title, "researches": researches, "global_template": global_template})
+        show_in_research_picker = t.show_in_research_picker
+        show_type = t.get_show_type()
+        site_type = t.site_type_id
+        department = t.podrazdeleniye_id
+
+    departments = [{"id": x["id"], "label": x["title"]} for x in Podrazdeleniya.objects.filter(hide=False, p_type=Podrazdeleniya.LABORATORY).values('id', 'title')]
+    departments_paraclinic = [{"id": x["id"], "label": x["title"]} for x in Podrazdeleniya.objects.filter(hide=False, p_type=Podrazdeleniya.PARACLINIC).values('id', 'title')]
+
+    for st in users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE:
+        site_types[st] = [
+            {"id": None, "label": 'Общие'},
+            *[
+                {"id": x["id"], "label": x["title"]}
+                for x in ResearchSite.objects.filter(site_type=users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE[st], hide=False).order_by('order', 'title').values('id', 'title')
+            ]
+        ]
+
+    return JsonResponse(
+        {
+            "title": title,
+            "researches": researches,
+            "global_template": global_template,
+            "department": department,
+            "departments": departments,
+            "departmentsParaclinic": departments_paraclinic,
+            "siteTypes": site_types,
+            "showInResearchPicker": show_in_research_picker,
+            "type": show_type,
+            "siteType": site_type,
+        }
+    )
 
 
 @login_required
@@ -1063,12 +1120,25 @@ def update_template(request):
                 t = users.AssignmentTemplates(title=title, global_template=global_template)
                 t.save()
                 pk = t.pk
-            if users.AssignmentTemplates.objects.filter(pk=pk).exists():
+            elif users.AssignmentTemplates.objects.filter(pk=pk).exists():
                 t = users.AssignmentTemplates.objects.get(pk=pk)
                 t.title = title
                 t.global_template = global_template
                 t.save()
             if t:
+                t.show_in_research_picker = bool(request_data.get('showInResearchPicker'))
+                tp = request_data.get('type')
+                t.podrazdeleniye_id = request_data.get('department') if tp in ('lab', 'paraclinic') else None
+                t.is_paraclinic = tp == 'paraclinic'
+                t.is_doc_refferal = tp == 'consult'
+                t.is_treatment = tp == 'treatment'
+                t.is_stom = tp == 'stom'
+                t.is_hospital = tp == 'hospital'
+                t.is_microbiology = tp == 'microbiology'
+                t.is_citology = tp == 'citology'
+                t.is_gistology = tp == 'gistology'
+                t.site_type_id = request_data.get('siteType') if tp in users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE else None
+                t.save()
                 users.AssignmentResearches.objects.filter(template=t).exclude(research__pk__in=researches).delete()
                 to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]
                 for ta in to_add:
@@ -1197,16 +1267,12 @@ def users_view(request):
             data.append(otd)
 
     spec = users.Speciality.objects.filter(hide=False).order_by("title")
-    spec_data = [
-        {"pk": -1, "title": "Не выбрано"}
-    ]
+    spec_data = [{"pk": -1, "title": "Не выбрано"}]
     for s in spec:
         spec_data.append({"pk": s.pk, "title": s.title})
 
     positions_qs = users.Position.objects.filter(hide=False).order_by("title")
-    positions = [
-        {"pk": -1, "title": "Не выбрано"}
-    ]
+    positions = [{"pk": -1, "title": "Не выбрано"}]
     for s in positions_qs:
         positions.append({"pk": s.pk, "title": s.title})
 
@@ -1218,6 +1284,7 @@ def users_view(request):
 def user_view(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
+    resource_researches = []
     if pk == -1:
         data = {
             "family": '',
@@ -1225,6 +1292,7 @@ def user_view(request):
             "patronymic": '',
             "username": '',
             "department": '',
+            "email": '',
             "groups": [],
             "restricted_to_direct": [],
             "users_services": [],
@@ -1240,16 +1308,35 @@ def user_view(request):
             "rmis_service_id_time_table": '',
             "snils": '',
             "position": -1,
+            "sendPassword": False,
+            "external_access": False,
+            "date_stop_external_access": None,
+            "resource_schedule": resource_researches,
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
         fio_parts = doc.get_fio_parts()
+        doc_schedule_obj = ScheduleResource.objects.filter(executor=doc)
+        resource_researches_temp = {}
+        doc_resource_pk_title = {k.pk: k.title for k in doc_schedule_obj}
+        doc_schedule = [i.pk for i in doc_schedule_obj]
+        if doc_schedule_obj:
+            researches_pks = get_resource_researches(tuple(doc_schedule))
+            for i in researches_pks:
+                if not resource_researches_temp.get(i.scheduleresource_id, None):
+                    resource_researches_temp[i.scheduleresource_id] = [i.researches_id]
+                else:
+                    temp_result = resource_researches_temp[i.scheduleresource_id]
+                    temp_result.append(i.researches_id)
+                    resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
+        resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
             "patronymic": fio_parts[2],
             "username": doc.user.username,
             "department": doc.podrazdeleniye_id,
+            "email": doc.email or '',
             "groups": [x.pk for x in doc.user.groups.all()],
             "restricted_to_direct": [x.pk for x in doc.restricted_to_direct.all()],
             "users_services": [x.pk for x in doc.users_services.all()],
@@ -1266,6 +1353,10 @@ def user_view(request):
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
             "snils": doc.snils,
             "position": doc.position_id or -1,
+            "sendPassword": False,
+            "external_access": doc.external_access,
+            "date_stop_external_access": doc.date_stop_external_access,
+            "resource_schedule": resource_researches,
         }
 
     return JsonResponse({"user": data})
@@ -1288,7 +1379,13 @@ def user_save_view(request):
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
     snils = ud.get("snils").strip() or ''
+    email = ud.get("email").strip() or None
     position = ud.get("position", -1)
+    send_password = ud.get("sendPassword", False)
+    external_access = ud.get("external_access", False)
+    date_stop_external_access = ud.get("date_stop_external_access")
+    if date_stop_external_access == "":
+        date_stop_external_access = None
     if position == -1:
         position = None
     user_hospital_pk = request.user.doctorprofile.get_hospital_id()
@@ -1326,6 +1423,17 @@ def user_save_view(request):
             else:
                 ok = False
                 message = "Имя пользователя уже занято"
+        if email:
+            email = email.strip()
+            try:
+                if email:
+                    validate_email(email)
+            except:
+                ok = False
+                message = f"Email {email} некорректный"
+            if users.DoctorProfile.objects.filter(email__iexact=email).exclude(pk=pk).exists():
+                ok = False
+                message = f"Email {email} уже занят"
 
         if ok:
             doc.user.groups.clear()
@@ -1358,7 +1466,10 @@ def user_save_view(request):
             doc.rmis_resource_id = rmis_resource_id
             doc.hospital_id = hospital_pk
             doc.snils = snils
+            doc.email = email
             doc.position_id = position
+            doc.external_access = external_access
+            doc.date_stop_external_access = date_stop_external_access
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
@@ -1367,6 +1478,8 @@ def user_save_view(request):
                 doc.rmis_login = None
                 doc.rmis_password = None
             doc.save()
+            if doc.email and send_password:
+                doc.reset_password()
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
 
 
@@ -1814,18 +1927,7 @@ def current_org(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def current_org_update(request):
-    parse_params = {
-        'title': str,
-        'shortTitle': str,
-        'address': str,
-        'phones': str,
-        'ogrn': str,
-        'currentManager': str,
-        'licenseData': str,
-        'www': str,
-        'email': str,
-        'okpo': str
-    }
+    parse_params = {'title': str, 'shortTitle': str, 'address': str, 'phones': str, 'ogrn': str, 'currentManager': str, 'licenseData': str, 'www': str, 'email': str, 'okpo': str}
 
     data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
 
@@ -1897,6 +1999,47 @@ def current_org_update(request):
 
 
 @login_required
+def get_links(request):
+    if not SOME_LINKS:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": SOME_LINKS})
+
+
+@login_required
+def get_disabled_forms(request):
+    user_disabled_forms = request.user.doctorprofile.disabled_forms.split(",")
+    user_disabled_forms.extend(DISABLED_FORMS)
+    result_disabled_forms = set(user_disabled_forms)
+    if len(result_disabled_forms) == 0:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": list(result_disabled_forms)})
+
+
+@login_required
+def get_disabled_categories(request):
+    disabled_statistic_categories = request.user.doctorprofile.disabled_statistic_categories.split(",")
+    disabled_statistic_categories.extend(DISABLED_STATISTIC_CATEGORIES)
+    result_disabled_statistic_categories = set(disabled_statistic_categories)
+    if len(result_disabled_statistic_categories) == 0:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": list(result_disabled_statistic_categories)})
+
+
+@login_required
+def get_disabled_reports(request):
+    disabled_statistic_reports = request.user.doctorprofile.disabled_statistic_reports.split(",")
+    disabled_statistic_reports.extend(DISABLED_STATISTIC_REPORTS)
+    result_disabled_statistic_reports = set(disabled_statistic_reports)
+    if len(result_disabled_statistic_reports) == 0:
+        return JsonResponse({"rows": []})
+
+    return JsonResponse({"rows": list(result_disabled_statistic_reports)})
+
+
+@login_required
 def org_generators(request):
     hospital: Hospitals = request.user.doctorprofile.get_hospital()
 
@@ -1960,3 +2103,11 @@ def org_generators_add(request):
         )
 
     return status_response(True)
+
+
+def current_time(request):
+    now = timezone.now().astimezone(pytz.timezone(TIME_ZONE))
+    return JsonResponse({
+        "date": now.strftime('%Y-%m-%d'),
+        "time": now.strftime('%X'),
+    })

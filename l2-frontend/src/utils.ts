@@ -145,10 +145,12 @@ export const PrepareFormula = (
       const vid = cleanBrackets(n);
       const vFromField = (fields[vid] || {}).value;
       if (DEBUG) {
+        // eslint-disable-next-line no-console
         console.log('vFromField', vid, vFromField);
       }
       const vOrig = String(parseInt(vFromField || '', 10) === 0 ? 0 : vFromField || '').trim();
       if (DEBUG) {
+        // eslint-disable-next-line no-console
         console.log('vOrig', vid, vOrig);
       }
       if (returnLinks) {
@@ -202,6 +204,7 @@ const isFilled = v => !isEmpty(v);
 export const CalculateFormula = (fields: Field[], formula: string, patient = {}, strict = false): string | number => {
   const s = PrepareFormula(fields, formula, patient, strict);
   if (DEBUG) {
+    // eslint-disable-next-line no-console
     console.log(s);
   }
 
@@ -219,7 +222,9 @@ export const CalculateFormula = (fields: Field[], formula: string, patient = {},
     return FUNCTION_CACHE[s];
   } catch (e) {
     FUNCTION_CACHE[s] = null;
+    // eslint-disable-next-line no-console
     console.log(s);
+    // eslint-disable-next-line no-console
     console.error(e);
     return '';
   }
@@ -347,3 +352,12 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
   }
   return result;
 };
+
+export const validateEmail = (email: string) => Boolean(
+  String(email || '')
+    .toLowerCase()
+    .match(
+      // eslint-disable-next-line max-len
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+    ),
+);

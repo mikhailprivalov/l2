@@ -151,7 +151,15 @@ const router = new Router({
       component: () => import('@/pages/Schedule/index.vue'),
       meta: {
         title: 'Расписание',
-        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Врач консультаций', 'Врач стационара', 'Врач параклиники'],
+        groups: [
+          'Лечащий врач',
+          'Оператор лечащего врача',
+          'Врач консультаций',
+          'Врач стационара',
+          'Врач параклиники',
+          'Управление расписанием',
+          'Создание и редактирование пользователей',
+        ],
         module: 'l2_schedule',
       },
     },
@@ -170,7 +178,13 @@ const router = new Router({
       component: () => import('@/pages/Statistics.vue'),
       meta: {
         title: 'Статистика',
-        groups: ['Просмотр статистики', 'Врач-лаборант', 'Статистика скрининга'],
+        groups: [
+          'Просмотр статистики',
+          'Врач-лаборант',
+          'Статистика скрининга',
+          'Свидетельство о смерти-доступ',
+          'Врач консультаций',
+        ],
       },
     },
     {
@@ -191,13 +205,33 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/plan-hospitalization',
+      name: 'plan_hospitalization',
+      component: () => import('@/pages/PlanHospitalization/index.vue'),
+      meta: {
+        title: 'План госпитализации',
+        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Вызов врача'],
+        narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/some-links',
+      name: 'some_links',
+      component: () => import('@/pages/SomeLinks.vue'),
+      meta: {
+        title: 'Ссылки',
+        narrowLayout: true,
+        module: 'l2_some_links',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
     },
     {
       path: '*',
-      redirect: to => ({ name: '404', hash: to.fullPath }),
+      redirect: (to) => ({ name: '404', hash: to.fullPath }),
       meta: {},
     },
   ],
@@ -274,7 +308,7 @@ router.beforeEach(async (to, from, next) => {
       // Если пользователь неавторизован и открывается страница входа
       // то не проверяем другие варианты
       next();
-    } else if (to.name !== 'login' && !toMatched.some(record => record.meta.allowWithoutLogin) && !getters.authenticated) {
+    } else if (to.name !== 'login' && !toMatched.some((record) => record.meta.allowWithoutLogin) && !getters.authenticated) {
       await router.app.$store.dispatch(actions.RESET_G_LOADING);
       // Если пользователь неавторизован и страница требует авторизации,
       // то идём на страницу входа
@@ -287,8 +321,8 @@ router.beforeEach(async (to, from, next) => {
       const nextPath = urlParams.get('next');
       next(nextPath || { name: 'menu' });
     } else if (
-      toMatched.some(r => r.meta.groups)
-      && toMatched.every(r => !r.meta.groups || !r.meta.groups.find(g => getters.user_groups.includes(g)))
+      toMatched.some((r) => r.meta.groups)
+      && toMatched.every((r) => !r.meta.groups || !r.meta.groups.find((g) => getters.user_groups.includes(g)))
       && !getters.user_groups.includes('Admin')
     ) {
       router.app.$toast.warning('Нет доступа.', {
@@ -300,7 +334,7 @@ router.beforeEach(async (to, from, next) => {
       // Если страница требует наличия групп и у пользователя в группах таких нет, и нет группы Admin,
       // то открываем меню
       next({ name: 'menu' });
-    } else if (toMatched.some(r => r.meta.module) && toMatched.every(r => !getters.modules[r.meta.module])) {
+    } else if (toMatched.some((r) => r.meta.module) && toMatched.every((r) => !getters.modules[r.meta.module])) {
       router.app.$toast.warning('Не настроено.', {
         position: POSITION.BOTTOM_RIGHT,
         timeout: 8000,
@@ -325,7 +359,7 @@ router.afterEach(async () => {
 new Vue({
   router,
   store,
-  render: h => h(App),
+  render: (h) => h(App),
   async created() {
     registerHooks(this);
   },

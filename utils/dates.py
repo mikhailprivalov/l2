@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
+from typing import Union
 from django.utils import timezone
 
 
-def try_strptime(s, formats=('%d.%m.%Y',), delta: timedelta = None) -> [datetime, None]:
+def try_strptime(s, formats=('%d.%m.%Y',), delta: timedelta = None) -> Union[datetime, None]:
     for fmt in formats:
         try:
             r = datetime.strptime(s, fmt)

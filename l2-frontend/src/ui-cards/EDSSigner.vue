@@ -55,8 +55,8 @@ import { getSystemInfo, getUserCertificates } from 'crypto-pro';
 import moment from 'moment';
 
 import * as actions from '@/store/action-types';
-import EDSDocument from './EDSDocument.vue';
 import { convertSubjectNameToTitle } from '@/utils';
+import EDSDocument from './EDSDocument.vue';
 
 export default {
   name: 'EDSSigner',
@@ -114,7 +114,7 @@ export default {
     },
     commonRoles() {
       const r = {};
-      for (const d of this.documents) {
+      for (const d of Array.isArray(this.documents) ? this.documents : []) {
         for (const s of Object.keys(d.signatures)) {
           if (!d.signatures[s] && (s !== 'Врач' || this.isDocAllowedSign)) {
             r[s] = true;
@@ -177,24 +177,31 @@ export default {
     async getEDSStatus() {
       try {
         this.systemInfo = await getSystemInfo();
+        // eslint-disable-next-line no-console
         console.log('getStatus', true, this.systemInfo);
         this.hasCP = true;
         try {
           this.certificates = await getUserCertificates();
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log('getCertificates error');
+          // eslint-disable-next-line no-console
           console.error(e);
           this.checked = false;
         }
         if (this.certificates.length > 0) {
+          // eslint-disable-next-line no-console
           console.log('getCertificates', true, this.certificates);
           this.selectedCertificate = (this.certificates[0] || {}).thumbprint;
         } else {
+          // eslint-disable-next-line no-console
           console.log('getCertificates', false);
         }
         this.checked = true;
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
+        // eslint-disable-next-line no-console
         console.log('getStatus', false);
         this.hasCP = false;
         this.checked = true;

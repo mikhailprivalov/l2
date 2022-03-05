@@ -2,14 +2,16 @@ from django.db import models
 
 from clients.models import Card
 from directory.models import Researches
+from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile, Speciality
 from utils.models import ChoiceArrayField
 from directions.models import Napravleniya
 
 
 class ScheduleResource(models.Model):
+    title = models.CharField(max_length=255, default="", help_text='Название ресурса', db_index=True)
     executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, verbose_name='Исполнитель', on_delete=models.SET_NULL)
-    service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, on_delete=models.CASCADE)  # TODO: может быть несколько
+    service = models.ManyToManyField(Researches, verbose_name='Услуга', db_index=True)
     room = models.ForeignKey(
         'podrazdeleniya.Room', related_name='scheduleresourceroom', verbose_name='Кабинет', db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
@@ -17,12 +19,13 @@ class ScheduleResource(models.Model):
         'podrazdeleniya.Podrazdeleniya', null=True, blank=True, verbose_name='Подразделение', db_index=True, related_name='scheduleresourcedepartment', on_delete=models.CASCADE
     )
     speciality = models.ForeignKey(Speciality, null=True, blank=True, verbose_name='Специальность', db_index=True, on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие ресурса', db_index=True)
 
     def __str__(self):
-        return f"{self.pk} — {self.executor} — {self.service} {self.room}, {self.department}, {self.speciality}"
+        return f"{self.pk} — {self.executor} — {', '.join([x.get_title() for x in self.service.all()[:5]])} {self.room}, {self.department}, {self.speciality}"
 
     class Meta:
-        unique_together = ('executor', 'service', 'room', 'department', 'speciality')
+        unique_together = ('id', 'executor',)
         verbose_name = 'Ресурс'
         verbose_name_plural = 'Ресурсы'
         ordering = ['-id']
@@ -41,6 +44,7 @@ class SlotPlan(models.Model):
 
     resource = models.ForeignKey(ScheduleResource, db_index=True, verbose_name='Ресурс', on_delete=models.CASCADE)
     datetime = models.DateTimeField(db_index=True, verbose_name='Дата/время слота')
+    datetime_end = models.DateTimeField(db_index=True, verbose_name='Дата/время окончания слота')
     duration_minutes = models.PositiveSmallIntegerField(verbose_name='Длительность в мин')
     available_systems = ChoiceArrayField(models.CharField(max_length=16, choices=AVAILABLE_RECORDS), verbose_name='Источник записи')
     disabled = models.BooleanField(default=False, blank=True, verbose_name='Не доступно для записи', db_index=True)
@@ -50,7 +54,7 @@ class SlotPlan(models.Model):
         return f"{self.pk} — {self.datetime} {self.duration_minutes} мин, {self.resource}"
 
     class Meta:
-        unique_together = ('resource', 'datetime', 'duration_minutes', 'available_systems', 'is_cito', 'disabled')
+        unique_together = ('id', 'resource',)
         verbose_name = 'Слот'
         verbose_name_plural = 'Слоты'
         ordering = ['-id']
@@ -72,12 +76,25 @@ class SlotFact(models.Model):
     external_slot_id = models.CharField(max_length=255, default='', blank=True, verbose_name='Внешний ИД')
     service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
     direction = models.ForeignKey(Napravleniya, verbose_name='Направление', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
+    is_cito = models.BooleanField(default=False, blank=True, verbose_name='ЦИТО', db_index=True)
 
     def __str__(self):
         return f"{self.pk} — {self.patient} {self.get_status_display()} {self.plan}"
 
     class Meta:
-        unique_together = ('plan', 'patient', 'external_slot_id', 'status')
+        unique_together = ('id', 'plan',)
         verbose_name = 'Запись на слот'
         verbose_name_plural = 'Записи на слоты'
         ordering = ['-id']
+
+
+class UserResourceModifyRights(models.Model):
+    resources = models.ManyToManyField(ScheduleResource, verbose_name='Ресурсы', db_index=True)
+    departments = models.ManyToManyField(Podrazdeleniya, blank=True, default=None, verbose_name='Подразделения', db_index=True)
+    services = models.ManyToManyField(Researches, blank=True, default=None, verbose_name='Услуга', db_index=True)
+
+    user = models.OneToOneField(DoctorProfile, unique=True, null=True, verbose_name='Исполнитель', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Права доступа к управлению расписанием'
+        verbose_name_plural = 'Права доступа к управлению расписанием'

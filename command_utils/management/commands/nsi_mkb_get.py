@@ -97,6 +97,7 @@ class Command(BaseCommand):
                             continue
 
                         n_str = f"({i + 1}/{data_parts}) ({n}/{len(diagnoses)}): {diag_key}-{mkb_code}-{title}-{nsi_code}"
+
                         if is_empty:
                             bulk_create.append(
                                 Diagnoses(

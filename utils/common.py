@@ -1,3 +1,4 @@
+import json
 from typing import Union, Dict, Iterable, Any
 
 from laboratory.settings import SYSTEM_AS_VI
@@ -38,3 +39,44 @@ def none_if_minus_1(v):
 
 def get_system_name():
     return 'VI' if SYSTEM_AS_VI else 'L2'
+
+
+def values_from_structure_data(data):
+    s = ''
+    for v in data:
+        if v['group_title']:
+            s = f"{s} [{v['group_title']}]:"
+        for field in v['fields']:
+            if field['field_type'] in [24, 25, 26]:
+                continue
+            if field['value']:
+                if field['title_field']:
+                    s = f"{s} {field['title_field']}"
+                s = f"{s} {field['value']};"
+    return s.strip()
+
+
+def values_as_structure_data(data):
+    values = []
+    from directions.models import ParaclinicResult
+    for v in data:
+        for field in v['fields']:
+            s = ''
+            if v['group_title']:
+                s = f"[{v['group_title']}]"
+            if field['title_field']:
+                s = f"{s} {field['title_field']}".strip()
+
+            if field['field_type'] in [24, 25, 26]:
+                continue
+            if field['value']:
+                vv = field['value']
+                t = field['field_type']
+                is_table = t == 27
+
+                values.append({
+                    "title": s,
+                    "value": json.loads(vv) if is_table else ParaclinicResult.JsonParser.from_static_json_to_string_value(vv, t),
+                    "table": is_table,
+                })
+    return values

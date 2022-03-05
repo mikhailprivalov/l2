@@ -10,6 +10,12 @@ export default generator({
   getPlansByParams: {
     url: 'plans/get-plan-by-params',
   },
+  getPlansHospitalizationByParams: {
+    url: 'plans/get-plan-hospitalization',
+  },
+  cancelPlansHospitalization: {
+    url: 'plans/cancel-plan-hospitalization',
+  },
   getDepartmentsOperate: {
     url: 'plans/departments-can-operate',
   },

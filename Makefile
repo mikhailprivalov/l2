@@ -5,6 +5,7 @@ front: build collect
 front_prod: build_prod collect
 install: pip_install_upgrade npm_install
 install_prod: pip_install_upgrade_prod npm_install
+release: up git_commit_up git_push
 
 watch:
 	yarn --cwd l2-frontend serve
@@ -36,3 +37,8 @@ pip_install_upgrade:
 pip_install_upgrade_prod:
 	sudo -H pip3 install --upgrade -r requirements.txt
 
+git_commit_up:
+	git commit -a -m "Up version"
+
+git_push:
+	git push

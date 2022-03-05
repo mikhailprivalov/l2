@@ -44,6 +44,17 @@ class TempData(models.Model):
     holter_protocol_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Последний обработанный протокол')
 
 
+class ExternalServiceRights(models.Model):
+    title = models.CharField(max_length=300, default="", blank=True, help_text='Название права', db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Роли для внешнего сервиса'
+        verbose_name_plural = 'Роли для внешних сервисы'
+
+
 class ExternalService(models.Model):
     ACCESS_RIGHT_QR_CHECK_RESULT = 'qr_check_result'
 
@@ -58,6 +69,8 @@ class ExternalService(models.Model):
         help_text='Права доступа'
     )
     is_active = models.BooleanField(default=True, help_text="Сервис активен")
+    extension_right = models.CharField(max_length=300, default="", blank=True, null=True, help_text="Название роли")
+    external_service_rights = models.ForeignKey(ExternalServiceRights, default=None, null=True, blank=True, help_text='роль в базе', on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.title

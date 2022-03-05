@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('generate', views.directions_generate),
+    path('add-additional-issledovaniye', views.add_additional_issledovaniye),
     path('rmis-directions', views.directions_rmis_directions),
     path('rmis-direction', views.directions_rmis_direction),
     path('history', views.directions_history),
@@ -50,4 +51,5 @@ urlpatterns = [
     path('eds/documents', views.eds_documents),
     path('eds/add-sign', views.eds_add_sign),
     path('eds/to-sign', views.eds_to_sign),
+    path('send-to-l2vi', views.send_to_l2vi),
 ]

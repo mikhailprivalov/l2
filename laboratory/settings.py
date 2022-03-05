@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'pharmacotherapy',
     'command_utils',
     'doctor_schedule',
+    'django_celery_results',
 )
 
 MIDDLEWARE = [
@@ -85,7 +86,9 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.RemoteUserBackend',
 ]
 
-REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication']}
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication'],
+}
 
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
@@ -255,7 +258,7 @@ LOGOUT_REDIRECT_URL = '/'
 LOGTAIL_FILES = {'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')}
 
 RMQ_URL = "amqp://t:t@localhost:5672/"
-RMQ_ENABLED = False
+DEPRECATED_RMQ_ENABLED = False
 
 WS_BASE = "localhost"
 WS_PORT = 8822
@@ -290,6 +293,12 @@ PAP_ANALYSIS_ID = []
 PAP_ANALYSIS_FRACTION_QUALITY_ID = []
 PAP_ANALYSIS_FRACTION_CONTAIN_ID = []
 
+DEF_LABORATORY_AUTH_PK = None
+DEF_LABORATORY_LEGAL_AUTH_PK = None
+
+DEF_CONSULT_AUTH = None
+DEF_CONSULT_LEGALAUTH = None
+
 DEATH_RESEARCH_PK = None
 PERINATAL_DEATH_RESEARCH_PK = None
 
@@ -298,6 +307,18 @@ CENTRE_GIGIEN_EPIDEMIOLOGY = ""
 REGION = ""
 EXCLUDE_HOSP_SEND_EPGU = []
 
+SOME_LINKS = []
+DISABLED_FORMS = []
+DISABLED_STATISTIC_CATEGORIES = []
+DISABLED_STATISTIC_REPORTS = []
+COVID_QUESTION_ID = None
+
+# Пример указания формы: [{'title': 'Согласие на обработку персональных данных', 'type': '101.02'}, {'title': 'Согласие на медицинское вмешательство', 'type': '101.03'}]
+LK_FORMS = []
+# Суррогатный юзер - подразделение "Личный кабинет" пользлватель "Личный кабинет"
+LK_USER = -1
+LK_FILE_SIZE_BYTES = -1
+LK_FILE_COUNT = -1
 
 SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 
@@ -323,6 +344,25 @@ DEFAULT_N3_DOCTOR = {
 }
 
 SYSTEM_AS_VI = False
+
+EMAIL_HOST = None
+EMAIL_PORT = 465
+EMAIL_HOST_USER = "your@yandex.ru"
+EMAIL_HOST_PASSWORD = "password"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+
+CELERY_TIMEZONE = 'Asia/Irkutsk'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_BROKER_URL = 'redis://localhost:6379/4'
+CELERY_RESULT_BACKEND = 'django-db'
+
+FORWARD_DAYS_SCHEDULE = -1
+
+SCHEDULE_AGE_LIMIT_LTE = None
+QRCODE_OFFSET_SIZE = {}
+LEFT_QRCODE_OFFSET_SIZE = {}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
@@ -383,6 +423,7 @@ if DB_PORT:
 
 if ENV_SECRET_KEY:
     SECRET_KEY = ENV_SECRET_KEY
+
 
 # db = DATABASES.get('default', {})
 # db['OPTIONS'] = db.get('OPTIONS', {})

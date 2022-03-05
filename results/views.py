@@ -47,13 +47,13 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import DEATH_RESEARCH_PK, SYSTEM_AS_VI
+from laboratory.settings import DEATH_RESEARCH_PK, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range, try_strptime
-from utils.flowable import InteractiveTextField
+from utils.flowable import InteractiveTextField, QrCodeSite
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
@@ -138,7 +138,7 @@ def result_print(request):
     )
     temp_iss = Issledovaniya.objects.filter(napravleniye_id=pk[0]).first()
     left_padding = 15
-    right_padding = 5
+    right_padding = 9
     top_padding = 5
     bottom_padding = 18
     if temp_iss.research.paddings_size:
@@ -494,6 +494,13 @@ def result_print(request):
             t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
+            lk_address = SettingManager.get("lk_address", default='', default_type='s')
+            if lk_address:
+                if leftnone:
+                    qr_code_param = LEFT_QRCODE_OFFSET_SIZE
+                else:
+                    qr_code_param = QRCODE_OFFSET_SIZE
+                fwb.append(QrCodeSite(lk_address, qr_code_param))
         if not has_paraclinic:
             fwb.append(Spacer(1, 4 * mm))
             fwb.append(InteractiveTextField())
@@ -1047,7 +1054,7 @@ def result_print(request):
                     br = ""
                     if not protocol_plain_text:
                         br = '<br/>'
-                    if napr_child:
+                    if napr_child.count() > 0:
                         fwb.append(Paragraph("Назначено:", styleBold))
                         s_napr = ""
                         for n_child in napr_child:
@@ -1060,7 +1067,7 @@ def result_print(request):
                     fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
 
                 fwb.append(Spacer(1, 3 * mm))
-                if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result:
+                if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result and not iss.research.is_form:
                     if iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
                     else:
@@ -1068,7 +1075,7 @@ def result_print(request):
                             fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
 
-                if not iss.research.has_own_form_result:
+                if not iss.research.has_own_form_result and not iss.research.is_form:
                     if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                         fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                     else:

@@ -25,6 +25,7 @@ class Hospitals(models.Model):
     research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
     current_manager = models.CharField(max_length=128, blank=True, default='', help_text="Руководитель/ИО учреждения")
     okpo = models.CharField(max_length=10, blank=True, default='', help_text="ОКПО")
+    okato = models.CharField(max_length=11, blank=True, default='', help_text="ОКАТО")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
     @staticmethod
@@ -101,3 +102,15 @@ class HospitalsGroup(models.Model):
     class Meta:
         verbose_name = 'Группа больница'
         verbose_name_plural = 'Группы больницы'
+
+
+class DisableIstochnikiFinansirovaniya(models.Model):
+    hospital = models.ForeignKey(Hospitals, blank=False, null=False, help_text="Больница", on_delete=models.CASCADE)
+    fin_source = models.ForeignKey("directions.IstochnikiFinansirovaniya", blank=False, null=False, help_text="Больница", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.hospital.title}-{self.fin_source}"
+
+    class Meta:
+        verbose_name = 'Запрещенные источники оплаты для Больницы'
+        verbose_name_plural = 'Запрещенные источники оплаты для Больницы'

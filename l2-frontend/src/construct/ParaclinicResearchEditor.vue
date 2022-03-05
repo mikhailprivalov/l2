@@ -208,6 +208,10 @@
           placeholder="Отделение не выбрано"
           v-model="hospital_research_department_pk"
         />
+         <div class="input-group">
+          <span class="input-group-addon">Наименование для расписания</span>
+          <input type="text" class="form-control" v-model="schedule_title" />
+        </div>
       </div>
       <template v-if="ex_dep !== 7">
         <div v-for="(group, gi) in orderBy(groups, 'order')" :key="gi" class="ed-group">
@@ -275,6 +279,10 @@
                   </div>
                   <div v-else-if="row.field_type === 3">
                     <strong>Формула:</strong>
+                    <input v-model="row.default" class="form-control" />
+                  </div>
+                  <div v-else-if="[2, 32, 33, 36].includes(row.field_type)">
+                    <strong>Ссылка на поле (%):</strong>
                     <input v-model="row.default" class="form-control" />
                   </div>
                   <div v-else-if="row.field_type === 30">
@@ -418,6 +426,9 @@
                   <label> <input type="checkbox" v-model="row.for_talon" /> в талон </label>
                   <label> <input type="checkbox" v-model="row.for_extract_card" /> в выписку </label>
                   <label> <input type="checkbox" v-model="row.for_med_certificate" /> в справку </label>
+                  <label v-show="row.field_type === 35" >
+                    <input type="checkbox" v-model="row.sign_organization" /> ЭЦП-МО
+                  </label>
                   <label
                     style="line-height: 1"
                     v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14 || row.field_type === 23"
@@ -460,7 +471,7 @@
                       <option value="31" v-if="tfoms_attachment_field_enabled">
                         Сведения о прикреплении застрахованного лица (ТФОМС)
                       </option>
-                      <option value="35">Лицо от организации придавшее юр. силу документу</option>
+                      <option value="35">Врач</option>
                     </select>
                   </label>
                 </div>
@@ -590,6 +601,7 @@ export default {
   data() {
     return {
       title: '',
+      schedule_title: '',
       short_title: '',
       is_global_direction_params: false,
       code: '',
@@ -881,6 +893,7 @@ export default {
     load() {
       this.title = '';
       this.short_title = '';
+      this.schedule_title = '';
       this.is_global_direction_params = false;
       this.code = '';
       this.info = '';
@@ -899,6 +912,7 @@ export default {
           .then(data => {
             this.title = data.title;
             this.short_title = data.short_title;
+            this.schedule_title = data.schedule_title;
             this.is_global_direction_params = data.is_global_direction_params;
             this.code = data.code;
             this.internal_code = data.internal_code;
@@ -948,6 +962,7 @@ export default {
         'department',
         'title',
         'short_title',
+        'schedule_title',
         'is_global_direction_params',
         'code',
         'hide',

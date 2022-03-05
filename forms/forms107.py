@@ -411,9 +411,9 @@ def form_02(request_data):
         end = start + slice_count
 
         if len(unique_dates) > slice_count:
-            dates_record = [[Paragraph(f'{date[0:8]}', styleTCBold)] for date in unique_dates[start:end]]
+            dates_record = [[Paragraph(f'{date[0:6]}{date[-2:]}', styleTCBold)] for date in unique_dates[start:end]]
         else:
-            dates_record = [[Paragraph(f'{date[0:8]}', styleTCBold)] for date in unique_dates]
+            dates_record = [[Paragraph(f'{date[0:6]}{date[-2:]}', styleTCBold)] for date in unique_dates]
         dates_record.insert(0, [Paragraph("Наименование", styleTCBold)])
 
         v_table.append(dates_record)

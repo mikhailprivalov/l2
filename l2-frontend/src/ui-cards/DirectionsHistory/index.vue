@@ -51,9 +51,11 @@
         <thead>
           <tr>
             <th class="text-center">Дата</th>
-            <th>№ напр.</th>
+            <th v-if="active_type !== 5">№ напр.</th>
+            <th v-else>№ дог</th>
             <th>Назначения</th>
-            <th class="text-center">Статус</th>
+            <th v-if="active_type !== 5" class="text-center">Статус</th>
+            <th v-else class="text-center">Сумма</th>
             <th></th>
             <th class="nopd noel"><input type="checkbox" v-model="all_checked" /></th>
           </tr>
@@ -101,7 +103,8 @@
                     ? row.expertise_status > 0
                       ? ' (экспертиза БЕЗ заменчаний)'
                       : ' (экспертза С замечаниями)'
-                    : '')
+                    : '') + (row.person_contract_pk > 0 ? ' (Договор-' + row.person_contract_pk +
+              ' (Направления: ' + row.person_contract_dirs+ ')': '')
               "
               v-tippy="{ placement: 'bottom', arrow: true }"
               :class="['status-' + row.status]"
@@ -111,11 +114,12 @@
                 <span v-if="row.maybe_onco">*О</span>
                 <span v-if="row.is_application">**З</span>
                 <span :class="['status-' + row.expertise_status]" v-if="row.is_expertise">-Э</span>
+                <span v-if="row.person_contract_pk > 0" style="color: #0d0d0d" >&#8381;</span>
               </strong>
             </td>
             <td class="button-td">
               <div
-                v-if="!row.is_application"
+                v-if="!row.is_application && active_type !== 5"
                 class="button-td-inner"
                 :class="[
                   {
@@ -168,8 +172,11 @@
                 <button class="btn btn-blue-nb" v-else-if="!row.has_hosp" @click="show_results(row)">Результаты</button>
                 <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
               </div>
-              <div v-else class="button-td-inner button-td-inner-single">
+              <div v-else-if="row.is_application" class="button-td-inner button-td-inner-single">
                 <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Заявление</button>
+              </div>
+              <div v-else-if="active_type===5" class="button-td-inner button-td-inner-single">
+                <button class="btn btn-blue-nb" @click="print_contract(row.pk, patient_pk)">Договор</button>
               </div>
             </td>
             <td class="nopd"><input v-model="row.checked" type="checkbox" /></td>
@@ -221,7 +228,7 @@ export default {
       required: false,
     },
     iss_pk: {
-      type: Number,
+      type: [String, Number],
       default: null,
       required: false,
     },
@@ -249,6 +256,7 @@ export default {
         { pk: 1, title: 'Материал в лаборатории' },
         { pk: 2, title: 'Результаты подтверждены' },
         { pk: 4, title: 'Созданы пользователем' },
+        { pk: 5, title: 'Договоры пациента' },
       ],
       active_type: 3,
       checked_obj: {},
@@ -306,6 +314,9 @@ export default {
     this.$root.$on(`researches-picker:refresh${this.kk}`, this.load_history_safe);
   },
   methods: {
+    print_contract(pk, card) {
+      window.open(`/forms/pdf?type=102.02&card_pk=${card}&contract_id=${pk}`, '_blank');
+    },
     async load_history_safe() {
       await this.load_history(true);
     },
@@ -656,7 +667,7 @@ th:not(.nopd):not(.button-td) {
       border: none !important;
     }
 
-    &:not(.has_pacs):not(&-single) {
+    &:not(.has_pacs):not(.has_pacs_stationar):not(&-single) {
       .btn {
         flex: 0 0 50%;
       }

@@ -22,6 +22,7 @@ import simplejson as json
 
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes
+from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.xh import check_valid_square_brackets
 from reportlab.platypus.flowables import HRFlowable
@@ -730,7 +731,7 @@ def procedural_text_for_result(direction, fwb, napr_child):
 
     procedurals_diary = ProcedureList.objects.filter(diary=direction)
     text = ''
-    if not napr_child:
+    if not napr_child and procedurals_diary.count() > 0:
         fwb.append(Paragraph("Назначено:", style))
     for p in procedurals_diary:
         text = f"{text} <font face=\"FreeSansBold\"> {p.drug.mnn} {p.form_release.title} {p.method.title} {p.dosage} {p.units}: </font>"
@@ -851,7 +852,20 @@ def table_part_result(value):
 
     table_rows = value['rows']
     for t in table_rows:
-        temp_data = [Paragraph(f"{row_data}", style) for row_data in t]
+        temp_data = []
+        result = ""
+        for value_raw in t:
+            try:
+                row_data = json.loads(value_raw)
+                if row_data.get('fio', None):
+                    result = f"{row_data.get('family')} {row_data.get('name')} {row_data.get('patronymic')}"
+                if row_data.get('id', None):
+                    doctor = DoctorProfile.objects.get(pk=row_data.get('id'))
+                    position = doctor.position.title if doctor.position else ""
+                    result = f"{result} ({position})"
+            except:
+                result = value_raw
+            temp_data.append(Paragraph(f"{result}", style))
         opinion.append(temp_data)
 
     table_width = []

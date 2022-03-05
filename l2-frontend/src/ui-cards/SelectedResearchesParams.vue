@@ -5,7 +5,7 @@
       <ResultsByYear :card_pk="selected_card.pk" isParaclinic />
       <ResultsByYear :card_pk="selected_card.pk" isLab />
     </template>
-    <DescriptiveForm :research="research" :confirmed="false" :patient="selected_card" />
+    <DescriptiveForm :research="research" :confirmed="false" :patient="card" />
   </div>
 </template>
 
@@ -23,6 +23,14 @@ export default {
     },
     selected_card: {
       type: Object,
+    },
+  },
+  computed: {
+    card() {
+      return {
+        card_pk: this.selected_card.pk,
+        ...this.selected_card,
+      };
     },
   },
   data() {

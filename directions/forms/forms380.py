@@ -967,3 +967,112 @@ def form_06(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
                 print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
 
     printForm(dir_obj)
+
+
+def form_07(c: Canvas, dir: Napravleniya):
+    # Универсальная форма с параметрами
+    def printForm():
+        hospital_name = dir.hospital_short_title
+        hospital_address = SettingManager.get("org_address")
+        hospital_kod_ogrn = SettingManager.get("org_ogrn")
+
+        if sys.platform == 'win32':
+            locale.setlocale(locale.LC_ALL, 'rus_rus')
+        else:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 11
+        style.leading = 12
+        style.spaceAfter = 1.5 * mm
+
+        styleCenterBold = deepcopy(style)
+        styleCenterBold.alignment = TA_CENTER
+        styleCenterBold.fontSize = 12
+        styleCenterBold.leading = 15
+        styleCenterBold.fontName = 'PTAstraSerifBold'
+
+        styleBold = deepcopy(styleCenterBold)
+        styleBold.alignment = TA_LEFT
+
+        styleT = deepcopy(style)
+        styleT.alignment = TA_LEFT
+        styleT.fontSize = 10
+        styleT.leading = 4.5 * mm
+        styleT.face = 'PTAstraSerifReg'
+
+        styleTCentre = deepcopy(styleT)
+        styleTCentre.alignment = TA_CENTER
+        styleTCentre.fontSize = 13
+
+        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
+        dir_code = Drawing()
+        dir_code.add(barcode)
+        renderPDF.draw(dir_code, c, 157 * mm, 259 * mm)
+
+        objs = []
+        opinion = [
+            [
+                Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
+                Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: <br/>' 'Медицинская документация<br/>Учетная форма № 204/у</font>', styleT),
+            ],
+        ]
+
+        tbl = Table(opinion, 2 * [100 * mm])
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+
+        objs.append(tbl)
+        objs.append(Spacer(1, 3 * mm))
+        history_num = ''
+        if dir.parent and dir.parent.research.is_hospital:
+            history_num = f"(cтационар-{str(dir.parent.napravleniye_id)})"
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} {history_num} ', styleCenterBold))
+        objs.append(Paragraph('патолого-анатомического вскрытия', styleCenterBold))
+        objs.append(Spacer(1, 3 * mm))
+        space_symbol = '&nbsp;'
+        objs.append(Paragraph(f'Фамилия, Имя, Отчество: {dir.client.individual.fio()}', style))
+        sex = dir.client.individual.sex
+        if sex == "м":
+            sex = f'{sex}-1'
+        else:
+            sex = f'{sex}-2'
+        objs.append(Paragraph(f'Возраст: {dir.client.individual.bd()} ({dir.client.individual.age_s(direction=dir)}) {space_symbol * 5} Пол: {sex},', style))
+        polis_num = ''
+        polis_issue = ''
+        ind_data = dir.client.get_data_individual()
+        if ind_data['oms']['polis_num']:
+            polis_num = ind_data['oms']['polis_num']
+        if ind_data['oms']['polis_issued']:
+            polis_issue = ind_data['oms']['polis_issued']
+        objs.append(Paragraph(f'Полис ОМС: {polis_num} с/к: {polis_issue}', style))
+        address = ind_data['main_address']
+        objs.append(Paragraph(f'Адрес постоянного места жительства: {address}', style))
+        objs.append(Paragraph(f'Место работы, учебы (наименование детского учреждения, школы): {dir.workplace}', style))
+
+        issledovaniya = dir.issledovaniya_set.all()
+        for v in issledovaniya:
+            objs.append(Paragraph(f"{v.research.title}", style))
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(Paragraph("Параметры направления:", styleBold))
+        objs.append(Spacer(1, 1 * mm))
+
+        direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
+        for dp in direction_params:
+            objs.append(Paragraph(f"{dp.title}: {dp.value}", style))
+
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph(f'Врач: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))
+        if dir.doc_who_create and dir.doc_who_create != dir.doc:
+            objs.append(Paragraph(f'Выписал: {dir.doc_who_create.get_fio()}', style))
+        objs.append(Paragraph(f'Дата направления:  {strdate(dir.data_sozdaniya)}', style))
+
+        gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        gistology_frame.addFromList([gistology_inframe], c)
+
+    printForm()

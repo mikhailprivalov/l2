@@ -1,10 +1,23 @@
 import base64
+import os
+
+from django.test import Client as TC
 import datetime
 import logging
 
 import pytz
+from django.utils.module_loading import import_string
+
+from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction
+from api.stationar.stationar_func import desc_to_data
+from api.views import mkb10_dict
+from clients.utils import find_patient
+from directory.utils import get_researches_details, get_can_created_patient
+from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
+from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
+from plans.models import PlanHospitalization, PlanHospitalizationFiles, Messages
 from podrazdeleniya.models import Podrazdeleniya
 import random
 from collections import defaultdict
@@ -18,7 +31,8 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from rest_framework.response import Response
 
 import directions.models as directions
@@ -28,22 +42,31 @@ from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
-from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY, REGION, DEATH_RESEARCH_PK
+from laboratory.settings import (
+    AFTER_DATE,
+    CENTRE_GIGIEN_EPIDEMIOLOGY,
+    MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY,
+    REGION,
+    SCHEDULE_AGE_LIMIT_LTE, LK_FORMS, LK_USER, LK_FILE_SIZE_BYTES, LK_FILE_COUNT,
+)
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
-from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
+from results.sql_func import get_laboratory_results_by_directions, get_not_confirm_direction
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
 from users.models import DoctorProfile
+from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date, normalize_dots_date
-from utils.xh import check_type_research
+from utils.dates import normalize_date, valid_date, try_strptime
+from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
+from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
+from django.contrib.auth.models import User
 
 logger = logging.getLogger("IF")
 
@@ -174,11 +197,13 @@ def direction_data(request):
             }
 
             for s in DocumentSign.objects.filter(document=d):
-                document['signatures'].append({
-                    "content": s.sign_value.replace('\n', ''),
-                    "type": s.sign_type,
-                    "executor": s.executor.uploading_data,
-                })
+                document['signatures'].append(
+                    {
+                        "content": s.sign_value.replace('\n', ''),
+                        "type": s.sign_type,
+                        "executor": s.executor.uploading_data,
+                    }
+                )
 
             signed_documents.append(document)
 
@@ -604,6 +629,7 @@ def check_enp(request):
 
 @api_view(['POST'])
 def patient_results_covid19(request):
+    return Response({"ok": False})
     days = 15
     results = []
     p_enp = data_parse(request.body, {'enp': str}, {'enp': ''})[0]
@@ -1236,26 +1262,27 @@ def get_cda_data(pk):
     n: Napravleniya = Napravleniya.objects.get(pk=pk)
     card = n.client
     ind = n.client.individual
-    data = get_json_protocol_data(pk)
+    if check_type_research(pk) == "is_refferal":
+        data = get_json_protocol_data(pk)
+    elif check_type_research(pk) == "is_lab":
+        data = get_json_labortory_data(pk)
+    else:
+        data = {}
     return {
         "title": n.get_eds_title(),
         "generatorName": n.get_eds_generator(),
         "rawResponse": True,
         "data": {
-            "oidMo": data["oidMo"],
+            "oidMo": data.get("oidMo"),
             "document": data,
             "patient": {
                 'id': card.number,
                 'snils': card.get_data_individual()["snils"],
-                'name': {
-                    'family': ind.family,
-                    'name': ind.name,
-                    'patronymic': ind.patronymic
-                },
+                'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
                 'gender': ind.sex.lower(),
                 'birthdate': ind.birthday.strftime("%Y%m%d"),
             },
-        }
+        },
     }
 
 
@@ -1392,219 +1419,584 @@ def get_protocol_result(request):
     ind = n.client.individual
     if check_type_research(pk) == "is_refferal":
         data = get_json_protocol_data(pk)
-        return Response({
-            "title": n.get_eds_title(),
-            "generatorName": n.get_eds_generator(),
-            "data": {
-                "oidMo": data["oidMo"],
-                "document": data,
-                "patient": {
-                    'id': card.number,
-                    'snils': card.get_data_individual()["snils"],
-                    'name': {
-                        'family': ind.family,
-                        'name': ind.name,
-                        'patronymic': ind.patronymic
+        return Response(
+            {
+                "title": n.get_eds_title(),
+                "generatorName": n.get_eds_generator(),
+                "data": {
+                    "oidMo": data["oidMo"],
+                    "document": data,
+                    "patient": {
+                        'id': card.number,
+                        'snils': card.get_data_individual()["snils"],
+                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                        'gender': ind.sex.lower(),
+                        'birthdate': ind.birthday.strftime("%Y%m%d"),
                     },
-                    'gender': ind.sex.lower(),
-                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    "organization": data["organization"],
                 },
-                "organization": data["organization"]
             }
-        })
+        )
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
-        return Response({
-            "generatorName": "Laboratory_min",
-            "data": {
-                "oidMo": data["oidMo"],
-                "document": data,
-                "patient": {
-                    'id': card.number,
-                    'snils': card.get_data_individual()["snils"],
-                    'name': {
-                        'family': ind.family,
-                        'name': ind.name,
-                        'patronymic': ind.patronymic
+        return Response(
+            {
+                "generatorName": "Laboratory_min",
+                "data": {
+                    "oidMo": data["oidMo"],
+                    "document": data,
+                    "patient": {
+                        'id': card.number,
+                        'snils': card.get_data_individual()["snils"],
+                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                        'gender': ind.sex.lower(),
+                        'birthdate': ind.birthday.strftime("%Y%m%d"),
                     },
-                    'gender': ind.sex.lower(),
-                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    "organization": data["organization"],
                 },
-                "organization": data["organization"]
             }
+        )
+
+    return Response({})
+
+
+@api_view(['POST', 'GET'])
+def get_hosp_services(request):
+    services = []
+    r: Researches
+    for r in Researches.objects.filter(is_hospital=True):
+        services.append(
+            {
+                "pk": r.pk,
+                "title": r.get_title(),
+            }
+        )
+    return Response({"services": services})
+
+
+@api_view(['GET'])
+def mkb10(request):
+    return Response({"rows": mkb10_dict(request, True)})
+
+
+@api_view(['POST', 'PUT'])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
+@can_use_schedule_only
+def hosp_record(request):
+    files = []
+    if request.method == 'PUT':
+        for kf in request.data:
+            if kf != 'document':
+                files.append(request.data[kf])
+        form = request.data['document']
+    else:
+        form = request.body
+
+    data = data_parse(
+        form,
+        {
+            'snils': 'str_strip',
+            'enp': 'str_strip',
+            'family': 'str_strip',
+            'name': 'str_strip',
+            'patronymic': 'str_strip',
+            'sex': 'str_strip',
+            'birthdate': 'str_strip',
+            'comment': 'str_strip',
+            'date': 'str_strip',
+            'service': int,
+            'phone': 'str_strip',
+            'diagnosis': 'str_strip',
+        },
+    )
+
+    if len(files) > LK_FILE_COUNT:
+        return Response({"ok": False, 'message': 'Слишком много файлов'})
+
+    for f in files:
+        if f.size > LK_FILE_SIZE_BYTES:
+            return Response({"ok": False, 'message': 'Файл слишком большой'})
+        if not check_type_file(file_in_memory=f):
+            return JsonResponse({
+                "ok": False,
+                "message": "Поддерживаются PDF и JPEG файлы",
+            })
+
+    snils: str = data[0]
+    enp: str = data[1]
+    family: str = data[2]
+    name: str = data[3]
+    patronymic: str = data[4]
+    sex: str = data[5].lower()
+    birthdate: str = data[6]
+    comment: str = data[7]
+    date: str = data[8]
+    service: int = data[9]
+    phone: str = data[10]
+    diagnosis: str = data[11]
+
+    if sex == 'm':
+        sex = 'м'
+
+    if sex == 'f':
+        sex = 'ж'
+
+    snils = ''.join(ch for ch in snils if ch.isdigit())
+
+    individual = None
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        individual = individuals.first()
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual and family and name:
+        individual = Individual.import_from_tfoms(
+            {
+                "family": family,
+                "given": name,
+                "patronymic": patronymic,
+                "gender": sex,
+                "birthdate": birthdate,
+                "enp": enp,
+                "snils": snils,
+            },
+            need_return_individual=True,
+        )
+    if not individual:
+        return Response({"ok": False, 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    if not card:
+        card = Card.add_l2_card(individual)
+
+    if not card:
+        return Response({"ok": False, 'message': 'Карта не найдена'})
+
+    if SCHEDULE_AGE_LIMIT_LTE:
+        age = card.individual.age()
+        if age > SCHEDULE_AGE_LIMIT_LTE:
+            return Response({"ok": False, 'message': f'Пациент должен быть не старше {SCHEDULE_AGE_LIMIT_LTE} лет'})
+
+    hospital_research: Researches = Researches.objects.filter(pk=service, is_hospital=True).first()
+
+    if not hospital_research:
+        return Response({"ok": False, 'message': 'Услуга не найдена'})
+
+    has_free_slots = check_available_hospital_slot_before_save(hospital_research.pk, None, date)
+    if not has_free_slots:
+        return JsonResponse({"ok": False, "message": "Нет свободных слотов"})
+
+    hosp_department_id = hospital_research.podrazdeleniye.pk
+    with transaction.atomic():
+        plan_pk = PlanHospitalization.plan_hospitalization_save(
+            {
+                'card': card,
+                'research': hospital_research.pk,
+                'date': date,
+                'comment': comment[:256],
+                'phone': phone,
+                'action': 0,
+                'hospital_department_id': hosp_department_id,
+                'diagnos': diagnosis,
+                'files': files,
+            },
+            None
+        )
+        for f in files:
+            plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan_id=plan_pk)
+
+            plan_files.uploaded_file = f
+            plan_files.save()
+    y, m, d = date.split('-')
+    return Response({"ok": True, "message": f"Запись создана — {hospital_research.get_title()} {d}.{m}.{y}"})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def hosp_record_list(request):
+    data = data_parse(
+        request.body,
+        {
+            'snils': 'str_strip',
+            'enp': 'str_strip',
+        },
+    )
+    snils: str = data[0]
+    enp: str = data[1]
+
+    snils = ''.join(ch for ch in snils if ch.isdigit())
+
+    individual = None
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        individual = individuals.first()
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual:
+        return Response({"rows": [], 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+
+    if not card:
+        return Response({"rows": [], 'message': 'Карта не найдена'})
+
+    rows = []
+
+    plan: PlanHospitalization
+    for plan in PlanHospitalization.objects.filter(client=card, research__isnull=False, action=0).order_by('-exec_at'):
+        status_description = ""
+        if plan.work_status == 2:
+            status_description = plan.why_cancel
+        if plan.work_status == 3:
+            slot_plan = plan.slot_fact.plan
+            status_description = slot_plan.datetime.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
+        rows_files = []
+        row_file: PlanHospitalizationFiles
+        for row_file in PlanHospitalizationFiles.objects.filter(plan=plan).order_by('-created_at'):
+            rows_files.append({
+                'pk': row_file.pk,
+                'fileName': os.path.basename(row_file.uploaded_file.name) if row_file.uploaded_file else None,
+            })
+        messages_data = Messages.get_messages_by_plan_hosp(plan.pk, last=True)
+        rows.append({
+            "pk": plan.pk,
+            "service": plan.research.get_title(),
+            "date": plan.exec_at.strftime('%d.%m.%Y'),
+            "phone": plan.phone,
+            "diagnosis": plan.diagnos,
+            "comment": plan.comment,
+            "status": plan.get_work_status_display(),
+            "status_description": status_description,
+            "files": rows_files,
+            "messages": messages_data
         })
 
+    return Response({"rows": rows})
 
-def get_json_protocol_data(pk):
-    result_protocol = get_paraclinic_results_by_direction(pk)
-    data = {}
-    document = {}
-    for r in result_protocol:
-        if "{" in r.value and "}" in r.value:
-            try:
-                val = json.loads(r.value)
-                if not val or not isinstance(val, dict):
-                    pass
-            except Exception:
-                val = r.value
+
+@api_view(['POST'])
+def get_all_messages_by_plan_id(request):
+    data = data_parse(request.body, {'pk': int})
+    pk: int = data[0]
+    messages = Messages.get_messages_by_plan_hosp(pk, last=False)
+    return Response({"rows": messages})
+
+
+@api_view(['POST'])
+def direction_records(request):
+    data = data_parse(
+        request.body,
+        {
+            'snils': 'str_strip',
+            'enp': 'str_strip',
+            'date_year': int
+        },
+    )
+    snils: str = data[0]
+    enp: str = data[1]
+    date_year: int = data[2]
+
+    card: Card = find_patient(snils, enp)
+    if not card:
+        return Response({"rows": [], 'message': 'Карта не найдена'})
+    d1 = try_strptime(f"{date_year}-01-01", formats=('%Y-%m-%d',))
+    d2 = try_strptime(f"{date_year}-12-31", formats=('%Y-%m-%d',))
+    start_date = datetime.datetime.combine(d1, datetime.time.min)
+    end_date = datetime.datetime.combine(d2, datetime.time.max)
+    rows = {}
+    collect_direction = direction_by_card(start_date, end_date, card.pk)
+    prev_direction = None
+    unique_direction = set([i.napravleniye_id for i in collect_direction])
+    not_confirm_direction = get_not_confirm_direction(list(unique_direction))
+    not_confirm_direction = [i[0] for i in not_confirm_direction]
+    confirm_direction = list(unique_direction - set(not_confirm_direction))
+    for dr in collect_direction:
+        if dr.napravleniye_id in confirm_direction:
+            status = 2
+            date_confirm = dr.date_confirm
+        elif dr.cancel:
+            date_confirm = ""
+            status = -1
         else:
-            val = r.value
-        if "rows" in val:
-            for k in val['rows']:
-                count = 0
-                for el in k:
-                    if "{" in el and "}" in el:
-                        try:
-                            el = json.loads(el)
-                            if not el or not isinstance(el, dict):
-                                pass
-                            else:
-                                k[count] = el
-                        except Exception:
-                            pass
-                    count += 1
-        if isinstance(val, str):
-            if val.strip() in ('-', ''):
-                val = ""
-        data[r.title] = val
+            date_confirm = ""
+            status = 0
+        if dr.napravleniye_id != prev_direction:
+            rows[dr.napravleniye_id] = {"createdAt": dr.date_create, "services": [], "status": status, "confirmedAt": date_confirm}
+        temp_research = rows.get(dr.napravleniye_id, None)
+        temp_research["services"].append(dr.research_title)
+        rows[dr.napravleniye_id] = temp_research.copy()
+        prev_direction = dr.napravleniye_id
 
-    iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)
-    if iss.research_id == DEATH_RESEARCH_PK:
-        data_direct_death = data.get("а) Болезнь или состояние, непосредственно приведшее к смерти", None)
-        if data_direct_death:
-            period_befor_death = data_direct_death["rows"][0][0]
-            type_period_befor_death = data_direct_death["rows"][0][1]
-            date_death = data["Дата смерти"]
-            time_death = data.get("Время смерти", "00:00")
-            if period_befor_death and type_period_befor_death:
-                data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
-    doctor_confirm_obj = iss.doc_confirmation
-    author_data = author_doctor(doctor_confirm_obj)
+    category_directions = get_type_confirm_direction(tuple(confirm_direction))
+    lab_podr = get_lab_podr()
+    lab_podr = [i[0] for i in lab_podr]
+    count_paraclinic = 0
+    count_doc_refferal = 0
+    count_laboratory = 0
+    for dr in category_directions:
+        if dr.is_doc_refferal:
+            count_paraclinic += 1
+        elif dr.is_paraclinic:
+            count_doc_refferal += 1
+        elif dr.podrazdeleniye_id in lab_podr:
+            count_laboratory += 1
 
-    legal_auth = data.get("Подпись от организации", None)
-    legal_auth_data = legal_auth_get(legal_auth)
-    hosp_obj = doctor_confirm_obj.hospital
-    hosp_oid = hosp_obj.oid
-
-    document["id"] = pk
-    time_confirm = iss.time_confirmation
-    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%M')
-    document["confirmedAt"] = f"{confirmed_time}+0800"
-    document["legalAuthenticator"] = legal_auth_data
-    document["author"] = author_data
-    document["content"] = data
-    document["oidMo"] = hosp_oid
-    document["organization"] = organization_get(hosp_obj)
-    document["orgName"] = hosp_obj.title
-    document["tel"] = hosp_obj.phones
-
-    return document
+    return Response({"rows": rows, "count_paraclinic": count_paraclinic, "count_doc_refferal": count_doc_refferal, "count_laboratory": count_laboratory})
 
 
-def get_json_labortory_data(pk):
-    result_protocol = get_laboratory_results_by_directions([pk])
-    document = {}
-    confirmed_at = ""
-    date_reiceve = ""
-    data = []
-    prev_research_title = ""
-    count = 0
-    tests = []
-    author_data = None
-    iss = None
-    for k in result_protocol:
-        iss = directions.Issledovaniya.objects.get(pk=k.iss_id)
-        next_research_title = iss.research.title
-        if (prev_research_title != next_research_title) and count != 0:
-            if len(tests) > 0:
-                data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmed_at, "receivedAt": date_reiceve, "author_data": author_data})
-            tests = []
-        author_data = author_doctor(iss.doc_confirmation)
-        time_confirm = iss.time_confirmation
-        confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%M')
-        fraction_id = k.fraction_id
-        frac_obj = Fractions.objects.get(pk=fraction_id)
-        if not frac_obj.unit or not frac_obj.fsli:
-            continue
-        unit_obj = frac_obj.unit
-        unit_val = {"code": unit_obj.code, "full_title": unit_obj.title, "ucum": unit_obj.ucum, "short_title": unit_obj.short_title}
-        flsi_param = {"code": frac_obj.fsli, "title": frac_obj.title}
-        result_val = k.value
-        confirmed_at = f"{confirmed_time}+0800"
-        date_reiceve = normalize_dots_date(k.date_confirm).replace("-","")
-        date_reiceve = f"{date_reiceve}+0800"
-        tests.append({"unit_val": unit_val, "flsi_param": flsi_param, "result_val": result_val})
-        prev_research_title = next_research_title
-        count += 1
-    if len(tests) > 0:
-        data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmed_at, "receivedAt": date_reiceve, "author_data": author_data})
+@api_view(['POST'])
+def directions_by_category_result_year(request):
+    request_data = json.loads(request.body)
+    mode = request_data.get('mode')
+    is_lab = request_data.get('isLab', mode == 'laboratory')
+    is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
+    is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
+    year = request_data['year']
 
-    hosp_obj = iss.doc_confirmation.hospital
-    hosp_oid = hosp_obj.oid
+    card: Card = find_patient(request_data.get('snils'), request_data.get('enp'))
+    if not card:
+        return Response({"results": [], 'message': 'Карта не найдена'})
 
-    document["id"] = pk
-    document["legalAuthenticator"] = ""
-    document["author"] = author_data
-    document["content"] = {}
-    document["content"]["Лаборатория"] = data
-    document["content"]["payment"] = {"code":"1", "title":"Средства обязательного медицинского страхования"}
-    document["oidMo"] = hosp_oid
-    document["orgName"] = hosp_obj.title
-    direction_obj = Napravleniya.objects.get(pk=pk)
-    direction_create = direction_obj.data_sozdaniya
-    direction_create = direction_create.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%M')
-    document["createdAt"] = f"{direction_create}+0800"
-    document["lastConfirmedAt"] = f"{confirmed_at}"
-    document["confirmedAt"] = f"{confirmed_at}"
-    document["organization"] = organization_get(hosp_obj)
+    d1 = datetime.datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
+    start_date = datetime.datetime.combine(d1, datetime.time.min)
+    d2 = datetime.datetime.strptime(f'31.12.{year}', '%d.%m.%Y')
+    end_date = datetime.datetime.combine(d2, datetime.time.max)
 
-    return document
+    if not is_lab and not is_doc_refferal and not is_paraclinic:
+        return JsonResponse({"results": []})
+
+    if is_lab:
+        lab_podr = get_lab_podr()
+        lab_podr = [i[0] for i in lab_podr]
+    else:
+        lab_podr = [-1]
+
+    confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card.pk, is_lab, is_paraclinic, is_doc_refferal)
+    if not confirmed_directions:
+        return JsonResponse({"results": []})
+
+    directions = {}
+
+    for d in confirmed_directions:
+        if d.direction not in directions:
+            directions[d.direction] = {
+                'pk': d.direction,
+                'confirmedAt': d.ch_time_confirmation,
+                'services': [],
+            }
+
+        directions[d.direction]['services'].append(d.research_title)
+    return JsonResponse({"results": list(directions.values())})
 
 
-def organization_get(hosp_obj_f):
-    return {
-        "name": hosp_obj_f.title,
-        "tel": hosp_obj_f.phones if hosp_obj_f.phones else "",
-        "address": {
-            "text": hosp_obj_f.address if hosp_obj_f.address else "г. Иркутск",
-            "subjectCode": "38",
-            "subjectName": "Иркутская область",
+@api_view(['POST'])
+def results_by_direction(request):
+    request_data = json.loads(request.body)
+    mode = request_data.get('mode')
+    is_lab = request_data.get('isLab', mode == 'laboratory')
+    is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
+    is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
+    direction = request_data.get('pk')
+
+    directions = request_data.get('directions', [])
+    if not directions and direction:
+        directions = [direction]
+    objs_result = {}
+    if is_lab:
+        direction_result = get_laboratory_results_by_directions(directions)
+
+        for r in direction_result:
+            if r.direction not in objs_result:
+                objs_result[r.direction] = {'pk': r.direction, 'confirmedAt': r.date_confirm, 'services': {}}
+
+            if r.iss_id not in objs_result[r.direction]['services']:
+                objs_result[r.direction]['services'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.fio), 'confirmedAt': r.date_confirm, 'fractions': []}
+
+            objs_result[r.direction]['services'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+
+    if is_paraclinic or is_doc_refferal:
+        results = desc_to_data(directions, force_all_fields=True)
+        for i in results:
+            direction_data = i['result'][0]["date"].split(' ')
+            if direction_data[1] not in objs_result:
+                objs_result[direction_data[1]] = {'pk': direction_data[1], 'confirmedAt': direction_data[0], 'services': {}}
+            if i['result'][0]["iss_id"] not in objs_result[direction_data[1]]['services']:
+                objs_result[direction_data[1]]['services'][i['result'][0]["iss_id"]] = {
+                    'title': i['title_research'],
+                    'fio': short_fio_dots(i['result'][0]["docConfirm"]),
+                    'confirmedAt': direction_data[0],
+                    'fractions': [],
+                }
+
+            values = values_as_structure_data(i['result'][0]["data"])
+            objs_result[direction_data[1]]['services'][i['result'][0]["iss_id"]]["fractions"].extend(values)
+
+    return JsonResponse({"results": list(objs_result.values())})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def check_employee(request):
+    data = json.loads(request.body)
+    snils = data.get('snils')
+    date_now = current_time(only_date=True)
+    doctor_profile = DoctorProfile.objects.filter(snils=snils, external_access=True, date_stop_external_access__gte=date_now).first()
+    if doctor_profile:
+        return Response({"ok": True})
+    return Response({"ok": False})
+
+
+@api_view(['GET'])
+@can_use_schedule_only
+def hospitalization_plan_research(request):
+    return Response({"services": get_hospital_resource()})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def available_hospitalization_plan(request):
+    data = json.loads(request.body)
+    research_pk = data.get('research_pk')
+    resource_id = data.get('resource_id')
+    date_start = data.get('date_start')
+    date_end = data.get('date_end')
+
+    result, _ = get_available_hospital_plans(research_pk, resource_id, date_start, date_end)
+    return Response({"data": result})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def check_hosp_slot_before_save(request):
+    data = json.loads(request.body)
+    research_pk = data.get('research_pk')
+    resource_id = data.get('resource_id')
+    date = data.get('date')
+
+    result = check_available_hospital_slot_before_save(research_pk, resource_id, date)
+    return JsonResponse({"result": result})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def get_pdf_result(request):
+    data = json.loads(request.body)
+    pk = data.get('pk')
+    localclient = TC(enforce_csrf_checks=False)
+    addr = "/results/pdf"
+    params = {"pk": json.dumps([pk]), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
+    result = localclient.get(addr, params).content
+    pdf_content = base64.b64encode(result).decode('utf-8')
+    return JsonResponse({"result": pdf_content})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def get_pdf_direction(request):
+    data = json.loads(request.body)
+    pk = data.get('pk')
+    localclient = TC(enforce_csrf_checks=False)
+    addr = "/directions/pdf"
+    params = {"napr_id": json.dumps([pk]), 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
+    result = localclient.get(addr, params).content
+    pdf_content = base64.b64encode(result).decode('utf-8')
+    return JsonResponse({"result": pdf_content})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def documents_lk(request):
+    return Response({"documents": get_can_created_patient()})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def details_document_lk(request):
+    data = data_parse(request.body, {'pk': int},)
+    pk: int = data[0]
+    response = get_researches_details(pk)
+    return Response(response)
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def forms_lk(request):
+    response = {"forms": LK_FORMS}
+    return Response(response)
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def pdf_form_lk(request):
+    data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str, 'agent': {'snils': str, 'enp': str}}, )
+    type_form: str = data[0]
+    snils: str = data[1]
+    enp: str = data[2]
+
+    card: Card = find_patient(snils, enp)
+    if not card:
+        return Response({"results": [], 'message': 'Карта не найдена'})
+
+    f = import_string('forms.forms' + type_form[0:3] + '.form_' + type_form[4:6])
+    user = User.objects.get(pk=LK_USER)
+    result = f(
+        request_data={
+            "card_pk": card,
+            "user": user,
+            "hospital": user.doctorprofile.get_hospital(),
         }
-    }
+    )
+    pdf_content = base64.b64encode(result).decode('utf-8')
+    return Response({"result": pdf_content})
 
 
-def author_doctor(doctor_confirm_obj):
-    author = {}
-    author["id"] = doctor_confirm_obj.pk
-    author["positionCode"] = doctor_confirm_obj.position.n3_id
-    author["positionName"] = doctor_confirm_obj.position.title
-    author["snils"] = doctor_confirm_obj.snils if doctor_confirm_obj.snils else ""
-    author["name"] = {}
-    author["name"]["family"] = doctor_confirm_obj.family
-    author["name"]["name"] = doctor_confirm_obj.name
-    author["name"]["patronymic"] = doctor_confirm_obj.patronymic
-    return author
+@api_view(['POST', 'PUT'])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
+@can_use_schedule_only
+def add_file_hospital_plan(request):
+    file = request.data.get('file-add')
+    data = data_parse(request.data.get('document'), {'pk': int})
+    pk: int = data[0]
+
+    with transaction.atomic():
+        plan: PlanHospitalization = PlanHospitalization.objects.select_for_update().get(pk=pk)
+
+        if file.size > LK_FILE_SIZE_BYTES:
+            return JsonResponse({
+                "ok": False,
+                "message": "Файл слишком большой",
+            })
+
+        if PlanHospitalizationFiles.get_count_files_by_plan(plan) >= LK_FILE_COUNT:
+            return JsonResponse({
+                "ok": False,
+                "message": "Вы добавили слишком много файлов в одну заявку",
+            })
+
+        if not check_type_file(file_in_memory=file):
+            return JsonResponse({
+                "ok": False,
+                "message": "Поддерживаются PDF и JPEG файлы",
+            })
+
+        plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan=plan)
+
+        plan_files.uploaded_file = file
+        plan_files.save()
+
+    return Response({
+        "ok": True,
+        "message": "Файл добавлен",
+    })
 
 
-def legal_auth_get(legal_auth_doc):
-    legal_auth = {"id": "", "snils": "", "positionCode": "", "positionName": "", "name": {"family": "", "name": "", "patronymic": ""}}
-    if legal_auth_doc:
-        id_doc = legal_auth_doc["id"]
-        legal_doctor = DoctorProfile.objects.get(pk=id_doc)
-        legal_auth["id"] = legal_doctor.pk
-        legal_auth["snils"] = legal_doctor.snils
-        legal_auth["positionCode"] = legal_doctor.position.n3_id
-        legal_auth["positionName"] = legal_doctor.position.title
-        legal_auth["name"]["family"] = legal_doctor.family
-        legal_auth["name"]["name"] = legal_doctor.name
-        legal_auth["name"]["patronymic"] = legal_doctor.patronymic
-    return legal_auth
-
-
-def start_pathological_process(date_death, time_data, type_period):
-    dt = datetime.datetime.strptime(date_death, '%Y-%m-%d %H:%M')
-    period = {"часов": relativedelta(hours=-time_data), "минут": relativedelta(minutes=-time_data), "дней": relativedelta(days=-time_data), "суток": relativedelta(days=-time_data),
-              "месяцев": relativedelta(months=-time_data), "лет": relativedelta(years=-time_data)}
-    delta = dt + period[type_period]
-    delta.strftime("%Y%m%d%H:%M:%S")
-    return f"{delta.strftime('%Y%m%d%H%M')}+0800"
+@api_view(['POST'])
+@can_use_schedule_only
+def get_limit_download_files(request):
+    return Response({"lk_file_count": LK_FILE_COUNT, "lk_file_size_bytes": LK_FILE_SIZE_BYTES})
