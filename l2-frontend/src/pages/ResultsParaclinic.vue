@@ -55,6 +55,7 @@
               <hr />
             </template>
             <div class="row">
+
               <div class="col-xs-4"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
               <div class="col-xs-4 text-center">
                 <a
@@ -369,6 +370,7 @@
               </dropdown>
             </div>
             <div class="research-right">
+              <file-add v-if="row.research.enabled_add_files" :iss_pk="row.pk" :count_files="row.countFiles"/>
               <template v-if="data.direction.all_confirmed && !data.has_monitoring && !data.has_expertise">
                 <a
                   :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
@@ -1112,6 +1114,7 @@ export default {
     RmisLink,
     ScreeningButton,
     Treeselect,
+    FileAdd: () => import('@/ui-cards/FileAdd.vue'),
   },
   data() {
     return {
