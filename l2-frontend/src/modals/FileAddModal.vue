@@ -12,8 +12,8 @@
     class="an"
   >
     <span slot="header">Управление файлами</span>
-    <div slot="body" class="an-body">
-      <div>
+    <div slot="body">
+      <div class="rows-file">
         <input type="file" ref="file" style="display: none" @change="fileChange($event.target.files)"/>
         <div v-if="!file">
           <h6>
@@ -40,10 +40,9 @@
           </a>
         </div>
         <div v-if="rows.length === 0">Нет записей</div>
-        <div v-for="row in rows" :key="row.pk">
-          <div class="rows-file">
-            <a :href="row.file" target="_blank"> {{ row.fileName }}</a>
-          </div>
+        <div v-for="(row, index) in rows" :key="row.pk">
+          <br/>
+           <a :href="row.file" target="_blank" class="rows-file" >{{ index + 1 }} - {{ row.fileName }}</a>
         </div>
      </div>
     </div>
@@ -164,8 +163,8 @@ export default {
 
 <style scoped lang="scss">
 .rows-file {
-  padding-top: 5px;
-  padding-left: 10px;
+  float: left;
+  padding-left: 30px;
 }
 
 </style>
