@@ -1,45 +1,70 @@
 <template>
-  <div ref="root" class="construct-root">
-    <div class="construct-sidebar" v-show="opened_id === -2" v-if="departments_of_type.length > 0">
+  <div
+    ref="root"
+    class="construct-root"
+  >
+    <div
+      v-show="opened_id === -2"
+      v-if="departments_of_type.length > 0"
+      class="construct-sidebar"
+    >
       <div class="sidebar-select">
-        <select-picker-b style="height: 34px;" :options="departments_of_type" v-model="department" />
+        <SelectPickerB
+          v-model="department"
+          style="height: 34px"
+          :options="departments_of_type"
+        />
       </div>
       <input
-        class="form-control"
         v-model="title_filter"
-        style="padding-top: 7px;padding-bottom: 7px"
+        class="form-control"
+        style="padding-top: 7px; padding-bottom: 7px"
         placeholder="Фильтр по названию"
-      />
-      <div class="sidebar-content" :class="{ fcenter: researches_list_filtered.length === 0 }">
-        <div v-if="researches_list_filtered.length === 0">Не найдено</div>
+      >
+      <div
+        class="sidebar-content"
+        :class="{ fcenter: researches_list_filtered.length === 0 }"
+      >
+        <div v-if="researches_list_filtered.length === 0">
+          Не найдено
+        </div>
         <div
+          v-for="row in researches_list_filtered"
+          :key="row.pk"
           class="research"
           :class="{ rhide: row.hide }"
-          :key="row.pk"
-          v-for="row in researches_list_filtered"
           @click="open_editor(row.pk)"
         >
           {{ row.title }}
         </div>
       </div>
-      <button class="btn btn-blue-nb sidebar-footer" @click="open_editor(-1)">
-        <i class="glyphicon glyphicon-plus"></i>
+      <button
+        class="btn btn-blue-nb sidebar-footer"
+        @click="open_editor(-1)"
+      >
+        <i class="glyphicon glyphicon-plus" />
         Добавить
       </button>
     </div>
-    <div class="construct-content" v-if="parseInt(department, 10) <= -500 && parseInt(department, 10) > -600">
-      <stationar-form-editor
-        style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
+    <div
+      v-if="parseInt(department, 10) <= -500 && parseInt(department, 10) > -600"
+      class="construct-content"
+    >
+      <StationarFormEditor
         v-if="opened_id > -2"
+        style="position: absolute; top: 0; right: 0; bottom: 0; left: 0"
         :pk="opened_id"
         :department="department_int"
         :direction_forms="direction_forms"
       />
     </div>
-    <div class="construct-content" v-else-if="department !== '-6'">
-      <paraclinic-research-editor
-        style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
+    <div
+      v-else-if="department !== '-6'"
+      class="construct-content"
+    >
+      <ParaclinicResearchEditor
         v-if="opened_id > -2"
+        style="position: absolute; top: 0; right: 0; bottom: 0; left: 0"
         :pk="opened_id"
         :department="department_int"
         :direction_forms="direction_forms"
@@ -49,13 +74,16 @@
         :period_types="period_types"
       />
     </div>
-    <div class="construct-content" v-else>
-      <microbiology-research-editor
+    <div
+      v-else
+      class="construct-content"
+    >
+      <MicrobiologyResearchEditor
+        v-if="opened_id > -2"
         :department="department_int"
         :pk="opened_id"
         :direction_forms="direction_forms"
-        style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
-        v-if="opened_id > -2"
+        style="position: absolute; top: 0; right: 0; bottom: 0; left: 0"
       />
     </div>
   </div>
@@ -73,13 +101,13 @@ import MicrobiologyResearchEditor from './MicrobiologyResearchEditor.vue';
 import StationarFormEditor from './StationarFormEditor.vue';
 
 export default {
+  name: 'ConstructParaclinic',
   components: {
     StationarFormEditor,
     SelectPickerB,
     ParaclinicResearchEditor,
     MicrobiologyResearchEditor,
   },
-  name: 'construct-paraclinic',
   data() {
     return {
       department: '-1',
@@ -95,12 +123,72 @@ export default {
       period_types: [],
     };
   },
+  computed: {
+    department_int() {
+      return parseInt(this.department, 10);
+    },
+    researches_list_filtered() {
+      if (!this.researches_list) {
+        return [];
+      }
+      return this.researches_list.filter(
+        (row) => row.title.trim().toLowerCase().indexOf(this.title_filter.trim().toLowerCase()) >= 0,
+      );
+    },
+    ...mapGetters({
+      departments: 'allDepartments',
+      modules: 'modules',
+    }),
+    can_edit_stationar() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Редактирование стационара') {
+          return true;
+        }
+      }
+      return false;
+    },
+  },
+  watch: {
+    department: {
+      handler() {
+        if (['-1', '-9998'].includes(this.department)) return;
+        this.load_researches();
+      },
+      immediate: true,
+    },
+    modules: {
+      handler() {
+        this.update_deps();
+      },
+      deep: true,
+      immediate: true,
+    },
+    departments: {
+      handler() {
+        this.update_deps();
+      },
+      deep: true,
+      immediate: true,
+    },
+  },
+  created() {
+    this.$parent.$on('research-editor:cancel', this.cancel_edit);
+  },
+  mounted() {
+    this.$store.watch(
+      (state) => state.user.data,
+      () => {
+        this.update_deps();
+      },
+    );
+    this.update_deps();
+  },
   methods: {
     load_researches() {
       this.$store.dispatch(actions.INC_LOADING);
       researchesPoint
         .getResearchesByDepartment(this, 'department')
-        .then(data => {
+        .then((data) => {
           this.researches_list = data.researches;
           this.direction_forms = data.direction_forms;
           this.result_forms = data.result_forms;
@@ -206,69 +294,6 @@ export default {
         }
       }
       this.department = deps[0].value.toString();
-    },
-  },
-  created() {
-    this.$parent.$on('research-editor:cancel', this.cancel_edit);
-  },
-  mounted() {
-    this.$store.watch(
-      state => state.user.data,
-      () => {
-        this.update_deps();
-      },
-    );
-    this.update_deps();
-  },
-  watch: {
-    department: {
-      handler() {
-        if (['-1', '-9998'].includes(this.department)) return;
-        this.load_researches();
-      },
-      immediate: true,
-    },
-    modules: {
-      handler() {
-        this.update_deps();
-      },
-      deep: true,
-      immediate: true,
-    },
-    departments: {
-      handler() {
-        this.update_deps();
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-  computed: {
-    department_int() {
-      return parseInt(this.department, 10);
-    },
-    researches_list_filtered() {
-      if (!this.researches_list) {
-        return [];
-      }
-      return this.researches_list.filter(
-        row => row.title
-          .trim()
-          .toLowerCase()
-          .indexOf(this.title_filter.trim().toLowerCase()) >= 0,
-      );
-    },
-    ...mapGetters({
-      departments: 'allDepartments',
-      modules: 'modules',
-    }),
-    can_edit_stationar() {
-      for (const g of this.$store.getters.user_data.groups || []) {
-        if (g === 'Редактирование стационара') {
-          return true;
-        }
-      }
-      return false;
     },
   },
 };

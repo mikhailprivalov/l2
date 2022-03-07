@@ -1,28 +1,41 @@
 <template>
   <div v-frag>
     <textarea
+      v-if="lines > 1"
+      ref="t"
+      v-model="content"
       :readonly="confirmed"
       :rows="lines"
       class="form-control"
-      v-if="lines > 1"
-      v-model="content"
       @focus="changeFocused(true)"
       @blur="changeFocused(false)"
-      ref="t"
-    ></textarea>
+    />
     <input
+      v-else
+      ref="t"
+      v-model="content"
       :readonly="confirmed"
       class="form-control"
-      v-else
-      v-model="content"
       @focus="changeFocused(true)"
       @blur="changeFocused(false)"
-      ref="t"
-    />
-    <div v-if="focused && suggests.length > 0 && !confirmed" class="text-suggests">
-      <div class="suggestion-template" v-for="s in suggests" @click.capture="selectSuggestion(s)" v-html="s" :key="s" />
+    >
+    <div
+      v-if="focused && suggests.length > 0 && !confirmed"
+      class="text-suggests"
+    >
+      <div
+        v-for="s in suggests"
+        :key="s"
+        class="suggestion-template"
+        @click.capture="selectSuggestion(s)"
+        v-html="/*eslint-disable-line vue/no-v-html*/ s"
+      />
       <div class="suggests-header">
-        Предложения по вашим шаблонам <span>(<a href="#" class="a-under" @click.prevent="templatesOpen">настроить</a>)</span>
+        Предложения по вашим шаблонам <span>(<a
+          href="#"
+          class="a-under"
+          @click.prevent="templatesOpen"
+        >настроить</a>)</span>
       </div>
     </div>
   </div>
@@ -33,6 +46,9 @@ import { debounce } from 'lodash/function';
 
 export default {
   name: 'TextFieldWithTemplates',
+  model: {
+    event: 'modified',
+  },
   props: {
     value: String,
     fieldPk: Number,
@@ -56,9 +72,6 @@ export default {
       this.$emit('modified', this.content);
       this.loadSuggestsDebounced();
     },
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     templatesOpen() {

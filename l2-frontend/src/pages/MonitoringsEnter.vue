@@ -1,7 +1,10 @@
 <template>
-  <div class="root" :class="{ hasGrid }">
+  <div
+    class="root"
+    :class="{ hasGrid }"
+  >
     <div class="a">
-      <researches-picker
+      <ResearchesPicker
         v-model="research"
         :hidetemplates="true"
         :oneselect="true"
@@ -11,9 +14,9 @@
         :just_search="true"
       />
     </div>
-    <div class="b gutter gutter-col gutter-column-1"></div>
+    <div class="b gutter gutter-col gutter-column-1" />
     <div class="c">
-      <selected-researches
+      <SelectedResearches
         :researches="research ? [research] : []"
         :card_pk="card_pk"
         :selected_card="selected_card"
@@ -25,35 +28,45 @@
         :base="base"
       />
     </div>
-    <div class="d gutter gutter-row gutter-row-1"></div>
+    <div class="d gutter gutter-row gutter-row-1" />
     <div class="e">
       <MonitoringHistoryViewer />
     </div>
 
-    <modal
+    <Modal
       v-if="toEnter"
       ref="modalResults"
-      @close="hideModalResults"
       white-bg="true"
       width="100%"
-      marginLeftRight="34px"
+      margin-left-right="34px"
       margin-top="30px"
       show-footer="true"
+      @close="hideModalResults"
     >
       <span slot="header">Заполнение мониторинга</span>
-      <div slot="body" class="monitoring-body">
-        <iframe :src="toEnterUrl" name="toEnter"></iframe>
+      <div
+        slot="body"
+        class="monitoring-body"
+      >
+        <iframe
+          :src="toEnterUrl"
+          name="toEnter"
+        />
       </div>
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="hideModalResults" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hideModalResults"
+            >
               Закрыть
             </button>
           </div>
         </div>
       </div>
-    </modal>
+    </Modal>
   </div>
 </template>
 
@@ -85,6 +98,11 @@ export default {
       toEnter: null,
     };
   },
+  computed: {
+    toEnterUrl() {
+      return `/ui/results/descriptive?embedded=1#{"pk":${this.toEnter}}`;
+    },
+  },
   mounted() {
     if (this.hasGrid) {
       Split({
@@ -115,11 +133,6 @@ export default {
       }
       this.$root.$emit('embedded-form:hide', this.toEnter);
       this.toEnter = null;
-    },
-  },
-  computed: {
-    toEnterUrl() {
-      return `/ui/results/descriptive?embedded=1#{"pk":${this.toEnter}}`;
     },
   },
 };

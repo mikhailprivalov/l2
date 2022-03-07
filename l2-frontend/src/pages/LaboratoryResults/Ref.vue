@@ -1,9 +1,18 @@
 <template>
-  <td class="ref" :class="{withoutBorderRight: !withBorderRight}">
-    <table v-if="parsedData" :class="bordered && 'table table-bordered table-condensed'">
-      <tr v-for="(v, k) in parsedData" :key="k">
+  <td
+    class="ref"
+    :class="{ withoutBorderRight: !withBorderRight }"
+  >
+    <table
+      v-if="parsedData"
+      :class="bordered && 'table table-bordered table-condensed'"
+    >
+      <tr
+        v-for="(v, k) in parsedData"
+        :key="k"
+      >
         <td>{{ k }}</td>
-        <td v-html="v"></td>
+        <td v-html="/*eslint-disable-line vue/no-v-html*/ v" />
       </tr>
     </table>
   </td>
@@ -51,7 +60,7 @@ export default {
 
   &:before {
     background-color: #ddd;
-    content: "";
+    content: '';
     display: block;
     width: 1px;
     height: 100%;
@@ -66,7 +75,8 @@ export default {
     background: transparent !important;
     table-layout: fixed;
 
-    td, th {
+    td,
+    th {
       border: 1px solid #ddd;
       background: transparent;
     }

@@ -6,30 +6,58 @@
       'patient-created': data.created_by_patient && data.status !== 3,
     }"
   >
-    <td v-tippy="vtp" :title="data.tooltip_data">
+    <td
+      v-tippy="vtp"
+      :title="data.tooltip_data"
+    >
       {{ data.date }}
-      <a href="#" class="a-under" @click.prevent="open_messages_data(data.pk_plan, data.patient_card)">
-        Сообщения: {{ data.messages.count }}</a
+      <a
+        href="#"
+        class="a-under"
+        @click.prevent="open_messages_data(data.pk_plan, data.patient_card)"
       >
+        Сообщения: {{ data.messages.count }}</a>
     </td>
-    <td v-tippy="vtp" :title="data.tooltip_data">
-      {{ data.fio_patient }}<br />
+    <td
+      v-tippy="vtp"
+      :title="data.tooltip_data"
+    >
+      {{ data.fio_patient }}<br>
       {{ data.phone }}
-      <div v-for="row of data.uploaded_file" :key="row.file">
+      <div
+        v-for="row of data.uploaded_file"
+        :key="row.file"
+      >
         <i class="fas fa-file-download" />
-        <a :href="row.file" target="_blank" class="a-under">
+        <a
+          :href="row.file"
+          target="_blank"
+          class="a-under"
+        >
           {{ row.fileName }}
         </a>
       </div>
     </td>
-    <td v-tippy="vtp" :title="data.tooltip_data">
+    <td
+      v-tippy="vtp"
+      :title="data.tooltip_data"
+    >
       <div>{{ data.research_title }}</div>
-      <div v-if="data.depart_title">— {{ data.depart_title }}</div>
+      <div v-if="data.depart_title">
+        — {{ data.depart_title }}
+      </div>
     </td>
-    <td v-tippy="vtp" :title="data.tooltip_data">
+    <td
+      v-tippy="vtp"
+      :title="data.tooltip_data"
+    >
       {{ data.diagnos }}
     </td>
-    <td v-tippy="vtp" :title="data.tooltip_data" class="td-comment">
+    <td
+      v-tippy="vtp"
+      :title="data.tooltip_data"
+      class="td-comment"
+    >
       {{ data.comment }}
     </td>
     <td>
@@ -38,7 +66,9 @@
         <div class="spacer" />
         <HospPlanCancelButton :data="data" />
       </template>
-      <template v-else-if="data.slot"> {{ data.slot }} </template>
+      <template v-else-if="data.slot">
+        {{ data.slot }}
+      </template>
     </td>
   </tr>
 </template>

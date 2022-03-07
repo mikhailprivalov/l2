@@ -8,19 +8,24 @@
     :clearable="true"
     :disabled="disabled"
     :value="content"
-    :zIndex="5001"
+    :z-index="5001"
     placeholder="Профиль врача"
     :load-options="loadOptions"
-    @select="selectValue"
-    loadingText="Загрузка"
-    noResultsText="Не найдено"
-    searchPromptText="Начните писать для поиска"
+    loading-text="Загрузка"
+    no-results-text="Не найдено"
+    search-prompt-text="Начните писать для поиска"
     :cache-options="false"
-    openDirection="top"
-    :openOnFocus="true"
+    open-direction="top"
+    :open-on-focus="true"
+    @select="selectValue"
     @input="input"
   >
-    <div slot="value-label" slot-scope="{ node }">{{ node.raw.label || node.raw.id }}</div>
+    <div
+      slot="value-label"
+      slot-scope="{ node }"
+    >
+      {{ node.raw.label || node.raw.id }}
+    </div>
   </Treeselect>
 </template>
 
@@ -29,6 +34,12 @@ import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 export default {
+  components: {
+    Treeselect,
+  },
+  model: {
+    event: 'input',
+  },
   props: {
     value: String,
     json: {
@@ -43,9 +54,6 @@ export default {
       type: Boolean,
       default: false,
     },
-  },
-  components: {
-    Treeselect,
   },
   data() {
     return {
@@ -75,9 +83,6 @@ export default {
         this.emit();
       },
     },
-  },
-  model: {
-    event: 'input',
   },
   methods: {
     emit() {

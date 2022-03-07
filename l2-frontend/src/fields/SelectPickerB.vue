@@ -1,16 +1,28 @@
 <template>
   <div :class="{'no-border-left': noBorderLeft === 'true'}">
-    <select v-model="lv" ref="sel" class="form-control"
-            :disabled="disabled"
-            data-width="100%" data-container="body" data-none-selected-text="Ничего не выбрано">
-      <option :value="option.value" :key="option.value" v-for="option in options">{{ option.label }}</option>
+    <select
+      ref="sel"
+      v-model="lv"
+      class="form-control"
+      :disabled="disabled"
+      data-width="100%"
+      data-container="body"
+      data-none-selected-text="Ничего не выбрано"
+    >
+      <option
+        v-for="option in options"
+        :key="option.value"
+        :value="option.value"
+      >
+        {{ option.label }}
+      </option>
     </select>
   </div>
 </template>
 
 <script lang="ts">
 export default {
-  name: 'select-picker-b',
+  name: 'SelectPickerB',
   props: {
     options: {
       type: Array,
@@ -39,9 +51,10 @@ export default {
       ready: false,
     };
   },
-  mounted() {
-    this.check_init();
-    this.ready = true;
+  computed: {
+    jel() {
+      return window.$(this.$refs.sel);
+    },
   },
   watch: {
     options() {
@@ -63,6 +76,14 @@ export default {
     lv() {
       this.update_val(this.lv);
     },
+  },
+  mounted() {
+    this.check_init();
+    this.ready = true;
+  },
+  created() {
+    this.update_val(this.value);
+    this.$root.$on('resync', this.resync);
   },
   methods: {
     check_init() {
@@ -116,15 +137,6 @@ export default {
         this.update_val(lval);
       });
       this.resync();
-    },
-  },
-  created() {
-    this.update_val(this.value);
-    this.$root.$on('resync', this.resync);
-  },
-  computed: {
-    jel() {
-      return window.$(this.$refs.sel);
     },
   },
 };

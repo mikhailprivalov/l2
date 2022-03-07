@@ -2,47 +2,93 @@
   <div class="root">
     <div class="schedule-control">
       <div class="row">
-        <div class="col-xs-4" style="padding-right: 0">
+        <div
+          class="col-xs-4"
+          style="padding-right: 0"
+        >
           <Treeselect
+            :key="`resource-treeselect-${loaded}`"
+            v-model="resourceSelected"
             :multiple="false"
             class="treeselect-wide treeselect-nbr treeselect-34px"
             :async="true"
             :append-to-body="true"
             :disable-branch-nodes="true"
             :clearable="true"
-            v-model="resourceSelected"
-            :zIndex="5001"
+            :z-index="5001"
             placeholder="Ресурс"
             :load-options="loadOptions"
             :default-options="defaultResourceOptions"
-            loadingText="Загрузка"
-            noResultsText="Не найдено"
-            searchPromptText="Начните писать для поиска"
+            loading-text="Загрузка"
+            no-results-text="Не найдено"
+            search-prompt-text="Начните писать для поиска"
             :cache-options="true"
-            openDirection="bottom"
-            :openOnFocus="true"
+            open-direction="bottom"
+            :open-on-focus="true"
             :default-expand-level="1"
-            :key="`resource-treeselect-${loaded}`"
           />
         </div>
-        <div class="col-xs-2" style="padding-left: 0; padding-right: 0">
-          <select v-model="mode" class="form-control">
-            <option value="natural">часовой вид</option>
-            <option value="list">списочный вид</option>
+        <div
+          class="col-xs-2"
+          style="padding-left: 0; padding-right: 0"
+        >
+          <select
+            v-model="mode"
+            class="form-control"
+          >
+            <option value="natural">
+              часовой вид
+            </option>
+            <option value="list">
+              списочный вид
+            </option>
           </select>
         </div>
-        <div class="col-xs-1" style="padding-left: 0">
-          <select v-model.number="displayDays" class="form-control">
-            <option :value="7">7 дней</option>
-            <option :value="14">14 дней</option>
-            <option :value="21">21 день</option>
+        <div
+          class="col-xs-1"
+          style="padding-left: 0"
+        >
+          <select
+            v-model.number="displayDays"
+            class="form-control"
+          >
+            <option :value="7">
+              7 дней
+            </option>
+            <option :value="14">
+              14 дней
+            </option>
+            <option :value="21">
+              21 день
+            </option>
           </select>
         </div>
-        <div class="col-xs-5 text-right no-wrap" v-if="hasResource">
-          <label v-if="canChangeSchedule"> <input type="checkbox" v-model="editingMode" /> редактирование </label>
-          <button class="btn btn-blue-nb nbr" @click="refresh"><i class="fa fa-refresh"></i></button>
-          <button class="btn btn-blue-nb nbr" @click="previousDate"><i class="fa fa-arrow-left"></i> Назад</button>
-          <button class="btn btn-blue-nb nbr" @click="nextDate">Вперёд <i class="fa fa-arrow-right"></i></button>
+        <div
+          v-if="hasResource"
+          class="col-xs-5 text-right no-wrap"
+        >
+          <label v-if="canChangeSchedule"> <input
+            v-model="editingMode"
+            type="checkbox"
+          > редактирование </label>
+          <button
+            class="btn btn-blue-nb nbr"
+            @click="refresh"
+          >
+            <i class="fa fa-refresh" />
+          </button>
+          <button
+            class="btn btn-blue-nb nbr"
+            @click="previousDate"
+          >
+            <i class="fa fa-arrow-left" /> Назад
+          </button>
+          <button
+            class="btn btn-blue-nb nbr"
+            @click="nextDate"
+          >
+            Вперёд <i class="fa fa-arrow-right" />
+          </button>
         </div>
       </div>
     </div>
@@ -58,7 +104,12 @@
           :services="services"
         />
       </template>
-      <div class="days-message" v-else>не выбран ресурс</div>
+      <div
+        v-else
+        class="days-message"
+      >
+        не выбран ресурс
+      </div>
     </div>
   </div>
 </template>

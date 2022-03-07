@@ -1,40 +1,56 @@
 <template>
-  <table class="table" style="table-layout: fixed">
+  <table
+    class="table"
+    style="table-layout: fixed"
+  >
     <colgroup>
-      <col width='201'/>
-      <col/>
-      <col width='310'/>
-      <col width='310'/>
-      <col width='310'/>
+      <col width="201">
+      <col>
+      <col width="310">
+      <col width="310">
+      <col width="310">
     </colgroup>
     <tbody>
-    <tr>
-      <td>
-        <date-range v-model="filters.date"/>
-      </td>
-      <td></td>
-      <td>
-        <treeselect :multiple="false" :disable-branch-nodes="true" :options="hirurgs"
-                    placeholder="Хирург не выбран" v-model="filters.doc_operate_pk"
-                    :append-to-body="true"
-        />
-      </td>
-      <td>
-        <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
-                    placeholder="Отделение не выбрано" v-model="filters.department_pk"
-                    :append-to-body="true"
-        />
-      </td>
-      <td>
-        <treeselect :multiple="false" :disable-branch-nodes="true" :options="anestesiologs"
-                    placeholder="Анестезиолог не выбран" v-model="filters.doc_anesthetist_pk"
-                    :append-to-body="true"
-        />
-      </td>
-    </tr>
+      <tr>
+        <td>
+          <DateRange v-model="filters.date" />
+        </td>
+        <td />
+        <td>
+          <Treeselect
+            v-model="filters.doc_operate_pk"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="hirurgs"
+            placeholder="Хирург не выбран"
+            :append-to-body="true"
+          />
+        </td>
+        <td>
+          <Treeselect
+            v-model="filters.department_pk"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="departments"
+            placeholder="Отделение не выбрано"
+            :append-to-body="true"
+          />
+        </td>
+        <td>
+          <Treeselect
+            v-model="filters.doc_anesthetist_pk"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="anestesiologs"
+            placeholder="Анестезиолог не выбран"
+            :append-to-body="true"
+          />
+        </td>
+      </tr>
     </tbody>
   </table>
 </template>
+
 <script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';

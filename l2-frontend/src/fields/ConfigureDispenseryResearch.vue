@@ -1,12 +1,14 @@
 <template>
   <div style="margin-top: 10px">
-    <h5 style="text-align: center">Глобальная настройка для всей системы</h5>
+    <h5 style="text-align: center">
+      Глобальная настройка для всей системы
+    </h5>
     <table class="table table-bordered">
       <colgroup>
-        <col width="110" />
-        <col />
-        <col width="70" />
-        <col width="30" />
+        <col width="110">
+        <col>
+        <col width="70">
+        <col width="30">
       </colgroup>
       <thead>
         <tr>
@@ -14,46 +16,73 @@
           <th>Наименование</th>
           <th>Кол-во в год</th>
           <th>Посещение</th>
-          <th></th>
+          <th />
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(val, index) in tb_data" :key="index">
+        <tr
+          v-for="(val, index) in tb_data"
+          :key="index"
+        >
           <td class="cl-td">
-            <select class="form-control" style="border: none" v-model="val.type">
-              <option :value="t" v-for="t in types" :key="t">{{ t }}</option>
+            <select
+              v-model="val.type"
+              class="form-control"
+              style="border: none"
+            >
+              <option
+                v-for="t in types"
+                :key="t"
+                :value="t"
+              >
+                {{ t }}
+              </option>
             </select>
           </td>
           <td class="cl-td">
-            <treeselect
+            <Treeselect
               v-if="val.type === 'Услуга'"
+              v-model="val.current_researches"
               class="treeselect-noborder"
               :multiple="false"
               :options="researches"
               placeholder="Не выбран"
-              v-model="val.current_researches"
             />
-            <treeselect
+            <Treeselect
               v-if="val.type === 'Врач'"
+              v-model="val.current_researches"
               class="treeselect-noborder"
               :multiple="false"
               :options="specialities"
               placeholder="Не выбран"
-              v-model="val.current_researches"
             />
           </td>
           <td class="cl-td">
             <div class="input-group">
-              <input type="number" class="form-control" style="border: none" v-model="val.count" placeholder="Кол-во в год" />
+              <input
+                v-model="val.count"
+                type="number"
+                class="form-control"
+                style="border: none"
+                placeholder="Кол-во в год"
+              >
             </div>
           </td>
           <td class="text-center cl-td">
             <label>
-              <input type="checkbox" v-model="val.is_visit" />
+              <input
+                v-model="val.is_visit"
+                type="checkbox"
+              >
             </label>
           </td>
           <td class="text-center cl-td">
-            <button class="btn btn-blue-nb" @click="delete_row(index)" v-tippy="{ placement: 'bottom' }" title="Удалить строку">
+            <button
+              v-tippy="{ placement: 'bottom' }"
+              class="btn btn-blue-nb"
+              title="Удалить строку"
+              @click="delete_row(index)"
+            >
               <i class="fa fa-times" />
             </button>
           </td>
@@ -61,14 +90,20 @@
       </tbody>
     </table>
     <div class="row">
-      <div class="col-xs-8"></div>
+      <div class="col-xs-8" />
       <div class="col-xs-2">
-        <button class="btn btn-blue-nb add-row" @click="save_dispensary_data(tb_data)">
+        <button
+          class="btn btn-blue-nb add-row"
+          @click="save_dispensary_data(tb_data)"
+        >
           Сохранить
         </button>
       </div>
       <div class="col-xs-2">
-        <button class="btn btn-blue-nb add-row" @click="add_new_row">
+        <button
+          class="btn btn-blue-nb add-row"
+          @click="add_new_row"
+        >
           Добавить
         </button>
       </div>
@@ -87,6 +122,9 @@ const makeDefaultRow = (type = null) => ({ type: type || types[0], is_visit: fal
 export default {
   name: 'ConfigureDispenseryResearch',
   components: { Treeselect },
+  model: {
+    event: 'modified',
+  },
   props: {
     diagnos_code: {
       default: '',
@@ -100,6 +138,14 @@ export default {
       researches: [],
       specialities: [],
     };
+  },
+  watch: {
+    tb_data: {
+      handler() {
+        this.changeValue(this.tb_data);
+      },
+      immediate: true,
+    },
   },
   mounted() {
     this.$api('researches/research-dispensary').then(rows => {
@@ -136,17 +182,6 @@ export default {
     changeValue(newVal) {
       this.$emit('modified', newVal);
     },
-  },
-  watch: {
-    tb_data: {
-      handler() {
-        this.changeValue(this.tb_data);
-      },
-      immediate: true,
-    },
-  },
-  model: {
-    event: 'modified',
   },
 };
 </script>

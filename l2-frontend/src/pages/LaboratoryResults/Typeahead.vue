@@ -1,14 +1,15 @@
 <template>
-  <input ref="input"
-         v-bind="$attrs"
-         :id="id"
-         :value="value"
-         @input="updateValue($event.target.value)"
-         @change="updateValue($event.target.value)"
-         @focus="updateValue($event.target.value)"
-         @blur="formatValue"
-         @keyup.enter="keyupEnter"
-         :placeholder="placeholder"
+  <input
+    :id="id"
+    ref="input"
+    v-bind="$attrs"
+    :value="value"
+    :placeholder="placeholder"
+    @input="updateValue($event.target.value)"
+    @change="updateValue($event.target.value)"
+    @focus="updateValue($event.target.value)"
+    @blur="formatValue"
+    @keyup.enter="keyupEnter"
   >
 </template>
 
@@ -17,13 +18,6 @@ import Vue from 'vue';
 import Bloodhound from 'typeahead.js';
 
 export default {
-  data() {
-    return {
-      id: this.$attrs.id || `typeahead-suggestion${Math.floor(Math.random() * 100000)}`,
-      defaultSuggestions: [],
-      query: '',
-    };
-  },
   props: {
     value: {
       type: String,
@@ -71,6 +65,13 @@ export default {
       type: Function,
       required: false,
     },
+  },
+  data() {
+    return {
+      id: this.$attrs.id || `typeahead-suggestion${Math.floor(Math.random() * 100000)}`,
+      defaultSuggestions: [],
+      query: '',
+    };
   },
   watch: {
     local(newVal) {

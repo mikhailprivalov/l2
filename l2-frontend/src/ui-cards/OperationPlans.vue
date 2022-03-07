@@ -1,70 +1,95 @@
 <template>
   <div v-frag>
-    <a href="#" class="dropdown-toggle" @click.prevent
-       v-tippy="{
-                html: '#operations-view',
-                reactive: true,
-                interactive: true,
-                arrow: true,
-                animation: 'fade',
-                duration: 0,
-                theme: 'light',
-                placement: 'bottom',
-                trigger: 'click mouseenter',
-                zIndex: 4999,
-                popperOptions: {
-                  modifiers: {
-                    preventOverflow: {
-                      boundariesElement: 'window'
-                    },
-                    hide: {
-                      enabled: false
-                    }
-                  }
-                },
-             }">
-      План операций пациента <span class="badge badge-light">{{data.length}}</span>
+    <a
+      v-tippy="{
+        html: '#operations-view',
+        reactive: true,
+        interactive: true,
+        arrow: true,
+        animation: 'fade',
+        duration: 0,
+        theme: 'light',
+        placement: 'bottom',
+        trigger: 'click mouseenter',
+        zIndex: 4999,
+        popperOptions: {
+          modifiers: {
+            preventOverflow: {
+              boundariesElement: 'window'
+            },
+            hide: {
+              enabled: false
+            }
+          }
+        },
+      }"
+      href="#"
+      class="dropdown-toggle"
+      @click.prevent
+    >
+      План операций пациента <span class="badge badge-light">{{ data.length }}</span>
     </a>
 
-    <div id="operations-view" class="tp">
+    <div
+      id="operations-view"
+      class="tp"
+    >
       <table class="table table-condensed table-bordered">
         <thead>
-        <tr>
-          <th>История</th>
-          <th>Дата</th>
-          <th>Врач-хирург</th>
-          <th>Операция</th>
-          <th></th>
-        </tr>
+          <tr>
+            <th>История</th>
+            <th>Дата</th>
+            <th>Врач-хирург</th>
+            <th>Операция</th>
+            <th />
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="row in data" :class="{'cancel-row': row.cancel}" :key="row.pk_plan">
-          <td>
-            <LinkPlanOperations :direction="row.direction"/>
-          </td>
-          <td>
-            {{row.date}}
-          </td>
-          <td>
-            {{row.hirurg}}
-          </td>
-          <td>
-            {{row.type_operation}}
-          </td>
-          <td>
-            <a href="#" @click.prevent="edit_data(row)" v-if="can_edit_operations"><i class="fa fa-pencil"></i></a>
-          </td>
-        </tr>
+          <tr
+            v-for="row in data"
+            :key="row.pk_plan"
+            :class="{'cancel-row': row.cancel}"
+          >
+            <td>
+              <LinkPlanOperations :direction="row.direction" />
+            </td>
+            <td>
+              {{ row.date }}
+            </td>
+            <td>
+              {{ row.hirurg }}
+            </td>
+            <td>
+              {{ row.type_operation }}
+            </td>
+            <td>
+              <a
+                v-if="can_edit_operations"
+                href="#"
+                @click.prevent="edit_data(row)"
+              ><i class="fa fa-pencil" /></a>
+            </td>
+          </tr>
         </tbody>
       </table>
-      <br/>
-      <a href="#" style="float: right" @click.prevent="add_data" v-if="can_edit_operations">Добавить</a>
+      <br>
+      <a
+        v-if="can_edit_operations"
+        href="#"
+        style="float: right"
+        @click.prevent="add_data"
+      >Добавить</a>
     </div>
-    <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations" :card_pk="card_pk"
-                         :patient_fio="patient_fio"
-                         :direction="current_direction" :pk_plan="pk_plan" :pk_hirurg="pk_hirurg" :date="date"
-                         :operation="operation"
-                         :cancel_operation="cancel"
+    <PlanOperationEdit
+      v-if="edit_plan_operations_old || edit_plan_operations"
+      :card_pk="card_pk"
+      :patient_fio="patient_fio"
+      :direction="current_direction"
+      :pk_plan="pk_plan"
+      :pk_hirurg="pk_hirurg"
+      :date="date"
+      :operation="operation"
+      :cancel_operation="cancel"
     />
   </div>
 </template>
@@ -91,6 +116,11 @@ export default {
       operation: '',
       cancel: false,
     };
+  },
+  computed: {
+    can_edit_operations() {
+      return (this.$store.getters.user_data.groups || []).includes('Управление планами операций');
+    },
   },
   mounted() {
     this.$root.$on('hide_plan_operations', () => {
@@ -127,11 +157,6 @@ export default {
       this.pk_plan = row.pk_plan;
       this.cancel = row.cancel;
       this.edit_plan_operations_old = true;
-    },
-  },
-  computed: {
-    can_edit_operations() {
-      return (this.$store.getters.user_data.groups || []).includes('Управление планами операций');
     },
   },
 };

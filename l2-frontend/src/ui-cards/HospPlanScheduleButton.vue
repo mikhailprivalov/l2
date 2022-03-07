@@ -1,27 +1,39 @@
 <template>
   <div v-frag>
-    <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="openSchedule = true">
+    <button
+      class="btn btn-blue-nb btn-block btn-sm"
+      type="button"
+      tabindex="-1"
+      @click="openSchedule = true"
+    >
       Записать
     </button>
-    <MountingPortal mountTo="#portal-place-modal" :name="`PlanSchedule_${data.pk_plan}`" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      :name="`PlanSchedule_${data.pk_plan}`"
+      append
+    >
       <transition name="fade">
         <Modal
-          @close="openSchedule = false"
+          v-if="openSchedule"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
-          :zIndex="5001"
-          v-if="openSchedule"
+          margin-left-right="auto"
+          :z-index="5001"
           show-footer="true"
+          @close="openSchedule = false"
         >
           <span slot="header">{{ data.date }} {{ data.fio_patient }} — запись на время</span>
-          <div slot="body" class="popup-body">
-            Заявка: {{ data.date }} {{ data.fio_patient }}<br />
-            Телефон: {{ data.phone }}<br />
-            Диагноз: {{ data.diagnos }}<br />
+          <div
+            slot="body"
+            class="popup-body"
+          >
+            Заявка: {{ data.date }} {{ data.fio_patient }}<br>
+            Телефон: {{ data.phone }}<br>
+            Диагноз: {{ data.diagnos }}<br>
             Примечания: {{ data.comment }}
-            <hr />
+            <hr>
             <ServiceSchedule
               v-model="selectedSlot"
               :service-pk="data.research_id"
@@ -34,10 +46,21 @@
           <div slot="footer">
             <div class="row">
               <div class="col-xs-6">
-                <button type="button" @click="openSchedule = false" class="btn btn-primary-nb btn-blue-nb">Закрыть</button>
+                <button
+                  type="button"
+                  class="btn btn-primary-nb btn-blue-nb"
+                  @click="openSchedule = false"
+                >
+                  Закрыть
+                </button>
               </div>
               <div class="col-xs-6 text-right">
-                <button type="button" @click="linkPlanSlot" class="btn btn-primary-nb btn-blue-nb" :disabled="!selectedSlot">
+                <button
+                  type="button"
+                  class="btn btn-primary-nb btn-blue-nb"
+                  :disabled="!selectedSlot"
+                  @click="linkPlanSlot"
+                >
                   Записать на время
                 </button>
               </div>

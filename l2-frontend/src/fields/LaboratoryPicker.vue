@@ -1,7 +1,10 @@
 <template>
   <div class="input-group">
     <span class="input-group-addon">Лаборатория</span>
-    <SelectFieldTitled :variants="labs" v-model="val" />
+    <SelectFieldTitled
+      v-model="val"
+      :variants="labs"
+    />
   </div>
 </template>
 
@@ -11,6 +14,9 @@ import SelectFieldTitled from '@/fields/SelectFieldTitled.vue';
 export default {
   components: {
     SelectFieldTitled,
+  },
+  model: {
+    event: 'modified',
   },
   props: {
     value: {
@@ -45,9 +51,6 @@ export default {
     val() {
       this.changeValue(this.val);
     },
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     changeValue(newVal) {

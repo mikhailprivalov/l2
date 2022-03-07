@@ -1,28 +1,35 @@
 <template>
   <date-picker
-    class="td-calendar"
-    v-model="a.plan"
     ref="datepicker"
     :key="a.plan"
+    v-model="a.plan"
+    class="td-calendar"
     is-dark
     color="teal"
     :available-dates="avDates"
-    @popoverWillShow="onShow"
     :masks="masks"
+    @popoverWillShow="onShow"
   >
     <template v-slot="{ togglePopover }">
       <div
+        v-tippy="{ html: '#' + tippyId, ...commonTippy, trigger: a.planYear === v.year ? 'mouseenter focus' : 'manual' }"
         class="td-calendar-inner"
         @click="togglePopover"
-        v-tippy="{ html: '#' + tippyId, ...commonTippy, trigger: a.planYear === v.year ? 'mouseenter focus' : 'manual' }"
       >
         <template v-if="a.planYear === v.year">
           {{ a.plan.replace(`.${v.year}`, '') }}
         </template>
       </div>
-      <div class="tp" :id="tippyId" v-if="a.planYear === v.year">
-        <button class="btn btn-blue-nb btn-transparent btn-sm" @click="clearPlan">
-          <i class="fas fa-times"></i>
+      <div
+        v-if="a.planYear === v.year"
+        :id="tippyId"
+        class="tp"
+      >
+        <button
+          class="btn btn-blue-nb btn-transparent btn-sm"
+          @click="clearPlan"
+        >
+          <i class="fas fa-times" />
         </button>
       </div>
     </template>

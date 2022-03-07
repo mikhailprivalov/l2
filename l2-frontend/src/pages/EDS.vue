@@ -1,22 +1,52 @@
 <template>
   <div class="root">
-    <div v-if="!checked" class="eds-preloader top-block"><i class="fa fa-spinner"></i> загрузка</div>
-    <div v-frag v-else>
+    <div
+      v-if="!checked"
+      class="eds-preloader top-block"
+    >
+      <i class="fa fa-spinner" /> загрузка
+    </div>
+    <div
+      v-else
+      v-frag
+    >
       <div class="row top-block">
-        <div class="col-xs-3" v-if="!hasCP">
-          <div class="eds-status status-error">Плагин CSP не настроен</div>
+        <div
+          v-if="!hasCP"
+          class="col-xs-3"
+        >
+          <div class="eds-status status-error">
+            Плагин CSP не настроен
+          </div>
         </div>
-        <div class="col-xs-8" v-else>
-          <select class="form-control" v-model="selectedCertificate" v-if="certificatesDisplay.length > 0">
-            <option v-for="c in certificatesDisplay" :key="c.thumbprint" :value="c.thumbprint">
+        <div
+          v-else
+          class="col-xs-8"
+        >
+          <select
+            v-if="certificatesDisplay.length > 0"
+            v-model="selectedCertificate"
+            class="form-control"
+          >
+            <option
+              v-for="c in certificatesDisplay"
+              :key="c.thumbprint"
+              :value="c.thumbprint"
+            >
               {{ c.name }}
             </option>
           </select>
-          <div v-else class="status-error">
+          <div
+            v-else
+            class="status-error"
+          >
             Нет сертификатов
           </div>
         </div>
-        <div class="col-xs-4 cert-info" v-if="selectedCertificateObject">
+        <div
+          v-if="selectedCertificateObject"
+          class="col-xs-4 cert-info"
+        >
           <div>{{ selectedCertificateObject.thumbprint }}</div>
           <div>{{ selectedCertificateObject.validFrom }} — {{ selectedCertificateObject.validTo }}</div>
         </div>
@@ -25,59 +55,107 @@
     <div class="top-block row">
       <div class="col-xs-6">
         <div class="radio-wrapper">
-          <RadioFieldById v-model="filters.mode" :variants="modesAvailable" :disabled="disabledByNumber" />
+          <RadioFieldById
+            v-model="filters.mode"
+            :variants="modesAvailable"
+            :disabled="disabledByNumber"
+          />
         </div>
         <treeselect
+          v-if="filters.mode === 'mo'"
+          v-model="filters.department"
           class="treeselect-wide treeselect-34px"
           :multiple="false"
           :disable-branch-nodes="true"
           :options="deps"
           :clearable="false"
           placeholder="Подразделение не выбано"
-          v-if="filters.mode === 'mo'"
-          v-model="filters.department"
           :disabled="disabledByNumber"
         />
       </div>
       <div class="col-xs-6">
         <div class="radio-wrapper">
-          <RadioFieldById v-model="filters.status" :variants="STATUSES" :disabled="disabledByNumber" />
+          <RadioFieldById
+            v-model="filters.status"
+            :variants="STATUSES"
+            :disabled="disabledByNumber"
+          />
         </div>
         <div class="row">
           <div class="col-xs-6">
-            <DateFieldNav2 v-model="filters.date" w="100%" :brn="false" :disabled="disabledByNumber" />
+            <DateFieldNav2
+              v-model="filters.date"
+              w="100%"
+              :brn="false"
+              :disabled="disabledByNumber"
+            />
           </div>
           <div class="col-xs-6">
-            <input type="text" class="form-control" v-model.trim="filters.number" placeholder="номер направления" />
+            <input
+              v-model.trim="filters.number"
+              type="text"
+              class="form-control"
+              placeholder="номер направления"
+            >
           </div>
         </div>
       </div>
     </div>
 
-    <button class="top-button btn btn-blue-nb2 btn-block" type="button" @click="load(null)">
-      <i class="fa fa-search"></i> Поиск
+    <button
+      class="top-button btn btn-blue-nb2 btn-block"
+      type="button"
+      @click="load(null)"
+    >
+      <i class="fa fa-search" /> Поиск
     </button>
 
-    <div class="not-loaded" v-if="!loaded">
+    <div
+      v-if="!loaded"
+      class="not-loaded"
+    >
       Данные не загружены
     </div>
-    <div v-else class="data">
+    <div
+      v-else
+      class="data"
+    >
       <div>
-        <div class="float-right input-group" style="width: 450px;" v-if="hasAnyChecked">
+        <div
+          v-if="hasAnyChecked"
+          class="float-right input-group"
+          style="width: 450px;"
+        >
           <span class="input-group-addon">Роль подписи</span>
-          <select class="form-control" v-model="selectedSignatureMode">
-            <option v-for="s in commonSignModes" :key="s" :value="s">
+          <select
+            v-model="selectedSignatureMode"
+            class="form-control"
+          >
+            <option
+              v-for="s in commonSignModes"
+              :key="s"
+              :value="s"
+            >
               {{ s }}
             </option>
           </select>
           <span class="input-group-btn">
-            <button type="button" class="btn btn-default btn-primary-nb" @click="listSign()" :disabled="!selectedSignatureMode">
+            <button
+              type="button"
+              class="btn btn-default btn-primary-nb"
+              :disabled="!selectedSignatureMode"
+              @click="listSign()"
+            >
               Подписать списком
             </button>
           </span>
         </div>
-        <button class="btn btn-blue-nb float-right" @click="load(page)" v-else>
-          <i class="fa fa-refresh"></i>
+        <button
+          v-else
+          class="btn btn-blue-nb float-right"
+          @click="load(page)"
+        >
+          <i class="fa fa-refresh" />
         </button>
         <paginate
           v-model="page"
@@ -92,11 +170,11 @@
       </div>
       <table class="table table-bordered table-condensed">
         <colgroup>
-          <col style="width: 130px" />
-          <col />
-          <col />
-          <col style="width: 160px" />
-          <col style="width: 25px" />
+          <col style="width: 130px">
+          <col>
+          <col>
+          <col style="width: 160px">
+          <col style="width: 25px">
         </colgroup>
         <thead>
           <tr>
@@ -112,15 +190,28 @@
             <th>
               Подписи
             </th>
-            <td class="x-cell" :key="`check_${globalCheckStatus}`">
-              <label @click.prevent="toggleGlobalCheck" v-if="hasToCheck">
-                <input type="checkbox" :checked="globalCheckStatus" />
+            <td
+              :key="`check_${globalCheckStatus}`"
+              class="x-cell"
+            >
+              <label
+                v-if="hasToCheck"
+                @click.prevent="toggleGlobalCheck"
+              >
+                <input
+                  type="checkbox"
+                  :checked="globalCheckStatus"
+                >
               </label>
             </td>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.pk" :class="totallySigned(r) && 'tr-ok'">
+          <tr
+            v-for="r in rows"
+            :key="r.pk"
+            :class="totallySigned(r) && 'tr-ok'"
+          >
             <td>
               {{ r.pk }}
             </td>
@@ -130,36 +221,67 @@
             </td>
             <td class="eds-td cl-td">
               <div>
-                <EDSDirection :direction-pk="r.pk" :all_confirmed="true" :documents-prefetched="r.documents" />
+                <EDSDirection
+                  :direction-pk="r.pk"
+                  :all_confirmed="true"
+                  :documents-prefetched="r.documents"
+                />
               </div>
-              <div v-if="totallySigned(r)" class="uploading-status" :class="r.n3number ? 'm-ok' : 'm-error'">
+              <div
+                v-if="totallySigned(r)"
+                class="uploading-status"
+                :class="r.n3number ? 'm-ok' : 'm-error'"
+              >
                 {{ r.n3number ? 'выгружено в ИЭМК' : 'не выгружено в ИЭМК' }}
               </div>
             </td>
             <td class="x-cell">
               <label v-if="!totallySigned(r)">
-                <input type="checkbox" v-model="r.checked" />
+                <input
+                  v-model="r.checked"
+                  type="checkbox"
+                >
               </label>
             </td>
           </tr>
         </tbody>
       </table>
       <div>
-        <div class="float-right input-group" style="width: 450px;" v-if="hasAnyChecked">
+        <div
+          v-if="hasAnyChecked"
+          class="float-right input-group"
+          style="width: 450px;"
+        >
           <span class="input-group-addon">Роль подписи</span>
-          <select class="form-control" v-model="selectedSignatureMode">
-            <option v-for="s in commonSignModes" :key="s" :value="s">
+          <select
+            v-model="selectedSignatureMode"
+            class="form-control"
+          >
+            <option
+              v-for="s in commonSignModes"
+              :key="s"
+              :value="s"
+            >
               {{ s }}
             </option>
           </select>
           <span class="input-group-btn">
-            <button type="button" class="btn btn-default btn-primary-nb" @click="listSign()" :disabled="!selectedSignatureMode">
+            <button
+              type="button"
+              class="btn btn-default btn-primary-nb"
+              :disabled="!selectedSignatureMode"
+              @click="listSign()"
+            >
               Подписать списком
             </button>
           </span>
         </div>
-        <button class="btn btn-blue-nb float-right" @click="load(page)" v-else>
-          <i class="fa fa-refresh"></i>
+        <button
+          v-else
+          class="btn btn-blue-nb float-right"
+          @click="load(page)"
+        >
+          <i class="fa fa-refresh" />
         </button>
         <paginate
           v-model="page"
@@ -177,12 +299,21 @@
       </div>
     </div>
     <transition name="fade">
-      <div v-if="signingProcess.active" class="signing-root">
+      <div
+        v-if="signingProcess.active"
+        class="signing-root"
+      >
         <div class="signing-inner">
           <div class="signing-header">
             Создание подписей как {{ selectedSignatureMode }}
-            <i v-if="signingProcess.progress" class="fa fa-spinner"></i>
-            <i v-else class="fa fa-check"></i>
+            <i
+              v-if="signingProcess.progress"
+              class="fa fa-spinner"
+            />
+            <i
+              v-else
+              class="fa fa-check"
+            />
           </div>
 
           <ProgressBar
@@ -199,7 +330,12 @@
             bar-color="#049372"
           />
 
-          <button type="button" class="btn btn-default btn-primary-nb" @click="load(page)" :disabled="signingProcess.progress">
+          <button
+            type="button"
+            class="btn btn-default btn-primary-nb"
+            :disabled="signingProcess.progress"
+            @click="load(page)"
+          >
             Закрыть и перезагрузить список
           </button>
 
@@ -212,10 +348,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="p in signingProcess.log" :key="`${p.direction}_${p.type}`" :class="p.status ? 'tr-ok' : 'tr-error'">
+              <tr
+                v-for="p in signingProcess.log"
+                :key="`${p.direction}_${p.type}`"
+                :class="p.status ? 'tr-ok' : 'tr-error'"
+              >
                 <td>{{ p.direction }}</td>
                 <td>{{ p.type }}</td>
-                <td :class="p.status ? 'm-ok' : 'm-error'">{{ p.status ? 'ОК' : 'ОШИБКА' }}</td>
+                <td :class="p.status ? 'm-ok' : 'm-error'">
+                  {{ p.status ? 'ОК' : 'ОШИБКА' }}
+                </td>
               </tr>
             </tbody>
           </table>

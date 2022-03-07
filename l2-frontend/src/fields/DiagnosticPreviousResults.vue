@@ -1,50 +1,80 @@
 <template>
   <div>
-    <table class="table table-bordered table-condensed" style="table-layout: fixed" v-for="(val, index) in tb_data" :key="index">
+    <table
+      v-for="(val, index) in tb_data"
+      :key="index"
+      class="table table-bordered table-condensed"
+      style="table-layout: fixed"
+    >
       <colgroup>
-        <col width="50%" />
-        <col width="20%" />
-        <col />
-        <col width="36" />
+        <col width="50%">
+        <col width="20%">
+        <col>
+        <col width="36">
       </colgroup>
       <tbody>
         <tr>
           <td class="cl-td">
-            <input type="text" class="form-control" :readonly="disabled" placeholder="Услуга" v-model="val.researchTitle" />
+            <input
+              v-model="val.researchTitle"
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Услуга"
+            >
           </td>
           <td class="cl-td">
-            <input type="text" class="form-control" :readonly="disabled" placeholder="Дата" v-model="val.date" />
+            <input
+              v-model="val.date"
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Дата"
+            >
           </td>
           <td class="cl-td">
-            <input type="text" class="form-control" :readonly="disabled" placeholder="Врач" v-model="val.docConfirm" />
+            <input
+              v-model="val.docConfirm"
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Врач"
+            >
           </td>
           <td class="cl-td">
             <button
-              class="btn btn-blue-nb"
-              @click="delete_row(index)"
-              :disabled="disabled"
               v-tippy="{ placement: 'bottom' }"
+              class="btn btn-blue-nb"
+              :disabled="disabled"
               title="Удалить строку"
+              @click="delete_row(index)"
             >
               <i class="fa fa-times" />
             </button>
           </td>
         </tr>
         <tr>
-          <td colspan="4" class="cl-td">
+          <td
+            colspan="4"
+            class="cl-td"
+          >
             <textarea
+              v-model="val.value"
               rows="4"
               name="text"
               class="form-control"
               :readonly="disabled"
               placeholder="Описание"
-              v-model="val.value"
-            ></textarea>
+            />
           </td>
         </tr>
       </tbody>
     </table>
-    <button class="btn btn-blue-nb add-row" @click="add_new_row" :disabled="disabled">
+    <button
+      class="btn btn-blue-nb add-row"
+      :disabled="disabled"
+      @click="add_new_row"
+    >
       Добавить
     </button>
   </div>
@@ -63,6 +93,9 @@ const makeDefaultRow = () => ({
 
 export default {
   name: 'DiagnosticPreviousResults',
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -79,8 +112,17 @@ export default {
       result: [],
     };
   },
+  watch: {
+    tb_data: {
+      handler() {
+        this.changeValueDebounce();
+      },
+      immediate: true,
+      deep: true,
+    },
+  },
   mounted() {
-    this.$root.$on('protocol:paraclinicResult', direction => {
+    this.$root.$on('protocol:paraclinicResult', (direction) => {
       this.insertParaclinicResult(direction);
     });
   },
@@ -121,18 +163,6 @@ export default {
         }
       }
     },
-  },
-  watch: {
-    tb_data: {
-      handler() {
-        this.changeValueDebounce();
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  model: {
-    event: 'modified',
   },
 };
 </script>

@@ -4,23 +4,36 @@
       <div class="left">
         <div class="input-group">
           <span class="input-group-addon">Стационарная услуга</span>
-          <select-field-titled :variants="researches_list" v-model="main_service_pk"/>
+          <SelectFieldTitled
+            v-model="main_service_pk"
+            :variants="researches_list"
+          />
         </div>
       </div>
       <div class="right">
         <div class="input-group">
-          <label class="input-group-addon" style="height: 34px;text-align: left;">
-            <input type="checkbox" v-model="hide"/> Скрытие
+          <label
+            class="input-group-addon"
+            style="height: 34px;text-align: left;"
+          >
+            <input
+              v-model="hide"
+              type="checkbox"
+            > Скрытие
           </label>
         </div>
       </div>
     </div>
     <div class="content-editor">
-      <paraclinic-research-editor style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;" simple
-                                  :main_service_pk="main_service_pk"
-                                  :hs_pk="pk"
-                                  :hide_main="hide"
-                                  :pk="slave_service_pk" :department="department"/>
+      <ParaclinicResearchEditor
+        style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
+        simple
+        :main_service_pk="main_service_pk"
+        :hs_pk="pk"
+        :hide_main="hide"
+        :pk="slave_service_pk"
+        :department="department"
+      />
     </div>
   </div>
 </template>
@@ -33,7 +46,7 @@ import researchesPoint from '../api/researches-point';
 import SelectFieldTitled from '../fields/SelectFieldTitled.vue';
 
 export default {
-  name: 'stationar-form-editor',
+  name: 'StationarFormEditor',
   components: { SelectFieldTitled, ParaclinicResearchEditor },
   props: {
     pk: {
@@ -44,9 +57,6 @@ export default {
       type: Number,
       required: true,
     },
-  },
-  created() {
-    this.load();
   },
   data() {
     return {
@@ -65,6 +75,9 @@ export default {
     loaded_pk() {
       this.has_unsaved = false;
     },
+  },
+  created() {
+    this.load();
   },
   methods: {
     async load() {

@@ -1,6 +1,11 @@
 <template>
   <div class="input-group">
-    <input class="form-control" :value="content" readonly placeholder="Расчётное поле"/>
+    <input
+      class="form-control"
+      :value="content"
+      readonly
+      placeholder="Расчётное поле"
+    >
   </div>
 </template>
 
@@ -8,12 +13,20 @@
 import { CalculateFormula } from '../utils';
 
 export default {
-  name: 'formula-field',
+  name: 'FormulaField',
   props: ['value', 'fields', 'formula', 'patient'],
   data() {
     return {
       content: this.value,
     };
+  },
+  computed: {
+    func_formula() {
+      return this.calc();
+    },
+    f_obj() {
+      return this.fields.reduce((a, b) => ({ ...a, [b.pk]: b }), {});
+    },
   },
   watch: {
     patient: {
@@ -40,14 +53,6 @@ export default {
     },
     func_formula() {
       this.content = this.func_formula.toString();
-    },
-  },
-  computed: {
-    func_formula() {
-      return this.calc();
-    },
-    f_obj() {
-      return this.fields.reduce((a, b) => ({ ...a, [b.pk]: b }), {});
     },
   },
   methods: {

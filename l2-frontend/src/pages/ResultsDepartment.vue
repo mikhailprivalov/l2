@@ -1,56 +1,94 @@
 <template>
   <div>
-    <div class="row" style="margin-top: 60px">
-      <div class="col-xs-4">
-      </div>
+    <div
+      class="row"
+      style="margin-top: 60px"
+    >
+      <div class="col-xs-4" />
       <div class="col-xs-4">
         <div class="panel panel-default panel-flt">
           <div class="panel-heading">
-            <h3 class="panel-title">Быстрая печать результатов по отделению или врачу</h3>
+            <h3 class="panel-title">
+              Быстрая печать результатов по отделению или врачу
+            </h3>
           </div>
           <div class="panel-body">
             <div class="row">
-              <div class="col-xs-6" style="text-align: right;line-height: 1.26;">
+              <div
+                class="col-xs-6"
+                style="text-align: right;line-height: 1.26;"
+              >
                 <label>
                   Дата результатов:
                 </label>
               </div>
               <div class="col-xs-6">
-                <input v-model="date" type="date" style="display: inline-block"/>
+                <input
+                  v-model="date"
+                  type="date"
+                  style="display: inline-block"
+                >
               </div>
             </div>
-            <div class="row" style="margin-bottom: 5px; margin-top: 15px">
-              <div class="col-xs-4" style="text-align: right;line-height: 1.26;">
+            <div
+              class="row"
+              style="margin-bottom: 5px; margin-top: 15px"
+            >
+              <div
+                class="col-xs-4"
+                style="text-align: right;line-height: 1.26;"
+              >
                 <div class="checkbox">
                   <label>
-                    <input type="checkbox" v-model="is_lab"> Лабораторные
+                    <input
+                      v-model="is_lab"
+                      type="checkbox"
+                    > Лабораторные
                   </label>
                 </div>
               </div>
-              <div class="col-xs-4" style="text-align: right;line-height: 1.26;">
+              <div
+                class="col-xs-4"
+                style="text-align: right;line-height: 1.26;"
+              >
                 <div class="checkbox">
                   <label>
-                    <input type="checkbox" v-model="is_paraclinic"> Параклинические
+                    <input
+                      v-model="is_paraclinic"
+                      type="checkbox"
+                    > Параклинические
                   </label>
                 </div>
               </div>
-              <div class="col-xs-4" style="text-align: right;line-height: 1.26;">
+              <div
+                class="col-xs-4"
+                style="text-align: right;line-height: 1.26;"
+              >
                 <div class="checkbox">
                   <label>
-                    <input type="checkbox" v-model="is_doc_refferal"> Консультации
+                    <input
+                      v-model="is_doc_refferal"
+                      type="checkbox"
+                    > Консультации
                   </label>
                 </div>
               </div>
             </div>
             <div class="row">
-              <div class="col-xs-5"></div>
+              <div class="col-xs-5" />
               <div class="col-xs-7">
-                <div class="btn btn-blue-nb" style="margin-bottom: 5px;margin-top: 15px;"
-                     @click="print(false)">
+                <div
+                  class="btn btn-blue-nb"
+                  style="margin-bottom: 5px;margin-top: 15px;"
+                  @click="print(false)"
+                >
                   По отделению
                 </div>
-                <div class="btn btn-blue-nb" style="margin-bottom: 5px;margin-top: 15px; margin-left: 20px;"
-                     @click="print(true)">
+                <div
+                  class="btn btn-blue-nb"
+                  style="margin-bottom: 5px;margin-top: 15px; margin-left: 20px;"
+                  @click="print(true)"
+                >
                   По врачу
                 </div>
               </div>

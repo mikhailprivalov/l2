@@ -4,9 +4,9 @@
 
     <table class="table table-bordered table-condensed">
       <colgroup>
-        <col width="280" />
-        <col width="100" />
-        <col />
+        <col width="280">
+        <col width="100">
+        <col>
       </colgroup>
       <thead>
         <tr>
@@ -16,18 +16,22 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="f in fractions" :key="`${f.pk}_${f.title}`">
+        <tr
+          v-for="f in fractions"
+          :key="`${f.pk}_${f.title}`"
+        >
           <td>{{ f.title }}{{ f.units && !f.unit ? ', ' + f.units : '' }}</td>
           <td class="cl-td">
             <TypeAhead
-              :delayTime="150"
-              :getResponse="resp => [...resp.data.data]"
-              NoResultText="Не найдено"
+              v-model="f.fsli"
+              :delay-time="150"
+              :get-response="resp => [...resp.data.data]"
+              no-result-text="Не найдено"
               placeholder="Код ФСЛИ"
-              SearchingText="Поиск..."
+              searching-text="Поиск..."
               :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
               :limit="14"
-              :minChars="1"
+              :min-chars="1"
               :render="
                 items =>
                   items.map(
@@ -38,21 +42,20 @@
                       }`,
                   )
               "
-              :onHit="onHit(f)"
-              :selectFirst="true"
+              :on-hit="onHit(f)"
+              :select-first="true"
               maxlength="128"
               src="/api/autocomplete?value=:keyword&type=fsli&limit=14"
-              v-model="f.fsli"
             />
           </td>
           <td class="cl-td">
             <Treeselect
+              v-model="f.unit"
               class="treeselect-noborder"
               :multiple="false"
               :disable-branch-nodes="true"
               :options="unitOptions"
               placeholder="не выбрано"
-              v-model="f.unit"
               :append-to-body="true"
               :clearable="true"
             />
@@ -61,7 +64,11 @@
       </tbody>
     </table>
 
-    <button type="button" @click="save" class="btn btn-primary-nb btn-blue-nb">
+    <button
+      type="button"
+      class="btn btn-primary-nb btn-blue-nb"
+      @click="save"
+    >
       Сохранить изменения
     </button>
   </div>

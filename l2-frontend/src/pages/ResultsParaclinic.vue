@@ -1,119 +1,217 @@
 <template>
-  <div ref="root" class="results-root" :class="embedded && 'embedded'">
-    <div :class="{ has_loc, opened: sidebarIsOpened || !data.ok }" class="results-sidebar" v-if="!embedded">
+  <div
+    ref="root"
+    class="results-root"
+    :class="embedded && 'embedded'"
+  >
+    <div
+      v-if="!embedded"
+      :class="{ has_loc, opened: sidebarIsOpened || !data.ok }"
+      class="results-sidebar"
+    >
       <div class="sidebar-top">
         <div class="input-group">
-          <span class="input-group-btn" v-if="l2_microbiology">
+          <span
+            v-if="l2_microbiology"
+            class="input-group-btn"
+          >
             <label
-              class="btn btn-blue-nb nbr height34"
-              style="padding: 5px 11px;"
-              title="Использовать номер микробиологического анализа"
               v-tippy
+              class="btn btn-blue-nb nbr height34"
+              style="padding: 5px 11px"
+              title="Использовать номер микробиологического анализа"
             >
-              <input type="checkbox" v-model="iss_search" />
+              <input
+                v-model="iss_search"
+                type="checkbox"
+              >
             </label>
           </span>
           <input
+            v-model="pk"
             type="text"
             class="form-control"
-            v-model="pk"
-            @keyup.enter="load()"
             autofocus
             :placeholder="iss_search ? 'Номер м/б анализа' : 'Номер направления'"
-          />
+            @keyup.enter="load()"
+          >
           <span class="input-group-btn">
-            <button class="btn last btn-blue-nb nbr" type="button" @click="load()" style="margin-right: -1px">
-              Поиск
-            </button>
+            <button
+              class="btn last btn-blue-nb nbr"
+              type="button"
+              style="margin-right: -1px"
+              @click="load()"
+            >Поиск</button>
           </span>
         </div>
       </div>
       <div class="sidebar-bottom-top">
         <span>Результаты за</span>
-        <date-field-nav :brn="false" :def="date" :val.sync="date" w="100px" />
+        <DateFieldNav
+          :brn="false"
+          :def="date"
+          :val.sync="date"
+          w="100px"
+        />
       </div>
-      <div class="directions" :class="{ noStat: !stat_btn_d, has_loc, stat_btn: stat_btn_d }">
+      <div
+        class="directions"
+        :class="{ noStat: !stat_btn_d, has_loc, stat_btn: stat_btn_d }"
+      >
         <div class="inner">
-          <div class="direction" v-for="direction in directions_history" :key="direction.pk">
+          <div
+            v-for="direction in directions_history"
+            :key="direction.pk"
+            class="direction"
+          >
             <div>{{ direction.patient }}, {{ direction.card }}</div>
-            <div v-for="i in direction.iss" :key="`${i.title}_${i.saved}_${i.confirmed}`" class="research-row">
+            <div
+              v-for="i in direction.iss"
+              :key="`${i.title}_${i.saved}_${i.confirmed}`"
+              class="research-row"
+            >
               <div class="row">
                 <div class="col-xs-8">
                   {{ i.title }}
                 </div>
                 <div class="col-xs-4 text-right">
-                  <iss-status :i="i" short />
+                  <IssStatus
+                    :i="i"
+                    short
+                  />
                 </div>
               </div>
             </div>
-            <hr />
+            <hr>
             <template v-if="direction.amd !== 'not_need'">
-              <div v-if="direction.amd === 'need'" class="amd amd-need">АМД: не отправлено</div>
-              <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено ({{ direction.amd_number }})</div>
-              <div v-else-if="direction.amd === 'error'" class="amd amd-error">АМД: ошибка</div>
-              <div v-else-if="direction.amd === 'planned'" class="amd amd-planned">АМД: запланировано</div>
-              <hr />
+              <div
+                v-if="direction.amd === 'need'"
+                class="amd amd-need"
+              >
+                АМД: не отправлено
+              </div>
+              <div
+                v-else-if="direction.amd === 'ok'"
+                class="amd amd-ok"
+              >
+                АМД: отправлено ({{ direction.amd_number }})
+              </div>
+              <div
+                v-else-if="direction.amd === 'error'"
+                class="amd amd-error"
+              >
+                АМД: ошибка
+              </div>
+              <div
+                v-else-if="direction.amd === 'planned'"
+                class="amd amd-planned"
+              >
+                АМД: запланировано
+              </div>
+              <hr>
             </template>
             <div class="row">
-
-              <div class="col-xs-4"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
+              <div class="col-xs-4">
+                <a
+                  href="#"
+                  @click.prevent="load_pk(direction.pk)"
+                >Просмотр</a>
+              </div>
               <div class="col-xs-4 text-center">
                 <a
+                  v-if="direction.all_confirmed && stat_btn"
                   :href="`/forms/pdf?type=105.02&napr_id=[${direction.pk}]`"
                   target="_blank"
-                  v-if="direction.all_confirmed && stat_btn"
-                  >Статталон</a
-                >
+                >Статталон</a>
               </div>
               <div class="col-xs-4 text-right">
-                <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
-                <a href="#" @click.prevent="print_example(direction.pk)" v-else>Образец</a>
+                <a
+                  v-if="direction.all_confirmed"
+                  href="#"
+                  @click.prevent="print_results(direction.pk)"
+                >Печать</a>
+                <a
+                  v-else
+                  href="#"
+                  @click.prevent="print_example(direction.pk)"
+                >Образец</a>
               </div>
             </div>
           </div>
-          <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
+          <div
+            v-if="directions_history.length === 0"
+            class="text-center"
+            style="margin: 5px"
+          >
             Нет данных
           </div>
         </div>
-        <div class="rmis_loc" v-if="has_loc">
+        <div
+          v-if="has_loc"
+          class="rmis_loc"
+        >
           <div class="title">
-            <div class="loader" v-if="location.loading"><i class="fa fa-spinner"></i></div>
-            Очередь за <input :readonly="location.loading" class="inline-form" required type="date" v-model="td" />
+            <div
+              v-if="location.loading"
+              class="loader"
+            >
+              <i class="fa fa-spinner" />
+            </div>
+            Очередь за <input
+              v-model="td"
+              :readonly="location.loading"
+              class="inline-form"
+              required
+              type="date"
+            >
           </div>
-          <div class="inner" :class="{ stat_btn: stat_btn_d }">
+          <div
+            class="inner"
+            :class="{ stat_btn: stat_btn_d }"
+          >
             <table class="table table-bordered table-hover">
               <colgroup>
-                <col width="38" />
-                <col />
-                <col width="16" />
+                <col width="38">
+                <col>
+                <col width="16">
               </colgroup>
               <tbody>
                 <tr
-                  v-for="r in location.data"
-                  :key="`${r.slot}_${r.status && r.status.direction}`"
+                  v-for="rl in location.data"
+                  :key="`${rl.slot}_${rl.status && rl.status.direction}`"
+                  v-tippy="{ placement: 'top', arrow: true, animation: 'fade' }"
                   :class="{
                     current:
-                      r.slot === slot.id ||
-                      (data.ok && r.status.direction && r.status.direction === data.direction.pk && !slot.id),
+                      rl.slot === slot.id ||
+                      (data.ok && rl.status.direction && rl.status.direction === data.direction.pk && !slot.id),
                   }"
-                  @click="r.status.code > 0 ? open_fill_slot(r.status.direction) : open_slot(r)"
-                  v-tippy="{ placement: 'top', arrow: true, animation: 'fade' }"
-                  :title="statusTitles[r.status.code] || 'Не обработано'"
+                  :title="statusTitles[rl.status.code] || 'Не обработано'"
+                  @click="rl.status.code > 0 ? open_fill_slot(rl.status.direction) : open_slot(rl)"
                 >
-                  <td>{{ r.timeStart }}</td>
-                  <td>{{ r.patient }}</td>
+                  <td>{{ rl.timeStart }}</td>
+                  <td>{{ rl.patient }}</td>
                   <td>
-                    <span class="slot" :class="`slot-${r.status.code}`">
-                      <i class="fa fa-circle"></i>
+                    <span
+                      class="slot"
+                      :class="`slot-${rl.status.code}`"
+                    >
+                      <i class="fa fa-circle" />
                     </span>
                   </td>
                 </tr>
                 <tr v-if="!location.init">
-                  <td colspan="3" style="text-align: center">
+                  <td
+                    colspan="3"
+                    style="text-align: center"
+                  >
                     загрузка...
                   </td>
                 </tr>
-                <td colspan="3" style="text-align: center" v-else-if="(location.data || []).length === 0">
+                <td
+                  v-else-if="(location.data || []).length === 0"
+                  colspan="3"
+                  style="text-align: center"
+                >
                   нет данных на дату
                 </td>
               </tbody>
@@ -129,56 +227,110 @@
             'side-bottom_amd': !stat_btn && amd,
           }"
         >
-          <a v-if="stat_btn" class="btn btn-blue-nb" :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank"
-            >печать статталонов</a
-          >
-          <a v-if="amd" class="btn btn-blue-nb" href="#" @click.prevent="send_amd" target="_blank">отправить в амд</a>
+          <a
+            v-if="stat_btn"
+            class="btn btn-blue-nb"
+            :href="`/forms/preview?type=105.01&date=${date_to_form}`"
+            target="_blank"
+          >печать статталонов</a>
+          <a
+            v-if="amd"
+            class="btn btn-blue-nb"
+            href="#"
+            target="_blank"
+            @click.prevent="send_amd"
+          >отправить в амд</a>
         </div>
       </div>
     </div>
     <div
+      v-if="!embedded"
       class="burger"
       :class="{ active: sidebarIsOpened && data.ok }"
       @click="sidebarIsOpened = !sidebarIsOpened"
-      v-if="!embedded"
     >
-      <span class="burger-inner" v-if="data.ok">
-        <i class="fa fa-bars"></i>&nbsp;&nbsp;
+      <span
+        v-if="data.ok"
+        class="burger-inner"
+      >
+        <i class="fa fa-bars" />&nbsp;&nbsp;
         {{ sidebarIsOpened ? 'закрыть поиск и результаты' : 'открыть поиск и результаты' }}
       </span>
-      <div class="burger-lines" v-if="data.ok" />
+      <div
+        v-if="data.ok"
+        class="burger-lines"
+      />
     </div>
-    <div class="backdrop" v-if="(sidebarIsOpened || !data.ok) && !embedded" @click="sidebarIsOpened = false">
-      <div class="backdrop-inner" v-if="data.ok">
+    <div
+      v-if="(sidebarIsOpened || !data.ok) && !embedded"
+      class="backdrop"
+      @click="sidebarIsOpened = false"
+    >
+      <div
+        v-if="data.ok"
+        class="backdrop-inner"
+      >
         <div>
-          <div style="font-weight: bold;">Загруженное направление:</div>
+          <div style="font-weight: bold">
+            Загруженное направление:
+          </div>
           <div>№{{ data.direction.pk }} от {{ data.direction.date }}</div>
           <div>{{ data.patient.fio_age }}</div>
-          <div v-for="row in data.researches" :key="row.pk">Услуга: {{ row.research.title }}</div>
+          <div
+            v-for="row in data.researches"
+            :key="row.pk"
+          >
+            Услуга: {{ row.research.title }}
+          </div>
         </div>
       </div>
-      <div class="backdrop-inner" v-else>
+      <div
+        v-else
+        class="backdrop-inner"
+      >
         <div>направление не загружено</div>
       </div>
     </div>
-    <div class="results-content" :class="{ embedded, embeddedFull }" v-if="data.ok">
-      <div class="results-top" v-if="!embeddedFull">
+    <div
+      v-if="data.ok"
+      class="results-content"
+      :class="{ embedded, embeddedFull }"
+    >
+      <div
+        v-if="!embeddedFull"
+        class="results-top"
+      >
         <div class="row">
           <div :class="data.has_monitoring ? 'col-xs-11' : 'col-xs-6'">
             <div>
               {{ data.has_monitoring ? 'Мониторинг' : 'Направление' }}
-              №<a href="#" class="a-under" @click.prevent="print_direction(data.direction.pk)">{{ data.direction.pk }}</a>
+              №<a
+                href="#"
+                class="a-under"
+                @click.prevent="print_direction(data.direction.pk)"
+              >{{ data.direction.pk }}</a>
               от
               {{ data.direction.date }}
             </div>
-            <div v-if="data.has_monitoring">{{ data.hospital_title || data.patient.fio }}</div>
-            <div v-else>{{ data.patient.fio_age }}</div>
-            <div class="text-ell" :title="data.direction.diagnos" v-if="data.direction.diagnos !== '' && !data.has_monitoring">
+            <div v-if="data.has_monitoring">
+              {{ data.hospital_title || data.patient.fio }}
+            </div>
+            <div v-else>
+              {{ data.patient.fio_age }}
+            </div>
+            <div
+              v-if="data.direction.diagnos !== '' && !data.has_monitoring"
+              class="text-ell"
+              :title="data.direction.diagnos"
+            >
               Диагноз:
               {{ data.direction.diagnos }}
             </div>
           </div>
-          <div class="col-xs-5" v-if="!data.has_monitoring">
+          <div
+            v-if="!data.has_monitoring"
+            class="col-xs-5"
+          >
             <div v-if="!data.patient.imported_from_rmis && !data.has_monitoring">
               Источник финансирования: {{ data.direction.fin_source }}
             </div>
@@ -193,86 +345,104 @@
               </a>
               &nbsp;&nbsp;
               <a
-                href="#"
                 v-if="data.card_internal && data.has_doc_referral"
                 v-tippy="{ placement: 'bottom', arrow: true, reactive: true, interactive: true, html: '#template-anamnesis' }"
+                href="#"
                 @show="load_anamnesis"
                 @click.prevent="edit_anamnesis"
-                ><i class="fa fa-book"></i
-              ></a>
+              ><i
+                class="fa fa-book"
+              /></a>
               <span class="visible-small">&nbsp;</span>
               <div
-                id="template-anamnesis"
                 v-if="data.card_internal"
+                id="template-anamnesis"
                 :class="{ hidden: !data.ok || !data.has_doc_referral || !data.card_internal }"
               >
-                <strong>Анамнез жизни</strong><br />
+                <strong>Анамнез жизни</strong><br>
                 <span v-if="anamnesis_loading">загрузка...</span>
-                <pre v-else style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px">{{
-                  anamnesis_data.text || 'нет данных'
-                }}</pre>
+                <pre
+                  v-else
+                  style="padding: 5px; text-align: left; white-space: pre-wrap; word-break: keep-all; max-width: 600px"
+                >{{ anamnesis_data.text || 'нет данных' }}</pre>
               </div>
               <a
-                style="margin-left: 3px"
-                href="#"
                 v-if="data.card_internal && (data.has_doc_referral || data.has_paraclinic)"
                 v-tippy="{ placement: 'bottom', arrow: true, reactive: true, interactive: true, html: '#template-dreg' }"
+                style="margin-left: 3px"
+                href="#"
                 :class="{ dreg_nex: !data.patient.has_dreg, dreg_ex: data.patient.has_dreg }"
                 @show="load_dreg_rows"
                 @click.prevent="dreg = true"
-                ><i class="fa fa-database"></i
-              ></a>
+              ><i
+                class="fa fa-database"
+              /></a>
               <span class="visible-small">&nbsp;</span>
               <div
-                id="template-dreg"
                 v-if="data.card_internal"
+                id="template-dreg"
                 :class="{ hidden: !data.ok || (!data.has_doc_referral && !data.has_paraclinic) || !data.card_internal }"
               >
-                <strong>Диспансерный учёт</strong><br />
+                <strong>Диспансерный учёт</strong><br>
                 <span v-if="dreg_rows_loading">загрузка...</span>
-                <ul v-else style="padding-left: 25px;text-align: left">
-                  <li v-for="r in dreg_rows" :key="r.pk">
-                    {{ r.diagnos }} – {{ r.date_start }} <span v-if="r.illnes">– {{ r.illnes }}</span>
+                <ul
+                  v-else
+                  style="padding-left: 25px; text-align: left"
+                >
+                  <li
+                    v-for="rd in dreg_rows"
+                    :key="rd.pk"
+                  >
+                    {{ rd.diagnos }} – {{ rd.date_start }} <span v-if="rd.illnes">– {{ rd.illnes }}</span>
                   </li>
-                  <li v-if="dreg_rows.length === 0">нет активных записей</li>
+                  <li v-if="dreg_rows.length === 0">
+                    нет активных записей
+                  </li>
                 </ul>
               </div>
 
               <ScreeningButton
-                :card-pk="data.patient.card_pk"
                 v-if="data.card_internal && (data.has_doc_referral || data.has_paraclinic)"
+                :card-pk="data.patient.card_pk"
                 @openScreening="dreg = true"
               />
 
               <a
+                v-if="data.card_internal && data.has_doc_referral"
+                v-tippy="{ placement: 'bottom', arrow: true, reactive: true, interactive: true, html: '#template-benefit' }"
                 style="margin-left: 3px"
                 href="#"
                 :class="{ dreg_nex: !data.patient.has_benefit, dreg_ex: data.patient.has_benefit }"
-                v-if="data.card_internal && data.has_doc_referral"
-                v-tippy="{ placement: 'bottom', arrow: true, reactive: true, interactive: true, html: '#template-benefit' }"
                 @show="load_benefit_rows"
                 @click.prevent="benefit = true"
-                ><i class="fa fa-cubes"></i
-              ></a>
+              ><i
+                class="fa fa-cubes"
+              /></a>
               <span class="visible-small">&nbsp;</span>
               <div
+                v-if="data.card_internal"
                 id="template-benefit"
                 :class="{ hidden: !data.ok || !data.has_doc_referral || !data.card_internal }"
-                v-if="data.card_internal"
               >
-                <strong>Льготы пациента</strong><br />
+                <strong>Льготы пациента</strong><br>
                 <span v-if="benefit_rows_loading">загрузка...</span>
-                <ul v-else style="padding-left: 25px;text-align: left">
-                  <li v-for="r in benefit_rows" :key="r.pk">{{ r.benefit }} – {{ r.date_start }} – {{ r.registration_basis }}</li>
-                  <li v-if="benefit_rows.length === 0">нет активных записей</li>
+                <ul
+                  v-else
+                  style="padding-left: 25px; text-align: left"
+                >
+                  <li
+                    v-for="rb in benefit_rows"
+                    :key="rb.pk"
+                  >
+                    {{ rb.benefit }} – {{ rb.date_start }} – {{ rb.registration_basis }}
+                  </li>
+                  <li v-if="benefit_rows.length === 0">
+                    нет активных записей
+                  </li>
                 </ul>
               </div>
               <a
-                style="margin-left: 3px"
-                href="#"
-                :class="{ [`disp_${data.status_disp}`]: true }"
                 v-if="data.card_internal && data.has_doc_referral"
-                @click.prevent
                 v-tippy="{
                   placement: 'bottom',
                   arrow: true,
@@ -281,149 +451,230 @@
                   html: '#template-disp',
                   interactive: true,
                 }"
-                >Д</a
-              >
+                style="margin-left: 3px"
+                href="#"
+                :class="{ [`disp_${data.status_disp}`]: true }"
+                @click.prevent
+              >Д</a>
               <div
+                v-if="data.card_internal && data.status_disp !== 'notneed' && data.has_doc_referral"
                 id="template-disp"
                 class="disp"
-                v-if="data.card_internal && data.status_disp !== 'notneed' && data.has_doc_referral"
               >
-                <strong>Диспансеризация</strong><br />
-                <ul style="padding-left: 25px;text-align: left">
-                  <li v-for="d in data.disp_data" :key="`${d[0]}_${d[5]}`">
+                <strong>Диспансеризация</strong><br>
+                <ul style="padding-left: 25px; text-align: left">
+                  <li
+                    v-for="d in data.disp_data"
+                    :key="`${d[0]}_${d[5]}`"
+                  >
                     <span :class="{ disp_row: true, [!!d[2] ? 'disp_row_finished' : 'disp_row_need']: true }">
                       <span v-if="!d[2]">требуется</span>
-                      <a v-else href="#" @click.prevent="show_results([d[2]])" class="not-black">
-                        пройдено
-                      </a>
+                      <a
+                        v-else
+                        href="#"
+                        class="not-black"
+                        @click.prevent="show_results([d[2]])"
+                      > пройдено </a>
                     </span>
 
-                    <a href="#" @click.prevent="add_researches(data.researches[0], [d[0]])">
+                    <a
+                      href="#"
+                      @click.prevent="add_researches(data.researches[0], [d[0]])"
+                    >
                       {{ d[5] }}
                     </a>
                   </li>
                 </ul>
                 <div>
                   <a
+                    v-if="data.status_disp === 'need'"
                     href="#"
                     class="btn btn-blue-nb"
-                    v-if="data.status_disp === 'need'"
                     @click.prevent="
                       add_researches(
                         data.researches[0],
-                        data.disp_data.filter(d => !d[2]).map(d => d[0]),
+                        data.disp_data.filter((d) => !d[2]).map((d) => d[0]),
                       )
                     "
                   >
                     Выбрать требуемые
                   </a>
-                  <a href="#" class="btn btn-blue-nb" v-else @click.prevent="show_results(data.disp_data.map(d => d[2]))">
+                  <a
+                    v-else
+                    href="#"
+                    class="btn btn-blue-nb"
+                    @click.prevent="show_results(data.disp_data.map((d) => d[2]))"
+                  >
                     Печать всех результатов
                   </a>
                 </div>
               </div>
-              <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk" />
-              <rmis-link :is-schedule="false" />
-              <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral />
-              <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic />
-              <ResultsByYear :card_pk="data.patient.card_pk" isLab />
+              <MedicalCertificates
+                :med_certificates="data.medical_certificates"
+                :direction="data.direction.pk"
+              />
+              <RmisLink :is-schedule="false" />
+              <ResultsByYear
+                :card_pk="data.patient.card_pk"
+                is-doc-referral
+              />
+              <ResultsByYear
+                :card_pk="data.patient.card_pk"
+                is-paraclinic
+              />
+              <ResultsByYear
+                :card_pk="data.patient.card_pk"
+                is-lab
+              />
             </div>
-            <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis && !data.has_monitoring">
+            <div
+              v-if="!data.patient.imported_from_rmis && !data.has_monitoring"
+              class="text-ell"
+              :title="data.patient.doc"
+            >
               Лечащий врач:
               {{ data.patient.doc }}
             </div>
-            <div v-else-if="data.patient.imported_org">Организация: {{ data.patient.imported_org }}</div>
+            <div v-else-if="data.patient.imported_org">
+              Организация: {{ data.patient.imported_org }}
+            </div>
           </div>
           <div class="col-xs-1">
-            <button type="button" class="close" @click="clear()" v-if="!embedded">
+            <button
+              v-if="!embedded"
+              type="button"
+              class="close"
+              @click="clear()"
+            >
               <span>&times;</span>
             </button>
           </div>
         </div>
       </div>
       <div class="results-editor">
-        <div v-for="row in data.researches" :key="row.pk">
+        <div
+          v-for="row in data.researches"
+          :key="row.pk"
+        >
           <div class="research-title">
             <div class="research-left">
               {{ row.research.title }}
-              <span class="comment" v-if="row.research.comment"> [{{ row.research.comment }}]</span>
+              <span
+                v-if="row.research.comment"
+                class="comment"
+              > [{{ row.research.comment }}]</span>
               <dropdown
+                v-if="!data.has_microbiology && !data.has_monitoring && !embedded"
+                :key="`dd-${row.pk}`"
                 :visible="research_open_history === row.pk"
                 :position="['left', 'bottom', 'left', 'top']"
-                v-if="!data.has_microbiology && !data.has_monitoring && !embedded"
                 @clickout="hide_results"
-                :key="`dd-${row.pk}`"
               >
-                <a style="font-weight: normal" href="#" @click.prevent="open_results(row.pk)">
-                  (другие результаты)
-                </a>
-                <div class="results-history" :class="embedded && 'results-history-embedded'" slot="dropdown">
+                <a
+                  style="font-weight: normal"
+                  href="#"
+                  @click.prevent="open_results(row.pk)"
+                > (другие результаты) </a>
+                <div
+                  slot="dropdown"
+                  class="results-history"
+                  :class="embedded && 'results-history-embedded'"
+                >
                   <ul>
-                    <li v-for="r in research_history" :key="r.pk">
-                      {{ r.date }}
-                      <a href="#" @click.prevent="print_results(r.direction)">печать</a>
-                      <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать</a>
+                    <li
+                      v-for="rh in research_history"
+                      :key="rh.pk"
+                    >
+                      {{ rh.date }}
+                      <a
+                        href="#"
+                        @click.prevent="print_results(rh.direction)"
+                      >печать</a>
+                      <a
+                        v-if="!row.confirmed"
+                        href="#"
+                        @click.prevent="copy_results(row, rh.pk)"
+                      >скопировать</a>
                     </li>
-                    <li v-if="research_history.length === 0">результатов не найдено</li>
+                    <li v-if="research_history.length === 0">
+                      результатов не найдено
+                    </li>
                   </ul>
                 </div>
               </dropdown>
             </div>
             <div class="research-right">
-              <file-add v-if="row.research.enabled_add_files" :iss_pk="row.pk" :count_files="row.countFiles"/>
+              <FileAdd
+                v-if="row.research.enabled_add_files"
+                :iss_pk="row.pk"
+                :count_files="row.countFiles"
+              />
               <template v-if="data.direction.all_confirmed && !data.has_monitoring && !data.has_expertise">
                 <a
+                  v-if="stat_btn"
                   :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
                   class="btn btn-blue-nb"
                   target="_blank"
-                  v-if="stat_btn"
-                  >Статталон</a
-                >
-                <a href="#" class="btn btn-blue-nb" @click.prevent="print_results(data.direction.pk)">Печать</a>
+                >Статталон</a>
+                <a
+                  href="#"
+                  class="btn btn-blue-nb"
+                  @click.prevent="print_results(data.direction.pk)"
+                >Печать</a>
               </template>
               <template v-if="!data.has_microbiology">
-                <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs" target="_blank" title="Снимок" v-tippy>
-                  &nbsp;<i class="fa fa-camera"></i>&nbsp;
+                <a
+                  v-if="!!row.pacs"
+                  v-tippy
+                  :href="row.pacs"
+                  class="btn btn-blue-nb"
+                  target="_blank"
+                  title="Снимок"
+                >
+                  &nbsp;<i class="fa fa-camera" />&nbsp;
                 </a>
                 <template v-if="!row.confirmed">
                   <button
-                    class="btn btn-blue-nb"
-                    @click="print_example(data.direction.pk)"
                     v-if="!row.confirmed"
-                    title="Печать образца"
                     v-tippy
+                    class="btn btn-blue-nb"
+                    title="Печать образца"
+                    @click="print_example(data.direction.pk)"
                   >
                     Образец
                   </button>
                   <button
-                    class="btn btn-blue-nb"
-                    @click="save(row)"
                     v-if="!row.confirmed"
-                    title="Сохранить без подтверждения"
                     v-tippy
+                    class="btn btn-blue-nb"
+                    title="Сохранить без подтверждения"
+                    @click="save(row)"
                   >
-                    &nbsp;<i class="fa fa-save"></i>&nbsp;
+                    &nbsp;<i class="fa fa-save" />&nbsp;
                   </button>
                   <button
-                    class="btn btn-blue-nb"
-                    @click="clear_vals(row)"
-                    title="Очистить протокол"
-                    v-tippy
                     v-if="!data.has_monitoring && !data.has_expertise"
+                    v-tippy
+                    class="btn btn-blue-nb"
+                    title="Очистить протокол"
+                    @click="clear_vals(row)"
                   >
-                    &nbsp;<i class="fa fa-times"></i>&nbsp;
+                    &nbsp;<i class="fa fa-times" />&nbsp;
                   </button>
-                  <div class="right-f" v-if="fte && !data.has_monitoring && !data.has_expertise">
-                    <select-picker-m
+                  <div
+                    v-if="fte && !data.has_monitoring && !data.has_expertise"
+                    class="right-f"
+                  >
+                    <SelectPickerM
                       v-model="templates[row.pk]"
                       :search="true"
-                      :options="row.templates.map(x => ({ label: x.title, value: x.pk }))"
+                      :options="row.templates.map((x) => ({ label: x.title, value: x.pk }))"
                     />
                   </div>
                   <button
+                    v-if="fte && !data.has_monitoring && !data.has_expertise"
                     class="btn btn-blue-nb"
                     @click="load_template(row, templates[row.pk])"
-                    v-if="fte && !data.has_monitoring && !data.has_expertise"
                   >
                     Загрузить шаблон
                   </button>
@@ -432,15 +683,14 @@
             </div>
           </div>
           <DescriptiveForm
+            :key="`df-${row.pk}`"
             :research="row.research"
             :confirmed="row.confirmed"
             :patient="data.patient"
             :change_mkb="change_mkb(row)"
             :pk="row.pk"
-            :key="`df-${row.pk}`"
           />
           <div
-            class="group"
             v-if="
               !data.has_microbiology &&
                 row.research.show_more_services &&
@@ -448,15 +698,18 @@
                 !data.has_monitoring &&
                 !data.has_expertise
             "
+            class="group"
           >
-            <div class="group-title">Дополнительные услуги</div>
+            <div class="group-title">
+              Дополнительные услуги
+            </div>
             <div class="row">
               <div
-                class="col-xs-6"
                 v-show="!row.confirmed"
-                style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;"
+                class="col-xs-6"
+                style="height: 200px; border-right: 1px solid #eaeaea; padding-right: 0"
               >
-                <researches-picker
+                <ResearchesPicker
                   v-model="row.more"
                   :hidetemplates="true"
                   :readonly="row.confirmed"
@@ -468,26 +721,45 @@
                 :class="row.confirmed ? 'col-xs-12' : 'col-xs-6'"
                 :style="'height: 200px;' + (row.confirmed ? '' : 'padding-left: 0')"
               >
-                <SelectedResearches :researches="row.more" :readonly="row.confirmed" :simple="true" />
+                <SelectedResearches
+                  :researches="row.more"
+                  :readonly="row.confirmed"
+                  :simple="true"
+                />
               </div>
             </div>
           </div>
           <template v-if="data.has_microbiology">
-            <div class="group" v-if="row.tube">
+            <div
+              v-if="row.tube"
+              class="group"
+            >
               <div class="fields">
                 <div class="field">
-                  <div class="field-title" style="flex: 1 0 120px">
+                  <div
+                    class="field-title"
+                    style="flex: 1 0 120px"
+                  >
                     Номер анализа
                   </div>
-                  <div class="field-value" style="padding: 3px">
+                  <div
+                    class="field-value"
+                    style="padding: 3px"
+                  >
                     <span class="tube-pk">{{ row.tube.pk }}</span>
                   </div>
                 </div>
                 <div class="field">
-                  <div class="field-title" style="flex: 1 0 120px">
+                  <div
+                    class="field-title"
+                    style="flex: 1 0 120px"
+                  >
                     Ёмкость
                   </div>
-                  <div class="field-value" style="padding: 3px">
+                  <div
+                    class="field-value"
+                    style="padding: 3px"
+                  >
                     <span
                       :style="{
                         width: '10px',
@@ -496,28 +768,34 @@
                         border: '1px solid #aaa',
                         display: 'inline-block',
                       }"
-                    ></span>
+                    />
                     {{ row.tube.type }}, дата забора {{ row.tube.get }}
-                    <a href="#" class="a-under" @click.prevent="print_tube_iss(row.tube.pk)">печать ш/к</a>
+                    <a
+                      href="#"
+                      class="a-under"
+                      @click.prevent="print_tube_iss(row.tube.pk)"
+                    >печать ш/к</a>
                   </div>
                 </div>
               </div>
             </div>
             <BacMicroForm
-              :confirmed="row.confirmed"
               v-model="row.microbiology.bacteries"
-              :cultureCommentsTemplates="row.microbiology.cultureCommentsTemplates"
+              :confirmed="row.confirmed"
+              :culture-comments-templates="row.microbiology.cultureCommentsTemplates"
             />
             <div class="group">
-              <div class="group-title">Заключение</div>
+              <div class="group-title">
+                Заключение
+              </div>
               <div class="fields">
                 <div
                   :class="{ disabled: row.confirmed }"
+                  class="field"
                   v-on="{
                     mouseenter: enter_field(row.microbiology.conclusionTemplates.length > 0),
                     mouseleave: leave_field(row.microbiology.conclusionTemplates.length > 0),
                   }"
-                  class="field"
                 >
                   <FastTemplates
                     :update_value="updateValue(row.microbiology, 'conclusion')"
@@ -526,58 +804,105 @@
                     :confirmed="row.confirmed"
                   />
                   <div class="field-value">
-                    <textarea rows="5" class="form-control" :readonly="row.confirmed" v-model="row.microbiology.conclusion" />
+                    <textarea
+                      v-model="row.microbiology.conclusion"
+                      rows="5"
+                      class="form-control"
+                      :readonly="row.confirmed"
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </template>
-          <div class="group" v-if="row.research.is_doc_refferal && row.recipe">
-            <div class="group-title">Рецепты</div>
+          <div
+            v-if="row.research.is_doc_refferal && row.recipe"
+            class="group"
+          >
+            <div class="group-title">
+              Рецепты
+            </div>
             <div class="row">
               <div class="col-xs-12">
                 <div class="sd">
-                  <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
+                  <RecipeInput
+                    v-model="row.recipe"
+                    :pk="row.pk"
+                    :confirmed="row.confirmed"
+                  />
                 </div>
               </div>
             </div>
           </div>
-          <div class="group" v-if="row.research.is_doc_refferal">
-            <div class="group-title">Направления в рамках приёма</div>
+          <div
+            v-if="row.research.is_doc_refferal"
+            class="group"
+          >
+            <div class="group-title">
+              Направления в рамках приёма
+            </div>
             <div class="row">
               <div class="col-xs-12">
                 <div class="sd">
-                  <directions-history :iss_pk="row.pk" kk="cd" />
+                  <DirectionsHistory
+                    :iss_pk="row.pk"
+                    kk="cd"
+                  />
                 </div>
-                <div class="sd empty" v-if="!row.confirmed">
-                  <button @click="create_directions(row)" class="btn btn-primary-nb btn-blue-nb" type="button">
-                    <i class="fa fa-plus"></i> создать направления
+                <div
+                  v-if="!row.confirmed"
+                  class="sd empty"
+                >
+                  <button
+                    class="btn btn-primary-nb btn-blue-nb"
+                    type="button"
+                    @click="create_directions(row)"
+                  >
+                    <i class="fa fa-plus" /> создать направления
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          <div class="group" v-if="row.research.is_doc_refferal && stat_btn">
-            <div class="group-title">Данные статталона</div>
+          <div
+            v-if="row.research.is_doc_refferal && stat_btn"
+            class="group"
+          >
+            <div class="group-title">
+              Данные статталона
+            </div>
             <div class="fields">
               <div class="field">
                 <div class="field-title">
                   Цель посещения
                 </div>
                 <div class="field-value">
-                  <select v-model="row.purpose" :disabled="row.confirmed">
-                    <option v-for="o in row.purpose_list" :value="o.pk" :key="o.pk">
+                  <select
+                    v-model="row.purpose"
+                    :disabled="row.confirmed"
+                  >
+                    <option
+                      v-for="o in row.purpose_list"
+                      :key="o.pk"
+                      :value="o.pk"
+                    >
                       {{ o.title }}
                     </option>
                   </select>
                 </div>
               </div>
               <div class="field">
-                <label class="field-title" for="first-time">
-                  Впервые
-                </label>
+                <label
+                  class="field-title"
+                  for="first-time"
+                > Впервые </label>
                 <div class="field-value">
-                  <input type="checkbox" id="first-time" v-model="row.first_time" :disabled="row.confirmed" />
+                  <input
+                    id="first-time"
+                    v-model="row.first_time"
+                    type="checkbox"
+                    :disabled="row.confirmed"
+                  >
                 </div>
               </div>
               <div class="field">
@@ -585,8 +910,15 @@
                   Результат обращения
                 </div>
                 <div class="field-value">
-                  <select v-model="row.result" :disabled="row.confirmed">
-                    <option v-for="o in row.result_list" :value="o.pk" :key="o.pk">
+                  <select
+                    v-model="row.result"
+                    :disabled="row.confirmed"
+                  >
+                    <option
+                      v-for="o in row.result_list"
+                      :key="o.pk"
+                      :value="o.pk"
+                    >
                       {{ o.title }}
                     </option>
                   </select>
@@ -597,8 +929,15 @@
                   Исход
                 </div>
                 <div class="field-value">
-                  <select v-model="row.outcome" :disabled="row.confirmed">
-                    <option v-for="o in row.outcome_list" :value="o.pk" :key="o.pk">
+                  <select
+                    v-model="row.outcome"
+                    :disabled="row.confirmed"
+                  >
+                    <option
+                      v-for="o in row.outcome_list"
+                      :key="o.pk"
+                      :value="o.pk"
+                    >
                       {{ o.title }}
                     </option>
                   </select>
@@ -608,19 +947,33 @@
                 <div class="field-title">
                   Заключительный диагноз
                 </div>
-                <div class="field-value mkb10" v-if="!row.confirmed">
-                  <m-k-b-field v-model="row.diagnos" />
+                <div
+                  v-if="!row.confirmed"
+                  class="field-value mkb10"
+                >
+                  <MKBField v-model="row.diagnos" />
                 </div>
-                <div class="field-value" v-else>
-                  <input v-model="row.diagnos" class="form-control" :readonly="true" />
+                <div
+                  v-else
+                  class="field-value"
+                >
+                  <input
+                    v-model="row.diagnos"
+                    class="form-control"
+                    :readonly="true"
+                  >
                 </div>
               </div>
-              <div class="field" v-if="row.research.is_doc_refferal">
+              <div
+                v-if="row.research.is_doc_refferal"
+                class="field"
+              >
                 <div class="field-title">
                   Дата осмотра
                 </div>
                 <label class="field-value">
                   <input
+                    v-model="row.examination_date"
                     :max="tdm()"
                     :min="td_m_year"
                     :readonly="row.confirmed"
@@ -628,8 +981,7 @@
                     required
                     style="width: 160px"
                     type="date"
-                    v-model="row.examination_date"
-                  />
+                  >
                 </label>
               </div>
               <div class="field">
@@ -637,8 +989,15 @@
                   Место оказания
                 </div>
                 <div class="field-value">
-                  <select v-model="row.place" :disabled="row.confirmed">
-                    <option v-for="o in row.place_list" :value="o.pk" :key="o.pk">
+                  <select
+                    v-model="row.place"
+                    :disabled="row.confirmed"
+                  >
+                    <option
+                      v-for="o in row.place_list"
+                      :key="o.pk"
+                      :value="o.pk"
+                    >
                       {{ o.title }}
                     </option>
                   </select>
@@ -649,8 +1008,15 @@
                   Источник финансирования
                 </div>
                 <div class="field-value">
-                  <select v-model="row.fin_source" :disabled="row.confirmed">
-                    <option v-for="o in row.fin_source_list" :value="o.pk" :key="o.pk">
+                  <select
+                    v-model="row.fin_source"
+                    :disabled="row.confirmed"
+                  >
+                    <option
+                      v-for="o in row.fin_source_list"
+                      :key="o.pk"
+                      :value="o.pk"
+                    >
                       {{ o.title }}
                     </option>
                   </select>
@@ -658,78 +1024,129 @@
               </div>
             </div>
           </div>
-          <div class="group" v-if="!data.has_microbiology && !row.is_form && !data.has_monitoring && !data.has_expertise">
+          <div
+            v-if="!data.has_microbiology && !row.is_form && !data.has_monitoring && !data.has_expertise"
+            class="group"
+          >
             <div class="fields">
               <div class="field">
-                <label class="field-title" for="onco">
-                  Подозрение на онко
-                </label>
+                <label
+                  class="field-title"
+                  for="onco"
+                > Подозрение на онко </label>
                 <div class="field-value">
-                  <input type="checkbox" id="onco" v-model="row.maybe_onco" :disabled="row.confirmed" />
+                  <input
+                    id="onco"
+                    v-model="row.maybe_onco"
+                    type="checkbox"
+                    :disabled="row.confirmed"
+                  >
                 </div>
               </div>
             </div>
           </div>
-          <div class="group" v-if="row.parentDirection && !embedded">
-            <div class="group-title">Главное направление</div>
+          <div
+            v-if="row.parentDirection && !embedded"
+            class="group"
+          >
+            <div class="group-title">
+              Главное направление
+            </div>
             <div class="fields">
               <div class="field">
-                <label class="field-title" for="onco">
+                <label
+                  class="field-title"
+                  for="onco"
+                >
                   №<a
+                    v-if="!row.parentDirection.is_hospital"
                     href="#"
                     class="a-under"
                     @click.prevent="load_pk(row.parentDirection.pk)"
-                    v-if="!row.parentDirection.is_hospital"
-                    >{{ row.parentDirection.pk }}</a
-                  ><span v-else>{{ row.parentDirection.pk }}</span>
+                  >{{ row.parentDirection.pk }}</a><span v-else>{{ row.parentDirection.pk }}</span>
                 </label>
                 <div class="field-value simple-value">
                   {{ row.parentDirection.service }}
                   <template v-if="row.parentDirection.is_hospital">
-                    &nbsp;<i class="fa fa-bed" title="И/б стационара" v-tippy></i>
+                    &nbsp;<i
+                      v-tippy
+                      class="fa fa-bed"
+                      title="И/б стационара"
+                    />
                   </template>
                 </div>
               </div>
             </div>
           </div>
-          <div class="group" v-if="row.children_directions && row.children_directions.length > 0">
-            <div class="group-title">Дочерние направления</div>
-            <div class="fields" v-for="d in row.children_directions" :key="d.pk">
+          <div
+            v-if="row.children_directions && row.children_directions.length > 0"
+            class="group"
+          >
+            <div class="group-title">
+              Дочерние направления
+            </div>
+            <div
+              v-for="d in row.children_directions"
+              :key="d.pk"
+              class="fields"
+            >
               <div class="field">
                 <label class="field-title">
-                  №<a href="#" class="a-under" @click.prevent="load_pk(d.pk)">{{ d.pk }}</a>
+                  №<a
+                    href="#"
+                    class="a-under"
+                    @click.prevent="load_pk(d.pk)"
+                  >{{ d.pk }}</a>
                 </label>
                 <div class="field-value simple-value">
                   <ul>
-                    <li v-for="(s, j) in d.services" :key="j">{{ s }}</li>
+                    <li
+                      v-for="(s, j) in d.services"
+                      :key="j"
+                    >
+                      {{ s }}
+                    </li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
-          <div class="group" v-if="!row.confirmed && can_confirm_by_other_user">
+          <div
+            v-if="!row.confirmed && can_confirm_by_other_user"
+            class="group"
+          >
             <div class="fields">
               <div class="field">
-                <label class="field-title">
-                  Подтверждение от имени
-                </label>
+                <label class="field-title"> Подтверждение от имени </label>
                 <div class="field-value">
                   <Treeselect
+                    v-model="row.work_by"
                     :multiple="false"
                     :disable-branch-nodes="true"
                     class="treeselect-wide"
                     :options="workFromUsers"
                     :append-to-body="true"
                     :clearable="true"
-                    v-model="row.work_by"
-                    :zIndex="5001"
+                    :z-index="5001"
                     placeholder="Не выбрано"
                   />
 
-                  <div v-if="workFromHistoryList.length > 0" style="margin-top: 5px;">
-                    <div v-for="p in workFromHistoryList" :key="p.id">
-                      <a href="#" @click.prevent="row.work_by = p.id" class="a-under-reversed" title="Выбрать из истории" v-tippy>
-                        <i class="fas fa-history"></i> {{ p.label }} — {{ p.podr }}
+                  <div
+                    v-if="workFromHistoryList.length > 0"
+                    style="margin-top: 5px"
+                  >
+                    <div
+                      v-for="p in workFromHistoryList"
+                      :key="p.id"
+                    >
+                      <a
+                        v-tippy
+                        href="#"
+                        class="a-under-reversed"
+                        title="Выбрать из истории"
+                        @click.prevent="row.work_by = p.id"
+                      >
+                        <i class="fas fa-history" /> {{ p.label }} — {{ p.podr }}
                       </a>
                     </div>
                   </div>
@@ -737,28 +1154,34 @@
               </div>
             </div>
           </div>
-          <div class="group" v-if="row.whoSaved || row.whoConfirmed || row.whoExecuted">
+          <div
+            v-if="row.whoSaved || row.whoConfirmed || row.whoExecuted"
+            class="group"
+          >
             <div class="fields">
-              <div class="field" v-if="row.whoSaved">
-                <label class="field-title">
-                  Сохранено
-                </label>
+              <div
+                v-if="row.whoSaved"
+                class="field"
+              >
+                <label class="field-title"> Сохранено </label>
                 <div class="field-value simple-value">
                   {{ row.whoSaved }}
                 </div>
               </div>
-              <div class="field" v-if="row.whoConfirmed">
-                <label class="field-title">
-                  Подтверждено
-                </label>
+              <div
+                v-if="row.whoConfirmed"
+                class="field"
+              >
+                <label class="field-title"> Подтверждено </label>
                 <div class="field-value simple-value">
                   {{ row.whoConfirmed }}
                 </div>
               </div>
-              <div class="field" v-if="row.whoExecuted">
-                <label class="field-title">
-                  Оператор
-                </label>
+              <div
+                v-if="row.whoExecuted"
+                class="field"
+              >
+                <label class="field-title"> Оператор </label>
                 <div class="field-value simple-value">
                   {{ row.whoExecuted }}
                 </div>
@@ -766,75 +1189,144 @@
             </div>
           </div>
           <div class="control-row">
-            <div class="res-title">{{ row.research.title }}:</div>
+            <div class="res-title">
+              {{ row.research.title }}:
+            </div>
             <IssStatus :i="row" />
-            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
             <button
+              v-if="!row.confirmed"
               class="btn btn-blue-nb"
-              @click="save_and_confirm(row)"
+              @click="save(row)"
+            >
+              Сохранить
+            </button>
+            <button
               v-if="!row.confirmed && can_confirm"
+              class="btn btn-blue-nb"
               :disabled="!r(row) || needFillWorkBy(row)"
+              @click="save_and_confirm(row)"
             >
               Сохранить и подтвердить
             </button>
             <button
+              v-if="row.confirmed && row.allow_reset_confirm && can_confirm"
               class="btn btn-blue-nb"
               @click="reset_confirm(row)"
-              v-if="row.confirmed && row.allow_reset_confirm && can_confirm"
             >
               Сброс подтверждения
             </button>
             <template v-if="amd && data.researches.length === 1">
-              <div class="amd amd-planned" v-if="data.direction.amd === 'planned'">АМД: запланировано</div>
-              <div class="amd amd-error" v-if="data.direction.amd === 'error' && row.confirmed">АМД: ошибка</div>
-              <div class="amd amd-need" v-if="data.direction.amd === 'need' && row.confirmed">АМД: не отправлено</div>
-              <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено ({{ data.direction.amd_number }})</div>
+              <div
+                v-if="data.direction.amd === 'planned'"
+                class="amd amd-planned"
+              >
+                АМД: запланировано
+              </div>
+              <div
+                v-if="data.direction.amd === 'error' && row.confirmed"
+                class="amd amd-error"
+              >
+                АМД: ошибка
+              </div>
+              <div
+                v-if="data.direction.amd === 'need' && row.confirmed"
+                class="amd amd-need"
+              >
+                АМД: не отправлено
+              </div>
+              <div
+                v-if="data.direction.amd === 'ok'"
+                class="amd amd-ok"
+              >
+                АМД: отправлено ({{ data.direction.amd_number }})
+              </div>
               <button
+                v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'"
                 class="btn btn-blue-nb"
                 @click="reset_amd([data.direction.pk])"
-                v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'"
               >
                 Сброс статуса АМД
               </button>
               <button
+                v-if="data.direction.amd === 'need' || data.direction.amd === 'error'"
                 class="btn btn-blue-nb"
                 @click="send_to_amd([data.direction.pk])"
-                v-if="data.direction.amd === 'need' || data.direction.amd === 'error'"
               >
                 Отправить в АМД
               </button>
             </template>
             <EDSDirection
+              v-if="data.researches.length === 1"
               :key="`${data.direction.pk}_${row.confirmed}`"
               :direction-pk="data.direction.pk"
               :all_confirmed="data.direction.all_confirmed"
-              v-if="data.researches.length === 1"
             />
-            <div class="status-list" v-if="(!r(row) || needFillWorkBy(row)) && !row.confirmed">
-              <div class="status status-none">Не верно:</div>
-              <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
-              <div class="status status-none" v-if="needFillWorkBy(row)">подтверждение от имени</div>
+            <div
+              v-if="(!r(row) || needFillWorkBy(row)) && !row.confirmed"
+              class="status-list"
+            >
+              <div class="status status-none">
+                Не верно:
+              </div>
+              <div
+                v-for="rl in r_list(row)"
+                :key="rl"
+                class="status status-none"
+              >
+                {{ rl }};
+              </div>
+              <div
+                v-if="needFillWorkBy(row)"
+                class="status status-none"
+              >
+                подтверждение от имени
+              </div>
             </div>
           </div>
         </div>
-        <div class="control-row" v-if="data && data.ok && data.researches.length > 1 && data.direction.all_confirmed">
-          <div class="res-title">Услуг в направлении: {{ data.researches.length }} шт.</div>
+        <div
+          v-if="data && data.ok && data.researches.length > 1 && data.direction.all_confirmed"
+          class="control-row"
+        >
+          <div class="res-title">
+            Услуг в направлении: {{ data.researches.length }} шт.
+          </div>
           <template v-if="amd">
-            <div class="amd amd-planned" v-if="data.direction.amd === 'planned'">АМД: запланировано</div>
-            <div class="amd amd-error" v-if="data.direction.amd === 'error' && row.confirmed">АМД: ошибка</div>
-            <div class="amd amd-need" v-if="data.direction.amd === 'need' && row.confirmed">АМД: не отправлено</div>
-            <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено ({{ data.direction.amd_number }})</div>
+            <div
+              v-if="data.direction.amd === 'planned'"
+              class="amd amd-planned"
+            >
+              АМД: запланировано
+            </div>
+            <div
+              v-if="data.direction.amd === 'error' && row.confirmed"
+              class="amd amd-error"
+            >
+              АМД: ошибка
+            </div>
+            <div
+              v-if="data.direction.amd === 'need' && row.confirmed"
+              class="amd amd-need"
+            >
+              АМД: не отправлено
+            </div>
+            <div
+              v-if="data.direction.amd === 'ok'"
+              class="amd amd-ok"
+            >
+              АМД: отправлено ({{ data.direction.amd_number }})
+            </div>
             <button
+              v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'"
               class="btn btn-blue-nb"
               @click="reset_amd([data.direction.pk])"
-              v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'"
             >
               Сброс статуса АМД
             </button>
             <button
+              v-if="data.direction.amd === 'need' || data.direction.amd === 'error'"
               class="btn btn-blue-nb"
               @click="send_to_amd([data.direction.pk])"
-              v-if="data.direction.amd === 'need' || data.direction.amd === 'error'"
             >
               Отправить в АМД
             </button>
@@ -845,94 +1337,144 @@
             :all_confirmed="data.direction.all_confirmed"
           />
         </div>
-        <div class="group" v-if="show_additional">
-          <div class="group-title">Дополнительные исследования</div>
+        <div
+          v-if="show_additional"
+          class="group"
+        >
+          <div class="group-title">
+            Дополнительные исследования
+          </div>
           <div class="row">
-            <div class="col-xs-6" style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
+            <div
+              class="col-xs-6"
+              style="height: 200px; border-right: 1px solid #eaeaea; padding-right: 0"
+            >
               <ResearchesPicker
                 v-model="moreServices"
                 :hidetemplates="true"
                 :just_search="true"
-                :typesOnly="[10000]"
+                :types-only="[10000]"
                 :filter_sub_types="additionalTypes"
-                :filter_researches="data.researches.map(r => r.research.pk)"
+                :filter_researches="data.researches.map((r) => r.research.pk)"
               />
             </div>
-            <div class="col-xs-6" style="height: 200px;padding-left: 0">
-              <SelectedResearches :researches="moreServices" :simple="true" />
+            <div
+              class="col-xs-6"
+              style="height: 200px; padding-left: 0"
+            >
+              <SelectedResearches
+                :researches="moreServices"
+                :simple="true"
+              />
             </div>
           </div>
-          <div class="sd empty" style="margin-top: 5px">
+          <div
+            class="sd empty"
+            style="margin-top: 5px"
+          >
             <button
-              @click="add_services"
               class="btn btn-primary-nb btn-blue-nb"
               type="button"
               :disabled="moreServices.length === 0"
+              @click="add_services"
             >
               Добавить услуги в направление
             </button>
           </div>
-          <div class="text-right" style="margin-top: 5px">
+          <div
+            class="text-right"
+            style="margin-top: 5px"
+          >
             Вы можете назначить дополнительные исследования только, если направление не подтверждено полностью.
           </div>
         </div>
       </div>
     </div>
-    <div class="results-content" v-else></div>
-    <modal
+    <div
+      v-else
+      class="results-content"
+    />
+    <Modal
       v-if="anamnesis_edit"
       ref="modalAnamnesisEdit"
-      @close="hide_modal_anamnesis_edit"
       show-footer="true"
       white-bg="true"
       max-width="710px"
       width="100%"
-      marginLeftRight="auto"
+      margin-left-right="auto"
       margin-top
+      @close="hide_modal_anamnesis_edit"
     >
       <span slot="header">Редактор анамнеза жизни – карта {{ data.patient.card }}, {{ data.patient.fio_age }}</span>
-      <div slot="body" style="min-height: 140px" class="registry-body">
-        <textarea v-model="anamnesis_data.text" rows="14" class="form-control" placeholder="Анамнез жизни"></textarea>
+      <div
+        slot="body"
+        style="min-height: 140px"
+        class="registry-body"
+      >
+        <textarea
+          v-model="anamnesis_data.text"
+          rows="14"
+          class="form-control"
+          placeholder="Анамнез жизни"
+        />
       </div>
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="hide_modal_anamnesis_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_modal_anamnesis_edit"
+            >
               Отмена
             </button>
           </div>
           <div class="col-xs-4">
-            <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="save_anamnesis()"
+            >
               Сохранить
             </button>
           </div>
         </div>
       </div>
-    </modal>
-    <modal
-      @close="hide_modal_create_directions"
-      margin-top
-      marginLeftRight="auto"
-      max-width="1400px"
-      ref="modalCD"
-      show-footer="true"
+    </Modal>
+    <Modal
       v-if="create_directions_for > -1"
+      ref="modalCD"
+      margin-top
+      margin-left-right="auto"
+      max-width="1400px"
+      show-footer="true"
       white-bg="true"
       width="100%"
+      @close="hide_modal_create_directions"
     >
       <span slot="header">Создание направлений – карта {{ data.patient.card }}, {{ data.patient.fio_age }}</span>
-      <div class="registry-body" slot="body" style="min-height: 140px">
+      <div
+        slot="body"
+        class="registry-body"
+        style="min-height: 140px"
+      >
         <div class="row">
-          <div class="col-xs-6" style="height: 450px;border-right: 1px solid #eaeaea;padding-right: 0;">
-            <researches-picker
+          <div
+            class="col-xs-6"
+            style="height: 450px; border-right: 1px solid #eaeaea; padding-right: 0"
+          >
+            <ResearchesPicker
               v-model="create_directions_data"
               kk="cd"
-              style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
+              style="border-top: 1px solid #eaeaea; border-bottom: 1px solid #eaeaea"
               :filter_types="[7]"
             />
           </div>
-          <div class="col-xs-6" style="height: 450px;padding-left: 0;">
-            <selected-researches
+          <div
+            class="col-xs-6"
+            style="height: 450px; padding-left: 0"
+          >
+            <SelectedResearches
               kk="cd"
               :base="bases_obj[data.patient.base]"
               :researches="create_directions_data"
@@ -942,24 +1484,27 @@
               :initial_fin="data.direction.fin_source_id"
               :parent_iss="create_directions_for"
               :clear_after_gen="true"
-              style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
+              style="border-top: 1px solid #eaeaea; border-bottom: 1px solid #eaeaea"
             />
           </div>
         </div>
-        <div v-if="create_directions_data.length > 0" style="margin-top: 5px;text-align: left">
+        <div
+          v-if="create_directions_data.length > 0"
+          style="margin-top: 5px; text-align: left"
+        >
           <table class="table table-bordered lastresults">
             <colgroup>
-              <col width="180" />
-              <col />
-              <col width="110" />
-              <col width="110" />
+              <col width="180">
+              <col>
+              <col width="110">
+              <col width="110">
             </colgroup>
             <tbody>
-              <last-result
-                :individual="data.patient.individual_pk"
-                :key="p"
+              <LastResult
                 v-for="p in create_directions_data"
-                :noScroll="true"
+                :key="p"
+                :individual="data.patient.individual_pk"
+                :no-scroll="true"
                 :research="p"
               />
             </tbody>
@@ -969,57 +1514,91 @@
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="hide_modal_create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_modal_create_directions"
+            >
               Закрыть
             </button>
           </div>
         </div>
       </div>
-    </modal>
-    <modal
+    </Modal>
+    <Modal
       v-if="!!slot.id"
       ref="modalSlot"
-      @close="close_slot"
       margin-top="50px"
       show-footer="true"
       white-bg="true"
       max-width="710px"
       width="100%"
-      marginLeftRight="auto"
+      margin-left-right="auto"
+      @close="close_slot"
     >
       <span slot="header">Слот {{ slot.id }}</span>
-      <div slot="body" style="min-height: 200px;background-color: #fff" class="registry-body">
-        <div class="text-center" v-if="Object.keys(slot.data).length === 0">загрузка...</div>
-        <div class="text-left" v-else>
-          <h3 style="margin-top: 0;">Талон № {{ slot.data.pk }}</h3>
+      <div
+        slot="body"
+        style="min-height: 200px; background-color: #fff"
+        class="registry-body"
+      >
+        <div
+          v-if="Object.keys(slot.data).length === 0"
+          class="text-center"
+        >
+          загрузка...
+        </div>
+        <div
+          v-else
+          class="text-left"
+        >
+          <h3 style="margin-top: 0">
+            Талон № {{ slot.data.pk }}
+          </h3>
           <h5>{{ slot.data.datetime }}</h5>
           РМИС UID пациента:
-          <a :href="`/ui/directions?rmis_uid=${slot.data.patient_uid}`" target="_blank">{{ slot.data.patient_uid }}</a
-          ><br />
-          <div v-if="!slot.data.direction">Нет связанного назначения. Выберите ниже:</div>
-          <div v-else>Выбранное назначение для талона:</div>
+          <a
+            :href="`/ui/directions?rmis_uid=${slot.data.patient_uid}`"
+            target="_blank"
+          >{{ slot.data.patient_uid }}</a><br>
+          <div v-if="!slot.data.direction">
+            Нет связанного назначения. Выберите ниже:
+          </div>
+          <div v-else>
+            Выбранное назначение для талона:
+          </div>
           <div class="content-picker">
-            <research-pick
-              :class="{ active: row.pk === slot.data.direction_service }"
-              :research="row"
-              @click.native="select_research(row.pk)"
-              class="research-select"
+            <ResearchPick
               v-for="row in userServicesFiltered"
               :key="row.pk"
+              :class="{ active: row.pk === slot.data.direction_service }"
+              :research="row"
+              class="research-select"
+              @click.native="select_research(row.pk)"
             />
-            <div v-if="userServicesFiltered.length === 0">нет данных</div>
+            <div v-if="userServicesFiltered.length === 0">
+              нет данных
+            </div>
           </div>
-          <div class="text-center" style="margin-top: 10px;">
+          <div
+            class="text-center"
+            style="margin-top: 10px"
+          >
             <button
-              @click="fill_slot"
-              :disabled="slot.data.direction_service === -1"
               v-if="!slot.data.direction"
+              :disabled="slot.data.direction_service === -1"
               class="btn btn-primary-nb btn-blue-nb"
               type="button"
+              @click="fill_slot"
             >
               Сохранить назначение и заполнить протокол
             </button>
-            <button @click="open_fill_slot(slot.data.direction)" v-else class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              v-else
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="open_fill_slot(slot.data.direction)"
+            >
               Перейти к протоколу
             </button>
           </div>
@@ -1028,22 +1607,34 @@
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="close_slot" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="close_slot"
+            >
               Закрыть
             </button>
           </div>
         </div>
       </div>
-    </modal>
-    <d-reg
+    </Modal>
+    <DReg
+      v-if="dreg"
       :card_pk="data.patient.card_pk"
       :card_data="data.patient"
       :fin-id="data.direction.fin_source_id"
       :parent_iss="data.researches[0].pk"
-      v-if="dreg"
     />
-    <benefit :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="benefit" :readonly="true" />
-    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" />
+    <Benefit
+      v-if="benefit"
+      :card_pk="data.patient.card_pk"
+      :card_data="data.patient"
+      :readonly="true"
+    />
+    <ResultsViewer
+      v-if="show_results_pk > -1"
+      :pk="show_results_pk"
+    />
   </div>
 </template>
 
@@ -1088,7 +1679,7 @@ import MedicalCertificates from '../ui-cards/MedicalCertificates.vue';
 import FastTemplates from '../forms/FastTemplates.vue';
 
 export default {
-  name: 'results-paraclinic',
+  name: 'ResultsParaclinic',
   components: {
     EDSDirection,
     FastTemplates,
@@ -1123,12 +1714,8 @@ export default {
       data: { ok: false, direction: {} },
       date: moment().format('DD.MM.YYYY'),
       td: moment().format('YYYY-MM-DD'),
-      tnd: moment()
-        .add(1, 'day')
-        .format('YYYY-MM-DD'),
-      td_m_year: moment()
-        .subtract(1, 'year')
-        .format('YYYY-MM-DD'),
+      tnd: moment().add(1, 'day').format('YYYY-MM-DD'),
+      td_m_year: moment().subtract(1, 'year').format('YYYY-MM-DD'),
       directions_history: [],
       prev_scroll: 0,
       prev_scrollHeightTop: 0,
@@ -1178,6 +1765,168 @@ export default {
       workFromHistory: [],
       moreServices: [],
     };
+  },
+  computed: {
+    userServicesFiltered() {
+      return this.user_services.filter((s) => !this.slot.data.direction || s.pk === this.slot.data.direction_service);
+    },
+    date_to_form() {
+      return `"${this.date}"`;
+    },
+    ca() {
+      if (this.new_anamnesis !== null) {
+        return this.new_anamnesis;
+      }
+      return this.data.anamnesis;
+    },
+    fte() {
+      return this.$store.getters.modules.l2_fast_templates;
+    },
+    stat_btn() {
+      return this.$store.getters.modules.l2_stat_btn;
+    },
+    stat_btn_d() {
+      return this.stat_btn && this.directions_history.length;
+    },
+    rmis_queue() {
+      return this.$store.getters.modules.l2_rmis_queue;
+    },
+    amd() {
+      return this.$store.getters.modules.l2_amd;
+    },
+    l2_microbiology() {
+      return this.$store.getters.modules.l2_microbiology;
+    },
+    l2_morfology_additional() {
+      return this.$store.getters.modules.l2_morfology_additional;
+    },
+    show_additional() {
+      if (!this.data || !this.data.ok) {
+        return false;
+      }
+      return (
+        this.l2_morfology_additional
+        && (this.data.has_microbiology || this.data.has_citology || this.data.has_gistology)
+        && !this.data.direction.all_confirmed
+      );
+    },
+    additionalTypes() {
+      if (!this.show_additional) {
+        return [];
+      }
+      if (this.data.has_microbiology) {
+        return [10001];
+      }
+      if (this.data.has_citology) {
+        return [10002];
+      }
+      if (this.data.has_gistology) {
+        return [10003];
+      }
+      return [1000000];
+    },
+    pk_c() {
+      const lpk = this.pk.trim();
+      if (lpk === '') return -1;
+      try {
+        return parseInt(lpk, 10);
+      } catch (e) {
+        // pass
+      }
+      return -1;
+    },
+    has_changed() {
+      return this.changed && this.data && this.data.ok && this.inserted;
+    },
+    ...mapGetters({
+      user_data: 'user_data',
+      researches_obj: 'researches',
+      bases: 'bases',
+    }),
+    internal_base() {
+      for (const b of this.bases) {
+        if (b.internal_type) {
+          return b.pk;
+        }
+      }
+      return -1;
+    },
+    bases_obj() {
+      return this.bases.reduce(
+        (a, b) => ({
+          ...a,
+          [b.pk]: b,
+        }),
+        {},
+      );
+    },
+    has_loc() {
+      if (!this.user_data || !this.rmis_queue) {
+        return false;
+      }
+      return !!this.user_data.rmis_location;
+    },
+    user_services() {
+      if (!this.user_data || !this.user_data.user_services) {
+        return [];
+      }
+      const r = [{ pk: -1, title: 'Не выбрано', full_title: 'Не выбрано' }];
+      for (const d of Object.keys(this.researches_obj)) {
+        for (const row of this.$store.getters.researches[d] || []) {
+          if (this.user_data.user_services.includes(row.pk)) {
+            r.push(row);
+          }
+        }
+      }
+      return r;
+    },
+    can_confirm() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Без подтверждений') {
+          return false;
+        }
+      }
+      return true;
+    },
+    can_reset_amd() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Управление отправкой в АМД') {
+          return true;
+        }
+      }
+      return false;
+    },
+    can_confirm_by_other_user() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Работа от имени в описательных протоколах') {
+          return true;
+        }
+      }
+      return false;
+    },
+    navState() {
+      if (!this.data.ok) {
+        return null;
+      }
+      return {
+        pk: this.data.direction.pk,
+      };
+    },
+    workFromHistoryList() {
+      return this.workFromHistory
+        .map((p) => {
+          for (const podr of this.workFromUsers) {
+            const profile = podr.children.find((x) => x.id === p);
+
+            if (profile) {
+              return profile;
+            }
+          }
+
+          return null;
+        })
+        .filter(Boolean);
+    },
   },
   watch: {
     date() {
@@ -1237,7 +1986,7 @@ export default {
       this.benefit = false;
     });
 
-    this.$root.$on('show_results', pk => {
+    this.$root.$on('show_results', (pk) => {
       this.show_results_pk = pk;
     });
 
@@ -1245,7 +1994,7 @@ export default {
       this.show_results_pk = -1;
     });
 
-    this.$root.$on('EDS:has-signs', has => {
+    this.$root.$on('EDS:has-signs', (has) => {
       this.hasEDSigns = has;
     });
 
@@ -1258,7 +2007,7 @@ export default {
       this.inited = true;
     }
 
-    this.$root.$on('open-direction-form', pk => this.load_pk(pk));
+    this.$root.$on('open-direction-form', (pk) => this.load_pk(pk));
 
     this.$root.$on('preselect-args-ok', () => {
       this.hasPreselectOk = true;
@@ -1317,7 +2066,7 @@ export default {
       if (ok) {
         this.load_pk(
           this.data.direction.pk,
-          this.data.researches.map(r => r.pk),
+          this.data.researches.map((r) => r.pk),
         );
         this.$root.$emit('msg', 'ok', `Добавлено услуг: ${pks.length}`);
       } else {
@@ -1341,7 +2090,7 @@ export default {
       this.location.loading = true;
       try {
         this.location.data = (
-          await usersPoint.loadLocation({ date: this.td }).catch(e => {
+          await usersPoint.loadLocation({ date: this.td }).catch((e) => {
             console.error(e);
             return { data: [] };
           })
@@ -1353,9 +2102,7 @@ export default {
       this.location.loading = false;
     },
     tdm() {
-      return moment()
-        .add(1, 'day')
-        .format('YYYY-MM-DD');
+      return moment().add(1, 'day').format('YYYY-MM-DD');
     },
     print_tube_iss(pk) {
       this.$root.$emit('print:barcodes:iss', [pk]);
@@ -1363,14 +2110,14 @@ export default {
     async load_dreg_rows() {
       this.dreg_rows_loading = true;
       this.dreg_rows = (await this.$api('patients/individuals/load-dreg', this.data.patient, 'card_pk')).rows.filter(
-        r => !r.date_end,
+        (r) => !r.date_end,
       );
       this.data.patient.has_dreg = this.dreg_rows.length > 0;
       this.dreg_rows_loading = false;
     },
     async load_benefit_rows() {
       this.benefit_rows_loading = true;
-      this.benefit_rows = (await patientsPoint.loadBenefit(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
+      this.benefit_rows = (await patientsPoint.loadBenefit(this.data.patient, 'card_pk')).rows.filter((r) => !r.date_end);
       this.data.patient.has_benefit = this.benefit_rows.length > 0;
       this.benefit_rows_loading = false;
     },
@@ -1380,7 +2127,7 @@ export default {
       this.anamnesis_loading = false;
     },
     change_mkb(row) {
-      return field => {
+      return (field) => {
         if (field.value && !row.confirmed && row.research.is_doc_refferal && this.stat_btn) {
           const ndiagnos = field.value.split(' ')[0] || '';
           if (ndiagnos !== row.diagnos && ndiagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?$/gm)) {
@@ -1462,7 +2209,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       patientsPoint
         .loadAnamnesis(this.data.patient, 'card_pk')
-        .then(data => {
+        .then((data) => {
           this.anamnesis_data = data;
         })
         .finally(() => {
@@ -1475,7 +2222,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       directionsPoint
         .paraclinicResultUserHistory(this, 'date')
-        .then(data => {
+        .then((data) => {
           this.directions_history = data.directions;
         })
         .finally(() => {
@@ -1505,18 +2252,14 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       await directionsPoint
         .getParaclinicForm({ pk: this.pk_c, byIssledovaniye: this.iss_search, withoutIssledovaniye })
-        .then(data => {
+        .then((data) => {
           if (withoutIssledovaniye) {
             this.data.researches = [...this.data.researches, ...data.researches];
             return;
           }
           if (data.ok) {
-            this.tnd = moment()
-              .add(1, 'day')
-              .format('YYYY-MM-DD');
-            this.td_m_year = moment()
-              .subtract(1, 'year')
-              .format('YYYY-MM-DD');
+            this.tnd = moment().add(1, 'day').format('YYYY-MM-DD');
+            this.td_m_year = moment().subtract(1, 'year').format('YYYY-MM-DD');
             this.dreg_rows_loading = false;
             this.benefit_rows_loading = false;
             this.dreg_rows = [];
@@ -1532,7 +2275,7 @@ export default {
             setTimeout(async () => {
               this.$root.$emit('open-pk', data.direction.pk);
               for (let i = 0; i < 10; i++) {
-                await new Promise(r => setTimeout(r, 100));
+                await new Promise((r) => setTimeout(r, 100));
                 if (this.hasPreselectOk) {
                   break;
                 }
@@ -1596,7 +2339,7 @@ export default {
           with_confirm: false,
           visibility_state: this.visibility_state(iss),
         })
-        .then(data => {
+        .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
             // eslint-disable-next-line no-param-reassign
@@ -1636,13 +2379,13 @@ export default {
           with_confirm: true,
           visibility_state: this.visibility_state(iss),
         })
-        .then(data => {
+        .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
             this.$root.$emit('msg', 'ok', 'Подтверждено');
 
             if (iss.work_by) {
-              this.workFromHistory = [iss.work_by, ...this.workFromHistory.filter(x => x !== iss.work_by).slice(0, 5)];
+              this.workFromHistory = [iss.work_by, ...this.workFromHistory.filter((x) => x !== iss.work_by).slice(0, 5)];
             }
             localStorage.setItem('results-paraclinic:work-from-history', JSON.stringify(this.workFromHistory));
 
@@ -1662,7 +2405,7 @@ export default {
             }
             this.data.direction.amd = data.amd;
             this.data.direction.amd_number = data.amd_number;
-            this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
+            this.data.direction.all_confirmed = this.data.researches.every((r) => Boolean(r.confirmed));
             for (const r of this.data.researches) {
               r.confirmed_at = data.confirmed_at;
             }
@@ -1685,7 +2428,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       directionsPoint
         .paraclinicResultConfirm({ iss_pk: iss.pk })
-        .then(data => {
+        .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Подтверждено');
             // eslint-disable-next-line no-param-reassign
@@ -1694,7 +2437,7 @@ export default {
             iss.allow_reset_confirm = true;
             this.data.direction.amd = data.amd;
             this.data.direction.amd_number = data.amd_number;
-            this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
+            this.data.direction.all_confirmed = this.data.researches.every((r) => Boolean(r.confirmed));
             for (const r of this.data.researches) {
               r.confirmed_at = data.confirmed_at;
             }
@@ -1735,7 +2478,7 @@ export default {
         // eslint-disable-next-line no-param-reassign
         iss.whoExecuted = null;
         this.data.direction.amd = 'not_need';
-        this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
+        this.data.direction.all_confirmed = this.data.researches.every((r) => Boolean(r.confirmed));
         if (this.hasEDSigns) {
           this.$root.$emit('EDS:archive-document');
         }
@@ -1948,7 +2691,7 @@ export default {
     },
     async send_amd() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const toSend = this.directions_history.filter(d => ['error', 'need'].includes(d.amd)).map(d => d.pk);
+      const toSend = this.directions_history.filter((d) => ['error', 'need'].includes(d.amd)).map((d) => d.pk);
       if (toSend.length > 0) {
         await directionsPoint.sendAMD({ pks: toSend });
         this.$root.$emit('msg', 'ok', 'Отправка запланирована');
@@ -1979,7 +2722,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     updateValue(field, prop) {
-      return newValue => {
+      return (newValue) => {
         // eslint-disable-next-line no-param-reassign
         field[prop] = newValue;
       };
@@ -1995,168 +2738,6 @@ export default {
         return false;
       }
       return !row.work_by;
-    },
-  },
-  computed: {
-    userServicesFiltered() {
-      return this.user_services.filter(s => !this.slot.data.direction || s.pk === this.slot.data.direction_service);
-    },
-    date_to_form() {
-      return `"${this.date}"`;
-    },
-    ca() {
-      if (this.new_anamnesis !== null) {
-        return this.new_anamnesis;
-      }
-      return this.data.anamnesis;
-    },
-    fte() {
-      return this.$store.getters.modules.l2_fast_templates;
-    },
-    stat_btn() {
-      return this.$store.getters.modules.l2_stat_btn;
-    },
-    stat_btn_d() {
-      return this.stat_btn && this.directions_history.length;
-    },
-    rmis_queue() {
-      return this.$store.getters.modules.l2_rmis_queue;
-    },
-    amd() {
-      return this.$store.getters.modules.l2_amd;
-    },
-    l2_microbiology() {
-      return this.$store.getters.modules.l2_microbiology;
-    },
-    l2_morfology_additional() {
-      return this.$store.getters.modules.l2_morfology_additional;
-    },
-    show_additional() {
-      if (!this.data || !this.data.ok) {
-        return false;
-      }
-      return (
-        this.l2_morfology_additional
-        && (this.data.has_microbiology || this.data.has_citology || this.data.has_gistology)
-        && !this.data.direction.all_confirmed
-      );
-    },
-    additionalTypes() {
-      if (!this.show_additional) {
-        return [];
-      }
-      if (this.data.has_microbiology) {
-        return [10001];
-      }
-      if (this.data.has_citology) {
-        return [10002];
-      }
-      if (this.data.has_gistology) {
-        return [10003];
-      }
-      return [1000000];
-    },
-    pk_c() {
-      const lpk = this.pk.trim();
-      if (lpk === '') return -1;
-      try {
-        return parseInt(lpk, 10);
-      } catch (e) {
-        // pass
-      }
-      return -1;
-    },
-    has_changed() {
-      return this.changed && this.data && this.data.ok && this.inserted;
-    },
-    ...mapGetters({
-      user_data: 'user_data',
-      researches_obj: 'researches',
-      bases: 'bases',
-    }),
-    internal_base() {
-      for (const b of this.bases) {
-        if (b.internal_type) {
-          return b.pk;
-        }
-      }
-      return -1;
-    },
-    bases_obj() {
-      return this.bases.reduce(
-        (a, b) => ({
-          ...a,
-          [b.pk]: b,
-        }),
-        {},
-      );
-    },
-    has_loc() {
-      if (!this.user_data || !this.rmis_queue) {
-        return false;
-      }
-      return !!this.user_data.rmis_location;
-    },
-    user_services() {
-      if (!this.user_data || !this.user_data.user_services) {
-        return [];
-      }
-      const r = [{ pk: -1, title: 'Не выбрано', full_title: 'Не выбрано' }];
-      for (const d of Object.keys(this.researches_obj)) {
-        for (const row of this.$store.getters.researches[d] || []) {
-          if (this.user_data.user_services.includes(row.pk)) {
-            r.push(row);
-          }
-        }
-      }
-      return r;
-    },
-    can_confirm() {
-      for (const g of this.$store.getters.user_data.groups || []) {
-        if (g === 'Без подтверждений') {
-          return false;
-        }
-      }
-      return true;
-    },
-    can_reset_amd() {
-      for (const g of this.$store.getters.user_data.groups || []) {
-        if (g === 'Управление отправкой в АМД') {
-          return true;
-        }
-      }
-      return false;
-    },
-    can_confirm_by_other_user() {
-      for (const g of this.$store.getters.user_data.groups || []) {
-        if (g === 'Работа от имени в описательных протоколах') {
-          return true;
-        }
-      }
-      return false;
-    },
-    navState() {
-      if (!this.data.ok) {
-        return null;
-      }
-      return {
-        pk: this.data.direction.pk,
-      };
-    },
-    workFromHistoryList() {
-      return this.workFromHistory
-        .map(p => {
-          for (const podr of this.workFromUsers) {
-            const profile = podr.children.find(x => x.id === p);
-
-            if (profile) {
-              return profile;
-            }
-          }
-
-          return null;
-        })
-        .filter(Boolean);
     },
   },
 };

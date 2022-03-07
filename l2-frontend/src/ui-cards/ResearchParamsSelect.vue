@@ -2,31 +2,50 @@
   <div class="root">
     <div>
       <div class="sticky-d">
-        {{research.title}}
+        {{ research.title }}
       </div>
-      <div class="l-actions" v-if="params.length > 1">
-        <a href="#" @click.prevent="select_all">выбрать всё</a> <a href="#" @click.prevent="deselect_all">снять всё</a>
+      <div
+        v-if="params.length > 1"
+        class="l-actions"
+      >
+        <a
+          href="#"
+          @click.prevent="select_all"
+        >выбрать всё</a> <a
+          href="#"
+          @click.prevent="deselect_all"
+        >снять всё</a>
       </div>
     </div>
     <div>
-      <div v-for="p in params"
-           :key="p.pk"
-           :class="{
-             active: selected_param(p.pk),
-             n1: params_cnt === 1,
-             n2: params_cnt === 2,
-             n3: params_cnt === 3,
-             n4: params_cnt > 3
-           }"
-           @click="toggle_select(p.pk)"
-           class="param" :title="p.title"><span>{{p.title}}</span></div>
+      <div
+        v-for="p in params"
+        :key="p.pk"
+        :class="{
+          active: selected_param(p.pk),
+          n1: params_cnt === 1,
+          n2: params_cnt === 2,
+          n3: params_cnt === 3,
+          n4: params_cnt > 3
+        }"
+        class="param"
+        :title="p.title"
+        @click="toggle_select(p.pk)"
+      >
+        <span>{{ p.title }}</span>
+      </div>
     </div>
     <div>
-      <longpress class="btn btn-blue-nb btn-sticky" :on-confirm="deselect" :confirm-time="0" :duration="400"
-                 pressing-text="×"
-                 action-text="×">
+      <Longpress
+        class="btn btn-blue-nb btn-sticky"
+        :on-confirm="deselect"
+        :confirm-time="0"
+        :duration="400"
+        pressing-text="×"
+        action-text="×"
+      >
         <span class="inner-sticky">×</span>
-      </longpress>
+      </Longpress>
     </div>
   </div>
 </template>
@@ -35,7 +54,7 @@
 import Longpress from 'vue-longpress';
 
 export default {
-  name: 'research-params-select',
+  name: 'ResearchParamsSelect',
   components: {
     Longpress,
   },
@@ -59,6 +78,16 @@ export default {
     },
     params() {
       return this.research.params;
+    },
+  },
+  watch: {
+    selected_params() {
+      if (this.inited) this.$emit('input', JSON.parse(JSON.stringify(this.selected_params)));
+    },
+    research() {
+      if (this.selected_params.length === 0 && this.research.selected_params.length > 0) {
+        this.selected_params = JSON.parse(JSON.stringify(this.research.selected_params));
+      }
     },
   },
   mounted() {
@@ -93,16 +122,6 @@ export default {
         this.selected_params = this.selected_params.filter((item) => item.pk !== pk);
       } else {
         this.selected_params.push({ pk, is_paraclinic: this.research.is_paraclinic });
-      }
-    },
-  },
-  watch: {
-    selected_params() {
-      if (this.inited) this.$emit('input', JSON.parse(JSON.stringify(this.selected_params)));
-    },
-    research() {
-      if (this.selected_params.length === 0 && this.research.selected_params.length > 0) {
-        this.selected_params = JSON.parse(JSON.stringify(this.research.selected_params));
       }
     },
   },

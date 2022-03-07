@@ -1,6 +1,6 @@
 <template>
   <span>
-    {{display}}
+    {{ display }}
   </span>
 </template>
 

@@ -1,36 +1,64 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" min-width="40%"
-         max-width="40%" width="100%" marginLeftRight="auto" margin-top="20%">
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    min-width="40%"
+    max-width="40%"
+    width="100%"
+    margin-left-right="auto"
+    margin-top="20%"
+    @close="hide_modal"
+  >
     <span slot="header">Настройка группы</span>
-    <div slot="body" style="min-height: 200px" class="manage">
+    <div
+      slot="body"
+      style="min-height: 200px"
+      class="manage"
+    >
       <div class="form-group">
         <label for="change-group-title">
           Название
         </label>
 
-        <input id="change-group-title" class="form-control" v-model="group_obj.title">
+        <input
+          id="change-group-title"
+          v-model="group_obj.title"
+          class="form-control"
+        >
       </div>
       <div class="checkbox">
         <label>
-          <input type="checkbox" v-model="group_obj.hide"> Скрыть
+          <input
+            v-model="group_obj.hide"
+            type="checkbox"
+          > Скрыть
         </label>
       </div>
     </div>
     <div slot="footer">
       <div class="row">
         <div class="col-xs-4">
-          <button type="button" @click="updateGroup" class="btn btn-primary-nb btn-blue-nb">
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb"
+            @click="updateGroup"
+          >
             Сохранить
           </button>
         </div>
         <div class="col-xs-4">
-          <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb">
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb"
+            @click="hide_modal"
+          >
             Отмена
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">

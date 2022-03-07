@@ -2,41 +2,71 @@
   <div v-frag>
     <div class="top-buttons">
       <template v-if="loaded">
-        <button class="btn btn-blue-nb" :disabled="!allSaved" @click="confirmAll" v-if="!allConfirmed">
+        <button
+          v-if="!allConfirmed"
+          class="btn btn-blue-nb"
+          :disabled="!allSaved"
+          @click="confirmAll"
+        >
           Подтвердить всё
         </button>
-        <div v-else class="eds-wrapper">
-          <EDSDirection :key="`eds-${direction.pk}`" :direction-pk="direction.pk" :all_confirmed="true" />
+        <div
+          v-else
+          class="eds-wrapper"
+        >
+          <EDSDirection
+            :key="`eds-${direction.pk}`"
+            :direction-pk="direction.pk"
+            :all_confirmed="true"
+          />
         </div>
 
-        <button class="btn btn-blue-nb btn-right" @click="reload()" title="Перезагрузить данные" v-tippy>
-          <i class="fa fa-refresh"></i>
+        <button
+          v-tippy
+          class="btn btn-blue-nb btn-right"
+          title="Перезагрузить данные"
+          @click="reload()"
+        >
+          <i class="fa fa-refresh" />
         </button>
-        <button class="btn btn-blue-nb btn-right" :disabled="!allConfirmed" @click="print" title="Печать результатов" v-tippy>
-          <i class="fa fa-print"></i>
+        <button
+          v-tippy
+          class="btn btn-blue-nb btn-right"
+          :disabled="!allConfirmed"
+          title="Печать результатов"
+          @click="print"
+        >
+          <i class="fa fa-print" />
         </button>
       </template>
     </div>
     <div class="root">
       <table class="table table-bordered table-condensed table-responsive">
         <colgroup>
-          <col width="26%" />
-          <col width="32%" />
-          <col width="21%" />
-          <col width="21%" />
+          <col width="26%">
+          <col width="32%">
+          <col width="21%">
+          <col width="21%">
         </colgroup>
         <tbody>
           <tr>
             <th>№ направл.</th>
             <td>
-              <a v-if="direction.pk" :href="`/directions/pdf?napr_id=[${direction.pk}]`" target="_blank" class="a-under">
+              <a
+                v-if="direction.pk"
+                :href="`/directions/pdf?napr_id=[${direction.pk}]`"
+                target="_blank"
+                class="a-under"
+              >
                 {{ direction.pk }}
               </a>
             </td>
             <th>Финанс.</th>
             <td>
               {{ direction.fin_source }}
-              <template v-if="fromRmis">внеш.орг</template>
+              <template v-if="fromRmis">
+                внеш.орг
+              </template>
             </td>
           </tr>
           <tr>
@@ -44,7 +74,11 @@
             <td :colspan="patient.diagnosis ? 2 : 3">
               {{ patient.fio }}
             </td>
-            <td v-if="patient.diagnosis" title="Диагноз" v-tippy>
+            <td
+              v-if="patient.diagnosis"
+              v-tippy
+              title="Диагноз"
+            >
               {{ patient.diagnosis }}
             </td>
           </tr>
@@ -58,33 +92,63 @@
             <th>Карта</th>
             <td>{{ patient.card }}</td>
             <th>Истор.</th>
-            <td title="Номер истории" v-tippy>{{ patient.history_num }}</td>
+            <td
+              v-tippy
+              title="Номер истории"
+            >
+              {{ patient.history_num }}
+            </td>
           </tr>
           <tr v-else>
             <th>Карта</th>
-            <td colspan="3">{{ patient.card }}</td>
+            <td colspan="3">
+              {{ patient.card }}
+            </td>
           </tr>
-          <tr title="Лечащий врач" v-if="!fromRmis" v-tippy>
+          <tr
+            v-if="!fromRmis"
+            v-tippy
+            title="Лечащий врач"
+          >
             <th>Леч. врач</th>
-            <td colspan="3">{{ direction.directioner }}</td>
+            <td colspan="3">
+              {{ direction.directioner }}
+            </td>
           </tr>
           <tr v-if="!fromRmis">
             <th>Отделение</th>
-            <td colspan="3">{{ direction.otd }}</td>
+            <td colspan="3">
+              {{ direction.otd }}
+            </td>
           </tr>
           <tr v-if="fromRmis">
             <th>Организация</th>
-            <td colspan="3">{{ direction.imported_org }}</td>
+            <td colspan="3">
+              {{ direction.imported_org }}
+            </td>
           </tr>
         </tbody>
       </table>
-      <div class="issledovaniya-scroll-wrapper" v-if="loaded">
-        <div class="empty-issledovaniya" v-if="issledovaniya.length === 0">
-          Нет исследований для выбранной лаборатории.<br /><br />
+      <div
+        v-if="loaded"
+        class="issledovaniya-scroll-wrapper"
+      >
+        <div
+          v-if="issledovaniya.length === 0"
+          class="empty-issledovaniya"
+        >
+          Нет исследований для выбранной лаборатории.<br><br>
           Назначения в направлении:
           <ul>
-            <li v-for="l in labs" :key="l.pk">
-              <a v-if="l.islab" href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
+            <li
+              v-for="l in labs"
+              :key="l.pk"
+            >
+              <a
+                v-if="l.islab"
+                href="#"
+                @click.prevent="selectOtherLab(l.pk)"
+              >{{ l.title }}</a>
               <span v-else>{{ l.title }}</span>
             </li>
           </ul>
@@ -92,29 +156,46 @@
         <template v-else>
           <ul class="issledovaniya">
             <li
+              v-for="i in issledovaniya"
+              :key="i.pk"
               :class="[
                 `issledovaniya-isnorm-${i.is_norm}`,
                 active !== i.pk && `tb-group-${i.group}`,
                 active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`,
               ]"
               @click="select(i.pk)"
-              :key="i.pk"
-              v-for="i in issledovaniya"
             >
-              <div :class="`status status-${getStatusClass(i)}`">{{ getStatus(i) }}</div>
+              <div :class="`status status-${getStatusClass(i)}`">
+                {{ getStatus(i) }}
+              </div>
               {{ i.title }}
-              <br />
+              <br>
               <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
-              <div class="fastlinks hiddenlinks" v-if="i.confirmed && i.allow_reset_confirm">
-                <a href="#" @click.prevent.stop="resetConfirmation(i)">сброс подтверждения</a>
+              <div
+                v-if="i.confirmed && i.allow_reset_confirm"
+                class="fastlinks hiddenlinks"
+              >
+                <a
+                  href="#"
+                  @click.prevent.stop="resetConfirmation(i)"
+                >сброс подтверждения</a>
               </div>
             </li>
           </ul>
-          <div class="other-issledovaniya" v-if="otherLabs.length > 0 && showOtherLabs">
+          <div
+            v-if="otherLabs.length > 0 && showOtherLabs"
+            class="other-issledovaniya"
+          >
             Другие лаборатории в направлении:
             <ul>
-              <li v-for="l in otherLabs" :key="l.pk">
-                <a href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
+              <li
+                v-for="l in otherLabs"
+                :key="l.pk"
+              >
+                <a
+                  href="#"
+                  @click.prevent="selectOtherLab(l.pk)"
+                >{{ l.title }}</a>
               </li>
             </ul>
           </div>
@@ -149,6 +230,14 @@ export default {
       active: -1,
       q: {},
     };
+  },
+  computed: {
+    fromRmis() {
+      return this.loaded && this.direction && this.direction.imported_from_rmis;
+    },
+    otherLabs() {
+      return this.labs.filter(l => l.islab && l.pk !== this.laboratory);
+    },
   },
   mounted() {
     this.$root.$on('laboratory:results:show-direction', (data, pk) => {
@@ -193,14 +282,6 @@ export default {
 
     this.$root.$on('laboratory:reload-direction:with-open-first', () => this.reload());
     this.$root.$on('laboratory:reload-direction:with-open-pk', pk => this.reload(pk));
-  },
-  computed: {
-    fromRmis() {
-      return this.loaded && this.direction && this.direction.imported_from_rmis;
-    },
-    otherLabs() {
-      return this.labs.filter(l => l.islab && l.pk !== this.laboratory);
-    },
   },
   methods: {
     getStatusClass(i) {

@@ -1,15 +1,20 @@
 <template>
   <div>
-    <a href="#" @click.prevent="select_research(row.pk)" class="research-select"
-       :class="{ active: research_selected(row.pk) }"
-       :key="row.pk"
-       v-for="row in researches_display" :title="row.title"><span>{{ row.title }}</span></a>
+    <a
+      v-for="row in researches_display"
+      :key="row.pk"
+      href="#"
+      class="research-select"
+      :class="{ active: research_selected(row.pk) }"
+      :title="row.title"
+      @click.prevent="select_research(row.pk)"
+    ><span>{{ row.title }}</span></a>
   </div>
 </template>
 
 <script lang="ts">
 export default {
-  name: 'researches-options',
+  name: 'ResearchesOptions',
   props: {
     value: {
       type: Array,

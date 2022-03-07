@@ -1,14 +1,41 @@
 <template>
   <div class="flex">
     <template v-if="!right">
-      <button class="btn btn-blue-nb" @click="decDate"><i class="glyphicon glyphicon-arrow-left"></i></button>
-      <button class="btn btn-blue-nb" @click="incDate"><i class="glyphicon glyphicon-arrow-right"></i></button>
+      <button
+        class="btn btn-blue-nb"
+        @click="decDate"
+      >
+        <i class="glyphicon glyphicon-arrow-left" />
+      </button>
+      <button
+        class="btn btn-blue-nb"
+        @click="incDate"
+      >
+        <i class="glyphicon glyphicon-arrow-right" />
+      </button>
     </template>
-    <input v-datepicker type="text" class="form-control no-context" :class="{brn: brn}" :style="{ width: w }"
-           v-model="val" maxlength="10"/>
+    <input
+      v-model="val"
+      v-datepicker
+      type="text"
+      class="form-control no-context"
+      :class="{brn: brn}"
+      :style="{ width: w }"
+      maxlength="10"
+    >
     <template v-if="right">
-      <button class="btn btn-blue-nb" @click="decDate"><i class="glyphicon glyphicon-arrow-left"></i></button>
-      <button class="btn btn-blue-nb" @click="incDate"><i class="glyphicon glyphicon-arrow-right"></i></button>
+      <button
+        class="btn btn-blue-nb"
+        @click="decDate"
+      >
+        <i class="glyphicon glyphicon-arrow-left" />
+      </button>
+      <button
+        class="btn btn-blue-nb"
+        @click="incDate"
+      >
+        <i class="glyphicon glyphicon-arrow-right" />
+      </button>
     </template>
   </div>
 </template>
@@ -17,7 +44,26 @@
 import moment from 'moment';
 
 export default {
-  name: 'date-field-nav',
+  name: 'DateFieldNav',
+  directives: {
+    datepicker: {
+      bind(el, binding, vnode) {
+        // eslint-disable-next-line no-param-reassign
+        vnode.context.el = window.$(el);
+        window.$(el).datepicker({
+          format: 'dd.mm.yyyy',
+          todayBtn: 'linked',
+          language: 'ru',
+          autoclose: true,
+          todayHighlight: true,
+          enableOnReadonly: true,
+          orientation: 'top left',
+        }).on('changeDate', () => {
+          vnode.context.emitf(window.$(el).val());
+        });
+      },
+    },
+  },
   props: {
     def: {
       type: String,
@@ -35,6 +81,12 @@ export default {
       default: false,
       type: Boolean,
     },
+  },
+  data() {
+    return {
+      val: this.def,
+      el: null,
+    };
   },
   computed: {
     md() {
@@ -59,31 +111,6 @@ export default {
     emitf(v) {
       this.val = v;
       this.$emit('update:val', v);
-    },
-  },
-  data() {
-    return {
-      val: this.def,
-      el: null,
-    };
-  },
-  directives: {
-    datepicker: {
-      bind(el, binding, vnode) {
-        // eslint-disable-next-line no-param-reassign
-        vnode.context.el = window.$(el);
-        window.$(el).datepicker({
-          format: 'dd.mm.yyyy',
-          todayBtn: 'linked',
-          language: 'ru',
-          autoclose: true,
-          todayHighlight: true,
-          enableOnReadonly: true,
-          orientation: 'top left',
-        }).on('changeDate', () => {
-          vnode.context.emitf(window.$(el).val());
-        });
-      },
     },
   },
 };

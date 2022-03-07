@@ -1,70 +1,134 @@
 <template>
   <div>
     <div class="radio-button-object">
-      <radio-field v-model="searchTypesObject" :variants="typesObject" @modified="filteredGroupObject" fullWidth/>
+      <RadioField
+        v-model="searchTypesObject"
+        :variants="typesObject"
+        full-width
+        @modified="filteredGroupObject"
+      />
     </div>
 
     <div class="radio-button-object radio-button-groups">
-      <radio-field v-model="searchTypesGroups" :variants="typesGroups" fullWidth @modified="filteredGroupObject"/>
+      <RadioField
+        v-model="searchTypesGroups"
+        :variants="typesGroups"
+        full-width
+        @modified="filteredGroupObject"
+      />
     </div>
 
     <div class="row lists">
       <div class="col-xs-4">
         <div class="edit-element">
-          <h6><strong>{{searchTypesObject}}</strong> (создание/редактирование)</h6>
+          <h6><strong>{{ searchTypesObject }}</strong> (создание/редактирование)</h6>
 
           <div class="content-edit margin-top">
             <div class="form-group">
               <label for="create-title">Название:</label>
               <div class="input-group">
-                <input class="form-control" v-model="editElementTitle"
-                       id="create-title"
-                       :placeholder="`${searchTypesObject}: введите название`">
+                <input
+                  id="create-title"
+                  v-model="editElementTitle"
+                  class="form-control"
+                  :placeholder="`${searchTypesObject}: введите название`"
+                >
                 <span class="input-group-btn">
-                  <button @click="onClearContentEdit" class="btn btn-default btn-primary-nb"
-                          v-tippy="{ placement : 'bottom'}" title="Очистить">
-                    <i class="fa fa-times"/>
+                  <button
+                    v-tippy="{ placement : 'bottom'}"
+                    class="btn btn-default btn-primary-nb"
+                    title="Очистить"
+                    @click="onClearContentEdit"
+                  >
+                    <i class="fa fa-times" />
                   </button>
                 </span>
               </div>
             </div>
             <div class="form-group">
               <label for="create-fsli">Код ФСЛИ:</label>
-              <input class="form-control" id="create-fsli" v-model="editElementFsli" placeholder="Введите код ФСЛИ.."/>
+              <input
+                id="create-fsli"
+                v-model="editElementFsli"
+                class="form-control"
+                placeholder="Введите код ФСЛИ.."
+              >
             </div>
             <div class="form-group">
               <label for="create-code-lis">Код LIS:</label>
-              <input class="form-control" id="create-code-lis" v-model="editElementLis" placeholder="Введите код LIS"/>
+              <input
+                id="create-code-lis"
+                v-model="editElementLis"
+                class="form-control"
+                placeholder="Введите код LIS"
+              >
             </div>
             <div class="checkbox">
               <label>
-                <input type="checkbox" v-model="editElementHide"> Скрыть
+                <input
+                  v-model="editElementHide"
+                  type="checkbox"
+                > Скрыть
               </label>
             </div>
-            <div class="form-group"><strong>Группа:</strong> {{editElementGroup || 'все' }}</div>
+            <div class="form-group">
+              <strong>Группа:</strong> {{ editElementGroup || 'все' }}
+            </div>
           </div>
         </div>
 
-        <button class="btn btn-blue-nb sidebar-footer" @click="save_element">
+        <button
+          class="btn btn-blue-nb sidebar-footer"
+          @click="save_element"
+        >
           Сохранить
         </button>
       </div>
 
       <div class="col-xs-4">
-        <v-select :clearable="false" label="title" :options="list1" :searchable="true" placeholder="Выберите группу"
-                  v-model="selected1" @change="load_culture_groups(selected1.title, '1')"
-                  :class="{background: selected1.hide}"
+        <v-select
+          v-model="selected1"
+          :clearable="false"
+          label="title"
+          :options="list1"
+          :searchable="true"
+          placeholder="Выберите группу"
+          :class="{background: selected1.hide}"
+          @change="load_culture_groups(selected1.title, '1')"
         />
-        <input class="form-control" v-model="searchElement" placeholder="Фильтр по названию.."/>
-        <draggable class="list-group" :list="list1Elements" group="some">
-          <div class="item" v-for="element in filteredList" :key="element.title">
+        <input
+          v-model="searchElement"
+          class="form-control"
+          placeholder="Фильтр по названию.."
+        >
+        <draggable
+          class="list-group"
+          :list="list1Elements"
+          group="some"
+        >
+          <div
+            v-for="element in filteredList"
+            :key="element.title"
+            class="item"
+          >
             <div :class="{background: element.hide}">
               {{ element.title }}
-              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
-                <i class="glyphicon glyphicon-pencil" v-if="searchTypesGroups === 'Группы'"
-                   @click="onEditElement(element)"/>
-                <i class="glyphicon glyphicon-arrow-right" @click="onAddToSet(element)"
-                   v-tippy="{ placement : 'bottom'}" title="Добавить в набор" v-else-if="selected2.title !== 'Все'"/>
+              <button
+                class="btn btn-blue-nb sidebar-btn"
+                style="font-size: 12px"
+              >
+                <i
+                  v-if="searchTypesGroups === 'Группы'"
+                  class="glyphicon glyphicon-pencil"
+                  @click="onEditElement(element)"
+                />
+                <i
+                  v-else-if="selected2.title !== 'Все'"
+                  v-tippy="{ placement : 'bottom'}"
+                  class="glyphicon glyphicon-arrow-right"
+                  title="Добавить в набор"
+                  @click="onAddToSet(element)"
+                />
               </button>
             </div>
           </div>
@@ -72,65 +136,112 @@
       </div>
 
       <div class="col-xs-4">
-        <v-select :clearable="false" label="title" :options="list2" :searchable="true"
-                  v-model="selected2" @change="load_culture_groups(selected2.title, '2')"
-                  :class="{background: selected2.hide}"
+        <v-select
+          v-model="selected2"
+          :clearable="false"
+          label="title"
+          :options="list2"
+          :searchable="true"
+          :class="{background: selected2.hide}"
+          @change="load_culture_groups(selected2.title, '2')"
         />
 
         <div class="input-group">
-          <input class="form-control" v-model="newgroup"
-                 :placeholder="`Добавить: ${searchTypesGroups}`">
+          <input
+            v-model="newgroup"
+            class="form-control"
+            :placeholder="`Добавить: ${searchTypesGroups}`"
+          >
           <span class="input-group-btn">
-            <button @click="addNewGroup" class="btn btn-default btn-primary-nb"
-                    v-tippy="{ placement : 'bottom' }"
-                    :title="`Соханить в &#171;${searchTypesGroups.toUpperCase().trim()}&#187;`">
-              <i class="fa fa-floppy-o"/>
+            <button
+              v-tippy="{ placement : 'bottom' }"
+              class="btn btn-default btn-primary-nb"
+              :title="`Соханить в &#171;${searchTypesGroups.toUpperCase().trim()}&#187;`"
+              @click="addNewGroup"
+            >
+              <i class="fa fa-floppy-o" />
             </button>
           </span>
         </div>
 
-        <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :list="list2Elements" group="some">
-          <div class="item" v-for="element in list2Elements" :key="element.title">
-            <div :class="{background: element.hide}">{{ element.title }}</div>
-          </div>
-        </draggable>
-        <div v-else class="list-group">
-          <div class="item" v-for="element in list2Elements" :key="element.title">
+        <draggable
+          v-if="searchTypesGroups === 'Группы'"
+          class="list-group"
+          :list="list2Elements"
+          group="some"
+        >
+          <div
+            v-for="element in list2Elements"
+            :key="element.title"
+            class="item"
+          >
             <div :class="{background: element.hide}">
               {{ element.title }}
-              <button class="btn btn-blue-nb sidebar-btn"
-                      v-if="selected2.title !== 'Все'"
-                      v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"
-                      @click="delFromlistSetsElements(element)">
-                <i class="fa fa-times"/>
+            </div>
+          </div>
+        </draggable>
+        <div
+          v-else
+          class="list-group"
+        >
+          <div
+            v-for="element in list2Elements"
+            :key="element.title"
+            class="item"
+          >
+            <div :class="{background: element.hide}">
+              {{ element.title }}
+              <button
+                v-if="selected2.title !== 'Все'"
+                v-tippy="{ placement : 'bottom'}"
+                class="btn btn-blue-nb sidebar-btn"
+                title="Удалть из Набора"
+                @click="delFromlistSetsElements(element)"
+              >
+                <i class="fa fa-times" />
               </button>
             </div>
           </div>
         </div>
 
-        <button class="btn btn-blue-nb sidebar-footer" @click="save_groups">
+        <button
+          class="btn btn-blue-nb sidebar-footer"
+          @click="save_groups"
+        >
           Сохранить
         </button>
-        <button class="btn btn-blue-nb sidebar-footer" @click="group_edit" v-if="selected2.pk >= 0">
+        <button
+          v-if="selected2.pk >= 0"
+          class="btn btn-blue-nb sidebar-footer"
+          @click="group_edit"
+        >
           Редактировать группу
         </button>
       </div>
     </div>
 
     <div class="sub-buttons">
-      <button class="btn btn-blue-nb" @click="openFcafbg" v-if="searchTypesGroups === 'Группы'">
-        Быстрое создание и заполнение: {{searchTypesObject}} – {{searchTypesGroups}}
+      <button
+        v-if="searchTypesGroups === 'Группы'"
+        class="btn btn-blue-nb"
+        @click="openFcafbg"
+      >
+        Быстрое создание и заполнение: {{ searchTypesObject }} – {{ searchTypesGroups }}
       </button>
     </div>
 
-    <bacteria-edit-title-group v-if="group_edit_open"
-                               :group_obj="selected2"
-                               :typesObject="searchTypesObject"
-                               :typesGroups="searchTypesGroups"/>
+    <BacteriaEditTitleGroup
+      v-if="group_edit_open"
+      :group_obj="selected2"
+      :types-object="searchTypesObject"
+      :types-groups="searchTypesGroups"
+    />
 
-    <fast-create-and-fill-bacteria-group v-if="isFcafbgOpen"
-                                         :typesObject="searchTypesObject"
-                                         :typesGroups="searchTypesGroups"/>
+    <FastCreateAndFillBacteriaGroup
+      v-if="isFcafbgOpen"
+      :types-object="searchTypesObject"
+      :types-groups="searchTypesGroups"
+    />
   </div>
 </template>
 
@@ -182,6 +293,29 @@ export default {
       group_edit_open: false,
       isFcafbgOpen: false,
     };
+  },
+  computed: {
+    filteredList() {
+      return this.list1Elements.filter((element) => element.title.toLowerCase().includes(this.searchElement.toLowerCase()));
+    },
+  },
+  watch: {
+    selected1() {
+      this.load_culture_groups(this.selected1.title, '1');
+    },
+    selected2() {
+      this.load_culture_groups(this.selected2.title, '2');
+    },
+  },
+  mounted() {
+    this.load_culture_groups(this.selected1.title, '1');
+    this.load_culture_groups(this.selected2.title, '2');
+    this.$root.$on('hide_ge', () => this.group_edit_hide());
+    this.$root.$on('hide_fcafbg', () => this.hide_fcafbg());
+    this.$root.$on('select2', async (obj) => {
+      await this.load_culture_groups(this.selected1.title, '1');
+      this.selected2 = obj;
+    });
   },
   methods: {
     group_edit() {
@@ -337,29 +471,6 @@ export default {
         this.searchTypesGroups = 'Группы';
       }
       this.typesGroups = this.searchTypesObject === 'Антибиотики' ? ['Группы', 'Наборы'] : ['Группы'];
-    },
-  },
-  mounted() {
-    this.load_culture_groups(this.selected1.title, '1');
-    this.load_culture_groups(this.selected2.title, '2');
-    this.$root.$on('hide_ge', () => this.group_edit_hide());
-    this.$root.$on('hide_fcafbg', () => this.hide_fcafbg());
-    this.$root.$on('select2', async (obj) => {
-      await this.load_culture_groups(this.selected1.title, '1');
-      this.selected2 = obj;
-    });
-  },
-  computed: {
-    filteredList() {
-      return this.list1Elements.filter((element) => element.title.toLowerCase().includes(this.searchElement.toLowerCase()));
-    },
-  },
-  watch: {
-    selected1() {
-      this.load_culture_groups(this.selected1.title, '1');
-    },
-    selected2() {
-      this.load_culture_groups(this.selected2.title, '2');
     },
   },
 };

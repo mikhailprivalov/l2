@@ -1,71 +1,131 @@
 <template>
-  <div class="eds-document" :class="ok && 'eds-document-ok'">
-    <div class="doc-header">Вложение {{ d.type }}</div>
+  <div
+    class="eds-document"
+    :class="ok && 'eds-document-ok'"
+  >
+    <div class="doc-header">
+      Вложение {{ d.type }}
+    </div>
 
-    <div class="sign-block" v-if="!isDocAllowedSign">
-      <div class="block-header">Подпись врача может добавить только:</div>
+    <div
+      v-if="!isDocAllowedSign"
+      class="sign-block"
+    >
+      <div class="block-header">
+        Подпись врача может добавить только:
+      </div>
 
       <ul>
-        <li v-for="(v, k) in executors" :key="k">
+        <li
+          v-for="(v, k) in executors"
+          :key="k"
+        >
           {{ v }}
         </li>
       </ul>
     </div>
 
-    <div class="sign-block" v-if="emptyNotAllowedSignatures.length > 0">
-      <div class="block-header">Недоступные роли для подписи:</div>
+    <div
+      v-if="emptyNotAllowedSignatures.length > 0"
+      class="sign-block"
+    >
+      <div class="block-header">
+        Недоступные роли для подписи:
+      </div>
 
       <ul>
-        <li v-for="s in emptyNotAllowedSignatures" :key="s">
+        <li
+          v-for="s in emptyNotAllowedSignatures"
+          :key="s"
+        >
           {{ s }}
         </li>
       </ul>
     </div>
 
-    <div class="sign-block" v-if="emptyAllowedSignatures.length > 0 && thumbprint">
+    <div
+      v-if="emptyAllowedSignatures.length > 0 && thumbprint"
+      class="sign-block"
+    >
       <div class="input-group">
         <span class="input-group-addon">Роль подписи</span>
-        <select class="form-control" v-model="selectedSignatureMode">
-          <option v-for="s in emptyAllowedSignatures" :key="s" :value="s">
+        <select
+          v-model="selectedSignatureMode"
+          class="form-control"
+        >
+          <option
+            v-for="s in emptyAllowedSignatures"
+            :key="s"
+            :value="s"
+          >
             {{ s }}
           </option>
         </select>
         <span class="input-group-btn">
-          <button type="button" class="btn btn-default btn-primary-nb" @click="addSign()">
+          <button
+            type="button"
+            class="btn btn-default btn-primary-nb"
+            @click="addSign()"
+          >
             Подписать
           </button>
         </span>
       </div>
     </div>
 
-    <div class="has-signs" v-if="hasSigns">
-      <div class="block-header">Добавленные подписи:</div>
+    <div
+      v-if="hasSigns"
+      class="has-signs"
+    >
+      <div class="block-header">
+        Добавленные подписи:
+      </div>
       <ul>
-        <li v-for="s in signs" :key="s.type">
+        <li
+          v-for="s in signs"
+          :key="s.type"
+        >
           <a
+            v-tippy
             :href="fileHref(s.signValue, 'text/plain')"
             :download="signFileName(s)"
             class="a-under"
             title="Скачать файл подписи"
-            v-tippy
           >
-            <i class="fa fa-download"></i>
+            <i class="fa fa-download" />
           </a>
-          <strong>{{ s.type }}</strong
-          >, {{ s.executor }}, {{ s.signedAt }}
+          <strong>{{ s.type }}</strong>, {{ s.executor }}, {{ s.signedAt }}
         </li>
       </ul>
     </div>
 
     <div class="download-block">
-      <a class="btn btn-default" :href="docHref" :download="d.fileName" v-if="d.fileContent">
-        <i class="fa fa-download"></i> Загрузить {{ d.fileName }}
+      <a
+        v-if="d.fileContent"
+        class="btn btn-default"
+        :href="docHref"
+        :download="d.fileName"
+      >
+        <i class="fa fa-download" /> Загрузить {{ d.fileName }}
       </a>
     </div>
 
-    <div class="download-block" v-if="isL2VI && d.type === 'CDA'">
-      <div v-if="d.vi_id" class="block-header">Отправлено в ВИМИС как {{ d.vi_id }}</div>
-      <a class="btn btn-default" href="#" @click="sendToVI" v-else>
+    <div
+      v-if="isL2VI && d.type === 'CDA'"
+      class="download-block"
+    >
+      <div
+        v-if="d.vi_id"
+        class="block-header"
+      >
+        Отправлено в ВИМИС как {{ d.vi_id }}
+      </div>
+      <a
+        v-else
+        class="btn btn-default"
+        href="#"
+        @click="sendToVI"
+      >
         Отправить в ВИМИС
       </a>
     </div>

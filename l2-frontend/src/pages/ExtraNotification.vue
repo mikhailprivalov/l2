@@ -1,17 +1,27 @@
 <template>
   <div>
-    <form class="panel panel-default panel-flt" style="margin: 20px;" @submit.prevent="load()">
-      <div class="panel-body" style="overflow: visible;">
-        <div class="row" style="margin-top:5px;">
+    <form
+      class="panel panel-default panel-flt"
+      style="margin: 20px;"
+      @submit.prevent="load()"
+    >
+      <div
+        class="panel-body"
+        style="overflow: visible;"
+      >
+        <div
+          class="row"
+          style="margin-top:5px;"
+        >
           <div class="col-xs-6">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Больница</span>
               <treeselect
+                v-model="params.hospital"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="visibleHospitals"
                 placeholder="Больница не выбрана"
-                v-model="params.hospital"
                 :clearable="false"
                 class="treeselect-wide"
               />
@@ -20,41 +30,78 @@
           <div class="col-xs-6">
             <div class="input-group date-time treeselect-noborder-left">
               <span class="input-group-addon">Дата</span>
-              <span class="input-group-addon" style="padding: 0;border: none;">
-                <DateFieldNav2 v-model="params.date" right w="140px" :brn="false" />
+              <span
+                class="input-group-addon"
+                style="padding: 0;border: none;"
+              >
+                <DateFieldNav2
+                  v-model="params.date"
+                  right
+                  w="140px"
+                  :brn="false"
+                />
               </span>
               <span class="input-group-addon">Статус</span>
-              <select v-model="params.status" class="form-control">
-                <option :value="2">Все</option>
-                <option :value="0">Новые</option>
-                <option :value="1">Выполнены</option>
+              <select
+                v-model="params.status"
+                class="form-control"
+              >
+                <option :value="2">
+                  Все
+                </option>
+                <option :value="0">
+                  Новые
+                </option>
+                <option :value="1">
+                  Выполнены
+                </option>
               </select>
             </div>
           </div>
         </div>
         <div style="margin-top: 5px">
-          <a class="a-under pull-right" href="#" @click.prevent="load()">перезагрузить данные</a>
-          <a v-if="canEdit" class="a-under pull-right" href="#" @click.prevent="covid()" style="padding-right: 10px">
+          <a
+            class="a-under pull-right"
+            href="#"
+            @click.prevent="load()"
+          >перезагрузить данные</a>
+          <a
+            v-if="canEdit"
+            class="a-under pull-right"
+            href="#"
+            style="padding-right: 10px"
+            @click.prevent="covid()"
+          >
             covid-json
           </a>
         </div>
       </div>
     </form>
-    <div class="not-loaded" v-if="!loaded">
-      Данные не загружены<br />
-      <a class="a-under" href="#" @click.prevent="load()">загрузить</a>
+    <div
+      v-if="!loaded"
+      class="not-loaded"
+    >
+      Данные не загружены<br>
+      <a
+        class="a-under"
+        href="#"
+        @click.prevent="load()"
+      >загрузить</a>
     </div>
-    <div v-else class="data">
+    <div
+      v-else
+      class="data"
+    >
       <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
-          <col />
-          <col />
-          <col style="width: 120px" />
-          <col style="width: 120px" />
-          <col style="width: 260px" />
-          <col style="width: 120px" />
-          <col style="width: 120px" />
-          <col style="width: 50px" />
+          <col>
+          <col>
+          <col style="width: 120px">
+          <col style="width: 120px">
+          <col style="width: 260px">
+          <col style="width: 120px">
+          <col style="width: 120px">
+          <col style="width: 50px">
         </colgroup>
         <thead>
           <tr>
@@ -67,36 +114,43 @@
             <th>№ в базе</th>
             <th class="text-center">
               <a
+                v-if="toPrintNumbers.length > 0"
+                v-tippy
                 href="#"
-                @click.prevent="print"
                 class="a-under"
                 title="Печать выбранных"
-                v-if="toPrintNumbers.length > 0"
-                v-tippy
+                @click.prevent="print"
               >
-                <i class="fas fa-print"></i>
+                <i class="fas fa-print" />
               </a>
               <a
-                href="#"
-                @click.prevent="savejson()"
-                class="a-under"
-                title="JSON-file"
                 v-if="toPrintNumbers.length > 0"
                 v-tippy
+                href="#"
+                class="a-under"
+                title="JSON-file"
+                @click.prevent="savejson()"
               >
-                <i class="fas fa-poll-h"></i>
+                <i class="fas fa-poll-h" />
               </a>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.mainDirection">
+          <tr
+            v-for="r in rows"
+            :key="r.mainDirection"
+          >
             <td>
               {{ r.hospital }}
             </td>
             <td>{{ r.patient }} {{ r.born }}</td>
             <td>
-              <a :href="`/ui/results/descriptive#{&quot;pk&quot;:${r.mainDirection}}`" target="_blank" class="a-under">
+              <a
+                :href="`/ui/results/descriptive#{&quot;pk&quot;:${r.mainDirection}}`"
+                target="_blank"
+                class="a-under"
+              >
                 {{ r.mainDirection }}
               </a>
             </td>
@@ -104,27 +158,39 @@
               {{ r.mainConfirm }}
             </td>
             <td class="cl-td">
-              <ExtraNotificationFastEditor :data="r" :can-edit="canEdit" />
+              <ExtraNotificationFastEditor
+                :data="r"
+                :can-edit="canEdit"
+              />
             </td>
             <td>
               {{ r.slaveConfirm || '–' }}
             </td>
             <td>
               <a
+                v-if="r.slaveDir"
                 :href="`/ui/results/descriptive#{&quot;pk&quot;:${r.slaveDir}}`"
                 class="a-under"
                 target="_blank"
-                v-if="r.slaveDir"
               >
                 {{ r.slaveDir }}
               </a>
             </td>
-            <td class="text-center cl-td" :class="[r.slaveConfirm ? 'checkbox-color' : '']">
-                <input type="checkbox" v-model="toPrint[r.slaveDir]" />
+            <td
+              class="text-center cl-td"
+              :class="[r.slaveConfirm ? 'checkbox-color' : '']"
+            >
+              <input
+                v-model="toPrint[r.slaveDir]"
+                type="checkbox"
+              >
             </td>
           </tr>
           <tr v-if="rows.length === 0">
-            <td colspan="8" class="text-center">
+            <td
+              colspan="8"
+              class="text-center"
+            >
               не найдено
             </td>
           </tr>

@@ -1,19 +1,37 @@
 <template>
-  <Modal @close="close" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" :zIndex="1000">
+  <Modal
+    show-footer="true"
+    white-bg="true"
+    max-width="710px"
+    width="100%"
+    margin-left-right="auto"
+    :z-index="1000"
+    @close="close"
+  >
     <span slot="header">Печать отчёта забора биоматериала</span>
-    <div slot="body" class="popup-body journal">
+    <div
+      slot="body"
+      class="popup-body journal"
+    >
       <div class="row">
         <div class="col-xs-6">
-          <DateSelector :date_type.sync="date_type" :values.sync="values" dataContainer="body" />
+          <DateSelector
+            :date_type.sync="date_type"
+            :values.sync="values"
+            data-container="body"
+          />
         </div>
-        <div class="col-xs-6" style="padding-left: 0">
+        <div
+          class="col-xs-6"
+          style="padding-left: 0"
+        >
           <SelectPicker
             :val="user"
             :options="users_list"
             :func="change_user"
             :multiple="users.length > 1"
             :actions_box="users.length > 1"
-            dataContainer="body"
+            data-container="body"
           />
         </div>
       </div>
@@ -21,12 +39,20 @@
     <div slot="footer">
       <div class="row">
         <div class="col-xs-6">
-          <button @click="close" class="btn btn-blue-nb" type="button">
+          <button
+            class="btn btn-blue-nb"
+            type="button"
+            @click="close"
+          >
             Закрыть
           </button>
         </div>
         <div class="col-xs-6 text-right">
-          <button @click="make_report" class="btn btn-blue-nb" type="button">
+          <button
+            class="btn btn-blue-nb"
+            type="button"
+            @click="make_report"
+          >
             Сформировать отчёт
           </button>
         </div>
@@ -42,13 +68,13 @@ import SelectPicker from '../fields/SelectPicker.vue';
 
 export default {
   name: 'JournalGetMaterial',
+
+  components: { DateSelector, SelectPicker, Modal },
   props: {
     users: {
       type: Array,
     },
   },
-
-  components: { DateSelector, SelectPicker, Modal },
   data() {
     return {
       user: '-1',
@@ -59,9 +85,6 @@ export default {
         year: '',
       },
     };
-  },
-  mounted() {
-    window.$('.journal .selectpicker').selectpicker();
   },
   computed: {
     users_list() {
@@ -74,6 +97,9 @@ export default {
     selected_users() {
       return this.user.split(',');
     },
+  },
+  mounted() {
+    window.$('.journal .selectpicker').selectpicker();
   },
   methods: {
     close() {

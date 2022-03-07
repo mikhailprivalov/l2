@@ -1,13 +1,23 @@
 <template>
   <div style="max-width: 800px;">
-    <div v-if="disabled" class="simple-value">
+    <div
+      v-if="disabled"
+      class="simple-value"
+    >
       {{ localCode }} – {{ localTitle }}
     </div>
-    <div v-else-if="loading" class="simple-value">
+    <div
+      v-else-if="loading"
+      class="simple-value"
+    >
       загрузка значений справочника
     </div>
     <div v-else>
-      <SelectFieldTitled v-model="localCode" :variants="variantsToSelect" fullWidth/>
+      <SelectFieldTitled
+        v-model="localCode"
+        :variants="variantsToSelect"
+        full-width
+      />
       <small v-if="fieldTitle !== directoryTitle">НСИ справочник: {{ directoryTitle }}</small>
     </div>
   </div>

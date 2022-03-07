@@ -1,54 +1,109 @@
 <template>
   <div v-frag>
-    <button class="btn btn-default btn-field" @click="show" title="Шаблоны поля ввода" v-tippy tabindex="-1">
-      <i class="fa fa-list-alt"></i>
+    <button
+      v-tippy
+      class="btn btn-default btn-field"
+      title="Шаблоны поля ввода"
+      tabindex="-1"
+      @click="show"
+    >
+      <i class="fa fa-list-alt" />
     </button>
 
-    <MountingPortal mountTo="#portal-place-modal" :name="`InputTemplates_${field.pk}`" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      :name="`InputTemplates_${field.pk}`"
+      append
+    >
       <transition name="fade">
         <Modal
           v-if="open"
-          @close="open = false"
           show-footer="true"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
+          margin-left-right="auto"
+          @close="open = false"
         >
           <span slot="header">Ваши шалоны поля {{ `${group.title} ${field.title}`.trim() }}</span>
-          <div slot="body" class="popup-body">
-            <div class="preloader" v-if="loading"><i class="fa fa-spinner"></i> загрузка</div>
+          <div
+            slot="body"
+            class="popup-body"
+          >
+            <div
+              v-if="loading"
+              class="preloader"
+            >
+              <i class="fa fa-spinner" /> загрузка
+            </div>
             <div v-else>
               <div class="templates-list">
-                <div v-if="templates.length === 0" class="text-center">нет шаблонов для этого поля</div>
+                <div
+                  v-if="templates.length === 0"
+                  class="text-center"
+                >
+                  нет шаблонов для этого поля
+                </div>
                 <template v-else>
-                  <div class="input-group input-group-flex t-group" v-for="t in templates" :key="t.pk">
+                  <div
+                    v-for="t in templates"
+                    :key="t.pk"
+                    class="input-group input-group-flex t-group"
+                  >
                     <div class="input-group-btn">
-                      <button class="btn btn-blue-nb2" @click="deleteTemplate(t.pk)" title="Удалить шаблон" v-tippy>
-                        <i class="fas fa-times"></i>
+                      <button
+                        v-tippy
+                        class="btn btn-blue-nb2"
+                        title="Удалить шаблон"
+                        @click="deleteTemplate(t.pk)"
+                      >
+                        <i class="fas fa-times" />
                       </button>
                     </div>
                     <textarea
+                      v-if="field.lines > 1"
                       :rows="field.lines"
                       class="form-control"
-                      v-if="field.lines > 1"
                       :value="t.value"
                       readonly
-                    ></textarea>
-                    <input class="form-control" v-else :value="t.value" readonly />
+                    />
+                    <input
+                      v-else
+                      class="form-control"
+                      :value="t.value"
+                      readonly
+                    >
                     <div class="input-group-btn">
-                      <button class="btn btn-blue-nb2" @click="useTemplate(t.value)" title="Применить шаблон" v-tippy>
-                        <i class="fas fa-check"></i>
+                      <button
+                        v-tippy
+                        class="btn btn-blue-nb2"
+                        title="Применить шаблон"
+                        @click="useTemplate(t.value)"
+                      >
+                        <i class="fas fa-check" />
                       </button>
                     </div>
                   </div>
                 </template>
               </div>
               <div class="input-group input-group-flex add-group">
-                <textarea :rows="field.lines" class="form-control" v-if="field.lines > 1" v-model="value"></textarea>
-                <input class="form-control" v-else v-model="value" />
+                <textarea
+                  v-if="field.lines > 1"
+                  v-model="value"
+                  :rows="field.lines"
+                  class="form-control"
+                />
+                <input
+                  v-else
+                  v-model="value"
+                  class="form-control"
+                >
                 <div class="input-group-btn">
-                  <button class="btn btn-blue-nb2" :disabled="value.trim().length === 0" @click="add">
+                  <button
+                    class="btn btn-blue-nb2"
+                    :disabled="value.trim().length === 0"
+                    @click="add"
+                  >
                     Добавить
                   </button>
                 </div>
@@ -58,7 +113,11 @@
           <div slot="footer">
             <div class="row">
               <div class="col-xs-6">
-                <button @click="open = false" class="btn btn-blue-nb" type="button">
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="open = false"
+                >
                   Закрыть
                 </button>
               </div>
@@ -76,12 +135,12 @@ import * as actions from '@/store/action-types';
 
 export default {
   name: 'InputTemplates',
+  components: {
+    Modal,
+  },
   props: {
     field: Object,
     group: Object,
-  },
-  components: {
-    Modal,
   },
   data() {
     return {

@@ -1,18 +1,37 @@
 <template>
   <div>
     <div class="input-group base">
-        <span class="input-group-btn" v-if="!readonly">
-            <button class="btn" title="Загрузить последний результат"
-                    @click="loadLast"
-                    v-tippy="{ placement : 'bottom', arrow: true }">
-                {{title}}&nbsp;&nbsp;<i class="fa fa-circle"></i>
-            </button>
-        </span>
-      <span v-else class="input-group-addon">{{title}}</span>
-      <input type="text" :readonly="readonly" v-model="val" class="form-control"/>
+      <span
+        v-if="!readonly"
+        class="input-group-btn"
+      >
+        <button
+          v-tippy="{ placement : 'bottom', arrow: true }"
+          class="btn"
+          title="Загрузить последний результат"
+          @click="loadLast"
+        >
+          {{ title }}&nbsp;&nbsp;<i class="fa fa-circle" />
+        </button>
+      </span>
+      <span
+        v-else
+        class="input-group-addon"
+      >{{ title }}</span>
+      <input
+        v-model="val"
+        type="text"
+        :readonly="readonly"
+        class="form-control"
+      >
     </div>
-    <a v-if="direction" href="#" class="a-under" @click.prevent="print_results">
-      печать результатов направления {{direction}}
+    <a
+      v-if="direction"
+      href="#"
+      class="a-under"
+      @click.prevent="print_results"
+    >
+      печать результатов направления {{ direction }}
     </a>
   </div>
 </template>
@@ -23,6 +42,9 @@ import directionsPoint from '../api/directions-point';
 
 export default {
   name: 'SearchFractionValueField',
+  model: {
+    event: 'modified',
+  },
   props: {
     readonly: {
       type: Boolean,
@@ -47,6 +69,12 @@ export default {
       direction: null,
     };
   },
+  watch: {
+    val() {
+      this.changeValue(this.val);
+      this.checkDirection();
+    },
+  },
   mounted() {
     researchesPoint.fractionTitle({ pk: this.fractionPk }).then((data) => {
       const titles = new Set([data.research, data.fraction]);
@@ -60,15 +88,6 @@ export default {
         }
       }, 200);
     });
-  },
-  watch: {
-    val() {
-      this.changeValue(this.val);
-      this.checkDirection();
-    },
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     checkDirection() {

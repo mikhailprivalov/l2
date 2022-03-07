@@ -1,23 +1,32 @@
 <template>
-  <modal
+  <Modal
     ref="modal"
-    @close="hide"
     show-footer="true"
     white-bg="true"
     max-width="600px"
     width="100%"
     height="20%"
-    marginLeftRight="auto"
+    margin-left-right="auto"
     margin-top
     class="an"
+    @close="hide"
   >
     <span slot="header">Управление файлами</span>
     <div slot="body">
       <div class="rows-file">
-        <input type="file" ref="file" style="display: none" @change="fileChange($event.target.files)"/>
+        <input
+          ref="file"
+          type="file"
+          style="display: none"
+          @change="fileChange($event.target.files)"
+        >
         <div v-if="!file">
           <h6>
-            <a href="#" @click.prevent="$refs.file.click()" class="a-under-reversed"> <i class="fa fa-folder"></i>
+            <a
+              href="#"
+              class="a-under-reversed"
+              @click.prevent="$refs.file.click()"
+            > <i class="fa fa-folder" />
               Загрузить файл
             </a>
             (max- 5 шт. по 5 МБ)
@@ -25,42 +34,66 @@
         </div>
         <div v-else>
           <a
+            v-tippy
             href="#"
-            @click.prevent="
-            file = '';
-            fileName = '';
-          "
             class="a-under-reversed"
             title="Удалить файл"
-            v-tippy
+            @click.prevent="
+              file = '';
+              fileName = '';
+            "
           >
-            <i class="fa fa-file"></i>
+            <i class="fa fa-file" />
             <span class="black"> {{ fileName }} ({{ fileSize }} МБ) </span>
-            &nbsp;&nbsp;<i class="fa fa-times"></i>
+            &nbsp;&nbsp;<i class="fa fa-times" />
           </a>
         </div>
-        <div v-if="rows.length === 0">Нет записей</div>
-        <div v-for="(row, index) in rows" :key="row.pk">
-          <br/>
-           <a :href="row.file" target="_blank" class="rows-file" >{{ index + 1 }} - {{ row.fileName }}</a>
+        <div v-if="rows.length === 0">
+          Нет записей
         </div>
-     </div>
+        <div
+          v-for="(row, index) in rows"
+          :key="row.pk"
+        >
+          <br>
+          <a
+            :href="row.file"
+            target="_blank"
+            class="rows-file"
+          >{{ index + 1 }} - {{ row.fileName }}</a>
+        </div>
+      </div>
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-5" style="float: right">
-          <button @click="hide" class="btn btn-primary-nb btn-blue-nb" type="button">
+        <div
+          class="col-xs-5"
+          style="float: right"
+        >
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="hide"
+          >
             Закрыть
           </button>
         </div>
-        <div class="col-xs-5" style="float: right">
-          <button class="btn btn-blue-nb btn-block" type="button" @click="addFile" :disabled="!file">
+        <div
+          class="col-xs-5"
+          style="float: right"
+        >
+          <button
+            class="btn btn-blue-nb btn-block"
+            type="button"
+            :disabled="!file"
+            @click="addFile"
+          >
             Сохранить
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">

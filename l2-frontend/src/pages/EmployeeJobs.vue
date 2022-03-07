@@ -3,66 +3,116 @@
     <div class="left">
       <div class="sidebar-bottom-top">
         <span>Новая запись</span>
-        <date-field-nav :brn="false" :right="true" :val.sync="date" :def="date"/>
+        <DateFieldNav
+          :brn="false"
+          :right="true"
+          :val.sync="date"
+          :def="date"
+        />
       </div>
       <div class="left-wrapper">
-          <div class="form-group">
-            <label>Исполнитель:
-              <select v-model="executor" class="form-control">
-                <option v-for="user in users" :value="user.pk" :key="user.pk">{{user.fio}} – {{user.username}}</option>
-              </select>
-            </label>
-          </div>
-          <div class="form-group">
-            <label>Тип работ:
-              <select v-model="type" class="form-control">
-                <option v-for="t in types" :value="t.pk" :key="t.pk">{{t.title}}</option>
-              </select>
-            </label>
-          </div>
-          <div class="form-group">
-            <label>Количество:
-              <input type="number" min="1" v-model="count" class="form-control" />
-            </label>
-          </div>
-          <button class="btn btn-primary-nb btn-blue-nb" @click="save">Создать запись</button>
+        <div class="form-group">
+          <label>Исполнитель:
+            <select
+              v-model="executor"
+              class="form-control"
+            >
+              <option
+                v-for="user in users"
+                :key="user.pk"
+                :value="user.pk"
+              >{{ user.fio }} – {{ user.username }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Тип работ:
+            <select
+              v-model="type"
+              class="form-control"
+            >
+              <option
+                v-for="t in types"
+                :key="t.pk"
+                :value="t.pk"
+              >{{ t.title }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Количество:
+            <input
+              v-model="count"
+              type="number"
+              min="1"
+              class="form-control"
+            >
+          </label>
+        </div>
+        <button
+          class="btn btn-primary-nb btn-blue-nb"
+          @click="save"
+        >
+          Создать запись
+        </button>
       </div>
     </div>
     <div class="right">
       <div class="sidebar-bottom-top">
-        <span>Просмотр записей за {{date}}</span>
+        <span>Просмотр записей за {{ date }}</span>
       </div>
       <div class="right-wrapper">
         <table class="table table-bordered table-condensed table-striped">
           <colgroup>
-            <col/>
-            <col/>
-            <col width="60"/>
-            <col width="160"/>
-            <col width="70"/>
+            <col>
+            <col>
+            <col width="60">
+            <col width="160">
+            <col width="70">
           </colgroup>
           <thead>
-          <tr>
-            <th>Исполнитель</th>
-            <th>Тип работ</th>
-            <th>Количество</th>
-            <th>Сохраненено</th>
-            <th></th>
-          </tr>
+            <tr>
+              <th>Исполнитель</th>
+              <th>Тип работ</th>
+              <th>Количество</th>
+              <th>Сохраненено</th>
+              <th />
+            </tr>
           </thead>
           <tbody>
-            <tr v-for="row in rows" :class="{canceled: row.canceled}" :key="row.pk">
-              <td>{{row.executor}}</td>
-              <td>{{row.type}}</td>
-              <td>{{row.count}}</td>
-              <td>{{row.saved}}</td>
+            <tr
+              v-for="row in rows"
+              :key="row.pk"
+              :class="{canceled: row.canceled}"
+            >
+              <td>{{ row.executor }}</td>
+              <td>{{ row.type }}</td>
+              <td>{{ row.count }}</td>
+              <td>{{ row.saved }}</td>
               <td>
-                <button @click="cancel(row.pk, true)" v-if="!row.canceled" class="btn btn-default btn-blue2-nb">отмена</button>
-                <button @click="cancel(row.pk, false)" v-else class="btn btn-default btn-blue2-nb">вернуть</button>
+                <button
+                  v-if="!row.canceled"
+                  class="btn btn-default btn-blue2-nb"
+                  @click="cancel(row.pk, true)"
+                >
+                  отмена
+                </button>
+                <button
+                  v-else
+                  class="btn btn-default btn-blue2-nb"
+                  @click="cancel(row.pk, false)"
+                >
+                  вернуть
+                </button>
               </td>
             </tr>
             <tr v-if="rows.length === 0">
-              <td colspan="5" style="text-align: center">нет данных</td>
+              <td
+                colspan="5"
+                style="text-align: center"
+              >
+                нет данных
+              </td>
             </tr>
           </tbody>
         </table>
@@ -78,7 +128,7 @@ import * as actions from '../store/action-types';
 import DateFieldNav from '../fields/DateFieldNav.vue';
 
 export default {
-  name: 'employee-jobs',
+  name: 'EmployeeJobs',
   components: { DateFieldNav },
   data() {
     return {

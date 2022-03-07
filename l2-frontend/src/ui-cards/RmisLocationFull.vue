@@ -1,8 +1,11 @@
 <template>
-  <table v-show="!!user_data.rmis_location" class="table table">
+  <table
+    v-show="!!user_data.rmis_location"
+    class="table table"
+  >
     <thead>
       <tr>
-        <th></th>
+        <th />
       </tr>
     </thead>
   </table>
@@ -21,6 +24,11 @@ export default {
       data: {},
     };
   },
+  computed: {
+    ...mapGetters({
+      user_data: 'user_data',
+    }),
+  },
   watch: {
     async user_data({ rmis_location }) {
       if (!this.init && rmis_location) {
@@ -32,14 +40,7 @@ export default {
       }
     },
   },
-  computed: {
-    ...mapGetters({
-      user_data: 'user_data',
-    }),
-  },
 };
 </script>
 
-<style scoped lang="scss">
-
-</style>
+<style scoped lang="scss"></style>

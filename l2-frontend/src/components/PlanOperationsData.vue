@@ -4,87 +4,130 @@
       <div class="row-t">
         Пациент (карта)
         <a
-          @click.prevent="open_patient_picker"
           :class="{ unvisible: patient_fio }"
           href="#"
           style="float: right; padding-right: 5px; color: #ffffff;"
-          >Найти</a
+          @click.prevent="open_patient_picker"
+        >Найти</a>
+      </div>
+      <div class="row-v">
+        <input
+          v-model="patient_data"
+          class="form-control"
+          readonly
         >
       </div>
-      <div class="row-v">
-        <input class="form-control" v-model="patient_data" readonly />
+    </div>
+    <div class="form-row">
+      <div class="row-t">
+        № Истории
       </div>
+      <input
+        v-model="current_direction"
+        class="form-control"
+        readonly
+      >
     </div>
     <div class="form-row">
-      <div class="row-t">№ Истории</div>
-      <input class="form-control" v-model="current_direction" readonly />
+      <div class="row-t">
+        Дата операции
+      </div>
+      <input
+        v-model="current_time"
+        class="form-control"
+        type="date"
+        :min="timeValue"
+      >
     </div>
     <div class="form-row">
-      <div class="row-t">Дата операции</div>
-      <input class="form-control" type="date" :min="timeValue" v-model="current_time" />
-    </div>
-    <div class="form-row">
-      <div class="row-t">Врач-хирург</div>
+      <div class="row-t">
+        Врач-хирург
+      </div>
       <div class="row-v">
-        <treeselect
+        <Treeselect
+          v-model="current_hirurg"
           class="treeselect-noborder"
           :multiple="false"
           :disable-branch-nodes="true"
           :options="hirurgs"
           placeholder="Хирург не выбран"
-          v-model="current_hirurg"
         />
       </div>
     </div>
     <div class="form-row">
-      <div class="row-t">Вид операции</div>
+      <div class="row-t">
+        Вид операции
+      </div>
       <div class="row-v">
-        <input class="form-control" v-model="type_operation" />
+        <input
+          v-model="type_operation"
+          class="form-control"
+        >
       </div>
     </div>
 
     <div class="buttons">
-      <div class="cancel-message" v-if="cancel_operation">Операция отменена</div>
+      <div
+        v-if="cancel_operation"
+        class="cancel-message"
+      >
+        Операция отменена
+      </div>
 
       <button
         class="btn btn-blue-nb btn-sm"
-        @click="save_to_plan"
         :class="[{ btndisable: !current_hirurg || !current_direction || !card_pk || !current_time }]"
+        @click="save_to_plan"
       >
         {{ pk_plan && pk_plan > -1 ? 'Сохранить изменения' : 'Добавить новую запись в план' }}
       </button>
 
-      <button class="btn btn-blue-nb btn-sm" @click="cancel_from_plan" v-if="pk_plan && pk_plan > -1">
+      <button
+        v-if="pk_plan && pk_plan > -1"
+        class="btn btn-blue-nb btn-sm"
+        @click="cancel_from_plan"
+      >
         {{ cancel_operation ? 'Убрать отмену' : 'Отменить операцию' }}
       </button>
     </div>
-    <modal
+    <Modal
       v-if="patient_to_edit"
       ref="modalPatientEdit"
-      @close="hide_modal_patient_edit"
       show-footer="true"
       white-bg="true"
       max-width="710px"
       width="100%"
-      marginLeftRight="auto"
+      margin-left-right="auto"
       margin-top
+      @close="hide_modal_patient_edit"
     >
       <span slot="header">Поиск пациента</span>
-      <div slot="body" style="min-height: 140px" class="registry-body">
+      <div
+        slot="body"
+        style="min-height: 140px"
+        class="registry-body"
+      >
         <div style="height: 110px">
-          <patient-small-picker v-model="card_pk" :base_pk="base_pk" />
+          <PatientSmallPicker
+            v-model="card_pk"
+            :base_pk="base_pk"
+          />
         </div>
       </div>
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="hide_modal_patient_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_modal_patient_edit"
+            >
               Подтвердить
             </button>
           </div>
         </div>
       </div>
-    </modal>
+    </Modal>
   </div>
 </template>
 
@@ -150,6 +193,11 @@ export default {
       base_pk: -1,
     };
   },
+  computed: {
+    bases() {
+      return this.$store.getters.bases.filter(b => !b.hide);
+    },
+  },
   watch: {
     card_pk_initial: {
       handler() {
@@ -174,11 +222,6 @@ export default {
       this.patient_data = this.patient_fio;
     }
     this.current_direction = this.direction;
-  },
-  computed: {
-    bases() {
-      return this.$store.getters.bases.filter(b => !b.hide);
-    },
   },
   methods: {
     check_base() {

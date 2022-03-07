@@ -1,29 +1,62 @@
 <template>
-  <div class="input-group" style="margin-right: -1px;">
+  <div
+    class="input-group"
+    style="margin-right: -1px;"
+  >
     <div class="input-group-btn">
-      <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
-              style="width: 115px;text-align: left!important;font-size: 12px;height: 34px;padding-right: 1px;"
-              :title="selected_base.title">
-        {{selected_base.title}}
+      <button
+        class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
+        type="button"
+        data-toggle="dropdown"
+        style="width: 115px;text-align: left!important;font-size: 12px;height: 34px;padding-right: 1px;"
+        :title="selected_base.title"
+      >
+        {{ selected_base.title }}
       </button>
       <ul class="dropdown-menu">
-        <li v-for="row in basesFiltered" :key="row.pk" :value="row.pk">
-          <a href="#" @click.prevent="select_base(row.pk)">{{row.title}}</a>
+        <li
+          v-for="row in basesFiltered"
+          :key="row.pk"
+          :value="row.pk"
+        >
+          <a
+            href="#"
+            @click.prevent="select_base(row.pk)"
+          >{{ row.title }}</a>
         </li>
       </ul>
     </div>
-    <input type="text" class="form-control bob" v-model="query" placeholder="Поиск пациента" ref="q"
-           maxlength="255" @keyup.enter="search">
+    <input
+      ref="q"
+      v-model="query"
+      type="text"
+      class="form-control bob"
+      placeholder="Поиск пациента"
+      maxlength="255"
+      @keyup.enter="search"
+    >
     <span class="input-group-btn">
-          <button class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
-            <i class="fa fa-search"></i>
-          </button>
+      <button
+        class="btn last btn-blue-nb nbr"
+        type="button"
+        :disabled="!query_valid || inLoading"
+        @click="search"
+      >
+        <i class="fa fa-search" />
+      </button>
     </span>
-    <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
+    <Modal
+      v-show="showModal"
+      ref="modal"
+      show-footer="true"
+      @close="hide_modal"
+    >
       <span slot="header">Найдено несколько карт</span>
       <div slot="body">
-        <table class="table table-responsive table-bordered table-hover"
-               style="background-color: #fff;max-width: 680px">
+        <table
+          class="table table-responsive table-bordered table-hover"
+          style="background-color: #fff;max-width: 680px"
+        >
           <colgroup>
             <col width="95">
             <col width="155">
@@ -31,27 +64,39 @@
             <col width="140">
           </colgroup>
           <thead>
-          <tr>
-            <th>Категория</th>
-            <th>Карта</th>
-            <th>ФИО, пол</th>
-            <th>Дата рождения</th>
-          </tr>
+            <tr>
+              <th>Категория</th>
+              <th>Карта</th>
+              <th>ФИО, пол</th>
+              <th>Дата рождения</th>
+            </tr>
           </thead>
           <tbody>
-          <tr v-for="(row, i) in founded_cards" :key="row.num" class="cursor-pointer" @click="select_card(i)">
-            <td class="text-center">{{row.type_title}}</td>
-            <td>{{row.num}}</td>
-            <td>{{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}</td>
-            <td class="text-center">{{row.birthday}}</td>
-          </tr>
+            <tr
+              v-for="(row, i) in founded_cards"
+              :key="row.num"
+              class="cursor-pointer"
+              @click="select_card(i)"
+            >
+              <td class="text-center">
+                {{ row.type_title }}
+              </td>
+              <td>{{ row.num }}</td>
+              <td>{{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}</td>
+              <td class="text-center">
+                {{ row.birthday }}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
-      <div slot="footer" class="text-center">
+      <div
+        slot="footer"
+        class="text-center"
+      >
         <small>Показано не более 10 карт</small>
       </div>
-    </modal>
+    </Modal>
   </div>
 </template>
 
@@ -75,17 +120,6 @@ export default {
       showModal: false,
       loaded: false,
     };
-  },
-  created() {
-    this.check_base();
-
-    this.$store.watch((state) => state.bases, () => {
-      this.check_base();
-    });
-
-    this.$root.$on('search', () => {
-      this.search();
-    });
   },
   computed: {
     bases() {
@@ -118,6 +152,17 @@ export default {
     bases() {
       this.check_base();
     },
+  },
+  created() {
+    this.check_base();
+
+    this.$store.watch((state) => state.bases, () => {
+      this.check_base();
+    });
+
+    this.$root.$on('search', () => {
+      this.search();
+    });
   },
   methods: {
     hide_modal() {

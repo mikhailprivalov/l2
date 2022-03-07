@@ -1,48 +1,68 @@
 <template>
-  <modal
+  <Modal
     ref="modal"
-    @close="hide_modal"
     show-footer="true"
     white-bg="true"
     max-width="680px"
     width="100%"
     margin-top
-    marginLeftRight="auto"
+    margin-left-right="auto"
+    @close="hide_modal"
   >
     <span slot="header">Настройка локализаций ({{ title }})</span>
-    <div slot="body" style="min-height: 200px" v-if="loaded">
+    <div
+      v-if="loaded"
+      slot="body"
+      style="min-height: 200px"
+    >
       <div class="list-group">
         <a
+          v-for="l in localizations"
+          :key="l.pk"
           href="#"
           class="list-group-item list-group-item-light"
           :class="selected[l.pk] && 'active'"
           @click.prevent="toggleSelected(l.pk)"
-          v-for="l in localizations"
-          :key="l.pk"
         >
-          <input type="checkbox" :checked="!!selected[l.pk]" />
+          <input
+            type="checkbox"
+            :checked="!!selected[l.pk]"
+          >
           {{ l.title }}
         </a>
       </div>
     </div>
-    <div slot="body" style="line-height: 200px;text-align: center" v-else>
+    <div
+      v-else
+      slot="body"
+      style="line-height: 200px;text-align: center"
+    >
       Загрузка данных...
     </div>
     <div slot="footer">
       <div class="row">
         <div class="col-xs-8">
-          <button type="button" @click="save" :disabled="!hasChanges" class="btn btn-primary-nb">
+          <button
+            type="button"
+            :disabled="!hasChanges"
+            class="btn btn-primary-nb"
+            @click="save"
+          >
             Сохранить
           </button>
         </div>
         <div class="col-xs-4">
-          <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb">
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb"
+            @click="hide_modal"
+          >
             Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">

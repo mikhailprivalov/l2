@@ -44,7 +44,7 @@ module.exports = {
   configureWebpack: {
     devtool: 'source-map',
     output: {
-      filename: '[name].[chunkhash:8].js'
+      filename: '[name].[chunkhash:8].js',
     },
     plugins: [
       new WebpackManifestPlugin({

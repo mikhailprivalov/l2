@@ -1,32 +1,50 @@
 <template>
   <div class="row">
-    <div class="col-xs-4" style="padding-right: 3px;">
-      <select-picker
+    <div
+      class="col-xs-4"
+      style="padding-right: 3px;"
+    >
+      <SelectPicker
         :val="date_type"
         :options="date_types"
         :func="change_type"
         :multiple="false"
         :actions_box="false"
-        :dataContainer="dataContainer"
+        :data-container="dataContainer"
       />
     </div>
     <div class="col-xs-8">
       <div :class="[{ hidden: date_type !== 'd' }]">
-        <date-field :val.sync="values.date" :def="values.date" />
+        <DateField
+          :val.sync="values.date"
+          :def="values.date"
+        />
       </div>
-      <div class="row" :class="[{ hidden: date_type !== 'm' }]">
-        <div class="col-xs-6" style="padding-right: 3px;">
-          <select-picker
+      <div
+        class="row"
+        :class="[{ hidden: date_type !== 'm' }]"
+      >
+        <div
+          class="col-xs-6"
+          style="padding-right: 3px;"
+        >
+          <SelectPicker
             :val="values.month"
             :options="monthes"
             :func="change_month"
             :multiple="false"
             :actions_box="false"
-            :dataContainer="dataContainer"
+            :data-container="dataContainer"
           />
         </div>
         <div class="col-xs-6">
-          <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100" />
+          <input
+            v-model="values.year"
+            type="number"
+            class="form-control year"
+            min="2015"
+            max="2100"
+          >
         </div>
       </div>
     </div>
@@ -39,7 +57,8 @@ import SelectPicker from './SelectPicker.vue';
 import DateField from './DateField.vue';
 
 export default {
-  name: 'date-selector',
+  name: 'DateSelector',
+  components: { SelectPicker, DateField },
   props: {
     values_def: {
       type: Object,
@@ -107,6 +126,5 @@ export default {
       this.values.month = v;
     },
   },
-  components: { SelectPicker, DateField },
 };
 </script>

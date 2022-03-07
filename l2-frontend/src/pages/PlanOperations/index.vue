@@ -1,25 +1,40 @@
 <template>
   <div>
     <h3>{{ title }}</h3>
-    <Filters :filters="filters" :hirurgs="hirurgsWithEmpty" :anestesiologs="anestesiologsWithEmpty" :departments="departments" />
+    <Filters
+      :filters="filters"
+      :hirurgs="hirurgsWithEmpty"
+      :anestesiologs="anestesiologsWithEmpty"
+      :departments="departments"
+    />
     <div class="buttons">
-      <button class="btn btn-blue-nb" @click="load_data">
+      <button
+        class="btn btn-blue-nb"
+        @click="load_data"
+      >
         Обновить
       </button>
-      <button @click="open_form_planOperations" class="btn btn-blue-nb" type="button">
+      <button
+        class="btn btn-blue-nb"
+        type="button"
+        @click="open_form_planOperations"
+      >
         Печать
       </button>
     </div>
-    <table class="table table-bordered" style="table-layout: fixed">
+    <table
+      class="table table-bordered"
+      style="table-layout: fixed"
+    >
       <colgroup>
-        <col width="85" />
-        <col width="90" />
-        <col />
-        <col width="155" />
-        <col width="155" />
-        <col width="155" />
-        <col width="320" />
-        <col width="55" />
+        <col width="85">
+        <col width="90">
+        <col>
+        <col width="155">
+        <col width="155">
+        <col width="155">
+        <col width="320">
+        <col width="55">
       </colgroup>
       <thead>
         <tr>
@@ -30,21 +45,26 @@
           <th>Врач-хирург</th>
           <th>Отделение</th>
           <th>Анестезиолог</th>
-          <th></th>
+          <th />
         </tr>
       </thead>
       <tbody>
         <Row
-          :data="row"
-          :key="row.pk_plan"
           v-for="row in data"
+          :key="row.pk_plan"
+          v-tippy="{ placement: 'top', arrow: true, interactive: true, theme: 'dark longread' }"
+          :data="row"
           :hirurgs="hirurgsReversed"
           :anestesiologs="anestesiologsWithEmpty"
-          v-tippy="{ placement: 'top', arrow: true, interactive: true, theme: 'dark longread' }"
           :title="row.tooltip_data"
         />
         <tr v-if="data.length === 0">
-          <td colspan="8" style="text-align: center">нет данных</td>
+          <td
+            colspan="8"
+            style="text-align: center"
+          >
+            нет данных
+          </td>
         </tr>
       </tbody>
     </table>
@@ -63,11 +83,11 @@ import usersPoint from '../../api/user-point';
 import { planOperations } from '../../forms';
 
 export default {
+  name: 'PlanOperations',
   components: {
     Filters,
     Row,
   },
-  name: 'PlanOperations',
   data() {
     return {
       title: 'План операций',
@@ -88,12 +108,6 @@ export default {
         department_pk: -1,
       },
     };
-  },
-  mounted() {
-    this.init();
-    this.$root.$on('reload-plans', () => {
-      this.load_data();
-    });
   },
   computed: {
     dateRange() {
@@ -142,6 +156,12 @@ export default {
       },
       deep: true,
     },
+  },
+  mounted() {
+    this.init();
+    this.$root.$on('reload-plans', () => {
+      this.load_data();
+    });
   },
   methods: {
     async open_form_planOperations() {

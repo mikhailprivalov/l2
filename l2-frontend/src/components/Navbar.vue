@@ -1,46 +1,91 @@
 <template>
-  <nav class="navbar navbar-inverse" :class="loaderInHeader && 'show-loader'">
-    <div class="nav-cont" v-show="!loading">
+  <nav
+    class="navbar navbar-inverse"
+    :class="loaderInHeader && 'show-loader'"
+  >
+    <div
+      v-show="!loading"
+      class="nav-cont"
+    >
       <div class="navbar-header">
-        <router-link :to="authenticated ? '/ui/menu' : '/ui/login'" class="navbar-left logo" :class="l2LogoClass">
-          <template v-if="asVI">{{ system }}</template>
-          <template v-else>L<sup>2</sup></template>
+        <router-link
+          :to="authenticated ? '/ui/menu' : '/ui/login'"
+          class="navbar-left logo"
+          :class="l2LogoClass"
+        >
+          <template v-if="asVI">
+            {{ system }}
+          </template>
+          <template v-else>
+            L<sup>2</sup>
+          </template>
         </router-link>
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
+        <button
+          type="button"
+          class="navbar-toggle collapsed"
+          data-toggle="collapse"
+          data-target="#navbar"
+        >
+          <span class="icon-bar" />
+          <span class="icon-bar" />
+          <span class="icon-bar" />
         </button>
-        <router-link to="/ui/menu" v-if="authenticated">
+        <router-link
+          v-if="authenticated"
+          to="/ui/menu"
+        >
           <span class="navbar-brand">
             <small>{{ fio_short }}</small>
           </span>
         </router-link>
-        <span class="navbar-brand" v-else>
+        <span
+          v-else
+          class="navbar-brand"
+        >
           <small class="page-title">{{ metaTitle }}</small>
         </span>
       </div>
-      <div id="navbar" class="navbar-collapse collapse">
-        <ul class="nav navbar-nav" v-if="authenticated">
+      <div
+        id="navbar"
+        class="navbar-collapse collapse"
+      >
+        <ul
+          v-if="authenticated"
+          class="nav navbar-nav"
+        >
           <li class="dropdown dropdown-large">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown"> Меню <b class="caret"></b> </a>
+            <a
+              href="#"
+              class="dropdown-toggle"
+              data-toggle="dropdown"
+            > Меню <b class="caret" /> </a>
             <NavbarDropdownContent />
           </li>
         </ul>
         <ExtendedPatientSearch v-if="meta.showExtendedPatientSearch" />
         <CardReader v-if="meta.showCardReader" />
-        <ul class="nav navbar-nav" v-if="meta.showCreateDirection">
+        <ul
+          v-if="meta.showCreateDirection"
+          class="nav navbar-nav"
+        >
           <CreateDescriptiveDirection />
         </ul>
-        <ul class="nav navbar-nav" v-if="meta.showRmisLinkSchedule">
+        <ul
+          v-if="meta.showRmisLinkSchedule"
+          class="nav navbar-nav"
+        >
           <li>
-            <RmisLink isSchedule />
+            <RmisLink is-schedule />
           </li>
         </ul>
         <ExpertiseStatus v-if="meta.showExpertiseStatus" />
         <ul class="nav navbar-right navbar-nav">
           <li v-if="hasNewVersion">
-            <button type="button" class="btn btn-blue btn-blue-nb btn-reload" @click="reload">
+            <button
+              type="button"
+              class="btn btn-blue btn-blue-nb btn-reload"
+              @click="reload"
+            >
               {{ system }} обновилась! Перезагрузить страницу
             </button>
           </li>
@@ -50,33 +95,49 @@
         </ul>
       </div>
     </div>
-    <div class="nav-loader center" v-show="loading">
+    <div
+      v-show="loading"
+      class="nav-loader center"
+    >
       <div class="navbar-header">
-        <div class="navbar-left logo" :class="l2LogoClass">
-          <template v-if="asVI">{{ system }}</template>
-          <template v-else>L<sup>2</sup></template>
+        <div
+          class="navbar-left logo"
+          :class="l2LogoClass"
+        >
+          <template v-if="asVI">
+            {{ system }}
+          </template>
+          <template v-else>
+            L<sup>2</sup>
+          </template>
         </div>
-        <span class="navbar-brand" v-if="authenticated">
+        <span
+          v-if="authenticated"
+          class="navbar-brand"
+        >
           <small>{{ fio_short }}</small>
         </span>
-        <span class="navbar-brand" v-else>
+        <span
+          v-else
+          class="navbar-brand"
+        >
           <small class="page-title">{{ metaTitle }}</small>
         </span>
       </div>
       <div class="din-spinner">
         <div class="sk-fading-circle">
-          <div class="sk-circle1 sk-circle"></div>
-          <div class="sk-circle2 sk-circle"></div>
-          <div class="sk-circle3 sk-circle"></div>
-          <div class="sk-circle4 sk-circle"></div>
-          <div class="sk-circle5 sk-circle"></div>
-          <div class="sk-circle6 sk-circle"></div>
-          <div class="sk-circle7 sk-circle"></div>
-          <div class="sk-circle8 sk-circle"></div>
-          <div class="sk-circle9 sk-circle"></div>
-          <div class="sk-circle10 sk-circle"></div>
-          <div class="sk-circle11 sk-circle"></div>
-          <div class="sk-circle12 sk-circle"></div>
+          <div class="sk-circle1 sk-circle" />
+          <div class="sk-circle2 sk-circle" />
+          <div class="sk-circle3 sk-circle" />
+          <div class="sk-circle4 sk-circle" />
+          <div class="sk-circle5 sk-circle" />
+          <div class="sk-circle6 sk-circle" />
+          <div class="sk-circle7 sk-circle" />
+          <div class="sk-circle8 sk-circle" />
+          <div class="sk-circle9 sk-circle" />
+          <div class="sk-circle10 sk-circle" />
+          <div class="sk-circle11 sk-circle" />
+          <div class="sk-circle12 sk-circle" />
         </div>
         <span class="loading-text">{{ loadingText }}</span>
       </div>

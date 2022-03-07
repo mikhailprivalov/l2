@@ -1,83 +1,142 @@
 <template>
   <div style="max-width: 1024px;margin-top: 10px">
-    <div class="input-group" style="margin-bottom: 10px">
+    <div
+      class="input-group"
+      style="margin-bottom: 10px"
+    >
       <span class="input-group-addon">Число колонок</span>
-      <input type="number" class="form-control" v-model.number="columns.count" min="1" max="8" placeholder="Название колонки" />
+      <input
+        v-model.number="columns.count"
+        type="number"
+        class="form-control"
+        min="1"
+        max="8"
+        placeholder="Название колонки"
+      >
     </div>
 
     <table
+      v-if="columns.settings && columns.settings.length === columns.count"
       class="table table-bordered table-condensed"
       style="table-layout: fixed;"
-      v-if="columns.settings && columns.settings.length === columns.count"
     >
       <colgroup>
-        <col width="36" />
-        <col v-for="(_, i) in columns.titles" :width="columns.settings[i] && columns.settings[i].width" :key="i" />
+        <col width="36">
+        <col
+          v-for="(_, i) in columns.titles"
+          :key="i"
+          :width="columns.settings[i] && columns.settings[i].width"
+        >
       </colgroup>
       <thead>
         <tr>
-          <td></td>
-          <td v-for="(_, i) in columns.titles" class="cl-td" :key="i">
-            <input type="text" class="form-control" v-model="columns.titles[i]" />
+          <td />
+          <td
+            v-for="(_, i) in columns.titles"
+            :key="i"
+            class="cl-td"
+          >
+            <input
+              v-model="columns.titles[i]"
+              type="text"
+              class="form-control"
+            >
           </td>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(r, j) in rows" :key="j">
+        <tr
+          v-for="(r, j) in rows"
+          :key="j"
+        >
           <td class="cl-td">
-            <button class="btn btn-blue-nb nbr" @click="deleteRow(j)" title="Удалить строку" v-tippy>
-              <i class="fas fa-times"></i>
+            <button
+              v-tippy
+              class="btn btn-blue-nb nbr"
+              title="Удалить строку"
+              @click="deleteRow(j)"
+            >
+              <i class="fas fa-times" />
             </button>
           </td>
-          <td v-for="(_, i) in columns.titles" class="cl-td" :class="columns.settings[i].type === 2 && 'mkb'" :key="i">
+          <td
+            v-for="(_, i) in columns.titles"
+            :key="i"
+            class="cl-td"
+            :class="columns.settings[i].type === 2 && 'mkb'"
+          >
             <template v-if="columns.settings[i].type === 0">
               <textarea
-                :rows="columns.settings[i].lines"
-                class="form-control"
                 v-if="columns.settings[i].lines > 1"
                 v-model="r[i]"
+                :rows="columns.settings[i].lines"
+                class="form-control"
                 placeholder="Значение по умолчанию"
-              ></textarea>
-              <input class="form-control" v-else v-model="r[i]" placeholder="Значение по умолчанию" />
+              />
+              <input
+                v-else
+                v-model="r[i]"
+                class="form-control"
+                placeholder="Значение по умолчанию"
+              >
             </template>
-            <div v-else-if="columns.settings[i].type === 1" style="padding: 5px">
+            <div
+              v-else-if="columns.settings[i].type === 1"
+              style="padding: 5px"
+            >
               Тип поля дата
             </div>
             <SelectField
-              :variants="columns.settings[i].variants"
-              class="form-control fw"
               v-else-if="columns.settings[i].type === 10"
               v-model="r[i]"
+              :variants="columns.settings[i].variants"
+              class="form-control fw"
             />
-            <RadioField :variants="columns.settings[i].variants" v-else-if="columns.settings[i].type === 12" v-model="r[i]" />
+            <RadioField
+              v-else-if="columns.settings[i].type === 12"
+              v-model="r[i]"
+              :variants="columns.settings[i].variants"
+            />
             <input
-              class="form-control"
               v-else-if="columns.settings[i].type === 18"
               v-model="r[i]"
+              class="form-control"
               type="number"
               placeholder="Значение по умолчанию"
+            >
+            <MKBFieldForm
+              v-else-if="columns.settings[i].type === 2"
+              v-model="r[i]"
+              :short="false"
             />
-            <MKBFieldForm v-else-if="columns.settings[i].type === 2" :short="false" v-model="r[i]" />
             <input
-              class="form-control"
               v-else-if="[23].includes(columns.settings[i].type)"
               v-model="r[i]"
-              placeholder="Ссылка на значение"
-            />
-            <input
               class="form-control"
+              placeholder="Ссылка на значение"
+            >
+            <input
               v-else-if="[32, 33, 34, 36].includes(columns.settings[i].type)"
               v-model="r[i]"
+              class="form-control"
               placeholder="Ссылка на поле (%)"
-            />
-            <div v-else-if="columns.settings[i].type === 'rowNumber'" style="padding: 5px;">
+            >
+            <div
+              v-else-if="columns.settings[i].type === 'rowNumber'"
+              style="padding: 5px;"
+            >
               <strong>{{ r[i] }}</strong>
             </div>
           </td>
         </tr>
         <tr>
           <td :colspan="columns.count + 1">
-            <button class="btn btn-blue-nb" @click="addRow">добавить строку</button>
+            <button
+              class="btn btn-blue-nb"
+              @click="addRow"
+            >
+              добавить строку
+            </button>
           </td>
         </tr>
       </tbody>
@@ -86,56 +145,94 @@
     <div v-if="columns.settings && columns.settings.length === columns.count">
       <strong>Настройка колонок:</strong>
 
-      <div v-for="(s, i) in columns.settings" :key="i" class="column-card card card-1 card-no-hover">
+      <div
+        v-for="(s, i) in columns.settings"
+        :key="i"
+        class="column-card card card-1 card-no-hover"
+      >
         <strong>Колонка №{{ i + 1 }} {{ columns.titles[i] }}:</strong>
-        <div class="input-group" style="margin-bottom: 10px">
+        <div
+          class="input-group"
+          style="margin-bottom: 10px"
+        >
           <span class="input-group-addon">Ширина (пиксели или проценты), пример: 42 или 10% или пусто</span>
           <input
+            v-model.trim="columns.settings[i].width"
             type="text"
             class="form-control"
-            v-model.trim="columns.settings[i].width"
-            @change="updatedSettings"
             placeholder="Ширина"
-          />
+            @change="updatedSettings"
+          >
         </div>
-        <div class="input-group" style="margin-bottom: 10px">
+        <div
+          class="input-group"
+          style="margin-bottom: 10px"
+        >
           <span class="input-group-addon">Тип</span>
-          <select class="form-control" v-model="columns.settings[i].type" @change="updatedSettings">
-            <option :value="t[0]" v-for="t in COLUMN_TYPES" :key="t[0]">{{ t[1] }}</option>
+          <select
+            v-model="columns.settings[i].type"
+            class="form-control"
+            @change="updatedSettings"
+          >
+            <option
+              v-for="t in COLUMN_TYPES"
+              :key="t[0]"
+              :value="t[0]"
+            >
+              {{ t[1] }}
+            </option>
           </select>
         </div>
-        <div class="input-group" style="margin-bottom: 10px" v-if="columns.settings[i].type === 0">
+        <div
+          v-if="columns.settings[i].type === 0"
+          class="input-group"
+          style="margin-bottom: 10px"
+        >
           <span class="input-group-addon">Число строк в тексте</span>
           <input
+            v-model.number="columns.settings[i].lines"
             type="number"
             class="form-control"
-            v-model.number="columns.settings[i].lines"
-            @change="updatedSettings"
             min="1"
             max="12"
             placeholder="Число строк в тексте"
-          />
+            @change="updatedSettings"
+          >
         </div>
-        <div class="input-group" style="margin-bottom: 10px" v-if="[10, 12].includes(columns.settings[i].type)">
+        <div
+          v-if="[10, 12].includes(columns.settings[i].type)"
+          class="input-group"
+          style="margin-bottom: 10px"
+        >
           <span class="input-group-addon">Варианты (по строкам)</span>
           <textarea
-            class="form-control"
             v-model="columns.settings[i].variants"
-            @change="updatedSettings"
             v-autosize="columns.settings[i].variants"
-          ></textarea>
+            class="form-control"
+            @change="updatedSettings"
+          />
         </div>
         <v-collapse-wrapper v-if="columns.settings[i].type !== 'rowNumber'">
-          <div class="header" v-collapse-toggle>
-            <a href="#" class="a-under" @click.prevent>
+          <div
+            v-collapse-toggle
+            class="header"
+          >
+            <a
+              href="#"
+              class="a-under"
+              @click.prevent
+            >
               Проверка корректности ячеек колонки
             </a>
           </div>
-          <div v-collapse-content class="code-editor">
+          <div
+            v-collapse-content
+            class="code-editor"
+          >
             <div class="code-help">
-              Код ниже является телом функции-валидатора.<br />
-              Сделайте <code>return false;</code>, если значение корректно.<br />
-              Если значение некорректно, то верните сообщение об ошибке.<br />
+              Код ниже является телом функции-валидатора.<br>
+              Сделайте <code>return false;</code>, если значение корректно.<br>
+              Если значение некорректно, то верните сообщение об ошибке.<br>
               Например <code>return "Ячейка не может быть пуста";</code>
               <div>
                 <strong>
@@ -154,7 +251,7 @@
                 </ul>
               </div>
             </div>
-            <vue-codeditor
+            <VueCodeditor
               v-model.lazy="columns.settings[i].validator"
               mode="javascript"
               theme="cobalt"
@@ -165,9 +262,13 @@
       </div>
     </div>
 
-    <label> <input type="checkbox" v-model="dynamicRows" /> пользователь может менять число строк </label>
+    <label> <input
+      v-model="dynamicRows"
+      type="checkbox"
+    > пользователь может менять число строк </label>
   </div>
 </template>
+
 <script lang="ts">
 import _ from 'lodash';
 import { debounce } from 'lodash/function';
@@ -215,9 +316,6 @@ export default {
   props: {
     row: {},
   },
-  mounted() {
-    this.checkTable();
-  },
   data() {
     return {
       columns: {
@@ -252,6 +350,9 @@ export default {
         this.updateValue();
       },
     },
+  },
+  mounted() {
+    this.checkTable();
   },
   methods: {
     updateValidator: debounce(function (i, v) {

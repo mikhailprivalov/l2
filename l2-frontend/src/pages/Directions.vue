@@ -1,29 +1,47 @@
 <template>
-  <div class="root" :class="{ noGrid: !hasGrid, hasGrid }">
+  <div
+    class="root"
+    :class="{ noGrid: !hasGrid, hasGrid }"
+  >
     <div class="a">
-      <patient-picker
+      <PatientPicker
         v-model="selected_card"
         directive_from_need="true"
         search_results="true"
         :selected-researches="selected_researches"
         bottom_picker="true"
       >
-        <div slot="for_card" class="text-right">
-          <div v-if="selected_researches.length > 0" style="margin-top: 5px;text-align: left">
+        <div
+          slot="for_card"
+          class="text-right"
+        >
+          <div
+            v-if="selected_researches.length > 0"
+            style="margin-top: 5px; text-align: left"
+          >
             <table class="table table-bordered lastresults">
               <colgroup>
-                <col width="180" />
-                <col />
-                <col width="110" />
-                <col width="110" />
+                <col width="180">
+                <col>
+                <col width="110">
+                <col width="110">
               </colgroup>
               <tbody>
-                <last-result :individual="selected_card.individual_pk" v-for="p in selected_researches" :key="p" :research="p" />
+                <LastResult
+                  v-for="p in selected_researches"
+                  :key="p"
+                  :individual="selected_card.individual_pk"
+                  :research="p"
+                />
               </tbody>
             </table>
           </div>
         </div>
-        <div slot="for_card_bottom" class="bottom-inner" v-if="selected_card.pk >= 0">
+        <div
+          v-if="selected_card.pk >= 0"
+          slot="for_card_bottom"
+          class="bottom-inner"
+        >
           <!--<a href="#" @click.prevent="do_show_rmis_send_directions" v-if="selected_card.is_rmis">
             <span>Направить в другую МО</span>
           </a>-->
@@ -32,57 +50,99 @@
               class="btn btn-blue-nb btn-ell dropdown-toggle"
               type="button"
               data-toggle="dropdown"
-              style="text-align: right!important;border-radius: 0;width: 100%"
+              style="text-align: right !important; border-radius: 0; width: 100%"
             >
-              Печатные формы <span class="caret"></span>
+              Печатные формы <span class="caret" />
             </button>
             <ul class="dropdown-menu">
-              <li v-for="f in forms" :key="`${f.url || '#'}_${f.title}`" :class="f.isGroup && 'dropdown-submenu'">
-                <a :href="f.url || '#'" :target="!f.isGroup && '_blank'" class="ddm">{{ f.title }}</a>
-                <ul class="dropdown-menu multi-level" v-if="f.isGroup">
-                  <li v-for="ff in f.forms" :key="ff.url">
-                    <a :href="ff.url" target="_blank" class="ddm">{{ ff.title }}</a>
+              <li
+                v-for="f in forms"
+                :key="`${f.url || '#'}_${f.title}`"
+                :class="f.isGroup && 'dropdown-submenu'"
+              >
+                <a
+                  :href="f.url || '#'"
+                  :target="!f.isGroup && '_blank'"
+                  class="ddm"
+                >{{ f.title }}</a>
+                <ul
+                  v-if="f.isGroup"
+                  class="dropdown-menu multi-level"
+                >
+                  <li
+                    v-for="ff in f.forms"
+                    :key="ff.url"
+                  >
+                    <a
+                      :href="ff.url"
+                      target="_blank"
+                      class="ddm"
+                    >{{ ff.title }}</a>
                   </li>
                 </ul>
               </li>
             </ul>
           </div>
-          <a href="#" class="a-under" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">
+          <a
+            v-if="selected_card.is_rmis"
+            href="#"
+            class="a-under"
+            @click.prevent="do_show_rmis_directions"
+          >
             <span>Направления из РМИС</span>
           </a>
-          <a class="a-under" :href="report_url">
+          <a
+            class="a-under"
+            :href="report_url"
+          >
             <span>Отчёт по результатам</span>
           </a>
-          <a class="a-under" v-if="can_create_tickets" :href="ticket_url">
+          <a
+            v-if="can_create_tickets"
+            class="a-under"
+            :href="ticket_url"
+          >
             <span>Создать статталон</span>
           </a>
         </div>
-      </patient-picker>
+      </PatientPicker>
     </div>
-    <div class="b gutter gutter-col gutter-column-1"></div>
-    <div class="c" v-if="!l2_only_doc_call">
-      <directions-history :patient_pk="selected_card.pk" />
+    <div class="b gutter gutter-col gutter-column-1" />
+    <div
+      v-if="!l2_only_doc_call"
+      class="c"
+    >
+      <DirectionsHistory :patient_pk="selected_card.pk" />
     </div>
-    <div v-else-if="!hasGrid" class="c">
-      <div></div>
+    <div
+      v-else-if="!hasGrid"
+      class="c"
+    >
+      <div />
     </div>
-    <div class="d gutter gutter-row gutter-row-1" :class="{ onlyDocCall: l2_only_doc_call }"></div>
+    <div
+      class="d gutter gutter-row gutter-row-1"
+      :class="{ onlyDocCall: l2_only_doc_call }"
+    />
     <div class="e">
-      <researches-picker v-model="selected_researches" />
+      <ResearchesPicker v-model="selected_researches" />
     </div>
-    <div class="f gutter gutter-col gutter-column-2"></div>
-    <div class="g" :class="{ noMoreModules: !l2_doc_call && !l2_list_wait, onlyDocCall: l2_only_doc_call }">
+    <div class="f gutter gutter-col gutter-column-2" />
+    <div
+      class="g"
+      :class="{ noMoreModules: !l2_doc_call && !l2_list_wait, onlyDocCall: l2_only_doc_call }"
+    >
       <DirectAndPlanSwitcher
-        v-model="mode"
-        :bages="this.modes_counts"
         v-if="(l2_doc_call || l2_list_wait) && !l2_only_doc_call"
+        v-model="mode"
+        :bages="modes_counts"
       />
       <div
         v-show="mode === DIRECTION_MODE_DIRECTION"
         v-if="!l2_only_doc_call"
         :style="(l2_doc_call || l2_list_wait) && 'border-top: 1px solid #434a54'"
       >
-        <selected-researches
+        <SelectedResearches
           :operator="selected_card.operator"
           :ofname="selected_card.ofname"
           :visible="mode === DIRECTION_MODE_DIRECTION"
@@ -95,15 +155,35 @@
           :selected_card="selected_card"
         />
       </div>
-      <div v-show="mode === DIRECTION_MODE_CALL" v-if="l2_doc_call">
-        <CallDoctor :card_pk="selected_card.pk" :researches="selected_researches" :visible="mode === DIRECTION_MODE_CALL" />
+      <div
+        v-show="mode === DIRECTION_MODE_CALL"
+        v-if="l2_doc_call"
+      >
+        <CallDoctor
+          :card_pk="selected_card.pk"
+          :researches="selected_researches"
+          :visible="mode === DIRECTION_MODE_CALL"
+        />
       </div>
-      <div v-show="mode === DIRECTION_MODE_WAIT" v-if="l2_list_wait && !l2_only_doc_call">
-        <ListWaitCreator :card_pk="selected_card.pk" :researches="selected_researches" :visible="mode === DIRECTION_MODE_WAIT" />
+      <div
+        v-show="mode === DIRECTION_MODE_WAIT"
+        v-if="l2_list_wait && !l2_only_doc_call"
+      >
+        <ListWaitCreator
+          :card_pk="selected_card.pk"
+          :researches="selected_researches"
+          :visible="mode === DIRECTION_MODE_WAIT"
+        />
       </div>
     </div>
-    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" />
-    <rmis-directions-viewer v-if="show_rmis_directions && selected_card.is_rmis" :card="selected_card" />
+    <ResultsViewer
+      v-if="show_results_pk > -1"
+      :pk="show_results_pk"
+    />
+    <RmisDirectionsViewer
+      v-if="show_rmis_directions && selected_card.is_rmis"
+      :card="selected_card"
+    />
   </div>
 </template>
 
@@ -124,6 +204,7 @@ import ListWaitCreator from '@/ui-cards/ListWaitCreator.vue';
 import { valuesToString } from '@/utils';
 
 export default {
+  name: 'Directions',
   components: {
     ListWaitCreator,
     CallDoctor,
@@ -136,7 +217,6 @@ export default {
     RmisDirectionsViewer,
     LastResult,
   },
-  name: 'directions',
   data() {
     return {
       selected_card: {
@@ -173,6 +253,41 @@ export default {
       disabled_forms: [],
     };
   },
+  computed: {
+    forms() {
+      return this.makeForms(forms);
+    },
+    patient_valid() {
+      return this.selected_card.pk !== -1;
+    },
+    ticket_url() {
+      // eslint-disable-next-line max-len
+      return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}&ofname_dep=${this.selected_card.ofname_dep}`;
+    },
+    report_url() {
+      // eslint-disable-next-line max-len
+      return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}&base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`;
+    },
+    can_create_tickets() {
+      if ('groups' in this.$store.getters.user_data) {
+        for (const g of this.$store.getters.user_data.groups) {
+          if (g === 'Оформление статталонов' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
+            return true;
+          }
+        }
+      }
+      return false;
+    },
+    l2_list_wait() {
+      return this.$store.getters.modules.l2_list_wait;
+    },
+    l2_doc_call() {
+      return this.$store.getters.modules.l2_doc_call;
+    },
+    l2_only_doc_call() {
+      return this.$store.getters.modules.l2_only_doc_call && this.l2_doc_call;
+    },
+  },
   watch: {
     l2_only_doc_call: {
       handler() {
@@ -184,7 +299,7 @@ export default {
     },
   },
   created() {
-    this.$root.$on('show_results', pk => {
+    this.$root.$on('show_results', (pk) => {
       this.show_results_pk = pk;
     });
 
@@ -197,19 +312,19 @@ export default {
       this.show_rmis_send_directions = false;
     });
 
-    this.$root.$on('update_diagnos', diagnos => {
+    this.$root.$on('update_diagnos', (diagnos) => {
       this.diagnos = diagnos;
     });
 
-    this.$root.$on('update_fin', fin => {
+    this.$root.$on('update_fin', (fin) => {
       this.fin = fin;
     });
 
-    this.$root.$on('call-doctor:rows-count', count => {
+    this.$root.$on('call-doctor:rows-count', (count) => {
       this.modes_counts[DIRECTION_MODE_CALL] = count;
     });
 
-    this.$root.$on('list-wait-creator:rows-count', count => {
+    this.$root.$on('list-wait-creator:rows-count', (count) => {
       this.modes_counts[DIRECTION_MODE_WAIT] = count;
     });
   },
@@ -283,7 +398,7 @@ export default {
     },
     makeForms(formsBase) {
       return formsBase
-        .map(f => {
+        .map((f) => {
           if (f.isGroup) {
             return {
               ...f,
@@ -298,42 +413,7 @@ export default {
             }),
           };
         })
-        .filter(f => ((this.selected_card.base.internal_type || f.not_internal) && !this.disabled_forms.includes(f.type)));
-    },
-  },
-  computed: {
-    forms() {
-      return this.makeForms(forms);
-    },
-    patient_valid() {
-      return this.selected_card.pk !== -1;
-    },
-    ticket_url() {
-      // eslint-disable-next-line max-len
-      return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}&ofname_dep=${this.selected_card.ofname_dep}`;
-    },
-    report_url() {
-      // eslint-disable-next-line max-len
-      return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}&base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`;
-    },
-    can_create_tickets() {
-      if ('groups' in this.$store.getters.user_data) {
-        for (const g of this.$store.getters.user_data.groups) {
-          if (g === 'Оформление статталонов' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
-            return true;
-          }
-        }
-      }
-      return false;
-    },
-    l2_list_wait() {
-      return this.$store.getters.modules.l2_list_wait;
-    },
-    l2_doc_call() {
-      return this.$store.getters.modules.l2_doc_call;
-    },
-    l2_only_doc_call() {
-      return this.$store.getters.modules.l2_only_doc_call && this.l2_doc_call;
+        .filter((f) => (this.selected_card.base.internal_type || f.not_internal) && !this.disabled_forms.includes(f.type));
     },
   },
 };

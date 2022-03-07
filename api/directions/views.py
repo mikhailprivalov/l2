@@ -52,7 +52,8 @@ from directions.models import (
     DirectionsHistory,
     MonitoringResult,
     TubesRegistration,
-    DirectionParamsResult, IssledovaniyaFiles,
+    DirectionParamsResult,
+    IssledovaniyaFiles,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -214,20 +215,49 @@ def directions_history(request):
         patient_contract = get_patient_contract(date_start, date_end, patient_card)
         count = 0
         last_contract = None
-        temp_data = {'pk': "", 'status': "", 'researches': "", "researches_pks": "", 'date': "", 'cancel': False, 'checked': False, 'pacs': False, 'has_hosp': False,
-                     'has_descriptive': False, 'maybe_onco': False, 'is_application': False, 'lab': "", 'parent': parent_obj, 'is_expertise': False,
-                     'expertise_status': False, 'person_contract_pk': "", 'person_contract_dirs': "",
-                     }
+        temp_data = {
+            'pk': "",
+            'status': "",
+            'researches': "",
+            "researches_pks": "",
+            'date': "",
+            'cancel': False,
+            'checked': False,
+            'pacs': False,
+            'has_hosp': False,
+            'has_descriptive': False,
+            'maybe_onco': False,
+            'is_application': False,
+            'lab': "",
+            'parent': parent_obj,
+            'is_expertise': False,
+            'expertise_status': False,
+            'person_contract_pk': "",
+            'person_contract_dirs': "",
+        }
         for i in patient_contract:
             if i.id != last_contract and count != 0:
-                final_result.append(
-                    temp_data.copy()
-                )
-                temp_data = {'pk': "", 'status': "", 'researches': "", "researches_pks": "", 'date': "", 'cancel': False, 'checked': False, 'pacs': False, 'has_hosp': False,
-                             'has_descriptive': False,
-                             'maybe_onco': False, 'is_application': False, 'lab': "", 'parent': parent_obj, 'is_expertise': False, 'expertise_status': False, 'person_contract_pk': "",
-                             'person_contract_dirs': "",
-                             }
+                final_result.append(temp_data.copy())
+                temp_data = {
+                    'pk': "",
+                    'status': "",
+                    'researches': "",
+                    "researches_pks": "",
+                    'date': "",
+                    'cancel': False,
+                    'checked': False,
+                    'pacs': False,
+                    'has_hosp': False,
+                    'has_descriptive': False,
+                    'maybe_onco': False,
+                    'is_application': False,
+                    'lab': "",
+                    'parent': parent_obj,
+                    'is_expertise': False,
+                    'expertise_status': False,
+                    'person_contract_pk': "",
+                    'person_contract_dirs': "",
+                }
             temp_data['pk'] = i.id
             if temp_data['researches']:
                 temp_data['researches'] = f"{temp_data['researches']} | {i.title}"
@@ -239,13 +269,10 @@ def directions_history(request):
             temp_data['person_contract_dirs'] = i.dir_list
             last_contract = i.id
             count += 1
-        final_result.append(
-            temp_data.copy()
-        )
+        final_result.append(temp_data.copy())
         res['directions'] = final_result
 
         return JsonResponse(res)
-
 
     is_service = False
     if services:
@@ -1262,7 +1289,7 @@ def directions_paraclinic_form(request):
                         "transfer_direction_iss": [] if not transfer_d else [r.research.title for r in Issledovaniya.objects.filter(napravleniye=transfer_d.pk)],
                         "r_type": i.research.r_type,
                         "show_more_services": i.research.show_more_services and not i.research.is_form and not i.research.is_microbiology,
-                        "enabled_add_files": i.research.enabled_add_files
+                        "enabled_add_files": i.research.enabled_add_files,
                     },
                     "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else search_dicom_study(d.pk),
                     "examination_date": i.get_medical_examination(),
@@ -1294,7 +1321,7 @@ def directions_paraclinic_form(request):
                     "whoSaved": None if not i.doc_save or not i.time_save else f"{i.doc_save}, {strdatetime(i.time_save)}",
                     "whoConfirmed": (None if not i.doc_confirmation or not i.time_confirmation else f"{i.doc_confirmation}, {strdatetime(i.time_confirmation)}"),
                     "whoExecuted": None if not i.time_confirmation or not i.executor_confirmation else str(i.executor_confirmation),
-                    "countFiles": IssledovaniyaFiles.objects.filter(issledovaniye_id=i.pk).count()
+                    "countFiles": IssledovaniyaFiles.objects.filter(issledovaniye_id=i.pk).count(),
                 }
 
                 if i.research.is_microbiology:
@@ -3426,6 +3453,7 @@ def send_to_l2vi(request):
 
 
 @login_required
+@group_required("Врач параклиники", "Врач консультаций", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def add_file(request):
     file = request.FILES.get('file')
     form = request.FILES['form'].read()
@@ -3435,23 +3463,29 @@ def add_file(request):
     iss_files = IssledovaniyaFiles.objects.filter(issledovaniye_id=pk)
 
     if file and iss_files.count() >= 5:
-        return JsonResponse({
-            "ok": False,
-            "message": "Вы добавили слишком много файлов в одну заявку",
-        })
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": "Вы добавили слишком много файлов в одну заявку",
+            }
+        )
 
     if file and file.size > 5242880:
-        return JsonResponse({
-            "ok": False,
-            "message": "Файл слишком большой",
-        })
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": "Файл слишком большой",
+            }
+        )
 
     iss = IssledovaniyaFiles(issledovaniye_id=pk, uploaded_file=file, who_add_files=request.user.doctorprofile)
     iss.save()
 
-    return JsonResponse({
-        "ok": True,
-    })
+    return JsonResponse(
+        {
+            "ok": True,
+        }
+    )
 
 
 @login_required
@@ -3460,13 +3494,17 @@ def file_log(request):
     pk = request_data["pk"]
     rows = []
     for row in IssledovaniyaFiles.objects.filter(issledovaniye_id=pk).order_by('-created_at'):
-        rows.append({
-            'pk': row.pk,
-            'author': row.who_add_files.get_fio(),
-            'createdAt': strfdatetime(row.created_at, "%d.%m.%Y %X"),
-            'file': row.uploaded_file.url if row.uploaded_file else None,
-            'fileName': os.path.basename(row.uploaded_file.name) if row.uploaded_file else None,
-        })
-    return JsonResponse({
-        "rows": rows,
-    })
+        rows.append(
+            {
+                'pk': row.pk,
+                'author': row.who_add_files.get_fio(),
+                'createdAt': strfdatetime(row.created_at, "%d.%m.%Y %X"),
+                'file': row.uploaded_file.url if row.uploaded_file else None,
+                'fileName': os.path.basename(row.uploaded_file.name) if row.uploaded_file else None,
+            }
+        )
+    return JsonResponse(
+        {
+            "rows": rows,
+        }
+    )

@@ -1,13 +1,26 @@
 <template>
   <div v-frag>
     <div>
-      <button class="btn btn-blue-nb btn-ell dropdown-toggle bt1" type="button" data-toggle="dropdown">
+      <button
+        class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
+        type="button"
+        data-toggle="dropdown"
+      >
         {{ selected_laboratory }}
-        <span class="caret"></span>
+        <span class="caret" />
       </button>
-      <ul class="dropdown-menu" style="margin-top: 1px">
-        <li v-for="row in laboratories" :key="row.pk">
-          <a href="#" @click.prevent="laboratory = row.pk">{{ row.title }}</a>
+      <ul
+        class="dropdown-menu"
+        style="margin-top: 1px"
+      >
+        <li
+          v-for="row in laboratories"
+          :key="row.pk"
+        >
+          <a
+            href="#"
+            @click.prevent="laboratory = row.pk"
+          >{{ row.title }}</a>
         </li>
       </ul>
     </div>
@@ -19,6 +32,31 @@ import * as actions from '@/store/action-types';
 
 export default {
   name: 'LaboratorySelector',
+  data() {
+    return {
+      laboratories: [],
+      laboratory: -1,
+    };
+  },
+  computed: {
+    selected_laboratory() {
+      for (const l of this.laboratories) {
+        if (l.pk === this.laboratory) {
+          return l.title;
+        }
+      }
+
+      return '';
+    },
+  },
+  watch: {
+    laboratory: {
+      handler() {
+        this.emit();
+      },
+      immediate: true,
+    },
+  },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
     const { rows, active } = await this.$api('laboratory/laboratories');
@@ -38,34 +76,9 @@ export default {
       }
     });
   },
-  data() {
-    return {
-      laboratories: [],
-      laboratory: -1,
-    };
-  },
   methods: {
     emit() {
       this.$root.$emit('change-laboratory', this.laboratory);
-    },
-  },
-  watch: {
-    laboratory: {
-      handler() {
-        this.emit();
-      },
-      immediate: true,
-    },
-  },
-  computed: {
-    selected_laboratory() {
-      for (const l of this.laboratories) {
-        if (l.pk === this.laboratory) {
-          return l.title;
-        }
-      }
-
-      return '';
     },
   },
 };

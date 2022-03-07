@@ -1,5 +1,6 @@
 <template>
-  <longpress
+  <Longpress
+    v-tippy
     :confirm-time="0"
     :duration="400"
     :on-confirm="onConfirm"
@@ -8,10 +9,9 @@
     class="btn btn-default btn-field"
     pressing-text="×"
     title="Очистить поле (удерживайте кнопку)"
-    v-tippy
   >
     ×
-  </longpress>
+  </Longpress>
 </template>
 
 <script lang="ts">

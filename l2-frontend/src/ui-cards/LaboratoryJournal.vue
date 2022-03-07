@@ -1,90 +1,138 @@
 <template>
   <div v-frag>
-    <a href="#" @click.prevent="doOpen">
+    <a
+      href="#"
+      @click.prevent="doOpen"
+    >
       Журнал
     </a>
-    <MountingPortal mountTo="#portal-place" name="LaboratoryJournal" append v-if="open">
-      <modal
+    <MountingPortal
+      v-if="open"
+      mount-to="#portal-place"
+      name="LaboratoryJournal"
+      append
+    >
+      <Modal
         v-if="open"
-        @close="open = false"
         show-footer="true"
         white-bg="true"
         max-width="710px"
         width="100%"
-        marginLeftRight="auto"
+        margin-left-right="auto"
         overflow-unset="true"
+        @close="open = false"
       >
         <span slot="header">Журнал по активной лаборатории</span>
         <div slot="body">
           <div class="filters">
             <div class="input-group">
               <span class="input-group-addon">Дата подтверждения</span>
-              <input class="form-control" type="date" v-model="date" />
+              <input
+                v-model="date"
+                class="form-control"
+                type="date"
+              >
             </div>
-            <hr />
+            <hr>
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Источник финансирования</span>
-              <treeselect
+              <Treeselect
+                v-model="fin_sources"
                 :multiple="true"
                 :disable-branch-nodes="true"
                 :options="fin_sources_options"
                 :clearable="true"
                 placeholder="Источники финансирования не выбраны"
-                v-model="fin_sources"
               />
             </div>
-            <hr />
+            <hr>
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Группа исследований для журнала-списка</span>
-              <treeselect
+              <Treeselect
+                v-model="group"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="groups"
                 :clearable="false"
                 placeholder="Группа не выбрана"
-                v-model="group"
               />
             </div>
           </div>
-          <hr />
-          <div class="row" style="text-align: center">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-8" style="margin: 0 auto">
-              <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" @click="createjournal()">
+          <hr>
+          <div
+            class="row"
+            style="text-align: center"
+          >
+            <div class="col-xs-2" />
+            <div
+              class="col-xs-8"
+              style="margin: 0 auto"
+            >
+              <button
+                type="button"
+                class="btn btn-primary-nb"
+                style="margin-bottom: 10px"
+                @click="createjournal()"
+              >
                 Создать журнал-список
               </button>
             </div>
-            <div class="col-xs-2"></div>
+            <div class="col-xs-2" />
           </div>
-          <div class="row" style="text-align: center">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-8" style="margin: 0 auto">
-              <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" @click="createjournaltable()">
+          <div
+            class="row"
+            style="text-align: center"
+          >
+            <div class="col-xs-2" />
+            <div
+              class="col-xs-8"
+              style="margin: 0 auto"
+            >
+              <button
+                type="button"
+                class="btn btn-primary-nb"
+                style="margin-bottom: 10px"
+                @click="createjournaltable()"
+              >
                 Создать журнал-таблицу
               </button>
             </div>
-            <div class="col-xs-2"></div>
+            <div class="col-xs-2" />
           </div>
-          <div class="row" style="text-align: center">
-            <div class="col-xs-2"></div>
-            <div class="col-xs-8" style="margin: 0 auto">
-              <button type="button" class="btn btn-primary-nb" @click="createjournalcodes()">
+          <div
+            class="row"
+            style="text-align: center"
+          >
+            <div class="col-xs-2" />
+            <div
+              class="col-xs-8"
+              style="margin: 0 auto"
+            >
+              <button
+                type="button"
+                class="btn btn-primary-nb"
+                @click="createjournalcodes()"
+              >
                 Создать журнал-список с кодами
               </button>
             </div>
-            <div class="col-xs-2"></div>
+            <div class="col-xs-2" />
           </div>
         </div>
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="open = false" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="open = false"
+              >
                 Закрыть
               </button>
             </div>
           </div>
         </div>
-      </modal>
+      </Modal>
     </MountingPortal>
   </div>
 </template>
@@ -98,8 +146,8 @@ import Modal from '@/ui-cards/Modal.vue';
 import * as actions from '@/store/action-types';
 
 export default {
-  components: { Modal, Treeselect },
   name: 'LaboratoryJournal',
+  components: { Modal, Treeselect },
   data() {
     return {
       open: false,

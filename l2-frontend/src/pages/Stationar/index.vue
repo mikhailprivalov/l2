@@ -1,26 +1,55 @@
 <template>
-  <div ref="root" class="root">
+  <div
+    ref="root"
+    class="root"
+  >
     <div class="sidebar">
       <div class="sidebar-top">
-        <input type="text" class="form-control" v-model="pk" @keyup.enter="load()" autofocus placeholder="Номер истории" />
-        <button class="btn btn-blue-nb" @click="load()" :disabled="pk === ''">Загрузить</button>
+        <input
+          v-model="pk"
+          type="text"
+          class="form-control"
+          autofocus
+          placeholder="Номер истории"
+          @keyup.enter="load()"
+        >
+        <button
+          class="btn btn-blue-nb"
+          :disabled="pk === ''"
+          @click="load()"
+        >
+          Загрузить
+        </button>
       </div>
       <div class="sidebar-content">
-        <div class="inner" v-if="direction !== null && !!patient.fio_age">
+        <div
+          v-if="direction !== null && !!patient.fio_age"
+          class="inner"
+        >
           <div class="inner-card">
             <a
+              v-if="!every"
               :href="`/forms/pdf?type=106.01&dir_pk=${direction}`"
               class="a-under"
               target="_blank"
-              v-if="!every"
               style="float: right"
             >
               003/у
             </a>
-            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-if="every">
-              №{{ tree.map(d => d.direction).join('-') }}
+            <a
+              v-if="every"
+              :href="`/forms/pdf?type=105.03&dir_pk=${direction}`"
+              class="a-under"
+              target="_blank"
+            >
+              №{{ tree.map((d) => d.direction).join('-') }}
             </a>
-            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-else>
+            <a
+              v-else
+              :href="`/forms/pdf?type=105.03&dir_pk=${direction}`"
+              class="a-under"
+              target="_blank"
+            >
               <del v-if="cancel">И/б {{ direction }}</del>
               <span v-else>И/б {{ direction }}</span>
             </a>
@@ -28,43 +57,62 @@
             <a
               v-if="!cancel"
               href="#"
-              @click.prevent="cancel_direction(direction)"
               :class="{ cancel_color: !cancel }"
               class="a-under"
+              @click.prevent="cancel_direction(direction)"
             >
               Отменить
             </a>
             <a
               v-if="cancel"
               href="#"
-              @click.prevent="cancel_direction(direction)"
               :class="{ active_color: cancel }"
               class="a-under"
+              @click.prevent="cancel_direction(direction)"
             >
               Вернуть
             </a>
           </div>
-          <div class="inner-card" v-if="every">
+          <div
+            v-if="every"
+            class="inner-card"
+          >
             Загружены все истории
           </div>
-          <div class="inner-card" v-if="every">
-            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" class="a-under" target="_blank">
-              003/у
-            </a>
+          <div
+            v-if="every"
+            class="inner-card"
+          >
+            <a
+              :href="`/forms/pdf?type=106.01&dir_pk=${direction}`"
+              class="a-under"
+              target="_blank"
+            > 003/у </a>
           </div>
-          <div class="inner-card" v-if="!every">
+          <div
+            v-if="!every"
+            class="inner-card"
+          >
             <Favorite :direction="direction" />
           </div>
-          <div class="inner-card" v-else>
+          <div
+            v-else
+            class="inner-card"
+          >
             {{ issTitle }}
           </div>
-          <div class="inner-card" v-if="cancel">
+          <div
+            v-if="cancel"
+            class="inner-card"
+          >
             <strong>Направление отменено</strong>
           </div>
-          <patient-card :patient="patient" class="inner-card" />
+          <PatientCard
+            :patient="patient"
+            class="inner-card"
+          />
           <div class="inner-card">
             <a
-              href="#"
               v-tippy="{
                 placement: 'right',
                 arrow: true,
@@ -82,92 +130,146 @@
                 interactive: true,
                 html: '#template-anamnesis',
               }"
-              @show="load_anamnesis"
+              href="#"
               class="a-under"
+              @show="load_anamnesis"
               @click.prevent="edit_anamnesis"
-              >Анамнез жизни</a
-            >
+            >Анамнез жизни</a>
             <div id="template-anamnesis">
-              <strong>Анамнез жизни</strong><br />
+              <strong>Анамнез жизни</strong><br>
               <span v-if="anamnesis_loading">загрузка...</span>
-              <pre v-else style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px">{{
+              <pre
+                v-else
+                style="padding: 5px; text-align: left; white-space: pre-wrap; word-break: keep-all; max-width: 600px"
+              >{{
                 anamnesis_data.text || 'нет данных'
               }}</pre>
             </div>
-            <a href="#" class="a-under" style="float: right" @click.prevent="open_ambulatory_data">112-ф</a>
+            <a
+              href="#"
+              class="a-under"
+              style="float: right"
+              @click.prevent="open_ambulatory_data"
+            >112-ф</a>
           </div>
-          <div class="inner-card" v-if="!every">
+          <div
+            v-if="!every"
+            class="inner-card"
+          >
             <div>
               <a
+                v-tippy
                 href="#"
                 :title="change_department ? 'Отмена' : 'Сменить отделение'"
-                v-tippy
                 class="a-under-reversed float-right a-icon-btn"
                 @click.prevent="changeDepartmentToggle"
               >
-                <i class="fa fa-pencil" v-if="!change_department"></i>
-                <i class="fa fa-times" v-else></i>
+                <i
+                  v-if="!change_department"
+                  class="fa fa-pencil"
+                />
+                <i
+                  v-else
+                  class="fa fa-times"
+                />
               </a>
               Отделение:
             </div>
             <div v-if="!change_department">
               {{ getDepartmentTitle(department_id) }}
             </div>
-            <treeselect
+            <Treeselect
+              v-else
+              v-model="department_id"
               :multiple="false"
               :disable-branch-nodes="true"
               class="treeselect-wide"
               :options="departments"
               placeholder="Отделение не выбрано"
               :clearable="false"
-              v-model="department_id"
-              @select="updateDepartment"
               :disabled="forbidden_edit"
-              v-else
+              @select="updateDepartment"
             />
           </div>
-          <div class="sidebar-btn-wrapper" v-for="(title, key) in menuItems" :key="key">
-            <button class="btn btn-blue-nb sidebar-btn" @click="load_directions(key)">
-              <span v-if="Boolean(counts[key])" class="counts">{{ counts[key] }} шт.</span> {{ title }}
-            </button>
+          <div
+            v-for="(title, key) in menuItems"
+            :key="key"
+            class="sidebar-btn-wrapper"
+          >
             <button
               class="btn btn-blue-nb sidebar-btn"
+              @click="load_directions(key)"
+            >
+              <span
+                v-if="Boolean(counts[key])"
+                class="counts"
+              >{{ counts[key] }} шт.</span> {{ title }}
+            </button>
+            <button
               v-if="
                 !every &&
                   menuNeedPlus[key] &&
                   (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) &&
                   (!forbidden_edit || (can_add_tadp && key === 't, ad, p sheet'))
               "
+              class="btn btn-blue-nb sidebar-btn"
               @click="plus(key)"
             >
               <i class="fa fa-plus" />
             </button>
           </div>
           <template v-for="(dir, index) in tree">
-            <div class="sidebar-btn-wrapper" v-if="!every && dir.isCurrent" :key="dir.direction">
-              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px" :style="{ color: dir.color }">
-                <i class="fa fa-arrow-down" v-if="index < tree.length - 1" />
-                <i class="fa fa-dot-circle-o" v-else />
+            <div
+              v-if="!every && dir.isCurrent"
+              :key="dir.direction"
+              class="sidebar-btn-wrapper"
+            >
+              <button
+                class="btn btn-blue-nb sidebar-btn active-btn"
+                style="font-size: 12px"
+                :style="{ color: dir.color }"
+              >
+                <i
+                  v-if="index < tree.length - 1"
+                  class="fa fa-arrow-down"
+                />
+                <i
+                  v-else
+                  class="fa fa-dot-circle-o"
+                />
                 <del v-if="dir.cancel">№{{ dir.direction }} {{ dir.research_title }}</del>
                 <span v-else>№{{ dir.direction }} {{ dir.research_title }}</span>
                 <i class="fa fa-check" />
               </button>
             </div>
-            <div class="sidebar-btn-wrapper" v-else :key="dir.direction">
+            <div
+              v-else
+              :key="dir.direction"
+              class="sidebar-btn-wrapper"
+            >
               <button
                 class="btn btn-blue-nb sidebar-btn"
                 style="font-size: 12px"
                 :style="{ color: dir.color }"
                 @click="load_pk(dir.direction)"
               >
-                <i class="fa fa-arrow-down" v-if="index < tree.length - 1" />
-                <i class="fa fa-dot-circle-o" v-else />
+                <i
+                  v-if="index < tree.length - 1"
+                  class="fa fa-arrow-down"
+                />
+                <i
+                  v-else
+                  class="fa fa-dot-circle-o"
+                />
                 <del v-if="dir.cancel">№{{ dir.direction }} {{ dir.research_title }}</del>
                 <span v-else>№{{ dir.direction }} {{ dir.research_title }}</span>
               </button>
             </div>
           </template>
-          <div class="sidebar-btn-wrapper" v-if="tree.length > 1">
+          <div
+            v-if="tree.length > 1"
+            class="sidebar-btn-wrapper"
+          >
             <button
               class="btn btn-blue-nb sidebar-btn text-center"
               style="font-size: 12px"
@@ -177,8 +279,15 @@
               Загрузить всё
             </button>
           </div>
-          <div class="sidebar-btn-wrapper" v-if="tree.length > 1">
-            <button class="btn btn-blue-nb sidebar-btn text-center" style="font-size: 12px" @click="close()">
+          <div
+            v-if="tree.length > 1"
+            class="sidebar-btn-wrapper"
+          >
+            <button
+              class="btn btn-blue-nb sidebar-btn text-center"
+              style="font-size: 12px"
+              @click="close()"
+            >
               <i class="fa fa-close" />
               Отмена просмотра истории
             </button>
@@ -188,99 +297,158 @@
     </div>
     <div class="content">
       <div class="top">
-        <div class="top-block title-block" v-if="opened_list_key">
+        <div
+          v-if="opened_list_key"
+          class="top-block title-block"
+        >
           <span>
             {{ menuItems[opened_list_key] }}
-            <br />
-            <a href="#" class="a-under" @click.prevent="print_all_list"><i class="fa fa-print" /> результатов</a>
+            <br>
+            <a
+              href="#"
+              class="a-under"
+              @click.prevent="print_all_list"
+            ><i class="fa fa-print" /> результатов</a>
           </span>
-          <i class="top-right fa fa-times" @click="close_list_directions" />
+          <i
+            class="top-right fa fa-times"
+            @click="close_list_directions"
+          />
         </div>
         <div
+          v-for="d in list_directions"
+          :key="d.pk"
           class="top-block direction-block"
           :class="{ confirmed: Boolean(d.confirm), active: opened_form_pk === d.pk }"
           @click="open_form(d)"
-          :key="d.pk"
-          v-for="d in list_directions"
         >
           <span>
-            <display-direction :direction="d" />
+            <DisplayDirection :direction="d" />
           </span>
         </div>
       </div>
       <div class="inner results-editor">
-        <div v-for="row in researches_forms" :key="row.pk">
+        <div
+          v-for="row in researches_forms"
+          :key="row.pk"
+        >
           <div class="research-title">
             <div class="research-left">
               <button
+                v-if="row.research.title.includes('анестез')"
+                v-tippy
                 style="margin-right: 5px"
                 class="btn btn-blue-nb"
-                @click="show_anesthesia"
                 title="Добавить значения в наркозную карту"
-                v-tippy
-                v-if="row.research.title.includes('анестез')"
+                @click="show_anesthesia"
               >
-                <i class="fa fa-heartbeat fa-lg"></i>
+                <i class="fa fa-heartbeat fa-lg" />
               </button>
               {{ row.research.title }}
-              <span class="comment" v-if="row.research.comment"> [{{ row.research.comment }}]</span>
+              <span
+                v-if="row.research.comment"
+                class="comment"
+              > [{{ row.research.comment }}]</span>
               <dropdown
                 :visible="research_open_history === row.pk"
                 :position="['left', 'bottom', 'left', 'top']"
                 @clickout="hide_results"
               >
-                <a style="font-weight: normal" href="#" @click.prevent="open_results(row.pk)">
-                  (другие результаты)
-                </a>
-                <div class="results-history" slot="dropdown">
+                <a
+                  style="font-weight: normal"
+                  href="#"
+                  @click.prevent="open_results(row.pk)"
+                > (другие результаты) </a>
+                <div
+                  slot="dropdown"
+                  class="results-history"
+                >
                   <ul>
-                    <li v-for="r in research_history" :key="r.pk">
-                      Результат от {{ r.date }}
-                      <a href="#" @click.prevent="print_results(r.direction)">печать</a>
-                      <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать</a>
+                    <li
+                      v-for="rh in research_history"
+                      :key="rh.pk"
+                    >
+                      Результат от {{ rh.date }}
+                      <a
+                        href="#"
+                        @click.prevent="print_results(rh.direction)"
+                      >печать</a>
+                      <a
+                        v-if="!row.confirmed"
+                        href="#"
+                        @click.prevent="copy_results(row, rh.pk)"
+                      >скопировать</a>
                     </li>
-                    <li v-if="research_history.length === 0">результатов не найдено</li>
+                    <li v-if="research_history.length === 0">
+                      результатов не найдено
+                    </li>
                   </ul>
                 </div>
               </dropdown>
             </div>
             <div class="research-right">
-              <file-add v-if="row.research.enabled_add_files" :iss_pk="row.pk" :count_files="row.countFiles"/>
+              <FileAdd
+                v-if="row.research.enabled_add_files"
+                :iss_pk="row.pk"
+                :count_files="row.countFiles"
+              />
               <template v-if="row.confirmed">
                 <a
+                  v-if="stat_btn"
                   :href="`/forms/pdf?type=105.02&napr_id=[${opened_form_pk}]`"
                   class="btn btn-blue-nb"
                   target="_blank"
-                  v-if="stat_btn"
-                  >Статталон</a
-                >
-                <a href="#" class="btn btn-blue-nb" @click.prevent="print_results(opened_form_pk)">Печать</a>
+                >Статталон</a>
+                <a
+                  href="#"
+                  class="btn btn-blue-nb"
+                  @click.prevent="print_results(opened_form_pk)"
+                >Печать</a>
               </template>
               <template>
-                <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs" target="_blank" title="Снимок" v-tippy>
+                <a
+                  v-if="!!row.pacs"
+                  v-tippy
+                  :href="row.pacs"
+                  class="btn btn-blue-nb"
+                  target="_blank"
+                  title="Снимок"
+                >
                   &nbsp;<i class="fa fa-camera" />&nbsp;
                 </a>
                 <template v-if="!row.confirmed">
                   <button
-                    class="btn btn-blue-nb"
-                    @click="save(row)"
                     v-if="!row.confirmed"
-                    title="Сохранить без подтверждения"
                     v-tippy
+                    class="btn btn-blue-nb"
+                    title="Сохранить без подтверждения"
+                    @click="save(row)"
                   >
                     &nbsp;<i class="fa fa-save" />&nbsp;
                   </button>
-                  <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
+                  <button
+                    v-tippy
+                    class="btn btn-blue-nb"
+                    title="Очистить протокол"
+                    @click="clear_vals(row)"
+                  >
                     &nbsp;<i class="fa fa-times" />&nbsp;
                   </button>
-                  <div class="right-f" v-if="fte">
-                    <select-picker-m
+                  <div
+                    v-if="fte"
+                    class="right-f"
+                  >
+                    <SelectPickerM
                       v-model="templates[row.pk]"
                       :search="true"
-                      :options="row.templates.map(x => ({ label: x.title, value: x.pk }))"
+                      :options="row.templates.map((x) => ({ label: x.title, value: x.pk }))"
                     />
                   </div>
-                  <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
+                  <button
+                    v-if="fte"
+                    class="btn btn-blue-nb"
+                    @click="load_template(row, templates[row.pk])"
+                  >
                     Загрузить шаблон
                   </button>
                 </template>
@@ -295,132 +463,222 @@
             :change_mkb="change_mkb(row)"
             :hospital_r_type="'desc'"
           />
-          <div class="group" v-if="r_is_transfer(row)">
-            <div class="radio-button-object radio-button-groups" v-if="!row.confirmed">
-              <radio-field v-model="typeTransfer" :variants="variantTypeTransfer" fullWidth style="width: 100%" />
+          <div
+            v-if="r_is_transfer(row)"
+            class="group"
+          >
+            <div
+              v-if="!row.confirmed"
+              class="radio-button-object radio-button-groups"
+            >
+              <RadioField
+                v-model="typeTransfer"
+                :variants="variantTypeTransfer"
+                full-width
+                style="width: 100%"
+              />
             </div>
-            <div class="group-title" v-if="newTransfer">Отделение перевода</div>
-            <div class="group-title" v-else>Схема движения по отделениям</div>
+            <div
+              v-if="newTransfer"
+              class="group-title"
+            >
+              Отделение перевода
+            </div>
+            <div
+              v-else
+              class="group-title"
+            >
+              Схема движения по отделениям
+            </div>
             <div class="fields">
-              <div class="content-picker" v-if="!row.confirmed && newTransfer">
-                <research-pick
-                  :class="{ active: r.pk === stationar_research }"
-                  :research="r"
-                  @click.native="stationar_research = r.pk"
+              <div
+                v-if="!row.confirmed && newTransfer"
+                class="content-picker"
+              >
+                <ResearchPick
+                  v-for="rf in stationar_researches_filtered"
+                  :key="rf.pk"
+                  :class="{ active: rf.pk === stationar_research }"
+                  :research="rf"
                   class="research-select"
-                  v-for="r in stationar_researches_filtered"
                   force_tippy
-                  :key="r.pk"
+                  @click.native="stationar_research = rf.pk"
                 />
               </div>
               <div v-else-if="!newTransfer && !row.confirmed">
-                <div class="row" id="row-box">
+                <div
+                  id="row-box"
+                  class="row"
+                >
                   <div class="col-xs-3">
                     <h6><strong>Поступил ИЗ (предыдущее отделение)</strong></h6>
-                    <treeselect
+                    <Treeselect
+                      v-model="parent_issledovaniye"
                       :multiple="false"
                       :disable-branch-nodes="true"
                       :options="directions_parent_select"
                       placeholder="Откуда поступил"
-                      v-model="parent_issledovaniye"
                     />
                   </div>
                   <div class="col-xs-1">
-                    <i class="fa fa-arrow-right fa-2x fa-fw transferArrow"></i>
+                    <i class="fa fa-arrow-right fa-2x fa-fw transferArrow" />
                   </div>
                   <div class="col-xs-3">
                     <h6><strong>Текущее отделение</strong></h6>
-                    <div style="padding-top: 10px">{{ direction }} - {{ issTitle }}</div>
+                    <div style="padding-top: 10px">
+                      {{ direction }} - {{ issTitle }}
+                    </div>
                   </div>
                   <div class="col-xs-1">
-                    <i class="fa fa-arrow-right fa-2x fa-fw transferArrow"></i>
+                    <i class="fa fa-arrow-right fa-2x fa-fw transferArrow" />
                   </div>
                   <div class="col-xs-3">
                     <h6><strong>Переведен В (следующее отделение)</strong></h6>
-                    <treeselect
+                    <Treeselect
+                      v-model="child_issledovaniye"
                       :multiple="false"
                       :disable-branch-nodes="true"
                       :options="directions_child_select"
                       placeholder="Куда переведен"
-                      v-model="child_issledovaniye"
                     />
                   </div>
                 </div>
               </div>
               <div v-else-if="row.confirmed">
                 История болезни №{{ child_direction }}
-                <br />
+                <br>
                 {{ child_research_title }}
-                <br />
-                <a class="a-under" href="#" @click.prevent="print_hosp(child_direction)">
-                  Печать ш/к браслета
-                </a>
-                <br />
-                <a class="a-under" href="#" @click.prevent="print_direction(child_direction)">
-                  Печать направления
-                </a>
-                <br />
-                <a class="a-under" href="#" @click.prevent="load_pk(child_direction)">
-                  Открыть историю
-                </a>
+                <br>
+                <a
+                  class="a-under"
+                  href="#"
+                  @click.prevent="print_hosp(child_direction)"
+                > Печать ш/к браслета </a>
+                <br>
+                <a
+                  class="a-under"
+                  href="#"
+                  @click.prevent="print_direction(child_direction)"
+                > Печать направления </a>
+                <br>
+                <a
+                  class="a-under"
+                  href="#"
+                  @click.prevent="load_pk(child_direction)"
+                > Открыть историю </a>
               </div>
             </div>
           </div>
-          <div class="group" v-if="is_diary(row.research)">
-            <div class="group-title">Направления в рамках приёма</div>
+          <div
+            v-if="is_diary(row.research)"
+            class="group"
+          >
+            <div class="group-title">
+              Направления в рамках приёма
+            </div>
             <div class="row">
               <div class="col-xs-12">
                 <div class="sd">
-                  <directions-history :iss_pk="row.pk" kk="stationar" forHospSlave />
+                  <DirectionsHistory
+                    :iss_pk="row.pk"
+                    kk="stationar"
+                    for-hosp-slave
+                  />
                 </div>
-                <div class="sd empty" v-if="!row.confirmed">
-                  <button @click="create_directions(row)" class="btn btn-primary-nb btn-blue-nb" type="button">
-                    <i class="fa fa-plus"></i> создать направления
+                <div
+                  v-if="!row.confirmed"
+                  class="sd empty"
+                >
+                  <button
+                    class="btn btn-primary-nb btn-blue-nb"
+                    type="button"
+                    @click="create_directions(row)"
+                  >
+                    <i class="fa fa-plus" /> создать направления
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          <div class="group" v-if="is_diary(row.research)">
-            <div class="group-title">Фармакотерапия</div>
+          <div
+            v-if="is_diary(row.research)"
+            class="group"
+          >
+            <div class="group-title">
+              Фармакотерапия
+            </div>
             <div class="row">
               <div class="col-xs-12">
-                <PharmacotherapyInput v-model="row.procedure_list" :pk="row.pk" :confirmed="row.confirmed" />
+                <PharmacotherapyInput
+                  v-model="row.procedure_list"
+                  :pk="row.pk"
+                  :confirmed="row.confirmed"
+                />
               </div>
             </div>
           </div>
-          <div class="control-row" :key="row.research.version">
-            <div class="res-title">{{ row.research.title }}:</div>
-            <iss-status :i="row" />
-            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed && !row.forbidden_edit">
+          <div
+            :key="row.research.version"
+            class="control-row"
+          >
+            <div class="res-title">
+              {{ row.research.title }}:
+            </div>
+            <IssStatus :i="row" />
+            <button
+              v-if="!row.confirmed && !row.forbidden_edit"
+              class="btn btn-blue-nb"
+              @click="save(row)"
+            >
               Сохранить
             </button>
             <button
-              class="btn btn-blue-nb"
-              @click="save_and_confirm(row)"
               v-if="!row.confirmed && !row.forbidden_edit"
+              class="btn btn-blue-nb"
               :disabled="!r(row)"
+              @click="save_and_confirm(row)"
             >
               Сохранить и подтвердить
             </button>
             <button
+              v-if="row.confirmed && row.allow_reset_confirm && (!row.forbidden_edit || can_reset_transfer)"
               class="btn btn-blue-nb"
               @click="reset_confirm(row)"
-              v-if="row.confirmed && row.allow_reset_confirm && (!row.forbidden_edit || can_reset_transfer)"
             >
               Сброс подтверждения
             </button>
-            <button class="btn btn-blue-nb" @click="close_form">
+            <button
+              class="btn btn-blue-nb"
+              @click="close_form"
+            >
               Закрыть
             </button>
-            <div class="status-list" v-if="!r(row) && !row.confirmed">
-              <div class="status status-none">Не заполнено:</div>
-              <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
+            <div
+              v-if="!r(row) && !row.confirmed"
+              class="status-list"
+            >
+              <div class="status status-none">
+                Не заполнено:
+              </div>
+              <div
+                v-for="rl in r_list(row)"
+                :key="rl"
+                class="status status-none"
+              >
+                {{ rl }};
+              </div>
             </div>
           </div>
         </div>
-        <div style="padding: 5px" v-if="!opened_form_pk">
-          <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss" disabled />
+        <div
+          v-if="!opened_form_pk"
+          style="padding: 5px"
+        >
+          <AggregateLaboratory
+            v-if="opened_list_key === 'laboratory'"
+            :pk="iss"
+            disabled
+          />
           <AggregateDesc
             v-if="['paraclinical', 'consultation', 'diaries', 'morfology'].includes(opened_list_key)"
             :pk="iss"
@@ -429,36 +687,49 @@
           />
           <AggregateTADP
             v-if="opened_list_key === 't, ad, p sheet'"
-            :directions="every ? tree.map(d => d.direction) : [direction]"
+            :directions="every ? tree.map((d) => d.direction) : [direction]"
           />
-          <AggregatePharmacotherapy v-if="opened_list_key === 'pharmacotherapy'" :direction="direction" />
+          <AggregatePharmacotherapy
+            v-if="opened_list_key === 'pharmacotherapy'"
+            :direction="direction"
+          />
         </div>
       </div>
     </div>
-    <modal
-      @close="closePlus"
-      marginLeftRight="auto"
+    <Modal
+      v-if="openPlusMode === 'directions' || create_directions_for > -1"
+      ref="modalStationar"
+      margin-left-right="auto"
       margin-top="60px"
       max-width="1400px"
-      ref="modalStationar"
       show-footer="true"
-      v-if="openPlusMode === 'directions' || create_directions_for > -1"
       white-bg="true"
       width="100%"
+      @close="closePlus"
     >
       <span slot="header">Создание направлений – история {{ direction }} {{ issTitle }}, {{ patient.fio_age }}</span>
-      <div class="registry-body" slot="body" style="min-height: 140px">
+      <div
+        slot="body"
+        class="registry-body"
+        style="min-height: 140px"
+      >
         <div class="row">
-          <div class="col-xs-6" style="height: 450px;border-right: 1px solid #eaeaea;padding-right: 0;">
-            <researches-picker
+          <div
+            class="col-xs-6"
+            style="height: 450px; border-right: 1px solid #eaeaea; padding-right: 0"
+          >
+            <ResearchesPicker
               v-model="create_directions_data"
               :types-only="pickerTypesOnly"
               kk="stationar"
-              style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
+              style="border-top: 1px solid #eaeaea; border-bottom: 1px solid #eaeaea"
             />
           </div>
-          <div class="col-xs-6" style="height: 450px;padding-left: 0;">
-            <selected-researches
+          <div
+            class="col-xs-6"
+            style="height: 450px; padding-left: 0"
+          >
+            <SelectedResearches
               kk="stationar"
               :base="bases_obj[patient.base]"
               :researches="create_directions_data"
@@ -469,25 +740,28 @@
               :parent_iss="iss"
               :parent_slave_iss="create_directions_for > -1 ? create_directions_for : null"
               :clear_after_gen="true"
-              style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
+              style="border-top: 1px solid #eaeaea; border-bottom: 1px solid #eaeaea"
             />
           </div>
         </div>
-        <div v-if="create_directions_data.length > 0" style="margin-top: 5px;text-align: left">
+        <div
+          v-if="create_directions_data.length > 0"
+          style="margin-top: 5px; text-align: left"
+        >
           <table class="table table-bordered lastresults">
             <colgroup>
-              <col width="180" />
-              <col />
-              <col width="110" />
-              <col width="110" />
+              <col width="180">
+              <col>
+              <col width="110">
+              <col width="110">
             </colgroup>
             <tbody>
-              <last-result
-                :individual="patient.individualId"
-                :key="p"
+              <LastResult
                 v-for="p in create_directions_data"
+                :key="p"
+                :individual="patient.individualId"
                 :parent-iss="iss"
-                :noScroll="true"
+                :no-scroll="true"
                 :research="p"
               />
             </tbody>
@@ -497,45 +771,58 @@
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="closePlus" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="closePlus"
+            >
               Закрыть
             </button>
           </div>
         </div>
       </div>
-    </modal>
-    <modal
+    </Modal>
+    <Modal
       v-if="openPlusMode === 'stationar'"
       ref="modalStationar2"
-      @close="closePlus"
       margin-top="50px"
       show-footer="true"
       white-bg="true"
       max-width="710px"
       width="100%"
-      marginLeftRight="auto"
+      margin-left-right="auto"
+      @close="closePlus"
     >
       <span slot="header">{{ menuItems[openPlusId] }} – история {{ direction }} {{ issTitle }}, {{ patient.fio_age }}</span>
-      <div slot="body" style="min-height: 200px;background-color: #fff" class="registry-body">
+      <div
+        slot="body"
+        style="min-height: 200px; background-color: #fff"
+        class="registry-body"
+      >
         <div class="text-left">
           <div class="content-picker">
-            <research-pick
-              :class="{ active: row.pk === direction_service }"
-              :research="row"
-              @click.native="select_research(row.pk)"
-              class="research-select"
-              force_tippy
+            <ResearchPick
               v-for="row in hosp_services"
               :key="row.pk"
+              :class="{ active: row.pk === direction_service }"
+              :research="row"
+              class="research-select"
+              force_tippy
+              @click.native="select_research(row.pk)"
             />
-            <div v-if="hosp_services.length === 0">не настроено</div>
+            <div v-if="hosp_services.length === 0">
+              не настроено
+            </div>
           </div>
-          <div class="text-center" style="margin-top: 10px;">
+          <div
+            class="text-center"
+            style="margin-top: 10px"
+          >
             <button
-              @click="confirm_service"
               :disabled="direction_service === -1"
               class="btn btn-primary-nb btn-blue-nb"
               type="button"
+              @click="confirm_service"
             >
               Сохранить назначение и заполнить протокол
             </button>
@@ -545,45 +832,74 @@
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="closePlus" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="closePlus"
+            >
               Закрыть
             </button>
           </div>
         </div>
       </div>
-    </modal>
-    <modal
+    </Modal>
+    <Modal
       v-if="anamnesis_edit"
       ref="modalAnamnesisEdit"
-      @close="hide_modal_anamnesis_edit"
       show-footer="true"
       white-bg="true"
       max-width="710px"
       width="100%"
-      marginLeftRight="auto"
+      margin-left-right="auto"
       margin-top
+      @close="hide_modal_anamnesis_edit"
     >
       <span slot="header">Редактор анамнеза жизни – карта {{ patient.card }}, {{ patient.fio_age }}</span>
-      <div slot="body" style="min-height: 140px" class="registry-body">
-        <textarea v-model="anamnesis_data.text" rows="14" class="form-control" placeholder="Анамнез жизни"></textarea>
+      <div
+        slot="body"
+        style="min-height: 140px"
+        class="registry-body"
+      >
+        <textarea
+          v-model="anamnesis_data.text"
+          rows="14"
+          class="form-control"
+          placeholder="Анамнез жизни"
+        />
       </div>
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="hide_modal_anamnesis_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_modal_anamnesis_edit"
+            >
               Отмена
             </button>
           </div>
           <div class="col-xs-4">
-            <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="save_anamnesis()"
+            >
               Сохранить
             </button>
           </div>
         </div>
       </div>
-    </modal>
-    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc />
-    <ambulatory-data :card_pk="patient.cardId" :card_data="patient" v-if="ambulatory_data && patient.cardId" />
+    </Modal>
+    <ResultsViewer
+      v-if="show_results_pk > -1"
+      :pk="show_results_pk"
+      no_desc
+    />
+    <AmbulatoryData
+      v-if="ambulatory_data && patient.cardId"
+      :card_pk="patient.cardId"
+      :card_data="patient"
+    />
   </div>
 </template>
 
@@ -610,7 +926,6 @@ import PatientCard from './PatientCard.vue';
 import menuMixin from './mixins/menu';
 
 export default {
-  mixins: [menuMixin],
   components: {
     RadioField,
     Treeselect,
@@ -636,9 +951,10 @@ export default {
     Modal: () => import('@/ui-cards/Modal.vue'),
     PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput.vue'),
   },
+  mixins: [menuMixin],
   data() {
     return {
-      file: '',
+      file: null,
       pk: '',
       every: false,
       direction: null,
@@ -693,6 +1009,85 @@ export default {
       tableFieldsErrors: {},
     };
   },
+  computed: {
+    ...mapGetters({
+      user_data: 'user_data',
+      researches_obj: 'researches',
+      bases: 'bases',
+    }),
+    newTransfer() {
+      return this.typeTransfer === 'Новый перевод';
+    },
+    navState() {
+      if (!this.direction) {
+        return null;
+      }
+      return {
+        pk: this.direction,
+        opened_list_key: this.opened_list_key,
+        opened_form_pk: this.opened_form_pk,
+        every: this.every,
+      };
+    },
+    stationar_researches_filtered() {
+      return [
+        {
+          pk: -1,
+          title: 'Не выбрано',
+        },
+        ...(this.stationar_researches || []).filter((r) => r.title !== this.issTitle && !r.hide),
+      ];
+    },
+    bases_obj() {
+      return this.bases.reduce(
+        (a, b) => ({
+          ...a,
+          [b.pk]: b,
+        }),
+        {},
+      );
+    },
+    stat_btn() {
+      return this.$store.getters.modules.l2_stat_btn;
+    },
+    pickerTypesOnly() {
+      if (this.openPlusId === 'laboratory') {
+        return [2];
+      }
+      if (this.openPlusId === 'paraclinical') {
+        return [3];
+      }
+      if (this.openPlusId === 'morfology') {
+        return [10000];
+      }
+      if (this.openPlusId === 'consultation') {
+        return [4];
+      }
+      if (this.openPlusId === null) {
+        return [2, 3, 4];
+      }
+      return [];
+    },
+    fte() {
+      return this.$store.getters.modules.l2_fast_templates;
+    },
+    can_reset_transfer() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Сброс подтверждения переводного эпикриза') {
+          return true;
+        }
+      }
+      return false;
+    },
+    can_add_tadp() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 't, ad, p') {
+          return !!this.soft_forbidden || !this.forbidden_edit;
+        }
+      }
+      return false;
+    },
+  },
   watch: {
     pk() {
       this.pk = String(this.pk).replace(/\D/g, '');
@@ -734,7 +1129,7 @@ export default {
       }
     }
     this.inited = true;
-    this.$root.$on('open-history', d => {
+    this.$root.$on('open-history', (d) => {
       this.load_pk(d, false);
     });
     this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
@@ -746,7 +1141,7 @@ export default {
   },
   methods: {
     getDepartmentTitle(pk) {
-      return (this.departments.find(d => d.id === pk) || {}).label || '';
+      return (this.departments.find((d) => d.id === pk) || {}).label || '';
     },
     async changeDepartmentToggle() {
       if (!this.change_department) {
@@ -773,7 +1168,10 @@ export default {
     async saveUpdatedDepartment(needUpdate, department_id) {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
-        newDepartment, ok, from: dep_from, to: dep_to,
+        newDepartment,
+        ok,
+        from: dep_from,
+        to: dep_to,
       } = await stationar_point.changeDepartment(this, 'iss', {
         needUpdate,
         department_id: department_id || this.department_id,
@@ -931,7 +1329,7 @@ export default {
     print_all_list() {
       this.$root.$emit(
         'print:results',
-        this.list_directions.map(d => d.pk),
+        this.list_directions.map((d) => d.pk),
       );
     },
     close_list_directions() {
@@ -1017,7 +1415,7 @@ export default {
           with_confirm: false,
           visibility_state: this.visibility_state(iss),
         })
-        .then(data => {
+        .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
             // eslint-disable-next-line no-param-reassign
@@ -1070,7 +1468,7 @@ export default {
             child_iss: this.child_issledovaniye,
           },
         })
-        .then(data => {
+        .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
             this.$root.$emit('msg', 'ok', 'Подтверждено');
@@ -1339,85 +1737,6 @@ export default {
     },
     open_ambulatory_data() {
       this.ambulatory_data = true;
-    },
-  },
-  computed: {
-    ...mapGetters({
-      user_data: 'user_data',
-      researches_obj: 'researches',
-      bases: 'bases',
-    }),
-    newTransfer() {
-      return this.typeTransfer === 'Новый перевод';
-    },
-    navState() {
-      if (!this.direction) {
-        return null;
-      }
-      return {
-        pk: this.direction,
-        opened_list_key: this.opened_list_key,
-        opened_form_pk: this.opened_form_pk,
-        every: this.every,
-      };
-    },
-    stationar_researches_filtered() {
-      return [
-        {
-          pk: -1,
-          title: 'Не выбрано',
-        },
-        ...(this.stationar_researches || []).filter(r => r.title !== this.issTitle && !r.hide),
-      ];
-    },
-    bases_obj() {
-      return this.bases.reduce(
-        (a, b) => ({
-          ...a,
-          [b.pk]: b,
-        }),
-        {},
-      );
-    },
-    stat_btn() {
-      return this.$store.getters.modules.l2_stat_btn;
-    },
-    pickerTypesOnly() {
-      if (this.openPlusId === 'laboratory') {
-        return [2];
-      }
-      if (this.openPlusId === 'paraclinical') {
-        return [3];
-      }
-      if (this.openPlusId === 'morfology') {
-        return [10000];
-      }
-      if (this.openPlusId === 'consultation') {
-        return [4];
-      }
-      if (this.openPlusId === null) {
-        return [2, 3, 4];
-      }
-      return [];
-    },
-    fte() {
-      return this.$store.getters.modules.l2_fast_templates;
-    },
-    can_reset_transfer() {
-      for (const g of this.$store.getters.user_data.groups || []) {
-        if (g === 'Сброс подтверждения переводного эпикриза') {
-          return true;
-        }
-      }
-      return false;
-    },
-    can_add_tadp() {
-      for (const g of this.$store.getters.user_data.groups || []) {
-        if (g === 't, ad, p') {
-          return !!this.soft_forbidden || !this.forbidden_edit;
-        }
-      }
-      return false;
     },
   },
 };

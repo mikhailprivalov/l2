@@ -3,8 +3,16 @@
     <div class="a">
       <BiomaterialSearch />
     </div>
-    <div class="b" v-if="needShowSchedule">2</div>
-    <div class="d" :class="!needShowSchedule && 'no-schedule'">
+    <div
+      v-if="needShowSchedule"
+      class="b"
+    >
+      2
+    </div>
+    <div
+      class="d"
+      :class="!needShowSchedule && 'no-schedule'"
+    >
       <BiomaterialHistory />
     </div>
   </div>

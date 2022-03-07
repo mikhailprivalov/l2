@@ -1,47 +1,60 @@
 <template>
   <div v-frag>
-    <a href="#" class="dropdown-toggle" @click.prevent
-       v-tippy="{
-                html: '#addfile-view',
-                reactive: true,
-                interactive: true,
-                arrow: true,
-                animation: 'fade',
-                duration: 0,
-                theme: 'light',
-                placement: 'bottom',
-                trigger: 'click mouseenter',
-                popperOptions: {
-                  modifiers: {
-                    preventOverflow: {
-                      boundariesElement: 'window'
-                    },
-                    hide: {
-                      enabled: false
-                    }
-                  }
-                },
-             }">
-      Избранные истории <span class="badge badge-light">{{data.length}}</span>
+    <a
+      v-tippy="{
+        html: '#favorites-view',
+        reactive: true,
+        interactive: true,
+        arrow: true,
+        animation: 'fade',
+        duration: 0,
+        theme: 'light',
+        placement: 'bottom',
+        trigger: 'click mouseenter',
+        popperOptions: {
+          modifiers: {
+            preventOverflow: {
+              boundariesElement: 'window',
+            },
+            hide: {
+              enabled: false,
+            },
+          },
+        },
+      }"
+      href="#"
+      class="dropdown-toggle"
+      @click.prevent
+    >
+      Избранные истории <span class="badge badge-light">{{ data.length }}</span>
     </a>
 
-    <div id="addfile-view" class="tp">
+    <div
+      id="favorites-view"
+      class="tp"
+    >
       <table class="table table-condensed table-bordered">
         <tbody>
-        <tr v-for="row in data" :key="row.pk">
-          <td>
-            <LinkToHistory :direction="row.direction" />
-          </td>
-          <td>
-            {{row.client}}
-          </td>
-          <td>
-            {{row.card}}
-          </td>
-          <td>
-            <Favorite :direction="row.direction" in-list />
-          </td>
-        </tr>
+          <tr
+            v-for="row in data"
+            :key="row.pk"
+          >
+            <td>
+              <LinkToHistory :direction="row.direction" />
+            </td>
+            <td>
+              {{ row.client }}
+            </td>
+            <td>
+              {{ row.card }}
+            </td>
+            <td>
+              <Favorite
+                :direction="row.direction"
+                in-list
+              />
+            </td>
+          </tr>
         </tbody>
       </table>
       <div v-if="data.length === 0">
@@ -80,35 +93,35 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .fv {
-    cursor: pointer;
+.fv {
+  cursor: pointer;
 
-    &:hover span {
-      text-shadow: 0 0 3px rgba(#049372, .4);
-      color: #049372;
-    }
+  &:hover span {
+    text-shadow: 0 0 3px rgba(#049372, 0.4);
+    color: #049372;
+  }
+}
+
+i {
+  vertical-align: middle;
+  display: inline-block;
+  margin-right: 3px;
+}
+
+.inFavorite i {
+  color: #93046d;
+}
+
+.tp {
+  text-align: left;
+  line-height: 1.1;
+  padding: 5px;
+
+  table {
+    margin: 0;
   }
 
-  i {
-    vertical-align: middle;
-    display: inline-block;
-    margin-right: 3px;
-  }
-
-  .inFavorite i {
-    color: #93046d;
-  }
-
-  .tp {
-    text-align: left;
-    line-height: 1.1;
-    padding: 5px;
-
-    table {
-      margin: 0;
-    }
-
-    max-height: 600px;
-    overflow-y: auto;
-  }
+  max-height: 600px;
+  overflow-y: auto;
+}
 </style>

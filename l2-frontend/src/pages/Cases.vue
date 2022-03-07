@@ -1,23 +1,36 @@
 <template>
   <div class="root">
-    <SelectedPatient :card="selected_card"/>
+    <SelectedPatient :card="selected_card" />
     <div class="flex-columns">
       <div class="fixed-column">
-        <CardSearch v-model="selected_card"/>
+        <CardSearch v-model="selected_card" />
         <div class="column-header-w-btn">
-          <div class="column-header-inner">Случаи</div>
+          <div class="column-header-inner">
+            Случаи
+          </div>
 
-          <button class="btn last btn-hd nbr" type="button">
-            <i class="fa fa-plus"></i>
+          <button
+            class="btn last btn-hd nbr"
+            type="button"
+          >
+            <i class="fa fa-plus" />
           </button>
         </div>
       </div>
       <div class="fixed-column">
         <div class="input-group-f">
-          <input type="text" class="form-control bob nbr" v-model="directionQ" placeholder="Направление"
-                 maxlength="128">
-          <button class="btn last btn-blue-nb nbr" type="button">
-            <i class="fa fa-search"></i>
+          <input
+            v-model="directionQ"
+            type="text"
+            class="form-control bob nbr"
+            placeholder="Направление"
+            maxlength="128"
+          >
+          <button
+            class="btn last btn-blue-nb nbr"
+            type="button"
+          >
+            <i class="fa fa-search" />
           </button>
         </div>
         <div class="two-columns">
@@ -33,7 +46,7 @@
           </div>
         </div>
       </div>
-      <div class="flex-column"></div>
+      <div class="flex-column" />
     </div>
   </div>
 </template>
@@ -43,7 +56,7 @@ import SelectedPatient from '../components/SelectedPatient.vue';
 import CardSearch from '../components/CardSearch.vue';
 
 export default {
-  name: 'cases',
+  name: 'Cases',
   components: { SelectedPatient, CardSearch },
   data() {
     return {

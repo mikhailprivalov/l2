@@ -1,10 +1,24 @@
 <template>
-  <select v-selectpicker ref="self" class="selectpicker" data-width="100%" :data-none-selected-text="noneText"
-          data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор"
-          :data-live-search="search"
-          :disabled="disabled"  :multiple="multiple" :data-actions-box="actions_box"
-          data-container="body">
-    <option :value="option.value" v-for="option in options" :key="option.value" :selected="option.value === value">
+  <select
+    ref="self"
+    v-selectpicker
+    class="selectpicker"
+    data-width="100%"
+    :data-none-selected-text="noneText"
+    data-select-all-text="Выбрать всё"
+    data-deselect-all-text="Отменить весь выбор"
+    :data-live-search="search"
+    :disabled="disabled"
+    :multiple="multiple"
+    :data-actions-box="actions_box"
+    data-container="body"
+  >
+    <option
+      v-for="option in options"
+      :key="option.value"
+      :value="option.value"
+      :selected="option.value === value"
+    >
       {{ option.label }}
     </option>
   </select>
@@ -12,7 +26,36 @@
 
 <script lang="ts">
 export default {
-  name: 'select-picker-m',
+  name: 'SelectPickerM',
+  directives: {
+    selectpicker: {
+      bind(el, binding, vnode) {
+        const $el = window.$(el).parent().children('select');
+        let v = vnode.context.value;
+        if (v === '-1' || !v) {
+          if (vnode.context.multiple) v = [];
+          else if (vnode.context.options.length > 0) v = vnode.context.options[0].value;
+          else v = '';
+        }
+        if (vnode.context.multiple && !Array.isArray(v)) {
+          v = v.split(',');
+        } else if (!vnode.context.multiple && typeof v !== 'string' && !(v instanceof String)) {
+          v = v.toString();
+        }
+        $el.selectpicker('val', v);
+        vnode.context.update_val(v);
+        window.$(el).change(function () {
+          const lval = window.$(this).selectpicker('val');
+          vnode.context.update_val(lval);
+        });
+      },
+      inserted(el, binding, vnode) {
+        window.$(el).selectpicker();
+        // eslint-disable-next-line no-param-reassign
+        vnode.context.elc = window.$(el);
+      },
+    },
+  },
   props: {
     options: {
       type: Array,
@@ -44,22 +87,6 @@ export default {
     actions_box: {
       type: Boolean,
       default: false,
-    },
-  },
-  mounted() {
-    this.$root.$on(`update-sp-m-${this.uid}`, () => {
-      this.refresh();
-    });
-  },
-  methods: {
-    update_val(v) {
-      this.$emit('input', v);
-    },
-    refresh() {
-      if (this.elc) {
-        this.elc.selectpicker('render');
-        this.elc.selectpicker('refresh');
-      }
     },
   },
   data() {
@@ -97,36 +124,23 @@ export default {
       },
     },
   },
+  mounted() {
+    this.$root.$on(`update-sp-m-${this.uid}`, () => {
+      this.refresh();
+    });
+  },
   created() {
     this.update_val(this.value);
   },
-  directives: {
-    selectpicker: {
-      bind(el, binding, vnode) {
-        const $el = window.$(el).parent().children('select');
-        let v = vnode.context.value;
-        if (v === '-1' || !v) {
-          if (vnode.context.multiple) v = [];
-          else if (vnode.context.options.length > 0) v = vnode.context.options[0].value;
-          else v = '';
-        }
-        if (vnode.context.multiple && !Array.isArray(v)) {
-          v = v.split(',');
-        } else if (!vnode.context.multiple && typeof v !== 'string' && !(v instanceof String)) {
-          v = v.toString();
-        }
-        $el.selectpicker('val', v);
-        vnode.context.update_val(v);
-        window.$(el).change(function () {
-          const lval = window.$(this).selectpicker('val');
-          vnode.context.update_val(lval);
-        });
-      },
-      inserted(el, binding, vnode) {
-        window.$(el).selectpicker();
-        // eslint-disable-next-line no-param-reassign
-        vnode.context.elc = window.$(el);
-      },
+  methods: {
+    update_val(v) {
+      this.$emit('input', v);
+    },
+    refresh() {
+      if (this.elc) {
+        this.elc.selectpicker('render');
+        this.elc.selectpicker('refresh');
+      }
     },
   },
 };

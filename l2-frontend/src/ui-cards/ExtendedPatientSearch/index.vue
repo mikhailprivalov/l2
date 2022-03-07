@@ -2,71 +2,105 @@
   <div v-frag>
     <ul class="nav navbar-nav">
       <li>
-        <a href="#" @click.prevent="open">
-          Расширенный поиск пациента
-        </a>
+        <a
+          href="#"
+          @click.prevent="open"
+        > Расширенный поиск пациента </a>
 
         <transition name="fade">
           <modal
             v-if="opened"
-            @close="close"
             show-footer="true"
             white-bg="true"
             max-width="710px"
             width="100%"
-            marginLeftRight="auto"
+            margin-left-right="auto"
             class="an"
+            @close="close"
           >
             <span slot="header">Расширенный поиск пациента</span>
-            <div slot="body" class="an-body search-body">
+            <div
+              slot="body"
+              class="an-body search-body"
+            >
               <div class="d-root">
-                <form @submit.prevent="search" autocomplete="off">
+                <form
+                  autocomplete="off"
+                  @submit.prevent="search"
+                >
                   <PatientSearchForm v-model="form" />
                   <div class="row mt15">
-                    <div class="col-xs-5" style="padding-right: 10px">
+                    <div
+                      class="col-xs-5"
+                      style="padding-right: 10px"
+                    >
                       <div class="input-group">
-                        <SelectFieldTitled v-model="base" :variants="basesFiltered" />
+                        <SelectFieldTitled
+                          v-model="base"
+                          :variants="basesFiltered"
+                        />
                         <span class="input-group-btn">
-                          <button class="btn btn-primary-nb btn-blue-nb search-btn" type="submit" :disabled="!isValidForm">
+                          <button
+                            class="btn btn-primary-nb btn-blue-nb search-btn"
+                            type="submit"
+                            :disabled="!isValidForm"
+                          >
                             {{ loading ? 'Загрузка' : 'Поиск' }}
                           </button>
                         </span>
                       </div>
                     </div>
-                    <div class="col-xs-2" style="padding-left: 0">
+                    <div
+                      class="col-xs-2"
+                      style="padding-left: 0"
+                    >
                       <button
-                        @click="restoreForm"
+                        v-if="formFromSaved"
+                        v-tippy
                         class="btn btn-blue-nb"
                         type="button"
                         :disabled="loading"
-                        v-if="formFromSaved"
                         title="Вернуться к предыдущему поиску"
-                        v-tippy
+                        @click="restoreForm"
                       >
-                        <i class="fas fa-history"></i>
+                        <i class="fas fa-history" />
                       </button>
                     </div>
                     <div class="col-xs-5 text-right">
                       <button
-                        @click="clearForm"
+                        v-tippy
                         class="btn btn-blue-nb"
                         type="button"
                         :disabled="loading"
                         title="Очистить форму"
-                        v-tippy
+                        @click="clearForm"
                       >
-                        <i class="fas fa-times"></i>
+                        <i class="fas fa-times" />
                       </button>
                     </div>
                   </div>
                 </form>
 
-                <div v-if="searched && results.length === 0" class="empty-results">
+                <div
+                  v-if="searched && results.length === 0"
+                  class="empty-results"
+                >
                   НИЧЕГО НЕ НАЙДЕНО
                 </div>
-                <div v-else-if="searched" class="results">
-                  <div class="founded" v-for="(row, i) in results" @click="select_card(i)" :key="row.pk">
-                    <div class="founded-row is-archive" v-if="row.isArchive">
+                <div
+                  v-else-if="searched"
+                  class="results"
+                >
+                  <div
+                    v-for="(row, i) in results"
+                    :key="row.pk"
+                    class="founded"
+                    @click="select_card(i)"
+                  >
+                    <div
+                      v-if="row.isArchive"
+                      class="founded-row is-archive"
+                    >
                       Карта в архиве
                     </div>
                     <div class="founded-row">
@@ -75,11 +109,23 @@
                     <div class="founded-row">
                       <span class="b">ФИО, пол:</span> {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}
                     </div>
-                    <div class="founded-row"><span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})</div>
-                    <div class="founded-row" v-for="d in row.docs" :key="d.pk">
+                    <div class="founded-row">
+                      <span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})
+                    </div>
+                    <div
+                      v-for="d in row.docs"
+                      :key="d.pk"
+                      class="founded-row"
+                    >
                       <span class="b">{{ d.type_title }}:</span> {{ d.serial }} {{ d.number }}
                     </div>
-                    <div class="founded-row" v-for="(p, i) in row.phones" :key="i"><span class="b">Телефон:</span> {{ p }}</div>
+                    <div
+                      v-for="(p, j) in row.phones"
+                      :key="`phone-${j}-${p}`"
+                      class="founded-row"
+                    >
+                      <span class="b">Телефон:</span> {{ p }}
+                    </div>
                   </div>
                   <div class="results-msg">
                     <small>Показано не более 20 карт</small>
@@ -90,7 +136,12 @@
             <div slot="footer">
               <div class="row">
                 <div class="col-xs-6">
-                  <button @click="close" class="btn btn-blue-nb" type="button" :disabled="loading">
+                  <button
+                    class="btn btn-blue-nb"
+                    type="button"
+                    :disabled="loading"
+                    @click="close"
+                  >
                     Закрыть
                   </button>
                 </div>
@@ -137,7 +188,7 @@ import { SimplePatient } from '@/types/patient';
         return false;
       }
 
-      return Object.keys(this.form).some(k => typeof this.form[k] !== 'boolean' && Boolean(this.form[k]));
+      return Object.keys(this.form).some((k) => typeof this.form[k] !== 'boolean' && Boolean(this.form[k]));
     },
     ...mapGetters(['bases', 'user_data']),
     formSavedKey() {
@@ -155,14 +206,14 @@ import { SimplePatient } from '@/types/patient';
       return null;
     },
     basesFiltered() {
-      return this.bases.filter(b => !b.hide);
+      return this.bases.filter((b) => !b.hide);
     },
   },
   watch: {
     bases: {
       immediate: true,
       handler() {
-        if (this.basesFiltered.length > 0 && !this.basesFiltered.find(b => b.pk === this.base)) {
+        if (this.basesFiltered.length > 0 && !this.basesFiltered.find((b) => b.pk === this.base)) {
           this.base = this.basesFiltered[0].pk;
         }
       },
@@ -201,7 +252,7 @@ export default class ExtendedPatientSearch extends Vue {
   isValidForm: boolean;
 
   mounted() {
-    this.$root.$on('global:select-base', pk => {
+    this.$root.$on('global:select-base', (pk) => {
       console.log('select', pk);
       this.baseGlobal = pk;
     });

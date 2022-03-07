@@ -1,6 +1,12 @@
 <template>
   <div class="input-group">
-    <button class="btn btn-blue-nb nbr btn-address" type="button" tabindex="-1" @click="gen" v-if="!val && !disabled">
+    <button
+      v-if="!val && !disabled"
+      class="btn btn-blue-nb nbr btn-address"
+      type="button"
+      tabindex="-1"
+      @click="gen"
+    >
       Загрузить данные из ТФОМС
     </button>
     <div class="form-control form-control-area">

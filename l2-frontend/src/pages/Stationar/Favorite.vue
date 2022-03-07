@@ -1,6 +1,10 @@
 <template>
-  <div class="fv" :class="{inFavorite}" @click="click()">
-    <i class="fa fa-star"></i> <span>{{inFavorite ? 'в избранном' : 'не в избранном'}}</span>
+  <div
+    class="fv"
+    :class="{inFavorite}"
+    @click="click()"
+  >
+    <i class="fa fa-star" /> <span>{{ inFavorite ? 'в избранном' : 'не в избранном' }}</span>
   </div>
 </template>
 
@@ -24,11 +28,6 @@ export default {
       inFavorite: false,
     };
   },
-  mounted() {
-    if (!this.inList) {
-      this.$root.$on('remove-from-favorites', () => this.load());
-    }
-  },
   watch: {
     direction: {
       immediate: true,
@@ -36,6 +35,11 @@ export default {
         this.load();
       },
     },
+  },
+  mounted() {
+    if (!this.inList) {
+      this.$root.$on('remove-from-favorites', () => this.load());
+    }
   },
   methods: {
     async click(forced, val) {

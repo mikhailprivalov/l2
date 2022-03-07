@@ -1,7 +1,17 @@
 <template>
   <div v-frag>
-    <a href="#" @click.prevent="show_modal" class="btn btn-blue-nb n-r">Файлы-{{count_files}}</a>
-    <file-add-modal v-if="showModal" :iss_pk="iss_pk"/>
+    <a
+      href="#"
+      class="btn btn-blue-nb n-r"
+      @click.prevent="show_modal"
+    >
+      Файлы
+      <span class="badge badge-secondary">{{ count_files }}</span>
+    </a>
+    <FileAddModal
+      v-if="showModal"
+      :iss_pk="iss_pk"
+    />
   </div>
 </template>
 

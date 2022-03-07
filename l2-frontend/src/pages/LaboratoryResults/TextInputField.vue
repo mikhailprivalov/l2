@@ -1,33 +1,44 @@
 <template>
   <td class="val">
-    <div class="input-group" :class="(readonly || !r.fraction.formula) && 'val-full'">
-      <span class="input-group-btn" v-if="!readonly && r.fraction.formula">
-        <button type="button"
-                @click="calcFormula"
-                class="btn btn-default btn-primary-nb btn30"
-                title="Рассчитать результат"
-                v-tippy>
-          <i class="fa fa-circle"></i>
+    <div
+      class="input-group"
+      :class="(readonly || !r.fraction.formula) && 'val-full'"
+    >
+      <span
+        v-if="!readonly && r.fraction.formula"
+        class="input-group-btn"
+      >
+        <button
+          v-tippy
+          type="button"
+          class="btn btn-default btn-primary-nb btn30"
+          title="Рассчитать результат"
+          @click="calcFormula"
+        >
+          <i class="fa fa-circle" />
         </button>
       </span>
-      <typeahead
+      <Typeahead
+        :id="`fraction-${r.fraction.pk}`"
+        v-model="r.value"
         class="form-control result-field"
         :class="[
-               r.fraction.units.length > 0 && 'with-units',
-               `isnorm_${r.norm}`,
-             ]"
+          r.fraction.units.length > 0 && 'with-units',
+          `isnorm_${r.norm}`,
+        ]"
         :readonly="readonly"
         :keyup-enter="moveFocusNext"
-        v-model="r.value"
-        :id="`fraction-${r.fraction.pk}`"
         :data-x="Math.min(r.fraction.units.length, 9)"
         :local="options"
-        defaultSuggestion
+        default-suggestion
       />
     </div>
-    <div class="unit">{{ r.fraction.units }}</div>
+    <div class="unit">
+      {{ r.fraction.units }}
+    </div>
   </td>
 </template>
+
 <script lang="ts">
 import * as actions from '@/store/action-types';
 import Typeahead from './Typeahead.vue';

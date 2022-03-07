@@ -1,25 +1,55 @@
 <template>
-  <div v-if="card_pk === -1" class="empty">
+  <div
+    v-if="card_pk === -1"
+    class="empty"
+  >
     <div>Пациент не выбран</div>
   </div>
-  <div v-else class="root">
+  <div
+    v-else
+    class="root"
+  >
     <div class="col-form mid">
       <div class="form-row sm-header">
-        Данные из картотеки<span v-if="!loaded" class="loading-text loading-sm">&nbsp;загрузка</span>
+        Данные из картотеки<span
+          v-if="!loaded"
+          class="loading-text loading-sm"
+        >&nbsp;загрузка</span>
       </div>
       <div class="form-row sm-f">
-        <div class="row-t">Телефон</div>
-        <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'" />
+        <div class="row-t">
+          Телефон
+        </div>
+        <input
+          v-model="card.phone"
+          v-mask="'8 999 9999999'"
+          class="form-control"
+        >
       </div>
       <div class="form-row sm-header">
         {{ hasOnlyHosp ? 'Данные записи на госпитализацию' : 'Данные для листа ожидания' }}
       </div>
-      <div class="form-row sm-f" v-if="!hasOnlyHosp">
-        <div class="row-t">Дата</div>
-        <input class="form-control" type="date" v-model="date" :min="td" />
+      <div
+        v-if="!hasOnlyHosp"
+        class="form-row sm-f"
+      >
+        <div class="row-t">
+          Дата
+        </div>
+        <input
+          v-model="date"
+          class="form-control"
+          type="date"
+          :min="td"
+        >
       </div>
-      <div v-else class="form-row sm-f">
-        <div class="row-t">Дата госпитализации</div>
+      <div
+        v-else
+        class="form-row sm-f"
+      >
+        <div class="row-t">
+          Дата госпитализации
+        </div>
         <DatePicker
           v-model="date"
           mode="date"
@@ -31,9 +61,15 @@
           color="teal"
         />
       </div>
-      <div class="form-row sm-f" v-if="hasOnlyHosp">
-        <div class="row-t">Отделение</div>
-        <treeselect
+      <div
+        v-if="hasOnlyHosp"
+        class="form-row sm-f"
+      >
+        <div class="row-t">
+          Отделение
+        </div>
+        <Treeselect
+          v-model="hospitalDepartment"
           :multiple="false"
           :disable-branch-nodes="true"
           class="treeselect-noborder"
@@ -41,25 +77,39 @@
           :append-to-body="true"
           placeholder="Отделение госпитализации"
           :clearable="true"
-          v-model="hospitalDepartment"
         />
       </div>
-      <div class="form-row sm-f" v-if="hasOnlyHosp">
-        <div class="row-t">Диагноз</div>
-        <MKBField v-model="diagnosis" :short="false" />
+      <div
+        v-if="hasOnlyHosp"
+        class="form-row sm-f"
+      >
+        <div class="row-t">
+          Диагноз
+        </div>
+        <MKBField
+          v-model="diagnosis"
+          :short="false"
+        />
       </div>
       <div class="form-row sm-f">
-        <div class="row-t">Комментарий</div>
-        <textarea class="form-control" v-model="comment"></textarea>
+        <div class="row-t">
+          Комментарий
+        </div>
+        <textarea
+          v-model="comment"
+          class="form-control"
+        />
       </div>
       <template v-if="researches.length > 0">
-        <div class="form-row sm-header">Услуги</div>
+        <div class="form-row sm-header">
+          Услуги
+        </div>
         <div class="researches">
-          <research-display
+          <ResearchDisplay
             v-for="(res, idx) in disp_researches"
+            :key="res.pk"
             :simple="true"
             :no_tooltip="true"
-            :key="res.pk"
             :title="res.title"
             :pk="res.pk"
             :n="idx"
@@ -67,35 +117,58 @@
           />
         </div>
         <div v-if="!date" />
-        <div v-else-if="!validDate && cito" class="alert alert-warning">Запись будет произведена как CITO сверх лимита</div>
-        <div v-else-if="!validDate" class="alert alert-warning">Выбранная дата недоступна для записи на госпитализацию</div>
+        <div
+          v-else-if="!validDate && cito"
+          class="alert alert-warning"
+        >
+          Запись будет произведена как CITO сверх лимита
+        </div>
+        <div
+          v-else-if="!validDate"
+          class="alert alert-warning"
+        >
+          Выбранная дата недоступна для записи на госпитализацию
+        </div>
         <div class="controls">
-          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save" :disabled="!valid">
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            :disabled="!valid"
+            @click="save"
+          >
             {{
               hasOnlyHosp
                 ? 'Записать на госпитализацию'
                 : hasMixedHosp
-                ? 'Госпитализация не может быть выбрана с не госпитализацией'
-                : hasManyHosp
-                ? 'Нужно выбрать только одну стационарную услугу'
-                : 'Создать записи в лист ожидания'
+                  ? 'Госпитализация не может быть выбрана с не госпитализацией'
+                  : hasManyHosp
+                    ? 'Нужно выбрать только одну стационарную услугу'
+                    : 'Создать записи в лист ожидания'
             }}
           </button>
         </div>
       </template>
-      <div v-else style="padding: 10px; color: gray; text-align: center">Услуги не выбраны</div>
+      <div
+        v-else
+        style="padding: 10px; color: gray; text-align: center"
+      >
+        Услуги не выбраны
+      </div>
 
-      <div class="rows" v-if="rows_count > 0">
+      <div
+        v-if="rows_count > 0"
+        class="rows"
+      >
         <table
           class="table table-bordered table-condensed table-sm-pd"
           style="table-layout: fixed; font-size: 12px; margin-top: 0"
         >
           <colgroup>
-            <col width="75" />
-            <col />
-            <col />
-            <col width="100" />
-            <col width="80" />
+            <col width="75">
+            <col>
+            <col>
+            <col width="100">
+            <col width="80">
           </colgroup>
           <thead>
             <tr>
@@ -107,16 +180,21 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in rows_mapped" :key="r.pk">
+            <tr
+              v-for="r in rows_mapped"
+              :key="r.pk"
+            >
               <td>{{ r.date }}</td>
               <td>
                 {{ r.service }}
                 <template v-if="r.hospital">
-                  <hr />
+                  <hr>
                   Отделение: {{ r.hospital }}
                 </template>
               </td>
-              <td style="white-space: pre-wrap">{{ (r.diagnosis ? 'Диагноз: ' + r.diagnosis + '\n\n' : '') + r.comment }}</td>
+              <td style="white-space: pre-wrap">
+                {{ (r.diagnosis ? 'Диагноз: ' + r.diagnosis + '\n\n' : '') + r.comment }}
+              </td>
               <td>{{ r.phone }}</td>
               <td>
                 <template v-if="!r.hospital">
@@ -127,7 +205,9 @@
                   <div class="spacer" />
                   <HospPlanCancelButton :data="r" />
                 </template>
-                <template v-else-if="r.slot"> {{ r.slot }} </template>
+                <template v-else-if="r.slot">
+                  {{ r.slot }}
+                </template>
               </td>
             </tr>
           </tbody>
@@ -200,6 +280,94 @@ export default {
       cito: false,
       counts: {},
     };
+  },
+  computed: {
+    disp_researches() {
+      return this.researches.map((id) => this.$store.getters.researches_obj[id]).filter(Boolean);
+    },
+    rows_count() {
+      return this.rows.length;
+    },
+    rows_mapped() {
+      return this.rows.map((r) => ({
+        ...r,
+        date: moment(r.exec_at).format('DD.MM.YYYY'),
+        service: r.research__title,
+        comment: r.comment,
+        status: r.work_status,
+        phone: r.phone,
+        hospital: r.hospital_department__title || null,
+        diagnosis: r.diagnos || null,
+      }));
+    },
+    researchesObjects() {
+      const r = [];
+      for (const pk of this.researches) {
+        const res = this.$store.getters.researches_obj[pk];
+        if (res) {
+          r.push(res);
+        }
+      }
+      return r;
+    },
+    hasHosp() {
+      return this.researchesObjects.length > 0 && this.researchesObjects.some((r) => r.is_hospital);
+    },
+    hasNonHosp() {
+      return this.researchesObjects.length > 0 && this.researchesObjects.some((r) => !r.is_hospital);
+    },
+    hasMixedHosp() {
+      return this.hasHosp && this.hasNonHosp;
+    },
+    hasManyHosp() {
+      return this.researchesObjects.filter((r) => r.is_hospital).length > 1;
+    },
+    hasOnlyHosp() {
+      return this.hasHosp && !this.hasNonHosp && !this.hasManyHosp;
+    },
+    validDate() {
+      return !this.hasOnlyHosp || (!!this.date && !!this.availableHospDates[this.date]);
+    },
+    valid() {
+      return (
+        !this.hasHosp
+        || (!this.hasNonHosp
+          && !!this.hospitalDepartment
+          && !!this.diagnosis.trim()
+          && (this.validDate
+            || (!!this.date && this.cito && Object.prototype.hasOwnProperty.call(this.availableHospDates, this.date))))
+      );
+    },
+    loaded() {
+      return this.loadCnt === 0;
+    },
+    availableDates() {
+      return Object.keys(this.availableHospDates)
+        .filter(
+          (d) => (this.cito && Object.prototype.hasOwnProperty.call(this.availableHospDates, d)) || !!this.availableHospDates[d],
+        )
+        .map((d) => {
+          const md = moment(d, 'YYYY-MM-DD').toDate();
+
+          return {
+            start: md,
+            end: md,
+          };
+        });
+    },
+    attributes() {
+      return Object.keys(this.availableHospDates).map((k) => {
+        const c = this.counts[k];
+
+        return {
+          dates: moment(k, 'YYYY-MM-DD').toDate(),
+          popover: {
+            label: c ? `Занято ${c.used} / ${c.available}` : 'на этот день нет запланированных слотов',
+          },
+          dot: this.availableHospDates[k] ? 'green' : 'red',
+        };
+      });
+    },
   },
   watch: {
     rows_count: {
@@ -313,94 +481,6 @@ export default {
       this.rows = await this.$api('list-wait/actual-rows', this, 'card_pk');
       await this.$store.dispatch(actions.DEC_LOADING);
       this.loadCnt--;
-    },
-  },
-  computed: {
-    disp_researches() {
-      return this.researches.map((id) => this.$store.getters.researches_obj[id]).filter(Boolean);
-    },
-    rows_count() {
-      return this.rows.length;
-    },
-    rows_mapped() {
-      return this.rows.map((r) => ({
-        ...r,
-        date: moment(r.exec_at).format('DD.MM.YYYY'),
-        service: r.research__title,
-        comment: r.comment,
-        status: r.work_status,
-        phone: r.phone,
-        hospital: r.hospital_department__title || null,
-        diagnosis: r.diagnos || null,
-      }));
-    },
-    researchesObjects() {
-      const r = [];
-      for (const pk of this.researches) {
-        const res = this.$store.getters.researches_obj[pk];
-        if (res) {
-          r.push(res);
-        }
-      }
-      return r;
-    },
-    hasHosp() {
-      return this.researchesObjects.length > 0 && this.researchesObjects.some((r) => r.is_hospital);
-    },
-    hasNonHosp() {
-      return this.researchesObjects.length > 0 && this.researchesObjects.some((r) => !r.is_hospital);
-    },
-    hasMixedHosp() {
-      return this.hasHosp && this.hasNonHosp;
-    },
-    hasManyHosp() {
-      return this.researchesObjects.filter((r) => r.is_hospital).length > 1;
-    },
-    hasOnlyHosp() {
-      return this.hasHosp && !this.hasNonHosp && !this.hasManyHosp;
-    },
-    validDate() {
-      return !this.hasOnlyHosp || (!!this.date && !!this.availableHospDates[this.date]);
-    },
-    valid() {
-      return (
-        !this.hasHosp
-        || (!this.hasNonHosp
-          && !!this.hospitalDepartment
-          && !!this.diagnosis.trim()
-          && (this.validDate
-            || (!!this.date && this.cito && Object.prototype.hasOwnProperty.call(this.availableHospDates, this.date))))
-      );
-    },
-    loaded() {
-      return this.loadCnt === 0;
-    },
-    availableDates() {
-      return Object.keys(this.availableHospDates)
-        .filter(
-          (d) => (this.cito && Object.prototype.hasOwnProperty.call(this.availableHospDates, d)) || !!this.availableHospDates[d],
-        )
-        .map((d) => {
-          const md = moment(d, 'YYYY-MM-DD').toDate();
-
-          return {
-            start: md,
-            end: md,
-          };
-        });
-    },
-    attributes() {
-      return Object.keys(this.availableHospDates).map((k) => {
-        const c = this.counts[k];
-
-        return {
-          dates: moment(k, 'YYYY-MM-DD').toDate(),
-          popover: {
-            label: c ? `Занято ${c.used} / ${c.available}` : 'на этот день нет запланированных слотов',
-          },
-          dot: this.availableHospDates[k] ? 'green' : 'red',
-        };
-      });
     },
   },
 };

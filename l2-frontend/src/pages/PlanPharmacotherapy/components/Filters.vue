@@ -1,28 +1,36 @@
 <template>
-  <table class="table" style="table-layout: fixed">
+  <table
+    class="table"
+    style="table-layout: fixed"
+  >
     <colgroup>
-      <col width='201'/>
-      <col width='20'/>
-      <col width='310'/>
-      <col/>
+      <col width="201">
+      <col width="20">
+      <col width="310">
+      <col>
     </colgroup>
     <tbody>
-    <tr>
-      <td>
-        <date-range v-model="filters.date"/>
-      </td>
-      <td></td>
-      <td>
-        <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
-                    placeholder="Отделение не выбрано" v-model="filters.department_pk"
-                    :append-to-body="true"
-        />
-      </td>
-      <td></td>
-    </tr>
+      <tr>
+        <td>
+          <DateRange v-model="filters.date" />
+        </td>
+        <td />
+        <td>
+          <Treeselect
+            v-model="filters.department_pk"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="departments"
+            placeholder="Отделение не выбрано"
+            :append-to-body="true"
+          />
+        </td>
+        <td />
+      </tr>
     </tbody>
   </table>
 </template>
+
 <script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';

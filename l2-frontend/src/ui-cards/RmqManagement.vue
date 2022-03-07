@@ -3,21 +3,46 @@
     <label>
       Модель:
       <select v-model="model">
-        <option v-for="m in models" :key="m">{{m}}</option>
+        <option
+          v-for="m in models"
+          :key="m"
+        >{{ m }}</option>
       </select>
     </label>
     <div>
-      Отправить в задание на синхронизацию: с <input v-model.number="from" type="number" min="0"
-                                                     :disabled="model === '' || insend"/>
-      по <input v-model.number="to" :disabled="model === '' || insend" type="number" min="0"/>
-      <button :disabled="model === '' || insend" @click="do_send">&rAarr;</button>
+      Отправить в задание на синхронизацию: с
+      <input
+        v-model.number="from"
+        type="number"
+        min="0"
+        :disabled="model === '' || insend"
+      > по
+      <input
+        v-model.number="to"
+        :disabled="model === '' || insend"
+        type="number"
+        min="0"
+      >
+      <button
+        :disabled="model === '' || insend"
+        @click="do_send"
+      >
+        &rAarr;
+      </button>
     </div>
     <div v-if="insend || oksend">
-      <progress :max="Math.max(to-from + 1, 1)" :value="csended + 1" style="width: 100%;"></progress>
+      <progress
+        :max="Math.max(to - from + 1, 1)"
+        :value="csended + 1"
+        style="width: 100%"
+      />
       <div class="text-center">
-        Отправка {{csended + 1}}/{{Math.max(to-from + 1, 1)}} ({{Math.round((csended + 1)/(Math.max(to-from + 1, 1))*100)}}%)
+        Отправка {{ csended + 1 }}/{{ Math.max(to - from + 1, 1) }} ({{
+          Math.round(((csended + 1) / Math.max(to - from + 1, 1)) * 100)
+        }}%)
       </div>
-      <div class="text-center">Исполнение задания можно проверить в RabbitMQ Management или в приложении-интеграторе
+      <div class="text-center">
+        Исполнение задания можно проверить в RabbitMQ Management или в приложении-интеграторе
       </div>
     </div>
   </div>
@@ -27,7 +52,7 @@
 import * as actions from '../store/action-types';
 
 export default {
-  name: 'rmq-management',
+  name: 'RmqManagement',
   data() {
     return {
       messages: null,
@@ -71,11 +96,13 @@ export default {
       this.csended = 0;
       this.oksend = false;
       this.$store.dispatch(actions.INC_LOADING);
-      window.$.ajax({ url: '/mainmenu/rmq/count', data: { model: this.model } }).done((data) => {
-        this.to = data.count;
-      }).always(() => {
-        this.$store.dispatch(actions.DEC_LOADING);
-      });
+      window.$.ajax({ url: '/mainmenu/rmq/count', data: { model: this.model } })
+        .done((data) => {
+          this.to = data.count;
+        })
+        .always(() => {
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
     },
     do_send() {
       if (this.model === '' || this.insend) return;
@@ -99,6 +126,4 @@ export default {
 };
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>
