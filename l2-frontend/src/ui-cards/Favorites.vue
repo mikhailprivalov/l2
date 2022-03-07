@@ -2,7 +2,7 @@
   <div v-frag>
     <a href="#" class="dropdown-toggle" @click.prevent
        v-tippy="{
-                html: '#addfile-view',
+                html: '#favorites-view',
                 reactive: true,
                 interactive: true,
                 arrow: true,
@@ -25,7 +25,7 @@
       Избранные истории <span class="badge badge-light">{{data.length}}</span>
     </a>
 
-    <div id="addfile-view" class="tp">
+    <div id="favorites-view" class="tp">
       <table class="table table-condensed table-bordered">
         <tbody>
         <tr v-for="row in data" :key="row.pk">

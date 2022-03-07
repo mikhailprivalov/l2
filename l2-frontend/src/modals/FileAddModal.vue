@@ -1,5 +1,5 @@
 <template>
-  <modal
+  <Modal
     ref="modal"
     @close="hide"
     show-footer="true"
@@ -60,7 +60,7 @@
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">

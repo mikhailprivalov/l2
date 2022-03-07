@@ -370,7 +370,7 @@
               </dropdown>
             </div>
             <div class="research-right">
-              <file-add v-if="row.research.enabled_add_files" :iss_pk="row.pk" :count_files="row.countFiles"/>
+              <FileAdd v-if="row.research.enabled_add_files" :iss_pk="row.pk" :count_files="row.countFiles"/>
               <template v-if="data.direction.all_confirmed && !data.has_monitoring && !data.has_expertise">
                 <a
                   :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
