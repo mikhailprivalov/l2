@@ -5,6 +5,8 @@ module.exports = {
   },
   extends: [
     'plugin:vue/essential',
+    'plugin:vue/recommended',
+    'plugin:vue/strongly-recommended',
     '@vue/airbnb',
     '@vue/typescript/recommended',
   ],
@@ -25,6 +27,13 @@ module.exports = {
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "off",
     'func-names': 'off',
+    'vue/prop-name-casing': 'off',
+    'vue/require-default-prop': 'off',
+    'vue/require-prop-types': 'off',
+    'vue/no-use-v-if-with-v-for': 'off',
+    'vue/component-name-in-template-casing': ["error", "PascalCase"],
+    "vue/order-in-components": "error",
+    "vue/padding-line-between-blocks": "error",
     "@typescript-eslint/prefer-optional-chain": "error",
   },
   "overrides": [

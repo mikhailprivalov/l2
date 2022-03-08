@@ -1,201 +1,366 @@
 <template>
   <div class="root">
     <div class="left">
-      <treeselect
+      <Treeselect
+        v-model="selected_hospital"
         :multiple="false"
         :disable-branch-nodes="true"
         :options="can_edit_any_organization ? hospitals : own_hospital"
         placeholder="Больница не выбрана"
-        v-model="selected_hospital"
         :append-to-body="true"
         :disabled="open_pk !== -2"
         :clearable="false"
       />
-      <input class="form-control" placeholder="Фильтр" v-model="filter" style="margin-top: 5px" />
+      <input
+        v-model="filter"
+        class="form-control"
+        placeholder="Фильтр"
+        style="margin-top: 5px"
+      >
       <div class="left-wrapper">
         <ul>
-          <li v-for="d in departmentFiltered" :key="d.pk">
+          <li
+            v-for="d in departmentFiltered"
+            :key="d.pk"
+          >
             <strong>{{ d.title }}</strong>
             <ul>
-              <li :class="{ selected: x.pk === open_pk }" v-for="x in d.users" :key="x.pk">
-                <a @click.prevent="open(x.pk)" class="user-link" href="#">{{ x.username }} – {{ x.fio }}</a>
+              <li
+                v-for="x in d.users"
+                :key="x.pk"
+                :class="{ selected: x.pk === open_pk }"
+              >
+                <a
+                  class="user-link"
+                  href="#"
+                  @click.prevent="open(x.pk)"
+                >{{ x.username }} – {{ x.fio }}</a>
               </li>
               <li :class="{ selected: open_pk === -1 && user.department === d.pk }">
-                <a @click.prevent="open(-1, d.pk)" href="#"> <i class="fa fa-plus"></i> добавить пользователя</a>
+                <a
+                  href="#"
+                  @click.prevent="open(-1, d.pk)"
+                > <i class="fa fa-plus" /> добавить пользователя</a>
               </li>
             </ul>
           </li>
         </ul>
       </div>
     </div>
-    <div class="right" v-if="open_pk > -2">
+    <div
+      v-if="open_pk > -2"
+      class="right"
+    >
       <div class="right-wrapper">
         <div class="main-data">
           <div class="row">
-            <div class="col-xs-6" style="padding-right: 0">
+            <div
+              class="col-xs-6"
+              style="padding-right: 0"
+            >
               <div class="input-group">
-                <input class="form-control wbr" type="text" v-model="user.family" placeholder="Фамилия" />
-                <span class="input-group-btn" style="width: 0"></span>
-                <input class="form-control wbr" type="text" v-model="user.name" placeholder="Имя" />
-                <span class="input-group-btn" style="width: 0"></span>
                 <input
+                  v-model="user.family"
+                  class="form-control wbr"
+                  type="text"
+                  placeholder="Фамилия"
+                >
+                <span
+                  class="input-group-btn"
+                  style="width: 0"
+                />
+                <input
+                  v-model="user.name"
+                  class="form-control wbr"
+                  type="text"
+                  placeholder="Имя"
+                >
+                <span
+                  class="input-group-btn"
+                  style="width: 0"
+                />
+                <input
+                  v-model="user.patronymic"
                   class="form-control"
                   style="margin-right: -1px"
                   type="text"
-                  v-model="user.patronymic"
                   placeholder="Отчество"
-                />
+                >
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0">
-              <div class="input-group" style="margin-right: -1px">
+            <div
+              class="col-xs-6"
+              style="padding-left: 0"
+            >
+              <div
+                class="input-group"
+                style="margin-right: -1px"
+              >
                 <span class="input-group-addon">Имя пользователя</span>
-                <input class="form-control" type="text" v-model="user.username" />
+                <input
+                  v-model="user.username"
+                  class="form-control"
+                  type="text"
+                >
                 <div class="input-group-btn">
                   <button
-                    @click="gen_username"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
                     title="Генерация имени пользователя на основе ФИО"
                     type="button"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
+                    @click="gen_username"
                   >
-                    <i class="fa fa-dot-circle-o"></i>
+                    <i class="fa fa-dot-circle-o" />
                   </button>
                 </div>
               </div>
             </div>
           </div>
           <div class="row">
-            <div class="col-xs-6" style="padding-right: 0">
+            <div
+              class="col-xs-6"
+              style="padding-right: 0"
+            >
               <div class="input-group">
                 <span class="input-group-addon">Пароль</span>
                 <input
+                  v-if="user.sendPassword && validEmail"
+                  key="no-passwd"
                   placeholder="пароль будет отправлен на email"
                   class="form-control"
                   type="text"
-                  v-if="user.sendPassword && validEmail"
-                  key="no-passwd"
                   readonly
-                />
+                >
                 <input
+                  v-else
+                  key="passwd"
+                  v-model="user.password"
                   :placeholder="
                     'Минимальная длина пароля – 6 символов. ' + (open_pk === -1 ? '' : 'Для смены пароля введите новый')
                   "
                   class="form-control"
                   type="text"
-                  v-model="user.password"
-                  key="passwd"
-                  v-else
-                />
-                <div class="input-group-btn" v-if="!user.sendPassword || !validEmail">
+                >
+                <div
+                  v-if="!user.sendPassword || !validEmail"
+                  class="input-group-btn"
+                >
                   <button
-                    @click="gen_passwd"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
                     title="Генерация пароля"
                     type="button"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
+                    @click="gen_passwd"
                   >
-                    <i class="fa fa-dot-circle-o"></i>
+                    <i class="fa fa-dot-circle-o" />
                   </button>
                 </div>
-                <div class="input-group-btn" v-if="user.doc_pk > -1">
+                <div
+                  v-if="user.doc_pk > -1"
+                  class="input-group-btn"
+                >
                   <a
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     :href="`/barcodes/login?pk=${user.doc_pk}`"
                     target="_blank"
                     class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
                     title="Штрих-код для входа"
                     type="button"
                     style="border-radius: 0"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
                   >
-                    <i class="fa fa-barcode"></i>
+                    <i class="fa fa-barcode" />
                   </a>
                 </div>
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0" v-if="modules.change_password">
+            <div
+              v-if="modules.change_password"
+              class="col-xs-6"
+              style="padding-left: 0"
+            >
               <div class="input-group">
                 <span class="input-group-addon">Email</span>
                 <input
+                  v-model.trim="user.email"
                   placeholder="Email"
                   class="form-control"
                   type="email"
                   :class="!validEmail && 'has-error-field'"
-                  v-model.trim="user.email"
-                />
+                >
               </div>
             </div>
-            <div class="col-xs-6" :style="modules.change_password ? 'padding-right: 0' : 'padding-left: 0'">
+            <div
+              class="col-xs-6"
+              :style="modules.change_password ? 'padding-right: 0' : 'padding-left: 0'"
+            >
               <div class="input-group">
                 <span class="input-group-addon">Подразделение</span>
-                <select class="form-control" v-model="user.department">
-                  <option :value="d.pk" v-for="d in departments" :key="d.pk">
+                <select
+                  v-model="user.department"
+                  class="form-control"
+                >
+                  <option
+                    v-for="d in departments"
+                    :key="d.pk"
+                    :value="d.pk"
+                  >
                     {{ d.title }}
                   </option>
                 </select>
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0" v-if="modules.change_password">
+            <div
+              v-if="modules.change_password"
+              class="col-xs-6"
+              style="padding-left: 0"
+            >
               <label class="group-input-label">
-                <input type="checkbox" v-model="user.sendPassword" :disabled="!validEmail" />
+                <input
+                  v-model="user.sendPassword"
+                  type="checkbox"
+                  :disabled="!validEmail"
+                >
                 Сгенерировать новый пароль и отправить на email
               </label>
             </div>
           </div>
         </div>
         <div class="more-data">
-          <div class="row" v-if="l2_user_data.rmis_enabled">
-            <div class="col-xs-4" style="padding-right: 0">
-              <div class="input-group" style="width: 100%">
+          <div
+            v-if="l2_user_data.rmis_enabled"
+            class="row"
+          >
+            <div
+              class="col-xs-4"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">РМИС логин</span>
-                <input class="form-control" v-model="user.rmis_login" />
+                <input
+                  v-model="user.rmis_login"
+                  class="form-control"
+                >
               </div>
             </div>
-            <div class="col-xs-4" style="padding-left: 0; padding-right: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-4"
+              style="padding-left: 0; padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">РМИС пароль</span>
-                <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password" />
+                <input
+                  v-model="user.rmis_password"
+                  class="form-control"
+                  placeholder="Для замены введите значение"
+                >
               </div>
             </div>
-            <div class="col-xs-4" style="padding-left: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-4"
+              style="padding-left: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">ID ресурса РМИС</span>
-                <input class="form-control" v-model="user.rmis_resource_id" />
+                <input
+                  v-model="user.rmis_resource_id"
+                  class="form-control"
+                >
               </div>
             </div>
           </div>
-          <div class="row" v-if="l2_user_data.rmis_enabled && modules.l2_rmis_queue">
-            <div class="col-xs-4" style="padding-right: 0">
-              <div class="input-group" style="width: 100%">
+          <div
+            v-if="l2_user_data.rmis_enabled && modules.l2_rmis_queue"
+            class="row"
+          >
+            <div
+              class="col-xs-4"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">РМИС location</span>
-                <input class="form-control" v-model="user.rmis_location" />
+                <input
+                  v-model="user.rmis_location"
+                  class="form-control"
+                >
               </div>
             </div>
-            <div class="col-xs-4" style="padding-left: 0; padding-right: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-4"
+              style="padding-left: 0; padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">РМИС employee</span>
-                <input class="form-control" v-model="user.rmis_employee_id" />
+                <input
+                  v-model="user.rmis_employee_id"
+                  class="form-control"
+                >
               </div>
             </div>
-            <div class="col-xs-4" style="padding-left: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-4"
+              style="padding-left: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">РМИС service</span>
-                <input class="form-control" v-model="user.rmis_service_id_time_table" />
+                <input
+                  v-model="user.rmis_service_id_time_table"
+                  class="form-control"
+                >
               </div>
             </div>
           </div>
           <div class="row">
-            <div class="col-xs-6" style="padding-right: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-6"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">Код врача</span>
-                <input class="form-control" v-model="user.personal_code" />
+                <input
+                  v-model="user.personal_code"
+                  class="form-control"
+                >
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-6"
+              style="padding-left: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">Специальность</span>
-                <select class="form-control" v-model="user.speciality">
-                  <option :value="d.pk" v-for="d in specialities" :key="d.pk">
+                <select
+                  v-model="user.speciality"
+                  class="form-control"
+                >
+                  <option
+                    v-for="d in specialities"
+                    :key="d.pk"
+                    :value="d.pk"
+                  >
                     {{ d.title }}
                   </option>
                 </select>
@@ -203,139 +368,306 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-xs-6" style="padding-right: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-6"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">СНИЛС</span>
                 <input
-                  class="form-control"
                   v-model.trim="user.snils"
+                  class="form-control"
                   :class="!snilsValid && 'has-error-field'"
                   placeholder="СНИЛС в формате 12345678912"
-                />
+                >
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-6"
+              style="padding-left: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">Должность</span>
-                <select class="form-control" v-model="user.position">
-                  <option :value="d.pk" v-for="d in positions" :key="d.pk">
+                <select
+                  v-model="user.position"
+                  class="form-control"
+                >
+                  <option
+                    v-for="d in positions"
+                    :key="d.pk"
+                    :value="d.pk"
+                  >
                     {{ d.title }}
                   </option>
                 </select>
               </div>
             </div>
           </div>
-          <div class="input-group" style="width: 100%">
+          <div
+            class="input-group"
+            style="width: 100%"
+          >
             <span class="input-group-addon">Группы</span>
-            <select class="form-control" multiple style="height: 136px" v-model="user.groups">
-              <option v-for="g in user.groups_list" :value="g.pk" :key="g.pk">{{ g.title }}</option>
+            <select
+              v-model="user.groups"
+              class="form-control"
+              multiple
+              style="height: 136px"
+            >
+              <option
+                v-for="g in user.groups_list"
+                :key="g.pk"
+                :value="g.pk"
+              >
+                {{ g.title }}
+              </option>
             </select>
           </div>
           <div class="row">
-            <div class="col-xs-2" style="padding-right: 0">
-              <div class="input-group" style="width: 100%">
-                <label class="input-group-addon" style="height: 34px; text-align: left">
-                  <input type="checkbox" v-model="user.external_access" /> Внешний доступ до
+            <div
+              class="col-xs-2"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <label
+                  class="input-group-addon"
+                  style="height: 34px; text-align: left"
+                >
+                  <input
+                    v-model="user.external_access"
+                    type="checkbox"
+                  > Внешний доступ до
                 </label>
               </div>
             </div>
-            <div class="col-xs-2" style="padding-left: 0">
-              <div class="input-group" style="width: 100%">
-                <input v-if="user.external_access" class="form-control" type="date" v-model="user.date_stop_external_access" />
+            <div
+              class="col-xs-2"
+              style="padding-left: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <input
+                  v-if="user.external_access"
+                  v-model="user.date_stop_external_access"
+                  class="form-control"
+                  type="date"
+                >
               </div>
             </div>
-            <div class="col-xs-8"></div>
+            <div class="col-xs-8" />
           </div>
           <div class="more-title">
             Запрет на создание направлений с назначениями:
-            <button class="btn btn-blue-nb sidebar-btn" style="font-size: 13px">
+            <button
+              class="btn btn-blue-nb sidebar-btn"
+              style="font-size: 13px"
+            >
               <i
                 v-if="setup_forbidden"
-                class="glyphicon glyphicon-circle-arrow-up"
-                @click="change_setup_forbidden"
                 v-tippy="{ placement: 'bottom' }"
+                class="glyphicon glyphicon-circle-arrow-up"
                 title="Скрыть"
+                @click="change_setup_forbidden"
               />
               <i
                 v-else
-                class="glyphicon glyphicon-circle-arrow-down"
-                @click="change_setup_forbidden"
                 v-tippy="{ placement: 'bottom' }"
+                class="glyphicon glyphicon-circle-arrow-down"
                 title="Редактировать"
+                @click="change_setup_forbidden"
               />
             </button>
           </div>
-          <div v-if="setup_forbidden" class="row" style="margin-right: 0">
-            <div class="col-xs-6" style="height: 300px; border-right: 1px solid #eaeaea; padding-right: 0">
-              <researches-picker :hidetemplates="true" :just_search="true" v-model="user.restricted_to_direct" />
+          <div
+            v-if="setup_forbidden"
+            class="row"
+            style="margin-right: 0"
+          >
+            <div
+              class="col-xs-6"
+              style="height: 300px; border-right: 1px solid #eaeaea; padding-right: 0"
+            >
+              <ResearchesPicker
+                v-model="user.restricted_to_direct"
+                :hidetemplates="true"
+                :just_search="true"
+              />
             </div>
-            <div class="col-xs-6" style="height: 300px; padding-left: 0; padding-right: 0">
-              <selected-researches :researches="user.restricted_to_direct" :simple="true" />
+            <div
+              class="col-xs-6"
+              style="height: 300px; padding-left: 0; padding-right: 0"
+            >
+              <SelectedResearches
+                :researches="user.restricted_to_direct"
+                :simple="true"
+              />
             </div>
           </div>
-          <div class="more-title" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">
+          <div
+            v-if="modules.l2_rmis_queue && user.rmis_location !== ''"
+            class="more-title"
+          >
             Услуги, оказываемые пользователем:
           </div>
-          <div class="row" style="margin-right: 0" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">
-            <div class="col-xs-6" style="height: 300px; border-right: 1px solid #eaeaea; padding-right: 0">
-              <researches-picker :hidetemplates="true" :filter_types="[2]" :just_search="true" v-model="user.users_services" />
+          <div
+            v-if="modules.l2_rmis_queue && user.rmis_location !== ''"
+            class="row"
+            style="margin-right: 0"
+          >
+            <div
+              class="col-xs-6"
+              style="height: 300px; border-right: 1px solid #eaeaea; padding-right: 0"
+            >
+              <ResearchesPicker
+                v-model="user.users_services"
+                :hidetemplates="true"
+                :filter_types="[2]"
+                :just_search="true"
+              />
             </div>
-            <div class="col-xs-6" style="height: 300px; padding-left: 0; padding-right: 0">
-              <selected-researches :researches="user.users_services" :simple="true" />
+            <div
+              class="col-xs-6"
+              style="height: 300px; padding-left: 0; padding-right: 0"
+            >
+              <SelectedResearches
+                :researches="user.users_services"
+                :simple="true"
+              />
             </div>
           </div>
           <div class="more-title">
             Расписание-ресурсы:
-            <button class="btn btn-blue-nb sidebar-btn" style="font-size: 13px">
+            <button
+              class="btn btn-blue-nb sidebar-btn"
+              style="font-size: 13px"
+            >
               <i
                 v-if="setup_resource"
-                class="glyphicon glyphicon-circle-arrow-up"
-                @click="change_setup_resource"
                 v-tippy="{ placement: 'bottom' }"
+                class="glyphicon glyphicon-circle-arrow-up"
                 title="Скрыть"
+                @click="change_setup_resource"
               />
               <i
                 v-else
-                class="glyphicon glyphicon-circle-arrow-down"
-                @click="change_setup_resource"
                 v-tippy="{ placement: 'bottom' }"
+                class="glyphicon glyphicon-circle-arrow-down"
                 title="Редактировать"
+                @click="change_setup_resource"
               />
             </button>
           </div>
-          <div v-if="setup_resource" class="row" style="height: 200px; border-right: 1px solid #eaeaea; padding-right: 0">
-            <div class="col-xs-6" style="height: 100%">
-              <ResearchesPicker v-model="resource_researches" autoselect="none" :hidetemplates="true" />
+          <div
+            v-if="setup_resource"
+            class="row"
+            style="height: 200px; border-right: 1px solid #eaeaea; padding-right: 0"
+          >
+            <div
+              class="col-xs-6"
+              style="height: 100%"
+            >
+              <ResearchesPicker
+                v-model="resource_researches"
+                autoselect="none"
+                :hidetemplates="true"
+              />
             </div>
-            <div class="col-xs-6" style="height: 100%">
-              <SelectedResearches :researches="resource_researches || []" :simple="true" />
+            <div
+              class="col-xs-6"
+              style="height: 100%"
+            >
+              <SelectedResearches
+                :researches="resource_researches || []"
+                :simple="true"
+              />
             </div>
-            <div class="col-xs-10" style="padding-right: 0">
-              <div class="input-group" style="width: 100%">
+            <div
+              class="col-xs-10"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
                 <span class="input-group-addon">Наименование ресурса</span>
-                <input class="form-control" v-model="current_resource_title" />
+                <input
+                  v-model="current_resource_title"
+                  class="form-control"
+                >
               </div>
             </div>
-            <div style="float: right; padding-right: 20px" class="col-xs-2">
-              <button :disabled="!valid" @click="save_resource" class="btn btn-blue-nb">Сохранить ресурс</button>
+            <div
+              style="float: right; padding-right: 20px"
+              class="col-xs-2"
+            >
+              <button
+                :disabled="!valid"
+                class="btn btn-blue-nb"
+                @click="save_resource"
+              >
+                Сохранить ресурс
+              </button>
             </div>
           </div>
-          <div v-if="setup_resource" style="padding-top: 30px">
-            <div class="research" :key="row.pk" v-for="row in rows">
-              <span v-for="res in row.researches" :key="res.pk" class="t-r">
+          <div
+            v-if="setup_resource"
+            style="padding-top: 30px"
+          >
+            <div
+              v-for="row in rows"
+              :key="row.pk"
+              class="research"
+            >
+              <span
+                v-for="res in row.researches"
+                :key="res.pk"
+                class="t-r"
+              >
                 {{ res.title }}
               </span>
-              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="current_resource_researches(row)">
+              <button
+                class="btn btn-blue-nb sidebar-btn"
+                style="font-size: 12px"
+                @click="current_resource_researches(row)"
+              >
                 Редактировать
               </button>
-              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="open_schedule">Расписание</button>
+              <button
+                class="btn btn-blue-nb sidebar-btn"
+                style="font-size: 12px"
+                @click="open_schedule"
+              >
+                Расписание
+              </button>
             </div>
           </div>
         </div>
       </div>
       <div class="right-bottom">
-        <button @click="close" class="btn btn-blue-nb">Закрыть</button>
-        <button :disabled="!valid" @click="save" class="btn btn-blue-nb">Сохранить</button>
+        <button
+          class="btn btn-blue-nb"
+          @click="close"
+        >
+          Закрыть
+        </button>
+        <button
+          :disabled="!valid"
+          class="btn btn-blue-nb"
+          @click="save"
+        >
+          Сохранить
+        </button>
       </div>
     </div>
   </div>
@@ -415,8 +747,8 @@ function str_rand(l = 8, v = 1) {
 }
 
 export default {
+  name: 'Profiles',
   components: { ResearchesPicker, SelectedResearches, Treeselect },
-  name: 'profiles',
   data() {
     return {
       filter: '',
@@ -450,11 +782,54 @@ export default {
       open_pk: -2,
     };
   },
-  created() {
-    this.load_users();
-    this.current_resource_pk = -1;
-    this.resource_researches = [];
-    this.current_resource_title = '';
+  computed: {
+    rows() {
+      return this.resource_templates_list.map((r) => ({
+        ...r,
+        researches: r.researches.map((rpk) => this.$store.getters.researches_obj[rpk]).filter(Boolean),
+      }));
+    },
+    snilsValid() {
+      return (
+        !this.user.snils || (!this.user.snils.includes('-') && !this.user.snils.includes(' ') && validateSnils(this.user.snils))
+      );
+    },
+    validEmail() {
+      return validateEmail(this.user?.email);
+    },
+    departmentFiltered() {
+      const r = [];
+      for (const x of this.departments) {
+        r.push({
+          ...x,
+          users: x.users.filter(
+            (y) => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
+              || y.username.toLowerCase().startsWith(this.filter.toLowerCase()),
+          ),
+        });
+      }
+      return r.filter((d) => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
+    },
+    valid() {
+      const p = (this.open_pk > -1
+          && (this.user.password.length === 0 || this.user.password.length >= 3 || (this.user.sendPassword && this.validEmail)))
+        || (this.open_pk === -1 && (this.user.password.length >= 3 || (this.user.sendPassword && this.validEmail)));
+      return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '' && this.snilsValid;
+    },
+    ...mapGetters({
+      modules: 'modules',
+      l2_user_data: 'user_data',
+      hospitals: 'hospitals',
+    }),
+    can_edit_any_organization() {
+      return this.l2_user_data.su || this.l2_user_data.all_hospitals_users_control;
+    },
+    user_hospital() {
+      return this.l2_user_data.hospital || -1;
+    },
+    own_hospital() {
+      return [this.hospitals.find(({ id }) => id === this.l2_user_data.hospital) || {}];
+    },
   },
   watch: {
     'user.family': function () {
@@ -522,6 +897,12 @@ export default {
         this.current_resource_pk = -1;
       }
     },
+  },
+  created() {
+    this.load_users();
+    this.current_resource_pk = -1;
+    this.resource_researches = [];
+    this.current_resource_title = '';
   },
   methods: {
     open_schedule() {
@@ -645,55 +1026,6 @@ export default {
       this.current_resource_pk = -1;
       this.current_resource_title = '';
       this.resource_researches = [];
-    },
-  },
-  computed: {
-    rows() {
-      return this.resource_templates_list.map((r) => ({
-        ...r,
-        researches: r.researches.map((rpk) => this.$store.getters.researches_obj[rpk]).filter(Boolean),
-      }));
-    },
-    snilsValid() {
-      return (
-        !this.user.snils || (!this.user.snils.includes('-') && !this.user.snils.includes(' ') && validateSnils(this.user.snils))
-      );
-    },
-    validEmail() {
-      return validateEmail(this.user?.email);
-    },
-    departmentFiltered() {
-      const r = [];
-      for (const x of this.departments) {
-        r.push({
-          ...x,
-          users: x.users.filter(
-            (y) => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
-              || y.username.toLowerCase().startsWith(this.filter.toLowerCase()),
-          ),
-        });
-      }
-      return r.filter((d) => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
-    },
-    valid() {
-      const p = (this.open_pk > -1
-          && (this.user.password.length === 0 || this.user.password.length >= 3 || (this.user.sendPassword && this.validEmail)))
-        || (this.open_pk === -1 && (this.user.password.length >= 3 || (this.user.sendPassword && this.validEmail)));
-      return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '' && this.snilsValid;
-    },
-    ...mapGetters({
-      modules: 'modules',
-      l2_user_data: 'user_data',
-      hospitals: 'hospitals',
-    }),
-    can_edit_any_organization() {
-      return this.l2_user_data.su || this.l2_user_data.all_hospitals_users_control;
-    },
-    user_hospital() {
-      return this.l2_user_data.hospital || -1;
-    },
-    own_hospital() {
-      return [this.hospitals.find(({ id }) => id === this.l2_user_data.hospital) || {}];
     },
   },
 };

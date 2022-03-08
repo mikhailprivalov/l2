@@ -1,17 +1,26 @@
 <template>
   <div>
     <template v-if="!disabled">
-      <input type="range" v-model="val" :min="min" :max="max" :step="step"/>
-      <span>{{val}}&nbsp;{{units}}</span>
+      <input
+        v-model="val"
+        type="range"
+        :min="min"
+        :max="max"
+        :step="step"
+      >
+      <span>{{ val }}&nbsp;{{ units }}</span>
     </template>
     <template v-else>
-      <span>{{val}}</span>
+      <span>{{ val }}</span>
     </template>
   </div>
 </template>
 
 <script lang="ts">
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -75,9 +84,6 @@ export default {
       },
       immediate: true,
     },
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     changeValue(newVal) {

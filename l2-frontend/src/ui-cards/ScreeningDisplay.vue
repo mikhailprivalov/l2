@@ -1,41 +1,79 @@
 <template>
   <div v-frag>
-    <div v-if="loading" class="text-center empty-screening">
+    <div
+      v-if="loading"
+      class="text-center empty-screening"
+    >
       загрузка скринингов
     </div>
     <table
+      v-else-if="researches && researches.length > 0"
       class="table table-bordered table-condensed table-sm-pd"
       :style="yearWidth"
-      v-else-if="researches && researches.length > 0"
       :class="embedded && 'table-embedded-screening'"
     >
       <colgroup>
-        <col />
-        <col style="width: 47px" />
-        <col v-for="y in years" :key="y" class="col-year" />
+        <col>
+        <col style="width: 47px">
+        <col
+          v-for="y in years"
+          :key="y"
+          class="col-year"
+        >
       </colgroup>
       <thead>
         <tr>
-          <th class="text-center" :colspan="2 + years.length">План скрининга</th>
+          <th
+            class="text-center"
+            :colspan="2 + years.length"
+          >
+            План скрининга
+          </th>
         </tr>
         <tr>
-          <th colspan="2">Год</th>
-          <td v-for="y in years" :key="y" :class="y === currentYear && 'current-param'">{{ y }}</td>
+          <th colspan="2">
+            Год
+          </th>
+          <td
+            v-for="y in years"
+            :key="y"
+            :class="y === currentYear && 'current-param'"
+          >
+            {{ y }}
+          </td>
         </tr>
         <tr>
-          <th colspan="2">Возраст</th>
-          <td v-for="a in ages" :key="a" :class="a === patientAge && 'current-param'">{{ a }}</td>
+          <th colspan="2">
+            Возраст
+          </th>
+          <td
+            v-for="a in ages"
+            :key="a"
+            :class="a === patientAge && 'current-param'"
+          >
+            {{ a }}
+          </td>
         </tr>
       </thead>
       <tbody>
         <template v-for="r in researches">
           <tr :key="`${r.pk}_1`">
-            <td rowspan="2" class="td-title">
+            <td
+              rowspan="2"
+              class="td-title"
+            >
               <div v-if="!selectedResearches">
                 {{ r.title }}
               </div>
-              <ResearchPickById v-else :pk="r.pk" :selected-researches="selectedResearches" :kk="kk" />
-              <div class="plan-details">раз в {{ r.period | pluralAge }}</div>
+              <ResearchPickById
+                v-else
+                :pk="r.pk"
+                :selected-researches="selectedResearches"
+                :kk="kk"
+              />
+              <div class="plan-details">
+                раз в {{ r.period | pluralAge }}
+              </div>
             </td>
             <th>план</th>
             <template v-for="(a, i) in r.ages">
@@ -54,7 +92,13 @@
                 <div v-else-if="embedded">
                   {{ a && a.plan && a.planYear === v.year ? a.plan.replace(`.${v.year}`, '') : '' }}
                 </div>
-                <ScreeningDate v-else :a="a" :v="v" :research-pk="r.pk" @updated="updatedDate" />
+                <ScreeningDate
+                  v-else
+                  :a="a"
+                  :v="v"
+                  :research-pk="r.pk"
+                  @updated="updatedDate"
+                />
               </td>
             </template>
           </tr>
@@ -68,7 +112,12 @@
                 :class="[a.isEven && 'td-even', !v && 'no-plan']"
               >
                 <div class="fact">
-                  <a href="#" @click.prevent="printResult(v.fact.direction)" class="a-under" v-if="v && v.fact">
+                  <a
+                    v-if="v && v.fact"
+                    href="#"
+                    class="a-under"
+                    @click.prevent="printResult(v.fact.direction)"
+                  >
                     {{ v.fact.date.replace(`.${v.year}`, '') }}
                   </a>
                 </div>
@@ -78,7 +127,10 @@
         </template>
       </tbody>
     </table>
-    <div v-else class="text-center empty-screening">
+    <div
+      v-else
+      class="text-center empty-screening"
+    >
       нет данных по скринингу
     </div>
   </div>

@@ -1,26 +1,56 @@
 <template>
   <div style="max-width: 1024px;">
-    <table class="table table-bordered table-condensed" style="table-layout: fixed;" v-if="settings">
+    <table
+      v-if="settings"
+      class="table table-bordered table-condensed"
+      style="table-layout: fixed;"
+    >
       <colgroup>
-        <col width="36" v-if="params.dynamicRows && !disabled" />
-        <col v-for="(_, i) in params.columns.titles" :key="i" :width="settings[i].width" />
+        <col
+          v-if="params.dynamicRows && !disabled"
+          width="36"
+        >
+        <col
+          v-for="(_, i) in params.columns.titles"
+          :key="i"
+          :width="settings[i].width"
+        >
       </colgroup>
       <thead>
         <tr>
-          <td v-if="params.dynamicRows && !disabled"></td>
-          <th v-for="(t, i) in params.columns.titles" :key="i">
+          <td v-if="params.dynamicRows && !disabled" />
+          <th
+            v-for="(t, i) in params.columns.titles"
+            :key="i"
+          >
             {{ t }}
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(r, j) in rows" :key="j">
-          <td class="cl-td" v-if="params.dynamicRows && !disabled">
-            <button class="btn btn-blue-nb nbr" @click="deleteRow(j)" title="Удалить строку" v-tippy>
-              <i class="fa fa-times"></i>
+        <tr
+          v-for="(r, j) in rows"
+          :key="j"
+        >
+          <td
+            v-if="params.dynamicRows && !disabled"
+            class="cl-td"
+          >
+            <button
+              v-tippy
+              class="btn btn-blue-nb nbr"
+              title="Удалить строку"
+              @click="deleteRow(j)"
+            >
+              <i class="fa fa-times" />
             </button>
           </td>
-          <td v-for="(_, i) in params.columns.titles" :key="i" class="cl-td" :class="settings[i].type === 2 && 'mkb'">
+          <td
+            v-for="(_, i) in params.columns.titles"
+            :key="i"
+            class="cl-td"
+            :class="settings[i].type === 2 && 'mkb'"
+          >
             <div
               v-if="settings[i].type === 'rowNumber' || (disabled && ![32, 33, 34, 35, 36].includes(settings[i].type))"
               class="just-val"
@@ -30,92 +60,105 @@
             </div>
             <template v-else-if="settings[i].type === 0">
               <textarea
+                v-if="settings[i].lines > 1"
+                v-model="r[i]"
                 :rows="settings[i].lines"
                 class="form-control"
                 :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
-                v-if="settings[i].lines > 1"
+              />
+              <input
+                v-else
                 v-model="r[i]"
-              ></textarea>
-              <input class="form-control" :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'" v-else v-model="r[i]" />
+                class="form-control"
+                :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              >
             </template>
-            <DateFieldWithNow v-else-if="settings[i].type === 1" v-model="r[i]" />
+            <DateFieldWithNow
+              v-else-if="settings[i].type === 1"
+              v-model="r[i]"
+            />
             <SelectField
+              v-else-if="settings[i].type === 10"
+              v-model="r[i]"
               :variants="settings[i].variants"
               class="form-control fw"
               :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
-              v-else-if="settings[i].type === 10"
-              v-model="r[i]"
             />
-            <RadioField :variants="settings[i].variants" v-else-if="settings[i].type === 12" v-model="r[i]" />
+            <RadioField
+              v-else-if="settings[i].type === 12"
+              v-model="r[i]"
+              :variants="settings[i].variants"
+            />
             <input
-              class="form-control"
-              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-else-if="settings[i].type === 18"
               v-model="r[i]"
+              class="form-control"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               type="number"
-            />
+            >
             <MKBFieldForm
               v-else-if="settings[i].type === 2"
+              v-model="r[i]"
               :classes="errors[`${fieldPk}_${j}_${i}`] ? 'has-error-field' : ''"
               :short="false"
-              v-model="r[i]"
               :field-pk-initial="r[i]"
               :iss_pk="iss_pk"
               :client-pk="card_pk"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 34"
-              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-model="r[i]"
-              @modified="changeCell(j, i, $event)"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               dictionary="mkb10.4"
               :disabled="disabled"
               :field-pk-initial="r[i]"
               :iss_pk="iss_pk"
               :client-pk="card_pk"
+              @modified="changeCell(j, i, $event)"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 33"
-              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-model="r[i]"
-              @modified="changeCell(j, i, $event)"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               dictionary="mkb10.5"
               :disabled="disabled"
               :field-pk-initial="r[i]"
               :iss_pk="iss_pk"
               :client-pk="card_pk"
+              @modified="changeCell(j, i, $event)"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 32"
-              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-model="r[i]"
-              @modified="changeCell(j, i, $event)"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               dictionary="mkb10.6"
               :disabled="disabled"
               :field-pk-initial="r[i]"
               :iss_pk="iss_pk"
               :client-pk="card_pk"
+              @modified="changeCell(j, i, $event)"
             />
             <MKBFieldTreeselect
               v-else-if="settings[i].type === 36"
-              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-model="r[i]"
-              @modified="changeCell(j, i, $event)"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               dictionary="mkb10.combined"
               :disabled="disabled"
               :field-pk-initial="r[i]"
               :iss_pk="iss_pk"
               :client-pk="card_pk"
+              @modified="changeCell(j, i, $event)"
             />
             <DoctorProfileTreeselectField
               v-else-if="settings[i].type === 35"
-              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-model="r[i]"
-              @modified="changeCell(j, i, $event)"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               :disabled="disabled"
+              @modified="changeCell(j, i, $event)"
             />
             <SearchFieldValueField
               v-else-if="settings[i].type === 23"
+              v-model="r[i]"
               :readonly="false"
               :field-pk-initial="r[i]"
               :once="true"
@@ -124,23 +167,31 @@
               :raw="true"
               :not_autoload_result="false"
               :iss_pk="iss_pk"
-              v-model="r[i]"
             />
 
-            <div v-if="errors[`${fieldPk}_${j}_${i}`]" class="has-error-message">
+            <div
+              v-if="errors[`${fieldPk}_${j}_${i}`]"
+              class="has-error-message"
+            >
               {{ errors[`${fieldPk}_${j}_${i}`] }}
             </div>
           </td>
         </tr>
         <tr v-if="params.dynamicRows && !disabled">
           <td :colspan="params.columns.count + 1">
-            <button class="btn btn-blue-nb" @click="addRow">добавить строку</button>
+            <button
+              class="btn btn-blue-nb"
+              @click="addRow"
+            >
+              добавить строку
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
+
 <script lang="ts">
 import _ from 'lodash';
 import { debounce } from 'debounce';
@@ -171,6 +222,9 @@ export default {
     MKBFieldTreeselect,
     DoctorProfileTreeselectField,
   },
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -191,13 +245,6 @@ export default {
     },
     card_pk: Number,
     iss_pk: Number,
-  },
-  mounted() {
-    this.checkTable();
-    this.$root.$on('checkTables', () => setTimeout(() => this.checkTable(), 50));
-  },
-  beforeDestroy() {
-    this.hasErrors = false;
   },
   data() {
     return {
@@ -266,8 +313,12 @@ export default {
       },
     },
   },
-  model: {
-    event: 'modified',
+  mounted() {
+    this.checkTable();
+    this.$root.$on('checkTables', () => setTimeout(() => this.checkTable(), 50));
+  },
+  beforeDestroy() {
+    this.hasErrors = false;
   },
   methods: {
     changeCell(j, i, v) {

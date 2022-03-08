@@ -1,39 +1,58 @@
 <template>
-  <modal ref="modal" @close="close" show-footer="true" white-bg="true" max-width="50%" min-width="800px" width="50%"
-         marginLeftRight="auto" margin-top="48px">
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    max-width="50%"
+    min-width="800px"
+    width="50%"
+    margin-left-right="auto"
+    margin-top="48px"
+    @close="close"
+  >
     <span slot="header">Настройка референсов результата</span>
-    <div slot="body" style="min-height: 340px">
+    <div
+      slot="body"
+      style="min-height: 340px"
+    >
       <table class="table table-bordered table-condensed">
         <colgroup>
-          <col width="200"/>
-          <col width="200"/>
-          <col />
+          <col width="200">
+          <col width="200">
+          <col>
         </colgroup>
         <thead>
-        <tr>
-          <th>Фракция</th>
-          <th>Выброр референса</th>
-          <th>Референс</th>
-        </tr>
+          <tr>
+            <th>Фракция</th>
+            <th>Выброр референса</th>
+            <th>Референс</th>
+          </tr>
         </thead>
         <tbody>
-        <!-- eslint-disable-next-line vue/require-v-for-key -->
-        <tr v-for="r in result">
-          <RefSettingsRow :r="r"/>
-        </tr>
+          <!-- eslint-disable-next-line vue/require-v-for-key -->
+          <tr v-for="r in result">
+            <RefSettingsRow :r="r" />
+          </tr>
         </tbody>
       </table>
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-5" style="float: right">
-          <button @click="closeWithFastHide" class="btn btn-primary-nb btn-blue-nb" type="button">
+        <div
+          class="col-xs-5"
+          style="float: right"
+        >
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="closeWithFastHide"
+          >
             Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">

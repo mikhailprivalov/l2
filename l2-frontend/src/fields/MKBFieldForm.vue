@@ -1,19 +1,19 @@
 <template>
   <TypeAhead
-    src="/api/mkb10?keyword=:keyword"
-    :getResponse="resp => [...resp.data.data]"
-    :onHit="onHit"
     ref="d"
-    placeholder="Диагноз (МКБ 10)"
-    NoResultText="Не найдено"
     v-model="content"
+    src="/api/mkb10?keyword=:keyword"
+    :get-response="resp => [...resp.data.data]"
+    :on-hit="onHit"
+    placeholder="Диагноз (МКБ 10)"
+    no-result-text="Не найдено"
     maxlength="255"
-    :delayTime="200"
-    :minChars="1"
+    :delay-time="200"
+    :min-chars="1"
     :render="items => items.map(i => `${i.code} ${i.title}`)"
     :limit="11"
     :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
-    :selectFirst="true"
+    :select-first="true"
     :classes="classes"
   />
 </template>
@@ -24,6 +24,9 @@ import TypeAhead from 'vue2-typeahead';
 import directionsPoint from '@/api/directions-point';
 
 export default {
+  components: {
+    TypeAhead,
+  },
   props: {
     value: String,
     classes: {
@@ -56,20 +59,11 @@ export default {
       default: -1,
     },
   },
-  components: {
-    TypeAhead,
-  },
   data() {
     return {
       content: this.value,
       fpkInitial: this.fieldPkInitial,
     };
-  },
-  mounted() {
-    if (this.isStaticLink) {
-      this.content = '';
-      this.loadLast();
-    }
   },
   computed: {
     isStaticLink() {
@@ -166,6 +160,12 @@ export default {
       this.content = s1 + (s2 !== '' ? ` ${s2}` : '');
       this.$emit('input', this.content);
     },
+  },
+  mounted() {
+    if (this.isStaticLink) {
+      this.content = '';
+      this.loadLast();
+    }
   },
   methods: {
     onHit(item) {

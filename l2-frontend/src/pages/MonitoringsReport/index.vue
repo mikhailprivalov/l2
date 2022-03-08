@@ -1,41 +1,67 @@
 <template>
   <div class="dash-root">
     <div class="mode-select">
-      <RadioField :variants="MODES" v-model="mode" />
+      <RadioField
+        v-model="mode"
+        :variants="MODES"
+      />
     </div>
-    <div v-if="mode === MODE_DASHBOARD" class="dashboard">
+    <div
+      v-if="mode === MODE_DASHBOARD"
+      class="dashboard"
+    >
       <div class="filters">
         <div class="row">
-          <div class="col-xs-6" style="padding-right: 5px">
-            <treeselect
+          <div
+            class="col-xs-6"
+            style="padding-right: 5px"
+          >
+            <Treeselect
+              v-model="dashboardPk"
               :multiple="false"
               :disable-branch-nodes="true"
               :options="dashboards"
               placeholder="Дэшборд не выбран"
-              v-model="dashboardPk"
               :append-to-body="true"
               class="treeselect-wide treeselect-32px"
             />
           </div>
-          <div class="col-xs-6" style="padding-left: 5px">
-            <div class="input-group" style="max-width: 300px">
+          <div
+            class="col-xs-6"
+            style="padding-left: 5px"
+          >
+            <div
+              class="input-group"
+              style="max-width: 300px"
+            >
               <span class="input-group-addon">
                 <span class="hidden-xs hidden-sm">Дата</span>
-                <i class="fa fa-calendar visible-xs visible-sm"></i>
+                <i class="fa fa-calendar visible-xs visible-sm" />
               </span>
-              <input class="form-control" type="date" v-model="dateDashboard" />
+              <input
+                v-model="dateDashboard"
+                class="form-control"
+                type="date"
+              >
               <span class="input-group-btn">
-                <button class="btn btn-blue-nb" @click="loadDashboard">
-                  Загрузить
-                </button>
+                <button
+                  class="btn btn-blue-nb"
+                  @click="loadDashboard"
+                >Загрузить</button>
               </span>
             </div>
           </div>
         </div>
       </div>
-      <h4 v-if="dashboard.title">{{ dashboard.title }} — {{ loadedDashboardDateString }}</h4>
+      <h4 v-if="dashboard.title">
+        {{ dashboard.title }} — {{ loadedDashboardDateString }}
+      </h4>
       <div class="row">
-        <div class="col-xs-12 col-md-6 col-xl-4" v-for="c in charts" :key="c.pk">
+        <div
+          v-for="c in charts"
+          :key="c.pk"
+          class="col-xs-12 col-md-6 col-xl-4"
+        >
           <div class="card-no-hover card card-1 chart">
             <h6>{{ c.title }}</h6>
             <div class="chart-inner">
@@ -50,68 +76,116 @@
         </div>
       </div>
     </div>
-    <div v-else-if="mode === MODE_SEARCH" :style="`--font-size-mon: ${fontSize}px;`" class="report-root">
+    <div
+      v-else-if="mode === MODE_SEARCH"
+      :style="`--font-size-mon: ${fontSize}px;`"
+      class="report-root"
+    >
       <div class="filters">
         <div class="row">
-          <div class="col-xs-12 col-md-4" style="margin-bottom: 5px;">
+          <div
+            class="col-xs-12 col-md-4"
+            style="margin-bottom: 5px"
+          >
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">
                 <span class="hidden-xs hidden-sm">Мониторинг</span>
-                <i class="fas fa-search visible-xs visible-sm"></i>
+                <i class="fas fa-search visible-xs visible-sm" />
               </span>
-              <treeselect
+              <Treeselect
+                v-model="research"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="monitorings"
                 placeholder="Мониторинг не выбран"
-                v-model="research"
                 :append-to-body="true"
                 class="treeselect-wide"
               />
             </div>
           </div>
-          <div class="col-xs-9 col-md-6" style="padding-right: 5px">
+          <div
+            class="col-xs-9 col-md-6"
+            style="padding-right: 5px"
+          >
             <div class="input-group">
               <span class="input-group-addon">
                 <span class="hidden-xs">Дата<span class="hidden-sm"> или начало периода</span></span>
-                <i class="fa fa-calendar visible-xs"></i>
+                <i class="fa fa-calendar visible-xs" />
               </span>
-              <input class="form-control" type="date" v-model="date" style="min-width: 140px;width: 100%;" />
+              <input
+                v-model="date"
+                class="form-control"
+                type="date"
+                style="min-width: 140px; width: 100%"
+              >
               <span class="input-group-addon">Час</span>
-              <select class="form-control" v-model="hour" style="width: 80px">
-                <option v-for="h in HOURS" :key="h.id" :value="h.id">{{ h.label }}</option>
+              <select
+                v-model="hour"
+                class="form-control"
+                style="width: 80px"
+              >
+                <option
+                  v-for="h in HOURS"
+                  :key="h.id"
+                  :value="h.id"
+                >
+                  {{ h.label }}
+                </option>
               </select>
             </div>
           </div>
-          <div class="col-xs-3 col-md-2" style="padding-left: 5px">
-            <button class="btn btn-blue-nb" @click="loadSearch" :disabled="research === null" ref="loadButton">
+          <div
+            class="col-xs-3 col-md-2"
+            style="padding-left: 5px"
+          >
+            <button
+              ref="loadButton"
+              class="btn btn-blue-nb"
+              :disabled="research === null"
+              @click="loadSearch"
+            >
               Загрузить
             </button>
 
             <button
+              v-tippy
               class="btn btn-blue-nb"
-              @click="print_data"
               :disabled="!data"
               title="Сохранение отображённых данных в XLSX"
-              v-tippy
+              @click="print_data"
             >
-              <i class="fas fa-download"></i>
+              <i class="fas fa-download" />
             </button>
           </div>
         </div>
       </div>
       <div>
         <div class="text-right font-settings">
-          <a href="#" @click.prevent="decFont()" class="a-under-reversed" title="Уменьшить шрифт таблицы" v-tippy>-A</a>
+          <a
+            v-tippy
+            href="#"
+            class="a-under-reversed"
+            title="Уменьшить шрифт таблицы"
+            @click.prevent="decFont()"
+          >-A</a>
           &nbsp;
-          <a href="#" @click.prevent="incFont()" class="a-under-reversed" title="Увеличить шрифт таблицы" v-tippy>+A</a>
+          <a
+            v-tippy
+            href="#"
+            class="a-under-reversed"
+            title="Увеличить шрифт таблицы"
+            @click.prevent="incFont()"
+          >+A</a>
         </div>
       </div>
-      <div class="scroll-container" v-if="data">
+      <div
+        v-if="data"
+        class="scroll-container"
+      >
         <table class="table table-bordered table-condensed table-striped">
           <colgroup>
-            <col style="width: 220px" />
-            <col style="width: 85px" />
+            <col style="width: 220px">
+            <col style="width: 85px">
           </colgroup>
           <thead v-if="data.rows.length > 0">
             <tr>
@@ -124,8 +198,15 @@
             </tr>
           </thead>
           <tbody v-if="data.rows.length > 0">
-            <tr v-for="(r, i) in data.rows" :key="i">
-              <td :title="`${r.hospTitle} – ${r.confirm}`" v-tippy v-html="r.hospTitle || '&nbsp;'">
+            <tr
+              v-for="(r, i) in data.rows"
+              :key="i"
+            >
+              <td
+                v-tippy
+                :title="`${r.hospTitle} – ${r.confirm}`"
+                v-html="/*eslint-disable-line vue/no-v-html*/ r.hospTitle || '&nbsp;'"
+              >
                 {{ r.hospTitle }}
               </td>
               <td>
@@ -133,7 +214,12 @@
               </td>
             </tr>
             <tr v-if="data.total && data.total.length > 0">
-              <th colspan="2" class="text-right">Итого</th>
+              <th
+                colspan="2"
+                class="text-right"
+              >
+                Итого
+              </th>
             </tr>
           </tbody>
           <thead v-if="data.rows.length > 0">
@@ -147,8 +233,15 @@
             </tr>
           </thead>
           <tbody v-if="data.empty_hospital.length > 0">
-            <tr v-for="(h, i) in data.empty_hospital" :key="`empty_${i}`">
-              <th :title="h" v-tippy v-html="h || '&nbsp;'"></th>
+            <tr
+              v-for="(h, i) in data.empty_hospital"
+              :key="`empty_${i}`"
+            >
+              <th
+                v-tippy
+                :title="h"
+                v-html="/*eslint-disable-line vue/no-v-html*/ h || '&nbsp;'"
+              />
               <th>пусто</th>
             </tr>
           </tbody>
@@ -159,7 +252,11 @@
         >
           <colgroup>
             <template v-for="(t, i) in data.titles">
-              <col v-for="(f, j) in t.fields" :key="`${i}_${j}`" width="140" />
+              <col
+                v-for="(f, j) in t.fields"
+                :key="`${i}_${j}`"
+                width="140"
+              >
             </template>
           </colgroup>
           <thead v-if="data.rows.length > 0">
@@ -167,38 +264,41 @@
               <th
                 v-for="(t, i) in data.titles"
                 :key="i"
+                v-tippy
                 :colspan="t.fields.length"
                 class="param-title group-start group-end"
                 :title="t.groupTitle"
-                v-tippy
-                v-html="t.groupTitle || '&nbsp;'"
-              ></th>
+                v-html="/*eslint-disable-line vue/no-v-html*/ t.groupTitle || '&nbsp;'"
+              />
             </tr>
             <tr>
               <template v-for="(t, i) in data.titles">
                 <th
                   v-for="(f, j) in t.fields"
                   :key="`${i}_${j}`"
+                  v-tippy
                   class="param-title"
                   :class="[j === 0 && 'group-start', j + 1 === t.fields.length && 'group-end']"
                   :title="`${t.groupTitle} — ${f}`"
-                  v-tippy
-                  v-html="f || '&nbsp;'"
-                ></th>
+                  v-html="/*eslint-disable-line vue/no-v-html*/ f || '&nbsp;'"
+                />
               </template>
             </tr>
           </thead>
           <tbody v-if="data.rows.length > 0">
-            <tr v-for="(r, i) in data.rows" :key="i">
+            <tr
+              v-for="(r, i) in data.rows"
+              :key="i"
+            >
               <template v-for="(v, j) in r.values">
                 <td
                   v-for="(rv, k) in v"
                   :key="`${i}_${j}_${k}`"
+                  v-tippy
                   :class="[k === 0 && 'group-start', k + 1 === v.length && 'group-end']"
                   :title="`${data.titles[j].groupTitle} — ${data.titles[j].fields[k]}: ${rv}`"
-                  v-tippy
-                  v-html="rv || '&nbsp;'"
-                ></td>
+                  v-html="/*eslint-disable-line vue/no-v-html*/ rv || '&nbsp;'"
+                />
               </template>
             </tr>
             <tr v-if="data.total && data.total.length > 0">
@@ -206,11 +306,11 @@
                 <td
                   v-for="(rv, k) in v"
                   :key="`total_${j}_${k}`"
+                  v-tippy
                   :class="[k === 0 && 'group-start', k + 1 === v.length && 'group-end']"
                   :title="`Итого — ${data.titles[j].groupTitle} — ${data.titles[j].fields[k]}: ${rv}`"
-                  v-tippy
-                  v-html="rv || '&nbsp;'"
-                ></td>
+                  v-html="/*eslint-disable-line vue/no-v-html*/ rv || '&nbsp;'"
+                />
               </template>
             </tr>
           </tbody>
@@ -220,29 +320,34 @@
                 <th
                   v-for="(f, j) in t.fields"
                   :key="`${i}_${j}`"
+                  v-tippy
                   class="param-title"
                   :class="[j === 0 && 'group-start', j + 1 === t.fields.length && 'group-end']"
                   :title="`${t.groupTitle} — ${f}`"
-                  v-tippy
-                  v-html="f || '&nbsp;'"
-                ></th>
+                  v-html="/*eslint-disable-line vue/no-v-html*/ f || '&nbsp;'"
+                />
               </template>
             </tr>
             <tr>
               <th
                 v-for="(t, i) in data.titles"
                 :key="i"
+                v-tippy
                 :colspan="t.fields.length"
                 class="param-title group-start group-end"
                 :title="t.groupTitle"
-                v-tippy
-                v-html="t.groupTitle || '&nbsp;'"
-              ></th>
+                v-html="/*eslint-disable-line vue/no-v-html*/ t.groupTitle || '&nbsp;'"
+              />
             </tr>
           </thead>
           <tbody v-if="data.titles.reduce((a, b) => a + b.fields.length, 0) > 0 && data.empty_hospital.length > 0">
-            <tr v-for="(h, i) in data.empty_hospital" :key="`empty_${i}`">
-              <td :colspan="data.titles.reduce((a, b) => a + b.fields.length, 0)">&nbsp;</td>
+            <tr
+              v-for="(h, i) in data.empty_hospital"
+              :key="`empty_${i}`"
+            >
+              <td :colspan="data.titles.reduce((a, b) => a + b.fields.length, 0)">
+&nbsp;
+              </td>
             </tr>
           </tbody>
         </table>
@@ -320,22 +425,10 @@ export default {
       charts: [],
     };
   },
-  watch: {
-    mode: {
-      handler() {
-        if (this.mode === MODE_SEARCH) {
-          this.entryToSearch();
-        } else if (this.mode === MODE_DASHBOARD) {
-          this.entryToDashboard();
-        }
-      },
-      immediate: true,
-    },
-  },
   computed: {
     ...mapGetters(['researches']),
     monitorings() {
-      return (this.researches['-12'] || []).map(r => ({ id: r.pk, label: r.title }));
+      return (this.researches['-12'] || []).map((r) => ({ id: r.pk, label: r.title }));
     },
     canIncFont() {
       return this.fontSize < MAX_FONT;
@@ -350,6 +443,18 @@ export default {
       }
 
       return `${parts[2]}.${parts[1]}.${parts[0]}`;
+    },
+  },
+  watch: {
+    mode: {
+      handler() {
+        if (this.mode === MODE_SEARCH) {
+          this.entryToSearch();
+        } else if (this.mode === MODE_DASHBOARD) {
+          this.entryToDashboard();
+        }
+      },
+      immediate: true,
     },
   },
   methods: {
@@ -387,7 +492,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       this.loadedDashboardDate = this.dateDashboard;
       this.dashboard = {
-        title: (this.dashboards.find(d => d.id === this.dashboardPk) || {}).label,
+        title: (this.dashboards.find((d) => d.id === this.dashboardPk) || {}).label,
       };
       const { rows } = await this.$api('/monitorings/dashboard', {
         dashboard: this.dashboardPk,
@@ -416,7 +521,7 @@ export default {
           'X-CSRFToken': Cookies.get('csrftoken'),
         },
       })
-        .then(response => {
+        .then((response) => {
           const blob = new Blob([response.data], { type: 'application/ms-excel' });
           const downloadUrl = window.URL.createObjectURL(blob);
           let filename = '';
@@ -436,7 +541,7 @@ export default {
             a.click();
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error(error);
           this.$root.$emit('msg', 'error', 'Сохранить данные в виде XLSX не удалось');
         });
@@ -458,9 +563,9 @@ export default {
         },
         [{ BAR: 'xaxis', COLUMN: 'xaxis', PIE: 'labels' }[c.type] || 'xaxis']:
           c.type === 'PIE'
-            ? c.data.map(d => d.title)
+            ? c.data.map((d) => d.title)
             : {
-              categories: c.data.map(d => d.title),
+              categories: c.data.map((d) => d.title),
             },
         plotOptions: {
           bar: {
@@ -480,9 +585,9 @@ export default {
     },
     getSeries(c) {
       if (c.type === 'PIE' && c.fields.length === 1) {
-        return c.data.map(d => d.values[0]);
+        return c.data.map((d) => d.values[0]);
       }
-      return c.fields.map((name, i) => ({ name, data: c.data.map(d => Number(d.values[i]) || 0) }));
+      return c.fields.map((name, i) => ({ name, data: c.data.map((d) => Number(d.values[i]) || 0) }));
     },
   },
 };

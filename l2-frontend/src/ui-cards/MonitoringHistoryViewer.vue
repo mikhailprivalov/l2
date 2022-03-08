@@ -1,24 +1,27 @@
 <template>
   <div class="table-root">
-    <div class="inner" ref="scroll">
+    <div
+      ref="scroll"
+      class="inner"
+    >
       <div class="filters">
         <treeselect
+          v-model="filterResearches"
           :multiple="true"
           :disable-branch-nodes="true"
           :options="monitorings"
           placeholder="Все мониторинги"
-          v-model="filterResearches"
         />
       </div>
       <table class="table table-bordered table-condensed table-sm-pd layout">
         <colgroup>
-          <col style="width: 80px" />
-          <col />
-          <col />
-          <col style="width: 150px" />
-          <col />
-          <col style="width: 140px" />
-          <col style="width: 40px" />
+          <col style="width: 80px">
+          <col>
+          <col>
+          <col style="width: 150px">
+          <col>
+          <col style="width: 140px">
+          <col style="width: 40px">
         </colgroup>
         <thead>
           <tr>
@@ -29,48 +32,96 @@
             <th>Автор</th>
             <th>Статус</th>
             <th class="text-center">
-              <a class="a-under" href="#" @click.prevent="reload()" title="Перезагрузить список" v-tippy>
-                <i class="fa fa-refresh"></i>
+              <a
+                v-tippy
+                class="a-under"
+                href="#"
+                title="Перезагрузить список"
+                @click.prevent="reload()"
+              >
+                <i class="fa fa-refresh" />
               </a>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.pk" :class="[r.isSaved && 'row-saved', r.isConfirmed && 'row-confirmed']">
+          <tr
+            v-for="r in rows"
+            :key="r.pk"
+            :class="[r.isSaved && 'row-saved', r.isConfirmed && 'row-confirmed']"
+          >
             <td>{{ r.pk }}</td>
             <td>{{ r.title }}</td>
             <td>
               <ul>
-                <li v-for="(p, i) in r.params" :key="i">
+                <li
+                  v-for="(p, i) in r.params"
+                  :key="i"
+                >
                   <strong v-if="p.title">{{ p.title }}:</strong>
-                  <span class="empty-v" v-if="!p.value">пусто</span>
+                  <span
+                    v-if="!p.value"
+                    class="empty-v"
+                  >пусто</span>
                   <span v-else>{{ p.value }}</span>
                 </li>
               </ul>
             </td>
             <td>{{ r.lastActionAt }}</td>
             <td>{{ r.author }}</td>
-            <th v-if="r.isConfirmed">подтверждено</th>
-            <th v-else-if="r.isSaved">сохранено</th>
-            <th v-else>не сохранено</th>
+            <th v-if="r.isConfirmed">
+              подтверждено
+            </th>
+            <th v-else-if="r.isSaved">
+              сохранено
+            </th>
+            <th v-else>
+              не сохранено
+            </th>
             <td class="cl-td">
-              <button class="btn btn-blue-nb btn-sm btn-block" @click="openForm(r.pk)" title="Открыть форму" v-tippy>
-                <i class="fas fa-eye " v-if="r.isConfirmed"></i>
-                <i class="fa fa-pencil" v-else></i>
+              <button
+                v-tippy
+                class="btn btn-blue-nb btn-sm btn-block"
+                title="Открыть форму"
+                @click="openForm(r.pk)"
+              >
+                <i
+                  v-if="r.isConfirmed"
+                  class="fas fa-eye "
+                />
+                <i
+                  v-else
+                  class="fa fa-pencil"
+                />
               </button>
             </td>
           </tr>
           <tr v-if="nextOffset !== null">
-            <td class="text-center" colspan="7">
-              <button class="btn btn-blue-nb btn-sm" @click="loadNext()" ref="loadButton">
-                <span class="hidden-spinner"><i class="fa fa-spinner"></i></span>
+            <td
+              class="text-center"
+              colspan="7"
+            >
+              <button
+                ref="loadButton"
+                class="btn btn-blue-nb btn-sm"
+                @click="loadNext()"
+              >
+                <span class="hidden-spinner"><i class="fa fa-spinner" /></span>
                 Загрузить ещё
-                <span :class="!listLoading && 'hidden-spinner'" class="loader"><i class="fa fa-spinner"></i></span>
+                <span
+                  :class="!listLoading && 'hidden-spinner'"
+                  class="loader"
+                ><i class="fa fa-spinner" /></span>
               </button>
             </td>
           </tr>
           <tr v-if="inited">
-            <td class="text-center" colspan="7">показано {{ rows.length }} из {{ total | pluralRecords }}</td>
+            <td
+              class="text-center"
+              colspan="7"
+            >
+              показано {{ rows.length }} из {{ total | pluralRecords }}
+            </td>
           </tr>
         </tbody>
       </table>

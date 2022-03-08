@@ -1,18 +1,37 @@
 <template>
   <div v-frag>
-    <div class="input-group" v-if="showNow">
-      <span class="input-group-btn" v-if="!disabled">
-        <button type="button"
-                @click="setNow"
-                class="btn btn-default btn-primary-nb btn30"
-                title="Сегодня"
-                v-tippy>
-          <i class="fa fa-circle"></i>
+    <div
+      v-if="showNow"
+      class="input-group"
+    >
+      <span
+        v-if="!disabled"
+        class="input-group-btn"
+      >
+        <button
+          v-tippy
+          type="button"
+          class="btn btn-default btn-primary-nb btn30"
+          title="Сегодня"
+          @click="setNow"
+        >
+          <i class="fa fa-circle" />
         </button>
       </span>
-      <input type="date" class="form-control no-context" v-model="val" :disabled="disabled"/>
+      <input
+        v-model="val"
+        type="date"
+        class="form-control no-context"
+        :disabled="disabled"
+      >
     </div>
-    <input v-else type="date" class="form-control no-context full" v-model="val" :disabled="disabled"/>
+    <input
+      v-else
+      v-model="val"
+      type="date"
+      class="form-control no-context full"
+      :disabled="disabled"
+    >
   </div>
 </template>
 
@@ -20,6 +39,9 @@
 import moment from 'moment';
 
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: true,
@@ -35,6 +57,11 @@ export default {
       type: Boolean,
     },
   },
+  data() {
+    return {
+      val: this.value,
+    };
+  },
   watch: {
     value: {
       handler() {
@@ -47,14 +74,6 @@ export default {
     val() {
       this.changeValue();
     },
-  },
-  data() {
-    return {
-      val: this.value,
-    };
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     changeValue() {

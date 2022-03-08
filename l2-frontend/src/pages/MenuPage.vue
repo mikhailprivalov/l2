@@ -6,65 +6,124 @@
           <div class="row">
             <div class="col-xs-12 col-md-6 col-lg-6">
               Вход выполнен как: {{ user_data.username }}
-              <a href="#" class="a-under" @click="modalPassword = true" v-if="changePassword">сменить&nbsp;пароль</a>
+              <a
+                v-if="changePassword"
+                href="#"
+                class="a-under"
+                @click="modalPassword = true"
+              >сменить&nbsp;пароль</a>
               <template v-if="changePassword">
-                <br />
+                <br>
                 Email:
-                <a href="#" class="a-under-reversed" @click="modalEmail = true" v-if="email" title="Редактировать адрес" v-tippy>
-                  <span class="a-internal">{{ email }}</span> <i class="fa fa-pencil"></i>
+                <a
+                  v-if="email"
+                  v-tippy
+                  href="#"
+                  class="a-under-reversed"
+                  title="Редактировать адрес"
+                  @click="modalEmail = true"
+                >
+                  <span class="a-internal">{{ email }}</span> <i class="fa fa-pencil" />
                 </a>
-                <a href="#" class="a-under" @click="modalEmail = true" v-else>установить email</a>
+                <a
+                  v-else
+                  href="#"
+                  class="a-under"
+                  @click="modalEmail = true"
+                >установить email</a>
               </template>
             </div>
             <div class="col-xs-12 col-md-6 col-lg-6 text-right text-left-xs">
               {{ fio_dep }}
-              <br />
-              <a href="/logout" class="btn btn-blue-nb">Выход</a>
+              <br>
+              <a
+                href="/logout"
+                class="btn btn-blue-nb"
+              >Выход</a>
             </div>
           </div>
         </li>
         <li class="list-group-item">
           Ваши права доступа и группы:
           <div class="row dash-buttons groups-btns">
-            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5" v-for="g in user_data.groups" :key="g">
-              <div class="label label-default bw100 btn-ell" :title="g">{{ g }}</div>
+            <div
+              v-for="g in user_data.groups"
+              :key="g"
+              class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5"
+            >
+              <div
+                class="label label-default bw100 btn-ell"
+                :title="g"
+              >
+                {{ g }}
+              </div>
             </div>
           </div>
         </li>
-        <li class="list-group-item" v-if="user_data.specialities && user_data.specialities.length > 0">
+        <li
+          v-if="user_data.specialities && user_data.specialities.length > 0"
+          class="list-group-item"
+        >
           Специальности:
-          <div class="row dash-buttons groups-btns" v-for="s in user_data.specialities" :key="s">
+          <div
+            v-for="s in user_data.specialities"
+            :key="s"
+            class="row dash-buttons groups-btns"
+          >
             <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5">
-              <div class="label label-default bw100 btn-ell" :title="s">{{ s }}</div>
+              <div
+                class="label label-default bw100 btn-ell"
+                :title="s"
+              >
+                {{ s }}
+              </div>
             </div>
           </div>
         </li>
       </ul>
     </div>
     <div class="row menu dash-buttons text-center">
-      <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn" v-for="b in buttons" :key="b.title">
-        <router-link :to="b.url" class="panel-body" :target="b.nt && '_blank'">
+      <div
+        v-for="b in buttons"
+        :key="b.title"
+        class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn"
+      >
+        <router-link
+          :to="b.url"
+          class="panel-body"
+          :target="b.nt && '_blank'"
+        >
           <span>{{ b.title }}</span>
         </router-link>
       </div>
     </div>
-    <hr />
+    <hr>
     <div class="row dash-buttons text-center">
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info">
         <div class="panel-body">
           <span>
             <span>{{ system }}</span>
-            <br />
+            <br>
             <span>{{ menu.version }}</span>
           </span>
         </div>
       </div>
-      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info" v-if="menu.region === '38'">
-        <a href="http://l2-irk.ru" target="_blank" class="panel-body">
+      <div
+        v-if="menu.region === '38'"
+        class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info"
+      >
+        <a
+          href="http://l2-irk.ru"
+          target="_blank"
+          class="panel-body"
+        >
           <span>l2-irk.ru</span>
         </a>
       </div>
-      <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb10 dash-btn dash-info" v-else-if="menu.region === 'DEMO'">
+      <div
+        v-else-if="menu.region === 'DEMO'"
+        class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb10 dash-btn dash-info"
+      >
         <div class="panel-body">
           <span>
             <span>DEMO</span>
@@ -72,37 +131,61 @@
         </div>
       </div>
     </div>
-    <MountingPortal mountTo="#portal-place-modal" name="ChangePassword" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="ChangePassword"
+      append
+    >
       <transition name="fade">
         <Modal
           v-if="modalPassword"
-          @close="modalPassword = false"
           show-footer="true"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
-          :noClose="!!loading"
+          margin-left-right="auto"
+          :no-close="!!loading"
+          @close="modalPassword = false"
         >
           <span slot="header">Смена пароля</span>
-          <div slot="body" class="popup-body" v-if="email">
+          <div
+            v-if="email"
+            slot="body"
+            class="popup-body"
+          >
             Ваш email: <strong>{{ email }}</strong>
-            <br />
-            Новый пароль будет отправлен вам на почту!<br />
-            После получения пароля войдите в систему заново.<br />
+            <br>
+            Новый пароль будет отправлен вам на почту!<br>
+            После получения пароля войдите в систему заново.<br>
             Все активные сессии будут прекращены (включая текущую).
-            <br /><br />
-            <button @click="doChangePassword" class="btn btn-blue-nb" :disabled="loading" type="button">
+            <br><br>
+            <button
+              class="btn btn-blue-nb"
+              :disabled="loading"
+              type="button"
+              @click="doChangePassword"
+            >
               Сменить пароль
             </button>
           </div>
-          <div slot="body" class="popup-body" v-else>
-            <div class="alert-modal">В вашем профиле не настроен <strong>email адрес</strong>!</div>
+          <div
+            v-else
+            slot="body"
+            class="popup-body"
+          >
+            <div class="alert-modal">
+              В вашем профиле не настроен <strong>email адрес</strong>!
+            </div>
           </div>
           <div slot="footer">
             <div class="row">
               <div class="col-xs-12 text-right">
-                <button @click="modalPassword = false" class="btn btn-blue-nb" :disabled="loading" type="button">
+                <button
+                  class="btn btn-blue-nb"
+                  :disabled="loading"
+                  type="button"
+                  @click="modalPassword = false"
+                >
                   Закрыть
                 </button>
               </div>
@@ -111,94 +194,132 @@
         </Modal>
       </transition>
     </MountingPortal>
-    <MountingPortal mountTo="#portal-place-modal" name="Email" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="Email"
+      append
+    >
       <transition name="fade">
         <Modal
           v-if="modalEmail"
-          @close="modalEmail = false"
           show-footer="true"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
-          :noClose="!!loading"
+          margin-left-right="auto"
+          :no-close="!!loading"
+          @close="modalEmail = false"
         >
           <span slot="header">Установка email</span>
-          <div slot="body" class="popup-body" v-if="!hasNewCodeRequest">
+          <div
+            v-if="!hasNewCodeRequest"
+            slot="body"
+            class="popup-body"
+          >
             Ваш текущий email: <strong>{{ email || 'не установлен' }}</strong>
-            <br />
-            <div v-if="email && !hasCodeRequest" class="alert-modal">
-              Для установки нового адреса запросите код на предыдущий.<br />
+            <br>
+            <div
+              v-if="email && !hasCodeRequest"
+              class="alert-modal"
+            >
+              Для установки нового адреса запросите код на предыдущий.<br>
               Если у вас нет доступа к {{ email }}, то обратитесь к администратору.
             </div>
-            <button @click="requestCode" class="btn btn-blue-nb" :disabled="loading" v-if="needCodeRequest" type="button">
+            <button
+              v-if="needCodeRequest"
+              class="btn btn-blue-nb"
+              :disabled="loading"
+              type="button"
+              @click="requestCode"
+            >
               Запросить код
             </button>
 
             <input
               v-else-if="email"
-              type="text"
               v-model.trim="confirmationCode"
+              type="text"
               class="form-control"
               style="margin-bottom: 10px;"
               :placeholder="`Код с ${email}`"
               :readonly="loading"
-            />
+            >
 
             <template v-if="!needCodeRequest">
               <input
-                type="email"
                 v-model.trim="newEmail"
+                type="email"
                 class="form-control"
                 placeholder="Новый адрес"
                 style="margin-bottom: 5px;"
                 :readonly="loading"
-              />
-              <div v-if="newEmailIsNotValid">{{ newEmailIsNotValid }}</div>
+              >
+              <div v-if="newEmailIsNotValid">
+                {{ newEmailIsNotValid }}
+              </div>
 
               <button
-                @click="setNewEmail"
                 class="btn btn-blue-nb"
                 style="margin-top: 5px;"
                 :disabled="loading || !!newEmailIsNotValid || (!confirmationCode && !!email)"
                 type="button"
+                @click="setNewEmail"
               >
                 Установить email
               </button>
             </template>
           </div>
-          <div slot="body" class="popup-body" v-else>
-            <a @click.prevent="hasNewCodeRequest = loading" class="a-under" :style="loading ? 'opacity: 0' : ''" href="#">
+          <div
+            v-else
+            slot="body"
+            class="popup-body"
+          >
+            <a
+              class="a-under"
+              :style="loading ? 'opacity: 0' : ''"
+              href="#"
+              @click.prevent="hasNewCodeRequest = loading"
+            >
               вернуться назад
             </a>
-            <br />
+            <br>
             Подтвердите
             <span v-if="email">
               смену адреса с <strong>{{ email }}</strong> на
             </span>
             <span v-else>установку адреса</span>
             <strong>{{ newEmail }}</strong>
-            <br />
+            <br>
             Вам был отправлен код на новый адрес.
-            <br />
+            <br>
 
             <input
-              type="text"
               v-model.trim="newConfirmationCode"
+              type="text"
               class="form-control"
               style="margin-bottom: 5px;"
               :placeholder="`Код с ${newEmail}`"
               :readonly="loading"
-            />
+            >
 
-            <button @click="confirmNewEmail" class="btn btn-blue-nb" :disabled="!newConfirmationCode || loading" type="button">
+            <button
+              class="btn btn-blue-nb"
+              :disabled="!newConfirmationCode || loading"
+              type="button"
+              @click="confirmNewEmail"
+            >
               Подтвердить
             </button>
           </div>
           <div slot="footer">
             <div class="row">
               <div class="col-xs-12 text-right">
-                <button @click="modalEmail = false" class="btn btn-blue-nb" :disabled="loading" type="button">
+                <button
+                  class="btn btn-blue-nb"
+                  :disabled="loading"
+                  type="button"
+                  @click="modalEmail = false"
+                >
                   Закрыть
                 </button>
               </div>

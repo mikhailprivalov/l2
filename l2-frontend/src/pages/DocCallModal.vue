@@ -1,26 +1,35 @@
 <template>
-  <modal
+  <Modal
     ref="modal"
-    @close="hide"
     show-footer="true"
     white-bg="true"
     max-width="1024px"
     width="100%"
-    marginLeftRight="auto"
+    margin-left-right="auto"
     margin-top
     class="an"
+    @close="hide"
   >
     <span slot="header">Управление заявкой</span>
-    <div slot="body" class="an-body">
+    <div
+      slot="body"
+      class="an-body"
+    >
       <div class="an-sidebar wide">
         <div class="an-sidebar-content">
           <div class="an-sidebar-content-row">
-            <div class="an-sidebar-content-row-header">Номер:</div>
+            <div class="an-sidebar-content-row-header">
+              Номер:
+            </div>
             {{ r.num }}{{ r.externalNum ? ` — ${r.externalNum}` : '' }}
-            <div v-if="r.isMainExternal"><i class="fa fa-check"></i> в больнице</div>
+            <div v-if="r.isMainExternal">
+              <i class="fa fa-check" /> в больнице
+            </div>
           </div>
           <div class="an-sidebar-content-row">
-            <div class="an-sidebar-content-row-header">Дата и время создания:</div>
+            <div class="an-sidebar-content-row-header">
+              Дата и время создания:
+            </div>
             {{ r.createdAt }}&nbsp;{{ r.createdAtTime }}
           </div>
           <div class="an-sidebar-content-row">
@@ -31,47 +40,86 @@
           <div class="an-sidebar-content-row">
             <div>{{ r.address }}</div>
           </div>
-          <div class="an-sidebar-content-row" v-if="r.email">
+          <div
+            v-if="r.email"
+            class="an-sidebar-content-row"
+          >
             {{ r.email }}
           </div>
-          <div class="an-sidebar-content-row" v-if="r.hospital || r.district">
+          <div
+            v-if="r.hospital || r.district"
+            class="an-sidebar-content-row"
+          >
             <div>{{ r.hospital }}</div>
             <div>{{ r.district }}</div>
           </div>
           <div class="an-sidebar-content-row">
-            <div class="an-sidebar-content-row-header">Цель:</div>
+            <div class="an-sidebar-content-row-header">
+              Цель:
+            </div>
             <div>{{ r.purpose }}</div>
           </div>
-          <div class="an-sidebar-content-row" v-if="r.research">
-            <div class="an-sidebar-content-row-header">Услуга:</div>
+          <div
+            v-if="r.research"
+            class="an-sidebar-content-row"
+          >
+            <div class="an-sidebar-content-row-header">
+              Услуга:
+            </div>
             <div>{{ r.research }}</div>
           </div>
-          <div class="an-sidebar-content-row" v-if="r.docAssigned">
-            <div class="an-sidebar-content-row-header">Врач:</div>
+          <div
+            v-if="r.docAssigned"
+            class="an-sidebar-content-row"
+          >
+            <div class="an-sidebar-content-row-header">
+              Врач:
+            </div>
             <div>{{ r.docAssigned }}</div>
           </div>
-          <div class="an-sidebar-content-row" v-if="r.comment">
-            <div class="an-sidebar-content-row-header">Примечания:</div>
+          <div
+            v-if="r.comment"
+            class="an-sidebar-content-row"
+          >
+            <div class="an-sidebar-content-row-header">
+              Примечания:
+            </div>
             <div>{{ r.comment }}</div>
           </div>
           <div class="an-sidebar-content-row">
-            <div class="an-sidebar-content-row-header">Исполнитель:</div>
+            <div class="an-sidebar-content-row-header">
+              Исполнитель:
+            </div>
             <div v-if="r.isMainExternal">
               внешняя больница
             </div>
             <div v-else-if="r.executor_fio">
               {{ r.executor_fio }}
             </div>
-            <div v-else class="alert alert-warning" style="margin-bottom: 0">
-              Не назначен!<br />
-              <a href="#" @click.prevent="setMeAsExecutor" class="alert-link">Нажмите здесь, что бы стать исполнителем</a>
+            <div
+              v-else
+              class="alert alert-warning"
+              style="margin-bottom: 0"
+            >
+              Не назначен!<br>
+              <a
+                href="#"
+                class="alert-link"
+                @click.prevent="setMeAsExecutor"
+              >Нажмите здесь, что бы стать исполнителем</a>
             </div>
             <div v-if="!r.isMainExternal && r.canEdit && r.executor_fio">
-              <a href="#" @click.prevent="setMeAsExecutor" class="a-under">назначить меня</a>
+              <a
+                href="#"
+                class="a-under"
+                @click.prevent="setMeAsExecutor"
+              >назначить меня</a>
             </div>
           </div>
           <div class="an-sidebar-content-row">
-            <div class="an-sidebar-content-row-header">Статус:</div>
+            <div class="an-sidebar-content-row-header">
+              Статус:
+            </div>
             <div>{{ statusText }}</div>
           </div>
         </div>
@@ -82,14 +130,21 @@
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-5" style="float: right">
-          <button @click="hide" class="btn btn-primary-nb btn-blue-nb" type="button">
+        <div
+          class="col-xs-5"
+          style="float: right"
+        >
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="hide"
+          >
             Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">

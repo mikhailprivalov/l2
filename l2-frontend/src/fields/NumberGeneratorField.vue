@@ -1,9 +1,21 @@
 <template>
   <div class="input-group">
-    <button class="btn btn-blue-nb nbr btn-address" type="button" tabindex="-1" @click="gen" v-if="!val && !disabled">
+    <button
+      v-if="!val && !disabled"
+      class="btn btn-blue-nb nbr btn-address"
+      type="button"
+      tabindex="-1"
+      @click="gen"
+    >
       Сгенерировать номер
     </button>
-    <button class="btn btn-blue-nb nbr btn-address" type="button" tabindex="-1" @click="free" v-else-if="!disabled">
+    <button
+      v-else-if="!disabled"
+      class="btn btn-blue-nb nbr btn-address"
+      type="button"
+      tabindex="-1"
+      @click="free"
+    >
       Освободить номер
     </button>
     <div class="form-control form-control-area">

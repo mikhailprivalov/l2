@@ -9,12 +9,15 @@
       <span class="a-under">{{ direction }}</span>
 
       <div class="result-dropdown">
-        <table class="table table-bordered table-condensed" v-if="isLab">
+        <table
+          v-if="isLab"
+          class="table table-bordered table-condensed"
+        >
           <colgroup>
-            <col width="50" />
-            <col width="80" />
-            <col width="50" />
-            <col width="50" />
+            <col width="50">
+            <col width="80">
+            <col width="50">
+            <col width="50">
           </colgroup>
           <thead>
             <tr>
@@ -26,11 +29,14 @@
           </thead>
           <tbody>
             <template v-for="(row, pk) in result.researches">
-              <tr v-for="f in row.fractions" :key="`${pk}_${f.title}_${f.value}`">
+              <tr
+                v-for="f in row.fractions"
+                :key="`${pk}_${f.title}_${f.value}`"
+              >
                 <td>{{ row.title }}</td>
                 <td>{{ f.title }}</td>
                 <td>
-                  <span v-html="f.value"></span>
+                  <span v-html="/*eslint-disable-line vue/no-v-html*/ f.value" />
                 </td>
                 <td>{{ f.units }}</td>
               </tr>

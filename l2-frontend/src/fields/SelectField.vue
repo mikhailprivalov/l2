@@ -1,6 +1,13 @@
 <template>
-  <select :disabled="disabled" v-model="val">
-    <option :value="v" :key="v" v-for="v in variantsLocal">
+  <select
+    v-model="val"
+    :disabled="disabled"
+  >
+    <option
+      v-for="v in variantsLocal"
+      :key="v"
+      :value="v"
+    >
       {{ v }}
     </option>
   </select>
@@ -8,6 +15,9 @@
 
 <script lang="ts">
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -41,9 +51,6 @@ export default {
         }
       },
     },
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     changeValue(newVal) {

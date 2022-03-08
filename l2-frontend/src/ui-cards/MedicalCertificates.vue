@@ -1,39 +1,55 @@
 <template>
   <div v-frag>
-    <a v-if="is_med_certificates" href="#" class="dropdown-toggle" style="color: #049372" @click.prevent
-       v-tippy="{
-                html: '#certificates-view',
-                reactive: true,
-                interactive: true,
-                arrow: true,
-                animation: 'fade',
-                duration: 0,
-                theme: 'light',
-                placement: 'bottom',
-                trigger: 'click mouseenter',
-                zIndex: 4999,
-                popperOptions: {
-                  modifiers: {
-                    preventOverflow: {
-                      boundariesElement: 'window'
-                    },
-                    hide: {
-                      enabled: false
-                    }
-                  }
-                },
-             }">
+    <a
+      v-if="is_med_certificates"
+      v-tippy="{
+        html: '#certificates-view',
+        reactive: true,
+        interactive: true,
+        arrow: true,
+        animation: 'fade',
+        duration: 0,
+        theme: 'light',
+        placement: 'bottom',
+        trigger: 'click mouseenter',
+        zIndex: 4999,
+        popperOptions: {
+          modifiers: {
+            preventOverflow: {
+              boundariesElement: 'window'
+            },
+            hide: {
+              enabled: false
+            }
+          }
+        },
+      }"
+      href="#"
+      class="dropdown-toggle"
+      style="color: #049372"
+      @click.prevent
+    >
       Справки
     </a>
 
-    <div id="certificates-view" class="tp" v-if="is_med_certificates">
+    <div
+      v-if="is_med_certificates"
+      id="certificates-view"
+      class="tp"
+    >
       <table class="table">
         <tbody>
-        <tr v-for="row in med_certificates" :key="`${row.form}_${row.title}`">
-          <td>
-            <a href="#" @click.prevent="print_med_certificate(row.form, direction)">{{row.title}} <i class="fa fa-print"/></a>
-          </td>
-        </tr>
+          <tr
+            v-for="row in med_certificates"
+            :key="`${row.form}_${row.title}`"
+          >
+            <td>
+              <a
+                href="#"
+                @click.prevent="print_med_certificate(row.form, direction)"
+              >{{ row.title }} <i class="fa fa-print" /></a>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -53,14 +69,14 @@ export default {
       required: false,
     },
   },
-  methods: {
-    print_med_certificate(type_form, direction) {
-      window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank');
-    },
-  },
   computed: {
     is_med_certificates() {
       return this.med_certificates.length > 0;
+    },
+  },
+  methods: {
+    print_med_certificate(type_form, direction) {
+      window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank');
     },
   },
 };

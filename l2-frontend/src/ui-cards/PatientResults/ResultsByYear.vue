@@ -1,9 +1,6 @@
 <template>
   <div v-frag>
     <a
-      href="#"
-      class="main-link"
-      @click.prevent
       v-tippy="{
         html: `#${tippyId}`,
         reactive: true,
@@ -26,49 +23,84 @@
           },
         },
       }"
+      href="#"
+      class="main-link"
+      @click.prevent
     >
-      <i v-if="isDocReferral" class="fa fa-user-md" style="color: #6f6f72"></i>
-      <i v-if="isParaclinic" class="fa fa-file-medical-alt" style="color: #6f6f72"></i>
-      <i v-if="isLab" class="fa fa-vials" style="color: #6f6f72"></i>
+      <i
+        v-if="isDocReferral"
+        class="fa fa-user-md"
+        style="color: #6f6f72"
+      />
+      <i
+        v-if="isParaclinic"
+        class="fa fa-file-medical-alt"
+        style="color: #6f6f72"
+      />
+      <i
+        v-if="isLab"
+        class="fa fa-vials"
+        style="color: #6f6f72"
+      />
     </a>
 
-    <div :id="tippyId" class="tp">
+    <div
+      :id="tippyId"
+      class="tp"
+    >
       <div class="tp-inner">
         <table class="table">
           <colgroup>
-            <col width="50" />
-            <col width="80" />
-            <col width="300" />
-            <col width="80" />
+            <col width="50">
+            <col width="80">
+            <col width="300">
+            <col width="80">
           </colgroup>
           <tbody>
             <tr>
               <td colspan="4">
-                <button class="btn btn-blue-nb add-row btn-xs nbr" @click="set_current_year">
+                <button
+                  class="btn btn-blue-nb add-row btn-xs nbr"
+                  @click="set_current_year"
+                >
                   Текущий год
                 </button>
                 <button
-                  class="btn btn-blue-nb btn-xs nbr"
-                  @click="minus_year"
                   v-tippy="{ placement: 'bottom' }"
+                  class="btn btn-blue-nb btn-xs nbr"
                   title="Год назад"
+                  @click="minus_year"
                 >
-                  <i class="glyphicon glyphicon-arrow-left" style="padding-bottom: 5px"></i>
+                  <i
+                    class="glyphicon glyphicon-arrow-left"
+                    style="padding-bottom: 5px"
+                  />
                 </button>
                 {{ current_year }}
                 <button
-                  class="btn btn-blue-nb btn-xs nbr"
-                  @click="plus_year"
                   v-tippy="{ placement: 'bottom' }"
+                  class="btn btn-blue-nb btn-xs nbr"
                   title="Год вперед"
+                  @click="plus_year"
                 >
-                  <i class="glyphicon glyphicon-arrow-right nbr" style="padding-bottom: 5px"></i>
+                  <i
+                    class="glyphicon glyphicon-arrow-right nbr"
+                    style="padding-bottom: 5px"
+                  />
                 </button>
               </td>
             </tr>
-            <tr v-for="row in data" :key="row.dir">
+            <tr
+              v-for="row in data"
+              :key="row.dir"
+            >
               <td>
-                <ResultDetails :direction="row.dir" :isLab="isLab" :isDocReferral="isDocReferral" :isParaclinic="isParaclinic" />
+                <ResultDetails
+                  :direction="row.dir"
+                  :is-lab="isLab"
+                  :is-doc-referral="isDocReferral"
+                  :is-paraclinic="isParaclinic"
+                />
               </td>
               <td>
                 {{ row.date }}
@@ -77,15 +109,18 @@
                 {{ row.researches.join('; ') }}
               </td>
               <td class="right-buttons">
-                <a href="#" @click.prevent="print_result(row.dir)" v-tippy="{ placement: 'bottom' }" title="Печать результата"
-                  ><i class="fa fa-print"></i
-                ></a>
                 <a
-                  href="#"
-                  @click.prevent="sendToProtocol(row.dir)"
                   v-tippy="{ placement: 'bottom' }"
+                  href="#"
+                  title="Печать результата"
+                  @click.prevent="print_result(row.dir)"
+                ><i class="fa fa-print" /></a>
+                <a
+                  v-tippy="{ placement: 'bottom' }"
+                  href="#"
                   title="Перенести в протокол"
-                  ><i class="fa fa-file-import"></i>
+                  @click.prevent="sendToProtocol(row.dir)"
+                ><i class="fa fa-file-import" />
                 </a>
               </td>
             </tr>
@@ -141,6 +176,11 @@ export default {
       return parts.filter(Boolean).join('-');
     },
   },
+  watch: {
+    current_year() {
+      this.load();
+    },
+  },
   mounted() {
     this.load();
   },
@@ -183,11 +223,6 @@ export default {
     },
     print_result(pk) {
       this.$root.$emit('print:results', [pk]);
-    },
-  },
-  watch: {
-    current_year() {
-      this.load();
     },
   },
 };

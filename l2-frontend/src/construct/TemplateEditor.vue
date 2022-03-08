@@ -1,54 +1,131 @@
 <template>
   <div class="root">
     <div class="top-editor">
-      <div class="input-group" style="width: 100%;">
+      <div
+        class="input-group"
+        style="width: 100%;"
+      >
         <span class="input-group-addon">Название</span>
-        <input type="text" class="form-control" v-model="title" />
-        <label class="input-group-addon" style="height: 34px;text-align: left;">
-          <input type="checkbox" v-model="global_template" /> {{ global_template ? 'Глобальный' : 'В поиске' }}
+        <input
+          v-model="title"
+          type="text"
+          class="form-control"
+        >
+        <label
+          class="input-group-addon"
+          style="height: 34px;text-align: left;"
+        >
+          <input
+            v-model="global_template"
+            type="checkbox"
+          > {{ global_template ? 'Глобальный' : 'В поиске' }}
         </label>
       </div>
     </div>
     <div class="content-editor">
       <div class="row res-row">
-        <div class="col-xs-6" style="height: 100%">
-          <ResearchesPicker v-model="researches" autoselect="none" :hidetemplates="true" v-if="researches !== null" />
+        <div
+          class="col-xs-6"
+          style="height: 100%"
+        >
+          <ResearchesPicker
+            v-if="researches !== null"
+            v-model="researches"
+            autoselect="none"
+            :hidetemplates="true"
+          />
         </div>
-        <div class="col-xs-6" style="height: 100%">
-          <SelectedResearches :researches="researches || []" :simple="true" />
+        <div
+          class="col-xs-6"
+          style="height: 100%"
+        >
+          <SelectedResearches
+            :researches="researches || []"
+            :simple="true"
+          />
         </div>
       </div>
       <div style="padding: 5px;">
-        <label style="margin-bottom: 5px"> <input type="checkbox" v-model="showInResearchPicker" /> показывать как услугу </label>
+        <label style="margin-bottom: 5px"> <input
+          v-model="showInResearchPicker"
+          type="checkbox"
+        > показывать как услугу </label>
         <template v-if="showInResearchPicker">
-          <div class="input-group" style="width: 100%; margin-bottom: 5px;">
+          <div
+            class="input-group"
+            style="width: 100%; margin-bottom: 5px;"
+          >
             <span class="input-group-addon">Тип услуги</span>
-            <select class="form-control" v-model="type" key="type">
-              <option v-for="t in TYPES" :key="t.id" :value="t.id">
+            <select
+              key="type"
+              v-model="type"
+              class="form-control"
+            >
+              <option
+                v-for="t in TYPES"
+                :key="t.id"
+                :value="t.id"
+              >
                 {{ t.label }}
               </option>
             </select>
           </div>
-          <div class="input-group" style="width: 100%; margin-bottom: 5px" v-if="site_types_for_type.length > 0">
+          <div
+            v-if="site_types_for_type.length > 0"
+            class="input-group"
+            style="width: 100%; margin-bottom: 5px"
+          >
             <span class="input-group-addon">Место размещения</span>
-            <select class="form-control" v-model="siteType" key="site_type">
-              <option v-for="t in site_types_for_type" :key="t.id" :value="t.id">
+            <select
+              key="site_type"
+              v-model="siteType"
+              class="form-control"
+            >
+              <option
+                v-for="t in site_types_for_type"
+                :key="t.id"
+                :value="t.id"
+              >
                 {{ t.label }}
               </option>
             </select>
           </div>
-          <div class="input-group" style="width: 100%; margin-bottom: 5px" v-if="type === 'lab'">
+          <div
+            v-if="type === 'lab'"
+            class="input-group"
+            style="width: 100%; margin-bottom: 5px"
+          >
             <span class="input-group-addon">Лаборатория</span>
-            <select class="form-control" v-model="department" key="lab">
-              <option v-for="t in departments" :key="t.id" :value="t.id">
+            <select
+              key="lab"
+              v-model="department"
+              class="form-control"
+            >
+              <option
+                v-for="t in departments"
+                :key="t.id"
+                :value="t.id"
+              >
                 {{ t.label }}
               </option>
             </select>
           </div>
-          <div class="input-group" style="width: 100%; margin-bottom: 5px" v-if="type === 'paraclinic'">
+          <div
+            v-if="type === 'paraclinic'"
+            class="input-group"
+            style="width: 100%; margin-bottom: 5px"
+          >
             <span class="input-group-addon">Подразделение</span>
-            <select class="form-control" v-model="department" key="paraclinic">
-              <option v-for="t in departmentsParaclinic" :key="t.id" :value="t.id">
+            <select
+              key="paraclinic"
+              v-model="department"
+              class="form-control"
+            >
+              <option
+                v-for="t in departmentsParaclinic"
+                :key="t.id"
+                :value="t.id"
+              >
                 {{ t.label }}
               </option>
             </select>
@@ -57,8 +134,19 @@
       </div>
     </div>
     <div class="footer-editor">
-      <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
-      <button class="btn btn-blue-nb" :disabled="!valid" @click="save">Сохранить</button>
+      <button
+        class="btn btn-blue-nb"
+        @click="cancel"
+      >
+        Отмена
+      </button>
+      <button
+        class="btn btn-blue-nb"
+        :disabled="!valid"
+        @click="save"
+      >
+        Сохранить
+      </button>
     </div>
   </div>
 </template>
@@ -109,7 +197,7 @@ const TYPES = [
 ];
 
 export default {
-  name: 'template-editor',
+  name: 'TemplateEditor',
   components: {
     ResearchesPicker,
     SelectedResearches,
@@ -123,9 +211,6 @@ export default {
       type: Number,
       required: true,
     },
-  },
-  created() {
-    this.load();
   },
   data() {
     return {
@@ -144,6 +229,17 @@ export default {
       siteType: null,
       siteTypes: {},
     };
+  },
+  computed: {
+    valid() {
+      return this.norm_title.length > 0 && this.researches && this.researches.length > 0;
+    },
+    norm_title() {
+      return this.title.trim();
+    },
+    site_types_for_type() {
+      return this.siteTypes[this.type] || [];
+    },
   },
   watch: {
     pk() {
@@ -190,6 +286,9 @@ export default {
       }
     },
   },
+  created() {
+    this.load();
+  },
   mounted() {
     window.$(window).on('beforeunload', () => {
       if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do) {
@@ -198,17 +297,6 @@ export default {
 
       return undefined;
     });
-  },
-  computed: {
-    valid() {
-      return this.norm_title.length > 0 && this.researches && this.researches.length > 0;
-    },
-    norm_title() {
-      return this.title.trim();
-    },
-    site_types_for_type() {
-      return this.siteTypes[this.type] || [];
-    },
   },
   methods: {
     load() {

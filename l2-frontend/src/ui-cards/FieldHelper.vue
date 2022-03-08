@@ -4,27 +4,46 @@
       <div>{{ modeTitle }}</div>
       <div v-if="mode === 'formula'">
         <ul>
-          <li v-for="l in formulaLinks" :key="`${l.type}-${l.id}`">
-            <u>{{ LINK_TITLES[l.type] }} {{ l.id }}</u
-            >:
+          <li
+            v-for="l in formulaLinks"
+            :key="`${l.type}-${l.id}`"
+          >
+            <u>{{ LINK_TITLES[l.type] }} {{ l.id }}</u>:
             <span v-if="fieldsAsObject[l.id]">{{ fieldsAsObject[l.id] }}</span>
             <strong v-else>значение не найдено</strong>
           </li>
         </ul>
       </div>
       <div v-else-if="mode === 'fraction'">
-        <u>Фракция {{ this.value }}</u
-        >:
+        <u>Фракция {{ value }}</u>:
         <span v-if="loading">загрузка...</span>
-        <span v-else-if="fractions[this.value.trim()]">{{ fractions[this.value.trim()] }}</span>
+        <span v-else-if="fractions[value.trim()]">{{ fractions[value.trim()] }}</span>
         <strong v-else>фракция не найдена</strong>
       </div>
       <div v-else>
-        <div class="bold" v-if="fieldsAndGroups.sign === '&'">Объединение полей или групп</div>
-        <div class="bold" v-if="fieldsAndGroups.sign === '|'">Одно из полей или групп</div>
-        <div class="bold" v-if="fieldsAndGroups.ids.length === 1">Одно поле или группа</div>
+        <div
+          v-if="fieldsAndGroups.sign === '&'"
+          class="bold"
+        >
+          Объединение полей или групп
+        </div>
+        <div
+          v-if="fieldsAndGroups.sign === '|'"
+          class="bold"
+        >
+          Одно из полей или групп
+        </div>
+        <div
+          v-if="fieldsAndGroups.ids.length === 1"
+          class="bold"
+        >
+          Одно поле или группа
+        </div>
         <ul>
-          <li v-for="fg in fieldsAndGroups.ids" :key="fg">
+          <li
+            v-for="fg in fieldsAndGroups.ids"
+            :key="fg"
+          >
             <u>
               {{ fg.endsWith('@') ? 'Группа' : fg.startsWith('%') ? 'Ссылка на значение в базе' : 'Поле' }}
               {{ fg.replace('@', '') }}:
@@ -125,6 +144,51 @@ export default {
       loading: false,
     };
   },
+  computed: {
+    mode() {
+      return fieldModes[this.fieldType];
+    },
+    modeTitle() {
+      return modeTitles[this.mode];
+    },
+    formulaLinks() {
+      if (this.mode !== 'formula') {
+        return null;
+      }
+
+      return PrepareFormula([], this.value, {}, false, true);
+    },
+    fieldsAsObject() {
+      if (this.mode !== 'formula') {
+        return null;
+      }
+
+      return _.flatten(this.groups.map((g) => g.fields.map((f) => ({ pk: f.pk, title: f.title, group: g.title }))))
+        .filter((f: { pk?: number }) => f.pk && f.pk > -1)
+        .reduce(
+          (a: any, b: any) => ({ ...a, [b.pk]: `${b.group || 'группа без названия'} – ${b.title || 'поле без названия'}` }),
+          { age: 'возраст', sex: 'пол' },
+        );
+    },
+    fieldsAndGroups() {
+      if (this.mode === 'formula' || this.mode === 'fraction' || typeof this.value !== 'string') {
+        return null;
+      }
+      const signAND = this.value.includes('&');
+      const signOR = this.value.includes('|');
+      const sign = !signAND && !signOR ? '-' : (signAND && '&') || '|';
+      const ids = _.uniq(this.value.trim().split(sign).filter(Boolean));
+
+      return { ids, sign };
+    },
+  },
+  watch: {
+    value: {
+      handler() {
+        this.updated();
+      },
+    },
+  },
   mounted() {
     this.loadFractionFast();
     this.loadFieldsAndGroupsFast();
@@ -149,7 +213,7 @@ export default {
       if (!this.fieldsAndGroups) {
         return;
       }
-      const ids = this.fieldsAndGroups.ids.filter(i => !this.fieldsAndGroupsCache[i]);
+      const ids = this.fieldsAndGroups.ids.filter((i) => !this.fieldsAndGroupsCache[i]);
       if (ids.length > 0) {
         this.loading = true;
         const { titles } = await researchesPoint.getFieldsAndGroups({ ids });
@@ -163,56 +227,6 @@ export default {
       } else if (this.fieldsAndGroups) {
         this.loadFieldsAndGroups();
       }
-    },
-  },
-  watch: {
-    value: {
-      handler() {
-        this.updated();
-      },
-    },
-  },
-  computed: {
-    mode() {
-      return fieldModes[this.fieldType];
-    },
-    modeTitle() {
-      return modeTitles[this.mode];
-    },
-    formulaLinks() {
-      if (this.mode !== 'formula') {
-        return null;
-      }
-
-      return PrepareFormula([], this.value, {}, false, true);
-    },
-    fieldsAsObject() {
-      if (this.mode !== 'formula') {
-        return null;
-      }
-
-      return _.flatten(this.groups.map(g => g.fields.map(f => ({ pk: f.pk, title: f.title, group: g.title }))))
-        .filter((f: { pk?: number }) => f.pk && f.pk > -1)
-        .reduce(
-          (a: any, b: any) => ({ ...a, [b.pk]: `${b.group || 'группа без названия'} – ${b.title || 'поле без названия'}` }),
-          { age: 'возраст', sex: 'пол' },
-        );
-    },
-    fieldsAndGroups() {
-      if (this.mode === 'formula' || this.mode === 'fraction' || typeof this.value !== 'string') {
-        return null;
-      }
-      const signAND = this.value.includes('&');
-      const signOR = this.value.includes('|');
-      const sign = !signAND && !signOR ? '-' : (signAND && '&') || '|';
-      const ids = _.uniq(
-        this.value
-          .trim()
-          .split(sign)
-          .filter(Boolean),
-      );
-
-      return { ids, sign };
     },
   },
 };

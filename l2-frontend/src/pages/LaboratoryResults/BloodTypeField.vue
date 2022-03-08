@@ -1,13 +1,30 @@
 <template>
   <td colspan="4">
-    <div v-if="readonly" v-html="r.value" class="val"></div>
+    <div
+      v-if="readonly"
+      class="val"
+      v-html="/*eslint-disable-line vue/no-v-html*/ r.value"
+    />
     <template v-else>
       <div>
         <template v-for="g in GROUPS">
-          <label :key="g" class="radio-inline" v-if="g !== 'spacer'">
-            <input type="radio" name="blood-type" v-model="r.value" :value="g" /> <span v-html="g"></span>
+          <label
+            v-if="g !== 'spacer'"
+            :key="g"
+            class="radio-inline"
+          >
+            <input
+              v-model="r.value"
+              type="radio"
+              name="blood-type"
+              :value="g"
+            >
+            <span v-html="/*eslint-disable-line vue/no-v-html*/ g" />
           </label>
-          <hr v-else :key="g" />
+          <hr
+            v-else
+            :key="g"
+          >
         </template>
       </div>
     </template>

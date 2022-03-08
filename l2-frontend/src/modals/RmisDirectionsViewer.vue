@@ -1,139 +1,241 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" min-width="85%" margin-top
-         :no-close="selected_direction !== -1">
-    <span slot="header">Направления из РМИС. Пациент: {{card.family}} {{card.name}} {{card.twoname}},
-      {{card.birthday}} ({{card.age}})</span>
-    <div slot="body" style="min-height: 200px" class="directions-manage" v-if="loaded">
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    min-width="85%"
+    margin-top
+    :no-close="selected_direction !== -1"
+    @close="hide_modal"
+  >
+    <span slot="header">Направления из РМИС. Пациент: {{ card.family }} {{ card.name }} {{ card.twoname }},
+      {{ card.birthday }} ({{ card.age }})</span>
+    <div
+      v-if="loaded"
+      slot="body"
+      style="min-height: 200px"
+      class="directions-manage"
+    >
       <div class="directions-sidebar">
-        <div @click="select_direction(d.pk)" class="direction"
-             :class="{active: d.pk === selected_direction}"
-             :key="d.pk"
-             v-for="d in rows">
-          <div>РМИС-направление №{{d.pk}} от {{d.referralDate}}</div>
-          <div>Направляющая организация: {{d.referralOrganization}}</div>
-          <hr/>
+        <div
+          v-for="d in rows"
+          :key="d.pk"
+          class="direction"
+          :class="{active: d.pk === selected_direction}"
+          @click="select_direction(d.pk)"
+        >
+          <div>РМИС-направление №{{ d.pk }} от {{ d.referralDate }}</div>
+          <div>Направляющая организация: {{ d.referralOrganization }}</div>
+          <hr>
           <ol>
-            <li v-for="s in d.services" :key="`${s.code}_${s.title}`">
-              <span class="s-code" v-if="s.code">{{s.code}}</span>
-              {{s.title}}
+            <li
+              v-for="s in d.services"
+              :key="`${s.code}_${s.title}`"
+            >
+              <span
+                v-if="s.code"
+                class="s-code"
+              >{{ s.code }}</span>
+              {{ s.title }}
             </li>
           </ol>
         </div>
-        <div v-if="rows.length === 0" class="text-center" style="padding: 10px">
-          Направлений из РМИС, не зарегистрированных в {{system}}, не найдено
+        <div
+          v-if="rows.length === 0"
+          class="text-center"
+          style="padding: 10px"
+        >
+          Направлений из РМИС, не зарегистрированных в {{ system }}, не найдено
         </div>
       </div>
-      <div class="directions-content" v-if="selected_direction !== -1">
+      <div
+        v-if="selected_direction !== -1"
+        class="directions-content"
+      >
         <div class="direction-data">
-          <h4>РМИС-направление №{{direction_data.pk}} от {{direction_data.referralDate}}</h4>
-          Организация: {{direction_data.referralOrganization}}<br/>
-          <div v-if="direction_data.diagnosis">Диагноз: {{direction_data.diagnosis}}
-            ({{direction_data.diagnosisName}})
+          <h4>РМИС-направление №{{ direction_data.pk }} от {{ direction_data.referralDate }}</h4>
+          Организация: {{ direction_data.referralOrganization }}<br>
+          <div v-if="direction_data.diagnosis">
+            Диагноз: {{ direction_data.diagnosis }}
+            ({{ direction_data.diagnosisName }})
           </div>
-          <hr/>
+          <hr>
           <div class="direction-service">
             <div class="service-rmis">
-              <div class="s-title"><strong>Исследование в РМИС</strong></div>
+              <div class="s-title">
+                <strong>Исследование в РМИС</strong>
+              </div>
             </div>
-            <div class="service-l2"><strong>Исследование в {{system}}</strong></div>
+            <div class="service-l2">
+              <strong>Исследование в {{ system }}</strong>
+            </div>
           </div>
-          <div class="direction-service"
-               :class="{wrn: s.selected_local_service === -1 && !s.exclude_direction, cancel: s.exclude_direction}"
-               :key="`${s.code}_${s.title}`"
-               v-for="s in direction_data.services">
+          <div
+            v-for="s in direction_data.services"
+            :key="`${s.code}_${s.title}`"
+            class="direction-service"
+            :class="{wrn: s.selected_local_service === -1 && !s.exclude_direction, cancel: s.exclude_direction}"
+          >
             <div class="service-rmis">
-              <div class="s-code">{{s.code}}</div>
-              <div class="s-title">{{s.title}}</div>
+              <div class="s-code">
+                {{ s.code }}
+              </div>
+              <div class="s-title">
+                {{ s.title }}
+              </div>
             </div>
-            <div class="service-l2" v-if="s.local_services.length === 1 && s.selected_local_service !== -1">
+            <div
+              v-if="s.local_services.length === 1 && s.selected_local_service !== -1"
+              class="service-l2"
+            >
               <div class="service-department">
-                {{departments[research_data(s.selected_local_service).department_pk].title}}
+                {{ departments[research_data(s.selected_local_service).department_pk].title }}
               </div>
-              {{research_data(s.selected_local_service).title}}
+              {{ research_data(s.selected_local_service).title }}
               <div class="no-attach">
-                <label><input type="checkbox" v-model="s.exclude_direction"> не назначать</label>
+                <label><input
+                  v-model="s.exclude_direction"
+                  type="checkbox"
+                > не назначать</label>
               </div>
             </div>
-            <div class="service-l2" v-else-if="s.local_services.length > 1">
-              <div class="l2-notice">Найдено несколько исследований с таким кодом</div>
+            <div
+              v-else-if="s.local_services.length > 1"
+              class="service-l2"
+            >
+              <div class="l2-notice">
+                Найдено несколько исследований с таким кодом
+              </div>
               <ul>
-                <li v-for="rs in s.local_services" :key="rs">
+                <li
+                  v-for="rs in s.local_services"
+                  :key="rs"
+                >
                   <label class="fwn">
-                    <input type="radio" :value="rs" v-model="s.selected_local_service">
+                    <input
+                      v-model="s.selected_local_service"
+                      type="radio"
+                      :value="rs"
+                    >
                     <span class="service-department">
-                      {{departments[research_data(rs).department_pk].title}}
+                      {{ departments[research_data(rs).department_pk].title }}
                     </span>
-                    {{research_data(rs).title}}
+                    {{ research_data(rs).title }}
                   </label>
                 </li>
               </ul>
               <div class="no-attach">
-                <label><input type="checkbox" v-model="s.exclude_direction"> не назначать</label>
+                <label><input
+                  v-model="s.exclude_direction"
+                  type="checkbox"
+                > не назначать</label>
               </div>
             </div>
-            <div class="service-l2" v-else>
-              <div class="l2-notice">Исследований с таким кодом не найдено</div>
+            <div
+              v-else
+              class="service-l2"
+            >
+              <div class="l2-notice">
+                Исследований с таким кодом не найдено
+              </div>
               <div v-if="s.selected_local_service !== -1">
                 Будет произведена замена на:
                 <div class="service-department">
-                  {{departments[research_data(s.selected_local_service).department_pk].title}}
+                  {{ departments[research_data(s.selected_local_service).department_pk].title }}
                 </div>
-                {{research_data(s.selected_local_service).title}}
+                {{ research_data(s.selected_local_service).title }}
               </div>
               <div :id="'template-' + s.pk">
                 <div style="width: 666px;height: 280px;text-align: left;">
-                  <researches-picker v-model="s.selected_local_service" autoselect="none" :hidetemplates="true"
-                                     :oneselect="true"/>
+                  <ResearchesPicker
+                    v-model="s.selected_local_service"
+                    autoselect="none"
+                    :hidetemplates="true"
+                    :oneselect="true"
+                  />
                 </div>
               </div>
-              <button class="btn btn-primary-nb btn-blue-nb btn-sm" style="margin-top: 3px"
-                      v-tippy="{
-                        html: '#template-' + s.pk,
-                        reactive : true,
-                        interactive : true,
-                        theme: 'light',
-                        animateFill: false,
-                        trigger: 'click'
-                      }">
+              <button
+                v-tippy="{
+                  html: '#template-' + s.pk,
+                  reactive : true,
+                  interactive : true,
+                  theme: 'light',
+                  animateFill: false,
+                  trigger: 'click'
+                }"
+                class="btn btn-primary-nb btn-blue-nb btn-sm"
+                style="margin-top: 3px"
+              >
                 Заменить исследование
               </button>
               <div class="no-attach">
-                <label><input type="checkbox" v-model="s.exclude_direction"> не назначать</label>
+                <label><input
+                  v-model="s.exclude_direction"
+                  type="checkbox"
+                > не назначать</label>
               </div>
             </div>
           </div>
         </div>
         <div class="direction-control">
-          <button class="btn btn-primary-nb btn-blue-nb" @click="cancel">Отмена</button>
-          <button class="btn btn-primary-nb btn-blue-nb" :disabled="!valid" @click="generateDirections">Создать
-            направления в {{system}}
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            @click="cancel"
+          >
+            Отмена
+          </button>
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            :disabled="!valid"
+            @click="generateDirections"
+          >
+            Создать
+            направления в {{ system }}
           </button>
         </div>
       </div>
-      <div class="directions-content" style="line-height: 200px;text-align: center;color:grey" v-else>
+      <div
+        v-else
+        class="directions-content"
+        style="line-height: 200px;text-align: center;color:grey"
+      >
         Направление не выбрано
       </div>
     </div>
-    <div slot="body" style="line-height: 200px;text-align: center" v-else>
+    <div
+      v-else
+      slot="body"
+      style="line-height: 200px;text-align: center"
+    >
       Загрузка данных...
     </div>
     <div slot="footer">
       <div class="row">
         <div class="col-xs-4">
-          <button type="button" @click="load_data" class="btn btn-primary-nb btn-blue-nb"
-                  :disabled="selected_direction !== -1">Перезагрузить
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb"
+            :disabled="selected_direction !== -1"
+            @click="load_data"
+          >
+            Перезагрузить
           </button>
         </div>
+        <div class="col-xs-4" />
         <div class="col-xs-4">
-        </div>
-        <div class="col-xs-4">
-          <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb"
-                  :disabled="selected_direction !== -1">Закрыть
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb"
+            :disabled="selected_direction !== -1"
+            @click="hide_modal"
+          >
+            Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -143,7 +245,7 @@ import * as actions from '../store/action-types';
 import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
 
 export default {
-  name: 'rmis-directions-viewer',
+  name: 'RmisDirectionsViewer',
   components: { Modal, ResearchesPicker },
   props: {
     card: {
@@ -159,9 +261,6 @@ export default {
       selected_direction: -1,
       post: false,
     };
-  },
-  created() {
-    this.load_data();
   },
   computed: {
     system() {
@@ -192,6 +291,9 @@ export default {
       }
       return false;
     },
+  },
+  created() {
+    this.load_data();
   },
   methods: {
     generateDirections() {

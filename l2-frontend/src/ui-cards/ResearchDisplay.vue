@@ -1,40 +1,89 @@
 <template>
-  <div class="root-c" @click.left="update_comment"
-       v-tippy="no_tooltip ? null : {html: '#research-display-' + pk, reactive: true, interactive: true, theme: 'light',
-                arrow: true,
-                placement: 'bottom',
-                popperOptions: {
-                  modifiers: {
-                    preventOverflow: {
-                      boundariesElement: 'window'
-                    },
-                    hide: {
-                      enabled: false
-                    }
-                  }
-                },
-              }"
-       @click.right.prevent="update_comment">
+  <div
+    v-tippy="no_tooltip ? null : {html: '#research-display-' + pk, reactive: true, interactive: true, theme: 'light',
+                                  arrow: true,
+                                  placement: 'bottom',
+                                  popperOptions: {
+                                    modifiers: {
+                                      preventOverflow: {
+                                        boundariesElement: 'window'
+                                      },
+                                      hide: {
+                                        enabled: false
+                                      }
+                                    }
+                                  },
+    }"
+    class="root-c"
+    @click.left="update_comment"
+    @click.right.prevent="update_comment"
+  >
     <div class="root-in">
-      <span class="category" v-if="category">[{{ category }}]</span>
+      <span
+        v-if="category"
+        class="category"
+      >[{{ category }}]</span>
       {{ title }}
-      <span class="count" v-if="count > 1">(x{{ count }})</span>
-      <span class="comment" v-if="comment !== '' && !simple">[{{ comment }}]</span>
-      <span class="service_location" v-if="service_location !== '' && !simple">[{{ service_location }}]</span>
-      <span class="has_not_filled" v-if="has_not_filled && !simple">[параметры не заполнены]</span>
-      <span class="has_params" v-else-if="has_params && !simple">[параметры]</span>
+      <span
+        v-if="count > 1"
+        class="count"
+      >(x{{ count }})</span>
+      <span
+        v-if="comment !== '' && !simple"
+        class="comment"
+      >[{{ comment }}]</span>
+      <span
+        v-if="service_location !== '' && !simple"
+        class="service_location"
+      >[{{ service_location }}]</span>
+      <span
+        v-if="has_not_filled && !simple"
+        class="has_not_filled"
+      >[параметры не заполнены]</span>
+      <span
+        v-else-if="has_params && !simple"
+        class="has_params"
+      >[параметры]</span>
     </div>
-    <div v-if="n + 1 < nof" class="root-div"></div>
-    <div :id="`research-display-${pk}`" class="tp" v-if="!no_tooltip">
+    <div
+      v-if="n + 1 < nof"
+      class="root-div"
+    />
+    <div
+      v-if="!no_tooltip"
+      :id="`research-display-${pk}`"
+      class="tp"
+    >
       <div style="text-align: left">
-        <div class="param"><strong>Назначение:</strong> {{ title }}</div>
-        <div class="param"><strong>Количество:</strong> {{ count }}</div>
-        <button class="btn btn-blue-nb btn-sm" @click.stop="update_comment" v-if="!simple && !readonly">Настройка</button>
-        <button class="btn btn-blue-nb btn-sm" @click.stop="remove" v-if="!readonly">Убрать</button>
+        <div class="param">
+          <strong>Назначение:</strong> {{ title }}
+        </div>
+        <div class="param">
+          <strong>Количество:</strong> {{ count }}
+        </div>
+        <button
+          v-if="!simple && !readonly"
+          class="btn btn-blue-nb btn-sm"
+          @click.stop="update_comment"
+        >
+          Настройка
+        </button>
+        <button
+          v-if="!readonly"
+          class="btn btn-blue-nb btn-sm"
+          @click.stop="remove"
+        >
+          Убрать
+        </button>
         <div v-if="has_not_filled && !simple">
           <div><strong>Незаполенные поля:</strong></div>
           <ul>
-            <li v-for="f in not_filled_fields" :key="f">{{ f }}</li>
+            <li
+              v-for="f in not_filled_fields"
+              :key="f"
+            >
+              {{ f }}
+            </li>
           </ul>
         </div>
       </div>
@@ -44,7 +93,7 @@
 
 <script lang="ts">
 export default {
-  name: 'research-display',
+  name: 'ResearchDisplay',
   props: {
     title: {
       type: String,

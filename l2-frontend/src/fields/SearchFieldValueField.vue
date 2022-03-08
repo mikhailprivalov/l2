@@ -1,38 +1,47 @@
 <template>
   <div>
     <div class="input-group">
-      <span class="input-group-btn" style="vertical-align: top;" v-if="!readonly && (!once || (once && isStaticLink))">
+      <span
+        v-if="!readonly && (!once || (once && isStaticLink))"
+        class="input-group-btn"
+        style="vertical-align: top;"
+      >
         <button
+          v-tippy="{ placement: 'bottom', arrow: true }"
           class="btn btn-block"
           :class="{ btn_color: not_autoload_result }"
           :title="isStaticLink ? 'Загрузить данные' : 'Загрузить последний результат'"
           @click="loadLast"
-          v-tippy="{ placement: 'bottom', arrow: true }"
         >
           <i class="fa fa-circle" />
         </button>
       </span>
       <textarea
+        v-if="lines > 1"
+        v-model="val"
+        v-tippy="{ placement: 'bottom', arrow: true }"
         :readonly="readonly"
         :rows="lines"
         class="form-control"
         :placeholder="title"
-        v-tippy="{ placement: 'bottom', arrow: true }"
         :title="title"
-        v-if="lines > 1"
-        v-model="val"
       />
       <input
+        v-else
+        v-model="val"
+        v-tippy="{ placement: 'bottom', arrow: true }"
         :readonly="readonly"
         class="form-control"
         :placeholder="title"
-        v-tippy="{ placement: 'bottom', arrow: true }"
         :title="title"
-        v-else
-        v-model="val"
-      />
+      >
     </div>
-    <a v-if="direction" class="a-under" href="#" @click.prevent="print_results">
+    <a
+      v-if="direction"
+      class="a-under"
+      href="#"
+      @click.prevent="print_results"
+    >
       печать результатов направления {{ direction }}
     </a>
   </div>
@@ -44,6 +53,9 @@ import directionsPoint from '../api/directions-point';
 
 export default {
   name: 'SearchFieldValueField',
+  model: {
+    event: 'modified',
+  },
   props: {
     readonly: {
       type: Boolean,
@@ -102,6 +114,14 @@ export default {
       return this.fpkInitial || this.fieldPk;
     },
   },
+  watch: {
+    val() {
+      this.changeValue(this.val);
+    },
+    value() {
+      this.val = this.value;
+    },
+  },
   mounted() {
     if (!this.raw) {
       researchesPoint.fieldTitle({ pk: this.fpk }).then(data => {
@@ -123,17 +143,6 @@ export default {
       this.val = '';
       this.loadLast();
     }
-  },
-  watch: {
-    val() {
-      this.changeValue(this.val);
-    },
-    value() {
-      this.val = this.value;
-    },
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     checkDirection() {

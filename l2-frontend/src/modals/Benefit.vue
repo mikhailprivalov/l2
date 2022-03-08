@@ -1,111 +1,209 @@
 <template>
-  <modal @close="hide_modal" margin-top marginLeftRight="auto" max-width="680px" ref="modal" show-footer="true"
-         white-bg="true" width="100%">
+  <Modal
+    ref="modal"
+    margin-top
+    margin-left-right="auto"
+    max-width="680px"
+    show-footer="true"
+    white-bg="true"
+    width="100%"
+    @close="hide_modal"
+  >
     <span slot="header">Льготы пациента
-      <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
-      {{card_data.age}}, карта {{card_data.num}}</span>
-      <span v-else>{{card_data.fio_age}}</span>
+      <span v-if="!card_data.fio_age">{{ card_data.family }} {{ card_data.name }} {{ card_data.twoname }},
+        {{ card_data.age }}, карта {{ card_data.num }}</span>
+      <span v-else>{{ card_data.fio_age }}</span>
     </span>
-    <div class="registry-body" slot="body" style="min-height: 200px">
-      <table class="table table-bordered table-condensed table-sm-pd"
-             style="table-layout: fixed; font-size: 12px">
+    <div
+      slot="body"
+      class="registry-body"
+      style="min-height: 200px"
+    >
+      <table
+        class="table table-bordered table-condensed table-sm-pd"
+        style="table-layout: fixed; font-size: 12px"
+      >
         <colgroup>
-          <col width="130"/>
-          <col/>
-          <col/>
-          <col/>
-          <col width="45" v-if="!readonly"/>
+          <col width="130">
+          <col>
+          <col>
+          <col>
+          <col
+            v-if="!readonly"
+            width="45"
+          >
         </colgroup>
         <thead>
-        <tr>
-          <th>Вид льготы</th>
-          <th>Основание</th>
-          <th>Постановка на льготу</th>
-          <th>Снятие со льготы</th>
-          <th v-if="!readonly"></th>
-        </tr>
+          <tr>
+            <th>Вид льготы</th>
+            <th>Основание</th>
+            <th>Постановка на льготу</th>
+            <th>Снятие со льготы</th>
+            <th v-if="!readonly" />
+          </tr>
         </thead>
         <tbody>
-        <tr :class="{stop: !!r.date_end}" v-for="r in rows" :key="r.pk">
-          <td>{{r.benefit}}</td>
-          <td>{{r.registration_basis}}</td>
-          <td>{{r.doc_start_reg}}<br/>{{r.date_start}}</td>
-          <td>{{r.doc_end_reg}}<br v-if="!!r.date_end"/>{{r.date_end}}</td>
-          <td v-if="!readonly">
-            <button @click="edit(r.pk)" class="btn last btn-blue-nb nbr"
-                    style="margin-left: -1px"
-                    title="Редактирование" type="button" v-tippy="{ placement : 'bottom', arrow: true }">
-              <i class="glyphicon glyphicon-pencil"></i>
-            </button>
-          </td>
-        </tr>
+          <tr
+            v-for="r in rows"
+            :key="r.pk"
+            :class="{stop: !!r.date_end}"
+          >
+            <td>{{ r.benefit }}</td>
+            <td>{{ r.registration_basis }}</td>
+            <td>{{ r.doc_start_reg }}<br>{{ r.date_start }}</td>
+            <td>{{ r.doc_end_reg }}<br v-if="!!r.date_end">{{ r.date_end }}</td>
+            <td v-if="!readonly">
+              <button
+                v-tippy="{ placement : 'bottom', arrow: true }"
+                class="btn last btn-blue-nb nbr"
+                style="margin-left: -1px"
+                title="Редактирование"
+                type="button"
+                @click="edit(r.pk)"
+              >
+                <i class="glyphicon glyphicon-pencil" />
+              </button>
+            </td>
+          </tr>
         </tbody>
       </table>
-      <div style="margin: 0 auto; width: 200px" v-if="!readonly">
-        <button @click="edit(-1)"
-                class="btn btn-primary-nb btn-blue-nb"
-                type="button"><i class="fa fa-plus"></i> Создать запись
+      <div
+        v-if="!readonly"
+        style="margin: 0 auto; width: 200px"
+      >
+        <button
+          class="btn btn-primary-nb btn-blue-nb"
+          type="button"
+          @click="edit(-1)"
+        >
+          <i class="fa fa-plus" /> Создать запись
         </button>
       </div>
-      <modal @close="hide_edit" margin-top marginLeftRight="auto" max-width="710px" ref="modalEdit" show-footer="true"
-             v-if="edit_pk > -2" white-bg="true" width="100%">
-        <span slot="header" v-if="edit_pk > -1">Редактор льготы</span>
-        <span slot="header" v-else>Создание льготы</span>
-        <div class="registry-body" slot="body" style="min-height: 200px;padding: 10px">
+      <Modal
+        v-if="edit_pk > -2"
+        ref="modalEdit"
+        margin-top
+        margin-left-right="auto"
+        max-width="710px"
+        show-footer="true"
+        white-bg="true"
+        width="100%"
+        @close="hide_edit"
+      >
+        <span
+          v-if="edit_pk > -1"
+          slot="header"
+        >Редактор льготы</span>
+        <span
+          v-else
+          slot="header"
+        >Создание льготы</span>
+        <div
+          slot="body"
+          class="registry-body"
+          style="min-height: 200px;padding: 10px"
+        >
           <div class="form-group">
             <label>Вид льготы:</label>
-            <select :readonly="edit_data.close" class="form-control" v-model="edit_data.benefit_id">
-              <option :value="x.pk" v-for="x in edit_data.types" :key="x.pk">{{x.title}}</option>
+            <select
+              v-model="edit_data.benefit_id"
+              :readonly="edit_data.close"
+              class="form-control"
+            >
+              <option
+                v-for="x in edit_data.types"
+                :key="x.pk"
+                :value="x.pk"
+              >
+                {{ x.title }}
+              </option>
             </select>
           </div>
           <div class="form-group">
             <label for="de-f3">Дата постановки на льготу:</label>
-            <input :max="td" :readonly="edit_data.close" class="form-control" id="de-f3" type="date"
-                   v-model="edit_data.date_start">
+            <input
+              id="de-f3"
+              v-model="edit_data.date_start"
+              :max="td"
+              :readonly="edit_data.close"
+              class="form-control"
+              type="date"
+            >
           </div>
           <div class="form-group">
             <label for="de-f6">Основание:</label>
-            <textarea class="form-control" id="de-f6" :readonly="edit_data.close"
-                      v-model="edit_data.registration_basis"></textarea>
+            <textarea
+              id="de-f6"
+              v-model="edit_data.registration_basis"
+              class="form-control"
+              :readonly="edit_data.close"
+            />
           </div>
-          <div class="checkbox" style="padding-left: 15px;">
+          <div
+            class="checkbox"
+            style="padding-left: 15px;"
+          >
             <label>
-              <input type="checkbox" v-model="edit_data.close"> снят с льготы
+              <input
+                v-model="edit_data.close"
+                type="checkbox"
+              > снят с льготы
             </label>
           </div>
-          <div class="form-group" v-if="edit_data.close">
+          <div
+            v-if="edit_data.close"
+            class="form-group"
+          >
             <label for="de-f5">Дата снятия:</label>
-            <input :min="td" class="form-control" id="de-f5" type="date" v-model="edit_data.date_end">
+            <input
+              id="de-f5"
+              v-model="edit_data.date_end"
+              :min="td"
+              class="form-control"
+              type="date"
+            >
           </div>
         </div>
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="hide_edit"
+              >
                 Отмена
               </button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid_reg" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                :disabled="!valid_reg"
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="save()"
+              >
                 Сохранить
               </button>
             </div>
           </div>
         </div>
-      </modal>
+      </Modal>
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-10">
-        </div>
+        <div class="col-xs-10" />
         <div class="col-xs-2">
-          <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="hide_modal"
+          >
             Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -115,7 +213,7 @@ import patientsPoint from '../api/patients-point';
 import * as actions from '../store/action-types';
 
 export default {
-  name: 'benefit',
+  name: 'Benefit',
   components: { Modal },
   props: {
     card_pk: {
@@ -140,9 +238,6 @@ export default {
       edit_pk: -2,
     };
   },
-  created() {
-    this.load_data();
-  },
   computed: {
     valid_reg() {
       return this.edit_pk > -2
@@ -150,6 +245,9 @@ export default {
           && this.edit_data.registration_basis !== ''
           && (!this.edit_data.close || this.edit_data.date_end !== '');
     },
+  },
+  created() {
+    this.load_data();
   },
   methods: {
     async edit(pk) {

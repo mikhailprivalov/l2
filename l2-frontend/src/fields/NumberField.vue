@@ -1,9 +1,19 @@
 <template>
-  <input type="number" v-model="val" :readonly="disabled" min="-1000" max="1000" class="form-control" />
+  <input
+    v-model="val"
+    type="number"
+    :readonly="disabled"
+    min="-1000"
+    max="1000"
+    class="form-control"
+  >
 </template>
 
 <script lang="ts">
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -26,9 +36,6 @@ export default {
       },
       immediate: true,
     },
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     changeValue(newVal) {

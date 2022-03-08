@@ -1,21 +1,48 @@
 <template>
-  <modal ref="modal" @close="hide_plan_operations" show-footer="true" white-bg="true" max-width="680px" width="100%"
-         marginLeftRight="auto" margin-top>
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    max-width="680px"
+    width="100%"
+    margin-left-right="auto"
+    margin-top
+    @close="hide_plan_operations"
+  >
     <span slot="header">Планирование операции</span>
-    <div slot="body" style="min-height: 200px" class="registry-body">
-      <plan-operations-data :card_pk_initial="card_pk" :patient_fio="patient_fio" :direction="direction" :pk_plan="pk_plan"
-                            :pk_hirurg="pk_hirurg" :date="date" :operation="operation" :cancel_operation="cancel_operation"/>
+    <div
+      slot="body"
+      style="min-height: 200px"
+      class="registry-body"
+    >
+      <PlanOperationsData
+        :card_pk_initial="card_pk"
+        :patient_fio="patient_fio"
+        :direction="direction"
+        :pk_plan="pk_plan"
+        :pk_hirurg="pk_hirurg"
+        :date="date"
+        :operation="operation"
+        :cancel_operation="cancel_operation"
+      />
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-5" style="float: right">
-          <button @click="hide_plan_operations" class="btn btn-primary-nb btn-blue-nb" type="button">
+        <div
+          class="col-xs-5"
+          style="float: right"
+        >
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="hide_plan_operations"
+          >
             Отмена
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -23,7 +50,7 @@ import Modal from '../ui-cards/Modal.vue';
 import PlanOperationsData from '../components/PlanOperationsData.vue';
 
 export default {
-  name: 'plan-operation-edit',
+  name: 'PlanOperationEdit',
   components: { Modal, PlanOperationsData },
   props: {
     card_pk: {

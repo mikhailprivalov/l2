@@ -1,23 +1,55 @@
 <template>
-  <div ref="root" class="split content">
-    <div ref="ct" style="display: flex">
-      <div ref="tl" class="split content" style="padding: 0;">
-        <patient-picker v-model="selected_card" directive_from_need="true" search_results="false" history_n="false"
-                        bottom_picker="true">
-          <div slot="for_card_bottom" class="bottom-inner">
-            <a v-if="can_create_directions && selected_card.pk !== -1" :href="directions_url">
+  <div
+    ref="root"
+    class="split content"
+  >
+    <div
+      ref="ct"
+      style="display: flex"
+    >
+      <div
+        ref="tl"
+        class="split content"
+        style="padding: 0;"
+      >
+        <PatientPicker
+          v-model="selected_card"
+          directive_from_need="true"
+          search_results="false"
+          history_n="false"
+          bottom_picker="true"
+        >
+          <div
+            slot="for_card_bottom"
+            class="bottom-inner"
+          >
+            <a
+              v-if="can_create_directions && selected_card.pk !== -1"
+              :href="directions_url"
+            >
               <span>Создать направления</span>
             </a>
           </div>
-        </patient-picker>
+        </PatientPicker>
       </div>
-      <div ref="tr" class="split content" style="overflow: visible;display: flex;padding-bottom: 0">
-        <statistics-ticket-creator :base="selected_card.base"
-                                   :ofname="selected_card.ofname" :card_pk="selected_card.pk"/>
+      <div
+        ref="tr"
+        class="split content"
+        style="overflow: visible;display: flex;padding-bottom: 0"
+      >
+        <StatisticsTicketCreator
+          :base="selected_card.base"
+          :ofname="selected_card.ofname"
+          :card_pk="selected_card.pk"
+        />
       </div>
     </div>
-    <div ref="cb" class="split content" style="padding: 0;">
-      <statistics-tickets-viewer/>
+    <div
+      ref="cb"
+      class="split content"
+      style="padding: 0;"
+    >
+      <StatisticsTicketsViewer />
     </div>
   </div>
 </template>
@@ -29,7 +61,7 @@ import StatisticsTicketCreator from '../ui-cards/StatisticsTicketCreator.vue';
 import StatisticsTicketsViewer from '../ui-cards/StatisticsTicketsViewer.vue';
 
 export default {
-  name: 'statistics-tickets',
+  name: 'StatisticsTickets',
   components: {
     PatientPicker,
     StatisticsTicketCreator,

@@ -1,12 +1,31 @@
 <template>
   <div class="custom-view-wrapper">
-    <div class="dg-content">Шаблон "{{ messageBody }}".</div>
-    <div class="dg-content">Выберите вариант действий:</div>
-    <br />
+    <div class="dg-content">
+      Шаблон "{{ messageBody }}".
+    </div>
+    <div class="dg-content">
+      Выберите вариант действий:
+    </div>
+    <br>
 
-    <button @click="handle('replace')" class="btn btn-blue-nb">Заменить значения</button>
-    <button @click="handle('append')" class="btn btn-blue-nb">Дописать</button>
-    <button @click="handleDismiss()" class="btn btn-blue-nb">Отмена</button>
+    <button
+      class="btn btn-blue-nb"
+      @click="handle('replace')"
+    >
+      Заменить значения
+    </button>
+    <button
+      class="btn btn-blue-nb"
+      @click="handle('append')"
+    >
+      Дописать
+    </button>
+    <button
+      class="btn btn-blue-nb"
+      @click="handleDismiss()"
+    >
+      Отмена
+    </button>
   </div>
 </template>
 

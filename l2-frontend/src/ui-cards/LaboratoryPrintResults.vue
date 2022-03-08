@@ -1,26 +1,38 @@
 <template>
   <div v-frag>
-    <a href="#" @click.prevent="doOpen">
+    <a
+      href="#"
+      @click.prevent="doOpen"
+    >
       Печать результатов
     </a>
-    <MountingPortal mountTo="#portal-place" name="LaboratoryPrintResults" append v-if="open">
-      <modal
+    <MountingPortal
+      v-if="open"
+      mount-to="#portal-place"
+      name="LaboratoryPrintResults"
+      append
+    >
+      <Modal
         v-if="open"
-        @close="open = false"
         show-footer="true"
         white-bg="true"
         max-width="710px"
         width="100%"
-        marginLeftRight="auto"
+        margin-left-right="auto"
+        @close="open = false"
       >
         <span slot="header">Печать результатов за день</span>
         <div slot="body">
           <div class="input-group">
             <span class="input-group-addon">Дата подтверждения</span>
-            <input class="form-control" type="date" v-model="date" />
+            <input
+              v-model="date"
+              class="form-control"
+              type="date"
+            >
           </div>
           <div style="margin-top: 10px">
-            <researches-picker
+            <ResearchesPicker
               v-model="selected_researches"
               autoselect="none"
               :just_search="true"
@@ -30,16 +42,20 @@
             />
           </div>
           <div style="margin-top: 10px">
-            <treeselect
+            <Treeselect
+              v-model="otd"
               :multiple="false"
               :disable-branch-nodes="true"
               :options="otds"
               :clearable="false"
               placeholder="Отделение не выбрано"
-              v-model="otd"
             />
-            <hr />
-            <button type="button" class="btn btn-primary-nb" @click="dayprint_do">
+            <hr>
+            <button
+              type="button"
+              class="btn btn-primary-nb"
+              @click="dayprint_do"
+            >
               Печать результатов за выбранную дату
             </button>
           </div>
@@ -47,13 +63,17 @@
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="open = false" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="open = false"
+              >
                 Закрыть
               </button>
             </div>
           </div>
         </div>
-      </modal>
+      </Modal>
     </MountingPortal>
   </div>
 </template>
@@ -69,8 +89,8 @@ import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import * as actions from '@/store/action-types';
 
 export default {
-  components: { Modal, ResearchesPicker, Treeselect },
   name: 'LaboratoryPrintResults',
+  components: { Modal, ResearchesPicker, Treeselect },
   data() {
     return {
       open: false,

@@ -1,10 +1,18 @@
 <template>
-  <div class="form-group mkb10" style="width: 100%; margin-top: 40px">
+  <div
+    class="form-group mkb10"
+    style="width: 100%; margin-top: 40px"
+  >
     <label>Диагноз в полной форме (код по МКБ и название):</label>
-    <MKBFieldForm v-model="diagnos" :short="false"/>
-    <ConfigureDispenseryResearch v-if="diagnos.length >= 5" :diagnos_code="diagnos"/>
+    <MKBFieldForm
+      v-model="diagnos"
+      :short="false"
+    />
+    <ConfigureDispenseryResearch
+      v-if="diagnos.length >= 5"
+      :diagnos_code="diagnos"
+    />
   </div>
-
 </template>
 
 <script lang="ts">

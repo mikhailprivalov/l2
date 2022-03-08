@@ -1,9 +1,21 @@
 <template>
-  <div class="base" :class="{ fullWidth, redesigned }">
-    <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }" :key="v" v-for="v in variantsLocal">
+  <div
+    class="base"
+    :class="{ fullWidth, redesigned }"
+  >
+    <a
+      v-for="v in variantsLocal"
+      :key="v"
+      href="#"
+      :class="{ active: v === val, disabled }"
+      @click.prevent="changeValue(v)"
+    >
       <span>
         {{ uppercase ? v.toUpperCase() : v }}
-        <span class="badge badge-warning" v-if="Boolean(bages[v])">{{ bages[v] }}</span>
+        <span
+          v-if="Boolean(bages[v])"
+          class="badge badge-warning"
+        >{{ bages[v] }}</span>
       </span>
     </a>
   </div>
@@ -11,6 +23,9 @@
 
 <script lang="ts">
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -44,6 +59,12 @@ export default {
       default: () => ({}),
     },
   },
+  data() {
+    return {
+      val: this.value,
+      variantsLocal: [],
+    };
+  },
   watch: {
     value: {
       handler() {
@@ -66,15 +87,6 @@ export default {
         }
       },
     },
-  },
-  data() {
-    return {
-      val: this.value,
-      variantsLocal: [],
-    };
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     changeValue(newVal) {

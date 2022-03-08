@@ -3,17 +3,33 @@
     <Navbar v-if="!embedded" />
 
     <div :class="isNarrowLayout && 'container'">
-      <router-view></router-view>
+      <router-view />
     </div>
 
-    <div id="preloader" v-if="inLoading"></div>
+    <div
+      v-if="inLoading"
+      id="preloader"
+    />
 
     <transition name="fade">
-      <div id="full-page-loader" v-if="fullPageLoader">
+      <div
+        v-if="fullPageLoader"
+        id="full-page-loader"
+      >
         <div class="loader-inner">
-          <div class="rotated-circle"></div>
-          <div class="fixed-loader-text" v-if="asVI">{{system}}</div>
-          <div class="fixed-loader-text" v-else>L<span>2</span></div>
+          <div class="rotated-circle" />
+          <div
+            v-if="asVI"
+            class="fixed-loader-text"
+          >
+            {{ system }}
+          </div>
+          <div
+            v-else
+            class="fixed-loader-text"
+          >
+            L<span>2</span>
+          </div>
         </div>
       </div>
     </transition>

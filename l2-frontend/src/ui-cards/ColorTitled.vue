@@ -1,6 +1,9 @@
 <template>
   <div v-frag>
-    <div class="color" :style="`background-color: ${color};color: ${color};`"></div>
+    <div
+      class="color"
+      :style="`background-color: ${color};color: ${color};`"
+    />
 
     {{ title }}
   </div>

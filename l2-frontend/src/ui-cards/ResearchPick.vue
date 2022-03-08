@@ -1,17 +1,28 @@
 <template>
   <div v-tippy="V_TIPPY_PROPS">
     <span class="rps">{{ research.short_title || research.title }}</span>
-    <div :id="tid" v-if="research.full_title || research.code || force_tippy || research.auto_deselect">
-      <div class="rtitle">{{ research.full_title || research.title }}</div>
-      <span class="s-code" v-if="research.code">{{ research.code }}</span>
-      <span class="auto-deselect" v-if="research.auto_deselect">шаблон назначений</span>
+    <div
+      v-if="research.full_title || research.code || force_tippy || research.auto_deselect"
+      :id="tid"
+    >
+      <div class="rtitle">
+        {{ research.full_title || research.title }}
+      </div>
+      <span
+        v-if="research.code"
+        class="s-code"
+      >{{ research.code }}</span>
+      <span
+        v-if="research.auto_deselect"
+        class="auto-deselect"
+      >шаблон назначений</span>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 export default {
-  name: 'research-pick',
+  name: 'ResearchPick',
   props: {
     research: {
       type: Object,

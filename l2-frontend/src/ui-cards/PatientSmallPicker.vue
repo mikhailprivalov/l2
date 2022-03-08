@@ -1,23 +1,39 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
-    <div class="top-picker" :class="{ internalType: selected_base.internal_type }">
+    <div
+      class="top-picker"
+      :class="{ internalType: selected_base.internal_type }"
+    >
       <div class="input-group">
-        <div class="input-group-btn" v-if="bases.length > 1">
+        <div
+          v-if="bases.length > 1"
+          class="input-group-btn"
+        >
           <button
             class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
             type="button"
             data-toggle="dropdown"
             style="width: 200px;text-align: left!important;"
           >
-            <span class="caret"></span> {{ selected_base.title }}
+            <span class="caret" /> {{ selected_base.title }}
           </button>
           <ul class="dropdown-menu">
-            <li v-for="row in basesFiltered" :value="row.pk" :key="row.pk">
-              <a href="#" @click.prevent="select_base(row.pk)">{{ row.title }}</a>
+            <li
+              v-for="row in basesFiltered"
+              :key="row.pk"
+              :value="row.pk"
+            >
+              <a
+                href="#"
+                @click.prevent="select_base(row.pk)"
+              >{{ row.title }}</a>
             </li>
           </ul>
         </div>
-        <div class="input-group-btn" v-else>
+        <div
+          v-else
+          class="input-group-btn"
+        >
           <button
             class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
             type="button"
@@ -28,17 +44,26 @@
           </button>
         </div>
         <input
+          ref="q"
+          v-model="query"
           type="text"
           class="form-control bob"
-          v-model="query"
           placeholder="Введите запрос"
-          ref="q"
           maxlength="255"
           @keyup.enter="search"
-        />
-        <span v-if="selected_base.internal_type" class="rmis-search input-group-btn">
-          <label class="btn btn-blue-nb nbr" style="padding: 5px 12px;">
-            <input type="checkbox" v-model="inc_rmis" /> Вкл. РМИС
+        >
+        <span
+          v-if="selected_base.internal_type"
+          class="rmis-search input-group-btn"
+        >
+          <label
+            class="btn btn-blue-nb nbr"
+            style="padding: 5px 12px;"
+          >
+            <input
+              v-model="inc_rmis"
+              type="checkbox"
+            > Вкл. РМИС
           </label>
         </span>
         <span class="input-group-btn">
@@ -58,52 +83,98 @@
       <div style="padding-left: 5px;padding-right: 5px;">
         <table class="table table-bordered">
           <colgroup>
-            <col width="124" />
-            <col />
-            <col width="54" />
-            <col />
+            <col width="124">
+            <col>
+            <col width="54">
+            <col>
           </colgroup>
           <tbody>
             <tr>
-              <td style="max-width: 124px;" class="table-header-row">ФИО:</td>
-              <td style="max-width: 99%;" class="table-content-row">
+              <td
+                style="max-width: 124px;"
+                class="table-header-row"
+              >
+                ФИО:
+              </td>
+              <td
+                style="max-width: 99%;"
+                class="table-content-row"
+              >
                 {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }}
               </td>
-              <td style="max-width: 54px;" class="table-header-row">{{ selected_card.is_rmis ? 'ID' : 'Карта' }}:</td>
-              <td style="max-width: 99%;" class="table-content-row">{{ selected_card.num }}</td>
+              <td
+                style="max-width: 54px;"
+                class="table-header-row"
+              >
+                {{ selected_card.is_rmis ? 'ID' : 'Карта' }}:
+              </td>
+              <td
+                style="max-width: 99%;"
+                class="table-content-row"
+              >
+                {{ selected_card.num }}
+              </td>
             </tr>
             <tr>
-              <td class="table-header-row">Дата рождения:</td>
+              <td class="table-header-row">
+                Дата рождения:
+              </td>
               <td class="table-content-row">
                 {{ selected_card.birthday }}<span v-if="loaded"> ({{ selected_card.age }})</span>
               </td>
-              <td class="table-header-row">Пол:</td>
-              <td class="table-content-row">{{ selected_card.sex }}</td>
+              <td class="table-header-row">
+                Пол:
+              </td>
+              <td class="table-content-row">
+                {{ selected_card.sex }}
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <modal ref="modal" v-if="showModal" @close="hide_modal" show-footer="true">
+    <Modal
+      v-if="showModal"
+      ref="modal"
+      show-footer="true"
+      @close="hide_modal"
+    >
       <span slot="header">Найдено несколько карт</span>
-      <div slot="body" style="padding: 10px">
-        <div class="founded" v-for="(row, i) in founded_cards" :key="row.pk" @click="select_card(i)">
+      <div
+        slot="body"
+        style="padding: 10px"
+      >
+        <div
+          v-for="(row, i) in founded_cards"
+          :key="row.pk"
+          class="founded"
+          @click="select_card(i)"
+        >
           <div class="founded-row">
             Карта <span class="b">{{ row.type_title }} {{ row.num }}</span>
           </div>
           <div class="founded-row">
             <span class="b">ФИО, пол:</span> {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}
           </div>
-          <div class="founded-row"><span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})</div>
-          <div class="founded-row" v-for="d in row.docs" :key="d.pk">
+          <div class="founded-row">
+            <span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})
+          </div>
+          <div
+            v-for="d in row.docs"
+            :key="d.pk"
+            class="founded-row"
+          >
             <span class="b">{{ d.type_title }}:</span> {{ d.serial }} {{ d.number }}
           </div>
         </div>
       </div>
-      <div slot="footer" class="text-center">
+      <div
+        slot="footer"
+        class="text-center"
+      >
         <small>Показано не более 10 карт</small>
       </div>
-    </modal>
+    </Modal>
   </div>
 </template>
 
@@ -113,7 +184,7 @@ import * as actions from '../store/action-types';
 import patientsPoint from '../api/patients-point';
 
 export default {
-  name: 'patient-small-picker',
+  name: 'PatientSmallPicker',
   components: { Modal },
   props: {
     base_pk: {
@@ -146,33 +217,6 @@ export default {
       inc_rmis: false,
       perf_val: false,
     };
-  },
-  mounted() {
-    this.check_base();
-
-    this.$store.watch(
-      state => state.bases,
-      () => {
-        this.check_base();
-      },
-      { immediate: true },
-    );
-  },
-  watch: {
-    query() {
-      this.query = this.query
-        .split(' ')
-        .map(s => s.charAt(0).toUpperCase() + s.substring(1))
-        .join(' ');
-    },
-    bases() {
-      this.check_base();
-    },
-    inLoading() {
-      if (!this.inLoading && this.search_after_loading) {
-        this.search();
-      }
-    },
   },
   computed: {
     bases() {
@@ -250,6 +294,33 @@ export default {
       }
       return [];
     },
+  },
+  watch: {
+    query() {
+      this.query = this.query
+        .split(' ')
+        .map(s => s.charAt(0).toUpperCase() + s.substring(1))
+        .join(' ');
+    },
+    bases() {
+      this.check_base();
+    },
+    inLoading() {
+      if (!this.inLoading && this.search_after_loading) {
+        this.search();
+      }
+    },
+  },
+  mounted() {
+    this.check_base();
+
+    this.$store.watch(
+      state => state.bases,
+      () => {
+        this.check_base();
+      },
+      { immediate: true },
+    );
   },
   methods: {
     open_editor(isnew) {

@@ -1,56 +1,74 @@
 <template>
   <div v-frag>
     <li v-show="Boolean(l2_load_file)">
-      <a href="#" @click.prevent="doOpen">
+      <a
+        href="#"
+        @click.prevent="doOpen"
+      >
         Загрузка файла
       </a>
-      <modal
+      <Modal
         v-if="open"
-        @close="open = false"
         show-footer="true"
         white-bg="true"
         max-width="710px"
         width="100%"
-        marginLeftRight="auto"
+        margin-left-right="auto"
+        @close="open = false"
       >
         <span slot="header">Загрузка файла</span>
         <div slot="body">
           <div class="form-group">
             <label for="fileInput">PDF файл</label>
             <input
-              type="file"
-              ref="file"
-              class="form-control-file"
               id="fileInput"
+              ref="file"
+              type="file"
+              class="form-control-file"
               :readonly="loading"
               @change="handleFileUpload()"
-            />
+            >
           </div>
           <button
             style="width: 200px;"
             type="button"
             class="btn btn-primary"
-            @click="submit()"
             :disabled="!Boolean(file) || loading"
+            @click="submit()"
           >
-            <i class="fa fa-spinner" v-if="loading"></i>
+            <i
+              v-if="loading"
+              class="fa fa-spinner"
+            />
             <span v-else>Загрузить</span>
           </button>
-          <h5 v-if="results.length > 0">Сохранённые результаты</h5>
+          <h5 v-if="results.length > 0">
+            Сохранённые результаты
+          </h5>
           <ul>
-            <li v-for="r in results" :key="r.pk">{{ r.pk }} – {{ r.result }}</li>
+            <li
+              v-for="r in results"
+              :key="r.pk"
+            >
+              {{ r.pk }} – {{ r.result }}
+            </li>
           </ul>
         </div>
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="open = false" class="btn btn-primary-nb btn-blue-nb" type="button" :disabled="loading">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                :disabled="loading"
+                @click="open = false"
+              >
                 Закрыть
               </button>
             </div>
           </div>
         </div>
-      </modal>
+      </Modal>
     </li>
   </div>
 </template>
@@ -61,8 +79,8 @@ import * as Cookies from 'es-cookie';
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {
-  components: { Modal },
   name: 'LoadFile',
+  components: { Modal },
   data() {
     return {
       open: false,
@@ -70,6 +88,11 @@ export default {
       file: '',
       results: [],
     };
+  },
+  computed: {
+    l2_load_file() {
+      return this.$store.getters.modules.l2_load_file;
+    },
   },
   methods: {
     doOpen() {
@@ -102,11 +125,6 @@ export default {
         this.$root.$emit('msg', 'error', 'Ошибка');
       }
       this.loading = false;
-    },
-  },
-  computed: {
-    l2_load_file() {
-      return this.$store.getters.modules.l2_load_file;
     },
   },
 };

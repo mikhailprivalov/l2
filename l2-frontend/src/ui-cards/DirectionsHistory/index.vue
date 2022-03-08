@@ -1,19 +1,32 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative" :class="[!!iss_pk && 'no_abs']">
-    <div class="top-picker" v-if="!iss_pk">
-      <div class="direct-date" title="Дата направления" v-tippy="{ placement: 'right', arrow: true }">
-        <date-range small v-model="date_range" />
+  <div
+    style="height: 100%;width: 100%;position: relative"
+    :class="[!!iss_pk && 'no_abs']"
+  >
+    <div
+      v-if="!iss_pk"
+      class="top-picker"
+    >
+      <div
+        v-tippy="{ placement: 'right', arrow: true }"
+        class="direct-date"
+        title="Дата направления"
+      >
+        <DateRange
+          v-model="date_range"
+          small
+        />
       </div>
       <div class="top-inner">
         <div class="top-select">
-          <select-picker-m
+          <SelectPickerM
+            v-model="services"
             :options="services_options"
             actions_box
             multiple
-            noneText="Все услуги"
+            none-text="Все услуги"
             search
             uid="services_options"
-            v-model="services"
           />
         </div>
         <div class="position-relative">
@@ -23,78 +36,140 @@
             style="text-align: left!important;width: 100%;"
             type="button"
           >
-            <span class="caret"></span> {{ active_type_obj.title }}
+            <span class="caret" /> {{ active_type_obj.title }}
           </button>
           <ul class="dropdown-menu">
-            <li v-for="row in typesFiltered" :key="row.pk">
-              <a :title="row.title" @click.prevent="select_type(row.pk)" href="#">
+            <li
+              v-for="row in typesFiltered"
+              :key="row.pk"
+            >
+              <a
+                :title="row.title"
+                href="#"
+                @click.prevent="select_type(row.pk)"
+              >
                 {{ row.title }}
               </a>
             </li>
           </ul>
         </div>
-        <button class="btn btn-blue-nb btn-ell nbr" title="Обновить" v-tippy @click="load_history_safe">
-          <i class="glyphicon glyphicon-refresh"></i>
+        <button
+          v-tippy
+          class="btn btn-blue-nb btn-ell nbr"
+          title="Обновить"
+          @click="load_history_safe"
+        >
+          <i class="glyphicon glyphicon-refresh" />
         </button>
       </div>
     </div>
     <div class="content-picker">
       <table class="table table-responsive table-bordered table-one">
         <colgroup>
-          <col width="66" />
-          <col width="70" />
-          <col />
-          <col width="65" />
-          <col :width="!!iss_pk ? 200 : 150" />
-          <col width="28" />
+          <col width="66">
+          <col width="70">
+          <col>
+          <col width="65">
+          <col :width="!!iss_pk ? 200 : 150">
+          <col width="28">
         </colgroup>
         <thead>
           <tr>
-            <th class="text-center">Дата</th>
-            <th v-if="active_type !== 5">№ напр.</th>
-            <th v-else>№ дог</th>
+            <th class="text-center">
+              Дата
+            </th>
+            <th v-if="active_type !== 5">
+              № напр.
+            </th>
+            <th v-else>
+              № дог
+            </th>
             <th>Назначения</th>
-            <th v-if="active_type !== 5" class="text-center">Статус</th>
-            <th v-else class="text-center">Сумма</th>
-            <th></th>
-            <th class="nopd noel"><input type="checkbox" v-model="all_checked" /></th>
+            <th
+              v-if="active_type !== 5"
+              class="text-center"
+            >
+              Статус
+            </th>
+            <th
+              v-else
+              class="text-center"
+            >
+              Сумма
+            </th>
+            <th />
+            <th class="nopd noel">
+              <input
+                v-model="all_checked"
+                type="checkbox"
+              >
+            </th>
           </tr>
         </thead>
       </table>
       <table class="table table-responsive table-bordered no-first-border-top table-hover table-two">
         <colgroup>
-          <col width="66" />
-          <col width="70" />
-          <col />
-          <col width="65" />
-          <col :width="!!iss_pk ? 200 : 150" />
-          <col width="28" />
+          <col width="66">
+          <col width="70">
+          <col>
+          <col width="65">
+          <col :width="!!iss_pk ? 200 : 150">
+          <col width="28">
         </colgroup>
         <tbody>
           <tr v-if="directions.length === 0 && is_created">
-            <td class="text-center" :colspan="6">Не найдено</td>
+            <td
+              class="text-center"
+              :colspan="6"
+            >
+              Не найдено
+            </td>
           </tr>
           <tr v-if="directions.length === 0 && !is_created">
-            <td class="text-center" :colspan="6">Загрузка...</td>
+            <td
+              class="text-center"
+              :colspan="6"
+            >
+              Загрузка...
+            </td>
           </tr>
-          <tr v-for="row in directions" :key="row.pk">
-            <td class="text-center">{{ row.date }}</td>
+          <tr
+            v-for="row in directions"
+            :key="row.pk"
+          >
+            <td class="text-center">
+              {{ row.date }}
+            </td>
             <td>
               <span v-if="!!row.has_hosp && role_can_use_stationar">
                 <!-- eslint-disable-next-line max-len -->
-                <a :href="stationar_link(row.pk)" target="_blank" class="a-under">
+                <a
+                  :href="stationar_link(row.pk)"
+                  target="_blank"
+                  class="a-under"
+                >
                   {{ row.pk }}
                 </a>
               </span>
               <span v-else-if="!!row.has_descriptive && role_can_use_descriptive">
-                <a :href="`/ui/results/descriptive#{%22pk%22:${row.pk}}`" target="_blank" class="a-under">
+                <a
+                  :href="`/ui/results/descriptive#{%22pk%22:${row.pk}}`"
+                  target="_blank"
+                  class="a-under"
+                >
                   {{ row.pk }}
                 </a>
               </span>
               <span v-else>{{ row.pk }}</span>
             </td>
-            <td class="researches" :title="row.researches">{{ row.researches }}</td>
             <td
+              class="researches"
+              :title="row.researches"
+            >
+              {{ row.researches }}
+            </td>
+            <td
+              v-tippy="{ placement: 'bottom', arrow: true }"
               class="text-center"
               :title="
                 statuses[row.status === 1 && row.has_descriptive ? -2 : row.status] +
@@ -104,17 +179,22 @@
                       ? ' (экспертиза БЕЗ заменчаний)'
                       : ' (экспертза С замечаниями)'
                     : '') + (row.person_contract_pk > 0 ? ' (Договор-' + row.person_contract_pk +
-              ' (Направления: ' + row.person_contract_dirs+ ')': '')
+                    ' (Направления: ' + row.person_contract_dirs+ ')': '')
               "
-              v-tippy="{ placement: 'bottom', arrow: true }"
               :class="['status-' + row.status]"
             >
               <strong>
                 {{ row.status }}
                 <span v-if="row.maybe_onco">*О</span>
                 <span v-if="row.is_application">**З</span>
-                <span :class="['status-' + row.expertise_status]" v-if="row.is_expertise">-Э</span>
-                <span v-if="row.person_contract_pk > 0" style="color: #0d0d0d" >&#8381;</span>
+                <span
+                  v-if="row.is_expertise"
+                  :class="['status-' + row.expertise_status]"
+                >-Э</span>
+                <span
+                  v-if="row.person_contract_pk > 0"
+                  style="color: #0d0d0d"
+                >&#8381;</span>
               </strong>
             </td>
             <td class="button-td">
@@ -133,53 +213,96 @@
                   },
                 ]"
               >
-                <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
+                <a
+                  v-if="!!row.pacs"
+                  v-tippy
+                  :href="row.pacs"
+                  title="Снимок"
+                  target="_blank"
+                  class="btn btn-blue-nb"
+                >
                   <i class="fa fa-camera" />
                 </a>
                 <a
-                  href="#"
-                  @click.prevent="role_can_use_stationar ? show_stationar(row.parent.pk) : null"
-                  :title="`Принадлежит и/б: ${row.parent.pk}-${row.parent.parent_title}`"
-                  v-tippy
-                  class="btn btn-blue-nb"
                   v-if="!!row.parent.parent_is_hosp"
+                  v-tippy
+                  href="#"
+                  :title="`Принадлежит и/б: ${row.parent.pk}-${row.parent.parent_title}`"
+                  class="btn btn-blue-nb"
+                  @click.prevent="role_can_use_stationar ? show_stationar(row.parent.pk) : null"
                 >
                   <i class="fa fa-bed" />
                 </a>
                 <a
-                  href="#"
-                  @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null"
-                  :title="`Создано в амбулаторном приеме: ${row.parent.pk}-${row.parent.parent_title}`"
-                  v-tippy
-                  class="btn btn-blue-nb"
                   v-if="!!row.parent.parent_is_doc_refferal"
+                  v-tippy
+                  href="#"
+                  :title="`Создано в амбулаторном приеме: ${row.parent.pk}-${row.parent.parent_title}`"
+                  class="btn btn-blue-nb"
                   :class="{ isDisabled: !row.parent.is_confirm }"
+                  @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null"
                 >
                   <i class="fa fa-user-md" />
                 </a>
                 <button
+                  v-if="row.has_hosp"
+                  v-tippy
                   class="btn btn-blue-nb"
                   title="Штрих-код браслета"
-                  v-tippy
                   @click="print_hosp(row.pk)"
-                  v-if="row.has_hosp"
                 >
                   <i class="fa fa-barcode" /> браслета
                 </button>
-                <button class="btn btn-blue-nb" v-if="row.status <= 1 && !row.has_hosp" @click="cancel_direction(row.pk)">
+                <button
+                  v-if="row.status <= 1 && !row.has_hosp"
+                  class="btn btn-blue-nb"
+                  @click="cancel_direction(row.pk)"
+                >
                   Отмена
                 </button>
-                <button class="btn btn-blue-nb" v-else-if="!row.has_hosp" @click="show_results(row)">Результаты</button>
-                <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
+                <button
+                  v-else-if="!row.has_hosp"
+                  class="btn btn-blue-nb"
+                  @click="show_results(row)"
+                >
+                  Результаты
+                </button>
+                <button
+                  class="btn btn-blue-nb"
+                  @click="print_direction(row.pk)"
+                >
+                  Направление
+                </button>
               </div>
-              <div v-else-if="row.is_application" class="button-td-inner button-td-inner-single">
-                <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Заявление</button>
+              <div
+                v-else-if="row.is_application"
+                class="button-td-inner button-td-inner-single"
+              >
+                <button
+                  class="btn btn-blue-nb"
+                  @click="print_direction(row.pk)"
+                >
+                  Заявление
+                </button>
               </div>
-              <div v-else-if="active_type===5" class="button-td-inner button-td-inner-single">
-                <button class="btn btn-blue-nb" @click="print_contract(row.pk, patient_pk)">Договор</button>
+              <div
+                v-else-if="active_type===5"
+                class="button-td-inner button-td-inner-single"
+              >
+                <button
+                  class="btn btn-blue-nb"
+                  @click="print_contract(row.pk, patient_pk)"
+                >
+                  Договор
+                </button>
               </div>
             </td>
-            <td class="nopd"><input v-model="row.checked" type="checkbox" /></td>
+            <td class="nopd">
+              <input
+                v-model="row.checked"
+                type="checkbox"
+              >
+            </td>
           </tr>
         </tbody>
       </table>
@@ -219,8 +342,8 @@ function truncate(s, n, useWordBoundary) {
 }
 
 export default {
+  name: 'DirectionsHistory',
   components: { SelectPickerM, DateRange, Bottom },
-  name: 'directions-history',
   props: {
     patient_pk: {
       type: Number,
@@ -306,6 +429,42 @@ export default {
     ...mapGetters({
       researches: 'researches_obj',
     }),
+  },
+  watch: {
+    active_type() {
+      this.load_history();
+    },
+    patient_pk() {
+      this.load_history();
+    },
+    date_range() {
+      this.load_history();
+    },
+    services() {
+      this.load_history();
+    },
+    all_checked() {
+      for (const row of this.directions) {
+        row.checked = this.all_checked;
+      }
+    },
+    directions: {
+      handler() {
+        this.checked = [];
+        for (const row of this.directions) {
+          if (row.checked) {
+            this.checked.push(row.pk);
+          }
+        }
+      },
+      deep: true,
+    },
+    researches: {
+      handler() {
+        this.update_so(this.researches);
+      },
+      immediate: true,
+    },
   },
   mounted() {
     this.is_created = true;
@@ -423,42 +582,6 @@ export default {
       } else if (!this.in_checked(pk)) {
         this.checked.push(pk);
       }
-    },
-  },
-  watch: {
-    active_type() {
-      this.load_history();
-    },
-    patient_pk() {
-      this.load_history();
-    },
-    date_range() {
-      this.load_history();
-    },
-    services() {
-      this.load_history();
-    },
-    all_checked() {
-      for (const row of this.directions) {
-        row.checked = this.all_checked;
-      }
-    },
-    directions: {
-      handler() {
-        this.checked = [];
-        for (const row of this.directions) {
-          if (row.checked) {
-            this.checked.push(row.pk);
-          }
-        }
-      },
-      deep: true,
-    },
-    researches: {
-      handler() {
-        this.update_so(this.researches);
-      },
-      immediate: true,
     },
   },
 };

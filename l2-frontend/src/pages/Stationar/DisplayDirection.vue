@@ -1,6 +1,5 @@
 <template>
   <div
-    class="root-dd"
     v-tippy="{
       html: '#tp-' + direction.pk,
       reactive: true,
@@ -20,18 +19,28 @@
         },
       },
     }"
+    class="root-dd"
   >
     <div class="date">
       {{ direction.date_create }}
     </div>
-    <div class="dep" v-if="Boolean(direction.podrazdeleniye) && direction.researches.length !== 1">
+    <div
+      v-if="Boolean(direction.podrazdeleniye) && direction.researches.length !== 1"
+      class="dep"
+    >
       {{ direction.podrazdeleniye }}
     </div>
-    <div class="dep" v-else>
+    <div
+      v-else
+      class="dep"
+    >
       {{ direction.researches_short[0] || direction.researches[0] }}
     </div>
 
-    <div :id="`tp-${direction.pk}`" class="tp">
+    <div
+      :id="`tp-${direction.pk}`"
+      class="tp"
+    >
       <div class="t-left">
         <div>№ {{ direction.pk }}</div>
         <div>{{ direction.date_create }}</div>
@@ -39,7 +48,12 @@
       <div class="t-right">
         <ul>
           <li><strong>Назначения:</strong></li>
-          <li v-for="r in direction.researches" :key="r">{{ r }}</li>
+          <li
+            v-for="r in direction.researches"
+            :key="r"
+          >
+            {{ r }}
+          </li>
         </ul>
       </div>
     </div>

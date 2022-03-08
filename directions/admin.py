@@ -26,6 +26,7 @@ from .models import (
     NumberGenerator,
     DirectionDocument,
     DocumentSign, AdditionNapravleniya,
+    IssledovaniyaFiles,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -203,6 +204,14 @@ class ResAdditionNapravleniya(admin.ModelAdmin):
     search_fields = ('target_direction__pk', 'addition_direction__pk', )
 
 
+class ResIssledovaniyaFiles(admin.ModelAdmin):
+    list_display = (
+        'issledovaniye',
+        'uploaded_file',
+        'created_at',
+    )
+    search_fields = ('issledovaniye__pk', )
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -223,3 +232,4 @@ admin.site.register(DashboardChartFields, ResDashboardChartFields)
 admin.site.register(MonitoringSumFieldByDay)
 admin.site.register(MonitoringSumFieldTotal)
 admin.site.register(AdditionNapravleniya, ResAdditionNapravleniya)
+admin.site.register(IssledovaniyaFiles, ResIssledovaniyaFiles)

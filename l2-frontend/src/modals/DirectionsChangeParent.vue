@@ -1,41 +1,84 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="50%" min-width="800px" width="50%"
-         marginLeftRight="auto" margin-top="48px">
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    max-width="50%"
+    min-width="800px"
+    width="50%"
+    margin-left-right="auto"
+    margin-top="48px"
+    @close="hide_modal"
+  >
     <span slot="header">Изменить родителя</span>
-    <div slot="body" style="min-height: 340px">
-      <h6><strong>Пациент: </strong>{{patientFio}}</h6>
-      <div class="row" id="row-box">
+    <div
+      slot="body"
+      style="min-height: 340px"
+    >
+      <h6><strong>Пациент: </strong>{{ patientFio }}</h6>
+      <div
+        id="row-box"
+        class="row"
+      >
         <div class="col-xs-6">
           <h6><strong>Изменить принадлежность:</strong></h6>
           <ul>
-            <li v-for="dir in directions_checked" :key="dir.pk">
-              <div v-if="dir.has_hosp" class="invalid" v-tippy="{ placement : 'bottom'}"
-                 title="История болезни не может подчиняться">
-                <span style="text-decoration: line-through;"><strong>{{dir.pk}}</strong>- {{dir.researches}}</span>
+            <li
+              v-for="dir in directions_checked"
+              :key="dir.pk"
+            >
+              <div
+                v-if="dir.has_hosp"
+                v-tippy="{ placement: 'bottom' }"
+                class="invalid"
+                title="История болезни не может подчиняться"
+              >
+                <span
+                  style="text-decoration: line-through"
+                ><strong>{{ dir.pk }}</strong>- {{ dir.researches }}</span>
               </div>
               <div v-else-if="dir.parent.parent_is_hosp || dir.parent.parent_is_doc_refferal">
-                <i class="fa fa-exclamation-triangle fa-lg" style="color: #d35400"></i><strong>{{dir.pk}}</strong> -
-                {{dir.researches}}
-                <!-- eslint-disable-next-line max-len -->
-                <a :href="`/mainmenu/stationar#{%22pk%22:${dir.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
-                  v-if="dir.parent.parent_is_hosp" class="invalid" target="_blank">
-                  (Принадлежит И/Б № {{dir.parent.pk}} - {{dir.parent.parent_title}})
+                <i
+                  class="fa fa-exclamation-triangle fa-lg"
+                  style="color: #d35400"
+                /><strong>{{ dir.pk }}</strong> -
+                {{ dir.researches }}
+                <a
+                  v-if="dir.parent.parent_is_hosp"
+                  :href="/*eslint-disable-line max-len*/ `/mainmenu/stationar#{%22pk%22:${dir.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+                  class="invalid"
+                  target="_blank"
+                >
+                  (Принадлежит И/Б № {{ dir.parent.pk }} - {{ dir.parent.parent_title }})
                 </a>
-                <a @click="dir.parent.is_confirm ? show_results(dir.parent) : null"
-                   v-if="dir.parent.parent_is_doc_refferal"
-                   target="_blank">
-                  <!-- eslint-disable-next-line max-len -->
-                  <span :class="[{invalid: dir.parent.is_confirm}, {isDisabled: !dir.parent.is_confirm}]"> (Создано в амбулаторном приеме: {{dir.parent.pk}} - {{dir.parent.parent_title}})</span>
+                <a
+                  v-if="dir.parent.parent_is_doc_refferal"
+                  target="_blank"
+                  @click="dir.parent.is_confirm ? show_results(dir.parent) : null"
+                >
+                  <span :class="[{ invalid: dir.parent.is_confirm }, { isDisabled: !dir.parent.is_confirm }]">
+                    (Создано в амбулаторном приеме: {{ dir.parent.pk }} - {{ dir.parent.parent_title }})</span>
                 </a>
               </div>
-              <div v-else><strong>{{dir.pk}}</strong> - {{dir.researches}}</div>
+              <div v-else>
+                <strong>{{ dir.pk }}</strong> - {{ dir.researches }}
+              </div>
             </li>
           </ul>
         </div>
-        <div class="col-xs-6" id="box-right">
+        <div
+          id="box-right"
+          class="col-xs-6"
+        >
           <h6><strong>Главное направление:</strong></h6>
-          <v-select :clearable="false" v-model="selectStationarDir" label="label" :options="dirs_options"
-                    :searchable="true" placeholder="Выберите историю болезни"/>
+          <v-select
+            v-model="selectStationarDir"
+            :clearable="false"
+            label="label"
+            :options="dirs_options"
+            :searchable="true"
+            placeholder="Выберите историю болезни"
+          />
         </div>
       </div>
     </div>
@@ -43,18 +86,26 @@
     <div slot="footer">
       <div class="row">
         <div class="col-xs-4">
-          <button type="button" @click="updateParent" class="btn btn-primary-nb btn-blue-nb">
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb"
+            @click="updateParent"
+          >
             Сохранить
           </button>
         </div>
         <div class="col-xs-4">
-          <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb">
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb"
+            @click="hide_modal"
+          >
             Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -149,33 +200,32 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .invalid {
-    color: #d35400;
-    cursor: pointer;
-  }
+.invalid {
+  color: #d35400;
+  cursor: pointer;
+}
 
-  .isDisabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-    color: #d35400;
-  }
+.isDisabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  color: #d35400;
+}
 
-  #row-box {
-    display: flex;
-  }
+#row-box {
+  display: flex;
+}
 
-  #box-right {
-    border-left: 1px solid silver;
-  }
+#box-right {
+  border-left: 1px solid silver;
+}
 
-  ul {
-    font-size: 13px;
-    padding: 0;
-  }
+ul {
+  font-size: 13px;
+  padding: 0;
+}
 
-  li {
-    list-style-type: none;
-    padding: 5px;
-  }
-
+li {
+  list-style-type: none;
+  padding: 5px;
+}
 </style>

@@ -2,26 +2,54 @@
   <div class="d-root">
     <div class="top-pane">
       <div style="float: right;">
-        <button type="button" @click="showJournal = true" class="btn btn-primary-nb btn-ell">Отчёт</button>
+        <button
+          type="button"
+          class="btn btn-primary-nb btn-ell"
+          @click="showJournal = true"
+        >
+          Отчёт
+        </button>
       </div>
-      <div class="btn-group btn-group-justified" style="margin-bottom: 10px; width: 50%">
+      <div
+        class="btn-group btn-group-justified"
+        style="margin-bottom: 10px; width: 50%"
+      >
         <div class="btn-group">
-          <a type="button" class="btn btn-primary-nb btn-ell" target="_blank" :href="historyUrl">Печать</a>
+          <a
+            type="button"
+            class="btn btn-primary-nb btn-ell"
+            target="_blank"
+            :href="historyUrl"
+          >Печать</a>
         </div>
         <div class="btn-group">
-          <button type="button" class="btn btn-blue-nb btn-ell" @click="load()">Обновить</button>
+          <button
+            type="button"
+            class="btn btn-blue-nb btn-ell"
+            @click="load()"
+          >
+            Обновить
+          </button>
         </div>
       </div>
     </div>
-    <div class="preloader" v-if="loading"><i class="fa fa-spinner"></i> загрузка</div>
-    <table class="table table-bordered table-hover table-condensed" v-else>
+    <div
+      v-if="loading"
+      class="preloader"
+    >
+      <i class="fa fa-spinner" /> загрузка
+    </div>
+    <table
+      v-else
+      class="table table-bordered table-hover table-condensed"
+    >
       <colgroup>
-        <col style="width: 70px" />
-        <col style="width: 80px" />
-        <col style="width: 80px" />
-        <col style="width: 200px" />
-        <col />
-        <col style="width: 25px" />
+        <col style="width: 70px">
+        <col style="width: 80px">
+        <col style="width: 80px">
+        <col style="width: 200px">
+        <col>
+        <col style="width: 25px">
       </colgroup>
       <thead>
         <tr>
@@ -30,9 +58,15 @@
           <th>Ёмкость</th>
           <th>Тип</th>
           <th>Исследования</th>
-          <td class="x-cell" :key="`check_confirm_${globalCheckConfirm}`">
+          <td
+            :key="`check_confirm_${globalCheckConfirm}`"
+            class="x-cell"
+          >
             <label @click.prevent="toggleGlobalCheckConfirm">
-              <input type="checkbox" :checked="globalCheckConfirm" />
+              <input
+                type="checkbox"
+                :checked="globalCheckConfirm"
+              >
             </label>
           </td>
         </tr>
@@ -46,11 +80,19 @@
           <td>{{ t.time }}</td>
           <td>{{ t.direction }}</td>
           <td>{{ t.pk }}</td>
-          <td><ColorTitled :color="t.color" :title="t.title" /></td>
+          <td>
+            <ColorTitled
+              :color="t.color"
+              :title="t.title"
+            />
+          </td>
           <td>{{ t.researches }}</td>
           <td class="x-cell">
             <label>
-              <input type="checkbox" v-model="t.checked" />
+              <input
+                v-model="t.checked"
+                type="checkbox"
+              >
             </label>
           </td>
         </tr>
@@ -58,7 +100,11 @@
     </table>
 
     <transition name="fade">
-      <JournalGetMaterial :users="currentUser" v-if="showJournal" @close="showJournal = false" />
+      <JournalGetMaterial
+        v-if="showJournal"
+        :users="currentUser"
+        @close="showJournal = false"
+      />
     </transition>
   </div>
 </template>

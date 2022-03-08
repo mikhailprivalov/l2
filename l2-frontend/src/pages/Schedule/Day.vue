@@ -1,20 +1,62 @@
 <template>
-  <div class="day-root" :class="[currentDate === day.date && 'day-today', mode === 'list' ? 'day-list' : 'day-natural']">
+  <div
+    class="day-root"
+    :class="[currentDate === day.date && 'day-today', mode === 'list' ? 'day-list' : 'day-natural']"
+  >
     <div class="day-header">
-      <DayHeader :day="day" :is-editing="isEditing" :resource="resource" />
+      <DayHeader
+        :day="day"
+        :is-editing="isEditing"
+        :resource="resource"
+      />
     </div>
-    <div class="hours" v-if="mode !== 'list'">
-      <div class="hour" v-for="h in allHours" :key="h">
-        <div class="hour-label">{{ h }}</div>
-        <div class="hour-buttons" v-if="isEditing">
-          <a href="#" class="a-under" title="Создать слот" @click.prevent="createSlot(h)" v-tippy><i class="fa fa-plus"></i></a>
+    <div
+      v-if="mode !== 'list'"
+      class="hours"
+    >
+      <div
+        v-for="h in allHours"
+        :key="h"
+        class="hour"
+      >
+        <div class="hour-label">
+          {{ h }}
         </div>
-        <div class="hour-border"></div>
+        <div
+          v-if="isEditing"
+          class="hour-buttons"
+        >
+          <a
+            v-tippy
+            href="#"
+            class="a-under"
+            title="Создать слот"
+            @click.prevent="createSlot(h)"
+          ><i class="fa fa-plus" /></a>
+        </div>
+        <div class="hour-border" />
       </div>
     </div>
-    <TimeSlot v-for="s in day.slots" :key="s.id" :data="s" :mode="mode" :services="services" :allHoursValues="allHoursValues" />
-    <TimeMarker v-if="currentDate === day.date && mode !== 'list'" :time="currentTime" :allHoursValues="allHoursValues" />
-    <button class="btn btn-blue-nb btn-sm btn-block nbr" v-if="isEditing" @click.prevent="createSlot()">Создать слот</button>
+    <TimeSlot
+      v-for="s in day.slots"
+      :key="s.id"
+      :data="s"
+      :mode="mode"
+      :services="services"
+      :all-hours-values="allHoursValues"
+    />
+    <TimeMarker
+      v-if="currentDate === day.date && mode !== 'list'"
+      :time="currentTime"
+      :all-hours-values="allHoursValues"
+    />
+    <button
+      v-if="isEditing"
+      class="btn btn-blue-nb btn-sm btn-block nbr"
+      @click.prevent="createSlot()"
+    >
+      Создать слот
+    </button>
   </div>
 </template>
 

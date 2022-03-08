@@ -2,75 +2,99 @@
   <div class="group">
     <div class="group-title">
       Микроорганизмы
-      <div class="input-select flex-select" v-if="!confirmed">
+      <div
+        v-if="!confirmed"
+        class="input-select flex-select"
+      >
         <v-select
+          v-model="selectedGroup"
           :clearable="false"
           label="title"
           :options="bacteriesGroups"
           :searchable="true"
           class="inner-select"
           placeholder="Выберите группу"
-          v-model="selectedGroup"
           append-to-body
           :calculate-position="withPopper"
         />
         <v-select
+          v-model="selectedBactery"
           :clearable="false"
           label="title"
           :options="bacteries"
           :searchable="true"
           class="inner-select"
           placeholder="Выберите микроорганизм"
-          v-model="selectedBactery"
           append-to-body
           :calculate-position="withPopper"
         />
-        <button class="btn btn-blue-nb" @click="addBactery">
+        <button
+          class="btn btn-blue-nb"
+          @click="addBactery"
+        >
           Добавить
         </button>
       </div>
     </div>
     <div class="fields">
       <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
-        <div v-for="bactery in bacteriesResult" class="bactery" :key="bactery.bacteryPk">
+        <div
+          v-for="bactery in bacteriesResult"
+          :key="bactery.bacteryPk"
+          class="bactery"
+        >
           <div class="bactery-title">
-            <span title="Удалить" class="bactery-delete" @click="deleteBac(bactery.bacteryPk)" v-tippy>
-              <i class="fa fa-times"></i>
+            <span
+              v-tippy
+              title="Удалить"
+              class="bactery-delete"
+              @click="deleteBac(bactery.bacteryPk)"
+            >
+              <i class="fa fa-times" />
             </span>
             <span class="bactery-title-inner"> {{ bactery.bacteryGroupTitle }} {{ bactery.bacteryTitle }} </span>
           </div>
           <div class="bactery-body">
-            <div class="bactery-selects" v-if="!confirmed">
+            <div
+              v-if="!confirmed"
+              class="bactery-selects"
+            >
               <div class="row">
                 <div class="col-xs-6 two">
                   <v-select
+                    v-model="bactery.selectedSet"
                     :clearable="false"
                     label="title"
                     :options="antibiotics.sets"
                     :searchable="true"
                     class="inner-select"
                     placeholder="Выберите набор"
-                    v-model="bactery.selectedSet"
                     append-to-body
                     :calculate-position="withPopper"
                   />
-                  <button class="btn btn-blue-nb" @click="loadSet(bactery)">
+                  <button
+                    class="btn btn-blue-nb"
+                    @click="loadSet(bactery)"
+                  >
                     Загрузить набор
                   </button>
                 </div>
                 <div class="col-xs-6 three">
                   <v-select
+                    v-model="bactery.selectedAntibiotic"
                     :clearable="false"
                     label="title"
                     :options="antibiotics.groupsObj[bactery.selectedGroup.pk]"
                     :searchable="true"
                     class="inner-select"
                     placeholder="Выберите антибиотик"
-                    v-model="bactery.selectedAntibiotic"
                     append-to-body
                     :calculate-position="withPopper"
                   />
-                  <button class="btn btn-blue-nb" @click="loadAntibiotic(bactery)">
+                  <button
+                    class="btn btn-blue-nb"
+                    @click="loadAntibiotic(bactery)"
+                  >
                     Добавить
                   </button>
                 </div>
@@ -78,36 +102,55 @@
             </div>
             <div class="table-row">
               <div class="left">
-                <table class="table table-bordered table-condensed" style="max-width: 665px;margin-top: 15px">
+                <table
+                  class="table table-bordered table-condensed"
+                  style="max-width: 665px;margin-top: 15px"
+                >
                   <colgroup>
-                    <col style="width: 34px" v-if="!confirmed" />
-                    <col />
-                    <col style="width: 90px" />
-                    <col style="width: 74px" />
-                    <col style="width: 148px" />
-                    <col style="width: 100px" />
+                    <col
+                      v-if="!confirmed"
+                      style="width: 34px"
+                    >
+                    <col>
+                    <col style="width: 90px">
+                    <col style="width: 74px">
+                    <col style="width: 148px">
+                    <col style="width: 100px">
                   </colgroup>
                   <thead>
                     <tr>
-                      <th colspan="2" v-if="!confirmed">Название</th>
-                      <th v-else>Название</th>
-                      <th></th>
+                      <th
+                        v-if="!confirmed"
+                        colspan="2"
+                      >
+                        Название
+                      </th>
+                      <th v-else>
+                        Название
+                      </th>
+                      <th />
                       <th>Чувствительность</th>
                       <th>Диаметр</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="a in bactery.antibiotics" :key="a.pk">
-                      <td class="cl-td" v-if="!confirmed">
+                    <tr
+                      v-for="a in bactery.antibiotics"
+                      :key="a.pk"
+                    >
+                      <td
+                        v-if="!confirmed"
+                        class="cl-td"
+                      >
                         <button
+                          v-tippy
                           title="Удалить"
                           class="btn last btn-blue-nb nbr"
                           type="button"
-                          v-tippy
                           tabindex="-1"
                           @click="deleteAnti(bactery, a.pk)"
                         >
-                          <i class="fa fa-times"></i>
+                          <i class="fa fa-times" />
                         </button>
                       </td>
                       <td>
@@ -120,20 +163,38 @@
                           maxlength="30"
                           :readonly="confirmed"
                           placeholder="Дозировка"
+                        >
+                      </td>
+                      <td class="cl-td">
+                        <RadioField
+                          v-model="a.sri"
+                          :variants="sri"
+                          redesigned
+                          :disabled="confirmed"
                         />
                       </td>
                       <td class="cl-td">
-                        <radio-field v-model="a.sri" :variants="sri" redesigned :disabled="confirmed" />
-                      </td>
-                      <td class="cl-td">
-                        <input v-model="a.dia" class="form-control" maxlength="64" :readonly="confirmed" />
+                        <input
+                          v-model="a.dia"
+                          class="form-control"
+                          maxlength="64"
+                          :readonly="confirmed"
+                        >
                       </td>
                     </tr>
                     <tr v-if="bactery.antibiotics.length === 0">
-                      <td colspan="5" class="text-center" v-if="!confirmed">
+                      <td
+                        v-if="!confirmed"
+                        colspan="5"
+                        class="text-center"
+                      >
                         антибиотики не выбраны
                       </td>
-                      <td colspan="4" class="text-center" v-else>
+                      <td
+                        v-else
+                        colspan="4"
+                        class="text-center"
+                      >
                         антибиотики не выбраны
                       </td>
                     </tr>
@@ -142,19 +203,28 @@
               </div>
               <div class="right">
                 <div class="right-inner">
-                  <div class="input-group" style="max-width: 330px">
+                  <div
+                    class="input-group"
+                    style="max-width: 330px"
+                  >
                     <span class="input-group-addon">КОЕ</span>
-                    <KOEField v-model="bactery.koe" :disabled="confirmed" />
+                    <KOEField
+                      v-model="bactery.koe"
+                      :disabled="confirmed"
+                    />
                   </div>
 
-                  <div class="fields" style="padding: 5px 0">
+                  <div
+                    class="fields"
+                    style="padding: 5px 0"
+                  >
                     <div
                       :class="{ disabled: confirmed }"
+                      class="field field-vertical"
                       v-on="{
                         mouseenter: enter_field(cultureCommentsTemplates.length > 0),
                         mouseleave: leave_field(cultureCommentsTemplates.length > 0),
                       }"
-                      class="field field-vertical"
                     >
                       <div class="field-value">
                         <textarea
@@ -179,7 +249,10 @@
             </div>
           </div>
         </div>
-        <div v-if="bacteriesResult.length === 0" class="bactery-msg">
+        <div
+          v-if="bacteriesResult.length === 0"
+          class="bactery-msg"
+        >
           Микроорганизмы не выбраны
         </div>
       </div>
@@ -245,6 +318,20 @@ export default {
       prev_scroll: 0,
       prev_scrollHeightTop: 0,
     };
+  },
+  watch: {
+    bacteriesResult: {
+      deep: true,
+      handler() {
+        this.$emit('input', this.bacteriesResult);
+      },
+    },
+    selectedGroup: {
+      deep: true,
+      handler() {
+        this.load_bac_by_group();
+      },
+    },
   },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
@@ -348,20 +435,6 @@ export default {
     },
     leave_field(...args) {
       return leave_field.apply(this, args);
-    },
-  },
-  watch: {
-    bacteriesResult: {
-      deep: true,
-      handler() {
-        this.$emit('input', this.bacteriesResult);
-      },
-    },
-    selectedGroup: {
-      deep: true,
-      handler() {
-        this.load_bac_by_group();
-      },
     },
   },
 };

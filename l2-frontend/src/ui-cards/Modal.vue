@@ -1,6 +1,9 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask" :style="{ zIndex }">
+    <div
+      class="modal-mask"
+      :style="{ zIndex }"
+    >
       <div
         class="panel panel-flt"
         :style="{
@@ -9,6 +12,7 @@
           alignSelf,
           marginTop,
           width,
+          height,
           marginLeft: marginLeftRight,
           marginRight: marginLeftRight,
           withoutFooter: showFooter === 'true',
@@ -19,22 +23,42 @@
             <slot name="header">
               default header
             </slot>
-            <button type="button" class="close" v-show="!noClose" @click="$emit('close')">&times;</button>
+            <button
+              v-show="!noClose"
+              type="button"
+              class="close"
+              @click="$emit('close')"
+            >
+              &times;
+            </button>
           </h3>
         </div>
-        <div v-if="resultsEditor" class="results-editor">
-          <div class="panel-body" :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true' }">
+        <div
+          v-if="resultsEditor"
+          class="results-editor"
+        >
+          <div
+            class="panel-body"
+            :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true' }"
+          >
             <slot name="body">
               default body
             </slot>
           </div>
         </div>
-        <div v-else class="panel-body" :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true' }">
+        <div
+          v-else
+          class="panel-body"
+          :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true' }"
+        >
           <slot name="body">
             default body
           </slot>
         </div>
-        <div class="panel-footer" v-if="showFooter === 'true'">
+        <div
+          v-if="showFooter === 'true'"
+          class="panel-footer"
+        >
           <slot name="footer">
             default footer
           </slot>
@@ -46,7 +70,7 @@
 
 <script lang="ts">
 export default {
-  name: 'modal',
+  name: 'Modal',
   props: {
     'show-footer': {
       required: false,
@@ -69,6 +93,10 @@ export default {
       default: '100%',
     },
     width: {
+      required: false,
+      default: 'auto',
+    },
+    height: {
       required: false,
       default: 'auto',
     },

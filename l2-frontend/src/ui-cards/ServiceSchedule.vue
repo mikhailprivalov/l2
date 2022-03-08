@@ -1,33 +1,49 @@
 <template>
   <div>
-    <div class="schedule-title">Запись на услугу {{ serviceTitle }}</div>
+    <div class="schedule-title">
+      Запись на услугу {{ serviceTitle }}
+    </div>
 
     <div class="week-selector">
-      <button class="btn btn-link" @click="decDate"><i class="fa fa-arrow-left"></i></button>
       <button
         class="btn btn-link"
+        @click="decDate"
+      >
+        <i class="fa fa-arrow-left" />
+      </button>
+      <button
         v-for="d in displayDates"
         :key="d"
-        @click="activeDate = d"
+        class="btn btn-link"
         :class="[d === activeDate && 'active', !!datesAvailable[d] ? 'availableDate' : 'unavailableDate']"
         :disabled="!datesAvailable[d]"
+        @click="activeDate = d"
       >
         {{ d | formatDateShort }}
       </button>
-      <button class="btn btn-link" @click="incDate"><i class="fa fa-arrow-right"></i></button>
+      <button
+        class="btn btn-link"
+        @click="incDate"
+      >
+        <i class="fa fa-arrow-right" />
+      </button>
     </div>
 
-    <div class="resource" v-for="r in slots" :key="r.resourcePk">
+    <div
+      v-for="r in slots"
+      :key="r.resourcePk"
+      class="resource"
+    >
       <div class="resource-title">
         {{ r.resourceTitle || `Ресурс ${r.resourcePk}` }}
       </div>
       <div class="resource-slots">
         <div
+          v-for="s in r.slots"
+          :key="s.pk"
           class="resource-slot"
           :class="activeSlot === s.pk && 'active'"
           @click="selectSlot(s.pk, s.title, r.resourcePk)"
-          v-for="s in r.slots"
-          :key="s.pk"
         >
           {{ s.title }}
         </div>
@@ -40,6 +56,9 @@
 import moment from 'moment';
 
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       type: Number,
@@ -65,9 +84,6 @@ export default {
       type: Number,
       required: false,
     },
-  },
-  model: {
-    event: 'modified',
   },
   data() {
     return {

@@ -1,30 +1,34 @@
 <template>
-  <modal
+  <Modal
     ref="modal"
-    @close="hide_modal"
     show-footer="true"
     white-bg="true"
     max-width="900px"
     width="100%"
-    marginLeftRight="auto"
+    margin-left-right="auto"
     margin-top
+    @close="hide_modal"
   >
-    <span slot="header"
-      >Диспансерный учёт пациента
-      <span v-if="!card_data.fio_age"
-        >{{ card_data.family }} {{ card_data.name }} {{ card_data.twoname }}, {{ card_data.age }}, карта {{ card_data.num }}</span
-      >
+    <span
+      slot="header"
+    >Диспансерный учёт пациента
+      <span
+        v-if="!card_data.fio_age"
+      >{{ card_data.family }} {{ card_data.name }} {{ card_data.twoname }}, {{ card_data.age }}, карта {{ card_data.num }}</span>
       <span v-else>{{ card_data.fio_age }}</span>
     </span>
-    <div slot="body" class="registry-body">
+    <div
+      slot="body"
+      class="registry-body"
+    >
       <table class="table table-bordered table-condensed table-sm-pd dreg-table">
         <colgroup>
-          <col width="70" />
-          <col width="98" />
-          <col />
-          <col width="70" />
-          <col />
-          <col width="90" />
+          <col width="70">
+          <col width="98">
+          <col>
+          <col width="70">
+          <col>
+          <col width="90">
         </colgroup>
         <thead>
           <tr>
@@ -34,12 +38,22 @@
             <th>Код по МКБ-10</th>
             <th>Врач</th>
             <th>
-              <button class="btn btn-primary-nb btn-blue-nb pl4" @click="edit(-1)" type="button">Добавить</button>
+              <button
+                class="btn btn-primary-nb btn-blue-nb pl4"
+                type="button"
+                @click="edit(-1)"
+              >
+                Добавить
+              </button>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :class="{ stop: !!r.date_end }" :key="r.pk">
+          <tr
+            v-for="r in rows"
+            :key="r.pk"
+            :class="{ stop: !!r.date_end }"
+          >
             <td>{{ r.date_start }}</td>
             <td>{{ r.date_end }}</td>
             <td>{{ r.illnes }}</td>
@@ -47,22 +61,22 @@
             <td>{{ r.spec_reg }} {{ r.doc_start_reg }}</td>
             <td>
               <button
+                v-tippy="{ placement: 'bottom', arrow: true }"
                 class="btn last btn-blue-nb nbr ml-1"
                 type="button"
-                v-tippy="{ placement: 'bottom', arrow: true }"
                 title="030/у"
                 @click="print_form_030(r.pk)"
               >
-                <i class="fa fa-print"></i>
+                <i class="fa fa-print" />
               </button>
               <button
+                v-tippy="{ placement: 'bottom', arrow: true }"
                 class="btn last btn-blue-nb nbr ml-1"
                 type="button"
-                v-tippy="{ placement: 'bottom', arrow: true }"
                 title="Редактирование"
                 @click="edit(r.pk)"
               >
-                <i class="glyphicon glyphicon-pencil"></i>
+                <i class="glyphicon glyphicon-pencil" />
               </button>
             </td>
           </tr>
@@ -71,21 +85,34 @@
       <template v-if="researches_data && researches_data.length > 0">
         <table class="table table-bordered table-condensed table-sm-pd dreg-table">
           <colgroup>
-            <col />
-            <col width="110" />
-            <col width="40" v-for="m in monthes" :key="m" />
-            <col width="30" />
+            <col>
+            <col width="110">
+            <col
+              v-for="m in monthes"
+              :key="m"
+              width="40"
+            >
+            <col width="30">
           </colgroup>
           <thead>
             <tr>
-              <th :colspan="3 + monthes.length" class="text-center">
+              <th
+                :colspan="3 + monthes.length"
+                class="text-center"
+              >
                 План диспансерного учёта
               </th>
             </tr>
             <tr>
               <td :colspan="3 + monthes.length">
                 <div class="years">
-                  <div class="year" @click="load_data(false, y)" :class="{ active: y === year }" v-for="y in years" :key="y">
+                  <div
+                    v-for="y in years"
+                    :key="y"
+                    class="year"
+                    :class="{ active: y === year }"
+                    @click="load_data(false, y)"
+                  >
                     {{ y }}
                   </div>
                 </div>
@@ -93,59 +120,98 @@
             </tr>
             <tr>
               <th>Обследование (прием)</th>
-              <th>МКБ-10<br />кол-во в год</th>
-              <th v-for="(m, i) in monthes" :key="`th-${m}`" class="text-center">
-                {{ m }}<br />
+              <th>МКБ-10<br>кол-во в год</th>
+              <th
+                v-for="(m, i) in monthes"
+                :key="`th-${m}`"
+                class="text-center"
+              >
+                {{ m }}<br>
                 <a
+                  v-if="researches_data && researches_data.length > 1"
+                  v-tippy="{ placement: 'top', arrow: true }"
                   href="#"
                   class="a-under"
-                  @click.prevent="fill_column(i)"
-                  v-if="researches_data && researches_data.length > 1"
                   title="Заполнить столбец по первой строке"
-                  v-tippy="{ placement: 'top', arrow: true }"
+                  @click.prevent="fill_column(i)"
                 >
-                  <i class="fa fa-arrow-circle-down"></i>
+                  <i class="fa fa-arrow-circle-down" />
                 </a>
               </th>
-              <th title="Результатов в году" v-tippy="{ placement: 'top', arrow: true }" class="text-center fs14">
-                <i class="fa fa-times-circle-o"></i>
+              <th
+                v-tippy="{ placement: 'top', arrow: true }"
+                title="Результатов в году"
+                class="text-center fs14"
+              >
+                <i class="fa fa-times-circle-o" />
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="k in researches_data" :key="`${k.research_pk}`">
+            <tr
+              v-for="k in researches_data"
+              :key="`${k.research_pk}`"
+            >
               <td>
-                <ResearchPickById :pk="k.research_pk" :selected-researches="selectedResearchesLocal" :kk="kk" />
+                <ResearchPickById
+                  :pk="k.research_pk"
+                  :selected-researches="selectedResearchesLocal"
+                  :kk="kk"
+                />
               </td>
               <td>
-                <div v-for="d in k.diagnoses_time" :key="`${d.diagnos}_${d.times}`" class="mkb-year">
+                <div
+                  v-for="d in k.diagnoses_time"
+                  :key="`${d.diagnos}_${d.times}`"
+                  class="mkb-year"
+                >
                   <span>{{ d.diagnos }}</span> <span class="year-times">{{ d.times }} р. в год</span>
                 </div>
               </td>
-              <td v-for="(m, i) in monthes" :key="`td-${k.research_pk}-${m}`">
+              <td
+                v-for="(m, i) in monthes"
+                :key="`td-${k.research_pk}-${m}`"
+              >
                 <input
                   v-model="k.plans[i]"
+                  v-tippy="{ placement: 'left', arrow: true, reactive: true, trigger: 'mouseenter focus input' }"
                   type="text"
                   class="form-control nbr input-cell"
                   maxlength="3"
                   :title="get_date_string(year, i, k.plans[i])"
-                  v-tippy="{ placement: 'left', arrow: true, reactive: true, trigger: 'mouseenter focus input' }"
-                />
-                <div v-if="k.results[i]" class="text-center">
-                  <a href="#" @click.prevent="print_results(k.results[i].pk)" class="a-under" title="Печать результата" v-tippy>
+                >
+                <div
+                  v-if="k.results[i]"
+                  class="text-center"
+                >
+                  <a
+                    v-tippy
+                    href="#"
+                    class="a-under"
+                    title="Печать результата"
+                    @click.prevent="print_results(k.results[i].pk)"
+                  >
                     {{ k.results[i].date }}
                   </a>
                 </div>
-                <div v-else>&nbsp;</div>
+                <div v-else>
+&nbsp;
+                </div>
               </td>
               <td class="text-center">
-                <div class="nbsp-height">&nbsp;</div>
+                <div class="nbsp-height">
+&nbsp;
+                </div>
                 x{{ k.times }}
               </td>
             </tr>
             <tr>
               <td :colspan="3 + monthes.length">
-                <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb btn-sm" type="button">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb btn-sm"
+                  type="button"
+                  @click="save_plan"
+                >
                   Сохранить план
                 </button>
               </td>
@@ -153,14 +219,24 @@
           </tbody>
         </table>
       </template>
-      <div v-else class="text-center empty-dreg">
+      <div
+        v-else
+        class="text-center empty-dreg"
+      >
         Нет данных для построения плана по диагнозам
       </div>
 
-      <ScreeningDisplay :selected-researches="selectedResearchesLocal" :card-pk="card_pk" :kk="kk" />
+      <ScreeningDisplay
+        :selected-researches="selectedResearchesLocal"
+        :card-pk="card_pk"
+        :kk="kk"
+      />
 
-      <div class="selected-researches" v-if="extendedResearches && card_pk && parent_iss">
-        <selected-researches
+      <div
+        v-if="extendedResearches && card_pk && parent_iss"
+        class="selected-researches"
+      >
+        <SelectedResearches
           :kk="kk"
           :researches="selectedResearchesLocal"
           :base="bases_obj[card_data.base]"
@@ -169,97 +245,163 @@
           :selected_card="card_data"
           :initial_fin="finId"
           :parent_iss="parent_iss"
-          style="border-top: 1px solid #eaeaea;"
+          style="border-top: 1px solid #eaeaea"
         />
       </div>
 
       <div class="dreg-flt">
-        <modal
+        <Modal
           v-if="edit_pk > -2"
           ref="modalEdit"
-          @close="hide_edit"
           show-footer="true"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
+          margin-left-right="auto"
           margin-top
+          @close="hide_edit"
         >
-          <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
-          <span slot="header" v-else>Создание записи диспансерного учёта</span>
-          <div slot="body" class="registry-body p10">
+          <span
+            v-if="edit_pk > -1"
+            slot="header"
+          >Редактор диспансерного учёта</span>
+          <span
+            v-else
+            slot="header"
+          >Создание записи диспансерного учёта</span>
+          <div
+            slot="body"
+            class="registry-body p10"
+          >
             <div class="form-group">
               <label for="de-f3">Дата начала:</label>
               <input
-                class="form-control"
-                type="date"
                 id="de-f3"
                 v-model="edit_data.date_start"
+                class="form-control"
+                type="date"
                 :max="td"
                 :readonly="edit_data.close"
-              />
+              >
             </div>
             <div class="form-group mkb10 w100">
               <label>Диагноз в полной форме (код по МКБ и название):</label>
-              <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
-              <input class="form-control" v-model="edit_data.diagnos" v-else readonly />
+              <MKBFieldForm
+                v-if="!edit_data.close"
+                v-model="edit_data.diagnos"
+                :short="false"
+              />
+              <input
+                v-else
+                v-model="edit_data.diagnos"
+                class="form-control"
+                readonly
+              >
             </div>
             <div class="radio-button-object radio-button-groups">
               <label>Диагноз установлен</label>
-              <radio-field v-model="is_first_time" :variants="variant_is_first_time" @modified="change_index" fullWidth />
+              <RadioField
+                v-model="is_first_time"
+                :variants="variant_is_first_time"
+                full-width
+                @modified="change_index"
+              />
             </div>
             <div class="radio-button-object radio-button-groups mtb15">
               <label>Заболевание выявлено при:</label>
-              <radio-field v-model="how_identified" :variants="variant_identified" @modified="change_index" fullWidth />
+              <RadioField
+                v-model="how_identified"
+                :variants="variant_identified"
+                full-width
+                @modified="change_index"
+              />
             </div>
             <div class="checkbox pl15">
-              <label> <input type="checkbox" v-model="edit_data.close" /> прекращён </label>
+              <label> <input
+                v-model="edit_data.close"
+                type="checkbox"
+              > прекращён </label>
             </div>
-            <div class="form-group" v-if="edit_data.close">
+            <div
+              v-if="edit_data.close"
+              class="form-group"
+            >
               <label for="de-f5">Дата прекращения:</label>
-              <input class="form-control" type="date" id="de-f5" v-model="edit_data.date_end" :min="td" />
+              <input
+                id="de-f5"
+                v-model="edit_data.date_end"
+                class="form-control"
+                type="date"
+                :min="td"
+              >
             </div>
-            <div class="form-group" v-if="edit_data.close">
+            <div
+              v-if="edit_data.close"
+              class="form-group"
+            >
               <label for="de-f6">Причина прекращения:</label>
-              <input class="form-control" id="de-f6" v-model="edit_data.why_stop" />
+              <input
+                id="de-f6"
+                v-model="edit_data.why_stop"
+                class="form-control"
+              >
             </div>
 
             <div class="checkbox pl15">
-              <label> <input type="checkbox" v-model="enable_construct" /> настройка обследований для диагноза: </label>
+              <label> <input
+                v-model="enable_construct"
+                type="checkbox"
+              > настройка обследований для диагноза: </label>
             </div>
             <div class="form-group">
-              <ConfigureDispenseryResearch v-if="enable_construct && edit_data.diagnos" :diagnos_code="edit_data.diagnos" />
+              <ConfigureDispenseryResearch
+                v-if="enable_construct && edit_data.diagnos"
+                :diagnos_code="edit_data.diagnos"
+              />
             </div>
           </div>
           <div slot="footer">
             <div class="row">
               <div class="col-xs-4">
-                <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  @click="hide_edit"
+                >
                   Отмена
                 </button>
               </div>
               <div class="col-xs-4">
-                <button :disabled="!valid_reg" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
+                <button
+                  :disabled="!valid_reg"
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  @click="save()"
+                >
                   Сохранить
                 </button>
               </div>
             </div>
           </div>
-        </modal>
+        </Modal>
       </div>
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-6"></div>
-        <div class="col-xs-4"></div>
+        <div class="col-xs-6" />
+        <div class="col-xs-4" />
         <div class="col-xs-2">
-          <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="hide_modal"
+          >
             Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -286,7 +428,7 @@ const weekDays = ['понедельник', 'вторник', 'среда', 'ч�
 const KK = '-dreg';
 
 export default {
-  name: 'd-reg',
+  name: 'DReg',
   components: {
     ResearchPickById,
     Modal,
@@ -349,28 +491,6 @@ export default {
       selectedResearchesDReg: [],
     };
   },
-  created() {
-    this.load_data(true);
-  },
-  mounted() {
-    this.$root.$on(`researches-picker:deselect${KK}`, pk => {
-      this.selectedResearchesDReg = this.selectedResearchesDReg.filter(k => k !== pk);
-    });
-    this.$root.$on(`researches-picker:deselect_department${KK}`, (_, pks) => {
-      this.selectedResearchesDReg = this.selectedResearchesDReg.filter(k => !pks.includes(k));
-    });
-    this.$root.$on(`researches-picker:deselect_all${KK}`, () => {
-      this.selectedResearchesDReg = [];
-    });
-    this.$root.$on(`researches-picker:directions_created${KK}`, () => {
-      this.$root.$emit('researches-picker:directions_createdcd');
-    });
-    this.$root.$on(`researches-picker:add_research${KK}`, pk => {
-      this.selectedResearchesDReg = !this.selectedResearchesDReg.includes(pk)
-        ? [...this.selectedResearchesDReg, pk]
-        : this.selectedResearchesDReg;
-    });
-  },
   computed: {
     ...mapGetters({
       bases: 'bases',
@@ -402,7 +522,7 @@ export default {
       );
     },
     assignments() {
-      return this.researches_data.filter(({ assignment }) => assignment).map(rd => rd.assign_research_pk);
+      return this.researches_data.filter(({ assignment }) => assignment).map((rd) => rd.assign_research_pk);
     },
     assignments_diagnoses() {
       return Object.keys(
@@ -415,7 +535,7 @@ export default {
       return this.count_assignments_available > 0;
     },
     count_assignments_available() {
-      return this.researches_data.filter(rd => rd.assign_research_pk).length;
+      return this.researches_data.filter((rd) => rd.assign_research_pk).length;
     },
     count_assignments() {
       return this.assignments.length;
@@ -448,6 +568,28 @@ export default {
         }
       }
     },
+  },
+  created() {
+    this.load_data(true);
+  },
+  mounted() {
+    this.$root.$on(`researches-picker:deselect${KK}`, (pk) => {
+      this.selectedResearchesDReg = this.selectedResearchesDReg.filter((k) => k !== pk);
+    });
+    this.$root.$on(`researches-picker:deselect_department${KK}`, (_, pks) => {
+      this.selectedResearchesDReg = this.selectedResearchesDReg.filter((k) => !pks.includes(k));
+    });
+    this.$root.$on(`researches-picker:deselect_all${KK}`, () => {
+      this.selectedResearchesDReg = [];
+    });
+    this.$root.$on(`researches-picker:directions_created${KK}`, () => {
+      this.$root.$emit('researches-picker:directions_createdcd');
+    });
+    this.$root.$on(`researches-picker:add_research${KK}`, (pk) => {
+      this.selectedResearchesDReg = !this.selectedResearchesDReg.includes(pk)
+        ? [...this.selectedResearchesDReg, pk]
+        : this.selectedResearchesDReg;
+    });
   },
   methods: {
     get_date_string(year, month, dayOrig) {

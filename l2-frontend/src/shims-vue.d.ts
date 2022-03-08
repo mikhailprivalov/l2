@@ -1,5 +1,5 @@
 declare module '*.vue' {
-  import Vue from 'vue';
+  import V from 'vue';
 
   declare module 'vue/types/vue' {
     interface Vue {
@@ -11,5 +11,5 @@ declare module '*.vue' {
     }
   }
 
-  export default Vue;
+  export default V;
 }

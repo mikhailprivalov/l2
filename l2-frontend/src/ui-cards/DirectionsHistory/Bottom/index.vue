@@ -1,32 +1,51 @@
 <template>
   <div>
     <div style="padding-left: 5px;color: #fff">
-      <span v-show="checked.length > 0">Отмечено: {{checked.length}}</span>
+      <span v-show="checked.length > 0">Отмечено: {{ checked.length }}</span>
     </div>
     <div class="bottom-inner">
-      <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%" v-show="checked.length > 0 &&
-        active_type !== 5">
-        <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                style="text-align: right!important;border-radius: 0;width: 100%">
-          Действие с отмеченными <span class="caret"></span>
+      <div
+        v-show="checked.length > 0 &&
+          active_type !== 5"
+        class="dropup"
+        style="display: inline-block;max-width: 350px;width: 100%"
+      >
+        <button
+          class="btn btn-blue-nb btn-ell dropdown-toggle"
+          type="button"
+          data-toggle="dropdown"
+          style="text-align: right!important;border-radius: 0;width: 100%"
+        >
+          Действие с отмеченными <span class="caret" />
         </button>
         <ul class="dropdown-menu">
-          <li v-for="f in formsFiltered" :key="f.url">
-            <a :href="f.url" target="_blank">{{f.title}}</a>
+          <li
+            v-for="f in formsFiltered"
+            :key="f.url"
+          >
+            <a
+              :href="f.url"
+              target="_blank"
+            >{{ f.title }}</a>
           </li>
-          <li v-for="value in menuItems" :key="value.title">
-            <a href="#"
-               v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
-                  && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))
-                  && (!value.requiredGroup || user_groups.includes(value.requiredGroup))"
-               @click.prevent="() => callAsThis(value.handler)">
-              {{value.title}}
+          <li
+            v-for="value in menuItems"
+            :key="value.title"
+          >
+            <a
+              v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
+                && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))
+                && (!value.requiredGroup || user_groups.includes(value.requiredGroup))"
+              href="#"
+              @click.prevent="() => callAsThis(value.handler)"
+            >
+              {{ value.title }}
             </a>
           </li>
         </ul>
       </div>
     </div>
-    <directions-change-parent
+    <DirectionsChangeParent
       v-if="isOpenChangeParent"
       :card_pk="card_pk"
       :directions_checked="directions_checked"
@@ -73,22 +92,6 @@ export default {
       disabled_forms: [],
     };
   },
-  mounted() {
-    this.$root.$on('hide_pe', this.change_parent_hide);
-    this.get_disabled_forms();
-  },
-  methods: {
-    callAsThis(handler) {
-      handler.call(this);
-    },
-    change_parent_hide() {
-      this.isOpenChangeParent = false;
-    },
-    async get_disabled_forms() {
-      const result_data = await this.$api('disabled-forms');
-      this.disabled_forms = result_data.rows;
-    },
-  },
   computed: {
     forms() {
       return forDirs.map((f) => ({
@@ -113,6 +116,22 @@ export default {
     },
     user_groups() {
       return this.$store.getters.user_data.groups || [];
+    },
+  },
+  mounted() {
+    this.$root.$on('hide_pe', this.change_parent_hide);
+    this.get_disabled_forms();
+  },
+  methods: {
+    callAsThis(handler) {
+      handler.call(this);
+    },
+    change_parent_hide() {
+      this.isOpenChangeParent = false;
+    },
+    async get_disabled_forms() {
+      const result_data = await this.$api('disabled-forms');
+      this.disabled_forms = result_data.rows;
     },
   },
 };

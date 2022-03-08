@@ -1,33 +1,16 @@
 <template>
-  <input v-datepicker type="text" class="form-control no-context" v-model="val" maxlength="10"/>
+  <input
+    v-model="val"
+    v-datepicker
+    type="text"
+    class="form-control no-context"
+    maxlength="10"
+  >
 </template>
 
 <script lang="ts">
 export default {
-  name: 'date-field-2',
-  props: {
-    value: {
-      type: String,
-      required: false,
-      default: '',
-    },
-  },
-  data() {
-    return {
-      val: this.def,
-    };
-  },
-  created() {
-    this.val = this.value;
-  },
-  watch: {
-    value() {
-      this.val = this.value;
-    },
-    val() {
-      this.$emit('input', this.val);
-    },
-  },
+  name: 'DateField2',
   directives: {
     datepicker: {
       bind(el, binding, vnode) {
@@ -46,6 +29,29 @@ export default {
         });
       },
     },
+  },
+  props: {
+    value: {
+      type: String,
+      required: false,
+      default: '',
+    },
+  },
+  data() {
+    return {
+      val: this.def,
+    };
+  },
+  watch: {
+    value() {
+      this.val = this.value;
+    },
+    val() {
+      this.$emit('input', this.val);
+    },
+  },
+  created() {
+    this.val = this.value;
   },
 };
 </script>

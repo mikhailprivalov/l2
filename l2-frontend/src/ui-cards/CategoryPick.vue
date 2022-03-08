@@ -8,7 +8,7 @@
 
 <script lang="ts">
 export default {
-  name: 'category-pick',
+  name: 'CategoryPick',
   props: {
     category: {
       type: Object,

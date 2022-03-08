@@ -1,6 +1,12 @@
 <template>
   <div class="base">
-    <a href="#" @click.prevent="changeValue(v.id)" :class="{ active: v.id === val, disabled }" :key="v.id" v-for="v in variants">
+    <a
+      v-for="v in variants"
+      :key="v.id"
+      href="#"
+      :class="{ active: v.id === val, disabled }"
+      @click.prevent="changeValue(v.id)"
+    >
       <span>
         {{ v.label }}
       </span>
@@ -10,6 +16,9 @@
 
 <script lang="ts">
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -22,6 +31,11 @@ export default {
       default: false,
       type: Boolean,
     },
+  },
+  data() {
+    return {
+      val: this.value,
+    };
   },
   watch: {
     value: {
@@ -41,14 +55,6 @@ export default {
         this.fixVal();
       },
     },
-  },
-  data() {
-    return {
-      val: this.value,
-    };
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     changeValue(newVal) {

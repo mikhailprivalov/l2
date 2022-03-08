@@ -4,46 +4,82 @@
     :class="[`slot-status-${data.status}`, mode === 'list' ? 'slot-list' : 'slot-natural']"
     :style="mode === 'list' ? '' : `top: ${offset}; min-height: ${minHeight};`"
   >
-    <div class="slot-inner" @click="open">
-      <div v-if="data.patient" class="patient-row">
+    <div
+      class="slot-inner"
+      @click="open"
+    >
+      <div
+        v-if="data.patient"
+        class="patient-row"
+      >
         <strong v-if="data.cito">CITO</strong> <span>{{ smallTime(data.time) }}</span>
         <span class="fio">{{ data.patient.fioShort }}</span>
       </div>
-      <div v-else class="patient-row">
+      <div
+        v-else
+        class="patient-row"
+      >
         <span>{{ smallTime(data.time) }}</span>
       </div>
-      <div v-if="data.service && data.service.id" class="service-row">{{ data.service.title }}</div>
-      <div class="param-row"><i class="far fa-circle"></i> {{ data.duration }} мин</div>
+      <div
+        v-if="data.service && data.service.id"
+        class="service-row"
+      >
+        {{ data.service.title }}
+      </div>
+      <div class="param-row">
+        <i class="far fa-circle" /> {{ data.duration }} мин
+      </div>
     </div>
 
-    <MountingPortal mountTo="#portal-place-modal" :name="`TimeSlotPopup-${smallTime(data.time)}—${data.date}`" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      :name="`TimeSlotPopup-${smallTime(data.time)}—${data.date}`"
+      append
+    >
       <transition name="fade">
         <modal
           v-if="isOpened"
-          @close="close"
           show-footer="true"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
+          margin-left-right="auto"
+          @close="close"
         >
           <span slot="header">{{ data.date }} {{ data.time }}</span>
-          <div slot="body" class="popup-body">
-            <div class="preloader" v-if="!details"><i class="fa fa-spinner"></i> загрузка</div>
+          <div
+            slot="body"
+            class="popup-body"
+          >
+            <div
+              v-if="!details"
+              class="preloader"
+            >
+              <i class="fa fa-spinner" /> загрузка
+            </div>
             <div v-else>
               <div class="patient-root">
-                <PatientSmallPicker v-model="details.cardId" :base_pk="details.baseId" />
+                <PatientSmallPicker
+                  v-model="details.cardId"
+                  :base_pk="details.baseId"
+                />
               </div>
-              <div class="form-row" v-if="details.cardId">
-                <div class="row-t">Услуга</div>
+              <div
+                v-if="details.cardId"
+                class="form-row"
+              >
+                <div class="row-t">
+                  Услуга
+                </div>
                 <div class="row-v">
                   <treeselect
+                    v-model="details.service.id"
                     class="treeselect-noborder"
                     :multiple="false"
                     :disable-branch-nodes="true"
                     :options="services"
                     placeholder="Услуга не выбрана"
-                    v-model="details.service.id"
                   />
                 </div>
               </div>
@@ -52,10 +88,22 @@
           <div slot="footer">
             <div class="row">
               <div class="col-xs-6">
-                <button @click="close" class="btn btn-blue-nb" type="button">Закрыть</button>
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="close"
+                >
+                  Закрыть
+                </button>
               </div>
               <div class="col-xs-6">
-                <button @click="save" class="btn btn-blue-nb" type="button">Сохранить</button>
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="save"
+                >
+                  Сохранить
+                </button>
               </div>
             </div>
           </div>

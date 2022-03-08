@@ -1,7 +1,7 @@
 <template>
   <div>
-    <patient></patient>
-    <card></card>
+    <Patient />
+    <Card />
   </div>
 </template>
 
@@ -10,7 +10,7 @@ import Patient from './Patient.vue';
 import Card from './Card.vue';
 
 export default {
-  name: 'patient-card',
+  name: 'PatientCard',
   components: { Patient, Card },
 };
 </script>

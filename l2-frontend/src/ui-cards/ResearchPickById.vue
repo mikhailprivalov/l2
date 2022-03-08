@@ -1,8 +1,11 @@
 <template>
   <div class="research-wrapper">
-    <ResearchPick :class="{ active }" class="research-select"
-                  :research="research" v-if="research"
-                  @click.native="toggle"
+    <ResearchPick
+      v-if="research"
+      :class="{ active }"
+      class="research-select"
+      :research="research"
+      @click.native="toggle"
     />
   </div>
 </template>

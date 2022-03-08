@@ -1,47 +1,124 @@
 <template>
   <div>
     <div class="input-group">
-      <input class="form-control" placeholder="Фамилия" v-model="form.family" maxlength="120" />
-      <span class="input-group-btn" style="width:0"></span>
-      <input class="form-control" placeholder="Имя" v-model="form.name" maxlength="120" />
-      <span class="input-group-btn" style="width:0"></span>
-      <input class="form-control" placeholder="Отчество" v-model="form.patronymic" maxlength="120" />
-      <span class="input-group-btn" style="width:0"></span>
-      <input class="form-control" v-model="form.birthday" placeholder="Дата рождения" v-mask="'99.99.9999'" />
+      <input
+        v-model="form.family"
+        class="form-control"
+        placeholder="Фамилия"
+        maxlength="120"
+      >
+      <span
+        class="input-group-btn"
+        style="width:0"
+      />
+      <input
+        v-model="form.name"
+        class="form-control"
+        placeholder="Имя"
+        maxlength="120"
+      >
+      <span
+        class="input-group-btn"
+        style="width:0"
+      />
+      <input
+        v-model="form.patronymic"
+        class="form-control"
+        placeholder="Отчество"
+        maxlength="120"
+      >
+      <span
+        class="input-group-btn"
+        style="width:0"
+      />
+      <input
+        v-model="form.birthday"
+        v-mask="'99.99.9999'"
+        class="form-control"
+        placeholder="Дата рождения"
+      >
     </div>
     <div class="input-group mt15">
       <span class="input-group-addon addon-fixed">Полис ОМС</span>
-      <input class="form-control" v-model="form.enp_s" placeholder="серия" maxlength="30" />
-      <span class="input-group-btn" style="width:0"></span>
-      <input class="form-control" v-model="form.enp_n" placeholder="номер" maxlength="30" />
+      <input
+        v-model="form.enp_s"
+        class="form-control"
+        placeholder="серия"
+        maxlength="30"
+      >
+      <span
+        class="input-group-btn"
+        style="width:0"
+      />
+      <input
+        v-model="form.enp_n"
+        class="form-control"
+        placeholder="номер"
+        maxlength="30"
+      >
     </div>
     <div class="input-group mt5">
       <span class="input-group-addon addon-fixed">Паспорт</span>
-      <input class="form-control" v-model="form.pass_s" placeholder="серия" maxlength="30" />
-      <span class="input-group-btn" style="width:0"></span>
-      <input class="form-control" v-model="form.pass_n" placeholder="номер" maxlength="30" />
+      <input
+        v-model="form.pass_s"
+        class="form-control"
+        placeholder="серия"
+        maxlength="30"
+      >
+      <span
+        class="input-group-btn"
+        style="width:0"
+      />
+      <input
+        v-model="form.pass_n"
+        class="form-control"
+        placeholder="номер"
+        maxlength="30"
+      >
     </div>
     <div class="input-group mt5">
       <span class="input-group-addon addon-fixed">СНИЛС</span>
-      <input class="form-control" v-model="form.snils" placeholder="номер" maxlength="30" />
+      <input
+        v-model="form.snils"
+        class="form-control"
+        placeholder="номер"
+        maxlength="30"
+      >
     </div>
-    <div class="input-group mt5" v-if="l2_profcenter">
+    <div
+      v-if="l2_profcenter"
+      class="input-group mt5"
+    >
       <span class="input-group-addon addon-fixed">Мед.книжка</span>
-      <input class="form-control" v-model="form.medbookNumber" placeholder="номер (без префикса)" maxlength="16" />
+      <input
+        v-model="form.medbookNumber"
+        class="form-control"
+        placeholder="номер (без префикса)"
+        maxlength="16"
+      >
     </div>
     <div class="row mt5">
       <div class="col-xs-8">
         <div class="input-group">
           <span class="input-group-addon addon-fixed">Телефон</span>
-          <input class="form-control" v-model="form.phone" placeholder="телефон" v-mask="'8 999 9999999'" />
+          <input
+            v-model="form.phone"
+            v-mask="'8 999 9999999'"
+            class="form-control"
+            placeholder="телефон"
+          >
         </div>
       </div>
       <div class="col-xs-4 text-right">
-        <label class="form-label"><input type="checkbox" v-model="form.archive" /> включая архив</label>
+        <label class="form-label"><input
+          v-model="form.archive"
+          type="checkbox"
+        > включая архив</label>
       </div>
     </div>
   </div>
 </template>
+
 <script lang="ts">
 import Vue, { PropType } from 'vue';
 import Component from 'vue-class-component';
@@ -126,6 +203,7 @@ export default class PatientSearchForm extends Vue {
   }
 }
 </script>
+
 <style lang="scss" scoped>
 .addon-fixed {
   width: 140px;

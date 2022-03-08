@@ -1,47 +1,55 @@
 <template>
   <li>
-    <a href="#" @click.prevent="doOpen">
-      Создать направление
-    </a>
-    <modal
+    <a
+      href="#"
+      @click.prevent="doOpen"
+    > Создать направление </a>
+    <Modal
       v-if="open"
-      @close="hide_window"
+      ref="modal"
       show-footer="true"
       white-bg="true"
-      ref="modal"
       max-width="1600px"
       width="100%"
-      marginLeftRight="41px"
+      margin-left-right="41px"
       margin-top
       class="an"
+      @close="hide_window"
     >
       <span slot="header">Создать направление</span>
-      <div slot="body" class="an-body">
+      <div
+        slot="body"
+        class="an-body"
+      >
         <div class="d-root">
           <div>
             <div class="overflow-visible">
-              <patient-picker v-model="selected_card" history_n="false" :hide_card_editor="true" />
+              <PatientPicker
+                v-model="selected_card"
+                history_n="false"
+                :hide_card_editor="true"
+              />
             </div>
           </div>
           <div>
-            <div></div>
+            <div />
           </div>
           <div>
             <div>
-              <researches-picker
+              <ResearchesPicker
+                v-model="research"
                 :hidetemplates="true"
                 :oneselect="true"
                 :autoselect="false"
                 :types-only="[4, 3, 11]"
                 kk="cdd"
                 :just_search="true"
-                v-model="research"
               />
             </div>
           </div>
           <div>
             <div>
-              <selected-researches
+              <SelectedResearches
                 :researches="research ? [research] : []"
                 :card_pk="card_pk"
                 :selected_card="selected_card"
@@ -59,13 +67,17 @@
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="hide_window" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_window"
+            >
               Закрыть
             </button>
           </div>
         </div>
       </div>
-    </modal>
+    </Modal>
   </li>
 </template>
 
@@ -77,13 +89,13 @@ import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 import PatientPicker from '@/ui-cards/PatientPicker.vue';
 
 export default {
+  name: 'CreateDescriptiveDirection',
   components: {
     PatientPicker,
     SelectedResearches,
     ResearchesPicker,
     Modal,
   },
-  name: 'CreateDescriptiveDirection',
   data() {
     return {
       open: false,
@@ -92,8 +104,33 @@ export default {
       research: null,
     };
   },
+  computed: {
+    card_pk() {
+      return this.selected_card.pk || null;
+    },
+    ...mapGetters({
+      bases: 'bases',
+    }),
+    bases_obj() {
+      return this.bases.reduce(
+        (a, b) => ({
+          ...a,
+          [b.pk]: b,
+        }),
+        {},
+      );
+    },
+    internal_base() {
+      for (const b of this.bases) {
+        if (b.internal_type) {
+          return b.pk;
+        }
+      }
+      return -1;
+    },
+  },
   mounted() {
-    this.$root.$on('preselect-args', data => {
+    this.$root.$on('preselect-args', (data) => {
       if (!data) {
         this.args_to_preselect = null;
       } else {
@@ -120,31 +157,6 @@ export default {
       if (this.$refs.modal) {
         this.$refs.modal.$el.style.display = 'none';
       }
-    },
-  },
-  computed: {
-    card_pk() {
-      return this.selected_card.pk || null;
-    },
-    ...mapGetters({
-      bases: 'bases',
-    }),
-    bases_obj() {
-      return this.bases.reduce(
-        (a, b) => ({
-          ...a,
-          [b.pk]: b,
-        }),
-        {},
-      );
-    },
-    internal_base() {
-      for (const b of this.bases) {
-        if (b.internal_type) {
-          return b.pk;
-        }
-      }
-      return -1;
     },
   },
 };

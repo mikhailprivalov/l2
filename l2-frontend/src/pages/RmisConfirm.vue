@@ -1,29 +1,48 @@
 <template>
-  <div ref="root" class="results-root">
+  <div
+    ref="root"
+    class="results-root"
+  >
     <div class="results-sidebar">
       <div class="sidebar-top">
-        <input type="text" class="form-control" v-model="pk" @keyup.enter="load" autofocus
-               placeholder="Номер направления"/>
-        <button class="btn btn-blue-nb" @click="load">Загрузить</button>
+        <input
+          v-model="pk"
+          type="text"
+          class="form-control"
+          autofocus
+          placeholder="Номер направления"
+          @keyup.enter="load"
+        >
+        <button
+          class="btn btn-blue-nb"
+          @click="load"
+        >
+          Загрузить
+        </button>
       </div>
       <div class="sidebar-bottom-top">
         <span>Результаты за</span>
         <div style="width: 186px;display: inline-block;vertical-align: top">
-          <date-range v-model="date_range"/>
+          <DateRange v-model="date_range" />
         </div>
       </div>
       <div style="overflow-y: auto;overflow-x:hidden;">
         <!-- eslint-disable-next-line vue/no-unused-vars -->
-        <div class="direction" v-for="direction in directions" :key="direction.pk">
-        </div>
-        <div class="text-center" style="margin: 5px" v-if="directions.length === 0">
+        <div
+          v-for="direction in directions"
+          :key="direction.pk"
+          class="direction"
+        />
+        <div
+          v-if="directions.length === 0"
+          class="text-center"
+          style="margin: 5px"
+        >
           Нет данных
         </div>
       </div>
     </div>
-    <div class="results-content">
-
-    </div>
+    <div class="results-content" />
   </div>
 </template>
 
@@ -32,7 +51,7 @@ import moment from 'moment';
 import DateRange from '../ui-cards/DateRange.vue';
 
 export default {
-  name: 'rmis-confirm',
+  name: 'RmisConfirm',
   components: { DateRange },
   data() {
     return {

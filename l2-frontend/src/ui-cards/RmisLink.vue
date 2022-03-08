@@ -1,6 +1,14 @@
 <template>
-  <a v-if="isSchedule" href="#" @click.prevent="open_page">Записать</a>
-  <a v-else href="#" @click.prevent="open_page">ЭЛН</a>
+  <a
+    v-if="isSchedule"
+    href="#"
+    @click.prevent="open_page"
+  >Записать</a>
+  <a
+    v-else
+    href="#"
+    @click.prevent="open_page"
+  >ЭЛН</a>
 </template>
 
 <script lang="ts">

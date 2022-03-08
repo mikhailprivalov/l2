@@ -359,8 +359,8 @@ router.afterEach(async () => {
 new Vue({
   router,
   store,
-  render: (h) => h(App),
   async created() {
     registerHooks(this);
   },
+  render: (h) => h(App),
 }).$mount('#app');

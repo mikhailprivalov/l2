@@ -1,36 +1,69 @@
 <template>
   <div v-frag>
-    <div class="top-buttons" :class="!confirmed && 'top-buttons-full'">
+    <div
+      class="top-buttons"
+      :class="!confirmed && 'top-buttons-full'"
+    >
       <template v-if="loaded">
         <template v-if="!confirmed">
-          <button class="btn btn-blue-nb btn-ell" @click="openRefSettings()">
+          <button
+            class="btn btn-blue-nb btn-ell"
+            @click="openRefSettings()"
+          >
             Настройка референсов
           </button>
-          <button class="btn btn-blue-nb btn-ell" @click="save()">
+          <button
+            class="btn btn-blue-nb btn-ell"
+            @click="save()"
+          >
             Сохранить
           </button>
-          <button class="btn btn-blue-nb btn-ell" :disabled="!saved" @click="confirm()">
+          <button
+            class="btn btn-blue-nb btn-ell"
+            :disabled="!saved"
+            @click="confirm()"
+          >
             Подтвердить
           </button>
-          <button class="btn btn-blue-nb btn-ell" @click="saveAndConfirm()">
+          <button
+            class="btn btn-blue-nb btn-ell"
+            @click="saveAndConfirm()"
+          >
             Сохранить и подтвердить
           </button>
         </template>
         <template v-else>
-          <button class="btn btn-blue-nb btn-right" :disabled="!allow_reset_confirm" @click="resetConfirm()">
+          <button
+            class="btn btn-blue-nb btn-right"
+            :disabled="!allow_reset_confirm"
+            @click="resetConfirm()"
+          >
             Сброс подтверждения
           </button>
         </template>
       </template>
     </div>
-    <div class="root" ref="root" v-show="pk">
-      <table class="table table-bordered table-sm-pd" v-if="pk">
+    <div
+      v-show="pk"
+      ref="root"
+      class="root"
+    >
+      <table
+        v-if="pk"
+        class="table table-bordered table-sm-pd"
+      >
         <colgroup>
-          <col style="width: 29%" />
-          <col style="width: 31px" />
-          <col />
-          <col v-if="!noRefs" style="width: 21%" />
-          <col v-if="!noRefs" style="width: 21%" />
+          <col style="width: 29%">
+          <col style="width: 31px">
+          <col>
+          <col
+            v-if="!noRefs"
+            style="width: 21%"
+          >
+          <col
+            v-if="!noRefs"
+            style="width: 21%"
+          >
         </colgroup>
         <thead>
           <tr>
@@ -44,66 +77,91 @@
             <th>Фракция</th>
             <td class="x-cell">
               <button
-                class="btn btn-sm btn-cell"
-                @click.prevent="clearAll"
                 v-if="!confirmed"
-                title="Очистить все значения"
                 v-tippy
+                class="btn btn-sm btn-cell"
+                title="Очистить все значения"
+                @click.prevent="clearAll"
               >
-                <i class="fa fa-times"></i>
+                <i class="fa fa-times" />
               </button>
             </td>
             <th>Значение</th>
-            <th v-if="!noRefs">Нормы М</th>
-            <th v-if="!noRefs">Нормы Ж</th>
+            <th v-if="!noRefs">
+              Нормы М
+            </th>
+            <th v-if="!noRefs">
+              Нормы Ж
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(r, i) in result" :key="r.fraction.pk">
+          <tr
+            v-for="(r, i) in result"
+            :key="r.fraction.pk"
+          >
             <td>
-              <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
+              <label
+                class="fraction-title"
+                :for="`fraction-${r.fraction.pk}`"
+              >{{ r.fraction.title }}</label>
             </td>
-            <BloodTypeField v-if="research.template === 2 && i === 0" :readonly="confirmed || !loaded" :r="r" />
+            <BloodTypeField
+              v-if="research.template === 2 && i === 0"
+              :readonly="confirmed || !loaded"
+              :r="r"
+            />
             <template v-else>
               <td class="x-cell">
                 <button
-                  class="btn btn-sm btn-cell"
-                  @click.prevent="clear(r)"
                   v-if="!confirmed"
-                  :title="`Очистить ${r.fraction.title}`"
                   v-tippy
+                  class="btn btn-sm btn-cell"
+                  :title="`Очистить ${r.fraction.title}`"
                   tabindex="-1"
+                  @click.prevent="clear(r)"
                 >
-                  <i class="fa fa-times"></i>
+                  <i class="fa fa-times" />
                 </button>
               </td>
               <TextInputField
                 :readonly="confirmed || !loaded"
                 :move-focus-next="moveFocusNext"
                 :r="r"
-                :allDirPks="allDirPks"
-                :dirData="dirData"
+                :all-dir-pks="allDirPks"
+                :dir-data="dirData"
               />
             </template>
-            <Ref :data="r.ref.m" v-if="!noRefs" />
-            <Ref :data="r.ref.f" v-if="!noRefs" />
+            <Ref
+              v-if="!noRefs"
+              :data="r.ref.m"
+            />
+            <Ref
+              v-if="!noRefs"
+              :data="r.ref.f"
+            />
           </tr>
           <tr v-if="research.can_comment">
-            <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
+            <td>
+              <label
+                class="fraction-title"
+                for="result_comment"
+              >Комментарий</label>
+            </td>
             <td colspan="4">
               <textarea
+                id="result_comment"
+                v-model="comment"
+                v-autosize="comment"
                 class="noresize form-control result-field"
                 :readonly="confirmed || !loaded"
-                v-autosize="comment"
-                v-model="comment"
-                id="result_comment"
-              ></textarea>
+              />
             </td>
           </tr>
           <template v-if="research.co_executor_mode > 0 && laborants.length > 0">
             <tr>
               <td colspan="5">
-                <hr />
+                <hr>
               </td>
             </tr>
             <tr>
@@ -111,15 +169,15 @@
                 <label for="laborant">Лаборант</label>
               </td>
               <td colspan="4">
-                <treeselect
+                <Treeselect
+                  id="laborant"
+                  v-model="co_executor"
                   :multiple="false"
                   :disable-branch-nodes="true"
                   :options="laborants"
                   placeholder="Лаборант не выбран"
-                  v-model="co_executor"
                   :append-to-body="true"
                   :clearable="false"
-                  id="laborant"
                   :disabled="confirmed"
                 />
               </td>
@@ -129,15 +187,15 @@
                 <label for="co_executor2">{{ research.co_executor_title }}</label>
               </td>
               <td colspan="4">
-                <treeselect
+                <Treeselect
+                  id="co_executor2"
+                  v-model="co_executor2"
                   :multiple="false"
                   :disable-branch-nodes="true"
                   :options="laborants"
                   placeholder="Соисполнитель не выбран"
-                  v-model="co_executor2"
                   :append-to-body="true"
                   :clearable="false"
-                  id="co_executor2"
                   :disabled="confirmed"
                 />
               </td>
@@ -145,7 +203,7 @@
           </template>
           <tr v-else-if="legalAuthenticator">
             <td colspan="5">
-              <hr />
+              <hr>
             </td>
           </tr>
           <tr v-if="legalAuthenticator">
@@ -153,60 +211,91 @@
               <label for="laborant">Подпись от организации</label>
             </td>
             <td colspan="4">
-              <treeselect
+              <Treeselect
+                id="legal_authenticator"
+                v-model="legal_authenticator"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="legalAuthenticators"
                 placeholder="Не выбрано"
-                v-model="legal_authenticator"
                 :append-to-body="true"
                 :clearable="false"
-                id="legal_authenticator"
                 :disabled="confirmed"
               />
             </td>
           </tr>
         </tbody>
       </table>
-      <table class="table table-bordered table-condensed" v-if="pk && execParams.length > 0">
+      <table
+        v-if="pk && execParams.length > 0"
+        class="table table-bordered table-condensed"
+      >
         <colgroup>
-          <col width="208" />
-          <col />
+          <col width="208">
+          <col>
         </colgroup>
         <tbody>
-          <tr v-for="r in execParams" :key="`${r[0]}_${r[1]}`">
+          <tr
+            v-for="r in execParams"
+            :key="`${r[0]}_${r[1]}`"
+          >
             <th>{{ r[0] }}</th>
             <td>{{ r[1] }}</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="bottom-buttons" :class="!confirmed && 'bottom-buttons-full'">
+    <div
+      class="bottom-buttons"
+      :class="!confirmed && 'bottom-buttons-full'"
+    >
       <template v-if="loaded">
         <template v-if="!confirmed">
-          <button class="btn btn-blue-nb btn-ell" @click="openRefSettings()">
+          <button
+            class="btn btn-blue-nb btn-ell"
+            @click="openRefSettings()"
+          >
             Настройка референсов
           </button>
-          <button class="btn btn-blue-nb btn-ell" @click="save()">
+          <button
+            class="btn btn-blue-nb btn-ell"
+            @click="save()"
+          >
             Сохранить
           </button>
-          <button class="btn btn-blue-nb btn-ell" :disabled="!saved" @click="confirm()">
+          <button
+            class="btn btn-blue-nb btn-ell"
+            :disabled="!saved"
+            @click="confirm()"
+          >
             Подтвердить
           </button>
-          <button class="btn btn-blue-nb btn-ell" @click="saveAndConfirm()">
+          <button
+            class="btn btn-blue-nb btn-ell"
+            @click="saveAndConfirm()"
+          >
             Сохранить и подтвердить
           </button>
         </template>
         <template v-else>
-          <button class="btn btn-blue-nb btn-right" :disabled="!allow_reset_confirm" @click="resetConfirm()">
+          <button
+            class="btn btn-blue-nb btn-right"
+            :disabled="!allow_reset_confirm"
+            @click="resetConfirm()"
+          >
             Сброс подтверждения
           </button>
         </template>
       </template>
     </div>
-    <RefSettings v-if="showRefSettings" :close="hideRefSettings" :result="result" />
+    <RefSettings
+      v-if="showRefSettings"
+      :close="hideRefSettings"
+      :result="result"
+    />
   </div>
 </template>
+
 <script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -225,14 +314,6 @@ export default {
     BloodTypeField,
     Ref,
     Treeselect,
-  },
-  mounted() {
-    this.$root.$on('laboratory:results:open-form', (pk, allDirPks, dirData) => {
-      this.loadForm(pk);
-      this.allDirPks = allDirPks;
-      this.dirData = dirData;
-    });
-    this.$root.$on('laboratory:reload-form', () => this.reloadForm());
   },
   data() {
     return {
@@ -281,6 +362,14 @@ export default {
     legalAuthenticator() {
       return !!this.$store.getters.modules.legal_authenticator;
     },
+  },
+  mounted() {
+    this.$root.$on('laboratory:results:open-form', (pk, allDirPks, dirData) => {
+      this.loadForm(pk);
+      this.allDirPks = allDirPks;
+      this.dirData = dirData;
+    });
+    this.$root.$on('laboratory:reload-form', () => this.reloadForm());
   },
   methods: {
     async loadForm(pk) {

@@ -1,14 +1,25 @@
 <template>
   <div class="wrapper-component">
-    <treeselect :multiple="false" :disable-branch-nodes="true"
-                :options="permanent_directories_keys" placeholder="Справочник не выбран"
-                v-model="code"
-                @select="saveDirectory"/>
-    <a href="#" class="a-under" @click.prevent="open = !open">
+    <treeselect
+      v-model="code"
+      :multiple="false"
+      :disable-branch-nodes="true"
+      :options="permanent_directories_keys"
+      placeholder="Справочник не выбран"
+      @select="saveDirectory"
+    />
+    <a
+      href="#"
+      class="a-under"
+      @click.prevent="open = !open"
+    >
       Варианты (кол-во: {{ variantsCount }})
     </a>
     <ul v-if="open">
-      <li v-for="(v, k) in variants" :key="k">
+      <li
+        v-for="(v, k) in variants"
+        :key="k"
+      >
         {{ k }} – {{ v }}
       </li>
     </ul>

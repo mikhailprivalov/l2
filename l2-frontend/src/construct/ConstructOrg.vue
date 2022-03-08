@@ -1,8 +1,13 @@
 <template>
   <div v-frag>
     <div class="card-no-hover card card-1">
-      <h4 class="text-center">Настройка данных организации</h4>
-      <FormulateForm v-model="org" @submit="save">
+      <h4 class="text-center">
+        Настройка данных организации
+      </h4>
+      <FormulateForm
+        v-model="org"
+        @submit="save"
+      >
         <div class="row f-row">
           <div class="col-xs-6">
             <FormulateInput
@@ -14,30 +19,76 @@
               required
               validation="required"
             />
-            <FormulateInput type="text" name="shortTitle" label="Краткое название" />
-            <FormulateInput type="text" name="address" label="Адрес" />
-            <FormulateInput type="text" name="phones" label="Телефоны" />
-            <FormulateInput type="text" name="ogrn" label="ОГРН" maxlength="13" />
+            <FormulateInput
+              type="text"
+              name="shortTitle"
+              label="Краткое название"
+            />
+            <FormulateInput
+              type="text"
+              name="address"
+              label="Адрес"
+            />
+            <FormulateInput
+              type="text"
+              name="phones"
+              label="Телефоны"
+            />
+            <FormulateInput
+              type="text"
+              name="ogrn"
+              label="ОГРН"
+              maxlength="13"
+            />
           </div>
           <div class="col-xs-6">
-            <FormulateInput type="text" name="currentManager" label="Главный врач" />
-            <FormulateInput type="text" name="licenseData" label="Лицензия" />
-            <FormulateInput type="text" name="www" label="Сайт" />
-            <FormulateInput type="text" name="email" label="Email" />
-            <FormulateInput type="text" name="okpo" label="ОКПО" />
+            <FormulateInput
+              type="text"
+              name="currentManager"
+              label="Главный врач"
+            />
+            <FormulateInput
+              type="text"
+              name="licenseData"
+              label="Лицензия"
+            />
+            <FormulateInput
+              type="text"
+              name="www"
+              label="Сайт"
+            />
+            <FormulateInput
+              type="text"
+              name="email"
+              label="Email"
+            />
+            <FormulateInput
+              type="text"
+              name="okpo"
+              label="ОКПО"
+            />
           </div>
         </div>
-        <FormulateInput type="submit" label="Сохранить" :disabled="loading" />
+        <FormulateInput
+          type="submit"
+          label="Сохранить"
+          :disabled="loading"
+        />
 
         <div class="journal-warning">
-          Изменения будут записаны в журнал.<br />
-          <strong>Обновлённые данные будут отображены на печатных бланках, в отчётах и в интерфейсе {{system}}</strong>
+          Изменения будут записаны в журнал.<br>
+          <strong>Обновлённые данные будут отображены на печатных бланках, в отчётах и в интерфейсе {{ system }}</strong>
         </div>
       </FormulateForm>
     </div>
 
-    <div class="card-no-hover card card-1" v-if="numberGeneratorEnabled">
-      <h4 class="text-center">Генераторы номеров</h4>
+    <div
+      v-if="numberGeneratorEnabled"
+      class="card-no-hover card card-1"
+    >
+      <h4 class="text-center">
+        Генераторы номеров
+      </h4>
 
       <table class="table table-bordered">
         <thead>
@@ -51,12 +102,21 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="g in generators" :key="g.pk">
+          <tr
+            v-for="g in generators"
+            :key="g.pk"
+          >
             <td>{{ g.keyDisplay }}</td>
             <td>{{ g.year }}</td>
             <td>
-              <span class="badge badge-success" v-if="g.isActive">да</span>
-              <span class="badge badge-warning" v-else>нет</span>
+              <span
+                v-if="g.isActive"
+                class="badge badge-success"
+              >да</span>
+              <span
+                v-else
+                class="badge badge-warning"
+              >нет</span>
             </td>
             <td>{{ g.start }}</td>
             <td>{{ g.end }}</td>
@@ -67,7 +127,10 @@
 
       <h5>Добавить новый или заменить генератор</h5>
 
-      <FormulateForm v-model="generator" @submit="saveGenerator">
+      <FormulateForm
+        v-model="generator"
+        @submit="saveGenerator"
+      >
         <FormulateInput
           name="key"
           :options="{ deathFormNumber: 'Номер свидетельства о смерти' }"
@@ -76,9 +139,28 @@
           label="Тип генератора"
           required
         />
-        <FormulateInput type="number" name="year" label="Год" :min="2021" :max="3000" required />
-        <FormulateInput type="number" name="start" label="Начало (первое значение)" :max="generator.end" required />
-        <FormulateInput type="number" name="end" label="Конец (последнее значение)" :min="generator.start || 0" required />
+        <FormulateInput
+          type="number"
+          name="year"
+          label="Год"
+          :min="2021"
+          :max="3000"
+          required
+        />
+        <FormulateInput
+          type="number"
+          name="start"
+          label="Начало (первое значение)"
+          :max="generator.end"
+          required
+        />
+        <FormulateInput
+          type="number"
+          name="end"
+          label="Конец (последнее значение)"
+          :min="generator.start || 0"
+          required
+        />
         <FormulateInput
           type="number"
           name="prependLength"
@@ -87,10 +169,14 @@
           :max="20"
           required
         />
-        <FormulateInput type="submit" label="Сохранить" :disabled="loading" />
+        <FormulateInput
+          type="submit"
+          label="Сохранить"
+          :disabled="loading"
+        />
 
         <div class="journal-warning">
-          Существующие генераторы такого же типа и с тем же годом будут деактивированы.<br />
+          Существующие генераторы такого же типа и с тем же годом будут деактивированы.<br>
           Изменения будут записаны в журнал.
         </div>
       </FormulateForm>

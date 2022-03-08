@@ -1,20 +1,20 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
+  <div style="height: 100%; width: 100%; position: relative; min-height: 100px">
     <table
       class="table table-responsive table-bordered table-condensed"
-      style="table-layout: fixed;margin-bottom: 0;background-color: #fff"
+      style="table-layout: fixed; margin-bottom: 0; background-color: #fff"
     >
       <colgroup>
-        <col width="240" />
-        <col />
-        <col />
-        <col width="90" />
-        <col width="70" />
-        <col width="160" />
-        <col width="130" />
-        <col width="70" />
-        <col width="60" />
-        <col width="96" />
+        <col width="240">
+        <col>
+        <col>
+        <col width="90">
+        <col width="70">
+        <col width="160">
+        <col width="130">
+        <col width="70">
+        <col width="60">
+        <col width="96">
       </colgroup>
       <thead>
         <tr>
@@ -32,34 +32,72 @@
       </thead>
       <tbody>
         <PharmacotherapyRow
+          v-for="v in valueFiltered"
+          :key="`${v.pk}-${v.remove}`"
           :data="v"
           :confirmed="confirmed"
           :params="params"
-          v-for="v in valueFiltered"
-          :key="`${v.pk}-${v.remove}`"
         />
         <tr v-if="value.length === 0">
-          <td class="text-center" colspan="10">нет назначений</td>
+          <td
+            class="text-center"
+            colspan="10"
+          >
+            нет назначений
+          </td>
         </tr>
       </tbody>
     </table>
-    <hr v-if="!confirmed" />
-    <div class="row" v-if="!confirmed">
+    <hr v-if="!confirmed">
+    <div
+      v-if="!confirmed"
+      class="row"
+    >
       <div class="col-xs-3">
-        <div class="input-group" style="z-index: 0">
-          <input class="form-control" placeholder="Поиск назначения" v-model="search" />
+        <div
+          class="input-group"
+          style="z-index: 0"
+        >
+          <input
+            v-model="search"
+            class="form-control"
+            placeholder="Поиск назначения"
+          >
           <span class="input-group-btn">
-            <button @click="search = ''" class="btn btn-blue-nb" type="button"><i class="fa fa-times"></i></button>
+            <button
+              class="btn btn-blue-nb"
+              type="button"
+              @click="search = ''"
+            ><i class="fa fa-times" /></button>
           </span>
         </div>
         <div v-if="variants.length > 0">
           <small>выберите назначение из списка справа</small>
         </div>
       </div>
-      <div class="col-xs-9" style="padding-left: 0">
-        <div @click="add(v.value, v.titleOrig)" class="variant" v-for="v in variants" :key="v.pk" v-html="v.title" />
-        <div class="variant-msg" v-if="search === ''">выполните поиск для добавления назначений</div>
-        <div class="variant-msg" v-else-if="variants.length === 0">не найдено</div>
+      <div
+        class="col-xs-9"
+        style="padding-left: 0"
+      >
+        <div
+          v-for="v in variants"
+          :key="v.pk"
+          class="variant"
+          @click="add(v.value, v.titleOrig)"
+          v-html="/*eslint-disable-line vue/no-v-html*/ v.title"
+        />
+        <div
+          v-if="search === ''"
+          class="variant-msg"
+        >
+          выполните поиск для добавления назначений
+        </div>
+        <div
+          v-else-if="variants.length === 0"
+          class="variant-msg"
+        >
+          не найдено
+        </div>
       </div>
     </div>
   </div>
@@ -90,36 +128,9 @@ export default {
       params: {},
     };
   },
-  async mounted() {
-    await this.$store.dispatch(actions.INC_LOADING);
-    this.params = await this.$api('procedural-list/params');
-    await this.$store.dispatch(actions.DEC_LOADING);
-  },
-  methods: {
-    add(drugPk, drug) {
-      this.value.push({
-        pk: Math.random() + Math.random(),
-        isNew: true,
-        remove: false,
-        drug,
-        drugPk,
-        timesSelected: [],
-        form_release: -1,
-        method: -1,
-        dosage: 1,
-        step: 1,
-        dateStart: moment().format('YYYY-MM-DD'),
-        dateEnd: null,
-        countDays: 1,
-        units: null,
-        comment: '',
-      });
-      this.search = '';
-    },
-  },
   computed: {
     valueFiltered() {
-      return this.value.filter(v => !v.remove);
+      return this.value.filter((v) => !v.remove);
     },
   },
   watch: {
@@ -129,7 +140,7 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { data } = await fetch(`/api/autocomplete?type=drugs&value=${this.search}&limit=60`).then(r => r.json());
+      const { data } = await fetch(`/api/autocomplete?type=drugs&value=${this.search}&limit=60`).then((r) => r.json());
       this.variants = [];
       const lowerSearch = this.search.trim().toLowerCase();
       const l = lowerSearch.length;
@@ -162,6 +173,33 @@ export default {
         });
       }
       await this.$store.dispatch(actions.DEC_LOADING);
+    },
+  },
+  async mounted() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    this.params = await this.$api('procedural-list/params');
+    await this.$store.dispatch(actions.DEC_LOADING);
+  },
+  methods: {
+    add(drugPk, drug) {
+      this.value.push({
+        pk: Math.random() + Math.random(),
+        isNew: true,
+        remove: false,
+        drug,
+        drugPk,
+        timesSelected: [],
+        form_release: -1,
+        method: -1,
+        dosage: 1,
+        step: 1,
+        dateStart: moment().format('YYYY-MM-DD'),
+        dateEnd: null,
+        countDays: 1,
+        units: null,
+        comment: '',
+      });
+      this.search = '';
     },
   },
 };
