@@ -16,6 +16,9 @@ build:
 build_prod:
 	yarn --cwd l2-frontend build_prod
 
+ci_lint:
+	yarn --cwd l2-frontend ci:lint
+
 collect:
 	python3 manage.py collectstatic --no-input
 

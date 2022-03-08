@@ -1,9 +1,20 @@
 <template>
   <div v-frag>
-    <ul class="nav navbar-nav" v-show="Boolean(readerId)">
+    <ul
+      v-show="Boolean(readerId)"
+      class="nav navbar-nav"
+    >
       <li>
-        <a href="#" @click.prevent="clickPlus" v-tippy title="Найти или импортировать пациента">
-          <i class="fa fa-circle status" :class="`status-${status}`"></i> {{ textStatus }}
+        <a
+          v-tippy
+          href="#"
+          title="Найти или импортировать пациента"
+          @click.prevent="clickPlus"
+        >
+          <i
+            class="fa fa-circle status"
+            :class="`status-${status}`"
+          /> {{ textStatus }}
         </a>
       </li>
     </ul>
@@ -26,6 +37,17 @@ export default {
       polis: null,
       details: {},
     };
+  },
+  computed: {
+    textStatus() {
+      if (this.status === 'none') {
+        return 'нет связи с карт-ридером';
+      }
+      if (this.status === 'wait') {
+        return 'карта не вставлена в карт-ридер';
+      }
+      return `${this.fio} – ${this.polis}`;
+    },
   },
   mounted() {
     if (this.readerId) {
@@ -65,17 +87,6 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
 
       this.$root.$emit('search-value', this.polis || '');
-    },
-  },
-  computed: {
-    textStatus() {
-      if (this.status === 'none') {
-        return 'нет связи с карт-ридером';
-      }
-      if (this.status === 'wait') {
-        return 'карта не вставлена в карт-ридер';
-      }
-      return `${this.fio} – ${this.polis}`;
     },
   },
 };

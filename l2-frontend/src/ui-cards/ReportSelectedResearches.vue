@@ -1,10 +1,23 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
-    <div class="content-picker" style="overflow: auto">
+    <div
+      class="content-picker"
+      style="overflow: auto"
+    >
       <div style="width: 100%;display: contents">
-        <research-params-select v-for="r in params_researches" v-model="r.selected_params" :research="r" :key="r.pk"/>
-        <div class="text-center" v-if="params_researches.length === 0"
-             style="width: 100%;display: flex;align-items: center;justify-content: center;">Ничего не выбрано</div>
+        <ResearchParamsSelect
+          v-for="r in params_researches"
+          :key="r.pk"
+          v-model="r.selected_params"
+          :research="r"
+        />
+        <div
+          v-if="params_researches.length === 0"
+          class="text-center"
+          style="width: 100%;display: flex;align-items: center;justify-content: center;"
+        >
+          Ничего не выбрано
+        </div>
       </div>
     </div>
   </div>
@@ -15,7 +28,7 @@ import _ from 'lodash';
 import ResearchParamsSelect from './ResearchParamsSelect.vue';
 
 export default {
-  name: 'report-selected-researches',
+  name: 'ReportSelectedResearches',
   components: {
     ResearchParamsSelect,
   },
@@ -44,6 +57,21 @@ export default {
       return p;
     },
   },
+  watch: {
+    params_directory: {
+      handler() {
+        this.params_researches_update();
+      },
+      deep: true,
+    },
+    researches() {
+      this.params_researches_update();
+      this.$root.$emit('report-researches:update');
+    },
+    selected_params() {
+      this.$emit('input', this.selected_params);
+    },
+  },
   created() {
     this.$root.$on('researches-picker:clear_all', this.clear_all);
     this.$root.$on('params-load', this.params_researches_update);
@@ -68,21 +96,6 @@ export default {
         }
         this.params_directory[rpk].selected_params = [];
       }
-    },
-  },
-  watch: {
-    params_directory: {
-      handler() {
-        this.params_researches_update();
-      },
-      deep: true,
-    },
-    researches() {
-      this.params_researches_update();
-      this.$root.$emit('report-researches:update');
-    },
-    selected_params() {
-      this.$emit('input', this.selected_params);
     },
   },
 };

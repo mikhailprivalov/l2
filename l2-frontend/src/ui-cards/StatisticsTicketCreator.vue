@@ -2,26 +2,48 @@
   <div style="align-self: stretch;overflow-y: auto;width: 100%;overflow-x: hidden;">
     <div class="input-group">
       <span class="input-group-addon">Цель посещения</span>
-      <div class="input-group-btn" style="width: 100%;">
-        <select-picker-b no-border-left="true" :options="visit_select" v-model="visit"/>
+      <div
+        class="input-group-btn"
+        style="width: 100%;"
+      >
+        <SelectPickerB
+          v-model="visit"
+          no-border-left="true"
+          :options="visit_select"
+        />
       </div>
     </div>
-    <div class="form-group basic-textarea" style="margin-top: 5px;margin-bottom: 0">
+    <div
+      class="form-group basic-textarea"
+      style="margin-top: 5px;margin-bottom: 0"
+    >
       <label style="width: 100%;font-weight: normal;">Код диагноза (МКБ 10), виды услуг, виды травм:
-        <textarea class="form-control" v-model="info" rows="2"
-                  style="resize: none;width: 100%"></textarea>
+        <textarea
+          v-model="info"
+          class="form-control"
+          rows="2"
+          style="resize: none;width: 100%"
+        />
       </label>
     </div>
-    <div class="row" style="margin-top: 5px;">
+    <div
+      class="row"
+      style="margin-top: 5px;"
+    >
       <div class="col-xs-6">
         <label style="display: block;font-weight: normal;">
-          Впервые: <input v-model="first_time" type="checkbox"/> {{first_time? 'да': 'нет'}}
+          Впервые: <input
+            v-model="first_time"
+            type="checkbox"
+          > {{ first_time? 'да': 'нет' }}
         </label>
       </div>
       <div class="col-xs-6">
         <label style="display: block;font-weight: normal;">
-          Первичный приём: <input v-model="primary_visit"
-                                  type="checkbox"/> {{primary_visit? 'да': 'нет'}}
+          Первичный приём: <input
+            v-model="primary_visit"
+            type="checkbox"
+          > {{ primary_visit? 'да': 'нет' }}
         </label>
       </div>
     </div>
@@ -29,43 +51,76 @@
     <div class="input-group flex-group">
       <span class="input-group-addon">Диспансерный учёт</span>
       <div class="input-group-btn">
-        <select-picker-b no-border-left="true" :options="disp_select" v-model="disp"/>
+        <SelectPickerB
+          v-model="disp"
+          no-border-left="true"
+          :options="disp_select"
+        />
       </div>
     </div>
 
-    <div class="input-group flex-group" v-show="disp === '1' || disp === '2' || disp === '3'">
+    <div
+      v-show="disp === '1' || disp === '2' || disp === '3'"
+      class="input-group flex-group"
+    >
       <span class="input-group-addon">Диагноз учёта</span>
-      <input type="text" class="form-control" v-model="disp_diagnos"/>
+      <input
+        v-model="disp_diagnos"
+        type="text"
+        class="form-control"
+      >
     </div>
 
-    <div class="input-group flex-group" v-show="disp === '3'">
+    <div
+      v-show="disp === '3'"
+      class="input-group flex-group"
+    >
       <span class="input-group-addon">Причина снятия</span>
       <div class="input-group-btn">
-        <select-picker-b no-border-left="true" :options="exclude_select" v-model="exclude"/>
+        <SelectPickerB
+          v-model="exclude"
+          no-border-left="true"
+          :options="exclude_select"
+        />
       </div>
     </div>
 
     <div class="input-group flex-group">
       <span class="input-group-addon">Результат обращения</span>
       <div class="input-group-btn">
-        <select-picker-b no-border-left="true" :options="result_select" v-model="result"/>
+        <SelectPickerB
+          v-model="result"
+          no-border-left="true"
+          :options="result_select"
+        />
       </div>
     </div>
 
     <div class="input-group flex-group">
       <span class="input-group-addon">Исход</span>
       <div class="input-group-btn">
-        <select-picker-b no-border-left="true" :options="outcome_select" v-model="outcome"/>
+        <SelectPickerB
+          v-model="outcome"
+          no-border-left="true"
+          :options="outcome_select"
+        />
       </div>
     </div>
 
     <div class="input-group flex-group">
       <span class="input-group-addon">Дата талона</span>
-      <date-field-2 class="text-date-left" v-model="date_ticket"/>
+      <DateField2
+        v-model="date_ticket"
+        class="text-date-left"
+      />
     </div>
 
-    <button @click="create" class="btn btn-blue-nb" :disabled="card_pk === -1"
-            style="margin-top: 10px;margin-bottom: 5px;width: 100%">
+    <button
+      class="btn btn-blue-nb"
+      :disabled="card_pk === -1"
+      style="margin-top: 10px;margin-bottom: 5px;width: 100%"
+      @click="create"
+    >
       Сохранить
     </button>
   </div>
@@ -79,8 +134,8 @@ import SelectPickerB from '../fields/SelectPickerB.vue';
 import DateField2 from '../fields/DateField2.vue';
 
 export default {
+  name: 'StatisticsTicketCreator',
   components: { SelectPickerB, DateField2 },
-  name: 'statistics-ticket-creator',
   props: {
     base: {
       type: Object,
@@ -118,23 +173,6 @@ export default {
       first_time: false,
       primary_visit: true,
     };
-  },
-  created() {
-    this.$store.dispatch(actions.INC_LOADING);
-    statisticsTicketsPoint.getTicketsTypes().then((data) => {
-      this.types.visit = data.visit;
-      if (data.visit.length > 0) this.visit = data.visit[0].pk;
-      this.types.result = data.result;
-      if (data.result.length > 0) this.result = data.result[0].pk;
-      this.disp = this.types.disp[0].pk;
-
-      this.types.outcome = data.outcome;
-      if (data.outcome.length > 0) this.outcome = data.outcome[0].pk;
-      this.types.exclude = data.exclude;
-      if (data.exclude.length > 0) this.exclude = data.exclude[0].pk;
-    }).finally(() => {
-      this.$store.dispatch(actions.DEC_LOADING);
-    });
   },
   computed: {
     exclude_val() {
@@ -209,6 +247,39 @@ export default {
       return { pk: -1, title: 'Не выбрано' };
     },
   },
+  created() {
+    this.$store.dispatch(actions.INC_LOADING);
+    statisticsTicketsPoint.getTicketsTypes().then((data) => {
+      this.types.visit = data.visit;
+      if (data.visit.length > 0) this.visit = data.visit[0].pk;
+      this.types.result = data.result;
+      if (data.result.length > 0) this.result = data.result[0].pk;
+      this.disp = this.types.disp[0].pk;
+
+      this.types.outcome = data.outcome;
+      if (data.outcome.length > 0) this.outcome = data.outcome[0].pk;
+      this.types.exclude = data.exclude;
+      if (data.exclude.length > 0) this.exclude = data.exclude[0].pk;
+    }).finally(() => {
+      this.$store.dispatch(actions.DEC_LOADING);
+    });
+  },
+  mounted() {
+    window.$('.dropdown:not(.dropdown-large)').on('show.bs.dropdown', function () {
+      const $btnDropDown = window.$(this).find('.dropdown-toggle');
+      const $listHolder = window.$(this).find('.dropdown-menu');
+
+      window.$(this).css('position', 'static');
+      $listHolder.css({
+        top: `${$btnDropDown.offset().top + $btnDropDown.outerHeight(true)}px`,
+        left: `${$btnDropDown.offset().left}px`,
+      });
+      $listHolder.data('open', true);
+    }).on('hidden.bs.dropdown', function () {
+      const $listHolder = window.$(this).find('.dropdown-menu');
+      $listHolder.data('open', false);
+    });
+  },
   methods: {
     create() {
       this.$store.dispatch(actions.INC_LOADING);
@@ -241,22 +312,6 @@ export default {
       this.disp_diagnos = '';
       this.date_ticket = moment().format('DD.MM.YYYY');
     },
-  },
-  mounted() {
-    window.$('.dropdown:not(.dropdown-large)').on('show.bs.dropdown', function () {
-      const $btnDropDown = window.$(this).find('.dropdown-toggle');
-      const $listHolder = window.$(this).find('.dropdown-menu');
-
-      window.$(this).css('position', 'static');
-      $listHolder.css({
-        top: `${$btnDropDown.offset().top + $btnDropDown.outerHeight(true)}px`,
-        left: `${$btnDropDown.offset().left}px`,
-      });
-      $listHolder.data('open', true);
-    }).on('hidden.bs.dropdown', function () {
-      const $listHolder = window.$(this).find('.dropdown-menu');
-      $listHolder.data('open', false);
-    });
   },
 };
 </script>

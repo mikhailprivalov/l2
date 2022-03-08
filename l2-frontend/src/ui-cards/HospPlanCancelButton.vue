@@ -1,33 +1,59 @@
 <template>
   <div v-frag>
-    <button class="btn btn-blue-nb btn-block btn-sm" type="button" tabindex="-1" @click="cancelModal = true">Отмена</button>
-    <MountingPortal mountTo="#portal-place-modal" :name="`PlanCancel_${data.pk_plan}`" append>
+    <button
+      class="btn btn-blue-nb btn-block btn-sm"
+      type="button"
+      tabindex="-1"
+      @click="cancelModal = true"
+    >
+      Отмена
+    </button>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      :name="`PlanCancel_${data.pk_plan}`"
+      append
+    >
       <transition name="fade">
         <Modal
-          @close="cancelModal = false"
+          v-if="cancelModal"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
-          :zIndex="5001"
-          v-if="cancelModal"
+          margin-left-right="auto"
+          :z-index="5001"
           show-footer="true"
+          @close="cancelModal = false"
         >
           <span slot="header">{{ data.date }} {{ data.fio_patient }} — отмена</span>
-          <div slot="body" class="popup-body">
-            <input class="form-control" placeholder="Причина отмены" autofocus v-model="cancelReason" type="text" />
+          <div
+            slot="body"
+            class="popup-body"
+          >
+            <input
+              v-model="cancelReason"
+              class="form-control"
+              placeholder="Причина отмены"
+              autofocus
+              type="text"
+            >
           </div>
           <div slot="footer">
             <div class="row">
               <div class="col-xs-6">
-                <button type="button" @click="cancelModal = false" class="btn btn-primary-nb btn-blue-nb">Закрыть</button>
+                <button
+                  type="button"
+                  class="btn btn-primary-nb btn-blue-nb"
+                  @click="cancelModal = false"
+                >
+                  Закрыть
+                </button>
               </div>
               <div class="col-xs-6 text-right">
                 <button
                   type="button"
-                  @click="cancel_plan_hospitalization"
                   class="btn btn-primary-nb btn-blue-nb"
                   :disabled="!cancelReason"
+                  @click="cancel_plan_hospitalization"
                 >
                   Подтвердить отмену
                 </button>

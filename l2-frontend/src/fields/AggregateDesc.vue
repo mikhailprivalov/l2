@@ -1,39 +1,79 @@
 <template>
   <div class="root-agg">
-    <div class="research" v-for="(research, ir) in data" :key="ir">
-      <div class="research-title">{{research.title_research}}</div>
-      <div v-if="excludedDateDirByGroup(research.title_research).length > 0" class="excluded">
+    <div
+      v-for="(research, ir) in data"
+      :key="ir"
+      class="research"
+    >
+      <div class="research-title">
+        {{ research.title_research }}
+      </div>
+      <div
+        v-if="excludedDateDirByGroup(research.title_research).length > 0"
+        class="excluded"
+      >
         <u><strong>Исключённые направления:</strong></u>
-        <span v-for="t in excludedDateDirByGroup(research.title_research)" :key="t" @click="cancelExcludeDateDir(t)"
-              v-tippy="{ placement : 'top', arrow: true }"
-              title="Вернуть"
-              class="clickable-return">
-          {{getAfterGroup(t)}}
+        <span
+          v-for="t in excludedDateDirByGroup(research.title_research)"
+          :key="t"
+          v-tippy="{ placement: 'top', arrow: true }"
+          title="Вернуть"
+          class="clickable-return"
+          @click="cancelExcludeDateDir(t)"
+        >
+          {{ getAfterGroup(t) }}
         </span>
       </div>
       <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
-      <div v-for="(res, i) in research.result" v-if="!excludedDateDir(res.date, research.title_research)"
-           :key="i" class="research-date">
+      <div
+        v-for="(res, i) in research.result"
+        v-if="!excludedDateDir(res.date, research.title_research)"
+        :key="i"
+        class="research-date"
+      >
         <div
+          v-tippy="{ placement: 'top', arrow: true }"
           class="research-date-title"
-          @click="excludeDateDir(res.date, research.title_research)"
           title="Скрыть направление"
-          v-tippy="{ placement : 'top', arrow: true }"
+          @click="excludeDateDir(res.date, research.title_research)"
         >
-          {{res.date}}:
+          {{ res.date }}:
         </div>
-        <div v-if="res.link_dicom"><a class="a-under" :href="res.link_dicom" target="_blank">снимок</a></div>
+        <div v-if="res.link_dicom">
+          <a
+            class="a-under"
+            :href="res.link_dicom"
+            target="_blank"
+          >снимок</a>
+        </div>
         <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
-        <span class="research-group" v-for="(g, gi) in res.data" v-if="non_empty_group(g)" :key="gi">
-          <span class="research-group-title" v-if="g.group_title !== ''">
-            {{fix_space(g.group_title)}}<span v-if="non_empty_fields(g)">:</span></span>
-          <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
-          <span class="group-field" v-for="(f, fi) in g.fields" v-if="f.value !== ''" :key="fi">
-            <span class="group-field-title" v-if="f.title_field !== ''">{{fix_space(f.title_field)}}:&nbsp;</span><span
-            v-html="fix_html(f.value)"/><span
-            v-if="fi + 1 < g.fields.length && !f.value.endsWith(';') && !f.value.endsWith('.')">; </span><span
-            v-else-if="fi + 1 === g.fields.length && !f.value.endsWith(';') && !f.value.endsWith('.')">.</span><span
-            v-else>&nbsp;</span>
+        <span
+          v-for="(g, gi) in res.data"
+          v-if="non_empty_group(g)"
+          :key="gi"
+          class="research-group"
+        >
+          <span
+            v-if="g.group_title !== ''"
+            class="research-group-title"
+          >
+            {{ fix_space(g.group_title) }}<span v-if="non_empty_fields(g)">:</span></span>
+          <span
+            v-for="(f, fi) in g.fields"
+            v-if="f.value !== ''"
+            :key="fi"
+            class="group-field"
+          >
+            <span
+              v-if="f.title_field !== ''"
+              class="group-field-title"
+            > {{ fix_space(f.title_field) }}:&nbsp; </span>
+            <span v-html="/*eslint-disable-line vue/no-v-html*/ fix_html(f.value)" /><span
+              v-if="fi + 1 < g.fields.length && !f.value.endsWith(';') && !f.value.endsWith('.')"
+            >;
+            </span>
+            <span v-else-if="fi + 1 === g.fields.length && !f.value.endsWith(';') && !f.value.endsWith('.')">.</span>
+            <span v-else>&nbsp;</span>
           </span>
         </span>
       </div>
@@ -71,6 +111,46 @@ export default {
       excluded: [],
       inited: false,
     };
+  },
+  computed: {
+    directions() {
+      const d = [];
+      try {
+        if (Array.isArray(this.data)) {
+          for (const res of this.data) {
+            for (const row of res.result) {
+              if (row.date && !this.excludedDateDir(row.date, res.title_research)) {
+                d.push(parseInt(row.date.split(' ')[1], 10));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return d;
+    },
+    val_data() {
+      return {
+        directions: this.directions,
+        excluded: this.excluded,
+      };
+    },
+  },
+  watch: {
+    val_data: {
+      deep: true,
+      handler() {
+        if (this.inited) {
+          this.$emit('input', JSON.stringify(this.val_data));
+        }
+      },
+    },
+    inited() {
+      if (this.inited) {
+        this.$emit('input', JSON.stringify(this.val_data));
+      }
+    },
   },
   async mounted() {
     await this.load();
@@ -149,106 +229,66 @@ export default {
       return this.excluded.includes(title);
     },
   },
-  computed: {
-    directions() {
-      const d = [];
-      try {
-        if (Array.isArray(this.data)) {
-          for (const res of this.data) {
-            for (const row of res.result) {
-              if (row.date && !this.excludedDateDir(row.date, res.title_research)) {
-                d.push(parseInt(row.date.split(' ')[1], 10));
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
-      return d;
-    },
-    val_data() {
-      return {
-        directions: this.directions,
-        excluded: this.excluded,
-      };
-    },
-  },
-  watch: {
-    val_data: {
-      deep: true,
-      handler() {
-        if (this.inited) {
-          this.$emit('input', JSON.stringify(this.val_data));
-        }
-      },
-    },
-    inited() {
-      if (this.inited) {
-        this.$emit('input', JSON.stringify(this.val_data));
-      }
-    },
-  },
 };
 </script>
 
 <style scoped lang="scss">
-  .root-agg {
-    line-height: 1.5;
-  }
+.root-agg {
+  line-height: 1.5;
+}
 
-  .research {
-    margin-bottom: 10px;
+.research {
+  margin-bottom: 10px;
 
-    &-title {
-      font-weight: bold;
-      font-size: 110%;
-    }
-
-    &-date {
-      text-align: justify;
-    }
-
-    &-group-title {
-      font-weight: bold;
-    }
-  }
-
-  .research-date-title {
+  &-title {
     font-weight: bold;
-    cursor: pointer;
-
-    &:hover {
-      text-decoration: underline;
-      background: rgba(#000, .05);
-    }
+    font-size: 110%;
   }
 
-  .root-agg {
-    max-width: 21cm;
+  &-date {
+    text-align: justify;
   }
 
-  .clickable-return {
-    cursor: pointer;
-    padding: 0 2px;
-    border: 1px solid rgba(#049372, .4);
-    border-radius: 3px;
-    margin-left: 4px;
-    margin-bottom: 5px;
-    transition: .2s ease-in all;
-    white-space: nowrap;
-    display: inline-block;
-
-    &:hover {
-      color: #fff;
-      background: #049372;
-      border: 1px solid #049372;
-      box-shadow: 0 7px 14px #04937254, 0 5px 5px #049372ba;
-    }
+  &-group-title {
+    font-weight: bold;
   }
+}
 
-  .excluded {
-    white-space: normal;
-    word-break: break-word;
+.research-date-title {
+  font-weight: bold;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+    background: rgba(#000, 0.05);
   }
+}
+
+.root-agg {
+  max-width: 21cm;
+}
+
+.clickable-return {
+  cursor: pointer;
+  padding: 0 2px;
+  border: 1px solid rgba(#049372, 0.4);
+  border-radius: 3px;
+  margin-left: 4px;
+  margin-bottom: 5px;
+  transition: 0.2s ease-in all;
+  white-space: nowrap;
+  display: inline-block;
+
+  &:hover {
+    color: #fff;
+    background: #049372;
+    border: 1px solid #049372;
+    box-shadow: 0 7px 14px #04937254, 0 5px 5px #049372ba;
+  }
+}
+
+.excluded {
+  white-space: normal;
+  word-break: break-word;
+}
 </style>

@@ -1,52 +1,70 @@
 <template>
   <div v-frag>
-    <button class="btn btn-blue-nb nbr" @click="modal_opened = true" v-if="visible">
-      <i v-if="documentsPrefetched" class="fa fa-eye"></i>
+    <button
+      v-if="visible"
+      class="btn btn-blue-nb nbr"
+      @click="modal_opened = true"
+    >
+      <i
+        v-if="documentsPrefetched"
+        class="fa fa-eye"
+      />
       <template v-else>
         ЭЦП
       </template>
     </button>
 
     <div
-      class="eds-status"
-      :class="d.status && 'eds-status-ok'"
       v-for="d in requiredDocuments"
       :key="d.type"
+      v-tippy
+      class="eds-status"
+      :class="d.status && 'eds-status-ok'"
       :title="
         `Есть подписи: ${d.has.join('; ') || 'пусто'}` + (d.empty.length > 0 ? `; Нужны подписи: ${d.empty.join('; ')}` : '')
       "
-      v-tippy
     >
-      <i class="fa fa-certificate"></i> {{ d.type }}
+      <i class="fa fa-certificate" /> {{ d.type }}
     </div>
 
-    <MountingPortal mountTo="#portal-place-modal" :name="`EDSDirection_modal_${directionPk}`" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      :name="`EDSDirection_modal_${directionPk}`"
+      append
+    >
       <transition name="fade">
-        <modal
+        <Modal
           v-if="modal_opened"
           ref="modal"
-          @close="hide_modal"
           show-footer="true"
           white-bg="true"
           width="100%"
           max-width="1020px"
-          marginLeftRight="auto"
+          margin-left-right="auto"
           margin-top="30px"
+          @close="hide_modal"
         >
           <span slot="header">Подписать ЭЦП результат направления {{ directionPk }}</span>
-          <div slot="body" class="eds-body">
+          <div
+            slot="body"
+            class="eds-body"
+          >
             <EDSSigner :direction-pk="directionPk" />
           </div>
           <div slot="footer">
             <div class="row">
               <div class="col-xs-4">
-                <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  @click="hide_modal"
+                >
                   Закрыть
                 </button>
               </div>
             </div>
           </div>
-        </modal>
+        </Modal>
       </transition>
     </MountingPortal>
   </div>
@@ -82,6 +100,30 @@ export default {
       requiredDocuments: [],
     };
   },
+  computed: {
+    visible() {
+      return this.all_confirmed && this.eds;
+    },
+    eds() {
+      return this.$store.getters.modules.l2_eds;
+    },
+    eds_base() {
+      return '/mainmenu/eds';
+    },
+    eds_allowed_sign() {
+      return this.$store.getters.user_data.eds_allowed_sign;
+    },
+  },
+  watch: {
+    visible: {
+      immediate: true,
+      handler() {
+        if (this.visible) {
+          this.loadStatus();
+        }
+      },
+    },
+  },
   methods: {
     hide_modal() {
       this.modal_opened = false;
@@ -103,30 +145,6 @@ export default {
       });
       this.requiredDocuments = documents;
       await this.$store.dispatch(actions.DEC_LOADING);
-    },
-  },
-  watch: {
-    visible: {
-      immediate: true,
-      handler() {
-        if (this.visible) {
-          this.loadStatus();
-        }
-      },
-    },
-  },
-  computed: {
-    visible() {
-      return this.all_confirmed && this.eds;
-    },
-    eds() {
-      return this.$store.getters.modules.l2_eds;
-    },
-    eds_base() {
-      return '/mainmenu/eds';
-    },
-    eds_allowed_sign() {
-      return this.$store.getters.user_data.eds_allowed_sign;
     },
   },
 };

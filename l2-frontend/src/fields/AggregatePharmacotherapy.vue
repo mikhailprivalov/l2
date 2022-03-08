@@ -1,47 +1,122 @@
 <template>
   <div class="root-agg">
-    <button style="margin-bottom: 5px; position: sticky; left: 0;" class="btn btn-blue-nb" @click="print_form">
+    <button
+      style="margin-bottom: 5px; position: sticky; left: 0;"
+      class="btn btn-blue-nb"
+      @click="print_form"
+    >
       Печать
     </button>
     <table class="table table-responsive table-bordered table-condensed">
       <colgroup>
-        <col style="width: 300px" />
-        <col v-for="d in dates" :key="d" />
+        <col style="width: 300px">
+        <col
+          v-for="d in dates"
+          :key="d"
+        >
       </colgroup>
       <thead>
         <tr>
-          <th rowspan="2" class="first-cell">Наименование ЛП</th>
-          <th v-for="d in dates" :key="d">{{ d }}</th>
+          <th
+            rowspan="2"
+            class="first-cell"
+          >
+            Наименование ЛП
+          </th>
+          <th
+            v-for="d in dates"
+            :key="d"
+          >
+            {{ d }}
+          </th>
         </tr>
         <tr>
-          <th v-for="d in dates" :key="d" class="cl-td">
-            <div class="time" v-for="t in timesInDates[d]" :key="t" :data-datetime="`${d} ${t}`">
+          <th
+            v-for="d in dates"
+            :key="d"
+            class="cl-td"
+          >
+            <div
+              v-for="t in timesInDates[d]"
+              :key="t"
+              class="time"
+              :data-datetime="`${d} ${t}`"
+            >
               {{ t.split(':')[0] }}
             </div>
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="r in rows" :key="r.pk">
+        <tr
+          v-for="r in rows"
+          :key="r.pk"
+        >
           <td>
-            <div class="drug" :class="{ cancel: r.cancel }">{{ r.drug }}</div>
-            <span class="badge badge-primary" title="Форма выпуска" v-tippy>{{ r.form_release }}</span>
-            <span class="badge badge-primary" title="Способ применения" v-tippy>{{ r.method }}</span>
-            <span class="badge badge-info" title="Дозировка" v-tippy>{{ r.dosage }}</span>
-            <span class="badge badge-light" title="Дата создания" v-tippy>{{ r.created_at }}</span>
-            <span class="badge badge-warning" title="Шаг дней" v-tippy v-if="r.step > 1">шаг {{ r.step }} дн</span>
+            <div
+              class="drug"
+              :class="{ cancel: r.cancel }"
+            >
+              {{ r.drug }}
+            </div>
+            <span
+              v-tippy
+              class="badge badge-primary"
+              title="Форма выпуска"
+            >{{ r.form_release }}</span>
+            <span
+              v-tippy
+              class="badge badge-primary"
+              title="Способ применения"
+            >{{ r.method }}</span>
+            <span
+              v-tippy
+              class="badge badge-info"
+              title="Дозировка"
+            >{{ r.dosage }}</span>
+            <span
+              v-tippy
+              class="badge badge-light"
+              title="Дата создания"
+            >{{ r.created_at }}</span>
+            <span
+              v-if="r.step > 1"
+              v-tippy
+              class="badge badge-warning"
+              title="Шаг дней"
+            >шаг {{ r.step }} дн</span>
             <template v-if="can_cancel">
-              <a class="badge badge-secondary" href="#" v-if="!r.cancel" @click.prevent="cancelRow(r.pk, true)">
+              <a
+                v-if="!r.cancel"
+                class="badge badge-secondary"
+                href="#"
+                @click.prevent="cancelRow(r.pk, true)"
+              >
                 <i class="fa fa-circle" /> отменить ЛП
               </a>
-              <a class="badge badge-secondary" href="#" v-else @click.prevent="cancelRow(r.pk, false)">
+              <a
+                v-else
+                class="badge badge-secondary"
+                href="#"
+                @click.prevent="cancelRow(r.pk, false)"
+              >
                 <i class="fa fa-circle" /> вернуть ЛП
               </a>
             </template>
-            <div v-if="r.comment"><strong>Комментарий:</strong>&nbsp;{{ r.comment }}</div>
+            <div v-if="r.comment">
+              <strong>Комментарий:</strong>&nbsp;{{ r.comment }}
+            </div>
           </td>
-          <td v-for="d in dates" :key="d" class="cl-td">
-            <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in timesInDates[d]" :key="t" />
+          <td
+            v-for="d in dates"
+            :key="d"
+            class="cl-td"
+          >
+            <PharmacotherapyTime
+              v-for="t in timesInDates[d]"
+              :key="t"
+              :data="r.dates[d][t]"
+            />
           </td>
         </tr>
         <tr v-if="rows.length === 0">
@@ -69,6 +144,16 @@ export default {
       timesInDates: {},
     };
   },
+  computed: {
+    can_cancel() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Врач стационара' || g === 'Admin') {
+          return true;
+        }
+      }
+      return false;
+    },
+  },
   async mounted() {
     await this.load();
     this.$root.$on('pharmacotherapy-aggregation:reload', () => this.load());
@@ -84,16 +169,6 @@ export default {
   },
   beforeDestroy() {
     window.$('.root-agg [data-datetime]').off('mouseover mouseout');
-  },
-  computed: {
-    can_cancel() {
-      for (const g of this.$store.getters.user_data.groups || []) {
-        if (g === 'Врач стационара' || g === 'Admin') {
-          return true;
-        }
-      }
-      return false;
-    },
   },
   methods: {
     async load() {

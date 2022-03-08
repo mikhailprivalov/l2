@@ -2,55 +2,90 @@
   <div style="margin-top: 10px">
     <table class="table table-bordered">
       <colgroup>
-        <col/>
-        <col width='230'/>
-        <col width='120'/>
-        <col width='34'/>
+        <col>
+        <col width="230">
+        <col width="120">
+        <col width="34">
       </colgroup>
       <thead>
-      <tr>
-        <th>Наименование</th>
-        <th>Категория</th>
-        <th>Показать по умолчанию</th>
-        <th></th>
-      </tr>
+        <tr>
+          <th>Наименование</th>
+          <th>Категория</th>
+          <th>Показать по умолчанию</th>
+          <th />
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="(val, index) in tb_data" :key="index">
-        <td class="cl-td">
-          <div class="input-group">
-            <div class="input-group-btn">
-              <button type="button" class="btn btn-blue-nb nbr" @click="up_row(index)"
-                      :disabled="is_first_in_template(index)">
-                <i class="glyphicon glyphicon-arrow-up"></i>
-              </button>
-              <button type="button" class="btn btn-blue-nb" @click="down_row(index)"
-                      :disabled="is_last_in_template(index)">
-                <i class="glyphicon glyphicon-arrow-down"></i>
-              </button>
+        <tr
+          v-for="(val, index) in tb_data"
+          :key="index"
+        >
+          <td class="cl-td">
+            <div class="input-group">
+              <div class="input-group-btn">
+                <button
+                  type="button"
+                  class="btn btn-blue-nb nbr"
+                  :disabled="is_first_in_template(index)"
+                  @click="up_row(index)"
+                >
+                  <i class="glyphicon glyphicon-arrow-up" />
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-blue-nb"
+                  :disabled="is_last_in_template(index)"
+                  @click="down_row(index)"
+                >
+                  <i class="glyphicon glyphicon-arrow-down" />
+                </button>
+              </div>
+              <input
+                v-model="val.title"
+                type="text"
+                class="form-control nbr"
+                placeholder="Введите наименование"
+              >
             </div>
-            <input type="text" class="form-control nbr" v-model="val.title" placeholder="Введите наименование">
-          </div>
-        <td class="cl-td">
-          <select class="form-control nbr" v-model="val.type">
-            <option :value="t" v-for="t in types" :key="t">{{t}}</option>
-          </select>
-        </td>
-        <td class="text-center cl-td">
-          <label>
-            <input type="checkbox" v-model="val.default">
-          </label>
-        </td>
-        <td class="text-center cl-td">
-          <button class="btn btn-blue-nb" @click="delete_row(index)" v-tippy="{ placement : 'bottom'}"
-                  title="Удалить строку">
-            <i class="fa fa-times"/>
-          </button>
-        </td>
-      </tr>
+          </td><td class="cl-td">
+            <select
+              v-model="val.type"
+              class="form-control nbr"
+            >
+              <option
+                v-for="t in types"
+                :key="t"
+                :value="t"
+              >
+                {{ t }}
+              </option>
+            </select>
+          </td>
+          <td class="text-center cl-td">
+            <label>
+              <input
+                v-model="val.default"
+                type="checkbox"
+              >
+            </label>
+          </td>
+          <td class="text-center cl-td">
+            <button
+              v-tippy="{ placement : 'bottom'}"
+              class="btn btn-blue-nb"
+              title="Удалить строку"
+              @click="delete_row(index)"
+            >
+              <i class="fa fa-times" />
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
-    <button class="btn btn-blue-nb add-row" @click="add_new_row">
+    <button
+      class="btn btn-blue-nb add-row"
+      @click="add_new_row"
+    >
       Добавить
     </button>
   </div>
@@ -67,6 +102,9 @@ const makeDefaultRow = (type = null) => ({ title: '', type: type || types[0], de
 
 export default {
   name: 'ConfigureAnesthesiaField',
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -82,6 +120,14 @@ export default {
       tb_data: this.value || [makeDefaultRow()],
       types,
     };
+  },
+  watch: {
+    tb_data: {
+      handler() {
+        this.changeValue(this.tb_data);
+      },
+      immediate: true,
+    },
   },
   methods: {
     add_new_row() {
@@ -116,17 +162,6 @@ export default {
     changeValue(newVal) {
       this.$emit('modified', newVal);
     },
-  },
-  watch: {
-    tb_data: {
-      handler() {
-        this.changeValue(this.tb_data);
-      },
-      immediate: true,
-    },
-  },
-  model: {
-    event: 'modified',
   },
 };
 </script>

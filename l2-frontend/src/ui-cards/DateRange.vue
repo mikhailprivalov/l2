@@ -1,10 +1,26 @@
 <template>
-  <div :class="{small}" class="input-daterange input-group">
-    <input class="input-sm form-control no-context" type="text"
-           ref="from" v-model.lazy="dfrom" maxlength="10"/>
-    <span class="input-group-addon" style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
-    <input class="input-sm form-control no-context" type="text"
-           ref="to" v-model.lazy="dto" maxlength="10"/>
+  <div
+    :class="{small}"
+    class="input-daterange input-group"
+  >
+    <input
+      ref="from"
+      v-model.lazy="dfrom"
+      class="input-sm form-control no-context"
+      type="text"
+      maxlength="10"
+    >
+    <span
+      class="input-group-addon"
+      style="background-color: #fff;color: #000; height: 34px"
+    >&mdash;</span>
+    <input
+      ref="to"
+      v-model.lazy="dto"
+      class="input-sm form-control no-context"
+      type="text"
+      maxlength="10"
+    >
   </div>
 </template>
 
@@ -12,7 +28,7 @@
 import moment from 'moment';
 
 export default {
-  name: 'date-range',
+  name: 'DateRange',
   props: {
     value: {
       type: Array,
@@ -28,6 +44,25 @@ export default {
       dfrom: '',
       dto: '',
     };
+  },
+  computed: {
+    datefull() {
+      return 'DD.MM.YYYY';
+    },
+    datesmall() {
+      return 'DD.MM.YY';
+    },
+    datef() {
+      return this.small ? this.datesmall : this.datefull;
+    },
+  },
+  watch: {
+    dfrom() {
+      this.emit();
+    },
+    dto() {
+      this.emit();
+    },
   },
   created() {
     // eslint-disable-next-line prefer-destructuring
@@ -48,25 +83,6 @@ export default {
       if (!window.$(this.$refs.from).is(':focus')) this.$refs.from.dispatchEvent(new Event('change'));
       if (!window.$(this.$refs.to).is(':focus')) this.$refs.to.dispatchEvent(new Event('change'));
     });
-  },
-  watch: {
-    dfrom() {
-      this.emit();
-    },
-    dto() {
-      this.emit();
-    },
-  },
-  computed: {
-    datefull() {
-      return 'DD.MM.YYYY';
-    },
-    datesmall() {
-      return 'DD.MM.YY';
-    },
-    datef() {
-      return this.small ? this.datesmall : this.datefull;
-    },
   },
   methods: {
     emit() {

@@ -1,50 +1,94 @@
 <template>
   <div v-frag>
     <div class="row">
-      <div class="col-xs-6" style="padding-right: 0;">
+      <div
+        class="col-xs-6"
+        style="padding-right: 0;"
+      >
         <table class="table table-bordered table-condensed">
           <thead>
-          <tr>
-            <th colspan="2">М</th>
-          </tr>
-          <tr>
-            <th>Возраст</th>
-            <th>Значение</th>
-          </tr>
+            <tr>
+              <th colspan="2">
+                М
+              </th>
+            </tr>
+            <tr>
+              <th>Возраст</th>
+              <th>Значение</th>
+            </tr>
           </thead>
           <tbody>
-          <tr v-for="row in m" :key="row.key">
-            <td class="cl-td"><input type="text" class="form-control" v-model="row.key"></td>
-            <td class="cl-td"><input type="text" class="form-control" v-model="row.value"></td>
-          </tr>
+            <tr
+              v-for="row in m"
+              :key="row.key"
+            >
+              <td class="cl-td">
+                <input
+                  v-model="row.key"
+                  type="text"
+                  class="form-control"
+                >
+              </td>
+              <td class="cl-td">
+                <input
+                  v-model="row.value"
+                  type="text"
+                  class="form-control"
+                >
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
-      <div class="col-xs-6" style="padding-left: 0;">
+      <div
+        class="col-xs-6"
+        style="padding-left: 0;"
+      >
         <table class="table table-bordered table-condensed">
           <thead>
-          <tr>
-            <th colspan="2">Ж</th>
-          </tr>
-          <tr>
-            <th>Возраст</th>
-            <th>Значение</th>
-          </tr>
+            <tr>
+              <th colspan="2">
+                Ж
+              </th>
+            </tr>
+            <tr>
+              <th>Возраст</th>
+              <th>Значение</th>
+            </tr>
           </thead>
           <tbody>
-          <tr v-for="row in f" :key="row.key">
-            <td class="cl-td"><input type="text" class="form-control" v-model.trim="row.key"></td>
-            <td class="cl-td"><input type="text" class="form-control" v-model.trim="row.value"></td>
-          </tr>
+            <tr
+              v-for="row in f"
+              :key="row.key"
+            >
+              <td class="cl-td">
+                <input
+                  v-model.trim="row.key"
+                  type="text"
+                  class="form-control"
+                >
+              </td>
+              <td class="cl-td">
+                <input
+                  v-model.trim="row.value"
+                  type="text"
+                  class="form-control"
+                >
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <button class="btn btn-default btn-primary-nb btn-sm mt5" @click="addRefEmptyRow">
-      <i class="fa fa-plus"></i>
+    <button
+      class="btn btn-default btn-primary-nb btn-sm mt5"
+      @click="addRefEmptyRow"
+    >
+      <i class="fa fa-plus" />
     </button>
   </div>
 </template>
+
 <script lang="ts">
 export default {
   name: 'RefEditor',

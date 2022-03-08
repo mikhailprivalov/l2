@@ -1,63 +1,108 @@
 <template>
   <div v-frag>
-    <div class="input-group" :class="form && 'form-row'" v-if="!disabled">
+    <div
+      v-if="!disabled"
+      class="input-group"
+      :class="form && 'form-row'"
+    >
       <button
+        v-tippy
         title="Редактировать адрес"
         class="btn btn-blue-nb nbr btn-address"
         type="button"
-        v-tippy
         tabindex="-1"
         @click="edit = true"
       >
-        <i class="fa fa-pencil"></i>
+        <i class="fa fa-pencil" />
       </button>
-      <div class="form-control form-control-area cursor-pointer" title="Редактировать адрес" v-tippy @click="edit = true">
+      <div
+        v-tippy
+        class="form-control form-control-area cursor-pointer"
+        title="Редактировать адрес"
+        @click="edit = true"
+      >
         {{ prevAddress || 'не заполнено' }}
       </div>
-      <slot name="input-group-append"></slot>
+      <slot name="input-group-append" />
     </div>
-    <div class="input-group" :class="[form && 'form-row', areaFull && 'input-group-flex']" v-else-if="!hideIfEmpty || address">
-      <slot name="input-group-disabled-prepend"></slot>
-      <div class="form-control form-control-area" :class="areaFull && 'form-control-area-full'">
+    <div
+      v-else-if="!hideIfEmpty || address"
+      class="input-group"
+      :class="[form && 'form-row', areaFull && 'input-group-flex']"
+    >
+      <slot name="input-group-disabled-prepend" />
+      <div
+        class="form-control form-control-area"
+        :class="areaFull && 'form-control-area-full'"
+      >
         {{ address }}
       </div>
-      <slot name="input-group-disabled-append"></slot>
+      <slot name="input-group-disabled-append" />
     </div>
-    <MountingPortal mountTo="#portal-place-modal" :name="`AddressFiasField_${editTitle}_${clientPk}`" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      :name="`AddressFiasField_${editTitle}_${clientPk}`"
+      append
+    >
       <transition name="fade">
-        <Modal @close="cancel" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" :zIndex="5001" v-if="edit">
-          <span slot="header" v-if="editTitle">{{ editTitle }} — редактирование</span>
-          <span slot="header" v-else>Редактирование адреса</span>
-          <div slot="body" class="address-body mkb">
+        <Modal
+          v-if="edit"
+          white-bg="true"
+          max-width="710px"
+          width="100%"
+          margin-left-right="auto"
+          :z-index="5001"
+          @close="cancel"
+        >
+          <span
+            v-if="editTitle"
+            slot="header"
+          >{{ editTitle }} — редактирование</span>
+          <span
+            v-else
+            slot="header"
+          >Редактирование адреса</span>
+          <div
+            slot="body"
+            class="address-body mkb"
+          >
             <div class="alert-address">
               Выберите из списка, если адрес найден
             </div>
 
-            <div class="address-header">Новый адрес:</div>
+            <div class="address-header">
+              Новый адрес:
+            </div>
             <TypeAhead
+              v-model="address"
               classes="vtypeahed"
               src="/api/autocomplete?value=:keyword&type=fias-extended"
-              :getResponse="getResponse"
-              :onHit="onHit"
+              :get-response="getResponse"
+              :on-hit="onHit"
               placeholder="Адрес по ФИАС"
-              NoResultText="Адрес не найден в ФИАС. Проверьте правильность ввода"
-              v-model="address"
+              no-result-text="Адрес не найден в ФИАС. Проверьте правильность ввода"
               maxlength="255"
-              :delayTime="400"
-              :minChars="1"
+              :delay-time="400"
+              :min-chars="1"
               :render="items => items.map(i => i.unrestricted_value)"
               :limit="10"
               :highlighting="highlighting"
-              :selectFirst="true"
+              :select-first="true"
               :name="name"
               :readonly="details.custom"
             />
 
-            <div v-if="!details.custom && !fias && address" class="alert alert-warning alert-top">
+            <div
+              v-if="!details.custom && !fias && address"
+              class="alert alert-warning alert-top"
+            >
               Выберите адрес из списка или введите вручную в форму ниже, если адрес не найден
             </div>
 
-            <div class="input-group nd f-row" v-if="!details.custom">
+            <div
+              v-if="!details.custom"
+              class="input-group nd f-row"
+            >
               <span class="input-group-addon">Номер объекта в ФИАС</span>
               <input
                 type="text"
@@ -65,227 +110,233 @@
                 :class="!fias && 'has-error'"
                 :value="fias || 'пусто, адрес не выбран из списка'"
                 readonly
-              />
+              >
             </div>
 
-            <div v-if="details.custom" class="alert-address alert-top">
-              Обязательно выберите тип объекта. <br />
+            <div
+              v-if="details.custom"
+              class="alert-address alert-top"
+            >
+              Обязательно выберите тип объекта. <br>
               Например для "ул. Ленина" выбрать <strong>ул.</strong> и в значение <strong>Ленина</strong>
             </div>
 
-            <label class="nd"><input type="checkbox" v-model="details.custom" /> Ввести адрес вручную</label>
+            <label class="nd"><input
+              v-model="details.custom"
+              type="checkbox"
+            > Ввести адрес вручную</label>
 
             <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Область</span>
               <input
+                v-if="!details.custom"
+                v-model="details.region_type"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.region_type"
                 readonly
-                v-if="!details.custom"
-              />
+              >
               <treeselect
                 v-else
+                v-model="details.region_type"
                 class="treeselect-wide"
                 :class="details.custom && details.region && !details.region_type && 'has-error'"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="REGION_TYPES"
                 placeholder="Тип области не выбран"
-                v-model="details.region_type"
                 :append-to-body="true"
                 :clearable="true"
-                :zIndex="6000"
+                :z-index="6000"
               />
               <input
+                v-model="details.region"
                 type="text"
                 class="form-control form-control-forced-last"
                 :class="details.custom && !details.region && 'has-error'"
-                v-model="details.region"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'область'"
                 autocomplete="new-password"
-              />
+              >
             </div>
 
             <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Район</span>
               <input
+                v-if="!details.custom"
+                v-model="details.area_type"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.area_type"
                 readonly
-                v-if="!details.custom"
-              />
+              >
               <treeselect
                 v-else
+                v-model="details.area_type"
                 class="treeselect-wide"
                 :class="details.custom && details.area && !details.area_type && 'has-error'"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="AREA_TYPES"
                 placeholder="Тип района не выбран"
-                v-model="details.area_type"
                 :append-to-body="true"
                 :clearable="true"
-                :zIndex="6000"
+                :z-index="6000"
               />
               <input
+                v-model="details.area"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.area"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'район'"
                 autocomplete="new-password"
-              />
+              >
             </div>
 
             <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Город</span>
               <input
+                v-if="!details.custom"
+                v-model="details.city_type"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.city_type"
                 readonly
-                v-if="!details.custom"
-              />
+              >
               <treeselect
                 v-else
+                v-model="details.city_type"
                 class="treeselect-wide"
                 :class="details.custom && details.city && !details.city_type && 'has-error'"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="CITY_TYPES"
                 placeholder="Тип города не выбран"
-                v-model="details.city_type"
                 :append-to-body="true"
                 :clearable="true"
-                :zIndex="6000"
+                :z-index="6000"
               />
               <input
+                v-model="details.city"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.city"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'город'"
                 autocomplete="new-password"
-              />
+              >
             </div>
 
             <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Населённый пункт</span>
               <input
+                v-if="!details.custom"
+                v-model="details.settlement_type"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.settlement_type"
                 readonly
-                v-if="!details.custom"
-              />
+              >
               <treeselect
                 v-else
+                v-model="details.settlement_type"
                 class="treeselect-wide"
                 :class="details.custom && details.settlement && !details.settlement_type && 'has-error'"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="SETTLEMENT_TYPES"
                 placeholder="Тип населённого пункта не выбран"
-                v-model="details.settlement_type"
                 :append-to-body="true"
                 :clearable="true"
-                :zIndex="6000"
+                :z-index="6000"
                 autocomplete="new-password"
               />
               <input
+                v-model="details.settlement"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.settlement"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'населённый пункт'"
-              />
+              >
             </div>
 
             <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Улица</span>
               <input
+                v-if="!details.custom"
+                v-model="details.street_type"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.street_type"
                 readonly
-                v-if="!details.custom"
-              />
+              >
               <treeselect
                 v-else
+                v-model="details.street_type"
                 class="treeselect-wide"
                 :class="details.custom && details.street && !details.street_type && 'has-error'"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="STREET_TYPES"
                 placeholder="Тип улицы не выбран"
-                v-model="details.street_type"
                 :append-to-body="true"
                 :clearable="true"
-                :zIndex="6000"
+                :z-index="6000"
                 autocomplete="new-password"
               />
               <input
+                v-model="details.street"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.street"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'улица'"
-              />
+              >
             </div>
 
             <div class="input-group input-multiple nd">
               <span class="input-group-addon form-group">Дом</span>
               <input
+                v-model="details.house_type"
                 type="text"
                 class="form-control form-control-forced-last"
                 :class="details.custom && details.house && !details.house_type && 'has-error'"
-                v-model="details.house_type"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'Тип (напр д, с)'"
-              />
+              >
               <input
+                v-model="details.house"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.house"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'номер дома'"
                 autocomplete="new-password"
-              />
+              >
             </div>
 
             <div class="input-group input-multiple nd">
               <span class="input-group-addon form-group">Квартира</span>
               <input
+                v-model="details.flat_type"
                 type="text"
                 class="form-control form-control-forced-last"
                 :class="details.custom && details.flat && !details.flat_type && 'has-error'"
-                v-model="details.flat_type"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'Тип (напр кв, оф)'"
-              />
+              >
               <input
+                v-model="details.flat"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.flat"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'значение'"
                 autocomplete="new-password"
-              />
+              >
             </div>
 
             <div class="input-group nd">
               <span class="input-group-addon form-group">Почтовый индекс</span>
               <input
+                v-model="details.postal_code"
                 type="text"
                 class="form-control form-control-forced-last"
-                v-model="details.postal_code"
                 :readonly="!details.custom"
                 :maxlength="6"
                 autocomplete="new-password"
-              />
+              >
             </div>
 
             <div class="input-group nd">
@@ -295,16 +346,28 @@
               </div>
             </div>
 
-            <slot name="extended-edit"></slot>
+            <slot name="extended-edit" />
 
             <div class="row btn-row">
               <div class="col-xs-6 text-right">
-                <button @click="cancel" class="btn btn-blue-nb" type="button" title="Оставить предыдущий адрес" v-tippy>
+                <button
+                  v-tippy
+                  class="btn btn-blue-nb"
+                  type="button"
+                  title="Оставить предыдущий адрес"
+                  @click="cancel"
+                >
                   Отмена
                 </button>
               </div>
               <div class="col-xs-6">
-                <button @click="confirm" class="btn btn-blue-nb" type="button" title="Применить адрес" v-tippy>
+                <button
+                  v-tippy
+                  class="btn btn-blue-nb"
+                  type="button"
+                  title="Применить адрес"
+                  @click="confirm"
+                >
                   Ок
                 </button>
               </div>

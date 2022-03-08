@@ -1,25 +1,43 @@
 <template>
   <tr :class="updated && 'has-success'">
     <td>{{ department.pk }}</td>
-    <td><input class="form-control" v-model="department.title" :disabled="!can_edit" /></td>
-    <td><input class="form-control" placeholder="oid - подразделения" v-model="department.oid" :disabled="!can_edit" /></td>
     <td>
-      <treeselect
+      <input
+        v-model="department.title"
+        class="form-control"
+        :disabled="!can_edit"
+      >
+    </td>
+    <td>
+      <input
+        v-model="department.oid"
+        class="form-control"
+        placeholder="oid - подразделения"
+        :disabled="!can_edit"
+      >
+    </td>
+    <td>
+      <Treeselect
+        v-model="department.type"
         :multiple="false"
         :disable-branch-nodes="true"
         :options="types_options"
         placeholder="Тип не выбран"
-        v-model="department.type"
         :clearable="false"
         :append-to-body="true"
         :disabled="!can_edit"
       />
     </td>
     <td>
-      <i v-if="department.type === '7'" class="fa fa-bed" style="margin-top: 10px; margin-left: 7px" />
+      <i
+        v-if="department.type === '7'"
+        class="fa fa-bed"
+        style="margin-top: 10px; margin-left: 7px"
+      />
     </td>
   </tr>
 </template>
+
 <script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -50,8 +68,16 @@ export default {
       timer: null,
     };
   },
-  beforeMount() {
-    clearTimeout(this.timer);
+  computed: {
+    department_title() {
+      return this.department.title;
+    },
+    department_type() {
+      return this.department.type;
+    },
+    department_oid() {
+      return this.department.oid;
+    },
   },
   watch: {
     department_title() {
@@ -64,16 +90,8 @@ export default {
       this.save_clear_deb();
     },
   },
-  computed: {
-    department_title() {
-      return this.department.title;
-    },
-    department_type() {
-      return this.department.type;
-    },
-    department_oid() {
-      return this.department.oid;
-    },
+  beforeMount() {
+    clearTimeout(this.timer);
   },
   methods: {
     save_clear_deb() {

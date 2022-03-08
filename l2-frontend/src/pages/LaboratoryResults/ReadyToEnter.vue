@@ -2,15 +2,24 @@
   <div>
     <div class="filters">
       <div class="filters-header">
-        <a href="#" class="a-under-reversed" @click.prevent="load" title="Перезагрузить направления и ёмкости" v-tippy>
-          <i class="fa fa-refresh"></i> обновить
+        <a
+          v-tippy
+          href="#"
+          class="a-under-reversed"
+          title="Перезагрузить направления и ёмкости"
+          @click.prevent="load"
+        >
+          <i class="fa fa-refresh" /> обновить
         </a>
         Дата приёма материала:
       </div>
-      <date-range v-model="date_range" />
+      <DateRange v-model="date_range" />
     </div>
     <div class="work-list">
-      <div class="work-list-left" ref="directions">
+      <div
+        ref="directions"
+        class="work-list-left"
+      >
         <table class="table table-bordered table-condensed">
           <thead>
             <tr>
@@ -21,15 +30,26 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="d in directions" :data-pk="d.pk" :key="d.pk">
-              <td class="num" @click="searchDirection(d.pk)" :class="activeDirections.includes(d.pk) && 'num-active'">
+            <tr
+              v-for="d in directions"
+              :key="d.pk"
+              :data-pk="d.pk"
+            >
+              <td
+                class="num"
+                :class="activeDirections.includes(d.pk) && 'num-active'"
+                @click="searchDirection(d.pk)"
+              >
                 <span>{{ d.date }}</span> {{ d.pk }}
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="work-list-right" ref="tubes">
+      <div
+        ref="tubes"
+        class="work-list-right"
+      >
         <table class="table table-bordered table-condensed">
           <thead>
             <tr>
@@ -40,17 +60,26 @@
             </tr>
           </thead>
           <tbody>
-            <tr class="select-tube" :title="t.tube.title" v-for="t in tubes" :key="t.pk" :data-pk="t.pk">
+            <tr
+              v-for="t in tubes"
+              :key="t.pk"
+              class="select-tube"
+              :title="t.tube.title"
+              :data-pk="t.pk"
+            >
               <td
                 class="num"
-                @click="searchTube(t.pk)"
                 :class="[
                   activeTubes.includes(t.pk) && 'num-active',
                   tubesInGroups[t.pk] && `tb-group-big-${tubesInGroups[t.pk]}`,
                 ]"
+                @click="searchTube(t.pk)"
               >
                 <span>{{ t.date }}</span>
-                <div :style="`background-color: ${t.tube.color};color: ${t.tube.color};`" class="circle"></div>
+                <div
+                  :style="`background-color: ${t.tube.color};color: ${t.tube.color};`"
+                  class="circle"
+                />
                 {{ t.pk }}
               </td>
             </tr>
@@ -61,11 +90,20 @@
 
     <div class="bottom-buttons">
       <div class="bottom-inner">
-        <div class="bottom-text">дата создания направл.</div>
-        <button class="btn btn-blue-nb" @click="load" title="Перезагрузить данные" v-tippy>
-          <i class="fa fa-refresh"></i>
+        <div class="bottom-text">
+          дата создания направл.
+        </div>
+        <button
+          v-tippy
+          class="btn btn-blue-nb"
+          title="Перезагрузить данные"
+          @click="load"
+        >
+          <i class="fa fa-refresh" />
         </button>
-        <div class="bottom-text">дата приёма материала</div>
+        <div class="bottom-text">
+          дата приёма материала
+        </div>
       </div>
     </div>
   </div>
@@ -97,6 +135,20 @@ export default {
       tubesInGroups: {},
     };
   },
+  computed: {
+    watchParams() {
+      return _.pick(this, ['laboratory', 'date_range']);
+    },
+  },
+  watch: {
+    watchParams() {
+      if (this.laboratory === -1) {
+        return;
+      }
+
+      this.load();
+    },
+  },
   mounted() {
     this.$root.$on('laboratory:results:activate-pks', (directions, tubes, tubesInGroups) => {
       this.activeDirections = directions;
@@ -111,20 +163,6 @@ export default {
         this.focus(this.$refs.tubes, tube);
       }
     });
-  },
-  computed: {
-    watchParams() {
-      return _.pick(this, ['laboratory', 'date_range']);
-    },
-  },
-  watch: {
-    watchParams() {
-      if (this.laboratory === -1) {
-        return;
-      }
-
-      this.load();
-    },
   },
   methods: {
     async load() {

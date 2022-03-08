@@ -1,7 +1,13 @@
 <template>
   <div style="min-height: 500px;margin-top: 25px">
-    <Filters :filters="filters" :departments="departments" />
-    <aggregate-pharmaco-therapy-department :dateRange="dateRange" :department_pk="deapartment" />
+    <Filters
+      :filters="filters"
+      :departments="departments"
+    />
+    <AggregatePharmacoTherapyDepartment
+      :date-range="dateRange"
+      :department_pk="deapartment"
+    />
   </div>
 </template>
 
@@ -11,11 +17,11 @@ import Filters from './components/Filters.vue';
 import AggregatePharmacoTherapyDepartment from './components/AggregatePharmacoTherapyDepartment.vue';
 
 export default {
+  name: 'PlanPharmacotherapy',
   components: {
     Filters,
     AggregatePharmacoTherapyDepartment,
   },
-  name: 'PlanPharmacotherapy',
   data() {
     return {
       departments: [],
@@ -30,9 +36,6 @@ export default {
       },
     };
   },
-  mounted() {
-    this.init();
-  },
   computed: {
     dateRange() {
       let [d1, d2] = this.filters.date;
@@ -45,6 +48,9 @@ export default {
     deapartment() {
       return this.filters.department_pk;
     },
+  },
+  mounted() {
+    this.init();
   },
   methods: {
     async init() {

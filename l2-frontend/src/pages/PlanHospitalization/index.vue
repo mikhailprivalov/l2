@@ -1,18 +1,29 @@
 <template>
   <div>
     <h3>{{ title }}</h3>
-    <Filters :filters="filters" :departments="departments" />
+    <Filters
+      :filters="filters"
+      :departments="departments"
+    />
     <div class="buttons">
-      <button class="btn btn-blue-nb" @click="load_data">Обновить</button>
+      <button
+        class="btn btn-blue-nb"
+        @click="load_data"
+      >
+        Обновить
+      </button>
     </div>
-    <table class="table table-bordered" style="table-layout: fixed">
+    <table
+      class="table table-bordered"
+      style="table-layout: fixed"
+    >
       <colgroup>
-        <col width="115" />
-        <col />
-        <col width="180" />
-        <col width="260" />
-        <col width="140" />
-        <col width="170" />
+        <col width="115">
+        <col>
+        <col width="180">
+        <col width="260">
+        <col width="140">
+        <col width="170">
       </colgroup>
       <thead>
         <tr>
@@ -25,13 +36,26 @@
         </tr>
       </thead>
       <tbody>
-        <Row :data="row" :key="row.pk_plan" v-for="row in data" />
+        <Row
+          v-for="row in data"
+          :key="row.pk_plan"
+          :data="row"
+        />
         <tr v-if="data.length === 0">
-          <td colspan="7" style="text-align: center">нет данных</td>
+          <td
+            colspan="7"
+            style="text-align: center"
+          >
+            нет данных
+          </td>
         </tr>
       </tbody>
     </table>
-    <MessagesData v-if="messages_data && plan_pk !== -1" :plan_pk="plan_pk" :card_pk="card_pk" />
+    <MessagesData
+      v-if="messages_data && plan_pk !== -1"
+      :plan_pk="plan_pk"
+      :card_pk="card_pk"
+    />
   </div>
 </template>
 

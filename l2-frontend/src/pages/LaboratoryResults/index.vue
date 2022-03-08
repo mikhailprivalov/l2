@@ -1,14 +1,17 @@
 <template>
   <div class="root">
     <div class="search-place">
-      <SearchToEnter :laboratory="currentLaboratory"/>
-      <ReadyToEnter :laboratory="currentLaboratory" class="ready-to-enter"/>
+      <SearchToEnter :laboratory="currentLaboratory" />
+      <ReadyToEnter
+        :laboratory="currentLaboratory"
+        class="ready-to-enter"
+      />
     </div>
     <div class="direction-form">
-      <DirectionForm :laboratory="currentLaboratory"/>
+      <DirectionForm :laboratory="currentLaboratory" />
     </div>
     <div class="results-form">
-      <ResultsForm/>
+      <ResultsForm />
     </div>
   </div>
 </template>
@@ -20,15 +23,16 @@ import DirectionForm from '@/pages/LaboratoryResults/DirectionForm.vue';
 import ResultsForm from '@/pages/LaboratoryResults/ResultsForm.vue';
 
 export default {
+  name: 'LaboratoryResults',
   components: {
     ResultsForm, DirectionForm, ReadyToEnter, SearchToEnter,
   },
-  name: 'laboratory-results',
   data() {
     return {
       currentLaboratory: -1,
     };
   },
+  computed: {},
   watch: {},
   mounted() {
     this.$root.$on('change-laboratory', (pk) => {
@@ -37,7 +41,6 @@ export default {
     this.$root.$emit('emit-laboratory');
   },
   methods: {},
-  computed: {},
 };
 </script>
 

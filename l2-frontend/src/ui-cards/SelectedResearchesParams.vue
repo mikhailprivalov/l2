@@ -1,11 +1,27 @@
 <template>
-  <div v-if="research.show" class="root">
+  <div
+    v-if="research.show"
+    class="root"
+  >
     <template v-if="selected_card.pk">
-      <ResultsByYear :card_pk="selected_card.pk" isDocReferral />
-      <ResultsByYear :card_pk="selected_card.pk" isParaclinic />
-      <ResultsByYear :card_pk="selected_card.pk" isLab />
+      <ResultsByYear
+        :card_pk="selected_card.pk"
+        is-doc-referral
+      />
+      <ResultsByYear
+        :card_pk="selected_card.pk"
+        is-paraclinic
+      />
+      <ResultsByYear
+        :card_pk="selected_card.pk"
+        is-lab
+      />
     </template>
-    <DescriptiveForm :research="research" :confirmed="false" :patient="card" />
+    <DescriptiveForm
+      :research="research"
+      :confirmed="false"
+      :patient="card"
+    />
   </div>
 </template>
 
@@ -25,6 +41,9 @@ export default {
       type: Object,
     },
   },
+  data() {
+    return {};
+  },
   computed: {
     card() {
       return {
@@ -32,9 +51,6 @@ export default {
         ...this.selected_card,
       };
     },
-  },
-  data() {
-    return {};
   },
 };
 </script>

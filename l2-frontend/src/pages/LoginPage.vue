@@ -1,104 +1,148 @@
 <template>
   <div id="login-container">
-    <form class="form-signin" @submit.prevent="auth">
+    <form
+      class="form-signin"
+      @submit.prevent="auth"
+    >
       <div class="panel panel-flt">
         <div class="panel-body">
           <input
-            type="text"
             id="input-username"
+            ref="username"
+            v-model="username"
+            type="text"
             class="form-control input-lg"
             name="username"
-            v-model="username"
             placeholder="Логин или штрих-код"
-            ref="username"
-          />
+          >
           <input
-            type="password"
             id="input-password"
+            v-model="password"
+            type="password"
             class="form-control input-lg"
             name="password"
-            v-model="password"
             placeholder="Пароль"
-          />
-          <button class="btn btn-lg btn-primary-nb btn-block" type="submit">Вход</button>
-          <button class="btn btn-reset btn-block" @click.prevent="clear">
+          >
+          <button
+            class="btn btn-lg btn-primary-nb btn-block"
+            type="submit"
+          >
+            Вход
+          </button>
+          <button
+            class="btn btn-reset btn-block"
+            @click.prevent="clear"
+          >
             Очистить форму
           </button>
-          <div v-if="changePassword" class="text-center password-reset-link">
-            <a href="#" class="a-under" @click="loosePassword = true" v-if="changePassword">восстановить пароль по email</a>
+          <div
+            v-if="changePassword"
+            class="text-center password-reset-link"
+          >
+            <a
+              v-if="changePassword"
+              href="#"
+              class="a-under"
+              @click="loosePassword = true"
+            >восстановить пароль по email</a>
           </div>
         </div>
       </div>
-      <div class="version">Система {{ system }} {{ menu.version }}</div>
+      <div class="version">
+        Система {{ system }} {{ menu.version }}
+      </div>
     </form>
-    <MountingPortal mountTo="#portal-place-modal" name="ChangePassword" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="ChangePassword"
+      append
+    >
       <transition name="fade">
         <Modal
           v-if="loosePassword"
-          @close="loosePassword = false"
           show-footer="true"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
-          :noClose="!!loading"
+          margin-left-right="auto"
+          :no-close="!!loading"
+          @close="loosePassword = false"
         >
           <span slot="header">Восстановление пароля по email</span>
-          <div slot="body" class="popup-body" v-if="!hasCodeSend">
+          <div
+            v-if="!hasCodeSend"
+            slot="body"
+            class="popup-body"
+          >
             <div class="alert-modal">
               Если в вашем профиле был указан email — мы можем отправить вам новый пароль после подтверждения адреса.
             </div>
             <input
-              type="email"
               v-model.trim="email"
+              type="email"
               class="form-control"
               placeholder="Ваш адрес"
               style="margin-bottom: 5px;"
               :readonly="loading"
-            />
+            >
 
             <button
-              @click="sendEmail"
               class="btn btn-blue-nb"
               style="margin-top: 5px;"
               :disabled="loading || !!emailIsNotValid"
               type="button"
+              @click="sendEmail"
             >
               Отправить код для подтверждения
             </button>
           </div>
-          <div slot="body" class="popup-body" v-else>
+          <div
+            v-else
+            slot="body"
+            class="popup-body"
+          >
             <div class="alert-modal">
               Был отправлен код на введённый email.
-              <br />
+              <br>
               Если код не был получен — проверьте правильность ввода адреса или обратитесь к администратору.
             </div>
             <input
-              type="text"
               v-model.trim="code"
+              type="text"
               class="form-control"
               style="margin-bottom: 5px;"
               :placeholder="`Код с ${email}`"
               :readonly="loading"
-            />
+            >
 
-            <button @click="sendCode" class="btn btn-blue-nb" style="margin-top: 5px;" :disabled="loading || !code" type="button">
+            <button
+              class="btn btn-blue-nb"
+              style="margin-top: 5px;"
+              :disabled="loading || !code"
+              type="button"
+              @click="sendCode"
+            >
               Получить новый пароль
             </button>
 
             <a
-              @click.prevent="hasCodeSend = loading"
               class="a-under"
               :style="loading ? 'opacity: 0' : 'margin-left: 5px;line-height: 34px;vertical-align: bottom;'"
               href="#"
+              @click.prevent="hasCodeSend = loading"
             >
-              <i class="fa fa-arrow-left"></i> вернуться назад
+              <i class="fa fa-arrow-left" /> вернуться назад
             </a>
           </div>
           <div slot="footer">
             <div class="row">
               <div class="col-xs-12 text-right">
-                <button @click="loosePassword = false" class="btn btn-blue-nb" :disabled="loading" type="button">
+                <button
+                  class="btn btn-blue-nb"
+                  :disabled="loading"
+                  type="button"
+                  @click="loosePassword = false"
+                >
                   Закрыть
                 </button>
               </div>

@@ -1,22 +1,41 @@
 <template>
   <div>
-    <visibility-group-wrapper :group="group" :groups="groups" :patient="patient" :key="group.pk" v-for="group in research.groups">
+    <VisibilityGroupWrapper
+      v-for="group in research.groups"
+      :key="group.pk"
+      :group="group"
+      :groups="groups"
+      :patient="patient"
+    >
       <div class="group">
-        <div class="group-title" v-if="group.title !== ''">{{ group.title }}</div>
+        <div
+          v-if="group.title !== ''"
+          class="group-title"
+        >
+          {{ group.title }}
+        </div>
         <div class="fields">
-          <visibility-field-wrapper
+          <VisibilityFieldWrapper
+            v-for="field in group.fields"
+            :key="field.pk"
             :formula="field.visibility"
             :group="group"
             :groups="research.groups"
             :patient="patient"
-            :key="field.pk"
-            v-for="field in group.fields"
           >
-            <div class="wide-field-title" v-if="field.title !== '' && research.wide_headers">
-              <template v-if="field.title.endsWith('?')">{{ field.title }}</template>
-              <template v-else>{{ field.title }}:</template>
+            <div
+              v-if="field.title !== '' && research.wide_headers"
+              class="wide-field-title"
+            >
+              <template v-if="field.title.endsWith('?')">
+                {{ field.title }}
+              </template>
+              <template v-else>
+                {{ field.title }}:
+              </template>
             </div>
             <div
+              :key="`field-${field.pk}`"
               :class="{
                 disabled: confirmed,
                 empty: notFilled.includes(field.pk),
@@ -24,14 +43,16 @@
                 required: field.required,
               }"
               :title="field.required && 'обязательно для заполнения'"
+              class="field"
               v-on="{
                 mouseenter: enter_field(field.values_to_input.length > 0),
                 mouseleave: leave_field(field.values_to_input.length > 0),
               }"
-              class="field"
-              :key="`field-${field.pk}`"
             >
-              <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
+              <div
+                v-if="field.title !== '' && !research.wide_headers"
+                class="field-title"
+              >
                 {{ field.title }}
               </div>
               <LPress
@@ -58,7 +79,11 @@
                 :pk="field.pk"
                 :on-confirm="clear_val_by_pk"
               />
-              <InputTemplates :field="field" :group="group" v-if="!confirmed && [0].includes(field.field_type)" />
+              <InputTemplates
+                v-if="!confirmed && [0].includes(field.field_type)"
+                :field="field"
+                :group="group"
+              />
               <FastTemplates
                 :update_value="updateValue(field)"
                 :value="field.value"
@@ -67,49 +92,100 @@
                 :field_type="field.field_type"
                 :field_title="field.title"
               />
-              <div class="field-value field-value-with-templates" v-if="field.field_type === 0">
-                <TextFieldWithTemplates v-model="field.value" :confirmed="confirmed" :field-pk="field.pk" :lines="field.lines" />
-              </div>
-              <div class="field-value" v-else-if="field.field_type === 1">
-                <input :readonly="confirmed" class="form-control" style="width: 160px" type="date" v-model="field.value" />
-              </div>
-              <div class="field-value mkb10" v-else-if="field.field_type === 2 && !confirmed">
-                <MKBFieldForm
-                  :short="false"
-                  @input="change_mkb(field)"
+              <div
+                v-if="field.field_type === 0"
+                class="field-value field-value-with-templates"
+              >
+                <TextFieldWithTemplates
                   v-model="field.value"
+                  :confirmed="confirmed"
+                  :field-pk="field.pk"
+                  :lines="field.lines"
+                />
+              </div>
+              <div
+                v-else-if="field.field_type === 1"
+                class="field-value"
+              >
+                <input
+                  v-model="field.value"
+                  :readonly="confirmed"
+                  class="form-control"
+                  style="width: 160px"
+                  type="date"
+                >
+              </div>
+              <div
+                v-else-if="field.field_type === 2 && !confirmed"
+                class="field-value mkb10"
+              >
+                <MKBFieldForm
+                  v-model="field.value"
+                  :short="false"
                   :field-pk="field.default_value"
                   :iss_pk="pk"
                   :client-pk="patient.card_pk"
+                  @input="change_mkb(field)"
                 />
               </div>
-              <div class="field-value mkb10" v-else-if="field.field_type === 3">
+              <div
+                v-else-if="field.field_type === 3"
+                class="field-value mkb10"
+              >
                 <FormulaField
+                  v-model="field.value"
                   :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
                   :formula="field.default_value"
                   :patient="patient"
-                  v-model="field.value"
                 />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 2 && confirmed">
-                <input :readonly="true" class="form-control" v-model="field.value" />
+              <div
+                v-else-if="field.field_type === 2 && confirmed"
+                class="field-value"
+              >
+                <input
+                  v-model="field.value"
+                  :readonly="true"
+                  class="form-control"
+                >
               </div>
-              <div class="field-value" v-else-if="field.field_type === 10">
-                <TreeSelectField :disabled="confirmed" :variants="field.values_to_input" v-model="field.value" />
+              <div
+                v-else-if="field.field_type === 10"
+                class="field-value"
+              >
+                <TreeSelectField
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :variants="field.values_to_input"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 11">
+              <div
+                v-else-if="field.field_type === 11"
+                class="field-value"
+              >
                 <SearchFractionValueField
+                  v-model="field.value"
                   :readonly="confirmed"
                   :fraction-pk="field.default_value"
                   :client-pk="patient.card_pk"
-                  v-model="field.value"
                 />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 12">
-                <RadioField :disabled="confirmed" :variants="field.values_to_input" v-model="field.value" />
+              <div
+                v-else-if="field.field_type === 12"
+                class="field-value"
+              >
+                <RadioField
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :variants="field.values_to_input"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 13 || field.field_type === 14 || field.field_type === 23">
+              <div
+                v-else-if="field.field_type === 13 || field.field_type === 14 || field.field_type === 23"
+                class="field-value"
+              >
                 <SearchFieldValueField
+                  v-model="field.value"
                   :readonly="confirmed"
                   :field-pk="field.default_value"
                   :client-pk="patient.card_pk"
@@ -117,62 +193,147 @@
                   :raw="field.field_type === 14 || field.field_type === 23"
                   :not_autoload_result="field.field_type === 23"
                   :iss_pk="pk"
-                  v-model="field.value"
                 />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 15">
-                <RichTextEditor :readonly="confirmed" :disabled="confirmed" v-model="field.value" />
+              <div
+                v-else-if="field.field_type === 15"
+                class="field-value"
+              >
+                <RichTextEditor
+                  v-model="field.value"
+                  :readonly="confirmed"
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 16 && pk">
-                <AggregateLaboratory :pk="pk" extract v-model="field.value" :disabled="confirmed" />
+              <div
+                v-else-if="field.field_type === 16 && pk"
+                class="field-value"
+              >
+                <AggregateLaboratory
+                  v-model="field.value"
+                  :pk="pk"
+                  extract
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 17 && pk && hospital_r_type">
-                <AggregateDesc :pk="pk" extract :r_type="hospital_r_type" v-model="field.value" />
+              <div
+                v-else-if="field.field_type === 17 && pk && hospital_r_type"
+                class="field-value"
+              >
+                <AggregateDesc
+                  v-model="field.value"
+                  :pk="pk"
+                  extract
+                  :r_type="hospital_r_type"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 18">
-                <NumberField v-model="field.value" :disabled="confirmed" />
+              <div
+                v-else-if="field.field_type === 18"
+                class="field-value"
+              >
+                <NumberField
+                  v-model="field.value"
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 19">
-                <NumberRangeField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+              <div
+                v-else-if="field.field_type === 19"
+                class="field-value"
+              >
+                <NumberRangeField
+                  v-model="field.value"
+                  :variants="field.values_to_input"
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 20">
-                <input :readonly="confirmed" class="form-control" style="width: 110px" type="time" v-model="field.value" />
+              <div
+                v-else-if="field.field_type === 20"
+                class="field-value"
+              >
+                <input
+                  v-model="field.value"
+                  :readonly="confirmed"
+                  class="form-control"
+                  style="width: 110px"
+                  type="time"
+                >
               </div>
-              <div class="field-value" v-else-if="field.field_type === 21">
-                <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk" :disabled="confirmed" />
+              <div
+                v-else-if="field.field_type === 21"
+                class="field-value"
+              >
+                <AnesthesiaProcess
+                  :fields="field.values_to_input"
+                  :iss="pk"
+                  :field_pk="field.pk"
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 22">
-                <TextareaAutocomplete :disabled="confirmed" v-model="field.value" />
+              <div
+                v-else-if="field.field_type === 22"
+                class="field-value"
+              >
+                <TextareaAutocomplete
+                  v-model="field.value"
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 24">
-                <LaboratoryPreviousResults v-model="field.value" :disabled="confirmed" />
+              <div
+                v-else-if="field.field_type === 24"
+                class="field-value"
+              >
+                <LaboratoryPreviousResults
+                  v-model="field.value"
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 25">
-                <DiagnosticPreviousResults v-model="field.value" :disabled="confirmed" />
+              <div
+                v-else-if="field.field_type === 25"
+                class="field-value"
+              >
+                <DiagnosticPreviousResults
+                  v-model="field.value"
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 26">
-                <DocReferralPreviousResults v-model="field.value" :disabled="confirmed" />
+              <div
+                v-else-if="field.field_type === 26"
+                class="field-value"
+              >
+                <DocReferralPreviousResults
+                  v-model="field.value"
+                  :disabled="confirmed"
+                />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 27">
+              <div
+                v-else-if="field.field_type === 27"
+                class="field-value"
+              >
                 <TableField
+                  v-model="field.value"
                   :variants="field.values_to_input"
                   :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
                   :field-pk="field.pk"
-                  v-model="field.value"
                   :disabled="confirmed"
                   :card_pk="patient.card_pk"
                   :iss_pk="pk"
                 />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 28">
+              <div
+                v-else-if="field.field_type === 28"
+                class="field-value"
+              >
                 <PermanentDirectoryField
-                  :oid="field.values_to_input"
                   v-model="field.value"
+                  :oid="field.values_to_input"
                   :field-title="field.title"
                   :disabled="confirmed"
                 />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 29">
+              <div
+                v-else-if="field.field_type === 29"
+                class="field-value field-value-address mkb"
+              >
                 <AddressFiasField
                   v-model="field.value"
                   :disabled="confirmed"
@@ -181,7 +342,10 @@
                   :strict="false"
                 />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 30">
+              <div
+                v-else-if="field.field_type === 30"
+                class="field-value field-value-address mkb"
+              >
                 <NumberGeneratorField
                   v-model="field.value"
                   :number-key="field.default_value"
@@ -190,7 +354,10 @@
                   :field-pk="field.pk"
                 />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 37">
+              <div
+                v-else-if="field.field_type === 37"
+                class="field-value field-value-address mkb"
+              >
                 <NumberGeneratorField
                   v-model="field.value"
                   :number-key="field.default_value"
@@ -199,10 +366,20 @@
                   :field-pk="field.pk"
                 />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 31">
-                <TfomsAttachmentField v-model="field.value" :disabled="confirmed" :client-pk="patient.card_pk" />
+              <div
+                v-else-if="field.field_type === 31"
+                class="field-value field-value-address mkb"
+              >
+                <TfomsAttachmentField
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :client-pk="patient.card_pk"
+                />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 32">
+              <div
+                v-else-if="field.field_type === 32"
+                class="field-value field-value-address mkb"
+              >
                 <MKBFieldTreeselect
                   v-model="field.value"
                   :disabled="confirmed"
@@ -212,7 +389,10 @@
                   :client-pk="patient.card_pk"
                 />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 33">
+              <div
+                v-else-if="field.field_type === 33"
+                class="field-value field-value-address mkb"
+              >
                 <MKBFieldTreeselect
                   v-model="field.value"
                   :disabled="confirmed"
@@ -222,7 +402,10 @@
                   :client-pk="patient.card_pk"
                 />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 34">
+              <div
+                v-else-if="field.field_type === 34"
+                class="field-value field-value-address mkb"
+              >
                 <MKBFieldTreeselect
                   v-model="field.value"
                   :disabled="confirmed"
@@ -232,10 +415,20 @@
                   :client-pk="patient.card_pk"
                 />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 35">
-                <DoctorProfileTreeselectField v-model="field.value" :disabled="confirmed" :sign_org="field.sign_organization" />
+              <div
+                v-else-if="field.field_type === 35"
+                class="field-value field-value-address mkb"
+              >
+                <DoctorProfileTreeselectField
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :sign_org="field.sign_organization"
+                />
               </div>
-              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 36">
+              <div
+                v-else-if="field.field_type === 36"
+                class="field-value field-value-address mkb"
+              >
                 <MKBFieldTreeselect
                   v-model="field.value"
                   :disabled="confirmed"
@@ -246,8 +439,6 @@
                 />
               </div>
               <div
-                :title="field.helper"
-                class="field-helper"
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -255,14 +446,16 @@
                   interactive: true,
                   theme: 'dark longread',
                 }"
+                :title="field.helper"
+                class="field-helper"
               >
                 <i class="fa fa-question" />
               </div>
             </div>
-          </visibility-field-wrapper>
+          </VisibilityFieldWrapper>
         </div>
       </div>
-    </visibility-group-wrapper>
+    </VisibilityGroupWrapper>
   </div>
 </template>
 
@@ -343,27 +536,6 @@ export default {
       tableFieldsErrors: {},
     };
   },
-  watch: {
-    groups: {
-      deep: true,
-      handler() {
-        this.inc_version();
-      },
-    },
-  },
-  mounted() {
-    this.versionTickTimer = setInterval(() => this.inc_version(), 2000);
-
-    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
-      this.tableFieldsErrors = {
-        ...this.tableFieldsErrors,
-        [fieldPk]: hasInvalid,
-      };
-    });
-  },
-  beforeDestroy() {
-    clearInterval(this.versionTickTimer);
-  },
   computed: {
     notFilled() {
       const l = [];
@@ -390,6 +562,27 @@ export default {
     groups() {
       return this.research.groups;
     },
+  },
+  watch: {
+    groups: {
+      deep: true,
+      handler() {
+        this.inc_version();
+      },
+    },
+  },
+  mounted() {
+    this.versionTickTimer = setInterval(() => this.inc_version(), 2000);
+
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
+    });
+  },
+  beforeDestroy() {
+    clearInterval(this.versionTickTimer);
   },
   methods: {
     inc_version() {

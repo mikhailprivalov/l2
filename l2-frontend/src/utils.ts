@@ -154,7 +154,7 @@ export const PrepareFormula = (
         console.log('vOrig', vid, vOrig);
       }
       if (returnLinks) {
-        if (!links.find(l => l.id === vid)) {
+        if (!links.find((l) => l.id === vid)) {
           links.push(new Link(LINK_FIELD, vid));
         }
       } else {
@@ -198,8 +198,8 @@ export const PrepareFormula = (
   return `return /*strict=${strict}*/ (${s});`;
 };
 
-const isEmpty = v => !v;
-const isFilled = v => !isEmpty(v);
+const isEmpty = (v) => !v;
+const isFilled = (v) => !isEmpty(v);
 
 export const CalculateFormula = (fields: Field[], formula: string, patient = {}, strict = false): string | number => {
   const s = PrepareFormula(fields, formula, patient, strict);
@@ -327,7 +327,7 @@ export const getFormattedDate = (date: Date | void): string => {
 export const convertSubjectNameToCertObject = (subjectName: string): any => {
   const result = {};
   const parts = subjectName.split(/(, )?(\w+)=/);
-  const p = parts.slice(2).filter(s => s !== ', ');
+  const p = parts.slice(2).filter((s) => s !== ', ');
   for (let i = 0; i < p.length; i += 2) {
     result[p[i]] = p[i + 1];
   }
@@ -361,3 +361,19 @@ export const validateEmail = (email: string) => Boolean(
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
     ),
 );
+
+export const selectFile = (contentType: string | null): Promise<File> => new Promise((resolve) => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = false;
+  if (contentType) {
+    input.accept = contentType;
+  }
+
+  input.onchange = () => {
+    const files = Array.from(input.files);
+    resolve(files[0]);
+  };
+
+  input.click();
+});

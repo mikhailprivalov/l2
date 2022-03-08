@@ -1,28 +1,35 @@
 <template>
-      <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="resp => [...resp.data.data]"
-                 :onHit="onHit" ref="d" placeholder="Диагноз (МКБ 10)"
-                 v-model="content" maxlength="200" :delayTime="200" :minChars="1"
-                 :render="items => items.map(i => `${i.code} ${i.title}`)"
-                 :limit="11"
-                 :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
-                 :selectFirst="true"
-      />
+  <TypeAhead
+    ref="d"
+    v-model="content"
+    src="/api/mkb10?keyword=:keyword"
+    :get-response="resp => [...resp.data.data]"
+    :on-hit="onHit"
+    placeholder="Диагноз (МКБ 10)"
+    maxlength="200"
+    :delay-time="200"
+    :min-chars="1"
+    :render="items => items.map(i => `${i.code} ${i.title}`)"
+    :limit="11"
+    :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
+    :select-first="true"
+  />
 </template>
 
 <script lang="ts">
 import TypeAhead from 'vue2-typeahead';
 
 export default {
-  name: 'm-k-b-field',
+  name: 'MKBField',
+  components: {
+    TypeAhead,
+  },
   props: {
     value: String,
     short: {
       type: Boolean,
       default: true,
     },
-  },
-  components: {
-    TypeAhead,
   },
   data() {
     return {

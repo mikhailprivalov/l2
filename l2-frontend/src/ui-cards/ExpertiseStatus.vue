@@ -1,10 +1,11 @@
 <template>
   <div v-frag>
-    <ul class="nav navbar-nav" v-show="showStatus">
+    <ul
+      v-show="showStatus"
+      class="nav navbar-nav"
+    >
       <li>
         <a
-          href="#"
-          @click.prevent
           v-tippy="{
             html: `#${tippyId}`,
             placement: 'bottom',
@@ -24,53 +25,104 @@
               },
             },
           }"
+          href="#"
+          @click.prevent
         >
-          <i class="fa fa-circle status" :class="`status-${status}`" v-if="status !== 'available'"></i> Экспертиза
+          <i
+            v-if="status !== 'available'"
+            class="fa fa-circle status"
+            :class="`status-${status}`"
+          /> Экспертиза
         </a>
       </li>
     </ul>
 
-    <div :id="tippyId" class="tp">
-      <div class="tp-title">Экспертиза для протокола {{ pk }}</div>
+    <div
+      :id="tippyId"
+      class="tp"
+    >
+      <div class="tp-title">
+        Экспертиза для протокола {{ pk }}
+      </div>
       <div>Статус: {{ statusTitle }}</div>
       <ul v-if="directions.length > 0">
-        <li v-for="d in directions" :key="d.pk">
-          {{ d.pk }} — {{ d.serviceTitle }}<span v-if="d.confirmedAt">, {{ d.confirmedAt }}</span
-          ><span v-else>, не подтверждено</span> —
-          <a href="#" @click.prevent="open(d.pk)" class="a-under">{{ d.confirmedAt ? 'открыть' : 'редактировать' }}</a>
+        <li
+          v-for="d in directions"
+          :key="d.pk"
+        >
+          {{ d.pk }} — {{ d.serviceTitle }},
+          <span v-if="d.confirmedAt">{{ d.confirmedAt }}</span>
+          <span v-else>не подтверждено</span> —
+          <a
+            href="#"
+            class="a-under"
+            @click.prevent="open(d.pk)"
+          >{{ d.confirmedAt ? 'открыть' : 'редактировать' }}</a>
         </li>
       </ul>
-      <button class="btn btn-blue-nb" type="button" @click="open(-1)" v-if="showFillButton">Заполнить новую экспертизу</button>
+      <button
+        v-if="showFillButton"
+        class="btn btn-blue-nb"
+        type="button"
+        @click="open(-1)"
+      >
+        Заполнить новую экспертизу
+      </button>
     </div>
 
-    <MountingPortal mountTo="#portal-place-modal" name="ExpertiseStatus_embedded" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="ExpertiseStatus_embedded"
+      append
+    >
       <transition name="fade">
         <Modal
           v-if="embeddedPk"
           ref="modalEmbedded"
-          @close="hideModalEmbedded"
           white-bg="true"
           width="100%"
-          marginLeftRight="34px"
+          margin-left-right="34px"
           margin-top="30px"
           show-footer="true"
+          @close="hideModalEmbedded"
         >
           <span slot="header">Заполнение экспертизы</span>
-          <div slot="body" class="embedded-body" v-if="canCreateExpertise && !withoutPreview">
+          <div
+            v-if="canCreateExpertise && !withoutPreview"
+            slot="body"
+            class="embedded-body"
+          >
             <div class="le">
-              <iframe :src="toEnterUrl" name="toEnterEmbedded"></iframe>
+              <iframe
+                :src="toEnterUrl"
+                name="toEnterEmbedded"
+              />
             </div>
             <div class="re">
-              <iframe :src="toEnterPdfUrl" name="toEnterPdf"></iframe>
+              <iframe
+                :src="toEnterPdfUrl"
+                name="toEnterPdf"
+              />
             </div>
           </div>
-          <div slot="body" class="embedded-body" v-else>
-            <iframe :src="toEnterUrl" name="toEnterEmbedded"></iframe>
+          <div
+            v-else
+            slot="body"
+            class="embedded-body"
+          >
+            <iframe
+              :src="toEnterUrl"
+              name="toEnterEmbedded"
+            />
           </div>
           <div slot="footer">
             <div class="row">
               <div class="col-xs-4">
-                <button @click="hideModalEmbedded" class="btn btn-primary-nb btn-blue-nb" type="button">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  @click="hideModalEmbedded"
+                >
                   Закрыть
                 </button>
               </div>
@@ -86,6 +138,7 @@
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {
+  name: 'ExpertiseStatus',
   components: { Modal },
   props: {
     withoutPreview: {
@@ -94,7 +147,6 @@ export default {
       required: false,
     },
   },
-  name: 'ExpertiseStatus',
   data() {
     return {
       status: 'empty',
@@ -107,8 +159,36 @@ export default {
       loading: false,
     };
   },
+  computed: {
+    showStatus() {
+      return !!this.status && this.status !== 'empty' && this.pk !== -1;
+    },
+    tippyId() {
+      return `expertise-status-${this.pk}`;
+    },
+    statusTitle() {
+      return (
+        {
+          available: 'доступно для заполнения',
+          ok: 'без замечаний',
+          error: 'есть замечания',
+        }[this.status] || ''
+      );
+    },
+    showFillButton() {
+      return (
+        this.canCreateExpertise && (this.directions.length === 0 || !!this.directions[this.directions.length - 1].confirmedAt)
+      );
+    },
+    toEnterUrl() {
+      return `/ui/results/descriptive?embedded=1&embeddedFull=1#{"pk":${this.embeddedPk}}`;
+    },
+    toEnterPdfUrl() {
+      return `/results/pdf?pk=${JSON.stringify([this.pk])}&leftnone=1&embedded=1`;
+    },
+  },
   mounted() {
-    this.$root.$on('open-pk', pk => {
+    this.$root.$on('open-pk', (pk) => {
       this.status = 'empty';
       this.pk = pk;
       this.loadStatus();
@@ -149,34 +229,6 @@ export default {
     hideModalEmbedded() {
       this.embeddedPk = null;
       this.loadStatus(true);
-    },
-  },
-  computed: {
-    showStatus() {
-      return !!this.status && this.status !== 'empty' && this.pk !== -1;
-    },
-    tippyId() {
-      return `expertise-status-${this.pk}`;
-    },
-    statusTitle() {
-      return (
-        {
-          available: 'доступно для заполнения',
-          ok: 'без замечаний',
-          error: 'есть замечания',
-        }[this.status] || ''
-      );
-    },
-    showFillButton() {
-      return (
-        this.canCreateExpertise && (this.directions.length === 0 || !!this.directions[this.directions.length - 1].confirmedAt)
-      );
-    },
-    toEnterUrl() {
-      return `/ui/results/descriptive?embedded=1&embeddedFull=1#{"pk":${this.embeddedPk}}`;
-    },
-    toEnterPdfUrl() {
-      return `/results/pdf?pk=${JSON.stringify([this.pk])}&leftnone=1&embedded=1`;
     },
   },
 };

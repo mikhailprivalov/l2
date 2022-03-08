@@ -1,20 +1,36 @@
 <template>
   <div class="popper-root">
-    <textarea v-model="val"
-              @focusout="focusout" @focus="focus" @blur="focusout"
-              @keydown.13="chooseItem" @keydown.tab="chooseItem" @keydown.40="moveDown" @keydown.38="moveUp"
-              @select="updateSelect"
-              ref="textarea"
-              class="form-control"
-              :readonly="disabled"
-              rows="5"
+    <textarea
+      ref="textarea"
+      v-model="val"
+      class="form-control"
+      :readonly="disabled"
+      rows="5"
+      @focusout="focusout"
+      @focus="focus"
+      @blur="focusout"
+      @keydown.13="chooseItem"
+      @keydown.tab="chooseItem"
+      @keydown.40="moveDown"
+      @keydown.38="moveUp"
+      @select="updateSelect"
     />
 
-    <div class="pop" :style="offset" v-if="searchMatch.length > 0 && !disabled && !forceHide">
+    <div
+      v-if="searchMatch.length > 0 && !disabled && !forceHide"
+      class="pop"
+      :style="offset"
+    >
       <template v-for="(result, index) in searchMatch">
-        <div class="item" :key="result" :class="{active: selectedIndex === index}"
-             @click="selectItem(index)" @mousedown.prevent @mouseover="selectIndex(index)">
-          <span v-html="highlightWord(result)"/>
+        <div
+          :key="result"
+          class="item"
+          :class="{ active: selectedIndex === index }"
+          @click="selectItem(index)"
+          @mousedown.prevent
+          @mouseover="selectIndex(index)"
+        >
+          <span v-html="/*eslint-disable-line vue/no-v-html*/ highlightWord(result)" />
         </div>
       </template>
     </div>
@@ -56,6 +72,9 @@ function escapeRegex(string) {
 }
 
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -78,27 +97,6 @@ export default {
       forceHide: false,
     };
   },
-  mounted() {
-    this.int = setInterval(() => {
-      this.updateSelect();
-    }, 100);
-  },
-  beforeDestroy() {
-    clearInterval(this.int);
-  },
-  watch: {
-    value() {
-      this.val = this.value;
-    },
-    val() {
-      this.changeValue(this.val);
-      this.focus();
-      this.selectedIndex = 0;
-      this.wordIndex = this.inputSplitted.length - 1;
-      this.loadSuggestions();
-      this.updateOffset();
-    },
-  },
   computed: {
     listToSearch() {
       if (typeof this.items !== 'undefined' && this.items.length > 0) {
@@ -113,8 +111,26 @@ export default {
       return this.val.replace(/(\r\n|\n|\r)/gm, ' ').split(' ');
     },
   },
-  model: {
-    event: 'modified',
+  watch: {
+    value() {
+      this.val = this.value;
+    },
+    val() {
+      this.changeValue(this.val);
+      this.focus();
+      this.selectedIndex = 0;
+      this.wordIndex = this.inputSplitted.length - 1;
+      this.loadSuggestions();
+      this.updateOffset();
+    },
+  },
+  mounted() {
+    this.int = setInterval(() => {
+      this.updateSelect();
+    }, 100);
+  },
+  beforeDestroy() {
+    clearInterval(this.int);
   },
   methods: {
     updateSelect() {
@@ -196,9 +212,7 @@ export default {
     },
     loadSuggestions() {
       if (this.currentWord) {
-        this.searchMatch = this.listToSearch.filter(
-          (el) => el.startsWith(this.currentWord),
-        );
+        this.searchMatch = this.listToSearch.filter((el) => el.startsWith(this.currentWord));
       } else {
         this.searchMatch = [];
       }
@@ -208,60 +222,58 @@ export default {
 </script>
 
 <style>
-  .item .inner {
-    color: #1b6d85;
-    font-family: "Lucida Console", Monaco, monospace;
-  }
+.item .inner {
+  color: #1b6d85;
+  font-family: 'Lucida Console', Monaco, monospace;
+}
 </style>
 
 <style scoped lang="scss">
-  textarea {
-    font-family: "Lucida Console", Monaco, monospace;
-  }
+textarea {
+  font-family: 'Lucida Console', Monaco, monospace;
+}
 
-  .popper-root {
-    position: relative;
-  }
+.popper-root {
+  position: relative;
+}
 
-  .pop {
-    position: absolute;
+.pop {
+  position: absolute;
 
-    z-index: 10;
+  z-index: 10;
 
-    overflow: auto;
+  overflow: auto;
 
-    min-width: 250px;
-    max-height: 300px;
+  min-width: 250px;
+  max-height: 300px;
 
-    top: 0;
-    left: 0;
+  top: 0;
+  left: 0;
 
-    border: 1px solid #ddd;
+  border: 1px solid #ddd;
 
-    list-style: none;
+  list-style: none;
 
-    background-color: #fff;
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.2);
+  background-color: #fff;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.2);
 
-    .item {
-      span {
-        font-family: "Lucida Console", Monaco, monospace;
-      }
+  .item {
+    span {
+      font-family: 'Lucida Console', Monaco, monospace;
+    }
 
-      cursor: pointer;
-      padding: 4px;
+    cursor: pointer;
+    padding: 4px;
 
-      border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
 
-      &:last-child {
-        border-bottom: 0;
-      }
+    &:last-child {
+      border-bottom: 0;
+    }
 
-      &.active {
-        background-color: #f5f5f5;
-      }
-
+    &.active {
+      background-color: #f5f5f5;
     }
   }
-
+}
 </style>

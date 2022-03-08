@@ -2,60 +2,111 @@
   <div v-frag>
     <div class="date-display">
       {{ dateDisplay }}
-      <a v-if="isEditing" href="#" class="a-under" title="Сгенерировать слоты" @click.prevent="generateSlots()" v-tippy>
-        <i class="fas fa-paint-roller"></i>
+      <a
+        v-if="isEditing"
+        v-tippy
+        href="#"
+        class="a-under"
+        title="Сгенерировать слоты"
+        @click.prevent="generateSlots()"
+      >
+        <i class="fas fa-paint-roller" />
       </a>
     </div>
-    <div class="week-day-name">{{ weekDayName }}</div>
+    <div class="week-day-name">
+      {{ weekDayName }}
+    </div>
 
-    <MountingPortal mountTo="#portal-place-modal" :name="`DayHeaderPopupSlotsGenerate-${day.date}`" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      :name="`DayHeaderPopupSlotsGenerate-${day.date}`"
+      append
+    >
       <transition name="fade">
         <modal
           v-if="open"
-          @close="open = false"
           show-footer="true"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
+          margin-left-right="auto"
+          @close="open = false"
         >
           <span slot="header">Сгенерировать слоты для даты {{ day.date | formatDate }}</span>
-          <div slot="body" class="popup-body">
+          <div
+            slot="body"
+            class="popup-body"
+          >
             <div class="input-group">
               <span class="input-group-addon">Время начала</span>
-              <input class="form-control" type="time" v-model="timeStart" />
+              <input
+                v-model="timeStart"
+                class="form-control"
+                type="time"
+              >
             </div>
             <div class="input-group">
               <span class="input-group-addon">Длительность, мин</span>
               <input
+                v-model.number="duration"
                 class="form-control"
                 type="number"
-                v-model.number="duration"
                 min="3"
                 :max="maxDuration"
                 :placeholder="`от 3 до ${maxDuration}`"
-              />
+              >
             </div>
             <div class="input-group">
               <span class="input-group-addon">Количество (1 - {{ countMax }})</span>
-              <input class="form-control" type="number" v-model.number="count" min="1" :max="countMax" />
+              <input
+                v-model.number="count"
+                class="form-control"
+                type="number"
+                min="1"
+                :max="countMax"
+              >
             </div>
 
             <div class="slots-generated">
-              <span class="badge badge-primary" v-for="t in slots" :key="t">{{ t }}</span>
+              <span
+                v-for="t in slots"
+                :key="t"
+                class="badge badge-primary"
+              >{{ t }}</span>
             </div>
 
             <h5>Источники записи</h5>
-            <label> <input type="checkbox" value="portal" v-model="sources" /> Портал пациента </label><br />
-            <label> <input type="checkbox" value="local" v-model="sources" /> Текущая система L2 </label>
+            <label> <input
+              v-model="sources"
+              type="checkbox"
+              value="portal"
+            > Портал пациента </label><br>
+            <label> <input
+              v-model="sources"
+              type="checkbox"
+              value="local"
+            > Текущая система L2 </label>
           </div>
           <div slot="footer">
             <div class="row">
               <div class="col-xs-6">
-                <button @click="open = false" class="btn btn-blue-nb" type="button">Закрыть</button>
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="open = false"
+                >
+                  Закрыть
+                </button>
               </div>
               <div class="col-xs-6 text-right">
-                <button class="btn btn-blue-nb" type="button" :disabled="!isValid" @click="save">Сохранить</button>
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  :disabled="!isValid"
+                  @click="save"
+                >
+                  Сохранить
+                </button>
               </div>
             </div>
           </div>

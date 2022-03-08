@@ -1,14 +1,17 @@
 <template>
   <div>
-    <table class="table table-bordered table-condensed" style="table-layout: fixed">
+    <table
+      class="table table-bordered table-condensed"
+      style="table-layout: fixed"
+    >
       <colgroup>
-        <col width="14%" />
-        <col />
-        <col width="14%" />
-        <col width="14%" />
-        <col width="14%" />
-        <col width="14%" />
-        <col width="36" />
+        <col width="14%">
+        <col>
+        <col width="14%">
+        <col width="14%">
+        <col width="14%">
+        <col width="14%">
+        <col width="36">
       </colgroup>
       <thead>
         <tr>
@@ -20,11 +23,11 @@
           <th>Исполнитель</th>
           <th class="cl-td">
             <button
-              class="btn btn-blue-nb"
-              @click="delete_rows"
-              :disabled="disabled"
               v-tippy="{ placement: 'bottom' }"
+              class="btn btn-blue-nb"
+              :disabled="disabled"
               title="Очистить строки"
+              @click="delete_rows"
             >
               <i class="fa fa-times" />
             </button>
@@ -32,50 +35,77 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(val, index) in tb_data" :key="`${val.researchTitle}_${val.fractionTitle}_${index}`">
+        <tr
+          v-for="(val, index) in tb_data"
+          :key="`${val.researchTitle}_${val.fractionTitle}_${index}`"
+        >
           <td class="cl-td">
             <input
+              v-model="val.researchTitle"
               type="text"
               class="form-control"
               :readonly="disabled"
               placeholder="Анализ-наименование"
-              v-model="val.researchTitle"
-            />
+            >
           </td>
 
           <td class="cl-td">
             <input
+              v-model="val.fractionTitle"
               type="text"
               class="form-control"
               :readonly="disabled"
               placeholder="Тест-наименование"
-              v-model="val.fractionTitle"
-            />
+            >
           </td>
 
           <td class="cl-td">
-            <input type="text" class="form-control" :readonly="disabled" placeholder="Значение" v-model="val.value" />
+            <input
+              v-model="val.value"
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Значение"
+            >
           </td>
 
           <td class="cl-td">
-            <input type="text" class="form-control" :readonly="disabled" placeholder="Ед. изм" v-model="val.units" />
+            <input
+              v-model="val.units"
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Ед. изм"
+            >
           </td>
 
           <td class="cl-td">
-            <input type="text" class="form-control" :readonly="disabled" placeholder="Дата" v-model="val.date" />
+            <input
+              v-model="val.date"
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Дата"
+            >
           </td>
 
           <td class="cl-td">
-            <input type="text" class="form-control" :readonly="disabled" placeholder="Исполнитель" v-model="val.docConfirm" />
+            <input
+              v-model="val.docConfirm"
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Исполнитель"
+            >
           </td>
 
           <td class="cl-td">
             <button
-              class="btn btn-blue-nb"
-              @click="delete_row(index)"
-              :disabled="disabled"
               v-tippy="{ placement: 'bottom' }"
+              class="btn btn-blue-nb"
+              :disabled="disabled"
               title="Удалить строку"
+              @click="delete_row(index)"
             >
               <i class="fa fa-times" />
             </button>
@@ -83,7 +113,11 @@
         </tr>
       </tbody>
     </table>
-    <button class="btn btn-blue-nb add-row" @click="add_new_row" :disabled="disabled">
+    <button
+      class="btn btn-blue-nb add-row"
+      :disabled="disabled"
+      @click="add_new_row"
+    >
       Добавить
     </button>
   </div>
@@ -104,8 +138,12 @@ const makeDefaultRow = () => ({
 
 export default {
   name: 'LaboratoryPreviousResults',
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
+      type: String,
       required: false,
     },
     disabled: {
@@ -120,8 +158,17 @@ export default {
       result: [],
     };
   },
+  watch: {
+    tb_data: {
+      handler() {
+        this.changeValueDebounce();
+      },
+      immediate: true,
+      deep: true,
+    },
+  },
   mounted() {
-    this.$root.$on('protocol:laboratoryResult', direction => {
+    this.$root.$on('protocol:laboratoryResult', (direction) => {
       this.insertLaboratoryResult(direction);
     });
   },
@@ -164,18 +211,6 @@ export default {
         }
       }
     },
-  },
-  watch: {
-    tb_data: {
-      handler() {
-        this.changeValueDebounce();
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  model: {
-    event: 'modified',
   },
 };
 </script>

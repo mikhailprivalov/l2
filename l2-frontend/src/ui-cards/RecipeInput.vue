@@ -5,76 +5,133 @@
       style="table-layout: fixed;margin-bottom: 0;background-color: #fff"
     >
       <colgroup>
-        <col width="280" />
-        <col />
-        <col width="290" />
-        <col v-if="!confirmed" width="38" />
+        <col width="280">
+        <col>
+        <col width="290">
+        <col
+          v-if="!confirmed"
+          width="38"
+        >
       </colgroup>
       <thead>
         <tr>
           <th>Наименование ЛП</th>
           <th>Форма выпуска, дозировка, количество</th>
           <th>Способ применения</th>
-          <th v-if="!confirmed"></th>
+          <th v-if="!confirmed" />
         </tr>
       </thead>
       <tbody>
-        <tr v-for="v in fv" :key="v.pk">
+        <tr
+          v-for="v in fv"
+          :key="v.pk"
+        >
           <td>{{ v.prescription }}</td>
           <td class="cl-td prec">
             <TypeAhead
-              :delayTime="300"
               v-if="!confirmed"
-              :getResponse="resp => [...resp.data.data]"
+              v-model="v.taking"
+              :delay-time="300"
+              :get-response="resp => [...resp.data.data]"
               :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
               :limit="10"
-              :minChars="1"
+              :min-chars="1"
               :render="items => items.map(i => `${i.method_of_taking}`)"
-              :selectFirst="true"
+              :select-first="true"
               :src="`/api/methods-of-taking?keyword=:keyword&prescription=${v.prescription}`"
               maxlength="128"
-              v-model="v.taking"
             />
-            <input class="form-control" readonly v-else v-model="v.taking" />
+            <input
+              v-else
+              v-model="v.taking"
+              class="form-control"
+              readonly
+            >
           </td>
-          <td class="cl-td"><input :readonly="confirmed" class="form-control" maxlength="128" v-model="v.comment" /></td>
-          <td class="cl-td" v-if="!confirmed">
+          <td class="cl-td">
+            <input
+              v-model="v.comment"
+              :readonly="confirmed"
+              class="form-control"
+              maxlength="128"
+            >
+          </td>
+          <td
+            v-if="!confirmed"
+            class="cl-td"
+          >
             <button
+              v-tippy="{ placement: 'bottom', arrow: true }"
               :title="`Убрать назначение`"
-              @click.prevent="remove(v.pk)"
               class="btn last btn-blue-nb nbr"
               type="button"
-              v-tippy="{ placement: 'bottom', arrow: true }"
+              @click.prevent="remove(v.pk)"
             >
-              <i class="fa fa-times-circle"></i>
+              <i class="fa fa-times-circle" />
             </button>
           </td>
         </tr>
         <tr v-if="fv.length === 0">
-          <td class="text-center" :colspan="confirmed ? 3 : 4">нет назначений</td>
+          <td
+            class="text-center"
+            :colspan="confirmed ? 3 : 4"
+          >
+            нет назначений
+          </td>
         </tr>
       </tbody>
     </table>
-    <hr v-if="!confirmed" />
-    <div class="row" v-if="!confirmed">
+    <hr v-if="!confirmed">
+    <div
+      v-if="!confirmed"
+      class="row"
+    >
       <div class="col-xs-3">
-        <div class="input-group" style="z-index: 0">
-          <input class="form-control" placeholder="Поиск назначения" v-model="search" />
+        <div
+          class="input-group"
+          style="z-index: 0"
+        >
+          <input
+            v-model="search"
+            class="form-control"
+            placeholder="Поиск назначения"
+          >
           <span class="input-group-btn">
-            <button @click="search = ''" class="btn btn-blue-nb" type="button"><i class="fa fa-times"></i></button>
+            <button
+              class="btn btn-blue-nb"
+              type="button"
+              @click="search = ''"
+            ><i class="fa fa-times" /></button>
           </span>
         </div>
         <div v-if="variants.length > 0">
           <small>выберите назначение из списка справа</small>
         </div>
       </div>
-      <div class="col-xs-9" style="padding-left: 0">
-        <div @click="add(v.value)" class="variant" v-for="v in variants" :key="v.pk">
-          <strong>{{ v.highlighted }}</strong
-          >{{ v.noHighlighted }}
+      <div
+        class="col-xs-9"
+        style="padding-left: 0"
+      >
+        <div
+          v-for="v in variants"
+          :key="v.pk"
+          class="variant"
+          @click="add(v.value)"
+        >
+          <strong>{{ v.highlighted }}</strong>{{ v.noHighlighted }}
         </div>
-        <div class="variant-msg" v-if="search === ''">выполните поиск для добавления назначений</div>
-        <div class="variant-msg" v-else-if="variants.length === 0">не найдено</div>
+        <div
+          v-if="search === ''"
+          class="variant-msg"
+        >
+          выполните поиск для добавления назначений
+        </div>
+        <div
+          v-else-if="variants.length === 0"
+          class="variant-msg"
+        >
+          не найдено
+        </div>
       </div>
     </div>
   </div>
@@ -85,7 +142,7 @@ import TypeAhead from 'vue2-typeahead';
 import * as actions from '../store/action-types';
 
 export default {
-  name: 'recipe-input',
+  name: 'RecipeInput',
   components: { TypeAhead },
   props: {
     value: {
@@ -106,31 +163,6 @@ export default {
   computed: {
     fv() {
       return this.value.filter(v => !this.toRemove.includes(v.pk) && !v.remove);
-    },
-  },
-  methods: {
-    add(value) {
-      this.value.push({
-        pk: Math.random() + Math.random(),
-        prescription: value,
-        taking: '',
-        comment: '',
-        isNew: true,
-      });
-    },
-    async remove(pk) {
-      for (let i = 0; i < this.value.length; i++) {
-        if (this.value[i].pk === pk) {
-          try {
-            await this.$dialog.confirm(`Подтвердите удаление назначения «${this.value[i].prescription}»`);
-          } catch (_) {
-            return;
-          }
-          this.value[i].remove = true;
-          this.toRemove.push(pk);
-          break;
-        }
-      }
     },
   },
   watch: {
@@ -157,6 +189,31 @@ export default {
         });
       }
       await this.$store.dispatch(actions.DEC_LOADING);
+    },
+  },
+  methods: {
+    add(value) {
+      this.value.push({
+        pk: Math.random() + Math.random(),
+        prescription: value,
+        taking: '',
+        comment: '',
+        isNew: true,
+      });
+    },
+    async remove(pk) {
+      for (let i = 0; i < this.value.length; i++) {
+        if (this.value[i].pk === pk) {
+          try {
+            await this.$dialog.confirm(`Подтвердите удаление назначения «${this.value[i].prescription}»`);
+          } catch (_) {
+            return;
+          }
+          this.value[i].remove = true;
+          this.toRemove.push(pk);
+          break;
+        }
+      }
     },
   },
 };

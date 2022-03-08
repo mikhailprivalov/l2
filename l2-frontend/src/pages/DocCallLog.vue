@@ -2,61 +2,136 @@
   <div>
     <div class="log-form">
       <div class="left">
-        <textarea class="form-control" placeholder="Запись в журнале" v-model="text"></textarea>
+        <textarea
+          v-model="text"
+          class="form-control"
+          placeholder="Запись в журнале"
+        />
       </div>
       <div class="right">
-        <button class="btn btn-blue-nb btn-block" type="button" @click="createLog" :disabled="!text && status === -1 && !file">
+        <button
+          class="btn btn-blue-nb btn-block"
+          type="button"
+          :disabled="!text && status === -1 && !file"
+          @click="createLog"
+        >
           Сохранить
         </button>
-        <select v-model="status" class="form-control" style="margin-top: 5px">
-          <option :value="-1">Не обновлять статус</option>
-          <option :value="1" v-if="r.status !== 1">Статус: Новая заявка</option>
-          <option :value="2" v-if="r.status !== 2">Статус: В работе</option>
-          <option :value="3" v-if="r.status !== 3">Статус: Выполнено</option>
-          <option :value="4" v-if="r.status !== 4">Статус: Отмена</option>
+        <select
+          v-model="status"
+          class="form-control"
+          style="margin-top: 5px"
+        >
+          <option :value="-1">
+            Не обновлять статус
+          </option>
+          <option
+            v-if="r.status !== 1"
+            :value="1"
+          >
+            Статус: Новая заявка
+          </option>
+          <option
+            v-if="r.status !== 2"
+            :value="2"
+          >
+            Статус: В работе
+          </option>
+          <option
+            v-if="r.status !== 3"
+            :value="3"
+          >
+            Статус: Выполнено
+          </option>
+          <option
+            v-if="r.status !== 4"
+            :value="4"
+          >
+            Статус: Отмена
+          </option>
         </select>
       </div>
     </div>
     <div class="log-file">
-      <input type="file" ref="file" style="display: none" @change="fileChange($event.target.files)" />
+      <input
+        ref="file"
+        type="file"
+        style="display: none"
+        @change="fileChange($event.target.files)"
+      >
       <template v-if="!file">
-        <a href="#" @click.prevent="$refs.file.click()" class="a-under-reversed"> <i class="fa fa-folder"></i> добавить файл </a>
+        <a
+          href="#"
+          class="a-under-reversed"
+          @click.prevent="$refs.file.click()"
+        > <i class="fa fa-folder" /> добавить файл </a>
         (не более 5 МБ, не более 10 штук на одну заявку)
       </template>
       <template v-else>
         <a
+          v-tippy
           href="#"
+          class="a-under-reversed"
+          title="Удалить файл"
           @click.prevent="
             file = '';
             fileName = '';
           "
-          class="a-under-reversed"
-          title="Удалить файл"
-          v-tippy
         >
-          <i class="fa fa-file"></i>
+          <i class="fa fa-file" />
           <span class="black"> {{ fileName }} ({{ fileSize }} МБ) </span>
-          &nbsp;&nbsp;<i class="fa fa-times"></i>
+          &nbsp;&nbsp;<i class="fa fa-times" />
         </a>
       </template>
     </div>
     <div class="log-rows">
-      <div v-if="rows.length === 0" class="log-row-empty">Нет записей</div>
-      <div class="log-row" v-for="row in rows" :key="row.pk">
-        <div class="log-row-author">{{ row.author }}</div>
-        <div class="log-row-time">{{ row.createdAt }}</div>
-        <div class="log-row-text" v-if="row.text">{{ row.text }}</div>
-        <div class="log-row-system" v-if="row.executorFrom || row.executorTo">
+      <div
+        v-if="rows.length === 0"
+        class="log-row-empty"
+      >
+        Нет записей
+      </div>
+      <div
+        v-for="row in rows"
+        :key="row.pk"
+        class="log-row"
+      >
+        <div class="log-row-author">
+          {{ row.author }}
+        </div>
+        <div class="log-row-time">
+          {{ row.createdAt }}
+        </div>
+        <div
+          v-if="row.text"
+          class="log-row-text"
+        >
+          {{ row.text }}
+        </div>
+        <div
+          v-if="row.executorFrom || row.executorTo"
+          class="log-row-system"
+        >
           Изменение исполнителя:
           {{ row.executorFrom || 'нет' }} → <strong>{{ row.executorTo || 'нет' }}</strong>
         </div>
-        <div class="log-row-system" v-if="row.statusFrom || row.statusTo">
+        <div
+          v-if="row.statusFrom || row.statusTo"
+          class="log-row-system"
+        >
           Изменение статуса:
           {{ row.statusFrom || 'нет' }} → <strong>{{ row.statusTo || 'нет' }}</strong>
         </div>
-        <div class="log-row-system log-row-file" v-if="row.file">
+        <div
+          v-if="row.file"
+          class="log-row-system log-row-file"
+        >
           Прикреплённый файл:
-          <a :href="row.file" target="_blank" class="a-under">
+          <a
+            :href="row.file"
+            target="_blank"
+            class="a-under"
+          >
             {{ row.fileName }}
           </a>
         </div>

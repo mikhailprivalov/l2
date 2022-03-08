@@ -1,5 +1,6 @@
 <template>
-  <treeselect
+  <Treeselect
+    v-model="val"
     :multiple="false"
     :disable-branch-nodes="true"
     class="treeselect-wide"
@@ -7,8 +8,7 @@
     :append-to-body="true"
     :clearable="false"
     :disabled="disabled"
-    v-model="val"
-    :zIndex="5001"
+    :z-index="5001"
   />
 </template>
 
@@ -19,6 +19,9 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 export default {
   components: {
     Treeselect,
+  },
+  model: {
+    event: 'modified',
   },
   props: {
     value: {
@@ -39,6 +42,11 @@ export default {
       variantsLocal: [],
     };
   },
+  computed: {
+    variantsTree() {
+      return this.variantsLocal.map(v => ({ id: v, label: v }));
+    },
+  },
   watch: {
     val() {
       this.changeValue(this.val);
@@ -53,14 +61,6 @@ export default {
         }
       },
     },
-  },
-  computed: {
-    variantsTree() {
-      return this.variantsLocal.map(v => ({ id: v, label: v }));
-    },
-  },
-  model: {
-    event: 'modified',
   },
   methods: {
     changeValue(newVal) {

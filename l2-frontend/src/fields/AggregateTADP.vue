@@ -1,19 +1,37 @@
 <template>
   <div class="root-agg">
-    <a :href="printHref" target="_blank" v-if="selectedChartsValues.length > 0" class="top-print a-under">печать</a>
-    <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
-    <div class="chart" v-for="chart in charts" :key="chart" v-if="!!dataCharts[chart]">
+    <a
+      v-if="selectedChartsValues.length > 0"
+      :href="printHref"
+      target="_blank"
+      class="top-print a-under"
+    >печать</a>
+    <div
+      v-for="chart in charts"
+      v-if="/*eslint-disable-line vue/no-use-v-if-with-v-for*/ !!dataCharts[chart]"
+      :key="chart"
+      class="chart"
+    >
       <label class="chart-title">
-        <input type="checkbox" v-model="selectedCharts[chart]"/>
-        {{chart}}
+        <input
+          v-model="selectedCharts[chart]"
+          type="checkbox"
+        >
+        {{ chart }}
       </label>
       <VueApexCharts
         type="line"
         height="330"
-        :options="get_options(dataCharts[chart])" :series="dataCharts[chart].series"
+        :options="get_options(dataCharts[chart])"
+        :series="dataCharts[chart].series"
       />
     </div>
-    <a :href="printHref" target="_blank" v-if="selectedChartsValues.length > 0" class="bottom-print a-under">печать</a>
+    <a
+      v-if="selectedChartsValues.length > 0"
+      :href="printHref"
+      target="_blank"
+      class="bottom-print a-under"
+    >печать</a>
   </div>
 </template>
 
@@ -22,11 +40,7 @@ import VueApexCharts from 'vue-apexcharts';
 
 import stationar_point from '../api/stationar-point';
 
-const charts = [
-  'Температура (°C)',
-  'Пульс (уд/с)',
-  'Давление',
-];
+const charts = ['Температура (°C)', 'Пульс (уд/с)', 'Давление'];
 
 const mergeData = {
   'Систолическое давление (мм рт.с)': 'Давление',
@@ -46,9 +60,6 @@ export default {
       data: {},
       selectedCharts: charts.reduce((a, c) => ({ ...a, [c]: false }), {}),
     };
-  },
-  async mounted() {
-    await this.load();
   },
   computed: {
     dataCharts() {
@@ -77,6 +88,9 @@ export default {
       const directions = encodeURI(JSON.stringify(this.directions));
       return `/forms/pdf?type=107.01&hosp_pks=${directions}&titles=${titles}`;
     },
+  },
+  async mounted() {
+    await this.load();
   },
   methods: {
     async load() {
@@ -147,41 +161,41 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .root-agg {
-    position: relative;
-  }
+.root-agg {
+  position: relative;
+}
 
-  .top-print {
-    position: absolute;
-    top: 0;
-    right: 5px;
-    z-index: 1;
-  }
+.top-print {
+  position: absolute;
+  top: 0;
+  right: 5px;
+  z-index: 1;
+}
 
-  .bottom-print {
-    position: absolute;
-    bottom: 0;
-    right: 5px;
-  }
+.bottom-print {
+  position: absolute;
+  bottom: 0;
+  right: 5px;
+}
 
-  .chart {
-    margin-bottom: 5px;
+.chart {
+  margin-bottom: 5px;
 
-    &-title {
-      font-weight: bold;
-    }
+  &-title {
+    font-weight: bold;
   }
+}
 </style>
 
 <style lang="scss">
-  .apexcharts-yaxis-label {
-    font-weight: 600;
-    font-size: 13px;
-  }
+.apexcharts-yaxis-label {
+  font-weight: 600;
+  font-size: 13px;
+}
 
-  .apexcharts-xaxis-label {
-    max-width: 60px;
-    white-space: normal;
-    word-break: keep-all;
-  }
+.apexcharts-xaxis-label {
+  max-width: 60px;
+  white-space: normal;
+  word-break: keep-all;
+}
 </style>

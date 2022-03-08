@@ -1,26 +1,48 @@
 <template>
   <div>
     <div class="filters">
-      <form autocomplete="off" @submit.prevent>
-        <input autocomplete="false" name="hidden" type="text" style="display: none;" />
+      <form
+        autocomplete="off"
+        @submit.prevent
+      >
+        <input
+          autocomplete="false"
+          name="hidden"
+          type="text"
+          style="display: none;"
+        >
         <div class="input-group">
-          <span class="input-group-btn" v-for="(title, key) in modes" :key="`${key}-${title}`">
-            <a href="#" class="top-inner-select" :class="key === mode && 'active'" @click.prevent="mode = key">
+          <span
+            v-for="(title, key) in modes"
+            :key="`${key}-${title}`"
+            class="input-group-btn"
+          >
+            <a
+              href="#"
+              class="top-inner-select"
+              :class="key === mode && 'active'"
+              @click.prevent="mode = key"
+            >
               <span>{{ title }}</span>
             </a>
           </span>
           <input
+            ref="q"
+            v-model="q"
             type="text"
             maxlength="13"
             class="form-control"
             autofocus
-            ref="q"
-            v-model="q"
-            @keyup.enter="search"
             :placeholder="mode === 'direction' ? 'номер направления' : 'номер ёмкости'"
-          />
+            @keyup.enter="search"
+          >
           <span class="input-group-btn">
-            <button style="margin-right: -1px;" type="button" @click="search" class="btn btn-blue-nb">Поиск</button>
+            <button
+              style="margin-right: -1px;"
+              type="button"
+              class="btn btn-blue-nb"
+              @click="search"
+            >Поиск</button>
           </span>
         </div>
       </form>
@@ -48,14 +70,6 @@ export default {
       pkAfterSearch: null,
     };
   },
-  mounted() {
-    this.$root.$on('laboratory:results:search', (mode, pk, pkAfterSearch) => {
-      this.mode = mode;
-      this.q = String(pk);
-      this.pkAfterSearch = pkAfterSearch;
-      this.search();
-    });
-  },
   watch: {
     mode() {
       window.$(this.$refs.q).focus();
@@ -63,6 +77,14 @@ export default {
     q() {
       this.q = this.q.replace(/\D/g, '');
     },
+  },
+  mounted() {
+    this.$root.$on('laboratory:results:search', (mode, pk, pkAfterSearch) => {
+      this.mode = mode;
+      this.q = String(pk);
+      this.pkAfterSearch = pkAfterSearch;
+      this.search();
+    });
   },
   methods: {
     async search() {

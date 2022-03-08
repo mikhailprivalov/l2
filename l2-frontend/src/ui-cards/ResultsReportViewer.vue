@@ -5,20 +5,20 @@
         style="align-self: stretch;display: inline-flex;align-items: center;padding: 1px 0 1px 5px;
       flex: 1;margin: 0;font-size: 12px;width: 101px;color:#fff"
       >
-        <span style="display: block;max-height: 2.2em;line-height: 1.1em;vertical-align: top">Дата<br />подтверждения:</span>
+        <span style="display: block;max-height: 2.2em;line-height: 1.1em;vertical-align: top">Дата<br>подтверждения:</span>
       </div>
       <div style="width: 186px;display: inline-block;vertical-align: top">
-        <date-range v-model="date_range" />
+        <DateRange v-model="date_range" />
       </div>
       <div class="top-inner">
         <button
+          v-if="individual_pk > -1 && params.length > 0"
           class="btn btn-blue-nb btn-ell"
           style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;"
           title="Загрузить данные"
           @click="load_history"
-          v-if="individual_pk > -1 && params.length > 0"
         >
-          <i class="glyphicon glyphicon-list-alt"></i> Загрузить данные
+          <i class="glyphicon glyphicon-list-alt" /> Загрузить данные
         </button>
         <!--<button class="btn btn-blue-nb btn-ell"
                 style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;"
@@ -28,15 +28,18 @@
         </button>-->
       </div>
     </div>
-    <div class="content-picker" v-if="rows.length > 0">
+    <div
+      v-if="rows.length > 0"
+      class="content-picker"
+    >
       <table class="table table-bordered table-smm">
         <colgroup>
-          <col width="90" />
-          <col width="120" />
-          <col />
-          <col />
-          <col width="120" />
-          <col width="110" />
+          <col width="90">
+          <col width="120">
+          <col>
+          <col>
+          <col width="120">
+          <col width="110">
         </colgroup>
         <thead>
           <tr>
@@ -49,29 +52,50 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.pk" :class="{ not_norm: r.is_norm !== 'normal' }">
+          <tr
+            v-for="r in rows"
+            :key="r.pk"
+            :class="{ not_norm: r.is_norm !== 'normal' }"
+          >
             <td>{{ r.date }}</td>
-            <td class="research">{{ get_param_name(r.research, r.pk).research }}</td>
+            <td class="research">
+              {{ get_param_name(r.research, r.pk).research }}
+            </td>
             <td>{{ get_param_name(r.research, r.pk).title }}</td>
-            <td v-if="r.active_ref" class="v-field">
+            <td
+              v-if="r.active_ref"
+              class="v-field"
+            >
               <span v-if="r.not_norm_dir === 'n_up'">&uarr;</span>
               <span v-if="r.not_norm_dir === 'up'">&uarr;&uarr;</span>
               <span v-if="r.not_norm_dir === 'n_down'">&darr;</span>
               <span v-if="r.not_norm_dir === 'down'">&darr;&darr;</span>
               {{ r.value }} <span class="units">{{ r.units }}</span>
             </td>
-            <td v-if="r.active_ref">{{ r.active_ref }}</td>
-            <td v-else colspan="2">
+            <td v-if="r.active_ref">
+              {{ r.active_ref }}
+            </td>
+            <td
+              v-else
+              colspan="2"
+            >
               {{ r.value }} <span class="units">{{ r.units }}</span>
             </td>
             <td>
-              <a href="#" @click.prevent="print_results(r.direction)" title="Печать результатов направления">{{ r.direction }}</a>
+              <a
+                href="#"
+                title="Печать результатов направления"
+                @click.prevent="print_results(r.direction)"
+              >{{ r.direction }}</a>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="content-none" v-else>
+    <div
+      v-else
+      class="content-none"
+    >
       Нет данных
     </div>
     <!--<report-chart-viewer v-if="show_charts" :directory="params_titles" :rows_data="rows"/>-->
@@ -86,8 +110,8 @@ import directionsPoint from '../api/directions-point';
 import * as actions from '../store/action-types';
 
 export default {
+  name: 'ResultsReportViewer',
   components: { DateRange /* ReportChartViewer */ },
-  name: 'results-report-viewer',
   props: {
     individual_pk: {
       type: Number,
@@ -116,6 +140,11 @@ export default {
     };
   },
   computed: {},
+  watch: {
+    individual_pk() {
+      this.clear();
+    },
+  },
   mounted() {
     this.is_created = true;
     this.$root.$on('hide_report-chart-viewer', () => {
@@ -174,11 +203,6 @@ export default {
     },
     clear() {
       this.rows = [];
-    },
-  },
-  watch: {
-    individual_pk() {
-      this.clear();
     },
   },
 };

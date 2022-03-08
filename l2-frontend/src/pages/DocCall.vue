@@ -1,13 +1,23 @@
 <template>
   <div>
-    <form class="panel panel-default panel-flt" style="margin: 20px;" @submit.prevent="load(null)">
-      <div class="panel-body" style="overflow: visible;">
+    <form
+      class="panel panel-default panel-flt"
+      style="margin: 20px"
+      @submit.prevent="load(null)"
+    >
+      <div
+        class="panel-body"
+        style="overflow: visible"
+      >
         <div class="row">
           <div class="col-xs-6">
             <div class="input-group date-time">
               <span class="input-group-addon">Дата и время</span>
-              <span class="input-group-addon" style="padding: 0;border: none;">
-                <date-field-nav-2
+              <span
+                class="input-group-addon"
+                style="padding: 0; border: none"
+              >
+                <DateFieldNav2
                   v-model="params.date"
                   right
                   :disabled="Boolean(params.number || params.without_date)"
@@ -18,37 +28,36 @@
               <span
                 class="input-group-addon addon-splitter"
                 :class="{ disabled: Boolean(params.number || params.without_date) }"
-                style="height: 34px;width: 1px"
-              ></span>
+                style="height: 34px; width: 1px"
+              />
               <input
                 v-model="params.time_start"
                 type="time"
                 class="form-control"
                 :disabled="Boolean(params.number || params.without_date)"
-              />
+              >
               <span
                 class="input-group-addon addon-splitter"
                 :class="{ disabled: Boolean(params.number || params.without_date) }"
                 style="color: #000; height: 34px"
-                >&mdash;</span
-              >
+              >&mdash;</span>
               <input
                 v-model="params.time_end"
                 type="time"
                 class="form-control"
                 :disabled="Boolean(params.number || params.without_date)"
-              />
+              >
             </div>
           </div>
           <div class="col-xs-2">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Цель</span>
-              <treeselect
+              <Treeselect
+                v-model="params.purpose"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="purposes"
                 placeholder="Цель не казана"
-                v-model="params.purpose"
                 :disabled="Boolean(params.number)"
                 :append-to-body="true"
                 :clearable="false"
@@ -58,32 +67,53 @@
           <div class="col-xs-2">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Статус</span>
-              <select v-model="params.status" :readonly="Boolean(params.number)" class="form-control">
-                <option :value="-1">Все</option>
-                <option :value="1">Новая заявка</option>
-                <option :value="2">В работе</option>
-                <option :value="3">Выполнено</option>
-                <option :value="4">Отмена</option>
+              <select
+                v-model="params.status"
+                :readonly="Boolean(params.number)"
+                class="form-control"
+              >
+                <option :value="-1">
+                  Все
+                </option>
+                <option :value="1">
+                  Новая заявка
+                </option>
+                <option :value="2">
+                  В работе
+                </option>
+                <option :value="3">
+                  Выполнено
+                </option>
+                <option :value="4">
+                  Отмена
+                </option>
               </select>
             </div>
           </div>
           <div class="col-xs-2">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Номер</span>
-              <input v-model.trim="params.number" class="form-control" placeholder="без других параметров" />
+              <input
+                v-model.trim="params.number"
+                class="form-control"
+                placeholder="без других параметров"
+              >
             </div>
           </div>
         </div>
-        <div class="row" style="margin-top:5px;">
+        <div
+          class="row"
+          style="margin-top: 5px"
+        >
           <div class="col-xs-6">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Больница</span>
-              <treeselect
+              <Treeselect
+                v-model="params.hospital"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="hospitals"
                 placeholder="Больница не выбрана"
-                v-model="params.hospital"
                 :disabled="Boolean(params.number)"
                 :clearable="false"
                 class="treeselect-wide"
@@ -93,12 +123,12 @@
           <div class="col-xs-3">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Участок</span>
-              <treeselect
+              <Treeselect
+                v-model="params.district"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="districts"
                 placeholder="Участок не выбран"
-                v-model="params.district"
                 :append-to-body="true"
                 :disabled="Boolean(params.number)"
                 :clearable="false"
@@ -108,12 +138,12 @@
           <div class="col-xs-3">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Врач</span>
-              <treeselect
+              <Treeselect
+                v-model="params.doc_assigned"
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="docs_assigned"
                 placeholder="Врач не выбран"
-                v-model="params.doc_assigned"
                 :append-to-body="true"
                 :disabled="Boolean(params.number)"
                 :clearable="false"
@@ -122,40 +152,79 @@
           </div>
         </div>
         <div style="margin: 5px 0">
-          <patient-picker-doc-call v-model="params.card_pk" :disabled="Boolean(params.number)" />
+          <PatientPickerDocCall
+            v-model="params.card_pk"
+            :disabled="Boolean(params.number)"
+          />
         </div>
         <div style="margin-top: 5px">
-          <a href="#" class="a-under pull-right" @click.prevent="print">
-            Печать
-          </a>
-          <a href="#" class="a-under pull-right" @click.prevent="show_statistics_message_tickets" style="padding-right: 10px">
+          <a
+            href="#"
+            class="a-under pull-right"
+            @click.prevent="print"
+          > Печать </a>
+          <a
+            href="#"
+            class="a-under pull-right"
+            style="padding-right: 10px"
+            @click.prevent="show_statistics_message_tickets"
+          >
             Статистика
           </a>
           <label class="checkbox-inline">
-            <input type="checkbox" v-model="params.is_external" :disabled="Boolean(params.number)" /> Внешние заявки
+            <input
+              v-model="params.is_external"
+              type="checkbox"
+              :disabled="Boolean(params.number)"
+            > Внешние заявки
           </label>
           <label class="checkbox-inline">
-            <input type="checkbox" v-model="params.without_date" :disabled="Boolean(params.number)" /> Искать по всем датам
+            <input
+              v-model="params.without_date"
+              type="checkbox"
+              :disabled="Boolean(params.number)"
+            > Искать по всем датам
           </label>
           <label class="checkbox-inline">
-            <input type="checkbox" v-model="params.is_canceled" :disabled="Boolean(params.number)" /> Показать отмененные
+            <input
+              v-model="params.is_canceled"
+              type="checkbox"
+              :disabled="Boolean(params.number)"
+            > Показать отмененные
           </label>
           <label class="checkbox-inline">
-            <input type="checkbox" v-model="params.my_requests" :disabled="Boolean(params.number)" /> Мои заявки
+            <input
+              v-model="params.my_requests"
+              type="checkbox"
+              :disabled="Boolean(params.number)"
+            > Мои заявки
           </label>
         </div>
       </div>
     </form>
-    <div class="not-loaded" v-if="!loaded">
-      Данные не загружены<br />
-      <a class="a-under" href="#" @click.prevent="load(null)">загрузить</a>
+    <div
+      v-if="!loaded"
+      class="not-loaded"
+    >
+      Данные не загружены<br>
+      <a
+        class="a-under"
+        href="#"
+        @click.prevent="load(null)"
+      >загрузить</a>
     </div>
-    <div v-else class="data">
+    <div
+      v-else
+      class="data"
+    >
       <div>
-        <button class="btn btn-blue-nb pull-right" @click="load(params.page)">
-          <i class="fa fa-refresh"></i>
+        <button
+          class="btn btn-blue-nb pull-right"
+          @click="load(params.page)"
+        >
+          <i class="fa fa-refresh" />
         </button>
-        <paginate
+        <Paginate
           v-model="params.page"
           :page-count="params.pages"
           :page-range="4"
@@ -168,15 +237,15 @@
       </div>
       <table class="table table-bordered table-condensed table-hover">
         <colgroup>
-          <col />
-          <col style="width: 95px" />
-          <col />
-          <col style="width: 125px" />
-          <col style="width: 150px" />
-          <col />
-          <col style="width: 150px" />
-          <col style="width: 95px" />
-          <col style="width: 90px" />
+          <col>
+          <col style="width: 95px">
+          <col>
+          <col style="width: 125px">
+          <col style="width: 150px">
+          <col>
+          <col style="width: 150px">
+          <col style="width: 95px">
+          <col style="width: 90px">
         </colgroup>
         <thead>
           <tr>
@@ -192,16 +261,22 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.pk">
+          <tr
+            v-for="r in rows"
+            :key="r.pk"
+          >
             <DocCallRow :r="r" />
           </tr>
         </tbody>
       </table>
       <div>
-        <button class="btn btn-blue-nb pull-right" @click="load(params.page)">
-          <i class="fa fa-refresh"></i>
+        <button
+          class="btn btn-blue-nb pull-right"
+          @click="load(params.page)"
+        >
+          <i class="fa fa-refresh" />
         </button>
-        <paginate
+        <Paginate
           v-model="params.page"
           :page-count="params.pages"
           :page-range="4"
@@ -216,7 +291,10 @@
         Найдено записей: <strong>{{ params.total }}</strong>
       </div>
     </div>
-    <statistics-message-print-modal v-if="statistics_tickets" :hospitals="hospitals" />
+    <StatisticsMessagePrintModal
+      v-if="statistics_tickets"
+      :hospitals="hospitals"
+    />
   </div>
 </template>
 
@@ -273,15 +351,6 @@ export default {
       statistics_tickets: false,
     };
   },
-  beforeMount() {
-    this.$store.dispatch(actions.GET_USER_DATA);
-    this.$store.watch(
-      state => state.user.data,
-      (oldValue, newValue) => {
-        this.params.hospital = newValue.hospital || -1;
-      },
-    );
-  },
   computed: {
     watchParams() {
       return _.pick(this.params, [
@@ -327,6 +396,15 @@ export default {
       },
       immediate: true,
     },
+  },
+  beforeMount() {
+    this.$store.dispatch(actions.GET_USER_DATA);
+    this.$store.watch(
+      (state) => state.user.data,
+      (oldValue, newValue) => {
+        this.params.hospital = newValue.hospital || -1;
+      },
+    );
   },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);

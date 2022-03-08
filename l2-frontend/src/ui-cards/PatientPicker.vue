@@ -1,23 +1,42 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative">
-    <div class="top-picker" :class="{ internalType: selected_base.internal_type }">
+  <div style="height: 100%; width: 100%; position: relative">
+    <div
+      class="top-picker"
+      :class="{ internalType: selected_base.internal_type }"
+    >
       <div class="input-group">
-        <div class="input-group-btn" v-if="bases.length > 1">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr base-toggle" type="button" data-toggle="dropdown">
-            <span class="caret"></span> {{ selected_base.title }}
+        <div
+          v-if="bases.length > 1"
+          class="input-group-btn"
+        >
+          <button
+            class="btn btn-blue-nb btn-ell dropdown-toggle nbr base-toggle"
+            type="button"
+            data-toggle="dropdown"
+          >
+            <span class="caret" /> {{ selected_base.title }}
           </button>
           <ul class="dropdown-menu">
-            <li v-for="row in basesFiltered" :key="row.pk">
-              <a href="#" @click.prevent="select_base(row.pk)">{{ row.title }}</a>
+            <li
+              v-for="row in basesFiltered"
+              :key="row.pk"
+            >
+              <a
+                href="#"
+                @click.prevent="select_base(row.pk)"
+              >{{ row.title }}</a>
             </li>
           </ul>
         </div>
-        <div class="input-group-btn" v-else>
+        <div
+          v-else
+          class="input-group-btn"
+        >
           <button
             class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
             type="button"
             data-toggle="dropdown"
-            style="max-width: 200px;text-align: left!important;"
+            style="max-width: 200px; text-align: left !important"
           >
             {{ selected_base.title }}
           </button>
@@ -25,11 +44,11 @@
         <div>
           <div class="autocomplete">
             <input
+              ref="q"
+              v-model="query"
               type="text"
               class="form-control bob"
-              v-model="query"
               placeholder="Введите запрос"
-              ref="q"
               maxlength="255"
               @keyup.enter="search"
               @keypress="keypress"
@@ -38,28 +57,50 @@
               @blur="blur"
               @keyup.esc="suggests.open = false"
               @focus="suggests_focus"
-            />
-            <div class="clear-input" :class="{ display: query.length > 0 }" @click="clear_input">
-              <i class="fa fa-times"></i>
+            >
+            <div
+              class="clear-input"
+              :class="{ display: query.length > 0 }"
+              @click="clear_input"
+            >
+              <i class="fa fa-times" />
             </div>
-            <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
-              <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
-              <div class="item" v-else-if="suggests.data.length === 0">
-                не найдено карт в {{system}}, попробуйте произвести поиск по ТФОМС или РМИС
+            <div
+              v-if="(suggests.open && normalized_query.length > 0) || suggests.loading"
+              class="suggestions"
+            >
+              <div
+                v-if="suggests.loading && suggests.data.length === 0"
+                class="item"
+              >
+                поиск...
+              </div>
+              <div
+                v-else-if="suggests.data.length === 0"
+                class="item"
+              >
+                не найдено карт в {{ system }}, попробуйте произвести поиск по ТФОМС или РМИС
               </div>
               <template v-else>
                 <div
-                  class="item item-selectable"
-                  :class="{ 'item-selectable-focused': i === suggests.focused }"
                   v-for="(row, i) in suggests.data"
                   :key="row.pk"
+                  class="item item-selectable"
+                  :class="{ 'item-selectable-focused': i === suggests.focused }"
                   @mouseover="suggests.focused = i"
                   @click.stop="select_suggest(i)"
                 >
                   {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}, {{ row.birthday }} ({{ row.age }})
                   <div>
-                    <span class="b" style="display: inline-block;margin-right: 4px;"> {{ row.type_title }} {{ row.num }} </span>
-                    <span class="item-doc" v-for="d in row.docs" :key="d.pk">
+                    <span
+                      class="b"
+                      style="display: inline-block; margin-right: 4px"
+                    > {{ row.type_title }} {{ row.num }} </span>
+                    <span
+                      v-for="d in row.docs"
+                      :key="d.pk"
+                      class="item-doc"
+                    >
                       {{ d.type_title }}: {{ d.serial }} {{ d.number }};
                     </span>
                   </div>
@@ -68,15 +109,33 @@
             </div>
           </div>
         </div>
-        <span class="rmis-search input-group-btn" v-if="tfoms_query">
-          <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
-            <input type="checkbox" v-model="inc_tfoms" />
+        <span
+          v-if="tfoms_query"
+          class="rmis-search input-group-btn"
+        >
+          <label
+            class="btn btn-blue-nb nbr height34"
+            style="padding: 5px 12px"
+          >
+            <input
+              v-model="inc_tfoms"
+              type="checkbox"
+            >
             {{ tfoms_as_l2 ? 'ЕРЦП' : 'ТФОМС' }}
           </label>
         </span>
-        <span class="rmis-search input-group-btn" v-if="selected_base.internal_type && user_data.rmis_enabled">
-          <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
-            <input type="checkbox" v-model="inc_rmis" /> Вкл. РМИС
+        <span
+          v-if="selected_base.internal_type && user_data.rmis_enabled"
+          class="rmis-search input-group-btn"
+        >
+          <label
+            class="btn btn-blue-nb nbr height34"
+            style="padding: 5px 12px"
+          >
+            <input
+              v-model="inc_rmis"
+              type="checkbox"
+            > Вкл. РМИС
           </label>
         </span>
         <span class="input-group-btn">
@@ -92,68 +151,101 @@
       </div>
     </div>
     <div class="content-picker scrolldown">
-      <div style="padding-left: 5px;padding-right: 5px;">
+      <div style="padding-left: 5px; padding-right: 5px">
         <table class="table table-bordered">
           <colgroup>
-            <col width="124" />
-            <col />
-            <col width="54" />
-            <col />
+            <col width="124">
+            <col>
+            <col width="54">
+            <col>
           </colgroup>
           <tbody>
             <tr>
-              <td style="max-width: 124px;" class="table-header-row">ФИО:</td>
-              <td style="max-width: 99%;" class="table-content-row">
+              <td
+                style="max-width: 124px"
+                class="table-header-row"
+              >
+                ФИО:
+              </td>
+              <td
+                style="max-width: 99%"
+                class="table-content-row"
+              >
                 {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }}
               </td>
-              <td style="max-width: 54px;" class="table-header-row">{{ selected_card.is_rmis ? 'ID' : 'Карта' }}:</td>
-              <td style="max-width: 99%;" class="table-content-row">
+              <td
+                style="max-width: 54px"
+                class="table-header-row"
+              >
+                {{ selected_card.is_rmis ? 'ID' : 'Карта' }}:
+              </td>
+              <td
+                style="max-width: 99%"
+                class="table-content-row"
+              >
                 {{ selected_card.num }}
-                <span class="is-archive" v-if="selected_card.isArchive">в архиве</span>
+                <span
+                  v-if="selected_card.isArchive"
+                  class="is-archive"
+                >в архиве</span>
               </td>
             </tr>
             <tr>
-              <td class="table-header-row">Дата рождения:</td>
+              <td class="table-header-row">
+                Дата рождения:
+              </td>
               <td class="table-content-row">
                 {{ selected_card.birthday }}<span v-if="loaded"> ({{ selected_card.age }})</span>
               </td>
-              <td class="table-header-row">Пол:</td>
-              <td class="table-content-row">{{ selected_card.sex }}</td>
+              <td class="table-header-row">
+                Пол:
+              </td>
+              <td class="table-content-row">
+                {{ selected_card.sex }}
+              </td>
             </tr>
             <tr v-if="!hide_card_editor">
               <td class="table-header-row">
-                <span class="hospital" style="display: block;line-height: 1.2;" v-if="history_n === 'true'">Номер истории:</span>
+                <span
+                  v-if="history_n === 'true'"
+                  class="hospital"
+                  style="display: block; line-height: 1.2"
+                >Номер истории:</span>
               </td>
               <td class="table-content-row">
-                <div style="height: 34px" v-if="history_n === 'true'">
+                <div
+                  v-if="history_n === 'true'"
+                  style="height: 34px"
+                >
                   <span class="hospital">
                     <input
+                      v-model="history_num"
                       type="text"
                       class="form-control"
                       maxlength="11"
-                      v-model="history_num"
                       :disabled="!selected_base.history_number"
-                    />
+                    >
                   </span>
                 </div>
               </td>
               <td colspan="2">
-                <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
+                <div
+                  v-if="selected_base.internal_type && l2_cards"
+                  class="internal_type"
+                >
                   <button
+                    v-if="selected_card.pk && l2_vaccine"
+                    v-tippy="{ placement: 'bottom' }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
-                    @click="open_vaccine"
-                    v-tippy="{ placement: 'bottom' }"
                     title="Вакцинация"
-                    v-if="selected_card.pk && l2_vaccine"
+                    @click="open_vaccine"
                   >
                     В
                   </button>
                   <button
-                    class="btn last btn-blue-nb nbr"
-                    :class="{ [`dsp_${selected_card.status_disp}`]: true }"
+                    v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'"
                     ref="disp"
-                    type="button"
                     v-tippy="{
                       placement: 'bottom',
                       reactive: true,
@@ -175,39 +267,47 @@
                       interactive: true,
                       html: '#template-disp',
                     }"
-                    v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'"
+                    class="btn last btn-blue-nb nbr"
+                    :class="{ [`dsp_${selected_card.status_disp}`]: true }"
+                    type="button"
                   >
                     Д
                   </button>
                   <div
+                    v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'"
                     id="template-disp"
                     class="dsp"
-                    v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'"
                   >
-                    <strong>Диспансеризация</strong><br />
-                    <ul style="padding-left: 25px;text-align: left">
+                    <strong>Диспансеризация</strong><br>
+                    <ul style="padding-left: 25px; text-align: left">
                       <!-- eslint-disable-next-line vue/require-v-for-key -->
                       <li v-for="d in selected_card.disp_data">
                         <span :class="{ disp_row: true, [!!d[2] ? 'dsp_row_finished' : 'dsp_row_need']: true }">
                           <span v-if="!d[2]">требуется</span>
-                          <a v-else href="#" @click.prevent="show_results([d[2]])" class="not-black">
-                            пройдено
-                          </a>
+                          <a
+                            v-else
+                            href="#"
+                            class="not-black"
+                            @click.prevent="show_results([d[2]])"
+                          > пройдено </a>
                         </span>
 
-                        <a href="#" @click.prevent="add_researches([d[0]])">
+                        <a
+                          href="#"
+                          @click.prevent="add_researches([d[0]])"
+                        >
                           {{ d[5] }}
                         </a>
                       </li>
                     </ul>
                     <div>
                       <a
+                        v-if="selected_card.status_disp === 'need'"
                         href="#"
                         class="btn btn-blue-nb"
-                        v-if="selected_card.status_disp === 'need'"
                         @click.prevent="
                           add_researches(
-                            selected_card.disp_data.filter(d => !d[2]).map(d => d[0]),
+                            selected_card.disp_data.filter((d) => !d[2]).map((d) => d[0]),
                             true,
                           )
                         "
@@ -215,221 +315,335 @@
                         Выбрать требуемые
                       </a>
                       <a
+                        v-else
                         href="#"
                         class="btn btn-blue-nb"
-                        v-else
-                        @click.prevent="show_results(selected_card.disp_data.map(d => d[2]))"
+                        @click.prevent="show_results(selected_card.disp_data.map((d) => d[2]))"
                       >
                         Печать всех результатов
                       </a>
                     </div>
                   </div>
                   <button
+                    v-if="l2_benefit && selected_card.pk"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
                     title="Льготы пациента"
                     @click="open_benefit()"
-                    v-if="l2_benefit && selected_card.pk"
                   >
                     <i class="fa fa-cubes" />
                   </button>
                   <button
+                    v-if="is_l2_cards && selected_card.pk"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
                     title="Диспансерный учёт"
                     @click="open_dreg()"
-                    v-if="is_l2_cards && selected_card.pk"
                   >
                     <i class="fa fa-database" />
                   </button>
                   <button
+                    v-if="is_l2_cards && selected_card.pk"
+                    v-tippy="{ placement: 'bottom' }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
-                    @click="open_ambulatory_data"
-                    v-tippy="{ placement: 'bottom' }"
                     title="Произвольные записи о пациенте"
-                    v-if="is_l2_cards && selected_card.pk"
+                    @click="open_ambulatory_data"
                   >
-                    <i class="fa fa-user"></i>
+                    <i class="fa fa-user" />
                   </button>
                   <button
+                    v-if="is_l2_cards && selected_card.pk"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
                     title="Анамнез жизни"
                     @click="open_anamnesis()"
-                    v-if="is_l2_cards && selected_card.pk"
                   >
                     <i class="fa fa-book" />
                   </button>
                   <button
+                    v-if="is_l2_cards && allow_l2_card_edit"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
                     :title="`Новая ${system} карта`"
                     @click="open_editor(true)"
-                    v-if="is_l2_cards && allow_l2_card_edit"
                   >
                     <i class="fa fa-plus" />
                   </button>
                   <button
+                    v-if="is_l2_cards && allow_l2_card_edit"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
                     title="Редактирование карты"
                     style="margin-left: -1px"
                     :disabled="!selected_card.pk"
                     @click="open_editor()"
-                    v-if="is_l2_cards && allow_l2_card_edit"
                   >
                     <i class="glyphicon glyphicon-pencil" />
                   </button>
                 </div>
-                <div class="internal_type" v-else-if="l2_cards && allow_l2_card_edit">
+                <div
+                  v-else-if="l2_cards && allow_l2_card_edit"
+                  class="internal_type"
+                >
                   <button
+                    v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
-                    v-tippy="{ placement: 'bottom', arrow: true }"
                     :title="`Открыть пациента в базе ${system}`"
                     style="margin-left: -1px"
                     :disabled="!selected_card.pk"
                     @click="open_as_l2_card()"
                   >
-                    {{system}}
+                    {{ system }}
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="directive_from_need === 'true'">
-              <td class="table-header-row" style="line-height: 1;">Работа от имени:</td>
+              <td
+                class="table-header-row"
+                style="line-height: 1"
+              >
+                Работа от имени:
+              </td>
               <td class="cl-td">
-                <treeselect
+                <Treeselect
+                  v-model="directive_department"
                   class="treeselect-noborder treeselect-wide"
                   :multiple="false"
                   :disable-branch-nodes="true"
                   :options="directive_departments_select"
                   placeholder="Подразделение не выбрано"
-                  v-model="directive_department"
                   :append-to-body="true"
                   :clearable="false"
                 />
               </td>
-              <td class=" cl-td" colspan="2">
-                <treeselect
+              <td
+                class="cl-td"
+                colspan="2"
+              >
+                <Treeselect
+                  v-model="directive_doc"
                   class="treeselect-noborder treeselect-wide"
                   :multiple="false"
                   :disable-branch-nodes="true"
                   :options="directive_docs_select"
                   placeholder="Исполнитель не выбран"
-                  v-model="directive_doc"
                   :append-to-body="true"
                   :clearable="false"
                 />
               </td>
             </tr>
             <tr v-if="selected_card.medbookNumber">
-              <td class="table-header-row">Мед.книжка:</td>
-              <td class="table-content-row" colspan="3">
+              <td class="table-header-row">
+                Мед.книжка:
+              </td>
+              <td
+                class="table-content-row"
+                colspan="3"
+              >
                 <strong>{{ selected_card.medbookNumber }}</strong>
               </td>
             </tr>
             <tr v-if="!hasSnils">
-              <td class="table-content-row error-row" colspan="4">
+              <td
+                class="table-content-row error-row"
+                colspan="4"
+              >
                 <strong>Некорректный СНИЛС!</strong>
               </td>
             </tr>
           </tbody>
         </table>
-        <div v-if="phones.length > 0 && !hide_card_editor" class="hovershow">
+        <div
+          v-if="phones.length > 0 && !hide_card_editor"
+          class="hovershow"
+        >
           <div class="fastlinks hovershow1">
             <a href="#"><i class="glyphicon glyphicon-phone" /> Позвонить</a>
           </div>
-          <div class="fastlinks hovershow2" style="margin-top: 1px">
-            <a :href="'sip:' + p" v-for="p in phones" style="display: inline-block" :key="p">
+          <div
+            class="fastlinks hovershow2"
+            style="margin-top: 1px"
+          >
+            <a
+              v-for="p in phones"
+              :key="p"
+              :href="'sip:' + p"
+              style="display: inline-block"
+            >
               <i class="glyphicon glyphicon-phone" /> {{ format_number(p) }}
             </a>
           </div>
         </div>
         <div v-if="phones_tranfer.length > 0">
-          <treeselect
+          <Treeselect
+            v-model="current_transfer"
             :multiple="false"
             :disable-branch-nodes="true"
             :options="phones_tranfer"
             placeholder="Выбрать куда позвонить"
-            v-model="current_transfer"
           />
-          <div v-if="current_transfer > 0 && !hide_card_editor" class="hovershow">
+          <div
+            v-if="current_transfer > 0 && !hide_card_editor"
+            class="hovershow"
+          >
             <div class="fastlinks hovershow1">
               <a href="#"><i class="glyphicon glyphicon-phone" /> Звонок</a>
             </div>
-            <div class="fastlinks hovershow2" style="margin-top: 1px">
-              <a :href="'sip:' + current_transfer" style="display: inline-block;">
+            <div
+              class="fastlinks hovershow2"
+              style="margin-top: 1px"
+            >
+              <a
+                :href="'sip:' + current_transfer"
+                style="display: inline-block"
+              >
                 <i class="glyphicon glyphicon-phone" /> {{ current_transfer }}
               </a>
             </div>
-         </div>
+          </div>
         </div>
-        <div v-if="extrenal_phones.length > 0 && !hide_card_editor" class="hovershow call-padding-top">
+        <div
+          v-if="extrenal_phones.length > 0 && !hide_card_editor"
+          class="hovershow call-padding-top"
+        >
           <h5>Экстренные службы</h5>
-          <div style="margin-top: 2px" class="fastlinks">
-            <a :href="'sip:' + p.id" v-for="p in extrenal_phones" style="display: inline-block;" :key="p.id"
-            class="call-padding-right">
+          <div
+            style="margin-top: 2px"
+            class="fastlinks"
+          >
+            <a
+              v-for="p in extrenal_phones"
+              :key="p.id"
+              :href="'sip:' + p.id"
+              style="display: inline-block"
+              class="call-padding-right"
+            >
               <i class="glyphicon glyphicon-phone" /> {{ p.label }}
             </a>
           </div>
         </div>
 
-        <slot name="for_card" v-if="loaded" style="margin-top: 5px" />
-        <slot name="for_all" style="margin-top: 5px" />
+        <slot
+          v-if="loaded"
+          name="for_card"
+          style="margin-top: 5px"
+        />
+        <slot
+          name="for_all"
+          style="margin-top: 5px"
+        />
       </div>
     </div>
-    <div class="bottom-picker" v-if="bottom_picker === 'true'">
+    <div
+      v-if="bottom_picker === 'true'"
+      class="bottom-picker"
+    >
       <slot name="for_card_bottom" />
     </div>
-    <modal ref="modal" v-if="showModal" @close="hide_modal" show-footer="true">
+    <Modal
+      v-if="showModal"
+      ref="modal"
+      show-footer="true"
+      @close="hide_modal"
+    >
       <span slot="header">Найдено несколько карт</span>
       <div slot="body">
-        <div class="founded" v-for="(row, i) in founded_cards" @click="select_card(i)" :key="row.pk">
+        <div
+          v-for="(row, i) in founded_cards"
+          :key="row.pk"
+          class="founded"
+          @click="select_card(i)"
+        >
           <div class="founded-row">
             Карта <span class="b">{{ row.type_title }} {{ row.num }}</span>
           </div>
           <div class="founded-row">
             <span class="b">ФИО, пол:</span> {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}
           </div>
-          <div class="founded-row"><span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})</div>
-          <div class="founded-row" v-for="d in row.docs" :key="d.pk">
+          <div class="founded-row">
+            <span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})
+          </div>
+          <div
+            v-for="d in row.docs"
+            :key="d.pk"
+            class="founded-row"
+          >
             <span class="b">{{ d.type_title }}:</span> {{ d.serial }} {{ d.number }}
           </div>
         </div>
       </div>
-      <div slot="footer" class="text-center">
+      <div
+        slot="footer"
+        class="text-center"
+      >
         <small>Показано не более 10 карт</small>
       </div>
-    </modal>
-    <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base" />
-    <d-reg :card_pk="selected_card.pk" :card_data="selected_card" v-if="dreg" :selected-researches="selectedResearches" />
-    <vaccine :card_pk="selected_card.pk" :card_data="selected_card" v-if="vaccine" />
-    <benefit :card_pk="selected_card.pk" :card_data="selected_card" v-if="benefit" :readonly="false" />
-    <ambulatory-data :card_pk="selected_card.pk" :card_data="selected_card" v-if="ambulatory_data && selected_card.pk" />
-    <modal
+    </Modal>
+    <L2CardCreate
+      v-if="editor_pk !== -2"
+      :card_pk="editor_pk"
+      :base_pk="base"
+    />
+    <DReg
+      v-if="dreg"
+      :card_pk="selected_card.pk"
+      :card_data="selected_card"
+      :selected-researches="selectedResearches"
+    />
+    <Vaccine
+      v-if="vaccine"
+      :card_pk="selected_card.pk"
+      :card_data="selected_card"
+    />
+    <Benefit
+      v-if="benefit"
+      :card_pk="selected_card.pk"
+      :card_data="selected_card"
+      :readonly="false"
+    />
+    <AmbulatoryData
+      v-if="ambulatory_data && selected_card.pk"
+      :card_pk="selected_card.pk"
+      :card_data="selected_card"
+    />
+    <Modal
       v-if="anamnesis"
       ref="modalAnamnesis"
-      @close="hide_modal_anamnesis"
       show-footer="true"
       white-bg="true"
       max-width="710px"
       width="100%"
-      marginLeftRight="auto"
+      margin-left-right="auto"
       margin-top
       class="an"
+      @close="hide_modal_anamnesis"
     >
       <span slot="header">Анамнез жизни – карта {{ selected_card.num }}, {{ selected_card.fio_age }}</span>
-      <div slot="body" class="an-body">
+      <div
+        slot="body"
+        class="an-body"
+      >
         <div class="an-sidebar">
-          <div class="an-s" :class="{ active: an_state.tab === 'text' }" @click="an_tab('text')">Анамнез</div>
-          <div class="an-s" :class="{ active: an_state.tab === 'history' }" @click="an_tab('history')">
+          <div
+            class="an-s"
+            :class="{ active: an_state.tab === 'text' }"
+            @click="an_tab('text')"
+          >
+            Анамнез
+          </div>
+          <div
+            class="an-s"
+            :class="{ active: an_state.tab === 'history' }"
+            @click="an_tab('history')"
+          >
             История изменений
           </div>
         </div>
@@ -437,8 +651,14 @@
           <div v-if="an_state.tab === 'text'">
             <pre>{{ anamnesis_data.text || 'нет данных' }}</pre>
           </div>
-          <div v-else class="an-history">
-            <div v-for="h in anamnesis_data.history" :key="h.pk">
+          <div
+            v-else
+            class="an-history"
+          >
+            <div
+              v-for="h in anamnesis_data.history"
+              :key="h.pk"
+            >
               <pre>{{ h.text || 'нет данных' }}</pre>
               {{ h.who_save.fio }}, {{ h.who_save.department }}. {{ h.datetime }}
             </div>
@@ -448,13 +668,17 @@
       <div slot="footer">
         <div class="row">
           <div class="col-xs-4">
-            <button @click="hide_modal_anamnesis" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_modal_anamnesis"
+            >
               Закрыть
             </button>
           </div>
         </div>
       </div>
-    </modal>
+    </Modal>
   </div>
 </template>
 
@@ -475,7 +699,7 @@ import AmbulatoryData from '../modals/AmbulatoryData.vue';
 const tfoms_re = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
 export default {
-  name: 'patient-picker',
+  name: 'PatientPicker',
   components: {
     Vaccine,
     Treeselect,
@@ -553,116 +777,15 @@ export default {
       current_extrenal_phones: -1,
     };
   },
-  created() {
-    this.$store.watch(
-      state => state.bases,
-      () => {
-        this.check_base();
-      },
-      { immediate: true },
-    );
-    this.$root.$on('search', () => {
-      this.search();
-    });
-    this.$root.$on('search-value', value => {
-      this.query = value;
-      this.search();
-    });
-    this.$root.$on('select_card', data => {
-      this.base = data.base_pk;
-      this.query = `card_pk:${data.card_pk}:${data.inc_archive}`;
-      this.search_after_loading = true;
-      window.$(this.$refs.q).focus();
-      this.emit_input();
-      if (!data.hide) {
-        this.editor_pk = data.card_pk;
-      } else {
-        this.editor_pk = -2;
-      }
-      setTimeout(() => {
-        this.search();
-        if (!data.hide) {
-          setTimeout(() => {
-            this.$root.$emit('reload_editor');
-          }, 5);
-        }
-      }, 5);
-    });
-    this.$root.$on('hide_l2_card_create', () => {
-      this.editor_pk = -2;
-    });
-    this.$root.$on('hide_dreg', () => {
-      this.dreg = false;
-    });
-    this.$root.$on('hide_benefit', () => {
-      this.benefit = false;
-    });
-    this.$root.$on('hide_vaccine', () => {
-      this.vaccine = false;
-    });
-    this.$root.$on('hide_ambulatory_data', () => {
-      this.ambulatory_data = false;
-    });
-  },
-  mounted() {
-    this.inited();
-    this.get_phones_transfer();
-  },
-  watch: {
-    force_rmis_search: {
-      handler() {
-        this.inc_rmis = this.force_rmis_search;
-      },
-      immediate: true,
-    },
-    normalized_query() {
-      this.keypress_other({ keyCode: -1 });
-    },
-    bases() {
-      this.check_base();
-    },
-    directive_department() {
-      this.update_ofname(this.directive_department !== -1);
-    },
-    directive_doc() {
-      this.emit_input();
-    },
-    is_operator() {
-      this.emit_input();
-    },
-    history_num() {
-      this.emit_input(true);
-    },
-    inLoading() {
-      if (!this.inLoading && (this.directive_department === -1 || this.directive_doc === -1)) {
-        this.update_ofname();
-      }
-      if (!this.inLoading && this.search_after_loading) {
-        this.search();
-      }
-    },
-    tfoms_query(nv) {
-      if (nv) {
-        this.inc_tfoms = true;
-      }
-    },
-    base: {
-      immediate: true,
-      handler() {
-        this.$root.$emit('global:select-base', this.base);
-        window.localStorage.setItem('selected-base', this.base);
-      },
-    },
-  },
   computed: {
     system() {
       return this.$systemTitle();
     },
     bases() {
-      return this.$store.getters.bases.filter(b => !b.hide);
+      return this.$store.getters.bases.filter((b) => !b.hide);
     },
     basesFiltered() {
-      return this.$store.getters.bases.filter(row => !row.hide && row.pk !== this.selected_base.pk);
+      return this.$store.getters.bases.filter((row) => !row.hide && row.pk !== this.selected_base.pk);
     },
     selected_base() {
       for (const b of this.bases) {
@@ -778,7 +901,7 @@ export default {
         return true;
       }
 
-      return this.selected_card.docs.some(d => d.type_title === 'СНИЛС' && d.number && d.number.length >= 11);
+      return this.selected_card.docs.some((d) => d.type_title === 'СНИЛС' && d.number && d.number.length >= 11);
     },
     ...mapGetters(['user_data']),
     allow_l2_card_edit() {
@@ -787,12 +910,113 @@ export default {
     fixedQuery() {
       return this.query
         .split(' ')
-        .map(s => s
+        .map((s) => s
           .split('-')
-          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
           .join('-'))
         .join(' ');
     },
+  },
+  watch: {
+    force_rmis_search: {
+      handler() {
+        this.inc_rmis = this.force_rmis_search;
+      },
+      immediate: true,
+    },
+    normalized_query() {
+      this.keypress_other({ keyCode: -1 });
+    },
+    bases() {
+      this.check_base();
+    },
+    directive_department() {
+      this.update_ofname(this.directive_department !== -1);
+    },
+    directive_doc() {
+      this.emit_input();
+    },
+    is_operator() {
+      this.emit_input();
+    },
+    history_num() {
+      this.emit_input(true);
+    },
+    inLoading() {
+      if (!this.inLoading && (this.directive_department === -1 || this.directive_doc === -1)) {
+        this.update_ofname();
+      }
+      if (!this.inLoading && this.search_after_loading) {
+        this.search();
+      }
+    },
+    tfoms_query(nv) {
+      if (nv) {
+        this.inc_tfoms = true;
+      }
+    },
+    base: {
+      immediate: true,
+      handler() {
+        this.$root.$emit('global:select-base', this.base);
+        window.localStorage.setItem('selected-base', this.base);
+      },
+    },
+  },
+  created() {
+    this.$store.watch(
+      (state) => state.bases,
+      () => {
+        this.check_base();
+      },
+      { immediate: true },
+    );
+    this.$root.$on('search', () => {
+      this.search();
+    });
+    this.$root.$on('search-value', (value) => {
+      this.query = value;
+      this.search();
+    });
+    this.$root.$on('select_card', (data) => {
+      this.base = data.base_pk;
+      this.query = `card_pk:${data.card_pk}:${data.inc_archive}`;
+      this.search_after_loading = true;
+      window.$(this.$refs.q).focus();
+      this.emit_input();
+      if (!data.hide) {
+        this.editor_pk = data.card_pk;
+      } else {
+        this.editor_pk = -2;
+      }
+      setTimeout(() => {
+        this.search();
+        if (!data.hide) {
+          setTimeout(() => {
+            this.$root.$emit('reload_editor');
+          }, 5);
+        }
+      }, 5);
+    });
+    this.$root.$on('hide_l2_card_create', () => {
+      this.editor_pk = -2;
+    });
+    this.$root.$on('hide_dreg', () => {
+      this.dreg = false;
+    });
+    this.$root.$on('hide_benefit', () => {
+      this.benefit = false;
+    });
+    this.$root.$on('hide_vaccine', () => {
+      this.vaccine = false;
+    });
+    this.$root.$on('hide_ambulatory_data', () => {
+      this.ambulatory_data = false;
+    });
+  },
+  mounted() {
+    this.inited();
+    this.get_phones_transfer();
   },
   methods: {
     fixQuery() {
@@ -899,7 +1123,7 @@ export default {
         if (!this.$store.getters.user_data.loading) {
           break;
         }
-        await new Promise(r => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, 10));
       }
       await this.$store.dispatch(actions.GET_DIRECTIVE_FROM);
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -927,7 +1151,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       patientsPoint
         .loadAnamnesis({ card_pk: this.selected_card.pk })
-        .then(data => {
+        .then((data) => {
           this.an_tab('text');
           this.anamnesis_data = data;
         })
@@ -1054,7 +1278,7 @@ export default {
         if (!this.auto_clinical_examination_direct || !this.is_operator || !this.is_doc) {
           return;
         }
-        const pks = this.selected_card.disp_data?.filter(d => !d[2]).map(d => d[0]) || [];
+        const pks = this.selected_card.disp_data?.filter((d) => !d[2]).map((d) => d[0]) || [];
         if (pks.length === 0) {
           return;
         }
@@ -1172,7 +1396,7 @@ export default {
       this.$store.dispatch(actions.ENABLE_LOADING, { loadingLabel: 'Загрузка' });
       patientsPoint
         .searchL2Card({ card_pk: this.selected_card.pk })
-        .then(result => {
+        .then((result) => {
           this.clear();
           if (result.results) {
             this.founded_cards = result.results;
@@ -1185,7 +1409,7 @@ export default {
             this.$root.$emit('msg', 'error', 'Ошибка на сервере');
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
         })
         .finally(() => {
@@ -1216,7 +1440,7 @@ export default {
           inc_rmis: this.inc_rmis || this.search_after_loading,
           inc_tfoms: this.inc_tfoms && this.tfoms_query,
         })
-        .then(result => {
+        .then((result) => {
           this.clear();
           if (result.results) {
             this.founded_cards = result.results;
@@ -1238,7 +1462,7 @@ export default {
             this.query = '';
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
         })
         .finally(() => {

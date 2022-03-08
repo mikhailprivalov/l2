@@ -1,133 +1,229 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
-         marginLeftRight="auto" margin-top>
-    <span slot="header">Сведения из амбулаторной карты
-      <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
-      {{card_data.age}}, карта {{card_data.num}}</span>
-      <span v-else>{{card_data.fio_age}}</span>
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    max-width="680px"
+    width="100%"
+    margin-left-right="auto"
+    margin-top
+    @close="hide_modal"
+  >
+    <span
+      slot="header"
+    >Сведения из амбулаторной карты
+      <span
+        v-if="!card_data.fio_age"
+      >{{ card_data.family }} {{ card_data.name }} {{ card_data.twoname }}, {{ card_data.age }}, карта {{ card_data.num }}</span>
+      <span v-else>{{ card_data.fio_age }}</span>
     </span>
-    <div slot="body" style="min-height: 200px" class="registry-body">
+    <div
+      slot="body"
+      style="min-height: 200px"
+      class="registry-body"
+    >
       <table class="table table-bordered table-condensed table-sm-pd layout">
         <colgroup>
-          <col width="100"/>
-          <col width="100"/>
-          <col width="430"/>
+          <col width="100">
+          <col width="100">
+          <col width="430">
         </colgroup>
         <thead>
-        <tr>
-          <th>Год</th>
-          <th>Месяц</th>
-          <th>Сведения</th>
-        </tr>
+          <tr>
+            <th>Год</th>
+            <th>Месяц</th>
+            <th>Сведения</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows" :key="r.date">
-          <td>{{r.date.slice(6)}}</td>
-          <td>{{r.date.slice(3,5)}}</td>
-          <td><span v-html="r.data.replace(/\n/g, '<br/>')"></span></td>
-          <td>
-            <button class="btn last btn-blue-nb nbr" type="button"
-                    v-tippy="{ placement : 'bottom', arrow: true }"
-                    title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
-              <i class="glyphicon glyphicon-pencil"></i>
-            </button>
-          </td>
-        </tr>
+          <tr
+            v-for="r in rows"
+            :key="r.date"
+          >
+            <td>{{ r.date.slice(6) }}</td>
+            <td>{{ r.date.slice(3, 5) }}</td>
+            <td><span v-html="/*eslint-disable-line vue/no-v-html*/ r.data.replace(/\n/g, '<br/>')" /></td>
+            <td>
+              <button
+                v-tippy="{ placement: 'bottom', arrow: true }"
+                class="btn last btn-blue-nb nbr"
+                type="button"
+                title="Редактирование"
+                style="margin-left: -1px"
+                @click="edit(r.pk)"
+              >
+                <i class="glyphicon glyphicon-pencil" />
+              </button>
+            </td>
+          </tr>
         </tbody>
       </table>
       <div style="margin: 0 auto; width: 200px">
-        <button class="btn btn-primary-nb btn-blue-nb"
-                @click="edit(-1)"
-                type="button"><i class="fa fa-plus"></i> Создать запись
+        <button
+          class="btn btn-primary-nb btn-blue-nb"
+          type="button"
+          @click="edit(-1)"
+        >
+          <i class="fa fa-plus" /> Создать запись
         </button>
       </div>
-      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
-             width="100%" marginLeftRight="auto" margin-top>
-        <span slot="header" v-if="edit_pk > -1">Редактор сведений</span>
-        <span slot="header" v-else>Создание записи</span>
-        <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
+      <Modal
+        v-if="edit_pk > -2"
+        ref="modalEdit"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        margin-left-right="auto"
+        margin-top
+        @close="hide_edit"
+      >
+        <span
+          v-if="edit_pk > -1"
+          slot="header"
+        >Редактор сведений</span>
+        <span
+          v-else
+          slot="header"
+        >Создание записи</span>
+        <div
+          slot="body"
+          style="min-height: 200px; padding: 10px"
+          class="registry-body"
+        >
           <div class="form-group">
             <label for="de-f1">Дата:</label>
-            <input class="form-control date" type="month" id="de-f1" v-model="edit_data.date" :max="td" required>
+            <input
+              id="de-f1"
+              v-model="edit_data.date"
+              class="form-control date"
+              type="month"
+              :max="td"
+              required
+            >
           </div>
           <div class="form-group">
             <label for="de-f2">Данные:</label>
-            <textarea class="form-control" id="de-f2" rows="10" v-model="edit_data.data"/>
+            <textarea
+              id="de-f2"
+              v-model="edit_data.data"
+              class="form-control"
+              rows="10"
+            />
           </div>
         </div>
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="hide_edit"
+              >
                 Отмена
               </button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                :disabled="!valid"
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="save()"
+              >
                 Сохранить
               </button>
             </div>
           </div>
         </div>
-      </modal>
-      <modal v-if="show_history_ambulatory" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true"
-             max-width="710px"
-             width="100%" marginLeftRight="auto" margin-top>
+      </Modal>
+      <Modal
+        v-if="show_history_ambulatory"
+        ref="modalEdit"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        margin-left-right="auto"
+        margin-top
+        @close="hide_edit"
+      >
         <span slot="header">История изменений</span>
-        <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
+        <div
+          slot="body"
+          style="min-height: 200px; padding: 10px"
+          class="registry-body"
+        >
           <table class="table table-bordered table-condensed table-sm-pd layout">
             <colgroup>
-              <col width="100"/>
-              <col width="530"/>
+              <col width="100">
+              <col width="530">
             </colgroup>
             <thead>
-            <tr>
-              <th>Дата</th>
-              <th>Сводные данные</th>
-            </tr>
+              <tr>
+                <th>Дата</th>
+                <th>Сводные данные</th>
+              </tr>
             </thead>
             <tbody>
-            <tr v-for="r in rows_history" :key="r.date">
-              <td>{{r.date}}</td>
-              <td>{{r.data}}</td>
-            </tr>
+              <tr
+                v-for="r in rows_history"
+                :key="r.date"
+              >
+                <td>{{ r.date }}</td>
+                <td>{{ r.data }}</td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="hide_edit"
+              >
                 Отмена
               </button>
             </div>
           </div>
         </div>
-      </modal>
+      </Modal>
     </div>
     <div slot="footer">
       <div class="row">
         <div class="col-xs-12">
           <div class="col-xs-4">
-            <button @click="show_history_ambulatory_data" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="show_history_ambulatory_data"
+            >
               История изменений
             </button>
           </div>
           <div class="col-xs-4">
-            <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_modal"
+            >
               Закрыть
             </button>
           </div>
           <div class="col-xs-4">
-            <button @click="open_form_112" class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="open_form_112"
+            >
               Печать
             </button>
           </div>
         </div>
-
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -164,9 +260,6 @@ export default {
       rows_history: [],
     };
   },
-  created() {
-    this.load_data();
-  },
   computed: {
     forms() {
       return form112.map((f) => ({
@@ -180,6 +273,9 @@ export default {
       return this.edit_data.date !== '' && this.edit_data.data !== '';
     },
   },
+  created() {
+    this.load_data();
+  },
   methods: {
     open_form_112() {
       window.open(this.forms[0].url);
@@ -187,11 +283,14 @@ export default {
     show_history_ambulatory_data() {
       this.show_history_ambulatory = true;
       this.$store.dispatch(actions.INC_LOADING);
-      patientsPoint.loadAmbulatoryHistory(this, 'card_pk').then(({ rows }) => {
-        this.rows_history = rows;
-      }).finally(() => {
-        this.$store.dispatch(actions.DEC_LOADING);
-      });
+      patientsPoint
+        .loadAmbulatoryHistory(this, 'card_pk')
+        .then(({ rows }) => {
+          this.rows_history = rows;
+        })
+        .finally(() => {
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
     },
     async edit(pk) {
       this.td = moment().format('YYYY-MM');
@@ -224,11 +323,14 @@ export default {
     },
     load_data() {
       this.$store.dispatch(actions.INC_LOADING);
-      patientsPoint.loadAmbulatoryData(this, 'card_pk').then(({ rows }) => {
-        this.rows = rows;
-      }).finally(() => {
-        this.$store.dispatch(actions.DEC_LOADING);
-      });
+      patientsPoint
+        .loadAmbulatoryData(this, 'card_pk')
+        .then(({ rows }) => {
+          this.rows = rows;
+        })
+        .finally(() => {
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
     },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
@@ -243,37 +345,36 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .align-button {
-    float: right;
-  }
+.align-button {
+  float: right;
+}
 
-  .layout {
-    table-layout: fixed;
-    font-size: 12px
-  }
+.layout {
+  table-layout: fixed;
+  font-size: 12px;
+}
 
-  .date {
-    width: 200px;
-  }
+.date {
+  width: 200px;
+}
 
-  .modal-mask {
-    align-items: stretch !important;
-    justify-content: stretch !important;
-  }
+.modal-mask {
+  align-items: stretch !important;
+  justify-content: stretch !important;
+}
 
-  ::v-deep .panel-flt {
-    margin: 41px;
-    align-self: stretch !important;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
+::v-deep .panel-flt {
+  margin: 41px;
+  align-self: stretch !important;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
-  ::v-deep .panel-body {
-    flex: 1;
-    padding: 0;
-    height: calc(100% - 91px);
-    min-height: 200px;
-  }
-
+::v-deep .panel-body {
+  flex: 1;
+  padding: 0;
+  height: calc(100% - 91px);
+  min-height: 200px;
+}
 </style>

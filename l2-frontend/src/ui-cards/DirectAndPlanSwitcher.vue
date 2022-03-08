@@ -1,5 +1,9 @@
 <template>
-  <radio-field v-model="val" :variants="DIRECTION_MODES" :bages="bages"/>
+  <RadioField
+    v-model="val"
+    :variants="DIRECTION_MODES"
+    :bages="bages"
+  />
 </template>
 
 <script lang="ts">
@@ -13,6 +17,9 @@ import {
 export default {
   name: 'DirectAndPlanSwitcher',
   components: { RadioField },
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       type: String,
@@ -28,14 +35,6 @@ export default {
     return {
       val: this.value,
     };
-  },
-  watch: {
-    val: {
-      handler() {
-        this.$emit('modified', this.val);
-      },
-      immediate: true,
-    },
   },
   computed: {
     l2_list_wait() {
@@ -57,8 +56,13 @@ export default {
       return modes;
     },
   },
-  model: {
-    event: 'modified',
+  watch: {
+    val: {
+      handler() {
+        this.$emit('modified', this.val);
+      },
+      immediate: true,
+    },
   },
 };
 </script>

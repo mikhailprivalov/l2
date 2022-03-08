@@ -1,5 +1,8 @@
 <template>
-  <span :class="'status-' + status" class="status">{{ text }}</span>
+  <span
+    :class="'status-' + status"
+    class="status"
+  >{{ text }}</span>
 </template>
 
 <script lang="ts">

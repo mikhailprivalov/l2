@@ -1,27 +1,57 @@
 <template>
-  <div ref="root" class="construct-root">
-    <div class="construct-sidebar" v-show="opened_id === -2">
+  <div
+    ref="root"
+    class="construct-root"
+  >
+    <div
+      v-show="opened_id === -2"
+      class="construct-sidebar"
+    >
       <div class="sidebar-select">
-        <select-picker-m style="height: 34px;" :options="types" v-model="type" />
+        <SelectPickerM
+          v-model="type"
+          style="height: 34px;"
+          :options="types"
+        />
       </div>
-      <div class="sidebar-content" :class="{ fcenter: templates_list.length === 0 }">
-        <div v-if="templates_list.length === 0">Не найдено</div>
-        <div class="research" :class="{ rhide: row.hide }" :key="row.pk" v-for="row in rows" @click="open_editor(row.pk)">
-          <div class="t-t">{{ row.title }}</div>
-          <div v-for="res in row.researches" :key="res.pk" class="t-r">
+      <div
+        class="sidebar-content"
+        :class="{ fcenter: templates_list.length === 0 }"
+      >
+        <div v-if="templates_list.length === 0">
+          Не найдено
+        </div>
+        <div
+          v-for="row in rows"
+          :key="row.pk"
+          class="research"
+          :class="{ rhide: row.hide }"
+          @click="open_editor(row.pk)"
+        >
+          <div class="t-t">
+            {{ row.title }}
+          </div>
+          <div
+            v-for="res in row.researches"
+            :key="res.pk"
+            class="t-r"
+          >
             {{ res.title }}
           </div>
         </div>
       </div>
-      <button class="btn btn-blue-nb sidebar-footer" @click="open_editor(-1)">
-        <i class="glyphicon glyphicon-plus"></i>
+      <button
+        class="btn btn-blue-nb sidebar-footer"
+        @click="open_editor(-1)"
+      >
+        <i class="glyphicon glyphicon-plus" />
         Добавить
       </button>
     </div>
     <div class="construct-content">
-      <template-editor
-        style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
+      <TemplateEditor
         v-if="opened_id > -2"
+        style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
         :pk="opened_id"
         :global_template_p="parseInt(type, 10)"
       />
@@ -35,11 +65,11 @@ import TemplateEditor from './TemplateEditor.vue';
 import * as actions from '../store/action-types';
 
 export default {
+  name: 'ConstructTemplates',
   components: {
     SelectPickerM,
     TemplateEditor,
   },
-  name: 'construct-templates',
   data() {
     return {
       type: 1,
@@ -47,6 +77,25 @@ export default {
       opened_id: -2,
       inLoading: true,
     };
+  },
+  computed: {
+    types() {
+      return [
+        { value: 1, label: 'Глобальные' },
+        { value: 2, label: 'В поиске' },
+      ];
+    },
+    rows() {
+      return this.templates_list.map(r => ({
+        ...r,
+        researches: r.researches.map(rpk => this.$store.getters.researches_obj[rpk]).filter(Boolean),
+      }));
+    },
+  },
+  watch: {
+    type() {
+      this.load_templates();
+    },
   },
   created() {
     this.$parent.$on('research-editor:cancel', this.cancel_edit);
@@ -78,25 +127,6 @@ export default {
     cancel_edit() {
       this.opened_id = -2;
       this.load_templates();
-    },
-  },
-  watch: {
-    type() {
-      this.load_templates();
-    },
-  },
-  computed: {
-    types() {
-      return [
-        { value: 1, label: 'Глобальные' },
-        { value: 2, label: 'В поиске' },
-      ];
-    },
-    rows() {
-      return this.templates_list.map(r => ({
-        ...r,
-        researches: r.researches.map(rpk => this.$store.getters.researches_obj[rpk]).filter(Boolean),
-      }));
     },
   },
 };

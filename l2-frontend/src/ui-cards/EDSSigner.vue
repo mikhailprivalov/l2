@@ -1,22 +1,52 @@
 <template>
   <div v-frag>
-    <div v-if="!checked" class="eds-preloader"><i class="fa fa-spinner"></i> загрузка</div>
-    <div v-frag v-else>
+    <div
+      v-if="!checked"
+      class="eds-preloader"
+    >
+      <i class="fa fa-spinner" /> загрузка
+    </div>
+    <div
+      v-else
+      v-frag
+    >
       <div class="row cryptopro">
-        <div class="col-xs-3" v-if="!hasCP">
-          <div class="eds-status status-error">Плагин CSP не настроен</div>
+        <div
+          v-if="!hasCP"
+          class="col-xs-3"
+        >
+          <div class="eds-status status-error">
+            Плагин CSP не настроен
+          </div>
         </div>
-        <div class="col-xs-8" v-else>
-          <select class="form-control" v-model="selectedCertificate" v-if="certificatesDisplay.length > 0">
-            <option v-for="c in certificatesDisplay" :key="c.thumbprint" :value="c.thumbprint">
+        <div
+          v-else
+          class="col-xs-8"
+        >
+          <select
+            v-if="certificatesDisplay.length > 0"
+            v-model="selectedCertificate"
+            class="form-control"
+          >
+            <option
+              v-for="c in certificatesDisplay"
+              :key="c.thumbprint"
+              :value="c.thumbprint"
+            >
               {{ c.name }}
             </option>
           </select>
-          <div v-else class="status-error">
+          <div
+            v-else
+            class="status-error"
+          >
             Нет сертификатов
           </div>
         </div>
-        <div class="col-xs-4 cert-info" v-if="selectedCertificateObject">
+        <div
+          v-if="selectedCertificateObject"
+          class="col-xs-4 cert-info"
+        >
           <div>{{ selectedCertificateObject.thumbprint }}</div>
           <div>{{ selectedCertificateObject.validFrom }} — {{ selectedCertificateObject.validTo }}</div>
         </div>
@@ -32,16 +62,30 @@
       :executors="executors"
     />
 
-    <div class="sign-block" v-if="commonRoles.length > 0 && selectedCertificate && selectedSignatureMode">
+    <div
+      v-if="commonRoles.length > 0 && selectedCertificate && selectedSignatureMode"
+      class="sign-block"
+    >
       <div class="input-group">
         <span class="input-group-addon">Роль подписи для всех вложений</span>
-        <select class="form-control" v-model="selectedSignatureMode">
-          <option v-for="s in commonRoles" :key="s" :value="s">
+        <select
+          v-model="selectedSignatureMode"
+          class="form-control"
+        >
+          <option
+            v-for="s in commonRoles"
+            :key="s"
+            :value="s"
+          >
             {{ s }}
           </option>
         </select>
         <span class="input-group-btn">
-          <button type="button" class="btn btn-default btn-primary-nb" @click="addSign">
+          <button
+            type="button"
+            class="btn btn-default btn-primary-nb"
+            @click="addSign"
+          >
             Подписать все вложения
           </button>
         </span>
@@ -125,14 +169,6 @@ export default {
       return Object.keys(r);
     },
   },
-  mounted() {
-    this.init();
-    this.$root.$on('eds:reload-document', direction => {
-      if (this.directionPk === direction) {
-        this.loadStatus();
-      }
-    });
-  },
   watch: {
     commonRoles: {
       immediate: true,
@@ -150,6 +186,14 @@ export default {
         this.selectedSignatureMode = this.commonRoles[0];
       },
     },
+  },
+  mounted() {
+    this.init();
+    this.$root.$on('eds:reload-document', direction => {
+      if (this.directionPk === direction) {
+        this.loadStatus();
+      }
+    });
   },
   methods: {
     async loadStatus() {

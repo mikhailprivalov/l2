@@ -1,5 +1,9 @@
 <template>
-  <div class="time-marker" :style="`top: ${offset}`" v-if="offset" />
+  <div
+    v-if="offset"
+    class="time-marker"
+    :style="`top: ${offset}`"
+  />
 </template>
 
 <script lang="ts">

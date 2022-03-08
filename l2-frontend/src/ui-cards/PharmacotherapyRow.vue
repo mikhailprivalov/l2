@@ -3,64 +3,157 @@
     <template v-if="!data.remove">
       <tr>
         <td>
-          <button class="btn btn-blue-nb" v-if="data.isNew" @click="delete_row" v-tippy="{ placement : 'bottom'}"
-                  title="Удалить назначение">
-            <i class="fa fa-times"/>
+          <button
+            v-if="data.isNew"
+            v-tippy="{ placement : 'bottom'}"
+            class="btn btn-blue-nb"
+            title="Удалить назначение"
+            @click="delete_row"
+          >
+            <i class="fa fa-times" />
           </button>
           {{ data.drug }}
         </td>
         <td class="cl-td">
-          <select class="form-control nbr" :class="!isValidFormRelease && 'invalid'"
-                  v-model.number="data.form_release" :readonly="confirmed">
-            <option value="-1" v-if="data.form_release === -1" disabled>Не выбрано</option>
-            <option :value="f.pk" v-for="f in params.formReleases" :key="f.pk">{{ f.title }}</option>
+          <select
+            v-model.number="data.form_release"
+            class="form-control nbr"
+            :class="!isValidFormRelease && 'invalid'"
+            :readonly="confirmed"
+          >
+            <option
+              v-if="data.form_release === -1"
+              value="-1"
+              disabled
+            >
+              Не выбрано
+            </option>
+            <option
+              v-for="f in params.formReleases"
+              :key="f.pk"
+              :value="f.pk"
+            >
+              {{ f.title }}
+            </option>
           </select>
         </td>
         <td class="cl-td">
-          <select class="form-control nbr" :class="!isValidMethod && 'invalid'" v-model.number="data.method"
-                  :readonly="confirmed">
-            <option value="-1" v-if="data.method === -1" disabled>Не выбрано</option>
-            <option :value="f.pk" v-for="f in params.methods" :key="f.pk">{{ f.title }}</option>
+          <select
+            v-model.number="data.method"
+            class="form-control nbr"
+            :class="!isValidMethod && 'invalid'"
+            :readonly="confirmed"
+          >
+            <option
+              v-if="data.method === -1"
+              value="-1"
+              disabled
+            >
+              Не выбрано
+            </option>
+            <option
+              v-for="f in params.methods"
+              :key="f.pk"
+              :value="f.pk"
+            >
+              {{ f.title }}
+            </option>
           </select>
         </td>
         <td class="cl-td">
-          <input class="form-control" v-model.number="data.dosage" type="number" min="0" step="0.001"
-                 :readonly="confirmed"/>
+          <input
+            v-model.number="data.dosage"
+            class="form-control"
+            type="number"
+            min="0"
+            step="0.001"
+            :readonly="confirmed"
+          >
         </td>
         <td class="cl-td">
-          <select class="form-control nbr" :class="!isValidUnits && 'invalid'" v-model="data.units"
-                  :readonly="confirmed">
-            <option :value="null" v-if="data.units === null" disabled>–</option>
-            <option :value="u" v-for="u in params.units" :key="u">{{ u }}</option>
+          <select
+            v-model="data.units"
+            class="form-control nbr"
+            :class="!isValidUnits && 'invalid'"
+            :readonly="confirmed"
+          >
+            <option
+              v-if="data.units === null"
+              :value="null"
+              disabled
+            >
+              –
+            </option>
+            <option
+              v-for="u in params.units"
+              :key="u"
+              :value="u"
+            >
+              {{ u }}
+            </option>
           </select>
         </td>
         <td class="cl-td">
-          <Treeselect class="treeselect-noborder"
-                      :multiple="true" :disable-branch-nodes="true" :options="timesToSelect"
-                      placeholder="Режим приёма не выбран" v-model="data.timesSelected"
-                      :searchable="false"
-                      :append-to-body="true" :disabled="confirmed"/>
+          <Treeselect
+            v-model="data.timesSelected"
+            class="treeselect-noborder"
+            :multiple="true"
+            :disable-branch-nodes="true"
+            :options="timesToSelect"
+            placeholder="Режим приёма не выбран"
+            :searchable="false"
+            :append-to-body="true"
+            :disabled="confirmed"
+          />
         </td>
         <td class="cl-td">
-          <input class="form-control" v-model="data.dateStart" style="padding-left: 5px;padding-right: 0;" type="date"
-                 :min="td" step="1" :readonly="confirmed"/>
+          <input
+            v-model="data.dateStart"
+            class="form-control"
+            style="padding-left: 5px;padding-right: 0;"
+            type="date"
+            :min="td"
+            step="1"
+            :readonly="confirmed"
+          >
         </td>
         <td class="cl-td">
-          <input class="form-control" v-model.number="data.countDays" type="number" min="1" step="1"
-                 :readonly="confirmed"/>
+          <input
+            v-model.number="data.countDays"
+            class="form-control"
+            type="number"
+            min="1"
+            step="1"
+            :readonly="confirmed"
+          >
         </td>
         <td class="cl-td">
-          <input class="form-control" v-model.number="data.step" type="number" min="1" max="5" step="1"
-                 :readonly="confirmed"/>
+          <input
+            v-model.number="data.step"
+            class="form-control"
+            type="number"
+            min="1"
+            max="5"
+            step="1"
+            :readonly="confirmed"
+          >
         </td>
         <td>
           {{ dateEndVisible }}
         </td>
       </tr>
       <tr>
-        <td colspan="10" class="cl-td">
-          <input class="form-control" v-model="data.comment" :readonly="confirmed"
-                 placeholder="Комментарий" maxlength="70"/>
+        <td
+          colspan="10"
+          class="cl-td"
+        >
+          <input
+            v-model="data.comment"
+            class="form-control"
+            :readonly="confirmed"
+            placeholder="Комментарий"
+            maxlength="70"
+          >
         </td>
       </tr>
     </template>
@@ -80,6 +173,11 @@ export default {
     data: {},
     params: {},
     confirmed: {},
+  },
+  data() {
+    return {
+      td: moment().format('YYYY-MM-DD'),
+    };
   },
   computed: {
     isValidMethod() {
@@ -135,11 +233,6 @@ export default {
         this.data.dateEnd = this.dateEnd;
       },
     },
-  },
-  data() {
-    return {
-      td: moment().format('YYYY-MM-DD'),
-    };
   },
   methods: {
     delete_row() {

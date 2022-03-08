@@ -2,9 +2,6 @@
   <div v-frag>
     <a
       v-if="show"
-      href="#"
-      @click.prevent="open"
-      class="main-open-link"
       v-tippy="{
         html: `#${tippyId}`,
         placement: 'bottom',
@@ -24,15 +21,33 @@
           },
         },
       }"
+      href="#"
+      class="main-open-link"
       :class="{ [`screening_${status}`]: true }"
+      @click.prevent="open"
     >
       Скрининг
     </a>
 
-    <div :id="tippyId" class="tp" v-if="show">
-      <ScreeningDisplay :card-pk="cardPk" :external-data="data" embedded />
-      <button class="btn btn-blue-nb" @click="open">Открыть скрининг</button>
-      <div class="text-center"><small>для настройки и создания направлений</small></div>
+    <div
+      v-if="show"
+      :id="tippyId"
+      class="tp"
+    >
+      <ScreeningDisplay
+        :card-pk="cardPk"
+        :external-data="data"
+        embedded
+      />
+      <button
+        class="btn btn-blue-nb"
+        @click="open"
+      >
+        Открыть скрининг
+      </button>
+      <div class="text-center">
+        <small>для настройки и создания направлений</small>
+      </div>
     </div>
   </div>
 </template>
@@ -99,6 +114,13 @@ export default {
       return 'none';
     },
   },
+  watch: {
+    cardPk: {
+      handler() {
+        this.load();
+      },
+    },
+  },
   mounted() {
     this.load();
     this.$root.$on('updated:screening-plan', () => this.load());
@@ -112,13 +134,6 @@ export default {
     },
     open() {
       this.$emit('openScreening');
-    },
-  },
-  watch: {
-    cardPk: {
-      handler() {
-        this.load();
-      },
     },
   },
 };

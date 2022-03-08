@@ -1,21 +1,25 @@
 <template>
-  <modal
+  <Modal
     ref="modal"
-    @close="hide_modal"
     show-footer="true"
     white-bg="true"
     max-width="680px"
     width="100%"
-    marginLeftRight="auto"
+    margin-left-right="auto"
     margin-top
+    @close="hide_modal"
   >
     <span slot="header">Сообщения</span>
-    <div slot="body" style="min-height: 200px" class="registry-body">
+    <div
+      slot="body"
+      style="min-height: 200px"
+      class="registry-body"
+    >
       <table class="table table-bordered table-condensed table-sm-pd layout">
         <colgroup>
-          <col width="100" />
-          <col width="160" />
-          <col width="370" />
+          <col width="100">
+          <col width="160">
+          <col width="370">
         </colgroup>
         <thead>
           <tr>
@@ -25,59 +29,93 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.date">
+          <tr
+            v-for="r in rows"
+            :key="r.date"
+          >
             <td>{{ r.createdAt }}</td>
             <td>{{ r.who_create }}</td>
-            <td><span v-html="r.message.replace(/\n/g, '<br/>')"></span></td>
+            <td><span v-html="/*eslint-disable-line vue/no-v-html*/ r.message.replace(/\n/g, '<br/>')" /></td>
           </tr>
         </tbody>
       </table>
       <div style="margin: 0 auto; width: 200px">
-        <button class="btn btn-primary-nb btn-blue-nb" @click="edit(-1)" type="button">
-          <i class="fa fa-plus"></i> Создать сообщение
+        <button
+          class="btn btn-primary-nb btn-blue-nb"
+          type="button"
+          @click="edit(-1)"
+        >
+          <i class="fa fa-plus" /> Создать сообщение
         </button>
       </div>
-      <modal
+      <Modal
         v-if="edit_pk > -2"
         ref="modalEdit"
-        @close="hide_edit"
         show-footer="true"
         white-bg="true"
         max-width="710px"
         width="100%"
-        marginLeftRight="auto"
+        margin-left-right="auto"
         margin-top
+        @close="hide_edit"
       >
         <span slot="header">Создание записи</span>
-        <div slot="body" style="min-height: 200px; padding: 10px" class="registry-body">
+        <div
+          slot="body"
+          style="min-height: 200px; padding: 10px"
+          class="registry-body"
+        >
           <div class="form-group">
             <label>Введите текст:</label>
-            <textarea class="form-control" rows="10" v-model="data" />
+            <textarea
+              v-model="data"
+              class="form-control"
+              rows="10"
+            />
           </div>
         </div>
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">Отмена</button>
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="hide_edit"
+              >
+                Отмена
+              </button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">Сохранить</button>
+              <button
+                :disabled="!valid"
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="save()"
+              >
+                Сохранить
+              </button>
             </div>
           </div>
         </div>
-      </modal>
+      </Modal>
     </div>
     <div slot="footer">
       <div class="row">
         <div class="col-xs-12">
           <div class="col-xs-4" />
           <div class="col-xs-4">
-            <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">Закрыть</button>
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_modal"
+            >
+              Закрыть
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -104,13 +142,13 @@ export default {
       data: '',
     };
   },
-  created() {
-    this.load_data(this.plan_pk);
-  },
   computed: {
     valid() {
       return this.data !== '';
     },
+  },
+  created() {
+    this.load_data(this.plan_pk);
   },
   methods: {
     async edit(pk) {

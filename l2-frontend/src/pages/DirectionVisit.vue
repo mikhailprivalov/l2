@@ -3,114 +3,203 @@
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-6">
         <div>
-          <div class="panel panel-flt nbl" style="margin-bottom: 10px">
-            <div class="panel-heading" style="padding-top: 0;padding-bottom: 0;height: 34px">
+          <div
+            class="panel panel-flt nbl"
+            style="margin-bottom: 10px"
+          >
+            <div
+              class="panel-heading"
+              style="padding-top: 0;padding-bottom: 0;height: 34px"
+            >
               <span style="margin-top: 7px;display: inline-block;">Направление</span>
             </div>
 
             <ul class="list-group">
               <li class="list-group-item">
                 <div class="input-group">
-                  <input type="text" class="form-control" v-model="direction" data-container="body"
-                         data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false" autofocus
-                         placeholder="Введите номер направления" @keyup.enter="load" ref="field">
+                  <input
+                    ref="field"
+                    v-model="direction"
+                    type="text"
+                    class="form-control"
+                    data-container="body"
+                    data-toggle="popover"
+                    data-placement="bottom"
+                    data-content=""
+                    spellcheck="false"
+                    autofocus
+                    placeholder="Введите номер направления"
+                    @keyup.enter="load"
+                  >
                   <span class="input-group-btn">
-                        <button class="btn btn-blue-nb" @click="load" type="button">Загрузить</button>
+                    <button
+                      class="btn btn-blue-nb"
+                      type="button"
+                      @click="load"
+                    >Загрузить</button>
                   </span>
                 </div>
               </li>
 
-              <li class="list-group-item" v-if="loaded_pk > 0">
-                <table class="table table-bordered table-condensed dirtb"
-                       style="margin-bottom: 0;background-color: #fff">
+              <li
+                v-if="loaded_pk > 0"
+                class="list-group-item"
+              >
+                <table
+                  class="table table-bordered table-condensed dirtb"
+                  style="margin-bottom: 0;background-color: #fff"
+                >
                   <tr>
                     <td>Номер</td>
                     <td>
-                      <h3 style="margin: 2px;padding: 0;">{{loaded_pk}}
-                        <small><a class="a-under" href="#" @click.prevent="print_direction">печать</a></small>
+                      <h3 style="margin: 2px;padding: 0;">
+                        {{ loaded_pk }}
+                        <small><a
+                          class="a-under"
+                          href="#"
+                          @click.prevent="print_direction"
+                        >печать</a></small>
                       </h3>
                     </td>
                   </tr>
                   <tr>
                     <td>Дата назначения</td>
-                    <td>{{direction_data.date}}</td>
+                    <td>{{ direction_data.date }}</td>
                   </tr>
                   <tr>
                     <td>Пациент</td>
-                    <td>{{direction_data.client}}</td>
+                    <td>{{ direction_data.client }}</td>
                   </tr>
                   <tr>
                     <td>Карта</td>
-                    <td>{{direction_data.card}}</td>
+                    <td>{{ direction_data.card }}</td>
                   </tr>
                   <tr v-if="!direction_data.imported_from_rmis">
                     <td>Л/врач</td>
-                    <td>{{direction_data.doc}}</td>
+                    <td>{{ direction_data.doc }}</td>
                   </tr>
                   <tr v-if="!direction_data.imported_from_rmis">
                     <td>Источник финансирования</td>
-                    <td>{{direction_data.fin_source}}</td>
+                    <td>{{ direction_data.fin_source }}</td>
                   </tr>
                   <tr v-if="!direction_data.imported_from_rmis">
                     <td>Диагноз</td>
-                    <td>{{direction_data.diagnos}}</td>
+                    <td>{{ direction_data.diagnos }}</td>
                   </tr>
                   <tr v-else>
                     <td>Огранизация</td>
-                    <td>{{direction_data.imported_org}}</td>
+                    <td>{{ direction_data.imported_org }}</td>
                   </tr>
                 </table>
               </li>
-              <li class="list-group-item" v-if="loaded_pk > 0">
-                <div v-for="r in researches" :key="r.pk" class="research-card card card-1 card-no-hover">
+              <li
+                v-if="loaded_pk > 0"
+                class="list-group-item"
+              >
+                <div
+                  v-for="r in researches"
+                  :key="r.pk"
+                  class="research-card card card-1 card-no-hover"
+                >
                   <div>
-                    <span v-if="r.tube" class="tube-pk">{{r.tube.pk}}</span>&nbsp;
-                    {{r.title}} <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
+                    <span
+                      v-if="r.tube"
+                      class="tube-pk"
+                    >{{ r.tube.pk }}</span>&nbsp;
+                    {{ r.title }} <span
+                      v-if="r.comment"
+                      class="comment"
+                    > [{{ r.comment }}]</span>
                   </div>
-                  <div v-if="r.tube" style="margin-top: 5px">
-                    <a style="float: right" class="a-under" href="#" @click.prevent="print_tube_iss(r.tube.pk)">печать ш/к</a>
+                  <div
+                    v-if="r.tube"
+                    style="margin-top: 5px"
+                  >
+                    <a
+                      style="float: right"
+                      class="a-under"
+                      href="#"
+                      @click.prevent="print_tube_iss(r.tube.pk)"
+                    >печать ш/к</a>
                     <!-- eslint-disable-next-line max-len -->
-                    <span :style="`background-color: ${r.tube.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
-                    <span>{{r.tube.title}}</span>
+                    <span :style="`background-color: ${r.tube.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`" />
+                    <span>{{ r.tube.title }}</span>
                   </div>
                 </div>
               </li>
-              <li class="list-group-item" v-if="loaded_pk > 0">
+              <li
+                v-if="loaded_pk > 0"
+                class="list-group-item"
+              >
                 <div class="row">
                   <div class="col-xs-5 col-sm-5 col-md-5 col-lg-6">
-                    <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
+                    <button
+                      class="btn btn-blue-nb"
+                      @click="cancel"
+                    >
+                      Отмена
+                    </button>
                   </div>
                   <div class="col-xs-7 col-sm-7 col-md-7 col-lg-6 text-right">
                     <div>
                       <template v-if="direction_data.has_microbiology">
-                        <button @click="make_visit()" class="btn btn-blue-nb" v-if="!visit_status && can_get">
+                        <button
+                          v-if="!visit_status && can_get"
+                          class="btn btn-blue-nb"
+                          @click="make_visit()"
+                        >
                           Регистрация забора биоматерала
                         </button>
                       </template>
-                      <button @click="make_visit()" class="btn btn-blue-nb" v-else-if="!visit_status && can_visit">
+                      <button
+                        v-else-if="!visit_status && can_visit"
+                        class="btn btn-blue-nb"
+                        @click="make_visit()"
+                      >
                         Зарегистрировать посещение
                       </button>
                     </div>
-                    <div class="float-right" v-if="visit_status">
-                      Посещение {{visit_date}}<br/>
-                      {{direction_data.visit_who_mark}}
+                    <div
+                      v-if="visit_status"
+                      class="float-right"
+                    >
+                      Посещение {{ visit_date }}<br>
+                      {{ direction_data.visit_who_mark }}
                       <div v-if="allow_reset_confirm">
-                        <a @click.prevent="cancel_visit" class="a-under" href="#"
-                           v-if="direction_data.has_microbiology && can_get">
+                        <a
+                          v-if="direction_data.has_microbiology && can_get"
+                          class="a-under"
+                          href="#"
+                          @click.prevent="cancel_visit"
+                        >
                           отменить забор материала
                         </a>
-                        <a @click.prevent="cancel_visit" class="a-under" href="#"
-                           v-else-if="!direction_data.has_microbiology && can_visit">отменить посещение</a>
+                        <a
+                          v-else-if="!direction_data.has_microbiology && can_visit"
+                          class="a-under"
+                          href="#"
+                          @click.prevent="cancel_visit"
+                        >отменить посещение</a>
                       </div>
                     </div>
-                    <div class="float-right" style="margin-top: 10px"
-                         v-if="direction_data.has_microbiology && can_receive">
+                    <div
+                      v-if="direction_data.has_microbiology && can_receive"
+                      class="float-right"
+                      style="margin-top: 10px"
+                    >
                       <div v-if="receive_status">
-                        Материал принят<br/>{{receive_datetime}}<br/>
-                        <a @click.prevent="cancel_receive" class="a-under" href="#">отменить приём материала</a>
+                        Материал принят<br>{{ receive_datetime }}<br>
+                        <a
+                          class="a-under"
+                          href="#"
+                          @click.prevent="cancel_receive"
+                        >отменить приём материала</a>
                       </div>
                       <div v-else>
-                        <button @click="make_receive()" class="btn btn-blue-nb">
+                        <button
+                          class="btn btn-blue-nb"
+                          @click="make_receive()"
+                        >
                           Принять материал
                         </button>
                       </div>
@@ -118,7 +207,10 @@
                   </div>
                 </div>
               </li>
-              <li v-else class="list-group-item text-center">
+              <li
+                v-else
+                class="list-group-item text-center"
+              >
                 направление не загружено
               </li>
             </ul>
@@ -126,95 +218,166 @@
         </div>
       </div>
       <div class="col-xs-12 col-sm-12 col-md-6">
-        <div class="panel panel-flt" v-if="can_visit || can_get">
-          <div class="panel-heading" style="padding-top: 0;padding-bottom: 0;padding-right: 0;height: 34px">
-            <date-field-nav class="btr" :brn="false" w="190px" style="float: right"
-                            :val.sync="journal_date" :def="journal_date"/>
-            <span style="margin-top: 7px;display: inline-block;">Журнал посещений</span></div>
-          <div class="panel-body" style="padding-top: 5px">
-            <div class="text-right" style="margin-bottom: 5px">
-              <a href="#" class="fli a-under" @click.prevent="show_modal">создание отчёта</a></div>
-            <div v-if="journal_data.length === 0" class="text-center">
+        <div
+          v-if="can_visit || can_get"
+          class="panel panel-flt"
+        >
+          <div
+            class="panel-heading"
+            style="padding-top: 0;padding-bottom: 0;padding-right: 0;height: 34px"
+          >
+            <DateFieldNav
+              class="btr"
+              :brn="false"
+              w="190px"
+              style="float: right"
+              :val.sync="journal_date"
+              :def="journal_date"
+            />
+            <span style="margin-top: 7px;display: inline-block;">Журнал посещений</span>
+          </div>
+          <div
+            class="panel-body"
+            style="padding-top: 5px"
+          >
+            <div
+              class="text-right"
+              style="margin-bottom: 5px"
+            >
+              <a
+                href="#"
+                class="fli a-under"
+                @click.prevent="show_modal"
+              >создание отчёта</a>
+            </div>
+            <div
+              v-if="journal_data.length === 0"
+              class="text-center"
+            >
               нет данных
             </div>
-            <table class="table table-bordered table-condensed dirtb visits"
-                   style="margin-bottom: 0;background-color: #fff"
-                   v-else>
+            <table
+              v-else
+              class="table table-bordered table-condensed dirtb visits"
+              style="margin-bottom: 0;background-color: #fff"
+            >
               <thead>
-              <tr>
-                <th>Направление</th>
-                <th>Дата и время</th>
-                <th>Пациент</th>
-              </tr>
+                <tr>
+                  <th>Направление</th>
+                  <th>Дата и время</th>
+                  <th>Пациент</th>
+                </tr>
               </thead>
               <tbody>
-              <tr v-for="r in journal_data" :key="r.pk">
-                <td>{{r.pk}}</td>
-                <td>{{r.datetime}}</td>
-                <td>{{r.client}}</td>
-              </tr>
+                <tr
+                  v-for="r in journal_data"
+                  :key="r.pk"
+                >
+                  <td>{{ r.pk }}</td>
+                  <td>{{ r.datetime }}</td>
+                  <td>{{ r.client }}</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
-        <div class="panel panel-flt" v-if="can_receive">
-          <div class="panel-heading" style="padding-top: 0;padding-bottom: 0;padding-right: 0;height: 34px">
-            <date-field-nav :brn="false" :def="journal_recv_date" :val.sync="journal_recv_date" class="btr"
-                            style="float: right" w="190px"/>
-            <span style="margin-top: 7px;display: inline-block;">Журнал приёма материала</span></div>
-          <div class="panel-body" style="padding-top: 5px">
-            <div class="text-center" v-if="journal_recv_data.length === 0">
-              <br/>
+        <div
+          v-if="can_receive"
+          class="panel panel-flt"
+        >
+          <div
+            class="panel-heading"
+            style="padding-top: 0;padding-bottom: 0;padding-right: 0;height: 34px"
+          >
+            <DateFieldNav
+              :brn="false"
+              :def="journal_recv_date"
+              :val.sync="journal_recv_date"
+              class="btr"
+              style="float: right"
+              w="190px"
+            />
+            <span style="margin-top: 7px;display: inline-block;">Журнал приёма материала</span>
+          </div>
+          <div
+            class="panel-body"
+            style="padding-top: 5px"
+          >
+            <div
+              v-if="journal_recv_data.length === 0"
+              class="text-center"
+            >
+              <br>
               нет данных
             </div>
-            <table class="table table-bordered table-condensed dirtb visits"
-                   style="margin-bottom: 0;background-color: #fff"
-                   v-else>
+            <table
+              v-else
+              class="table table-bordered table-condensed dirtb visits"
+              style="margin-bottom: 0;background-color: #fff"
+            >
               <thead>
-              <tr>
-                <th>Направление</th>
-                <th>Дата и время</th>
-                <th>Пациент</th>
-                <th>Ёмкость</th>
-              </tr>
+                <tr>
+                  <th>Направление</th>
+                  <th>Дата и время</th>
+                  <th>Пациент</th>
+                  <th>Ёмкость</th>
+                </tr>
               </thead>
               <tbody>
-              <tr v-for="r in journal_recv_data" :key="r.pk">
-                <td>{{r.pk}}</td>
-                <td>{{r.datetime}}</td>
-                <td>{{r.client}}</td>
-                <td>
-                  <div v-for="t in r.tubes" :key="`${t.title}_${t.color}`">
-                    <!-- eslint-disable-next-line max-len -->
-                    <span :style="`background-color: ${t.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
-                    {{t.title}}
-                  </div>
-                </td>
-              </tr>
+                <tr
+                  v-for="r in journal_recv_data"
+                  :key="r.pk"
+                >
+                  <td>{{ r.pk }}</td>
+                  <td>{{ r.datetime }}</td>
+                  <td>{{ r.client }}</td>
+                  <td>
+                    <div
+                      v-for="t in r.tubes"
+                      :key="`${t.title}_${t.color}`"
+                    >
+                      <!-- eslint-disable-next-line max-len -->
+                      <span :style="`background-color: ${t.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`" />
+                      {{ t.title }}
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
-    <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
+    <Modal
+      v-show="showModal"
+      ref="modal"
+      show-footer="true"
+      @close="hide_modal"
+    >
       <span slot="header">Настройка отчёта</span>
       <div slot="body">
         <span>Период: </span>
         <div style="width: 186px;display: inline-block;vertical-align: middle">
-          <date-range v-model="date_range"/>
+          <DateRange v-model="date_range" />
         </div>
       </div>
-      <div slot="footer" class="text-center">
+      <div
+        slot="footer"
+        class="text-center"
+      >
         <div class="row">
           <div class="col-xs-6">
-            <button type="button" @click="report('sum')" class="btn btn-primary-nb btn-blue-nb btn-ell">
+            <button
+              type="button"
+              class="btn btn-primary-nb btn-blue-nb btn-ell"
+              @click="report('sum')"
+            >
               Суммарный отчёт
             </button>
           </div>
         </div>
       </div>
-    </modal>
+    </Modal>
   </div>
 </template>
 
@@ -242,7 +405,7 @@ function TryParseInt(str, defaultValue) {
 }
 
 export default {
-  name: 'direction-visit',
+  name: 'DirectionVisit',
   components: {
     DateFieldNav,
     Modal,

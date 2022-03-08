@@ -1,29 +1,66 @@
 <template>
-  <tr v-show="ok" :class="{warn: warn, direction: type === 'direction', visit: type === 'visit'}">
-    <td>{{researche_title}}</td>
-    <td v-if="in_load" colspan="3">поиск результата или назначения...</td>
-    <td v-if="!in_load && type === 'result'">
-      <a href="#" @click.prevent="show_result">просмотр результата</a>
+  <tr
+    v-show="ok"
+    :class="{warn: warn, direction: type === 'direction', visit: type === 'visit'}"
+  >
+    <td>{{ researche_title }}</td>
+    <td
+      v-if="in_load"
+      colspan="3"
+    >
+      поиск результата или назначения...
     </td>
-    <td v-if="!in_load && type === 'direction'" colspan="3">
-      <a href="#" @click.prevent="show_direction">просмотр направления ({{date}})</a><br/>
+    <td v-if="!in_load && type === 'result'">
+      <a
+        href="#"
+        @click.prevent="show_result"
+      >просмотр результата</a>
+    </td>
+    <td
+      v-if="!in_load && type === 'direction'"
+      colspan="3"
+    >
+      <a
+        href="#"
+        @click.prevent="show_direction"
+      >просмотр направления ({{ date }})</a><br>
       Направление без результата.
       <div v-if="has_last_result">
-        <hr style="margin: 5px 0"/>
-        <a href="#" @click.prevent="show_result">последний результат ({{last_result.datetime}})</a>
+        <hr style="margin: 5px 0">
+        <a
+          href="#"
+          @click.prevent="show_result"
+        >последний результат ({{ last_result.datetime }})</a>
       </div>
     </td>
-    <td v-if="!in_load && type === 'visit'" colspan="3">
-      {{date}} посещение по направлению без результата.<br/>
-      <a href="#" @click.prevent="show_direction">просмотр направления</a>
+    <td
+      v-if="!in_load && type === 'visit'"
+      colspan="3"
+    >
+      {{ date }} посещение по направлению без результата.<br>
+      <a
+        href="#"
+        @click.prevent="show_direction"
+      >просмотр направления</a>
       <div v-if="has_last_result">
-        <hr style="margin: 5px 0"/>
-        <a href="#" @click.prevent="show_result">последний результат ({{last_result.datetime}})</a>
+        <hr style="margin: 5px 0">
+        <a
+          href="#"
+          @click.prevent="show_result"
+        >последний результат ({{ last_result.datetime }})</a>
       </div>
     </td>
-    <td v-if="!in_load && type === 'result'" class="text-center">{{date}}</td>
-    <td v-if="!in_load && type === 'result'" class="text-center">
-      {{days_str}}
+    <td
+      v-if="!in_load && type === 'result'"
+      class="text-center"
+    >
+      {{ date }}
+    </td>
+    <td
+      v-if="!in_load && type === 'result'"
+      class="text-center"
+    >
+      {{ days_str }}
     </td>
   </tr>
 </template>
@@ -49,7 +86,7 @@ moment.updateLocale('ru', {
 });
 
 export default {
-  name: 'last-result',
+  name: 'LastResult',
   props: {
     individual: {
       type: Number,
@@ -83,14 +120,6 @@ export default {
       is_paraclinic: false,
     };
   },
-  mounted() {
-    this.load();
-  },
-  watch: {
-    individual() {
-      this.load();
-    },
-  },
   computed: {
     researche_title() {
       for (const pk of Object.keys(this.$store.getters.researches_obj)) {
@@ -104,6 +133,14 @@ export default {
     warn() {
       return this.days <= 10 && this.ok && !this.in_load;
     },
+  },
+  watch: {
+    individual() {
+      this.load();
+    },
+  },
+  mounted() {
+    this.load();
   },
   methods: {
     show_result() {

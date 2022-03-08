@@ -1,61 +1,95 @@
 <template>
   <div class="root">
     <div class="categories">
-      <div class="col-header">Разделы статистики</div>
+      <div class="col-header">
+        Разделы статистики
+      </div>
       <div class="col-inner">
         <div
+          v-for="c in categories"
+          :key="c.id"
           class="col-picker"
           :class="selectedCategory === c.id && 'col-active'"
           @click="selectedCategory = c.id"
-          v-for="c in categories"
-          :key="c.id"
         >
           {{ c.label }}
         </div>
       </div>
     </div>
     <div class="reports">
-      <div class="col-header">Отчёты</div>
-      <div class="col-inner text-center" v-if="!currentCategory">не выбрано</div>
-      <div class="col-inner" v-else>
+      <div class="col-header">
+        Отчёты
+      </div>
+      <div
+        v-if="!currentCategory"
+        class="col-inner text-center"
+      >
+        не выбрано
+      </div>
+      <div
+        v-else
+        class="col-inner"
+      >
         <div
+          v-for="(r, id) in categoryReport"
+          :key="id"
           class="col-picker"
           :class="selectedReport === id && 'col-active'"
           @click="selectedReport = id"
-          v-for="(r, id) in categoryReport"
-          :key="id"
         >
           {{ r.title }}
         </div>
       </div>
     </div>
-    <div class="settings" :key="selectedReport">
-      <div class="col-header">Настройка</div>
-      <div class="col-inner text-center" v-if="!currentReport">не выбрано</div>
-      <div class="col-inner" v-else>
+    <div
+      :key="selectedReport"
+      class="settings"
+    >
+      <div class="col-header">
+        Настройка
+      </div>
+      <div
+        v-if="!currentReport"
+        class="col-inner text-center"
+      >
+        не выбрано
+      </div>
+      <div
+        v-else
+        class="col-inner"
+      >
         <div class="col-form">
           <LaboratoryPicker
-            v-model="values.lab"
-            :with-all="checkReportParam(PARAMS_TYPES.LABORATORY_WITH_ALL)"
             v-if="checkReportParam(PARAMS_TYPES.LABORATORY, PARAMS_TYPES.LABORATORY_WITH_ALL)"
             :key="PARAMS_TYPES.LABORATORY_WITH_ALL"
+            v-model="values.lab"
+            :with-all="checkReportParam(PARAMS_TYPES.LABORATORY_WITH_ALL)"
           />
 
-          <div class="input-group" v-if="checkReportParam(PARAMS_TYPES.USERS)" :key="PARAMS_TYPES.USERS">
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.USERS)"
+            :key="PARAMS_TYPES.USERS"
+            class="input-group"
+          >
             <span class="input-group-addon">Пользователи:</span>
             <treeselect
+              v-model="values.users"
               class="treeselect-noborder treeselect-wide"
               :multiple="true"
               :disable-branch-nodes="true"
               :options="users"
               placeholder="Пользователи не выбраны"
-              v-model="values.users"
             />
           </div>
 
-          <div class="input-group" v-if="checkReportParam(PARAMS_TYPES.USER_OR_DEP)" :key="`${PARAMS_TYPES.USER_OR_DEP}_user`">
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.USER_OR_DEP)"
+            :key="`${PARAMS_TYPES.USER_OR_DEP}_user`"
+            class="input-group"
+          >
             <span class="input-group-addon">Пользователь:</span>
             <treeselect
+              v-model="values.user"
               class="treeselect-noborder treeselect-wide"
               :multiple="false"
               :disable-branch-nodes="true"
@@ -63,15 +97,24 @@
               :clearable="true"
               placeholder="Пользователь не выбан"
               :disabled="values.dep"
-              v-model="values.user"
             />
           </div>
 
-          <div class="row-v" v-if="checkReportParam(PARAMS_TYPES.USER_OR_DEP)">или</div>
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.USER_OR_DEP)"
+            class="row-v"
+          >
+            или
+          </div>
 
-          <div class="input-group" v-if="checkReportParam(PARAMS_TYPES.USER_OR_DEP)" :key="`${PARAMS_TYPES.USER_OR_DEP}_dep`">
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.USER_OR_DEP)"
+            :key="`${PARAMS_TYPES.USER_OR_DEP}_dep`"
+            class="input-group"
+          >
             <span class="input-group-addon">Подразделение:</span>
             <treeselect
+              v-model="values.dep"
               class="treeselect-noborder treeselect-wide"
               :multiple="false"
               :disable-branch-nodes="true"
@@ -79,12 +122,17 @@
               :clearable="true"
               placeholder="Подразделение не выбано"
               :disabled="values.user"
-              v-model="values.dep"
             />
           </div>
 
-          <div class="row-v" v-if="checkReportParam(PARAMS_TYPES.RESEARCH)" :key="PARAMS_TYPES.RESEARCH">
-            <div class="row-v-header">Услуга:</div>
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.RESEARCH)"
+            :key="PARAMS_TYPES.RESEARCH"
+            class="row-v"
+          >
+            <div class="row-v-header">
+              Услуга:
+            </div>
             <div class="researches-wrapper">
               <ResearchesPicker
                 v-model="values.research"
@@ -96,77 +144,159 @@
             </div>
           </div>
 
-          <div class="input-group" v-if="checkReportParam(PARAMS_TYPES.COMPANY)" :key="PARAMS_TYPES.COMPANY">
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.COMPANY)"
+            :key="PARAMS_TYPES.COMPANY"
+            class="input-group"
+          >
             <span class="input-group-addon">Компания:</span>
             <treeselect
+              v-model="values.company"
               class="treeselect-noborder treeselect-wide"
               :multiple="false"
               :disable-branch-nodes="true"
               :options="companies"
               :clearable="true"
               placeholder="Компания не выбана"
-              v-model="values.company"
             />
           </div>
 
-          <div class="input-group" v-if="checkReportParam(PARAMS_TYPES.FIN_SOURCE)" :key="PARAMS_TYPES.FIN_SOURCE">
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.FIN_SOURCE)"
+            :key="PARAMS_TYPES.FIN_SOURCE"
+            class="input-group"
+          >
             <span class="input-group-addon">Источник финансирования:</span>
-            <select v-model="values.finSource" class="form-control">
-              <option :value="-1">не выбрано</option>
-              <optgroup :label="b.title" v-for="b in bases" :key="b.pk">
-                <option v-for="f in b.fin_sources.filter(x => !x.hide)" :key="f.pk" :value="f.pk">
+            <select
+              v-model="values.finSource"
+              class="form-control"
+            >
+              <option :value="-1">
+                не выбрано
+              </option>
+              <optgroup
+                v-for="b in bases"
+                :key="b.pk"
+                :label="b.title"
+              >
+                <option
+                  v-for="f in b.fin_sources.filter(x => !x.hide)"
+                  :key="f.pk"
+                  :value="f.pk"
+                >
                   {{ b.title }} – {{ f.title }}
                 </option>
               </optgroup>
             </select>
           </div>
 
-          <div class="input-group" v-if="checkReportParam(PARAMS_TYPES.MONTH_YEAR)" :key="PARAMS_TYPES.MONTH_YEAR">
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.MONTH_YEAR)"
+            :key="PARAMS_TYPES.MONTH_YEAR"
+            class="input-group"
+          >
             <span class="input-group-addon">Год</span>
-            <input v-model.number="values.year" type="number" min="2020" max="3000" class="form-control" />
+            <input
+              v-model.number="values.year"
+              type="number"
+              min="2020"
+              max="3000"
+              class="form-control"
+            >
             <span class="input-group-addon">Месяц</span>
-            <select v-model="values.month" class="form-control">
-              <option :value="1">Январь</option>
-              <option :value="2">Февраль</option>
-              <option :value="3">Март</option>
-              <option :value="4">Апрель</option>
-              <option :value="5">Май</option>
-              <option :value="6">Июнь</option>
-              <option :value="7">Июль</option>
-              <option :value="8">Август</option>
-              <option :value="9">Сентябрь</option>
-              <option :value="10">Октябрь</option>
-              <option :value="11">Ноябрь</option>
-              <option :value="12">Декабрь</option>
+            <select
+              v-model="values.month"
+              class="form-control"
+            >
+              <option :value="1">
+                Январь
+              </option>
+              <option :value="2">
+                Февраль
+              </option>
+              <option :value="3">
+                Март
+              </option>
+              <option :value="4">
+                Апрель
+              </option>
+              <option :value="5">
+                Май
+              </option>
+              <option :value="6">
+                Июнь
+              </option>
+              <option :value="7">
+                Июль
+              </option>
+              <option :value="8">
+                Август
+              </option>
+              <option :value="9">
+                Сентябрь
+              </option>
+              <option :value="10">
+                Октябрь
+              </option>
+              <option :value="11">
+                Ноябрь
+              </option>
+              <option :value="12">
+                Декабрь
+              </option>
             </select>
           </div>
 
           <DatePicker
+            v-if="checkReportParam(PARAMS_TYPES.DATE_RANGE)"
+            :key="PARAMS_TYPES.DATE_RANGE"
             v-model="values.dateRange"
             mode="date"
             :masks="masks"
             is-range
             :max-date="new Date()"
-            v-if="checkReportParam(PARAMS_TYPES.DATE_RANGE)"
             :rows="2"
             :step="1"
-            :key="PARAMS_TYPES.DATE_RANGE"
           >
             <template v-slot="{ inputValue, inputEvents }">
               <div class="input-group">
                 <span class="input-group-addon">Дата:</span>
-                <input class="form-control" :value="inputValue.start" v-on="inputEvents.start" />
-                <span class="input-group-addon" style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
-                <input class="form-control" :value="inputValue.end" v-on="inputEvents.end" />
+                <input
+                  class="form-control"
+                  :value="inputValue.start"
+                  v-on="inputEvents.start"
+                >
+                <span
+                  class="input-group-addon"
+                  style="background-color: #fff;color: #000; height: 34px"
+                >&mdash;</span>
+                <input
+                  class="form-control"
+                  :value="inputValue.end"
+                  v-on="inputEvents.end"
+                >
               </div>
             </template>
           </DatePicker>
 
-          <div class="row-v" v-if="checkReportParam(PARAMS_TYPES.PERIOD_DATE)" :key="PARAMS_TYPES.PERIOD_DATE">
-            <DateSelector :date_type.sync="values.dateType" :values.sync="values.dateValues" />
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.PERIOD_DATE)"
+            :key="PARAMS_TYPES.PERIOD_DATE"
+            class="row-v"
+          >
+            <DateSelector
+              :date_type.sync="values.dateType"
+              :values.sync="values.dateValues"
+            />
           </div>
 
-          <a class="btn btn-blue-nb" type="button" v-if="reportUrl" :href="reportUrl" target="_blank">
+          <a
+            v-if="reportUrl"
+            class="btn btn-blue-nb"
+            type="button"
+            :href="reportUrl"
+            target="_blank"
+          >
             Сформировать отчёт
           </a>
           <div v-else-if="dateRangeInvalid">

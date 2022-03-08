@@ -2,30 +2,40 @@
   <div class="b-root">
     <div class="top-search">
       <div class="confirm-list-wrapper">
-        <button class="btn btn-primary-nb btn-ell" @click="openConfirmationList()" type="button">Лист подтверждений</button>
+        <button
+          class="btn btn-primary-nb btn-ell"
+          type="button"
+          @click="openConfirmationList()"
+        >
+          Лист подтверждений
+        </button>
       </div>
       <div class="input-group">
         <input
+          ref="q"
+          v-model="query"
           type="text"
           class="form-control"
-          v-model="query"
           placeholder="Номер направления"
           autofocus
           maxlength="20"
-          @keyup.enter="search"
           :readonly="loading"
-          ref="q"
-        />
+          @keyup.enter="search"
+        >
         <span class="input-group-btn">
-          <button class="btn btn-blue-nb" @click="search" type="button">Поиск</button>
+          <button
+            class="btn btn-blue-nb"
+            type="button"
+            @click="search"
+          >Поиск</button>
         </span>
       </div>
     </div>
 
     <table class="table table-bordered table-condensed main-table">
       <colgroup>
-        <col style="width: 170px" />
-        <col />
+        <col style="width: 170px">
+        <col>
       </colgroup>
       <tbody>
         <tr>
@@ -34,10 +44,16 @@
             <h2 class="direction">
               <template v-if="direction">
                 {{ direction.pk }}
-                <template v-if="direction.full_confirm || !direction.has_not_completed || !needGlobalCheck">(исполнено)</template>
-                <template v-else-if="direction.cancel">(отменено)</template>
+                <template v-if="direction.full_confirm || !direction.has_not_completed || !needGlobalCheck">
+                  (исполнено)
+                </template>
+                <template v-else-if="direction.cancel">
+                  (отменено)
+                </template>
               </template>
-              <template v-else>&nbsp;</template>
+              <template v-else>
+&nbsp;
+              </template>
             </h2>
           </td>
         </tr>
@@ -78,48 +94,48 @@
     <div class="btn-group btn-group-justified control-buttons">
       <div class="btn-group">
         <button
+          v-tippy
           type="button"
           :disabled="!tubes || direction.full_confirm || !needGlobalCheck"
           class="btn btn-blue-nb3 btn-ell"
-          @click="cancel"
           title="Отмена направления"
-          v-tippy
+          @click="cancel"
         >
           Отмена направления
         </button>
       </div>
       <div class="btn-group">
         <button
+          v-tippy
           type="button"
           :disabled="!direction"
           class="btn btn-blue-nb3 btn-ell"
-          @click="printBarcodes()"
           title="Печать всех штрих-кодов направления"
-          v-tippy
+          @click="printBarcodes()"
         >
           Печать штрих-кодов
         </button>
       </div>
       <div class="btn-group">
         <button
+          v-tippy
           type="button"
           :disabled="!tubes || !hasAnyChecked"
           class="btn btn-blue-nb3 btn-ell"
-          @click="save(false)"
           title="Сохранить статус забора материала"
-          v-tippy
+          @click="save(false)"
         >
           Сохранить
         </button>
       </div>
       <div class="btn-group">
         <button
+          v-tippy
           type="button"
           :disabled="!tubes || !hasAnyChecked"
-          @click="save(true)"
           class="btn btn-blue-nb3 btn-ell"
           title="Печать выбранных штрих-кодов и сохранить статус забора материала"
-          v-tippy
+          @click="save(true)"
         >
           Печать ш/к и сохранить
         </button>
@@ -128,22 +144,39 @@
 
     <table class="table table-bordered table-condensed tubes-table">
       <colgroup>
-        <col />
-        <col style="width: 225px" />
-        <col style="width: 112px" />
-        <col style="width: 25px" />
+        <col>
+        <col style="width: 225px">
+        <col style="width: 112px">
+        <col style="width: 25px">
       </colgroup>
       <thead>
         <tr>
           <th>Исследования</th>
           <th>Тип ёмкости</th>
           <th>Номер</th>
-          <td class="x-cell" :key="`check_${globalCheckStatus}`">
-            <label v-if="!needGlobalCheck" class="disabled">
-              <i class="fas fa-check" v-if="tubes"></i>
+          <td
+            :key="`check_${globalCheckStatus}`"
+            class="x-cell"
+          >
+            <label
+              v-if="!needGlobalCheck"
+              class="disabled"
+            >
+              <i
+                v-if="tubes"
+                class="fas fa-check"
+              />
             </label>
-            <label v-else @click.prevent="toggleGlobalCheck" title="Переключить статус забора всех неисполенных ёмкостей" v-tippy>
-              <input type="checkbox" :checked="globalCheckStatus" />
+            <label
+              v-else
+              v-tippy
+              title="Переключить статус забора всех неисполенных ёмкостей"
+              @click.prevent="toggleGlobalCheck"
+            >
+              <input
+                type="checkbox"
+                :checked="globalCheckStatus"
+              >
             </label>
           </td>
         </tr>
@@ -151,32 +184,61 @@
       <tbody>
         <template v-for="(tubes, lab) in tubes">
           <tr :key="lab">
-            <th colspan="4">Лаборатория: {{ lab }}</th>
+            <th colspan="4">
+              Лаборатория: {{ lab }}
+            </th>
           </tr>
           <template v-for="t in tubes">
-            <tr :key="t.id" :class="t.checked && !t.status && 'row-checked'">
+            <tr
+              :key="t.id"
+              :class="t.checked && !t.status && 'row-checked'"
+            >
               <td>
                 {{ t.researches.join('; ') }}
               </td>
               <td>
-                <ColorTitled :color="t.color" :title="t.title" />
+                <ColorTitled
+                  :color="t.color"
+                  :title="t.title"
+                />
               </td>
-              <td class="x-cell" :rowspan="!!details[t.id] ? 2 : 1">
+              <td
+                class="x-cell"
+                :rowspan="!!details[t.id] ? 2 : 1"
+              >
                 <div class="tube_id">
                   <span>{{ t.barcode || t.id }} </span>
-                  <a href="#" @click.prevent="printBarcodes(t.id)" title="Печать штрих-кода этой ёмкости" v-tippy>
-                    <i class="fas fa-barcode"></i>
+                  <a
+                    v-tippy
+                    href="#"
+                    title="Печать штрих-кода этой ёмкости"
+                    @click.prevent="printBarcodes(t.id)"
+                  >
+                    <i class="fas fa-barcode" />
                   </a>
                 </div>
               </td>
-              <td class="x-cell" :rowspan="!!details[t.id] ? 2 : 1">
+              <td
+                class="x-cell"
+                :rowspan="!!details[t.id] ? 2 : 1"
+              >
                 <label :class="t.status && 'disabled'">
-                  <i v-if="t.status" class="fas fa-check"></i>
-                  <input type="checkbox" v-else v-model="t.checked" />
+                  <i
+                    v-if="t.status"
+                    class="fas fa-check"
+                  />
+                  <input
+                    v-else
+                    v-model="t.checked"
+                    type="checkbox"
+                  >
                 </label>
               </td>
             </tr>
-            <tr :key="`details-${t.id}`" v-if="details[t.id]">
+            <tr
+              v-if="details[t.id]"
+              :key="`details-${t.id}`"
+            >
               <td colspan="2">
                 <div><strong>Исполнитель:</strong> {{ details[t.id].executor }}</div>
                 <div><strong>Дата и время:</strong> {{ details[t.id].datetime }}</div>
@@ -187,10 +249,13 @@
       </tbody>
     </table>
 
-    <table class="table table-bordered table-condensed tubes-table" v-if="tubes && needGlobalCheck">
+    <table
+      v-if="tubes && needGlobalCheck"
+      class="table table-bordered table-condensed tubes-table"
+    >
       <colgroup>
-        <col style="width: 70%" />
-        <col />
+        <col style="width: 70%">
+        <col>
       </colgroup>
       <thead>
         <tr>
@@ -199,45 +264,70 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(t, title) in typesChecked" :key="title">
+        <tr
+          v-for="(t, title) in typesChecked"
+          :key="title"
+        >
           <td>
-            <ColorTitled :color="t.color" :title="title" />
+            <ColorTitled
+              :color="t.color"
+              :title="title"
+            />
           </td>
           <td>
             {{ t.count | pluralCount }}
           </td>
         </tr>
         <tr v-if="Object.keys(typesChecked).length === 0">
-          <td class="text-center" colspan="2">Нет</td>
+          <td
+            class="text-center"
+            colspan="2"
+          >
+            Нет
+          </td>
         </tr>
         <tr v-else>
-          <th class="text-right">Итого</th>
+          <th class="text-right">
+            Итого
+          </th>
           <td>{{ typesCheckedTotal | pluralCount }}</td>
         </tr>
       </tbody>
     </table>
-    <MountingPortal mountTo="#portal-place-modal" name="ConfirmListPopup" append>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="ConfirmListPopup"
+      append
+    >
       <transition name="fade">
         <modal
           v-if="showConfirmList"
-          @close="showConfirmList = false"
           show-footer="true"
           white-bg="true"
           max-width="710px"
           width="100%"
-          marginLeftRight="auto"
+          margin-left-right="auto"
+          @close="showConfirmList = false"
         >
           <span slot="header">Лист подтверждений</span>
-          <div slot="body" class="popup-body">
-            <div class="preloader" v-if="loading"><i class="fa fa-spinner"></i> загрузка</div>
+          <div
+            slot="body"
+            class="popup-body"
+          >
+            <div
+              v-if="loading"
+              class="preloader"
+            >
+              <i class="fa fa-spinner" /> загрузка
+            </div>
             <div v-else>
               <table class="table table-bordered table-condensed table-hover">
                 <colgroup>
-                  <col />
-                  <col style="width: 85px" />
-                  <col style="width: 85px" />
-                  <col style="width: 210px" />
-                  <col style="width: 25px" />
+                  <col>
+                  <col style="width: 85px">
+                  <col style="width: 85px">
+                  <col style="width: 210px">
+                  <col style="width: 25px">
                 </colgroup>
                 <thead>
                   <tr>
@@ -245,32 +335,56 @@
                     <th>№ напр.</th>
                     <th>№ ёмкости</th>
                     <th>Тип</th>
-                    <th class="x-cell" :key="`check_confirm_${globalCheckConfirm}`">
+                    <th
+                      :key="`check_confirm_${globalCheckConfirm}`"
+                      class="x-cell"
+                    >
                       <label @click.prevent="toggleGlobalCheckConfirm">
-                        <input type="checkbox" :checked="globalCheckConfirm" />
+                        <input
+                          type="checkbox"
+                          :checked="globalCheckConfirm"
+                        >
                       </label>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="t in tubesForConfirm" :key="`${t.pk}_${t.checked}`">
-                    <td @click="t.checked = !t.checked" class="cursor-pointer">
+                  <tr
+                    v-for="t in tubesForConfirm"
+                    :key="`${t.pk}_${t.checked}`"
+                  >
+                    <td
+                      class="cursor-pointer"
+                      @click="t.checked = !t.checked"
+                    >
                       {{ t.patient }}
                     </td>
                     <td>
                       {{ t.direction }}
-                      <br /><small><a @click.stop.prevent="cancel(t.direction)" href="#">отменить</a></small>
+                      <br><small><a
+                        href="#"
+                        @click.stop.prevent="cancel(t.direction)"
+                      >отменить</a></small>
                     </td>
                     <td>
                       {{ t.pk }}
-                      <br /><small><a @click.stop.prevent="printBarcodes(t.pk)" href="#">печать ш/к</a></small>
+                      <br><small><a
+                        href="#"
+                        @click.stop.prevent="printBarcodes(t.pk)"
+                      >печать ш/к</a></small>
                     </td>
                     <td @click="t.checked = !t.checked">
-                      <ColorTitled :color="t.color" :title="t.title" />
+                      <ColorTitled
+                        :color="t.color"
+                        :title="t.title"
+                      />
                     </td>
                     <td class="x-cell">
                       <label>
-                        <input type="checkbox" v-model="t.checked" />
+                        <input
+                          v-model="t.checked"
+                          type="checkbox"
+                        >
                       </label>
                     </td>
                   </tr>
@@ -281,12 +395,20 @@
           <div slot="footer">
             <div class="row">
               <div class="col-xs-6">
-                <button @click="showConfirmList = false" class="btn btn-blue-nb" type="button">
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="showConfirmList = false"
+                >
                   Закрыть
                 </button>
               </div>
               <div class="col-xs-6 text-right">
-                <button @click="saveList" class="btn btn-blue-nb" type="button">
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="saveList"
+                >
                   Подтвердить выбранные
                 </button>
               </div>

@@ -2,13 +2,21 @@
   <div>
     <h5>{{ title }}</h5>
     <ul style="list-style-type: none">
-      <li v-for="r in link_rows" :key="r.title" style="padding-top: 9px; font-size: 16px;">
-        <a :href="`${r.link}`" target="_blank" :title="r.comment" v-tippy>
+      <li
+        v-for="r in link_rows"
+        :key="r.title"
+        style="padding-top: 9px; font-size: 16px;"
+      >
+        <a
+          v-tippy
+          :href="`${r.link}`"
+          target="_blank"
+          :title="r.comment"
+        >
           {{ r.title }} - {{ r.link }}
         </a>
       </li>
     </ul>
-
   </div>
 </template>
 

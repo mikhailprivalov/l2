@@ -1,18 +1,58 @@
 <template>
   <div class="flex">
     <template v-if="!right">
-      <button class="btn btn-blue-nb" type="button" @click="decDate" :disabled="disabled || readonly"><i
-        class="glyphicon glyphicon-arrow-left"></i></button>
-      <button class="btn btn-blue-nb" type="button" @click="incDate" :disabled="disabled || readonly"><i
-        class="glyphicon glyphicon-arrow-right"></i></button>
+      <button
+        class="btn btn-blue-nb"
+        type="button"
+        :disabled="disabled || readonly"
+        @click="decDate"
+      >
+        <i
+          class="glyphicon glyphicon-arrow-left"
+        />
+      </button>
+      <button
+        class="btn btn-blue-nb"
+        type="button"
+        :disabled="disabled || readonly"
+        @click="incDate"
+      >
+        <i
+          class="glyphicon glyphicon-arrow-right"
+        />
+      </button>
     </template>
-    <input type="date" class="form-control no-context" :class="{brn: brn}" :style="{ width: w }"
-           v-model="val" maxlength="10" :disabled="disabled" :readonly="readonly"/>
+    <input
+      v-model="val"
+      type="date"
+      class="form-control no-context"
+      :class="{brn: brn}"
+      :style="{ width: w }"
+      maxlength="10"
+      :disabled="disabled"
+      :readonly="readonly"
+    >
     <template v-if="right">
-      <button class="btn btn-blue-nb" type="button" @click="decDate" :disabled="disabled || readonly"><i
-        class="glyphicon glyphicon-arrow-left"></i></button>
-      <button class="btn btn-blue-nb" type="button" @click="incDate" :disabled="disabled || readonly"><i
-        class="glyphicon glyphicon-arrow-right"></i></button>
+      <button
+        class="btn btn-blue-nb"
+        type="button"
+        :disabled="disabled || readonly"
+        @click="decDate"
+      >
+        <i
+          class="glyphicon glyphicon-arrow-left"
+        />
+      </button>
+      <button
+        class="btn btn-blue-nb"
+        type="button"
+        :disabled="disabled || readonly"
+        @click="incDate"
+      >
+        <i
+          class="glyphicon glyphicon-arrow-right"
+        />
+      </button>
     </template>
   </div>
 </template>
@@ -21,7 +61,10 @@
 import moment from 'moment';
 
 export default {
-  name: 'date-field-nav-2',
+  name: 'DateFieldNav2',
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       type: String,
@@ -46,6 +89,11 @@ export default {
       default: false,
       type: Boolean,
     },
+  },
+  data() {
+    return {
+      val: this.value,
+    };
   },
   computed: {
     md() {
@@ -77,14 +125,6 @@ export default {
     emitv() {
       this.$emit('modified', this.val);
     },
-  },
-  model: {
-    event: 'modified',
-  },
-  data() {
-    return {
-      val: this.value,
-    };
   },
 };
 </script>

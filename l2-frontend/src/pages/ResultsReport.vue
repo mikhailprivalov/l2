@@ -1,21 +1,52 @@
 <template>
   <div ref="root">
-    <div id="cont_left" class="split split-horizontal">
-      <div id="left_top" class="split content">
-        <individual-picker v-model="selected_individual"/>
+    <div
+      id="cont_left"
+      class="split split-horizontal"
+    >
+      <div
+        id="left_top"
+        class="split content"
+      >
+        <IndividualPicker v-model="selected_individual" />
       </div>
-      <div id="left_bottom" class="split content" style="padding: 0;">
-        <researches-picker v-model="selected_researches" autoselect="report" :hidetemplates="true"/>
+      <div
+        id="left_bottom"
+        class="split content"
+        style="padding: 0;"
+      >
+        <ResearchesPicker
+          v-model="selected_researches"
+          autoselect="report"
+          :hidetemplates="true"
+        />
       </div>
     </div>
-    <div id="cont_right" class="split split-horizontal">
-      <div id="right_top" class="split content" style="padding: 0;">
-        <results-report-viewer :individual_pk="selected_individual" :params="selected_params"
-                               :params_directory="params_directory"/>
+    <div
+      id="cont_right"
+      class="split split-horizontal"
+    >
+      <div
+        id="right_top"
+        class="split content"
+        style="padding: 0;"
+      >
+        <ResultsReportViewer
+          :individual_pk="selected_individual"
+          :params="selected_params"
+          :params_directory="params_directory"
+        />
       </div>
-      <div id="right_bottom" class="split content" style="padding: 0;box-shadow: none">
-        <report-selected-researches :researches="selected_researches" v-model="selected_params"
-                                    :params_directory="params_directory"/>
+      <div
+        id="right_bottom"
+        class="split content"
+        style="padding: 0;box-shadow: none"
+      >
+        <ReportSelectedResearches
+          v-model="selected_params"
+          :researches="selected_researches"
+          :params_directory="params_directory"
+        />
       </div>
     </div>
   </div>
@@ -31,13 +62,13 @@ import researchesPoint from '../api/researches-point';
 import * as actions from '../store/action-types';
 
 export default {
+  name: 'ResultsReport',
   components: {
     ResearchesPicker,
     IndividualPicker,
     ReportSelectedResearches,
     ResultsReportViewer,
   },
-  name: 'results-report',
   data() {
     return {
       selected_individual: -1,
@@ -47,6 +78,7 @@ export default {
       params_directory: {},
     };
   },
+  computed: {},
   watch: {
     selected_researches() {
       const r_to_load = [];
@@ -108,7 +140,6 @@ export default {
       });
     },
   },
-  computed: {},
 };
 </script>
 

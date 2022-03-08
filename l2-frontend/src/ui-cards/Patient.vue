@@ -7,7 +7,7 @@
 
 <script lang="ts">
 export default {
-  name: 'patient',
+  name: 'Patient',
 };
 </script>
 

@@ -1,40 +1,63 @@
 <template>
   <div>
-    <div class="input-group" style="width: 100%;">
+    <div
+      class="input-group"
+      style="width: 100%"
+    >
       <template v-if="!selected_card.pk || selected_card.pk === -1">
         <div class="autocomplete">
           <input
+            ref="q"
+            v-model="query"
             type="text"
             class="form-control bob"
-            v-model="query"
             placeholder="Поиск по пациенту"
-            ref="q"
             maxlength="255"
+            :disabled="disabled"
             @keyup.enter="search"
             @keypress="keypress"
             @keydown="keypress_arrow"
             @click="click_input"
             @blur="blur"
             @keyup.esc="suggests.open = false"
-            :disabled="disabled"
             @focus="suggests_focus"
-          />
-          <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
-            <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
-            <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в {{system}}</div>
+          >
+          <div
+            v-if="(suggests.open && normalized_query.length > 0) || suggests.loading"
+            class="suggestions"
+          >
+            <div
+              v-if="suggests.loading && suggests.data.length === 0"
+              class="item"
+            >
+              поиск...
+            </div>
+            <div
+              v-else-if="suggests.data.length === 0"
+              class="item"
+            >
+              не найдено карт в {{ system }}
+            </div>
             <template v-else>
               <div
-                class="item item-selectable"
-                :class="{ 'item-selectable-focused': i === suggests.focused }"
                 v-for="(row, i) in suggests.data"
                 :key="row.pk"
+                class="item item-selectable"
+                :class="{ 'item-selectable-focused': i === suggests.focused }"
                 @mouseover="suggests.focused = i"
                 @click.stop="select_suggest(i)"
               >
                 {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}, {{ row.birthday }} ({{ row.age }})
                 <div>
-                  <span class="b" style="display: inline-block;margin-right: 4px;"> {{ row.type_title }} {{ row.num }} </span>
-                  <span class="item-doc" v-for="d in row.docs" :key="d.pk">
+                  <span
+                    class="b"
+                    style="display: inline-block; margin-right: 4px"
+                  > {{ row.type_title }} {{ row.num }} </span>
+                  <span
+                    v-for="d in row.docs"
+                    :key="d.pk"
+                    class="item-doc"
+                  >
                     {{ d.type_title }}: {{ d.serial }} {{ d.number }};
                   </span>
                 </div>
@@ -46,16 +69,19 @@
       <template v-else>
         <span class="input-group-btn bcl">
           <button
+            v-tippy="{ placement: 'bottom' }"
             class="btn last btn-blue-nb nbr"
             type="button"
-            v-tippy="{ placement: 'bottom' }"
             title="Очистить"
             @click="clear_selected_card"
           >
             X
           </button>
         </span>
-        <span class="input-group-addon" style="width: 100%;">
+        <span
+          class="input-group-addon"
+          style="width: 100%"
+        >
           {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }}, {{ selected_card.birthday }},
           {{ selected_card.age }}, {{ selected_card.sex }}
         </span>
@@ -74,6 +100,9 @@ const tfoms_re = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2}
 
 export default {
   name: 'PatientPickerDocCall',
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {},
     disabled: {},
@@ -109,64 +138,12 @@ export default {
       },
     };
   },
-  created() {
-    this.$store.watch(
-      state => state.bases,
-      () => {
-        this.check_base();
-      },
-      { immediate: true },
-    );
-    this.$root.$on('search', () => {
-      this.search();
-    });
-    this.$root.$on('search-value', value => {
-      this.query = value;
-      this.search();
-    });
-    this.$root.$on('select_card', data => {
-      this.base = data.base_pk;
-      this.query = `card_pk:${data.card_pk}`;
-      this.search_after_loading = true;
-      this.emit_input();
-      if (!data.hide) {
-        this.editor_pk = data.card_pk;
-      } else {
-        this.editor_pk = -2;
-      }
-      setTimeout(() => {
-        this.search();
-        if (!data.hide) {
-          setTimeout(() => {
-            this.$root.$emit('reload_editor');
-          }, 5);
-        }
-      }, 5);
-    });
-    this.inited();
-  },
-  watch: {
-    normalized_query() {
-      this.keypress_other({ keyCode: -1 });
-    },
-    bases() {
-      this.check_base();
-    },
-    inLoading() {
-      if (!this.inLoading && (this.directive_department === '-1' || this.directive_doc === '-1')) {
-        this.update_ofname();
-      }
-      if (!this.inLoading && this.search_after_loading) {
-        this.search();
-      }
-    },
-  },
   computed: {
     system() {
       return this.$systemTitle();
     },
     bases() {
-      return this.$store.getters.bases.filter(b => !b.hide);
+      return this.$store.getters.bases.filter((b) => !b.hide);
     },
     selected_base() {
       for (const b of this.bases) {
@@ -227,15 +204,64 @@ export default {
     fixedQuery() {
       return this.query
         .split(' ')
-        .map(s => s
+        .map((s) => s
           .split('-')
-          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
           .join('-'))
         .join(' ');
     },
   },
-  model: {
-    event: 'modified',
+  watch: {
+    normalized_query() {
+      this.keypress_other({ keyCode: -1 });
+    },
+    bases() {
+      this.check_base();
+    },
+    inLoading() {
+      if (!this.inLoading && (this.directive_department === '-1' || this.directive_doc === '-1')) {
+        this.update_ofname();
+      }
+      if (!this.inLoading && this.search_after_loading) {
+        this.search();
+      }
+    },
+  },
+  created() {
+    this.$store.watch(
+      (state) => state.bases,
+      () => {
+        this.check_base();
+      },
+      { immediate: true },
+    );
+    this.$root.$on('search', () => {
+      this.search();
+    });
+    this.$root.$on('search-value', (value) => {
+      this.query = value;
+      this.search();
+    });
+    this.$root.$on('select_card', (data) => {
+      this.base = data.base_pk;
+      this.query = `card_pk:${data.card_pk}`;
+      this.search_after_loading = true;
+      this.emit_input();
+      if (!data.hide) {
+        this.editor_pk = data.card_pk;
+      } else {
+        this.editor_pk = -2;
+      }
+      setTimeout(() => {
+        this.search();
+        if (!data.hide) {
+          setTimeout(() => {
+            this.$root.$emit('reload_editor');
+          }, 5);
+        }
+      }, 5);
+    });
+    this.inited();
   },
   methods: {
     fixQuery() {
@@ -535,7 +561,7 @@ export default {
       this.$store.dispatch(actions.ENABLE_LOADING, { loadingLabel: 'Загрузка' });
       patientsPoint
         .searchL2Card({ card_pk: this.selected_card.pk })
-        .then(result => {
+        .then((result) => {
           this.clear();
           if (result.results) {
             this.founded_cards = result.results;
@@ -548,7 +574,7 @@ export default {
             this.$root.$emit('msg', 'error', 'Ошибка на сервере');
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
         })
         .finally(() => {
@@ -579,7 +605,7 @@ export default {
           inc_tfoms: this.inc_tfoms && this.tfoms_query,
           always_phone_search: true,
         })
-        .then(result => {
+        .then((result) => {
           this.clear();
           if (result.results) {
             this.founded_cards = result.results;
@@ -601,7 +627,7 @@ export default {
             this.query = '';
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
         })
         .finally(() => {

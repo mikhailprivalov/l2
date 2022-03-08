@@ -1,9 +1,19 @@
 <template>
   <div v-frag>
-    <h4 class="f-h text-center">Конструктор</h4>
+    <h4 class="f-h text-center">
+      Конструктор
+    </h4>
     <div class="row menu dash-buttons text-center">
-      <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn" v-for="b in buttons" :key="b.title">
-        <router-link :to="b.url" class="panel-body" :target="b.nt && '_blank'">
+      <div
+        v-for="b in buttons"
+        :key="b.title"
+        class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn"
+      >
+        <router-link
+          :to="b.url"
+          class="panel-body"
+          :target="b.nt && '_blank'"
+        >
           <span>{{ b.title }}</span>
         </router-link>
       </div>

@@ -1,44 +1,82 @@
 <template>
-  <div v-if="card_pk === -1" class="empty">
+  <div
+    v-if="card_pk === -1"
+    class="empty"
+  >
     <div>Пациент не выбран</div>
   </div>
-  <div v-else class="root">
+  <div
+    v-else
+    class="root"
+  >
     <div class="col-form mid">
       <div class="form-row sm-header">
-        Данные из картотеки<span v-if="!loaded" class="loading-text loading-sm">&nbsp;загрузка</span>
+        Данные из картотеки<span
+          v-if="!loaded"
+          class="loading-text loading-sm"
+        >&nbsp;загрузка</span>
       </div>
       <div class="form-row sm-f">
-        <div class="row-t">Адрес проживания</div>
+        <div class="row-t">
+          Адрес проживания
+        </div>
         <TypeAhead
-          :delayTime="400"
-          :getResponse="getResponse"
+          ref="af"
+          v-model="card.fact_address"
+          :delay-time="400"
+          :get-response="getResponse"
           :highlighting="highlighting"
           :limit="10"
           name="af"
-          :minChars="4"
-          :onHit="onHit('fact_address', true)"
-          :selectFirst="true"
+          :min-chars="4"
+          :on-hit="onHit('fact_address', true)"
+          :select-first="true"
           maxlength="110"
-          ref="af"
           :src="`/api/autocomplete?value=:keyword&type=fias`"
-          v-model="card.fact_address"
         />
       </div>
       <div class="row">
-        <div class="col-xs-6 col-form left" style="padding-bottom: 0">
-          <div class="form-row sm-f" style="border-top: none">
-            <div class="row-t">Участок</div>
-            <select v-model="card.district" class="form-control">
-              <option v-for="c in card.districts" :value="c.id" :key="c.id">
+        <div
+          class="col-xs-6 col-form left"
+          style="padding-bottom: 0"
+        >
+          <div
+            class="form-row sm-f"
+            style="border-top: none"
+          >
+            <div class="row-t">
+              Участок
+            </div>
+            <select
+              v-model="card.district"
+              class="form-control"
+            >
+              <option
+                v-for="c in card.districts"
+                :key="c.id"
+                :value="c.id"
+              >
                 {{ c.title }}
               </option>
             </select>
           </div>
         </div>
-        <div class="col-xs-6 col-form right" style="padding-bottom: 0">
-          <div class="form-row sm-f" style="border-top: none">
-            <div class="row-t">Телефон</div>
-            <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'" />
+        <div
+          class="col-xs-6 col-form right"
+          style="padding-bottom: 0"
+        >
+          <div
+            class="form-row sm-f"
+            style="border-top: none"
+          >
+            <div class="row-t">
+              Телефон
+            </div>
+            <input
+              v-model="card.phone"
+              v-mask="'8 999 9999999'"
+              class="form-control"
+            >
           </div>
         </div>
       </div>
@@ -46,94 +84,154 @@
         Данные вызова
       </div>
       <div class="row">
-        <div class="col-xs-6 col-form left" style="padding-bottom: 0">
-          <div class="form-row sm-f border-right" style="border-top: none">
-            <div class="row-t">Цель вызова</div>
-            <select v-model="card.purpose" class="form-control">
-              <option v-for="c in card.purposes" :value="c.id" :key="c.id">
+        <div
+          class="col-xs-6 col-form left"
+          style="padding-bottom: 0"
+        >
+          <div
+            class="form-row sm-f border-right"
+            style="border-top: none"
+          >
+            <div class="row-t">
+              Цель вызова
+            </div>
+            <select
+              v-model="card.purpose"
+              class="form-control"
+            >
+              <option
+                v-for="c in card.purposes"
+                :key="c.id"
+                :value="c.id"
+              >
                 {{ c.label }}
               </option>
             </select>
           </div>
         </div>
-        <div class="col-xs-6 col-form" style="padding-bottom: 0">
-          <div class="form-row sm-f" style="border-top: none">
-            <div class="row-t">Лечащий врач</div>
-            <treeselect
+        <div
+          class="col-xs-6 col-form"
+          style="padding-bottom: 0"
+        >
+          <div
+            class="form-row sm-f"
+            style="border-top: none"
+          >
+            <div class="row-t">
+              Лечащий врач
+            </div>
+            <Treeselect
+              v-model="card.doc"
               class="treeselect-noborder"
               :multiple="false"
               :disable-branch-nodes="true"
               :options="card.docs"
               :append-to-body="true"
               placeholder="Врач не выбран"
-              v-model="card.doc"
             />
           </div>
         </div>
       </div>
-      <div class="form-row sm-f" style="border-top: none">
-        <div class="row-t">Больница</div>
-        <treeselect
+      <div
+        class="form-row sm-f"
+        style="border-top: none"
+      >
+        <div class="row-t">
+          Больница
+        </div>
+        <Treeselect
+          v-model="card.hospital"
           class="treeselect-noborder treeselect-wide"
           :multiple="false"
           :disable-branch-nodes="true"
           :options="card.hospitals"
-          @input="updateCard"
           placeholder="Больница не выбрана"
-          v-model="card.hospital"
           :clearable="false"
+          @input="updateCard"
         />
       </div>
       <div class="row">
         <div class="col-xs-12">
-          <div class="form-row sm-f" style="border-top: none">
-            <div class="row-t">Комментарий</div>
-            <textarea class="form-control" v-autosize="comment" v-model="comment"></textarea>
+          <div
+            class="form-row sm-f"
+            style="border-top: none"
+          >
+            <div class="row-t">
+              Комментарий
+            </div>
+            <textarea
+              v-model="comment"
+              v-autosize="comment"
+              class="form-control"
+            />
           </div>
         </div>
       </div>
       <template v-if="researches.length > 0">
-        <div class="form-row sm-header" style="justify-content: space-between">
+        <div
+          class="form-row sm-header"
+          style="justify-content: space-between"
+        >
           <span>Услуги</span>
-          <label style="margin-bottom: 0;"><input type="checkbox" v-model="asExecuted" /> отметить как "выполнено"</label>
+          <label style="margin-bottom: 0;"><input
+            v-model="asExecuted"
+            type="checkbox"
+          > отметить как "выполнено"</label>
         </div>
         <div class="researches">
-          <research-display
+          <ResearchDisplay
             v-for="(res, idx) in disp_researches"
+            :key="res.pk"
             :simple="true"
             :no_tooltip="true"
-            :key="res.pk"
             :title="res.title"
             :pk="res.pk"
             :n="idx"
             :nof="disp_researches.length"
           />
         </div>
-        <div class="controls" :key="card.hospital">
-          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save" :disabled="disabled">
+        <div
+          :key="card.hospital"
+          class="controls"
+        >
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            :disabled="disabled"
+            @click="save"
+          >
             Создать записи для обращения
           </button>
-          <div v-if="noHospital" class="no-hospital">
+          <div
+            v-if="noHospital"
+            class="no-hospital"
+          >
             Больница не выбрана
           </div>
         </div>
       </template>
-      <div v-else style="padding: 10px;color: gray;text-align: center">
+      <div
+        v-else
+        style="padding: 10px;color: gray;text-align: center"
+      >
         Услуги не выбраны
       </div>
 
-      <div class="rows" v-if="rows_count > 0">
+      <div
+        v-if="rows_count > 0"
+        class="rows"
+      >
         <table
           class="table table-bordered table-condensed table-sm-pd"
           style="table-layout: fixed; font-size: 12px; margin-top: 0;"
         >
           <colgroup>
-            <col width="75" />
-            <col />
-            <col width="120" />
-            <col />
-            <col width="70" />
-            <col width="75" />
+            <col width="75">
+            <col>
+            <col width="120">
+            <col>
+            <col width="70">
+            <col width="75">
           </colgroup>
           <thead>
             <tr>
@@ -146,19 +244,37 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in rows_mapped" :class="{ 'cancel-row': r.cancel }" :key="r.pk">
+            <tr
+              v-for="r in rows_mapped"
+              :key="r.pk"
+              :class="{ 'cancel-row': r.cancel }"
+            >
               <td>{{ r.date }}</td>
               <td>
                 {{ r.service }}
-                <template v-if="r.doc"><br />{{ r.doc }}</template>
-                <template v-if="r.purpose"><br />{{ r.purpose }}</template>
-                <template v-if="r.hospital"><br />{{ r.hospital }}</template>
+                <template v-if="r.doc">
+                  <br>{{ r.doc }}
+                </template>
+                <template v-if="r.purpose">
+                  <br>{{ r.purpose }}
+                </template>
+                <template v-if="r.hospital">
+                  <br>{{ r.hospital }}
+                </template>
               </td>
-              <td style="white-space: pre-wrap">{{ r.comment }}</td>
-              <td>{{ r.address }}<br />{{ r.phone }}</td>
+              <td style="white-space: pre-wrap">
+                {{ r.comment }}
+              </td>
+              <td>{{ r.address }}<br>{{ r.phone }}</td>
               <td>{{ r.district }}</td>
               <td>
-                <button type="button" class="btn btn-blue-nb btn-xs" @click="cancel_doc_call(r.pk)">Отменить</button>
+                <button
+                  type="button"
+                  class="btn btn-blue-nb btn-xs"
+                  @click="cancel_doc_call(r.pk)"
+                >
+                  Отменить
+                </button>
               </td>
             </tr>
           </tbody>
@@ -217,8 +333,37 @@ export default {
       rows: [],
     };
   },
-  mounted() {
-    this.$root.$on('update_card_data', () => this.load_data());
+  computed: {
+    noHospital() {
+      return this.card.hospital === -1;
+    },
+    disabled() {
+      return this.noHospital;
+    },
+    disp_researches() {
+      return this.researches.map(id => this.$store.getters.researches_obj[id]).filter(Boolean);
+    },
+    rows_count() {
+      return this.rows.length;
+    },
+    purposes() {
+      return this.card.purposes.reduce((a, b) => ({ ...a, [b.id]: b.label }), {});
+    },
+    rows_mapped() {
+      return this.rows.map(r => ({
+        pk: r.pk,
+        date: moment(r.exec_at).format('DD.MM.YYYY'),
+        service: r.research__title,
+        address: r.address,
+        district: r.district__title,
+        doc: r.doc_assigned__fio && `${r.doc_assigned__fio}, ${r.doc_assigned__podrazdeleniye__title}`,
+        purpose: (this.purposes || {})[r.purpose],
+        hospital: r.hospital__short_title || r.hospital__title,
+        comment: r.comment,
+        phone: r.phone,
+        cancel: r.cancel,
+      }));
+    },
   },
   watch: {
     rows_count: {
@@ -239,6 +384,9 @@ export default {
         this.load_data();
       },
     },
+  },
+  mounted() {
+    this.$root.$on('update_card_data', () => this.load_data());
   },
   methods: {
     getResponse(resp) {
@@ -323,38 +471,6 @@ export default {
     },
     updateCard() {
       this.card = { ...this.card };
-    },
-  },
-  computed: {
-    noHospital() {
-      return this.card.hospital === -1;
-    },
-    disabled() {
-      return this.noHospital;
-    },
-    disp_researches() {
-      return this.researches.map(id => this.$store.getters.researches_obj[id]).filter(Boolean);
-    },
-    rows_count() {
-      return this.rows.length;
-    },
-    purposes() {
-      return this.card.purposes.reduce((a, b) => ({ ...a, [b.id]: b.label }), {});
-    },
-    rows_mapped() {
-      return this.rows.map(r => ({
-        pk: r.pk,
-        date: moment(r.exec_at).format('DD.MM.YYYY'),
-        service: r.research__title,
-        address: r.address,
-        district: r.district__title,
-        doc: r.doc_assigned__fio && `${r.doc_assigned__fio}, ${r.doc_assigned__podrazdeleniye__title}`,
-        purpose: (this.purposes || {})[r.purpose],
-        hospital: r.hospital__short_title || r.hospital__title,
-        comment: r.comment,
-        phone: r.phone,
-        cancel: r.cancel,
-      }));
     },
   },
 };

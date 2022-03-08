@@ -1,33 +1,59 @@
 <template>
   <div v-frag>
-    <div class="input-group" v-if="editing">
-      <input type="text" class="form-control" @keypress.enter="save" v-model="localValue" placeholder="Введите значение" />
+    <div
+      v-if="editing"
+      class="input-group"
+    >
+      <input
+        v-model="localValue"
+        type="text"
+        class="form-control"
+        placeholder="Введите значение"
+        @keypress.enter="save"
+      >
       <span class="input-group-btn">
-        <button class="btn btn-blue-nb" title="Сохранить" @click="save(false)" v-tippy v-if="!loading">
-          <i class="fas fa-save"></i>
+        <button
+          v-if="!loading"
+          v-tippy
+          class="btn btn-blue-nb"
+          title="Сохранить"
+          @click="save(false)"
+        >
+          <i class="fas fa-save" />
         </button>
-        <button class="btn btn-blue-nb" v-else disabled>
-          <i class="fa fa-spinner"></i>
+        <button
+          v-else
+          class="btn btn-blue-nb"
+          disabled
+        >
+          <i class="fa fa-spinner" />
         </button>
       </span>
       <span class="input-group-btn">
         <button
+          v-if="!loading"
+          v-tippy
           class="btn btn-blue-nb btn-2icons"
           title="Сохранить и подтвердить"
-          @click="save(true)"
-          v-tippy
           :disabled="!valid"
-          v-if="!loading"
+          @click="save(true)"
         >
-          <i class="fas fa-save"></i>
-          <i class="fas fa-check"></i>
+          <i class="fas fa-save" />
+          <i class="fas fa-check" />
         </button>
-        <button class="btn btn-blue-nb" v-else disabled>
-          <i class="fa fa-spinner"></i>
+        <button
+          v-else
+          class="btn btn-blue-nb"
+          disabled
+        >
+          <i class="fa fa-spinner" />
         </button>
       </span>
     </div>
-    <div v-else class="inner-text">
+    <div
+      v-else
+      class="inner-text"
+    >
       {{ data.value || 'не заполнено' }}
     </div>
   </div>

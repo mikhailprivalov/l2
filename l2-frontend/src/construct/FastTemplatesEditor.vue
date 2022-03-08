@@ -1,85 +1,179 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" min-width="85%" margin-top>
-    <span slot="header">Настройка шаблонов быстрого ввода ({{title}})</span>
-    <div slot="body" style="min-height: 200px" class="directions-manage" v-if="loaded">
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    min-width="85%"
+    margin-top
+    @close="hide_modal"
+  >
+    <span slot="header">Настройка шаблонов быстрого ввода ({{ title }})</span>
+    <div
+      v-if="loaded"
+      slot="body"
+      style="min-height: 200px"
+      class="directions-manage"
+    >
       <div class="directions-sidebar">
         <div class="inner">
-          <div @click="select_template(d.pk)" class="direction" :class="{active: d.pk === selected_template, ishidden: d.hide}"
-               :key="d.pk" v-for="d in rows">
-            <div>{{d.title}}</div>
-            <a href="#" @click.prevent.stop="copy_template(d.pk)"><i class="fa fa-copy"></i></a>
+          <div
+            v-for="d in rows"
+            :key="d.pk"
+            class="direction"
+            :class="{active: d.pk === selected_template, ishidden: d.hide}"
+            @click="select_template(d.pk)"
+          >
+            <div>{{ d.title }}</div>
+            <a
+              href="#"
+              @click.prevent.stop="copy_template(d.pk)"
+            ><i class="fa fa-copy" /></a>
           </div>
         </div>
-        <button class="btn btn-blue-nb" @click="add"><i class="fa fa-plus"></i> добавить</button>
+        <button
+          class="btn btn-blue-nb"
+          @click="add"
+        >
+          <i class="fa fa-plus" /> добавить
+        </button>
       </div>
-      <div class="directions-content" v-if="selected_template === -2"
-           style="line-height: 200px;text-align: center;color:grey">
+      <div
+        v-if="selected_template === -2"
+        class="directions-content"
+        style="line-height: 200px;text-align: center;color:grey"
+      >
         Шаблон не выбран
       </div>
-      <div class="directions-content" v-else>
+      <div
+        v-else
+        class="directions-content"
+      >
         <div class="direction-data">
           <div class="results-top">
             <div>
               <label>
-                Название: <input v-model="template_data.title" placeholder="Название" :readonly="template_data.readonly" />
+                Название: <input
+                  v-model="template_data.title"
+                  placeholder="Название"
+                  :readonly="template_data.readonly"
+                >
               </label>
               <strong v-if="selected_template === -1">(новый шаблон)</strong>
             </div>
             <div>
-              <label>Скрыть: <input v-model="template_data.hide" :disabled="template_data.readonly" type="checkbox" /></label>
+              <label>Скрыть: <input
+                v-model="template_data.hide"
+                :disabled="template_data.readonly"
+                type="checkbox"
+              ></label>
             </div>
           </div>
           <div class="results-editor">
-            <div class="ft-group" :key="`${group.pk}_${group.title}_${jg}`"
-                 v-for="(group, jg) in groups">
-              <div class="ft-group-title" v-if="group.title !== ''">{{group.title}}</div>
+            <div
+              v-for="(group, jg) in groups"
+              :key="`${group.pk}_${group.title}_${jg}`"
+              class="ft-group"
+            >
+              <div
+                v-if="group.title !== ''"
+                class="ft-group-title"
+              >
+                {{ group.title }}
+              </div>
               <div class="ft-fields">
-                <div class="ft-field" :key="`${field.pk}_${field.title}_${field.field_type}_${jf}`"
-                     v-for="(field, jf) in group.fields"
-                     :class="{disabled: template_data.readonly, required: field.required}">
-                  <div v-if="field.title !== ''" class="ft-field-title">
-                    {{field.title}}
+                <div
+                  v-for="(field, jf) in group.fields"
+                  :key="`${field.pk}_${field.title}_${field.field_type}_${jf}`"
+                  class="ft-field"
+                  :class="{disabled: template_data.readonly, required: field.required}"
+                >
+                  <div
+                    v-if="field.title !== ''"
+                    class="ft-field-title"
+                  >
+                    {{ field.title }}
                   </div>
-                  <div class="ft-field-value" v-if="field.field_type === 0">
-                    <textarea v-model="template_data.fields[field.pk]" :rows="field.lines" class="form-control"
-                              v-if="field.lines > 1" :readonly="template_data.readonly"></textarea>
-                    <input v-model="template_data.fields[field.pk]" class="form-control"
-                           :readonly="template_data.readonly" v-else/>
+                  <div
+                    v-if="field.field_type === 0"
+                    class="ft-field-value"
+                  >
+                    <textarea
+                      v-if="field.lines > 1"
+                      v-model="template_data.fields[field.pk]"
+                      :rows="field.lines"
+                      class="form-control"
+                      :readonly="template_data.readonly"
+                    />
+                    <input
+                      v-else
+                      v-model="template_data.fields[field.pk]"
+                      class="form-control"
+                      :readonly="template_data.readonly"
+                    >
                   </div>
-                  <div class="ft-field-value mkb10" v-else-if="field.field_type === 2 && !template_data.readonly">
-                    <m-k-b-field v-model="template_data.fields[field.pk]" :short="false" />
+                  <div
+                    v-else-if="field.field_type === 2 && !template_data.readonly"
+                    class="ft-field-value mkb10"
+                  >
+                    <MKBField
+                      v-model="template_data.fields[field.pk]"
+                      :short="false"
+                    />
                   </div>
-                  <div class="ft-field-value" v-else-if="field.field_type === 2 && template_data.readonly">
-                    <input v-model="template_data.fields[field.pk]" readonly class="form-control" />
+                  <div
+                    v-else-if="field.field_type === 2 && template_data.readonly"
+                    class="ft-field-value"
+                  >
+                    <input
+                      v-model="template_data.fields[field.pk]"
+                      readonly
+                      class="form-control"
+                    >
                   </div>
-                  <div v-else>не доступно для заполнения</div>
+                  <div v-else>
+                    не доступно для заполнения
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="center" v-if="!template_data.readonly">
-            <button class="btn btn-blue-nb" @click="save()" :disabled="(template_data.title || '').length === 0">
+          <div
+            v-if="!template_data.readonly"
+            class="center"
+          >
+            <button
+              class="btn btn-blue-nb"
+              :disabled="(template_data.title || '').length === 0"
+              @click="save()"
+            >
               Сохранить
             </button>
           </div>
         </div>
       </div>
     </div>
-    <div slot="body" style="line-height: 200px;text-align: center" v-else>
+    <div
+      v-else
+      slot="body"
+      style="line-height: 200px;text-align: center"
+    >
       Загрузка данных...
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-8">
-        </div>
+        <div class="col-xs-8" />
         <div class="col-xs-4">
-          <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb">
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb"
+            @click="hide_modal"
+          >
             Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -89,7 +183,7 @@ import researchesPoint from '../api/researches-point';
 import * as actions from '../store/action-types';
 
 export default {
-  name: 'fast-templates-editor',
+  name: 'FastTemplatesEditor',
   components: { Modal, MKBField },
   props: {
     research_pk: {
@@ -114,9 +208,6 @@ export default {
       template_data: {},
     };
   },
-  created() {
-    this.load_data();
-  },
   watch: {
     selected_template() {
       if (this.selected_template !== -2) {
@@ -130,6 +221,9 @@ export default {
         this.checked = true;
       }
     },
+  },
+  created() {
+    this.load_data();
   },
   methods: {
     hide_modal() {

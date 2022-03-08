@@ -1,38 +1,51 @@
 <template>
   <div class="root">
     <div class="card-no-hover card card-1">
-      <h4 class="text-center">Настройка скрининга</h4>
+      <h4 class="text-center">
+        Настройка скрининга
+      </h4>
 
       <table class="table table-bordered table-condensed table-striped table-screening">
         <colgroup>
-          <col style="width: 80px" />
-          <col />
-          <col style="width: 180px" />
-          <col style="width: 180px" />
-          <col style="width: 180px" />
-          <col style="width: 180px" />
-          <col style="width: 40px" />
+          <col style="width: 80px">
+          <col>
+          <col style="width: 180px">
+          <col style="width: 180px">
+          <col style="width: 180px">
+          <col style="width: 180px">
+          <col style="width: 40px">
         </colgroup>
         <thead>
           <tr>
-            <th></th>
+            <th />
             <th>Исследование</th>
             <th>Пол</th>
             <th>Возраст</th>
             <th>Период, раз в N лет</th>
             <th>Скрыть</th>
-            <th></th>
+            <th />
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in orderBy(rows, 'sort_weight')" :key="row.pk">
+          <tr
+            v-for="row in orderBy(rows, 'sort_weight')"
+            :key="row.pk"
+          >
             <td class="cl-td">
               <div class="incdec">
-                <button class="btn btn-primary-nb btn-sm" :disabled="isFirst(row)" @click="dec(row)">
-                  <i class="glyphicon glyphicon-arrow-up"></i>
+                <button
+                  class="btn btn-primary-nb btn-sm"
+                  :disabled="isFirst(row)"
+                  @click="dec(row)"
+                >
+                  <i class="glyphicon glyphicon-arrow-up" />
                 </button>
-                <button class="btn btn-primary-nb btn-sm" :disabled="isLast(row)" @click="inc(row)">
-                  <i class="glyphicon glyphicon-arrow-down"></i>
+                <button
+                  class="btn btn-primary-nb btn-sm"
+                  :disabled="isLast(row)"
+                  @click="inc(row)"
+                >
+                  <i class="glyphicon glyphicon-arrow-down" />
                 </button>
               </div>
             </td>
@@ -40,15 +53,25 @@
               {{ researches_obj[row.research_id].title }}
             </td>
             <td class="cl-td">
-              <select class="form-control" v-model="row.sex_client" @change="changeRow(row)">
-                <option v-for="s in SEX" :key="s.id" :value="s.id">{{ s.label }}</option>
+              <select
+                v-model="row.sex_client"
+                class="form-control"
+                @change="changeRow(row)"
+              >
+                <option
+                  v-for="s in SEX"
+                  :key="s.id"
+                  :value="s.id"
+                >
+                  {{ s.label }}
+                </option>
               </select>
             </td>
             <td class="cl-td">
               <div class="input-group">
                 <input
-                  class="form-control"
                   v-model.number="row.age_start_control"
+                  class="form-control"
                   type="number"
                   :min="0"
                   :max="row.age_end_control"
@@ -56,11 +79,11 @@
                   @change="changeRow(row)"
                   @keypress="changeRow(row)"
                   @input="changeRow(row)"
-                />
+                >
                 <span class="input-group-addon addon-splitter">—</span>
                 <input
-                  class="form-control"
                   v-model.number="row.age_end_control"
+                  class="form-control"
                   type="number"
                   :min="row.age_start_control"
                   :max="120"
@@ -68,13 +91,13 @@
                   @change="changeRow(row)"
                   @keypress="changeRow(row)"
                   @input="changeRow(row)"
-                />
+                >
               </div>
             </td>
             <td class="cl-td">
               <input
-                class="form-control"
                 v-model.number="row.period"
+                class="form-control"
                 type="number"
                 :min="1"
                 :max="100"
@@ -82,30 +105,33 @@
                 @change="changeRow(row)"
                 @keypress="changeRow(row)"
                 @input="changeRow(row)"
-              />
+              >
             </td>
             <td class="cl-td">
               <label>
                 <input
-                  type="checkbox"
                   v-model="row.hide"
+                  type="checkbox"
                   @change="changeRow(row)"
                   @keypress="changeRow(row)"
                   @input="changeRow(row)"
-                />
+                >
               </label>
             </td>
-            <td class="cl-td" :key="`${row.pk}_${row.hasChanges}`">
+            <td
+              :key="`${row.pk}_${row.hasChanges}`"
+              class="cl-td"
+            >
               <div class="save-td">
                 <button
-                  class="btn btn-primary-nb btn-sm btn-block btn-save"
                   v-if="row.hasChanges"
-                  @click="saveRow(row)"
+                  v-tippy
+                  class="btn btn-primary-nb btn-sm btn-block btn-save"
                   :disabled="isRowDisabled(row)"
                   :title="isRowDisabled(row) ? 'Некорректные данные' : 'Сохранить'"
-                  v-tippy
+                  @click="saveRow(row)"
                 >
-                  <i class="fas fa-save"></i>
+                  <i class="fas fa-save" />
                 </button>
               </div>
             </td>
@@ -114,23 +140,43 @@
       </table>
     </div>
     <div class="card-no-hover card card-1">
-      <h5 class="text-center">Добавить новую запись</h5>
+      <h5 class="text-center">
+        Добавить новую запись
+      </h5>
       <h6>Услуга или исследование</h6>
       <div class="researches-wrapper">
-        <researches-picker v-model="serviceToCreate" autoselect="none" :hidetemplates="true" :oneselect="true" kk="screening" />
+        <researches-picker
+          v-model="serviceToCreate"
+          autoselect="none"
+          :hidetemplates="true"
+          :oneselect="true"
+          kk="screening"
+        />
       </div>
       <h6>Параметры</h6>
-      <table class="table table-bordered table-condensed" style="width: 360px">
+      <table
+        class="table table-bordered table-condensed"
+        style="width: 360px"
+      >
         <colgroup>
-          <col style="width: 180px" />
-          <col />
+          <col style="width: 180px">
+          <col>
         </colgroup>
         <tbody>
           <tr>
             <th>Пол</th>
             <td class="cl-td">
-              <select class="form-control" v-model="sexToCreate">
-                <option v-for="s in SEX" :key="s.id" :value="s.id">{{ s.label }}</option>
+              <select
+                v-model="sexToCreate"
+                class="form-control"
+              >
+                <option
+                  v-for="s in SEX"
+                  :key="s.id"
+                  :value="s.id"
+                >
+                  {{ s.label }}
+                </option>
               </select>
             </td>
           </tr>
@@ -139,22 +185,22 @@
             <td class="cl-td">
               <div class="input-group">
                 <input
-                  class="form-control"
                   v-model.number="ageFromToCreate"
+                  class="form-control"
                   type="number"
                   :min="0"
                   :max="ageToToCreate"
                   placeholder="от"
-                />
+                >
                 <span class="input-group-addon addon-splitter">—</span>
                 <input
-                  class="form-control"
                   v-model.number="ageToToCreate"
+                  class="form-control"
                   type="number"
                   :min="ageFromToCreate"
                   :max="120"
                   placeholder="до"
-                />
+                >
               </div>
             </td>
           </tr>
@@ -162,13 +208,13 @@
             <th>Период, раз в {{ periodToCreate | pluralAge }}</th>
             <td class="cl-td">
               <input
-                class="form-control"
                 v-model.number="periodToCreate"
+                class="form-control"
                 type="number"
                 :min="1"
                 :max="100"
                 placeholder="период"
-              />
+              >
             </td>
           </tr>
         </tbody>

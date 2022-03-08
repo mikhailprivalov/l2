@@ -1,13 +1,25 @@
 <template>
-  <select :disabled="disabled" v-model="val" class="form-control" :class="fullWidth && 'fullWidth'">
-    <option :value="v.pk" :key="v.pk" v-for="v in variants">
-      {{v.title}}
+  <select
+    v-model="val"
+    :disabled="disabled"
+    class="form-control"
+    :class="fullWidth && 'fullWidth'"
+  >
+    <option
+      v-for="v in variants"
+      :key="v.pk"
+      :value="v.pk"
+    >
+      {{ v.title }}
     </option>
   </select>
 </template>
 
 <script lang="ts">
 export default {
+  model: {
+    event: 'modified',
+  },
   props: {
     value: {
       required: false,
@@ -31,9 +43,6 @@ export default {
       val: this.value,
     };
   },
-  mounted() {
-    this.fixVal();
-  },
   watch: {
     value() {
       this.val = this.value;
@@ -42,8 +51,8 @@ export default {
       this.changeValue(this.val);
     },
   },
-  model: {
-    event: 'modified',
+  mounted() {
+    this.fixVal();
   },
   methods: {
     changeValue(newVal) {

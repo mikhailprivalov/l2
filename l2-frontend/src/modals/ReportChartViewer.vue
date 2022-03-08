@@ -1,20 +1,28 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true">
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    @close="hide_modal"
+  >
     <span slot="header">Построение графиков по полученным значениям</span>
-    <div slot="body" style="min-width: 800px;">
+    <div
+      slot="body"
+      style="min-width: 800px;"
+    >
       // TODO
     </div>
     <div slot="footer">
       // TODO
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
 import Modal from '../ui-cards/Modal.vue';
 
 export default {
-  name: 'report-chart-viewer',
+  name: 'ReportChartViewer',
   components: { Modal },
   props: {
     rows_data: {

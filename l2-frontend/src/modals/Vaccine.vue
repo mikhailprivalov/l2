@@ -1,132 +1,238 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
-         marginLeftRight="auto" margin-top>
+  <Modal
+    ref="modal"
+    show-footer="true"
+    white-bg="true"
+    max-width="680px"
+    width="100%"
+    margin-left-right="auto"
+    margin-top
+    @close="hide_modal"
+  >
     <span slot="header">Вакцинация пациента
-      <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
-      {{card_data.age}}, карта {{card_data.num}}</span>
-      <span v-else>{{card_data.fio_age}}</span>
+      <span v-if="!card_data.fio_age">{{ card_data.family }} {{ card_data.name }} {{ card_data.twoname }},
+        {{ card_data.age }}, карта {{ card_data.num }}</span>
+      <span v-else>{{ card_data.fio_age }}</span>
     </span>
-    <div slot="body" style="min-height: 200px" class="registry-body">
-      <table class="table table-bordered table-condensed table-sm-pd"
-             style="table-layout: fixed; font-size: 12px">
+    <div
+      slot="body"
+      style="min-height: 200px"
+      class="registry-body"
+    >
+      <table
+        class="table table-bordered table-condensed table-sm-pd"
+        style="table-layout: fixed; font-size: 12px"
+      >
         <colgroup>
-          <col width="70" />
-          <col/>
-          <col/>
-          <col/>
-          <col/>
-          <col/>
-          <col/>
-          <col width="45" />
+          <col width="70">
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col width="45">
         </colgroup>
         <thead>
-        <tr>
-          <th>Дата</th>
-          <th>Название</th>
-          <th>Серия</th>
-          <th>Доза</th>
-          <th>Способ</th>
-          <th>Этап</th>
-          <th>Отвод</th>
-          <th></th>
-        </tr>
+          <tr>
+            <th>Дата</th>
+            <th>Название</th>
+            <th>Серия</th>
+            <th>Доза</th>
+            <th>Способ</th>
+            <th>Этап</th>
+            <th>Отвод</th>
+            <th />
+          </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.pk">
-            <td>{{r.date}}</td>
-            <td>{{r.title}}</td>
-            <td>{{r.series}}</td>
-            <td>{{r.amount}}</td>
-            <td>{{r.method}}</td>
-            <td>{{r.step}}</td>
-            <td>{{r.tap}}</td>
+          <tr
+            v-for="r in rows"
+            :key="r.pk"
+          >
+            <td>{{ r.date }}</td>
+            <td>{{ r.title }}</td>
+            <td>{{ r.series }}</td>
+            <td>{{ r.amount }}</td>
+            <td>{{ r.method }}</td>
+            <td>{{ r.step }}</td>
+            <td>{{ r.tap }}</td>
             <td>
-                <button class="btn last btn-blue-nb nbr" type="button"
-                        v-tippy="{ placement : 'bottom', arrow: true }"
-                        title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
-                  <i class="glyphicon glyphicon-pencil"></i>
-                </button>
+              <button
+                v-tippy="{ placement : 'bottom', arrow: true }"
+                class="btn last btn-blue-nb nbr"
+                type="button"
+                title="Редактирование"
+                style="margin-left: -1px"
+                @click="edit(r.pk)"
+              >
+                <i class="glyphicon glyphicon-pencil" />
+              </button>
             </td>
-        </tr>
+          </tr>
         </tbody>
       </table>
       <div style="margin: 0 auto; width: 200px">
-        <button class="btn btn-primary-nb btn-blue-nb"
-                @click="edit(-1)"
-                type="button"><i class="fa fa-plus"></i> Создать запись</button>
+        <button
+          class="btn btn-primary-nb btn-blue-nb"
+          type="button"
+          @click="edit(-1)"
+        >
+          <i class="fa fa-plus" /> Создать запись
+        </button>
       </div>
-      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
-             width="100%" marginLeftRight="auto" margin-top>
-        <span slot="header" v-if="edit_pk > -1">Редактор вакцинации</span>
-        <span slot="header" v-else>Создание записи вакцинации</span>
-        <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
+      <Modal
+        v-if="edit_pk > -2"
+        ref="modalEdit"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        margin-left-right="auto"
+        margin-top
+        @close="hide_edit"
+      >
+        <span
+          v-if="edit_pk > -1"
+          slot="header"
+        >Редактор вакцинации</span>
+        <span
+          v-else
+          slot="header"
+        >Создание записи вакцинации</span>
+        <div
+          slot="body"
+          style="min-height: 200px;padding: 10px"
+          class="registry-body"
+        >
           <div class="form-group">
             <label for="de-f3">Дата:</label>
-            <input class="form-control" type="date" id="de-f3" v-model="edit_data.date" :max="td" required>
+            <input
+              id="de-f3"
+              v-model="edit_data.date"
+              class="form-control"
+              type="date"
+              :max="td"
+              required
+            >
           </div>
-          <div class="form-group" v-if="edit_data.direction !== ''">
+          <div
+            v-if="edit_data.direction !== ''"
+            class="form-group"
+          >
             <label for="de-f5">Направление:</label>
-            <input class="form-control" id="de-f5" v-model="edit_data.direction" readonly>
+            <input
+              id="de-f5"
+              v-model="edit_data.direction"
+              class="form-control"
+              readonly
+            >
           </div>
           <div class="form-group">
             <label for="de-f6">Название:</label>
-            <input class="form-control" id="de-f6" v-model="edit_data.title">
+            <input
+              id="de-f6"
+              v-model="edit_data.title"
+              class="form-control"
+            >
           </div>
           <div class="form-group">
             <label for="de-f7">Серия:</label>
-            <input class="form-control" id="de-f7" v-model="edit_data.series">
+            <input
+              id="de-f7"
+              v-model="edit_data.series"
+              class="form-control"
+            >
           </div>
           <div class="form-group">
             <label for="de-f8">Доза:</label>
-            <input class="form-control" id="de-f8" v-model="edit_data.amount">
+            <input
+              id="de-f8"
+              v-model="edit_data.amount"
+              class="form-control"
+            >
           </div>
           <div class="form-group">
             <label for="de-f81">Способ:</label>
-            <input class="form-control" id="de-f81" v-model="edit_data.method">
+            <input
+              id="de-f81"
+              v-model="edit_data.method"
+              class="form-control"
+            >
           </div>
           <div class="form-group">
             <label for="de-f9">Этап:</label>
-            <select v-model="edit_data.step" id="de-f9" class="form-control">
-              <option v-for="s in steps" :value="s" :key="s">{{s}}</option>
+            <select
+              id="de-f9"
+              v-model="edit_data.step"
+              class="form-control"
+            >
+              <option
+                v-for="s in steps"
+                :key="s"
+                :value="s"
+              >
+                {{ s }}
+              </option>
             </select>
           </div>
           <div class="form-group">
             <label for="de-f10">Отвод:</label>
-            <input class="form-control" id="de-f10" v-model="edit_data.tap">
+            <input
+              id="de-f10"
+              v-model="edit_data.tap"
+              class="form-control"
+            >
           </div>
           <div class="form-group">
             <label for="de-f11">Примечание:</label>
-            <textarea class="form-control" id="de-f11" v-model="edit_data.comment"/>
+            <textarea
+              id="de-f11"
+              v-model="edit_data.comment"
+              class="form-control"
+            />
           </div>
         </div>
         <div slot="footer">
           <div class="row">
             <div class="col-xs-4">
-              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="hide_edit"
+              >
                 Отмена
               </button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button
+                :disabled="!valid"
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="save()"
+              >
                 Сохранить
               </button>
             </div>
           </div>
         </div>
-      </modal>
+      </Modal>
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-10">
-        </div>
+        <div class="col-xs-10" />
         <div class="col-xs-2">
-          <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="hide_modal"
+          >
             Закрыть
           </button>
         </div>
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script lang="ts">
@@ -136,7 +242,7 @@ import patientsPoint from '../api/patients-point';
 import * as actions from '../store/action-types';
 
 export default {
-  name: 'vaccine',
+  name: 'Vaccine',
   components: { Modal },
   props: {
     card_pk: {
@@ -167,13 +273,13 @@ export default {
       steps: ['V', 'V1', 'V2', 'V3', 'V4', 'R', 'R1', 'R2', 'R3'],
     };
   },
-  created() {
-    this.load_data();
-  },
   computed: {
     valid() {
       return this.edit_data.date !== '' && this.edit_data.title !== '';
     },
+  },
+  created() {
+    this.load_data();
   },
   methods: {
     async edit(pk) {

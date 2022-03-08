@@ -1,12 +1,17 @@
 <template>
   <div
-    class="field-inputs"
     v-if="values.length > 0 && !confirmed && ![10, 12, 18, 19, 21, 24, 25, 26, 27, 28].includes(field_type)"
+    class="field-inputs"
   >
     <div class="input-values-wrap">
       <div class="input-values">
         <div class="inner-wrap">
-          <div @click="append_value(val)" class="input-value" :key="`${val}_${i}`" v-for="(val, i) in values">
+          <div
+            v-for="(val, i) in values"
+            :key="`${val}_${i}`"
+            class="input-value"
+            @click="append_value(val)"
+          >
             {{ val }}
           </div>
         </div>

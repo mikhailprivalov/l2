@@ -4,21 +4,33 @@
       {{ r.fraction.title }}
     </td>
     <td>
-      <select class="form-control" v-model.number="r.selectedReference">
-        <option :value="k" :key="k" v-for="(v, k) in r.fraction.references.available">{{ v.title }}</option>
+      <select
+        v-model.number="r.selectedReference"
+        class="form-control"
+      >
+        <option
+          v-for="(v, k) in r.fraction.references.available"
+          :key="k"
+          :value="k"
+        >
+          {{ v.title }}
+        </option>
       </select>
     </td>
     <td>
       <template v-if="r.selectedReference !== -3">
         <table class="table table-bordered table-condensed">
           <tbody>
-          <Ref :data="r.ref.m" with-border-right/>
-          <Ref :data="r.ref.f"/>
+            <Ref
+              :data="r.ref.m"
+              with-border-right
+            />
+            <Ref :data="r.ref.f" />
           </tbody>
         </table>
       </template>
       <template v-else>
-        <RefEditor :reference="r.ref"/>
+        <RefEditor :reference="r.ref" />
       </template>
     </td>
   </div>
@@ -36,6 +48,11 @@ export default {
   props: {
     r: {},
   },
+  computed: {
+    selectedReference() {
+      return this.r.selectedReference;
+    },
+  },
   watch: {
     selectedReference() {
       const { r } = this;
@@ -50,11 +67,6 @@ export default {
       }
       r.ref.m = {};
       r.ref.f = {};
-    },
-  },
-  computed: {
-    selectedReference() {
-      return this.r.selectedReference;
     },
   },
 };
