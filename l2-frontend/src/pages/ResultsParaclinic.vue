@@ -607,11 +607,15 @@
               </dropdown>
             </div>
             <div class="research-right">
+<<<<<<< HEAD
               <FileAdd
                 v-if="row.research.enabled_add_files"
                 :iss_pk="row.pk"
                 :count_files="row.countFiles"
               />
+=======
+              <FileAdd v-if="row.research.enabled_add_files" :iss_pk="row.pk" :count_files="row.countFiles"/>
+>>>>>>> 9be6879e6abd8ff0a0948926f90fd45526541e2d
               <template v-if="data.direction.all_confirmed && !data.has_monitoring && !data.has_expertise">
                 <a
                   v-if="stat_btn"

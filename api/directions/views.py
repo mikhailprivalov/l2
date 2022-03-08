@@ -3453,7 +3453,11 @@ def send_to_l2vi(request):
 
 
 @login_required
+<<<<<<< HEAD
 @group_required("Врач параклиники", "Врач консультаций", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
+=======
+@group_required("Лечащий врач", "Врач стационара", "врач консультаций")
+>>>>>>> 9be6879e6abd8ff0a0948926f90fd45526541e2d
 def add_file(request):
     file = request.FILES.get('file')
     form = request.FILES['form'].read()
