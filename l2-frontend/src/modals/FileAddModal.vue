@@ -12,83 +12,81 @@
     @close="hide"
   >
     <span slot="header">Управление файлами</span>
-    <div slot="body">
-      <div class="rows-file">
-        <input
-          ref="file"
-          type="file"
-          style="display: none"
-          @change="fileChange($event.target.files)"
+    <div
+      slot="body"
+      class="modal-body"
+    >
+      <div
+        v-if="rows.length < 5"
+        class="uploading-block"
+      >
+        <a
+          href="#"
+          :class="file ? 'a-under-reversed s-black' : 'a-under'"
+          @click.prevent="changeFile"
         >
-        <div v-if="!file">
-          <h6>
-            <a
-              href="#"
-              class="a-under-reversed"
-              @click.prevent="$refs.file.click()"
-            > <i class="fa fa-folder" />
-              Загрузить файл
-            </a>
-            (max- 5 шт. по 5 МБ)
-          </h6>
-        </div>
-        <div v-else>
-          <a
-            v-tippy
-            href="#"
-            class="a-under-reversed"
-            title="Удалить файл"
-            @click.prevent="
-              file = '';
-              fileName = '';
-            "
-          >
-            <i class="fa fa-file" />
-            <span class="black"> {{ fileName }} ({{ fileSize }} МБ) </span>
-            &nbsp;&nbsp;<i class="fa fa-times" />
-          </a>
-        </div>
-        <div v-if="rows.length === 0">
-          Нет записей
-        </div>
-        <div
-          v-for="(row, index) in rows"
-          :key="row.pk"
+          <i class="fa fa-folder" />
+          <template v-if="file">{{ fileName }}</template>
+          <template v-else>выбрать файл (не более 5 МБ)</template>
+        </a>
+
+        <a
+          v-if="file"
+          v-tippy
+          href="#"
+          class="a-under ml-5"
+          title="Отменить выбор"
+          @click.prevent="file = ''"
         >
-          <br>
-          <a
-            :href="row.file"
-            target="_blank"
-            class="rows-file"
-          >{{ index + 1 }} - {{ row.fileName }}</a>
-        </div>
+          <i class="fa fa-times" />
+        </a>
       </div>
+      <div v-if="file">
+        <button
+          class="btn btn-blue-nb btn-block btn-sm mt-5"
+          type="button"
+          @click="addFile"
+        >
+          <template v-if="uploading">
+            <i class="fa fa-spinner" /> отправляем файл...
+          </template>
+          <template v-else>
+            <i class="fa fa-upload" /> Отправить файл ({{ fileSize }})
+          </template>
+        </button>
+      </div>
+      <div
+        v-if="rows.length === 0"
+        class="empty"
+      >
+        Нет записей
+      </div>
+      <template v-else>
+        <hr class="hrr">
+        <ol class="file-list">
+          <li
+            v-for="row in rows"
+            :key="row.pk"
+          >
+            <a
+              :href="row.file"
+              target="_blank"
+              class="rows-file a-under"
+            >{{ row.fileName }}</a>
+          </li>
+        </ol>
+      </template>
     </div>
     <div slot="footer">
       <div class="row">
-        <div
-          class="col-xs-5"
-          style="float: right"
-        >
+        <div class="col-xs-8" />
+        <div class="col-xs-4">
           <button
             class="btn btn-primary-nb btn-blue-nb"
             type="button"
             @click="hide"
           >
             Закрыть
-          </button>
-        </div>
-        <div
-          class="col-xs-5"
-          style="float: right"
-        >
-          <button
-            class="btn btn-blue-nb btn-block"
-            type="button"
-            :disabled="!file"
-            @click="addFile"
-          >
-            Сохранить
           </button>
         </div>
       </div>
@@ -100,6 +98,7 @@
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
 import * as actions from '@/store/action-types';
+import { selectFile } from '@/utils';
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {
@@ -117,30 +116,38 @@ export default {
       fileName: '',
       fileSize: '',
       rows: [],
+      uploading: false,
     };
   },
   mounted() {
     this.loadRows();
   },
   methods: {
-    fileChange(fileList) {
-      const [file] = fileList;
+    async changeFile() {
+      const file = await selectFile(null);
       if (!file) {
         this.file = '';
         this.fileName = '';
         this.fileSize = '';
         return;
       }
-      const size = Number(file.size);
+      let size = Number(file.size);
       if (size > 5242880) {
         this.$root.$emit('msg', 'error', 'Файл больше 5 МБ');
         return;
       }
       this.file = file;
       this.fileName = file.name;
-      this.fileSize = Math.round((size / 1024 / 1024) * 100) / 100;
+      size /= 1024;
+      let mode = 'КБ';
+      if (size >= 512) {
+        size /= 1024;
+        mode = 'МБ';
+      }
+      this.fileSize = `${Math.round(size * 100) / 100} ${mode}`;
     },
     async addFile() {
+      this.uploading = true;
       await this.$store.dispatch(actions.INC_LOADING);
 
       const json = JSON.stringify({
@@ -155,28 +162,27 @@ export default {
       formData.append('form', blob);
 
       const {
-        data: {
-          ok, message,
-        },
+        data: { ok, message },
       } = await axios.post('/api/directions/add-file', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-CSRFToken': Cookies.get('csrftoken'),
         },
       });
-
+      if (ok) {
+        await this.loadRows();
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.uploading = false;
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {
         this.$root.$emit('msg', 'ok', 'Сохранено');
-        this.status = -1;
         this.file = '';
         this.fileName = '';
         this.fileSize = '';
-        this.$refs.file.value = '';
+        this.$emit('add-file');
       }
-      await this.$store.dispatch(actions.DEC_LOADING);
-      await this.loadRows();
     },
     async loadRows() {
       await this.$store.dispatch(actions.INC_LOADING);
@@ -195,9 +201,39 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.rows-file {
-  float: left;
-  padding-left: 30px;
+.s-black {
+  color: black;
 }
 
+.modal-body {
+  padding: 10px 15px;
+}
+
+.empty {
+  margin: 15px 0 15px 0;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 8%);
+  border-radius: 4px;
+}
+
+.uploading-block {
+  margin-top: 10px;
+}
+
+.mt-5 {
+  margin-top: 5px;
+}
+
+.ml-5 {
+  margin-left: 5px;
+  display: inline-block;
+}
+
+.file-list {
+  padding-left: 18px;
+}
+
+.hrr {
+  margin: 5px 0;
+}
 </style>

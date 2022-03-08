@@ -332,7 +332,10 @@
           v-for="row in researches_forms"
           :key="row.pk"
         >
-          <div class="research-title">
+          <div
+            class="research-title"
+            :class="{ withFiles: row.research.enabled_add_file }"
+          >
             <div class="research-left">
               <button
                 v-if="row.research.title.includes('анестез')"
@@ -2036,6 +2039,15 @@ export default {
   font-weight: bold;
   z-index: 4;
   display: flex;
+
+  &.withFiles {
+    .research-left {
+      width: calc(100% - 500px);
+    }
+    .research-right {
+      width: 500px;
+    }
+  }
 }
 
 .research-left {
@@ -2060,7 +2072,8 @@ export default {
   margin-bottom: -5px;
   white-space: nowrap;
 
-  .btn {
+  .btn,
+  ::v-deep .file-btn {
     border-radius: 0;
     padding: 5px 4px;
   }

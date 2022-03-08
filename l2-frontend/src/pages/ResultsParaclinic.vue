@@ -556,7 +556,10 @@
           v-for="row in data.researches"
           :key="row.pk"
         >
-          <div class="research-title">
+          <div
+            class="research-title"
+            :class="{ withFiles: row.research.enabled_add_file }"
+          >
             <div class="research-left">
               {{ row.research.title }}
               <span
@@ -2921,6 +2924,15 @@ export default {
   font-weight: bold;
   z-index: 4;
   display: flex;
+
+  &.withFiles {
+    .research-left {
+      width: calc(100% - 540px);
+    }
+    .research-right {
+      width: 540px;
+    }
+  }
 }
 
 .research-left {
@@ -2937,7 +2949,8 @@ export default {
   margin-bottom: -5px;
   white-space: nowrap;
 
-  .btn {
+  .btn,
+  ::v-deep .file-btn {
     border-radius: 0;
     padding: 5px 4px;
   }
