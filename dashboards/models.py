@@ -18,7 +18,7 @@ class DatabaseConnectSettings(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название', db_index=True)
     login = models.CharField(max_length=255, default="", help_text='Логин', db_index=True)
     password = models.CharField(max_length=255, default="", help_text='Пароль', db_index=True)
-    name_database = models.CharField(max_length=255, default="", help_text='Название базы', db_index=True)
+    database = models.CharField(max_length=255, default="", help_text='Название базы', db_index=True)
     ip_address = models.CharField(max_length=255, default="", help_text='ip-address', db_index=True)
     port = models.CharField(max_length=5, default="", help_text='Порт', db_index=False)
 
@@ -61,13 +61,13 @@ class DashboardCharts(models.Model):
 
 
 class DashboardDataSet(models.Model):
-    title = models.CharField(max_length=255, default="", help_text='Название набора данных', db_index=True)
-    connect = models.ForeignKey(DatabaseConnectSettings, null=True, help_text='База данных', db_index=True, on_delete=models.CASCADE)
-    sql_query = models.CharField(max_length=1255, default="", help_text='SQL-запрос', db_index=True)
-    return_param_coord = models.JSONField(default={}, help_text="{x: {sql-название:синоним}, y: {sql-название:синоним}")
+    title = models.CharField(max_length=255, default="", help_text='Название набора данных')
+    connect = models.ForeignKey(DatabaseConnectSettings, null=True, help_text='База данных', on_delete=models.CASCADE)
+    sql_query = models.TextField(default="", help_text='SQL-запрос')
+    sql_columns_settings = models.JSONField(default=dict, help_text="{sql-название: {синоним: название, x:true}, sql-название: {синоним: название, x:false}")
 
     def __str__(self):
-        return f"{self.return_param_coord}"
+        return f"{self.title} {self.sql_columns_settings}"
 
     class Meta:
         verbose_name = 'Дашборд-набор данных по координатам'
@@ -75,13 +75,13 @@ class DashboardDataSet(models.Model):
 
 
 class DashboardChartData(models.Model):
-    charts = models.ForeignKey(DashboardCharts, null=True, help_text='График', db_index=True, on_delete=models.CASCADE)
+    chart = models.ForeignKey(DashboardCharts, null=True, help_text='График', db_index=True, on_delete=models.CASCADE)
     data_set = models.ForeignKey(DashboardDataSet, null=True, help_text='Набор даннах', db_index=True, on_delete=models.CASCADE)
     order = models.SmallIntegerField(default=-99, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие набора', db_index=True)
 
     def __str__(self):
-        return f"{self.charts.title}"
+        return f"{self.chart.title}"
 
     class Meta:
         verbose_name = 'Дашборд-график набор данных'
