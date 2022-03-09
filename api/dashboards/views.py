@@ -1,6 +1,6 @@
 import json
 
-from api.dashboards.sql_func import execute_select, get_charts_dataset
+from dashboards.sql_func import get_charts_dataset, execute_select
 from laboratory.decorators import group_required
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse

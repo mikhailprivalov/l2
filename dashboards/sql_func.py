@@ -1,22 +1,6 @@
 import psycopg2
-from django.db import connection
 from utils.db import namedtuplefetchall
-
-
-def execute_select(database, user, password, address, port, query):
-    connection = psycopg2.connect(
-        database=database,
-        user=user,
-        password=password,
-        host=address,
-        port=port
-    )
-    cursor = connection.cursor()
-    cursor.execute(query)
-    rows = namedtuplefetchall(cursor)
-    cursor.close()
-    connection.close()
-    return rows
+from django.db import connection
 
 
 def get_charts_dataset(dashboard_pk):
@@ -51,4 +35,20 @@ def get_charts_dataset(dashboard_pk):
         )
 
         rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def execute_select(database, user, password, address, port, query):
+    connection = psycopg2.connect(
+        database=database,
+        user=user,
+        password=password,
+        host=address,
+        port=port
+    )
+    cursor = connection.cursor()
+    cursor.execute(query)
+    rows = namedtuplefetchall(cursor)
+    cursor.close()
+    connection.close()
     return rows

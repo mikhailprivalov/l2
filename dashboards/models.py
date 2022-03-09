@@ -23,7 +23,7 @@ class DatabaseConnectSettings(models.Model):
     port = models.CharField(max_length=5, default="", help_text='Порт', db_index=False)
 
     def __str__(self):
-        return f"{self.title} - {self.name_database}"
+        return f"{self.title} - {self.database}"
 
     class Meta:
         verbose_name = 'Дашборд-подключения к БД'
