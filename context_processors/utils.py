@@ -5,6 +5,7 @@ from django.core.cache import cache
 import clients.models as Clients
 from appconf.manager import SettingManager
 from laboratory import settings
+from laboratory.settings import PROTOCOL_PLAIN_TEXT, SPLIT_PRINT_RESULT
 from rmis_integration.client import get_md5
 from utils.common import get_system_name
 
@@ -17,7 +18,7 @@ def card_bases(request):
 
 
 def local_settings(request):
-    return {"SYSTEM_AS_VI": settings.SYSTEM_AS_VI}
+    return {"SYSTEM_AS_VI": settings.SYSTEM_AS_VI, "PROTOCOL_PLAIN_TEXT": PROTOCOL_PLAIN_TEXT, "SPLIT_PRINT_RESULT": SPLIT_PRINT_RESULT}
 
 
 def ws(request):

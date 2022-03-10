@@ -128,6 +128,18 @@
     window.SYSTEM_AS_VI = false;
     {% endif %}
 
+    {% if PROTOCOL_PLAIN_TEXT %}
+    window.PROTOCOL_PLAIN_TEXT = true;
+    {% else %}
+    window.PROTOCOL_PLAIN_TEXT = false;
+    {% endif %}
+
+    {% if NOT_SPLIT_PRINT_RESULT %}
+    window.SPLIT_PRINT_RESULT = true;
+    {% else %}
+    window.SPLIT_PRINT_RESULT = false;
+    {% endif %}
+
     {% load setting_default %}
     {% s_default "l2_logo_class" "default" "s" as l2_logo_class %}
     window.L2_LOGO_CLASS = '{{ l2_logo_class|safe }}';

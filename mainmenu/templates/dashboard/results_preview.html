@@ -62,8 +62,13 @@
                 }
             })
             if (!localStorage.getItem('print_results_split')) {
-                $('#split').prop('checked', true)
-                localStorage.setItem('print_results_split', 'true')
+                {% if SPLIT_PRINT_RESULT %}
+                    $('#split').prop('checked', true)
+                    localStorage.setItem('print_results_split', 'true')
+                {% else %}
+                    $('#split').prop('checked', false)
+                    localStorage.setItem('print_results_split', 'false')
+                {% endif %}
             } else {
                 $('#split').prop('checked', JSON.parse(localStorage.getItem('print_results_split')))
             }
@@ -74,8 +79,14 @@
                 $('#margin').prop('checked', JSON.parse(localStorage.getItem('print_results_margin')))
             }
             if (!localStorage.getItem('print_results_protocol_plain_text')) {
-                $('#protocol_plain_text').prop('checked', false)
-                localStorage.setItem('print_results_protocol_plain_text', 'false')
+                {% if PROTOCOL_PLAIN_TEXT %}
+                    $('#protocol_plain_text').prop('checked', true)
+                    localStorage.setItem('print_results_protocol_plain_text', 'true')
+                {% else %}
+                    $('#protocol_plain_text').prop('checked', false)
+                    localStorage.setItem('print_results_protocol_plain_text', 'false')
+                {% endif %}
+
             } else {
                 $('#protocol_plain_text').prop('checked', JSON.parse(localStorage.getItem('print_results_protocol_plain_text')))
             }
