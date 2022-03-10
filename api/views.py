@@ -1005,7 +1005,7 @@ def flg(request):
             doc = None
             gi = None
             for u in users.DoctorProfile.objects.filter(podrazdeleniye=i.research.podrazdeleniye):
-                if u.get_fio().lower() == doc_f or (not doc and u.has_group('Врач параклиники')):
+                if doc_f in u.get_fio().lower() or (not doc and u.has_group('Врач параклиники')):
                     doc = u
 
                 gis = ParaclinicInputField.objects.filter(group__research=i.research, group__title="Заключение")
