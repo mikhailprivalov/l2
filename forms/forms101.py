@@ -1,3 +1,4 @@
+import copy
 import datetime
 import locale
 import os
@@ -3187,6 +3188,182 @@ def form_13(request_data):
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_14(request_data):
+    """
+    Согласие на оперативное вмешательство
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer,
+                            pagesize=A4,
+                            rightMargin=42,
+                            leftMargin=62,
+                            topMargin=30,
+                            bottomMargin=20,
+                            title='Согласие на оперативное вмешательство')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleP = deepcopy(style)
+    styleP.fontName = "PTAstraSerifReg"
+    styleP.fontSize = 12
+    styleP.firstLineIndent = 0
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFooter = deepcopy(style)
+    styleFooter.fontName = "PTAstraSerifReg"
+    styleFooter.fontSize = 12
+    styleFooter.alignment = TA_LEFT
+    styleFooter.firstLineIndent = 0
+    styleOperation = deepcopy(style)
+    styleOperation.fontName = "PTAstraSerifReg"
+    styleOperation.fontSize = 12
+    styleOperation.alignment = TA_CENTER
+
+    objs = []
+
+    objs.append(Paragraph(
+        'ИНФОРМАЦИОННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА '
+        'ОПЕРАТИВНОЕ ВМЕШАТЕЛЬСТВО, В Т.Ч. ПЕРЕЛИВАНИЕ КРОВИ '
+        'И ЕЕ КОМПОНЕНТОВ',
+        style=styleHeader
+    ))
+    objs.append(Spacer(1, 12))
+    objs.append(Paragraph(f"Я, {person_data['fio']}", style=styleP))
+    objs.append(Paragraph(
+        f"Паспорт: серия {person_data['passport_serial']}, номер {person_data['passport_num']} "
+        f"выдан {person_data['passport_issued']}.",
+        style=styleP
+    ))
+    objs.append(Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}', style=styleP))
+    objs.append(Paragraph(f"{patient_data['fio']}", style=styleP))
+    objs.append(Paragraph(f'Находясь на лечении в ____________________________________________', style=styleP))
+    objs.append(Paragraph('Добровольно даю свое согласие на проведение представляемому операции:', style=styleP))
+    objs.append(Spacer(1, 25))
+    objs.append(HRFlowable(width=180 * mm, color=colors.black))
+    objs.append(Paragraph('(название операции)', style=styleOperation))
+    objs.append(Spacer(1, 10))
+
+    objs.append(Paragraph('И прошу персонал медицинского учреждения о ее проведении.', style=style))
+    objs.append(Paragraph(
+        'Подтверждаю, что я ознакомлен(на) с характером предстоящей '
+        'представляемому операции. Мне разъяснены, и я понимаю особенности '
+        'и ход предстоящего оперативного лечения.',
+        style=style
+    ))
+    objs.append(Paragraph(
+        'Мне разъяснено, и я осознаю, что во время операции могут возникнуть непредвиденные '
+        'обстоятельства и осложнения. В таком случае я согласен(на) на то, что ход операции '
+        'может быть изменен врачами по их усмотрению.',
+        style=style
+    ))
+    objs.append(Paragraph(
+        'Я предупрежден(на) о фактах риска и понимаю, что проведение операции '
+        'сопряжено с риском потери крови, возможностью инфекционных осложнений, нарушений '
+        'со стороны сердечно-сосудистой и других систем жизнедеятельности организма '
+        'непреднамеренного причинения вреда здоровью и даже неблагоприятного исхода',
+        style=style
+    ))
+    objs.append(Paragraph(
+        'Я предупрежден(на), что в ряде случаев могут потребляться повторные '
+        'операции, в т.ч. в связи с возможными послеоперационными осложнениями течения '
+        'заболевания, и даю свое согласие на это',
+        style=style
+    ))
+    objs.append(Paragraph(
+        'Я поставил(ла) в известность врача обо всех проблемах, связанных со здоровьем, в том '
+        'числе об аллергических проявлениях или индивидуальной непереносимости '
+        'лекарственных препаратов, обо всех перенесенных мною (представляемым) и известных '
+        'мне травмах, операциях, заболеваниях в т.ч. носительстве ВИЧ-инфекции, вирусных '
+        'гепатитах, туберкулезе, инфекциях, передаваемых половым путем, об экологических и '
+        'производственных факторах физической, химической или биологической природы, '
+        'воздействующих на меня (представляемого) во время жизнедеятельности, '
+        'принимаемых лекарственных средствах, проводившихся ранее переливаниях крови и ее '
+        'компонентов. Сообщил(а) правдивые сведения о наследственности, а также '
+        'об употреблении алкоголя, наркотических и токсических средств.',
+        style=style
+    ))
+    objs.append(Paragraph(
+        'Я знаю, что во время операции возможна потеря крови и даю согласие на переливание '
+        'донорской или ауто (собственной) крови и ее компонентов.',
+        style=style
+    ))
+    objs.append(Paragraph(
+        'Я согласен(на) на запись хода операции на информационные носители и '
+        'демонстрацию лицам с медицинским образованием исключительно медицинских, научных '
+        'или обучающих целях с учетом сохранения врачебной тайны.',
+        style=style
+    ))
+    objs.append(Paragraph(
+        'Мне  была предоставлена возможность задать вопросы о степени риска и пользе '
+        'хирургического вмешательства (манипуляции), и врач дал понятные мне исчерпывающие '
+        'ответы.',
+        style=style
+    ))
+    objs.append(Paragraph(
+        'Я ознакомлен(на) и согласен(на) со всеми пунктами настоящего документа, положения '
+        'которого мне разъяснены, мною поняты и добровольно даю свое согласие '
+        f'на',
+        style=style
+    ))
+    objs.append(Spacer(1, 25))
+    objs.append(HRFlowable(width=180 * mm, color=colors.black))
+    objs.append(Paragraph(f'(название операции)', style=styleOperation))
+    objs.append(Spacer(1, 15))
+
+    objs.append(Paragraph('Подпись законного представителя _____________', style=styleFooter))
+    objs.append(Spacer(1, 10))
+    objs.append(Paragraph('Расписался в моем присутствии:', style=styleFooter))
+    objs.append(Spacer(1, 10))
+    objs.append(Paragraph('Врач _____________', style=styleFooter))
+    objs.append(Spacer(1, 10))
+    objs.append(Paragraph('Привит по возрасту _____________', style=styleFooter))
+    objs.append(Spacer(1, 7))
+
+    date = datetime.datetime.now().strftime('%d.%m.%Y')
+    objs.append(Paragraph(f'{date}', style=styleFooter))
+
+    doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
