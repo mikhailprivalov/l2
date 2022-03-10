@@ -17,7 +17,7 @@ def card_bases(request):
 
 
 def local_settings(request):
-    return {"SYSTEM_AS_VI": settings.SYSTEM_AS_VI}
+    return {"SYSTEM_AS_VI": settings.SYSTEM_AS_VI, "PROTOCOL_PLAIN_TEXT": settings.PROTOCOL_PLAIN_TEXT, "SPLIT_PRINT_RESULT": settings.SPLIT_PRINT_RESULT}
 
 
 def ws(request):
