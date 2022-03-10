@@ -396,6 +396,8 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
     if step > 0:
         result.append(deepcopy(tmp_chart))
 
+    print(result)
+
     return result
 
 
