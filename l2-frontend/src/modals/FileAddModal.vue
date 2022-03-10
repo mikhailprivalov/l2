@@ -51,7 +51,7 @@
             <i class="fa fa-spinner" /> отправляем файл...
           </template>
           <template v-else>
-            <i class="fa fa-upload" /> Отправить файл ({{ fileSize }})
+            <i class="fa fa-upload" /> Прикрепить файл ({{ fileSize }})
           </template>
         </button>
       </div>
