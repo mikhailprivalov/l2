@@ -45,7 +45,20 @@ def exec_query(dashboard_pk):
                 tmp_chart["chart_order"] = datachart['chart_order']
                 tmp_chart["type"] = datachart['default_type']
             r = execute_select(datachart['database'], datachart['user'], datachart['password'], datachart['address'], datachart['port'], datachart['query'])
-
-
-
             step += 1
+
+
+# [
+#     {
+#         'title': 'Койки',
+#         'type': 'COLUMN',
+#         'pk': 1,
+#         'chart_order': 1,
+#         'data': [{'title': 'ОГАУЗ ГИМДКБ222', 'values': [Decimal('13.00'), Decimal('11.00')], 'stringTotal': [Decimal('13.00'), Decimal('11.00')]}],
+#         'availableTypes': ['BAR', 'COLUMN', 'PIE', 'LINE', 'TABLE'],
+#         'isFullWidth': False,
+#         'dates': ['08.03'],
+#         'fields': ['ВСЕГО (коек общих)', 'Занято коек общих'],
+#         'columnTotal': [Decimal('13.00'), Decimal('11.00')]
+#     }
+# ]
