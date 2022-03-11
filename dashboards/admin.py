@@ -9,7 +9,7 @@ class ResDatabaseConnectSettings(admin.ModelAdmin):
         'ip_address',
         'port',
     )
-search_fields = ('name_database', 'ititle',)
+    search_fields = ('name_database', 'ititle',)
 
 
 class ResDashboardDataSet(admin.ModelAdmin):
@@ -18,7 +18,6 @@ class ResDashboardDataSet(admin.ModelAdmin):
         'connect',
         'sql_columns_settings',
     )
-
 
 
 admin.site.register(DatabaseConnectSettings, ResDatabaseConnectSettings)

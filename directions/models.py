@@ -4,8 +4,6 @@ import collections
 import logging
 import uuid
 
-from django.db.models import GenericIPAddressField
-
 from cda.integration import get_required_signatures
 import datetime
 import os
