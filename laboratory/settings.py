@@ -363,6 +363,8 @@ FORWARD_DAYS_SCHEDULE = -1
 SCHEDULE_AGE_LIMIT_LTE = None
 QRCODE_OFFSET_SIZE = {}
 LEFT_QRCODE_OFFSET_SIZE = {}
+PROTOCOL_PLAIN_TEXT = True
+SPLIT_PRINT_RESULT = False
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

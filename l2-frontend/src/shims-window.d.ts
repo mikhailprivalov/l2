@@ -4,6 +4,8 @@ declare global {
   interface Window {
     ORG_TITLE: string;
     SYSTEM_AS_VI: boolean;
+    PROTOCOL_PLAIN_TEXT: boolean;
+    SPLIT_PRINT_RESULT: boolean;
     L2_LOGO_CLASS: string;
     $: any
     Modernizr: any
