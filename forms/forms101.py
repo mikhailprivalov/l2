@@ -3240,25 +3240,22 @@ def form_14(request_data):
     style.fontSize = 12
     style.alignment = TA_JUSTIFY
     style.firstLineIndent = 15
-    styleP = deepcopy(style)
-    styleP.fontName = "PTAstraSerifReg"
-    styleP.fontSize = 12
-    styleP.firstLineIndent = 0
-    styleP.alignment = TA_LEFT
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
     styleHeader = deepcopy(style)
     styleHeader.fontName = "PTAstraSerifBold"
     styleHeader.fontSize = 14
     styleHeader.leading = 14
     styleHeader.alignment = TA_CENTER
-    styleFooter = deepcopy(style)
-    styleFooter.fontName = "PTAstraSerifReg"
-    styleFooter.fontSize = 12
-    styleFooter.alignment = TA_LEFT
-    styleFooter.firstLineIndent = 0
-    styleOperation = deepcopy(style)
-    styleOperation.fontName = "PTAstraSerifReg"
-    styleOperation.fontSize = 12
-    styleOperation.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
 
     objs = []
 
@@ -3266,51 +3263,51 @@ def form_14(request_data):
         'ИНФОРМАЦИОННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА ОПЕРАТИВНОЕ ВМЕШАТЕЛЬСТВО, В Т.Ч. ПЕРЕЛИВАНИЕ КРОВИ И ЕЕ КОМПОНЕНТОВ', style=styleHeader))
     objs.append(Spacer(1, 12))
 
-    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
-    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
-    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleP))
-    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleP))
-    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleP))
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
     objs.append(
         Paragraph(
-            f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleP
+            f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft
         )
     )
-    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleP))
-    objs.append(Spacer(1, 10))
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
 
     if agent_status:
         opinion = [
-            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleP),
-            Paragraph(f"{patient_data['fio']} {patient_data['born']} г. Рождения", styleP),
-            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleP),
-            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleP),
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
         ]
         # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
         if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
             opinion.append(
                 Paragraph(
-                    f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleP
+                    f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft
                 )
             )
-            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleP))
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
         else:
             opinion.append(
                 Paragraph(
-                    f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleP
+                    f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft
                 )
             )
-            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleP))
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
 
         objs.extend(opinion)
 
     objs.append(Spacer(1, 10))
-    objs.append(Paragraph(f'Находясь на лечении в ____________________________________________', style=styleP))
-    objs.append(Paragraph('Добровольно даю свое согласие на проведение представляемому операции:', style=styleP))
-    objs.append(Spacer(1, 25))
-    objs.append(HRFlowable(width=180 * mm, color=colors.black))
-    objs.append(Paragraph('(название операции)', style=styleOperation))
-    objs.append(Spacer(1, 10))
+    objs.append(Paragraph(f'Находясь на лечении в ____________________________________________', style=styleLeft))
+    objs.append(Paragraph('Добровольно даю свое согласие на проведение представляемому операции:', style=styleLeft))
+    objs.append(Spacer(1, 20))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    operation_name = '(название операции)'
+    objs.append(Paragraph(f'{operation_name}', styleFCenterMin))
+    objs.append(Spacer(1, 5))
 
     objs.append(Paragraph('И прошу персонал медицинского учреждения о ее проведении.', style=style))
     objs.append(Paragraph('Подтверждаю, что я ознакомлен(на) с характером предстоящей представляемому операции. Мне разъяснены, и я понимаю особенности и ход предстоящего оперативного лечения.',
@@ -3334,22 +3331,37 @@ def form_14(request_data):
     objs.append(Paragraph('Я ознакомлен(на) и согласен(на) со всеми пунктами настоящего документа, положения которого мне разъяснены, мною поняты и добровольно даю свое согласие на',
         style=style))
 
-    objs.append(Spacer(1, 25))
-    objs.append(HRFlowable(width=180 * mm, color=colors.black))
-    objs.append(Paragraph(f'(название операции)', style=styleOperation))
-    objs.append(Spacer(1, 15))
+    space_symbol = '&nbsp;'
 
-    objs.append(Paragraph('Подпись законного представителя _____________', style=styleFooter))
-    objs.append(Spacer(1, 10))
-    objs.append(Paragraph('Расписался в моем присутствии:', style=styleFooter))
-    objs.append(Spacer(1, 10))
-    objs.append(Paragraph('Врач _____________', style=styleFooter))
-    objs.append(Spacer(1, 10))
-    objs.append(Paragraph('Привит по возрасту _____________', style=styleFooter))
-    objs.append(Spacer(1, 7))
+    objs.append(Spacer(1, 20))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    operation_name = '(название операции)'
+    objs.append(Paragraph(f'{operation_name}', styleFCenterMin))
 
-    date = datetime.datetime.now().strftime('%d.%m.%Y')
-    objs.append(Paragraph(f'{date}', style=styleFooter))
+    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph('', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{73 * space_symbol} {sign_fio_person}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
 
     doc.build(objs)
     pdf = buffer.getvalue()
