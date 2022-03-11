@@ -3,5 +3,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('dashboard', views.get_dashboard),
+    path('dashboard', views.dashboard),
+    path('dashboard-charts', views.dashboard_charts),
 ]
