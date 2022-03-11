@@ -8,7 +8,7 @@ from django.http import JsonResponse
 
 @login_required
 @group_required("Просмотр мониторингов")
-def dashboard(request):
+def dashboard_list(request):
     result = get_dashboard()
     return JsonResponse({'rows': result})
 
@@ -21,4 +21,3 @@ def dashboard_charts(request):
     result = exec_query(dashboard_pk)
 
     return JsonResponse({'rows': result})
-

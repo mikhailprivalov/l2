@@ -3,20 +3,6 @@ from utils.db import namedtuplefetchall
 from django.db import connection
 
 
-def dashboards():
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-              SELECT id, title, 'order' as ord_dash FROM public.dashboards_dashboard
-              WHERE hide = False
-              ORDER BY ord_dash DESC
-        """
-        )
-
-        rows = namedtuplefetchall(cursor)
-    return rows
-
-
 def get_charts_dataset(dashboard_pk):
     with connection.cursor() as cursor:
         cursor.execute(

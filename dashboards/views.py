@@ -1,9 +1,11 @@
 import json
-from dashboards.sql_func import get_charts_dataset, execute_select, dashboards
+
+from dashboards.models import Dashboard
+from dashboards.sql_func import get_charts_dataset, execute_select
 
 
 def get_dashboard():
-    return [{"label": dashboard.title, "id": dashboard.id} for dashboard in dashboards()]
+    return [{"label": dashboard.title, "id": dashboard.pk} for dashboard in Dashboard.objects.filter(hide=False).order_by('-order')]
 
 
 def exec_query(dashboard_pk):
