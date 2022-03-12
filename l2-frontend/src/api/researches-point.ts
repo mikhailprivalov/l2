@@ -39,7 +39,7 @@ export default generator({
   getResearchesDispensary: {
     url: 'researches/research-dispensary',
   },
-  getRequiredFieldStattalon: {
+  getRequiredStattalonField: {
     method: 'get',
     url: 'researches/field-stattalon',
     onReject: { researches: [] },
