@@ -892,12 +892,6 @@
                       {{ o.title }}
                     </option>
                   </select>
-                  <div
-                    v-if="row.purpose === -1 && requiredStattalonFields.purpose"
-                    class="status status-none"
-                  >
-                    Укажите цель
-                  </div>
                 </div>
               </div>
               <div class="field">
@@ -1212,7 +1206,7 @@
             <button
               v-if="!row.confirmed && can_confirm"
               class="btn btn-blue-nb"
-              :disabled="!r(row) || needFillWorkBy(row) || (row.purpose === -1 && requiredStattalonFields.purpose)"
+              :disabled="!r(row) || needFillWorkBy(row)"
               @click="save_and_confirm(row)"
             >
               Сохранить и подтвердить
@@ -2203,6 +2197,13 @@ export default {
           }
         }
       }
+
+      for (const [key, value] of Object.entries(this.requiredStattalonFields)) {
+        if (!research[key] || research[key] === -1) {
+          l.push(value);
+        }
+      }
+
       return l.slice(0, 2);
     },
     hide_modal_anamnesis_edit() {
