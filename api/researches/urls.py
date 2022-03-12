@@ -25,4 +25,5 @@ urlpatterns = [
     path('get-direction-params', views.get_direction_params),
     path('localization', views.localization),
     path('localization/save', views.localization_save),
+    path('field-stattalon', views.required_fields_stattalon),
 ]

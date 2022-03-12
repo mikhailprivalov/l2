@@ -24,6 +24,7 @@ from directory.models import (
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
+from laboratory.settings import REQUIRED_FIELD_STATTALON
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from rmis_integration.client import get_md5
@@ -820,3 +821,8 @@ def load_research_by_diagnos(request):
         rows.append({'type': type, 'is_visit': d_p.is_visit, 'current_researches': code_id, 'count': d_p.repeat})
 
     return JsonResponse(rows, safe=False)
+
+
+@login_required
+def required_fields_stattalon(request):
+    return JsonResponse(REQUIRED_FIELD_STATTALON)

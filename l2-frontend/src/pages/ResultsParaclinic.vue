@@ -892,6 +892,12 @@
                       {{ o.title }}
                     </option>
                   </select>
+                  <div
+                    v-if="row.purpose === -1 && fieldstattalon.purpose"
+                    class="status status-none"
+                  >
+                    Укажите цель
+                  </div>
                 </div>
               </div>
               <div class="field">
@@ -1206,7 +1212,7 @@
             <button
               v-if="!row.confirmed && can_confirm"
               class="btn btn-blue-nb"
-              :disabled="!r(row) || needFillWorkBy(row)"
+              :disabled="!r(row) || needFillWorkBy(row) || (row.purpose === -1 && fieldstattalon.purpose)"
               @click="save_and_confirm(row)"
             >
               Сохранить и подтвердить
@@ -1770,6 +1776,9 @@ export default {
     };
   },
   computed: {
+    fieldstattalon() {
+      return this.$store.getters.fieldStattalon;
+    },
     userServicesFiltered() {
       return this.user_services.filter((s) => !this.slot.data.direction || s.pk === this.slot.data.direction_service);
     },
@@ -2039,6 +2048,8 @@ export default {
     } catch (e) {
       console.log(e);
     }
+
+    this.$store.dispatch(actions.LOAD_REQUIRED_FIELDS_STATTALON);
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
