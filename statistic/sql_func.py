@@ -298,14 +298,14 @@ def statistics_death_research(research_id: object, d_s: object, d_e: object, fil
                 WHEN %(filter_hospital_id)s > 0 THEN
                     issledovaniye_id in (
                         SELECT id FROM public.directions_issledovaniya
-                        WHERE research_id = %(death_research_id)s and (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
+                        WHERE research_id = %(research_id)s and (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
                         )
                     AND
                     directions_napravleniya.hospital_id = %(filter_hospital_id)s
                 WHEN %(filter_hospital_id)s = -1 THEN
                     issledovaniye_id in (
                         SELECT id FROM public.directions_issledovaniya
-                        WHERE research_id = %(death_research_id)s and (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
+                        WHERE research_id = %(research_id)s and (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
                         )
                 END
                 order by issledovaniye_id
