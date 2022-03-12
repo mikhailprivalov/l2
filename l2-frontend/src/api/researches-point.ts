@@ -11,6 +11,11 @@ export default generator({
     url: 'researches/all',
     onReject: { researches: [] },
   },
+  getRequiredFieldStattalon: {
+    method: 'get',
+    url: 'researches/field-stattalon',
+    onReject: { researches: [] },
+  },
   getResearchesByDepartment: {
     url: 'researches/by-department',
     onReject: { researches: [] },

@@ -892,6 +892,12 @@
                       {{ o.title }}
                     </option>
                   </select>
+                  <div
+                    v-if="row.purpose === -1 && requiredFieldStattalon.purpose"
+                    style="color: red"
+                  >
+                    Не верно: укажите цель!
+                  </div>
                 </div>
               </div>
               <div class="field">
@@ -1206,7 +1212,7 @@
             <button
               v-if="!row.confirmed && can_confirm"
               class="btn btn-blue-nb"
-              :disabled="!r(row) || needFillWorkBy(row)"
+              :disabled="!r(row) || needFillWorkBy(row) || (row.purpose === -1 && requiredFieldStattalon.purpose)"
               @click="save_and_confirm(row)"
             >
               Сохранить и подтвердить
@@ -1767,6 +1773,7 @@ export default {
       workFromUsers: [],
       workFromHistory: [],
       moreServices: [],
+      requiredFieldStattalon: {},
     };
   },
   computed: {
@@ -2039,6 +2046,8 @@ export default {
     } catch (e) {
       console.log(e);
     }
+    this.requiredFieldStattalon = this.$store.getters.fieldStattalon;
+    console.log(this.$store.getters.fieldStattalon);
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);

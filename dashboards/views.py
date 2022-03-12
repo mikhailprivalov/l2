@@ -80,6 +80,7 @@ def exec_query(dashboard_pk):
             step += 1
         tmp_chart["dates"] = sorted(global_dates.copy())
         result.append(tmp_chart.copy())
+
     for row in result:
         dates = row.get("dates", "")
         row_data = row.get("data", "")
