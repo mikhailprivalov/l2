@@ -1653,7 +1653,6 @@ def statistic_research_weapon_data(ws1, researches):
         ws1.cell(row=r, column=8).value = i["Врач"]
         ws1.cell(row=r, column=9).value = i.get("napravleniye_id", "")
 
-
         rows = ws1[f'A{r}:I{r}']
         for row in rows:
             for cell in row:
