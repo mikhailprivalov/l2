@@ -23,7 +23,7 @@ from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expert
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
-from utils.parse_sql import death_form_result_parse, get_unique_directions
+from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
 from . import sql_func
 from . import structure_sheet
 import datetime
@@ -43,7 +43,7 @@ from .sql_func import (
     sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value, sql_get_result_by_direction, sql_get_documents_by_card_id,
 )
 
-from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK, COVID_QUESTION_ID
+from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK, COVID_QUESTION_ID, RESEARCH_SPECIAL_REPORT
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -758,6 +758,13 @@ def statistic_xls(request):
                 ws3 = wb.create_sheet("По людям")
                 ws3 = structure_sheet.statistic_research_death_base_card(ws3, d1, d2, research_title[0])
                 ws3 = structure_sheet.statistic_research_death_data_card(ws3, data_death_card)
+        elif research_id in [RESEARCH_SPECIAL_REPORT.get("weapon_research_pk", -1), RESEARCH_SPECIAL_REPORT.get("driver_research", -1)]:
+            researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date, hospital_id)
+            data = weapon_form_result_parse(researches_sql, reserved=False)
+            # wb.remove(wb.get_sheet_by_name('Отчет'))
+            # ws = wb.create_sheet("Справки")
+            ws = structure_sheet.statistic_research_wepon_base(ws, d1, d2, research_title[0])
+            ws = structure_sheet.statistic_research_weapon_data(ws, data)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
