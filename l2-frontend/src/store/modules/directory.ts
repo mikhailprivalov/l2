@@ -63,7 +63,7 @@ const actions = {
     if (state.requiredStattalonFieldsLoaded) {
       return;
     }
-    const answer = await researchesPoint.getRequiredStattalonField();
+    const answer = await researchesPoint.getRequiredStattalonFields();
     commit(mutation_types.SET_REQUIRED_STATTALON_FIELDS, { answer });
   },
 };
