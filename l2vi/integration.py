@@ -39,4 +39,3 @@ def gen_cda_xml(pk: int) -> dict:
 
 def send_cda_xml(pk: int, xml: str) -> dict:
     return make_request('/perform', data=json.dumps({"pk": pk, "mode": "sendXml", "xml": xml}))
-

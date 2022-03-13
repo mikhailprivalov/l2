@@ -786,7 +786,18 @@ def previous_laboratory_result(value):
     ]
     opinion.extend(temp_data)
 
-    tbl = Table(opinion, hAlign='LEFT', colWidths=(50.8 * mm, 35 * mm, 20 * mm, 15 * mm, 20 * mm, 30 * mm,),)
+    tbl = Table(
+        opinion,
+        hAlign='LEFT',
+        colWidths=(
+            50.8 * mm,
+            35 * mm,
+            20 * mm,
+            15 * mm,
+            20 * mm,
+            30 * mm,
+        ),
+    )
     tbl.setStyle(
         TableStyle(
             [

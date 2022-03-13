@@ -47,7 +47,11 @@ from laboratory.settings import (
     CENTRE_GIGIEN_EPIDEMIOLOGY,
     MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY,
     REGION,
-    SCHEDULE_AGE_LIMIT_LTE, LK_FORMS, LK_USER, LK_FILE_SIZE_BYTES, LK_FILE_COUNT,
+    SCHEDULE_AGE_LIMIT_LTE,
+    LK_FORMS,
+    LK_USER,
+    LK_FILE_SIZE_BYTES,
+    LK_FILE_COUNT,
 )
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -1517,10 +1521,12 @@ def hosp_record(request):
         if f.size > LK_FILE_SIZE_BYTES:
             return Response({"ok": False, 'message': 'Файл слишком большой'})
         if not check_type_file(file_in_memory=f):
-            return JsonResponse({
-                "ok": False,
-                "message": "Поддерживаются PDF и JPEG файлы",
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Поддерживаются PDF и JPEG файлы",
+                }
+            )
 
     snils: str = data[0]
     enp: str = data[1]
@@ -1603,7 +1609,7 @@ def hosp_record(request):
                 'diagnos': diagnosis,
                 'files': files,
             },
-            None
+            None,
         )
         for f in files:
             plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan_id=plan_pk)
@@ -1659,23 +1665,27 @@ def hosp_record_list(request):
         rows_files = []
         row_file: PlanHospitalizationFiles
         for row_file in PlanHospitalizationFiles.objects.filter(plan=plan).order_by('-created_at'):
-            rows_files.append({
-                'pk': row_file.pk,
-                'fileName': os.path.basename(row_file.uploaded_file.name) if row_file.uploaded_file else None,
-            })
+            rows_files.append(
+                {
+                    'pk': row_file.pk,
+                    'fileName': os.path.basename(row_file.uploaded_file.name) if row_file.uploaded_file else None,
+                }
+            )
         messages_data = Messages.get_messages_by_plan_hosp(plan.pk, last=True)
-        rows.append({
-            "pk": plan.pk,
-            "service": plan.research.get_title(),
-            "date": plan.exec_at.strftime('%d.%m.%Y'),
-            "phone": plan.phone,
-            "diagnosis": plan.diagnos,
-            "comment": plan.comment,
-            "status": plan.get_work_status_display(),
-            "status_description": status_description,
-            "files": rows_files,
-            "messages": messages_data
-        })
+        rows.append(
+            {
+                "pk": plan.pk,
+                "service": plan.research.get_title(),
+                "date": plan.exec_at.strftime('%d.%m.%Y'),
+                "phone": plan.phone,
+                "diagnosis": plan.diagnos,
+                "comment": plan.comment,
+                "status": plan.get_work_status_display(),
+                "status_description": status_description,
+                "files": rows_files,
+                "messages": messages_data,
+            }
+        )
 
     return Response({"rows": rows})
 
@@ -1692,11 +1702,7 @@ def get_all_messages_by_plan_id(request):
 def direction_records(request):
     data = data_parse(
         request.body,
-        {
-            'snils': 'str_strip',
-            'enp': 'str_strip',
-            'date_year': int
-        },
+        {'snils': 'str_strip', 'enp': 'str_strip', 'date_year': int},
     )
     snils: str = data[0]
     enp: str = data[1]
@@ -1918,7 +1924,10 @@ def documents_lk(request):
 @api_view(['POST'])
 @can_use_schedule_only
 def details_document_lk(request):
-    data = data_parse(request.body, {'pk': int},)
+    data = data_parse(
+        request.body,
+        {'pk': int},
+    )
     pk: int = data[0]
     response = get_researches_details(pk)
     return Response(response)
@@ -1934,7 +1943,10 @@ def forms_lk(request):
 @api_view(['POST'])
 @can_use_schedule_only
 def pdf_form_lk(request):
-    data = data_parse(request.body, {'type_form': str, 'snils': str, 'enp': str, 'agent': {'snils': str, 'enp': str}}, )
+    data = data_parse(
+        request.body,
+        {'type_form': str, 'snils': str, 'enp': str, 'agent': {'snils': str, 'enp': str}},
+    )
     type_form: str = data[0]
     snils: str = data[1]
     enp: str = data[2]
@@ -1968,32 +1980,40 @@ def add_file_hospital_plan(request):
         plan: PlanHospitalization = PlanHospitalization.objects.select_for_update().get(pk=pk)
 
         if file.size > LK_FILE_SIZE_BYTES:
-            return JsonResponse({
-                "ok": False,
-                "message": "Файл слишком большой",
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Файл слишком большой",
+                }
+            )
 
         if PlanHospitalizationFiles.get_count_files_by_plan(plan) >= LK_FILE_COUNT:
-            return JsonResponse({
-                "ok": False,
-                "message": "Вы добавили слишком много файлов в одну заявку",
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Вы добавили слишком много файлов в одну заявку",
+                }
+            )
 
         if not check_type_file(file_in_memory=file):
-            return JsonResponse({
-                "ok": False,
-                "message": "Поддерживаются PDF и JPEG файлы",
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Поддерживаются PDF и JPEG файлы",
+                }
+            )
 
         plan_files: PlanHospitalizationFiles = PlanHospitalizationFiles(plan=plan)
 
         plan_files.uploaded_file = file
         plan_files.save()
 
-    return Response({
-        "ok": True,
-        "message": "Файл добавлен",
-    })
+    return Response(
+        {
+            "ok": True,
+            "message": "Файл добавлен",
+        }
+    )
 
 
 @api_view(['POST'])

@@ -111,13 +111,7 @@ class DoctorCall(models.Model):
             "executor": self.executor_id,
             "executor_fio": self.executor.get_fio() if self.executor else None,
             "canEdit": (
-                not self.need_send_to_external
-                and (
-                    not doc
-                    or doc.all_hospitals_users_control
-                    or not self.hospital or self.hospital == doc.get_hospital()
-                )
-                and not self.is_main_external
+                not self.need_send_to_external and (not doc or doc.all_hospitals_users_control or not self.hospital or self.hospital == doc.get_hospital()) and not self.is_main_external
             ),
             "inLog": DoctorCallLog.objects.filter(call=self).count(),
         }

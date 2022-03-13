@@ -515,10 +515,14 @@ def laboratory_journal_params(request):
 
 def bases(request):
     k = f'view:bases:{request.user.pk}'
-    disabled_fin_source = [i.fin_source.pk for i in DisableIstochnikiFinansirovaniya.objects.filter(
-        hospital_id=request.user.doctorprofile.hospital_id)] if request.user.is_authenticated else []
-    user_disabled_fin_source = [x for x in users.DoctorProfile.objects.values_list('disabled_fin_source', flat=True).filter(
-        pk=request.user.doctorprofile.pk) if x is not None] if request.user.is_authenticated else []
+    disabled_fin_source = (
+        [i.fin_source.pk for i in DisableIstochnikiFinansirovaniya.objects.filter(hospital_id=request.user.doctorprofile.hospital_id)] if request.user.is_authenticated else []
+    )
+    user_disabled_fin_source = (
+        [x for x in users.DoctorProfile.objects.values_list('disabled_fin_source', flat=True).filter(pk=request.user.doctorprofile.pk) if x is not None]
+        if request.user.is_authenticated
+        else []
+    )
     disabled_fin_source.extend(user_disabled_fin_source)
     ret = cache.get(k)
     if not ret:
@@ -534,8 +538,9 @@ def bases(request):
                     "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in x.istochnikifinansirovaniya_set.all()],
                 }
                 for x in CardBase.objects.all()
-                .prefetch_related(Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).
-                                           exclude(pk__in=disabled_fin_source).order_by('-order_weight')))
+                .prefetch_related(
+                    Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).exclude(pk__in=disabled_fin_source).order_by('-order_weight'))
+                )
                 .order_by('-order_weight')
             ]
         }
@@ -1085,7 +1090,7 @@ def get_template(request):
             *[
                 {"id": x["id"], "label": x["title"]}
                 for x in ResearchSite.objects.filter(site_type=users.AssignmentTemplates.SHOW_TYPES_SITE_TYPES_TYPE[st], hide=False).order_by('order', 'title').values('id', 'title')
-            ]
+            ],
         ]
 
     return JsonResponse(
@@ -2107,7 +2112,9 @@ def org_generators_add(request):
 
 def current_time(request):
     now = timezone.now().astimezone(pytz.timezone(TIME_ZONE))
-    return JsonResponse({
-        "date": now.strftime('%Y-%m-%d'),
-        "time": now.strftime('%X'),
-    })
+    return JsonResponse(
+        {
+            "date": now.strftime('%Y-%m-%d'),
+            "time": now.strftime('%X'),
+        }
+    )

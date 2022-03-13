@@ -21,7 +21,7 @@ def menu(request):
 @group_required("Оператор", "Конструктор: Лабораторные исследования")
 @ensure_csrf_cookie
 def researches(request):
-    """ Конструктор исследований """
+    """Конструктор исследований"""
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
     return render(request, 'construct_researches.html', {"labs": labs, "variants": directory.ResultVariants.objects.all()})
 
@@ -30,7 +30,7 @@ def researches(request):
 @group_required("Оператор", "Конструктор: Лабораторные исследования")
 @ensure_csrf_cookie
 def researches_tune(request):
-    """ Настройка исследований """
+    """Настройка исследований"""
     pk = request.GET["pk"]
     return render(request, 'construct_researches_tune.html', {"pk": pk, "material_types": directory.MaterialVariants.objects.all()})
 
@@ -39,7 +39,7 @@ def researches_tune(request):
 @group_required("Оператор", "Конструктор: Лабораторные исследования")
 @ensure_csrf_cookie
 def researches_tune_ng(request):
-    """ Настройка исследований """
+    """Настройка исследований"""
     pk = request.GET["pk"]
     return render(request, 'construct_researches_tune_ng.html', {"pk": pk})
 
@@ -48,7 +48,7 @@ def researches_tune_ng(request):
 @group_required("Оператор", "Конструктор: Ёмкости для биоматериала")
 @ensure_csrf_cookie
 def tubes(request):
-    """ Создание и редактирование ёмкостей """
+    """Создание и редактирование ёмкостей"""
     return render(request, 'construct_tubes.html')
 
 
@@ -56,7 +56,7 @@ def tubes(request):
 @group_required("Оператор", "Конструктор: Группировка исследований по направлениям")
 @ensure_csrf_cookie
 def directions_group(request):
-    """ Группировка по направлениям """
+    """Группировка по направлениям"""
     labs = Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.LABORATORY) | Q(p_type=Podrazdeleniya.PARACLINIC))
     return render(request, 'construct_directions_group.html', {"labs": labs})
 
@@ -65,7 +65,7 @@ def directions_group(request):
 @group_required("Оператор", "Конструктор: Настройка УЕТов")
 @ensure_csrf_cookie
 def uets(request):
-    """ Настройка УЕТов """
+    """Настройка УЕТов"""
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
     return render(request, 'uets.html', {"labs": labs})
 
@@ -75,7 +75,7 @@ def uets(request):
 @group_required("Оператор", "Группировка исследований по направлениям")
 @ensure_csrf_cookie
 def onlywith(request):
-    """ Настройка назначения анализов вместе """
+    """Настройка назначения анализов вместе"""
     if request.method == "GET":
         labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
         return render(request, 'onlywith.html', {"labs": labs})
@@ -95,7 +95,7 @@ def onlywith(request):
 @csrf_exempt
 @login_required
 def refs(request):
-    """ Настройка назначения анализов вместе """
+    """Настройка назначения анализов вместе"""
     if request.method == "GET":
         rows = []
         fraction = directory.Fractions.objects.get(pk=int(request.GET["pk"]))

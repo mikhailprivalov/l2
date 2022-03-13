@@ -90,23 +90,25 @@ def actual_rows(request):
             slot_datetime = p.why_cancel
         else:
             slot_datetime = "Ожидает решение"
-        rows.append({
-            "pk": p.pk,
-            "pk_plan": p.pk,
-            "exec_at": p.exec_at,
-            "date": p.exec_at,
-            "research_id": p.research_id,
-            "research__title": p.research.title,
-            "research_title": p.research.title,
-            "comment": p.comment,
-            "work_status": p.work_status,
-            "phone": p.phone,
-            "diagnos": p.diagnos,
-            "hospital_department__title": p.hospital_department.title,
-            "slot": slot_datetime,
-            "patient_card": card_pk,
-            "fio_patient": p.client.individual.fio(),
-            "canceled": p.work_status == 2,
-        })
+        rows.append(
+            {
+                "pk": p.pk,
+                "pk_plan": p.pk,
+                "exec_at": p.exec_at,
+                "date": p.exec_at,
+                "research_id": p.research_id,
+                "research__title": p.research.title,
+                "research_title": p.research.title,
+                "comment": p.comment,
+                "work_status": p.work_status,
+                "phone": p.phone,
+                "diagnos": p.diagnos,
+                "hospital_department__title": p.hospital_department.title,
+                "slot": slot_datetime,
+                "patient_card": card_pk,
+                "fio_patient": p.client.individual.fio(),
+                "canceled": p.work_status == 2,
+            }
+        )
 
     return JsonResponse(rows, safe=False)

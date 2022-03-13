@@ -415,19 +415,12 @@ class Patients(BaseRequester):
     def get_fake_reserves():
         r = []
         from random import randint
+
         cards = clients_models.Card.objects.filter(base__is_rmis=True, is_archive=False)
         for i in range(10):
             rn = randint(0, cards.count())
             c: clients_models.Card = cards[rn]
-            r.append(
-                {
-                    'uid': c.number,
-                    'patient': c.individual.fio(),
-                    'slot': f'l2-test-{i + rn}',
-                    'timeStart': f'0{i}:00',
-                    'timeEnd': f'0{i}:59'
-                }
-            )
+            r.append({'uid': c.number, 'patient': c.individual.fio(), 'slot': f'l2-test-{i + rn}', 'timeStart': f'0{i}:00', 'timeEnd': f'0{i}:59'})
         return r
 
     def get_reserves(self, date: datetime.date, location: Union[int, str]):
@@ -451,6 +444,7 @@ class Patients(BaseRequester):
     @staticmethod
     def get_fake_slot():
         from django.utils import timezone
+
         return {
             "status": "unknown",
             "datetime": timezone.now(),

@@ -258,18 +258,25 @@ def change_department(request):
         if not forbidden_edit and need_update and Podrazdeleniya.objects.filter(pk=dep_id, p_type=Podrazdeleniya.HOSP).exists():
             i.hospital_department_override_id = dep_id
             i.save(update_fields=['hospital_department_override_id'])
-            Log.log(iss, 100000, request.user.doctorprofile, {
-                "direction": i.napravleniye_id,
-                "old_dep": old_dep,
-                "dep": dep_id,
-            })
+            Log.log(
+                iss,
+                100000,
+                request.user.doctorprofile,
+                {
+                    "direction": i.napravleniye_id,
+                    "old_dep": old_dep,
+                    "dep": dep_id,
+                },
+            )
             ok = True
             dep_from = Podrazdeleniya.objects.get(pk=old_dep).get_title()
             dep_to = Podrazdeleniya.objects.get(pk=dep_id).get_title()
         dep_id = i.hospital_department_override_id or i.research.podrazdeleniye_id
-    return JsonResponse({
-        "newDepartment": dep_id,
-        "ok": ok,
-        "from": dep_from,
-        "to": dep_to,
-    })
+    return JsonResponse(
+        {
+            "newDepartment": dep_id,
+            "ok": ok,
+            "from": dep_from,
+            "to": dep_to,
+        }
+    )

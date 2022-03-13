@@ -34,6 +34,7 @@ class InstrumentalResearchRefbook(models.Model):
     """
     Таблица справочников: https://nsi.rosminzdrav.ru/#!/refbook/1.2.643.5.1.13.13.11.1471/
     """
+
     code_nsi = models.CharField(default='', max_length=20, db_index=True, help_text='Уникальный код')
     title = models.CharField(default='', max_length=1000, db_index=True, help_text='Полное наименование')
     method = models.CharField(default='', max_length=300, db_index=True, help_text='Метод')
@@ -49,6 +50,7 @@ class BodySiteRefbook(models.Model):
     """
     Область исследования: 1.2.643.2.69.1.1.1.57/
     """
+
     code = models.CharField(max_length=20, db_index=True, help_text='Код')
     title = models.CharField(max_length=1000, db_index=True, help_text='Полное наименование')
 

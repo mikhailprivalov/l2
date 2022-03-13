@@ -448,8 +448,7 @@ def form_02(request_data):
 
             if record['comment']:
                 comment = record['comment']
-            temp_time.insert(0, [Paragraph(f"{record['drug']} {record['form_release']} {record['method']} {record['dosage']} "
-                                           f"{comment}", styleT)])
+            temp_time.insert(0, [Paragraph(f"{record['drug']} {record['form_release']} {record['method']} {record['dosage']} " f"{comment}", styleT)])
             v_table.append(temp_time)
 
         cols_width = [15.5 * mm for i in range(len(dates_record))]

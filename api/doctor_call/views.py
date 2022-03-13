@@ -213,15 +213,14 @@ def search(request):
 
     p = Paginator(doc_call.distinct(), SettingManager.get("doc_call_page_size", default='30', default_type='i'))
 
-    return JsonResponse({
-        "rows": [
-            x.json(request.user.doctorprofile)
-            for x in p.page(page).object_list
-        ],
-        "page": page,
-        "pages": p.num_pages,
-        "total": p.count,
-    })
+    return JsonResponse(
+        {
+            "rows": [x.json(request.user.doctorprofile) for x in p.page(page).object_list],
+            "page": page,
+            "pages": p.num_pages,
+            "total": p.count,
+        }
+    )
 
 
 @login_required
@@ -233,17 +232,21 @@ def change_status(request):
     with transaction.atomic():
         call: DoctorCall = DoctorCall.objects.select_for_update().get(pk=pk)
         if not call.json(doc=request.user.doctorprofile)['canEdit']:
-            return JsonResponse({
-                "ok": False,
-                "message": "Редактирование запрещено",
-                **call.get_status_data(),
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Редактирование запрещено",
+                    **call.get_status_data(),
+                }
+            )
         if call.status != prev_status:
-            return JsonResponse({
-                "ok": False,
-                "message": "Статус уже обновлён",
-                **call.get_status_data(),
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Статус уже обновлён",
+                    **call.get_status_data(),
+                }
+            )
         if call.status != status:
             log: DoctorCallLog = DoctorCallLog(call=call, author=request.user.doctorprofile, status_update_from=call.status, status_update_to=status)
             log.save()
@@ -251,10 +254,12 @@ def change_status(request):
             if call.is_external:
                 call.need_send_status = True
             call.save(update_fields=['status', 'need_send_status'])
-    return JsonResponse({
-        "ok": True,
-        **call.get_status_data(),
-    })
+    return JsonResponse(
+        {
+            "ok": True,
+            **call.get_status_data(),
+        }
+    )
 
 
 @login_required
@@ -265,26 +270,32 @@ def change_executor(request):
     with transaction.atomic():
         call = DoctorCall.objects.select_for_update().get(pk=pk)
         if not call.json(doc=request.user.doctorprofile)['canEdit']:
-            return JsonResponse({
-                "ok": False,
-                "message": "Редактирование запрещено",
-                **call.get_status_data(),
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Редактирование запрещено",
+                    **call.get_status_data(),
+                }
+            )
         if call.executor_id != prev_executor:
-            return JsonResponse({
-                "ok": False,
-                "message": "Исполнитель уже обновлён",
-                **call.get_status_data(),
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Исполнитель уже обновлён",
+                    **call.get_status_data(),
+                }
+            )
         if call.executor_id != request.user.doctorprofile.pk:
             log: DoctorCallLog = DoctorCallLog(call=call, author=request.user.doctorprofile, executor_update_from=call.executor, executor_update_to_id=request.user.doctorprofile.pk)
             log.save()
             call.executor_id = request.user.doctorprofile.pk
             call.save(update_fields=['executor'])
-    return JsonResponse({
-        "ok": True,
-        **call.get_status_data(),
-    })
+    return JsonResponse(
+        {
+            "ok": True,
+            **call.get_status_data(),
+        }
+    )
 
 
 @login_required
@@ -301,34 +312,42 @@ def add_log(request):
         call: DoctorCall = DoctorCall.objects.select_for_update().get(pk=pk)
 
         if not call.json(doc=request.user.doctorprofile)['canEdit']:
-            return JsonResponse({
-                "ok": False,
-                "message": "Редактирование запрещено",
-                **call.get_status_data(),
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Редактирование запрещено",
+                    **call.get_status_data(),
+                }
+            )
 
         if file and DoctorCallLog.objects.filter(call=call, uploaded_file__isnull=False).count() >= 10:
-            return JsonResponse({
-                "ok": False,
-                "message": "Вы добавили слишком много файлов в одну заявку",
-                **call.get_status_data(),
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Вы добавили слишком много файлов в одну заявку",
+                    **call.get_status_data(),
+                }
+            )
 
         if file and file.size > 5242880:
-            return JsonResponse({
-                "ok": False,
-                "message": "Файл слишком большой",
-                **call.get_status_data(),
-            })
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "message": "Файл слишком большой",
+                    **call.get_status_data(),
+                }
+            )
         log: DoctorCallLog = DoctorCallLog(call=call, author=request.user.doctorprofile, text=text)
 
         if status != -1 and call.status != status:
             if call.status != prev_status:
-                return JsonResponse({
-                    "ok": False,
-                    "message": "Статус уже обновлён",
-                    **call.get_status_data(),
-                })
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "message": "Статус уже обновлён",
+                        **call.get_status_data(),
+                    }
+                )
             log.status_update_from = call.status
             log.status_update_to = status
             call.status = status
@@ -339,10 +358,12 @@ def add_log(request):
         log.uploaded_file = file
         log.save()
 
-    return JsonResponse({
-        "ok": True,
-        **DoctorCall.objects.get(pk=pk).get_status_data(),
-    })
+    return JsonResponse(
+        {
+            "ok": True,
+            **DoctorCall.objects.get(pk=pk).get_status_data(),
+        }
+    )
 
 
 @login_required
@@ -352,18 +373,22 @@ def log_rows(request):
     rows = []
     row: DoctorCallLog
     for row in DoctorCallLog.objects.filter(call_id=pk).order_by('-created_at'):
-        rows.append({
-            'pk': row.pk,
-            'author': row.author.get_fio(),
-            'text': row.text,
-            'statusFrom': row.get_status_update_from_display(),
-            'statusTo': row.get_status_update_to_display(),
-            'executorFrom': row.executor_update_from.get_fio() if row.executor_update_from else None,
-            'executorTo': row.executor_update_to.get_fio() if row.executor_update_to else None,
-            'createdAt': strfdatetime(row.created_at, "%d.%m.%Y %X"),
-            'file': row.uploaded_file.url if row.uploaded_file else None,
-            'fileName': os.path.basename(row.uploaded_file.name) if row.uploaded_file else None,
-        })
-    return JsonResponse({
-        "rows": rows,
-    })
+        rows.append(
+            {
+                'pk': row.pk,
+                'author': row.author.get_fio(),
+                'text': row.text,
+                'statusFrom': row.get_status_update_from_display(),
+                'statusTo': row.get_status_update_to_display(),
+                'executorFrom': row.executor_update_from.get_fio() if row.executor_update_from else None,
+                'executorTo': row.executor_update_to.get_fio() if row.executor_update_to else None,
+                'createdAt': strfdatetime(row.created_at, "%d.%m.%Y %X"),
+                'file': row.uploaded_file.url if row.uploaded_file else None,
+                'fileName': os.path.basename(row.uploaded_file.name) if row.uploaded_file else None,
+            }
+        )
+    return JsonResponse(
+        {
+            "rows": rows,
+        }
+    )

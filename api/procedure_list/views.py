@@ -15,10 +15,7 @@ from utils.xh import get_hospitals_podrazdeleniya
 from directory.models import Researches
 from laboratory.settings import TIME_ZONE
 
-TIMES = [
-    f"{x:02d}:00"
-    for x in range(24)
-]
+TIMES = [f"{x:02d}:00" for x in range(24)]
 
 
 @login_required
@@ -31,8 +28,7 @@ def get_procedure_by_dir(request):
     dates_times = {}
     procedure: ProcedureList
     for procedure in (
-        ProcedureList.objects
-        .filter(history_id=request_data["direction"], diary__issledovaniya__time_confirmation__isnull=False)
+        ProcedureList.objects.filter(history_id=request_data["direction"], diary__issledovaniya__time_confirmation__isnull=False)
         .order_by('pk')
         .prefetch_related(Prefetch('procedurelisttimes_set', queryset=ProcedureListTimes.objects.all().order_by('times_medication')))
     ):
@@ -130,14 +126,20 @@ def procedure_cancel(request):
 
 
 def params(request):
-    return JsonResponse({
-        "formReleases": list(FormRelease.objects.all().order_by('title').values('pk', 'title')),
-        "methods": list(MethodsReception.objects.all().order_by('title').values('pk', 'title')),
-        "times": TIMES,
-        "units": [
-            "мл", "мг", "мкг", "ед", "капля",
-        ]
-    })
+    return JsonResponse(
+        {
+            "formReleases": list(FormRelease.objects.all().order_by('title').values('pk', 'title')),
+            "methods": list(MethodsReception.objects.all().order_by('title').values('pk', 'title')),
+            "times": TIMES,
+            "units": [
+                "мл",
+                "мг",
+                "мкг",
+                "ед",
+                "капля",
+            ],
+        }
+    )
 
 
 @login_required
@@ -214,10 +216,16 @@ def procedure_aggregate(request):
                 'who_cancel': None,
                 'history_num': i[17],
                 'comment': i[18],
-                'dates': {d: {t: {
-                    **empty[t],
-                    "datetime": f"{d} {t}",
-                } for t in empty} for d in unique_dates}
+                'dates': {
+                    d: {
+                        t: {
+                            **empty[t],
+                            "datetime": f"{d} {t}",
+                        }
+                        for t in empty
+                    }
+                    for d in unique_dates
+                },
             }
         data[card_pk]['drugs'][k]['dates'][i[11]][i[12]] = {
             'datetime': f'{i[11]} {i[12]}',

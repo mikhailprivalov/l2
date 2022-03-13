@@ -95,10 +95,12 @@ def laboratories(request):
     active = -1
     r: Podrazdeleniya
     for r in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title"):
-        rows.append({
-            "pk": r.pk,
-            "title": r.get_title(),
-        })
+        rows.append(
+            {
+                "pk": r.pk,
+                "title": r.get_title(),
+            }
+        )
         if active == -1 or request.user.doctorprofile.podrazdeleniye_id == r.pk:
             active = r.pk
     return JsonResponse({"rows": rows, "active": active})
@@ -123,10 +125,7 @@ def ready(request):
         issledovaniya__time_confirmation__isnull=True,
         issledovaniya__research__podrazdeleniye_id=laboratory_pk,
         issledovaniya__isnull=False,
-    ).filter(
-        Q(issledovaniya__napravleniye__hospital_id=request.user.doctorprofile.hospital_id) |
-        Q(issledovaniya__napravleniye__hospital__isnull=True)
-    )
+    ).filter(Q(issledovaniya__napravleniye__hospital_id=request.user.doctorprofile.hospital_id) | Q(issledovaniya__napravleniye__hospital__isnull=True))
 
     for tube in tlist.distinct().prefetch_related('issledovaniya_set__napravleniye').select_related('type', 'type__tube'):
         direction = None
@@ -215,8 +214,8 @@ def search(request):
                 researches_chk = []
                 for issledovaniye in (
                     iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight")
-                        .prefetch_related('tubes', 'result_set')
-                        .select_related('research', 'doc_save')
+                    .prefetch_related('tubes', 'result_set')
+                    .select_related('research', 'doc_save')
                 ):
                     if True:
                         if issledovaniye.pk in researches_chk:
@@ -356,10 +355,7 @@ def form(request):
     pk = request_data["pk"]
     iss: Issledovaniya = Issledovaniya.objects.prefetch_related('result_set').get(pk=pk)
     research: Researches = Researches.objects.prefetch_related(
-        Prefetch(
-            'fractions_set',
-            queryset=Fractions.objects.all().order_by("sort_weight", "pk").prefetch_related('references_set')
-        )
+        Prefetch('fractions_set', queryset=Fractions.objects.all().order_by("sort_weight", "pk").prefetch_related('references_set'))
     ).get(pk=iss.research_id)
     data = {
         "pk": pk,
@@ -384,22 +380,20 @@ def form(request):
         "result": [],
         "comment": iss.lab_comment or "",
         "laborants": (
-            [{"id": -1, "label": 'Не выбрано'}, *[
-                {"id": x.pk, "label": x.get_full_fio()}
-                for x in
-                DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by('fio')
-            ]]
-            if SettingManager.l2('results_laborants') else
-            []
+            [
+                {"id": -1, "label": 'Не выбрано'},
+                *[
+                    {"id": x.pk, "label": x.get_full_fio()}
+                    for x in DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by('fio')
+                ],
+            ]
+            if SettingManager.l2('results_laborants')
+            else []
         ),
         "legalAuthenticators": (
-            [
-                {"id": x.pk, "label": x.get_full_fio()}
-                for x in
-                DoctorProfile.objects.filter(user__groups__name="Подпись от организации").order_by('fio')
-            ]
-            if SettingManager.get('legal_authenticator', default="false", default_type='b') else
-            []
+            [{"id": x.pk, "label": x.get_full_fio()} for x in DoctorProfile.objects.filter(user__groups__name="Подпись от организации").order_by('fio')]
+            if SettingManager.get('legal_authenticator', default="false", default_type='b')
+            else []
         ),
         "co_executor": iss.co_executor_id or -1,
         "co_executor2": iss.co_executor2_id or -1,
@@ -456,31 +450,35 @@ def form(request):
             "f": {},
         }
 
-        data["result"].append({
-            "fraction": {
-                "pk": f.pk,
-                "title": f.title,
-                "units": f.get_unit_str(),
-                "render_type": f.render_type,
-                "options": f.options,
-                "formula": f.formula,
-                "type": f.variants.get_variants() if f.variants else [],
-                "type2": f.variants2.get_variants() if f.variants2 else [],
-                "references": {
-                    **empty_ref,
-                    "default": def_ref_pk,
-                    "available": av,
+        data["result"].append(
+            {
+                "fraction": {
+                    "pk": f.pk,
+                    "title": f.title,
+                    "units": f.get_unit_str(),
+                    "render_type": f.render_type,
+                    "options": f.options,
+                    "formula": f.formula,
+                    "type": f.variants.get_variants() if f.variants else [],
+                    "type2": f.variants2.get_variants() if f.variants2 else [],
+                    "references": {
+                        **empty_ref,
+                        "default": def_ref_pk,
+                        "available": av,
+                    },
                 },
-            },
-            "ref": current_ref,
-            "selectedReference": selected_reference,
-            "norm": r.get_is_norm(recalc=True)[0] if r else None,
-            "value": str(r.value if r else '').replace('&lt;', '<').replace('&gt;', '>'),
-        })
+                "ref": current_ref,
+                "selectedReference": selected_reference,
+                "norm": r.get_is_norm(recalc=True)[0] if r else None,
+                "value": str(r.value if r else '').replace('&lt;', '<').replace('&gt;', '>'),
+            }
+        )
 
-    return JsonResponse({
-        "data": data,
-    })
+    return JsonResponse(
+        {
+            "data": data,
+        }
+    )
 
 
 @login_required
@@ -490,18 +488,17 @@ def save(request):
     pk = request_data["pk"]
     iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
     if iss.time_confirmation:
-        return JsonResponse({
-            "ok": False,
-            "message": 'Редактирование запрещено. Результат уже подтверждён.',
-        })
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": 'Редактирование запрещено. Результат уже подтверждён.',
+            }
+        )
     for t in TubesRegistration.objects.filter(issledovaniya=iss):
         if not t.rstatus():
             t.set_r(request.user.doctorprofile)
     for r in request_data["result"]:
-        result_q = {
-            "issledovaniye": iss,
-            "fraction_id": r["fraction"]["pk"]
-        }
+        result_q = {"issledovaniye": iss, "fraction_id": r["fraction"]["pk"]}
         if Result.objects.filter(**result_q).exists():
             fraction_result = Result.objects.filter(**result_q).order_by("-pk")[0]
             created = False
@@ -554,9 +551,11 @@ def save(request):
     iss.legal_authenticator_id = None if request_data.get("legal_authenticator", -1) == -1 else request_data["legal_authenticator"]
     iss.save()
     Log.log(str(pk), 13, body=request_data, user=request.user.doctorprofile)
-    return JsonResponse({
-        "ok": True,
-    })
+    return JsonResponse(
+        {
+            "ok": True,
+        }
+    )
 
 
 @login_required
@@ -566,10 +565,12 @@ def confirm(request):
     pk = request_data["pk"]
     iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
     if iss.time_confirmation:
-        return JsonResponse({
-            "ok": False,
-            "message": 'Редактирование запрещено. Результат уже подтверждён.',
-        })
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": 'Редактирование запрещено. Результат уже подтверждён.',
+            }
+        )
     if iss.doc_save:
         iss.doc_confirmation = request.user.doctorprofile
         if iss.napravleniye:
@@ -581,13 +582,17 @@ def confirm(request):
         iss.save()
         Log.log(str(pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
     else:
-        return JsonResponse({
-            "ok": False,
-            "message": 'Невозможно подтвердить, результат не сохранён',
-        })
-    return JsonResponse({
-        "ok": True,
-    })
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": 'Невозможно подтвердить, результат не сохранён',
+            }
+        )
+    return JsonResponse(
+        {
+            "ok": True,
+        }
+    )
 
 
 @login_required
@@ -610,9 +615,11 @@ def confirm_list(request):
             Log.log(str(iss.pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
     n.qr_check_token = None
     n.save(update_fields=['qr_check_token'])
-    return JsonResponse({
-        "ok": True,
-    })
+    return JsonResponse(
+        {
+            "ok": True,
+        }
+    )
 
 
 @login_required

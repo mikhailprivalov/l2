@@ -94,7 +94,3 @@ def weapon_form_result_parse(data, reserved=False):
     data_return.append(deepcopy(tmp_data))
 
     return data_return
-
-
-
-

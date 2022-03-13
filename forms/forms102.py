@@ -1244,7 +1244,6 @@ def form_02(request_data):
         objs.append(Spacer(1, 1 * mm))
         objs.append(Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter))
 
-        date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
         date_contract = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=person_contract_data.create_at)
 
         opinion = [
@@ -1579,8 +1578,9 @@ def form_02(request_data):
                 [
                     Paragraph('{} <br/>{}'.format("", hospital_address), styleAtr),
                     Paragraph('', styleAtr),
-                    Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(payer_data['fio'], payer_data['passport_serial'], payer_data['passport_num'], payer_data['main_address']),
-                              styleAtr),
+                    Paragraph(
+                        '{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(payer_data['fio'], payer_data['passport_serial'], payer_data['passport_num'], payer_data['main_address']), styleAtr
+                    ),
                 ],
                 [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
                 [Paragraph('Сотрудник {}'.format(""), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
@@ -1706,7 +1706,7 @@ def form_02(request_data):
                     Paragraph('', styleAtr),
                     Paragraph(
                         '{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['passport_serial'], patient_data['passport_num'], patient_data['main_address']),
-                        styleAtr
+                        styleAtr,
                     ),
                 ],
                 [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],

@@ -134,9 +134,7 @@ class Researches(models.Model):
         (38005, '38005. ИО - Напрвление в др. организацию'),
         (38006, '38006. ИО - Заявление на ВМП'),
         (38007, '38007. ИО - С параметрами по умолчанию'),
-
         (48001, '48001. ИО - Направление на Гистологию'),
-
         (38101, '38101. ИО - Направление в ИДЦ Ковид'),
         (38102, '38102. ИО - Направление в ИДЦ обследование'),
     )
@@ -251,8 +249,9 @@ class Researches(models.Model):
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
     type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     paddings_size = models.CharField(max_length=10, null=True, blank=True, default=None, help_text="Отступы для бланка результатов (лево| вверх|право|низ)")
-    odii_type = models.PositiveSmallIntegerField(choices=Podrazdeleniya.ODII_TYPES, default=None, blank=True, null=True,
-                                                 help_text="Оказываемые виды инструментальных услуг (перезатирает из подразделения, если оно там указано)")
+    odii_type = models.PositiveSmallIntegerField(
+        choices=Podrazdeleniya.ODII_TYPES, default=None, blank=True, null=True, help_text="Оказываемые виды инструментальных услуг (перезатирает из подразделения, если оно там указано)"
+    )
     generator_name = models.CharField(max_length=60, null=True, blank=True, default=None, help_text="Название для xml-generator")
     expertise_params = models.ForeignKey('self', related_name='expertise_params_p', help_text="Экспертиза ", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     file_name_contract = models.CharField(max_length=60, null=True, blank=True, default="default", help_text="Название ф-ла контракта")
@@ -685,6 +684,7 @@ class MaterialVariants(models.Model):
 #
 # class SharedParameters(models.Model):
 #     title = models.CharField(max_length=255, help_text='Название параметра')
+
 
 class Unit(models.Model):
     title = models.CharField(max_length=255, verbose_name='Название единицы измерения')

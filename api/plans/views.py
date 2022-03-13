@@ -1,4 +1,3 @@
-
 from datetime import datetime, time as dtime
 import simplejson as json
 from django.contrib.auth.decorators import login_required
@@ -130,9 +129,7 @@ def get_plan_hospitalization_by_params(request):
         plan_files_data = {}
         for p in pk_plans_files:
             if not plan_files_data.get(p.plan_id, None):
-                plan_files_data[p.plan_id] = [
-                    {'file': f"{MEDIA_URL}{p.uploaded_file}" if p.uploaded_file else None,
-                     'fileName': p.uploaded_file.split("/")[-1] if p.uploaded_file else None}]
+                plan_files_data[p.plan_id] = [{'file': f"{MEDIA_URL}{p.uploaded_file}" if p.uploaded_file else None, 'fileName': p.uploaded_file.split("/")[-1] if p.uploaded_file else None}]
             else:
                 temp_files = plan_files_data.get(p.plan_id, None)
                 temp_files.append({'file': f"{MEDIA_URL}{p.uploaded_file}" if p.uploaded_file else None, 'fileName': p.uploaded_file.split("/")[-1] if p.uploaded_file else None})
@@ -188,7 +185,7 @@ def get_plan_hospitalization_by_params(request):
                     "slot": slot_datetime,
                     "created_by_patient": patient_created,
                     "uploaded_file": plan_files_data.get(i.pk_plan, ""),
-                    "messages": messages_data
+                    "messages": messages_data,
                 }
             )
             if i.sex.lower() == "ж":

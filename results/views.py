@@ -339,7 +339,7 @@ def result_print(request):
         canvas_mark.setFont('FreeSansBold', 8)
         if watermarks:
             canvas_mark.rotate(90)
-            canvas_mark.setFillColor(HexColor(0xed775c))
+            canvas_mark.setFillColor(HexColor(0xED775C))
             canvas_mark.setFont('FreeSans', 6)
             canvas_mark.drawString(10 * mm, -23 * mm, '{}'.format(40 * " #ЕРЦП# - НЕ ПОДТВЕРЖДЕНО (ОБРАЗЕЦ) - "))
             canvas_mark.rotate(-90)
@@ -355,8 +355,9 @@ def result_print(request):
             if direction.is_external:
                 canvas_mark.drawString(55 * mm, 9.6 * mm, f'№ карты: {direction.client.number_with_type()}; Номер в организации: {direction.id_in_hospital}; Направление № {direction.pk}')
             else:
-                canvas_mark.drawString(55 * mm, 9.6 * mm,
-                                       '№ карты: {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+                canvas_mark.drawString(
+                    55 * mm, 9.6 * mm, '№ карты: {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk)
+                )
             canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
             canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
             if qr_data:
@@ -1005,7 +1006,7 @@ def result_print(request):
                 elif not protocol_plain_text:
                     fwb = structure_data_for_result(iss, fwb, doc, leftnone, med_certificate)
                 else:
-                    fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text,med_certificate)
+                    fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_certificate)
 
                 recipies = Recipe.objects.filter(issledovaniye=iss).order_by('pk')
                 if recipies.exists():

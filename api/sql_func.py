@@ -209,4 +209,3 @@ def get_resource_researches(resource_pks):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-

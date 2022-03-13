@@ -788,7 +788,7 @@ def hosp_get_operation_data(num_dir):
                 'diagnos_after_operation': '',
                 'mkb10': '',
                 'category_difficult': '',
-                'doc_code': ''
+                'doc_code': '',
             }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.time_confirmation:
@@ -964,4 +964,3 @@ def create_contract(ind_dir, card_pk):
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
 
     return PersonContract.pk
-

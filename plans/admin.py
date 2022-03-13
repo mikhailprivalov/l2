@@ -4,9 +4,7 @@ import plans.models as models
 
 
 class ResPlanHospitalization(admin.ModelAdmin):
-    list_filter = (
-        'hospital_department',
-    )
+    list_filter = ('hospital_department',)
     list_display = (
         'hospital_department',
         'research',
@@ -33,9 +31,7 @@ class ResPlanHospitalization(admin.ModelAdmin):
         'hospital_department',
         'research',
     )
-    raw_id_fields = (
-        'client',
-    )
+    raw_id_fields = ('client',)
 
     def plan_client(self, obj):
         if obj:
@@ -45,9 +41,7 @@ class ResPlanHospitalization(admin.ModelAdmin):
 
 
 class ResLimitDatePlanHospitalization(admin.ModelAdmin):
-    list_filter = (
-        'hospital_department',
-    )
+    list_filter = ('hospital_department',)
     list_display = (
         'hospital_department',
         'research',
@@ -63,19 +57,9 @@ class ResLimitDatePlanHospitalization(admin.ModelAdmin):
 
 
 class ResPlanHospitalizationFiles(admin.ModelAdmin):
-    list_display = (
-        'created_at',
-        'uploaded_file',
-        'plan_research',
-        'plan_client'
-    )
+    list_display = ('created_at', 'uploaded_file', 'plan_research', 'plan_client')
 
-    list_display_links = (
-        'created_at',
-        'uploaded_file',
-        'plan_research',
-        'plan_client'
-    )
+    list_display_links = ('created_at', 'uploaded_file', 'plan_research', 'plan_client')
 
     def plan_research(self, obj):
         if obj.plan:
@@ -101,18 +85,16 @@ class ResMessages(admin.ModelAdmin):
         'created_at',
         'plan_client',
         'plan',
-
     )
 
-    raw_id_fields = (
-        'client',
-    )
+    raw_id_fields = ('client',)
 
     def plan_client(self, obj):
         if obj.plan:
             return obj.plan.client.get_fio_w_card()
         else:
             return ""
+
 
 admin.site.register(models.PlanHospitalization, ResPlanHospitalization)
 admin.site.register(models.LimitDatePlanHospitalization, ResLimitDatePlanHospitalization)

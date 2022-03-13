@@ -27,9 +27,7 @@ class ExternalServiceAdmin(admin.ModelAdmin):
 
 
 class ExternalServiceRights(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
+    list_display = ('title',)
 
 
 class CrieOrderAdmin(admin.ModelAdmin):

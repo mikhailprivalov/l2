@@ -161,7 +161,6 @@ class ResParaclinicInputField(admin.ModelAdmin):
     list_display = (
         'title',
         'group',
-
     )
     list_display_links = (
         'title',
@@ -218,9 +217,7 @@ class ScreeningPlanAdmin(admin.ModelAdmin):
 
 class UnitAdmin(admin.ModelAdmin):
     list_display = ('title', 'short_title', 'code', 'hide')
-    list_filter = (
-        'hide',
-    )
+    list_filter = ('hide',)
     search_fields = ('title', 'short_title', 'code')
 
 

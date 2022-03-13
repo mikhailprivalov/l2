@@ -20,7 +20,10 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        code_nsi, title, = '', ''
+        code_nsi, title, = (
+            '',
+            '',
+        )
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:

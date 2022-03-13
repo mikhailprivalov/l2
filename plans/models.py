@@ -283,12 +283,7 @@ class Messages(models.Model):
         patient_card = Card.objects.get(pk=data['card_pk'])
         pk_plan = data.get("plan_pk", None)
         plan = PlanHospitalization.objects.get(pk=pk_plan) if pk_plan else None
-        message = Messages(
-            client=patient_card,
-            message=data['message'],
-            doc_who_create=doc_who_create,
-            plan=plan
-        )
+        message = Messages(client=patient_card, message=data['message'], doc_who_create=doc_who_create, plan=plan)
         message.save()
         return message.pk
 

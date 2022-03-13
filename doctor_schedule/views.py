@@ -79,8 +79,9 @@ def get_available_hospital_plans(research_pk, resource_id=None, date_start=None,
         d1 = try_strptime(current_date, formats=('%Y-%m-%d',))
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d1, datetime.time.max)
-        current_plan_count = PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status__in=[0, 1, 3], action=0, research_id=research_pk).order_by(
-            "exec_at").count()
+        current_plan_count = (
+            PlanHospitalization.objects.filter(exec_at__range=(start_date, end_date), work_status__in=[0, 1, 3], action=0, research_id=research_pk).order_by("exec_at").count()
+        )
         counts[current_date] = {
             "available": len(slots_in_date),
             "used": current_plan_count,

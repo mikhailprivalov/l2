@@ -580,9 +580,7 @@ class Individual(models.Model):
                     q_more = {}
                 if idp or enp or snils:
                     indv = (
-                        Individual.objects.filter(
-                            Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(**q_more)
-                        )
+                        Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(**q_more))
                         if snils
                         else Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(**q_more))
                     )
@@ -1135,9 +1133,7 @@ class Card(models.Model):
 
     @staticmethod
     def next_l2_n():
-        last_l2 = Card.objects.filter(base__internal_type=True, number__regex=r'^\d+$').extra(
-            select={'numberInt': 'CAST(number AS INTEGER)'}
-        ).order_by("-numberInt").first()
+        last_l2 = Card.objects.filter(base__internal_type=True, number__regex=r'^\d+$').extra(select={'numberInt': 'CAST(number AS INTEGER)'}).order_by("-numberInt").first()
         n = 0
         if last_l2:
             n = last_l2.numberInt

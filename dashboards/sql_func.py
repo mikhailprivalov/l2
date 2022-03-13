@@ -1,6 +1,11 @@
+import hashlib
+import pickle
 import psycopg2
+from laboratory import VERSION
+from laboratory.settings import DASHBOARD_CHARTS_CACHE_TIME_SEC
 from utils.db import namedtuplefetchall
 from django.db import connection
+from django.core.cache import cache
 
 
 def get_charts_dataset(dashboard_pk):
@@ -40,16 +45,19 @@ def get_charts_dataset(dashboard_pk):
 
 
 def execute_select(database, user, password, address, port, query):
-    connection = psycopg2.connect(
-        database=database,
-        user=user,
-        password=password,
-        host=address,
-        port=port
-    )
-    cursor = connection.cursor()
-    cursor.execute(query)
-    rows = namedtuplefetchall(cursor)
-    cursor.close()
-    connection.close()
+    key = f'{database}:{user}:{password}:{port}:{query}:{VERSION}'
+    key = str(hashlib.sha256(key.encode()).hexdigest())
+    key = f'dashboard-charts:{key}'
+    rows = cache.get(key)
+    if not rows:
+        connection = psycopg2.connect(database=database, user=user, password=password, host=address, port=port)
+        cursor = connection.cursor()
+        cursor.execute(query)
+        rows = namedtuplefetchall(cursor)
+        cursor.close()
+        connection.close()
+        if DASHBOARD_CHARTS_CACHE_TIME_SEC > 0:
+            cache.set(key, pickle.dumps(rows, protocol=4), DASHBOARD_CHARTS_CACHE_TIME_SEC)
+    else:
+        rows = pickle.loads(rows, encoding="utf8")
     return rows
