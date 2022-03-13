@@ -247,14 +247,14 @@ export default {
       };
       this.selected_template = -1;
     },
-    load_data(select_after) {
+    load_data(selectAfter) {
       this.loaded = false;
       this.clear();
       this.$store.dispatch(actions.INC_LOADING);
       researchesPoint.getFastTemplates({ pk: this.research_pk, all: true }).then(({ data }) => {
         this.rows = data;
-        if (select_after) {
-          this.select_template(select_after);
+        if (selectAfter) {
+          this.select_template(selectAfter);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);

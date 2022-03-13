@@ -267,7 +267,7 @@ import { createPopper } from '@popperjs/core';
 import bacteriaPoint from '../api/bacteria-point';
 import * as actions from '../store/action-types';
 import RadioField from '../fields/RadioField.vue';
-import { enter_field, leave_field } from './utils';
+import { enterField, leaveField } from './utils';
 import FastTemplates from './FastTemplates.vue';
 import KOEField from '../fields/KOEField.vue';
 
@@ -431,10 +431,10 @@ export default {
       };
     },
     enter_field(...args) {
-      return enter_field.apply(this, args);
+      return enterField.apply(this, args);
     },
     leave_field(...args) {
-      return leave_field.apply(this, args);
+      return leaveField.apply(this, args);
     },
   },
 };

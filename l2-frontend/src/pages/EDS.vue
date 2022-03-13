@@ -619,15 +619,15 @@ export default class EDS extends Vue {
     }
   }
 
-  async load(page_to_load) {
+  async load(pageToLoad) {
     if (this.signingProcess.active) {
       this.rows = [];
     }
     const prevSelectedSignatureMode = this.selectedSignatureMode;
     this.signingProcess.progress = false;
     this.signingProcess.active = false;
-    if (page_to_load !== null) {
-      this.page = page_to_load;
+    if (pageToLoad !== null) {
+      this.page = pageToLoad;
     } else {
       this.page = 1;
     }

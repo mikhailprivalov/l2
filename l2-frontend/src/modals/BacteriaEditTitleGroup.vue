@@ -23,14 +23,14 @@
 
         <input
           id="change-group-title"
-          v-model="group_obj.title"
+          v-model="/* eslint-disable-line vue/no-mutating-props */ group_obj.title"
           class="form-control"
         >
       </div>
       <div class="checkbox">
         <label>
           <input
-            v-model="group_obj.hide"
+            v-model="/* eslint-disable-line vue/no-mutating-props */ group_obj.hide"
             type="checkbox"
           > Скрыть
         </label>

@@ -3,14 +3,14 @@
     <td>{{ department.pk }}</td>
     <td>
       <input
-        v-model="department.title"
+        v-model="/* eslint-disable-line vue/no-mutating-props */ department.title"
         class="form-control"
         :disabled="!can_edit"
       >
     </td>
     <td>
       <input
-        v-model="department.oid"
+        v-model="/* eslint-disable-line vue/no-mutating-props */ department.oid"
         class="form-control"
         placeholder="oid - подразделения"
         :disabled="!can_edit"
@@ -18,7 +18,7 @@
     </td>
     <td>
       <Treeselect
-        v-model="department.type"
+        v-model="/* eslint-disable-line vue/no-mutating-props */ department.type"
         :multiple="false"
         :disable-branch-nodes="true"
         :options="types_options"
@@ -42,7 +42,7 @@
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import _ from 'lodash';
-import departments_directory from '@/api/departments-directory';
+import departmentsDirectory from '@/api/departments-directory';
 import * as actions from '../store/action-types';
 
 export default {
@@ -102,7 +102,7 @@ export default {
       this.save();
     }, 300),
     async save() {
-      const ok = await departments_directory.sendDepartments({
+      const ok = await departmentsDirectory.sendDepartments({
         method: 'POST',
         hospital: this.selected_hospital,
         type: 'update',

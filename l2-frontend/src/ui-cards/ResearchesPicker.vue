@@ -553,10 +553,10 @@ export default {
     }
   },
   methods: {
-    researches_sub_categories(sc_id) {
+    researches_sub_categories(scId) {
       const r = [];
       for (const row of this.$store.getters.researches[this.rev_t] || []) {
-        if (row.site_type_raw === sc_id && row.site_type === this.dep) {
+        if (row.site_type_raw === scId && row.site_type === this.dep) {
           r.push(row);
         }
       }
@@ -655,16 +655,16 @@ export default {
       if (this.readonly) {
         return;
       }
-      let last_dep = -1;
-      let last_type = -1;
+      let lastDep = -1;
+      let lastType = -1;
       for (const v of this.get_template(pk).values) {
         this.select_research_ignore(v);
         const d = this.research_data(v);
-        last_dep = d.department_pk;
-        last_type = d.type;
+        lastDep = d.department_pk;
+        lastType = d.type;
       }
-      this.select_type(last_type);
-      this.select_dep(last_dep);
+      this.select_type(lastType);
+      this.select_dep(lastDep);
     },
     get_template(pk) {
       for (const t of this.templates) {
@@ -706,8 +706,8 @@ export default {
           this.$root.$emit('msg', 'ok', 'Применён шаблон');
         }
         if (this.autoselect === 'directions' && research.autoadd) {
-          for (const autoadd_pk of research.autoadd) {
-            this.select_research_ignore(autoadd_pk);
+          for (const autoaddPk of research.autoadd) {
+            this.select_research_ignore(autoaddPk);
           }
         }
       }
@@ -720,8 +720,8 @@ export default {
         this.checked_researches = this.checked_researches.filter((item) => item !== pk);
         const research = this.research_data(pk);
         if (this.autoselect === 'directions') {
-          for (const addto_pk of research.addto || []) {
-            this.deselect_research_ignore(addto_pk);
+          for (const addtoPk of research.addto || []) {
+            this.deselect_research_ignore(addtoPk);
           }
         }
       }

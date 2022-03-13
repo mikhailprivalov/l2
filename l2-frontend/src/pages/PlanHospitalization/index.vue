@@ -152,12 +152,12 @@ export default class PlanHospitalization extends Vue {
   async load_data() {
     await this.$store.dispatch(actions.INC_LOADING);
     const [d1, d2] = this.dateRange.split('x');
-    const result_data = await plansPoint.getPlansHospitalizationByParams({
+    const resultData = await plansPoint.getPlansHospitalizationByParams({
       start_date: d1,
       end_date: d2,
       department_pk: this.filters.department_pk || -1,
     });
-    this.data = result_data.result;
+    this.data = resultData.result;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 }

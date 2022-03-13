@@ -133,6 +133,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/statistics/report',
+      name: 'statistics_report',
+      component: () => import('@/pages/StatisticsReport/index.vue'),
+      meta: {
+        title: 'Просмотр графиков статистики',
+        groups: ['Просмотр графиков статистики'],
+        module: 'l2_statistics',
+      },
+    },
+    {
       path: '/ui/results/descriptive',
       name: 'results_descriptive',
       component: () => import('@/pages/ResultsParaclinic.vue'),

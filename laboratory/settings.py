@@ -65,6 +65,7 @@ INSTALLED_APPS = (
     'command_utils',
     'doctor_schedule',
     'django_celery_results',
+    'dashboards',
 )
 
 MIDDLEWARE = [
@@ -301,8 +302,10 @@ DEF_CONSULT_LEGALAUTH = None
 
 DEATH_RESEARCH_PK = None
 PERINATAL_DEATH_RESEARCH_PK = None
-
 COVID_RESEARCHES_PK = []
+
+RESEARCH_SPECIAL_REPORT = {"driver_research": None, "weapon_research_pk": None}
+
 CENTRE_GIGIEN_EPIDEMIOLOGY = ""
 REGION = ""
 EXCLUDE_HOSP_SEND_EPGU = []
@@ -365,6 +368,9 @@ QRCODE_OFFSET_SIZE = {}
 LEFT_QRCODE_OFFSET_SIZE = {}
 PROTOCOL_PLAIN_TEXT = True
 SPLIT_PRINT_RESULT = False
+REQUIRED_STATTALON_FIELDS = {}
+
+DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

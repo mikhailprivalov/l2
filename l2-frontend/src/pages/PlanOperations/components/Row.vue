@@ -24,7 +24,7 @@
     </td>
     <td>
       <Treeselect
-        v-model="data.doc_anesthetist_id"
+        v-model="/* eslint-disable-line vue/no-mutating-props */ data.doc_anesthetist_id"
         :multiple="false"
         :disable-branch-nodes="true"
         :options="anestesiologs"

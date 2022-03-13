@@ -212,6 +212,7 @@ class ResIssledovaniyaFiles(admin.ModelAdmin):
     )
     search_fields = ('issledovaniye__pk', )
 
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)

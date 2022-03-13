@@ -408,7 +408,7 @@
                   @click.prevent="print_results(opened_form_pk)"
                 >Печать</a>
               </template>
-              <template>
+              <div v-frag>
                 <a
                   v-if="!!row.pacs"
                   v-tippy
@@ -455,7 +455,7 @@
                     Загрузить шаблон
                   </button>
                 </template>
-              </template>
+              </div>
             </div>
           </div>
           <DescriptiveForm
@@ -912,7 +912,7 @@ import dropdown from 'vue-my-dropdown';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
-import stationar_point from '@/api/stationar-point';
+import stationarPoint from '@/api/stationar-point';
 import Patient from '@/types/patient';
 import directionsPoint from '@/api/directions-point';
 import IssStatus from '@/ui-cards/IssStatus.vue';
@@ -1168,22 +1168,22 @@ export default {
 
       return this.saveUpdatedDepartment(needUpdate, node.id);
     },
-    async saveUpdatedDepartment(needUpdate, department_id) {
+    async saveUpdatedDepartment(needUpdate, departmentId) {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
         newDepartment,
         ok,
-        from: dep_from,
-        to: dep_to,
-      } = await stationar_point.changeDepartment(this, 'iss', {
+        from: depFrom,
+        to: depTo,
+      } = await stationarPoint.changeDepartment(this, 'iss', {
         needUpdate,
-        department_id: department_id || this.department_id,
+        department_id: departmentId || this.department_id,
       });
       this.department_id = newDepartment;
-      if (!department_id) {
+      if (!departmentId) {
         this.change_department = false;
       } else if (ok) {
-        this.$root.$emit('msg', 'ok', `Отделение успешно изменено\n${dep_from} → ${dep_to}`);
+        this.$root.$emit('msg', 'ok', `Отделение успешно изменено\n${depFrom} → ${depTo}`);
         this.change_department = false;
       } else if (needUpdate) {
         this.$root.$emit('msg', 'error', 'Не удалось сменить отделение!');
@@ -1201,8 +1201,8 @@ export default {
       this.$store.dispatch(actions.CHANGE_STATUS_MENU_ANESTHESIA);
     },
     is_diary(research) {
-      const res_title = research.title.toLowerCase();
-      return res_title.includes('осмотр') || res_title.includes('дневник') || res_title.includes('диагностический');
+      const resTitle = research.title.toLowerCase();
+      return resTitle.includes('осмотр') || resTitle.includes('дневник') || resTitle.includes('диагностический');
     },
     create_directions(iss) {
       this.create_directions_diagnosis = iss.diagnos;
@@ -1210,7 +1210,7 @@ export default {
     },
     async confirm_service() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { pk } = await stationar_point.makeService({
+      const { pk } = await stationarPoint.makeService({
         service: this.direction_service,
         main_direction: this.direction,
       });
@@ -1219,7 +1219,7 @@ export default {
         await this.open_form({ pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar' });
       }
       await this.closePlus();
-      this.counts = await stationar_point.counts(this, ['direction']);
+      this.counts = await stationarPoint.counts(this, ['direction']);
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     select_research(pk) {
@@ -1287,7 +1287,7 @@ export default {
       this.hide_results();
       await this.close(true);
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, data, message } = await stationar_point.load(this, ['pk'], { every });
+      const { ok, data, message } = await stationarPoint.load(this, ['pk'], { every });
       if (ok) {
         this.pk = '';
         this.every = every;
@@ -1307,19 +1307,19 @@ export default {
         this.directions_child_select = [];
         this.department_id = data.department_id;
         this.departments = data.departments;
-        for (const direction_obj of this.tree) {
+        for (const directionObj of this.tree) {
           this.directions_parent_select.push({
-            label: `${direction_obj.direction}-${direction_obj.research_title}(${direction_obj.order})`,
-            id: direction_obj.issledovaniye,
+            label: `${directionObj.direction}-${directionObj.research_title}(${directionObj.order})`,
+            id: directionObj.issledovaniye,
           });
-          this.direcions_order[direction_obj.issledovaniye] = direction_obj.order;
+          this.direcions_order[directionObj.issledovaniye] = directionObj.order;
         }
         this.directions_child_select = [...this.directions_parent_select];
         this.directions_parent_select.push({ label: 'Назначить головным текущее', id: -1 });
         this.directions_child_select.push({ label: 'Очистить', id: -1 });
 
         this.patient = new Patient(data.patient);
-        this.counts = await stationar_point.counts(this, ['direction'], { every });
+        this.counts = await stationarPoint.counts(this, ['direction'], { every });
         if (message && message.length > 0) {
           this.$root.$emit('msg', 'warning', message);
         }
@@ -1340,12 +1340,12 @@ export default {
       this.list_directions = [];
       this.opened_list_key = null;
     },
-    async load_directions(key, no_close = false) {
+    async load_directions(key, noClose = false) {
       await this.$store.dispatch(actions.INC_LOADING);
-      if (!no_close) {
+      if (!noClose) {
         this.close_list_directions();
       }
-      const { data } = await stationar_point.directionsByKey({
+      const { data } = await stationarPoint.directionsByKey({
         direction: this.direction,
         r_type: key,
         every: this.every,
@@ -1358,7 +1358,7 @@ export default {
       const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar';
       if (mode === 'stationar') {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { data } = await stationar_point.hospServicesByType({
+        const { data } = await stationarPoint.hospServicesByType({
           direction: this.direction,
           r_type: key,
         });
@@ -1389,18 +1389,18 @@ export default {
       }
 
       this.$store.dispatch(actions.INC_LOADING);
-      this.counts = await stationar_point.counts(this, ['direction']);
+      this.counts = await stationarPoint.counts(this, ['direction']);
       this.$store.dispatch(actions.DEC_LOADING);
       this.reload_if_need(true);
     },
     print_results(pk) {
       this.$root.$emit('print:results', [pk]);
     },
-    reload_if_need(no_close = false) {
+    reload_if_need(noСlose = false) {
       if (!this.opened_list_key) {
         return;
       }
-      this.load_directions(this.opened_list_key, no_close);
+      this.load_directions(this.opened_list_key, noСlose);
     },
     save(iss) {
       this.hide_results();
@@ -1653,17 +1653,17 @@ export default {
       field.value = '';
     },
     append_value(field, value) {
-      let add_val = value;
-      if (add_val !== ',' && add_val !== '.') {
+      let addVal = value;
+      if (addVal !== ',' && addVal !== '.') {
         if (
           field.value.length > 0
           && field.value[field.value.length - 1] !== ' '
           && field.value[field.value.length - 1] !== '\n'
         ) {
           if (field.value[field.value.length - 1] === '.') {
-            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
+            addVal = addVal.replace(/./, addVal.charAt(0).toUpperCase());
           }
-          add_val = ` ${add_val}`;
+          addVal = ` ${addVal}`;
         } else if (
           (field.value.length === 0
             || (field.value.length >= 2
@@ -1671,11 +1671,11 @@ export default {
               && field.value[field.value.length - 1] === '\n'))
           && field.title === ''
         ) {
-          add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
+          addVal = addVal.replace(/./, addVal.charAt(0).toUpperCase());
         }
       }
       // eslint-disable-next-line no-param-reassign
-      field.value += add_val;
+      field.value += addVal;
     },
     load_template(row, pk) {
       this.$store.dispatch(actions.INC_LOADING);

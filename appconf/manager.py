@@ -7,10 +7,10 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = laboratory.VERSION
+    VERSION = f"{laboratory.VERSION}-2"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
-    FULL_CACHE_L2_KEY = f'setting_manager_full_cached_l2:v{VERSION}'
-    FULL_CACHE_EN_KEY = f'setting_manager_full_cached_en:v{VERSION}'
+    FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
+    FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
 
     @staticmethod
     def warmup():
@@ -124,7 +124,8 @@ class SettingManager:
                     "l2vi",
                     "morfology_additional",
                     "some_links",
-                    "without_lab_and_paraclinic"
+                    "without_lab_and_paraclinic",
+                    "statistics",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

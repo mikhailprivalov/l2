@@ -82,7 +82,7 @@
 </template>
 
 <script lang="ts">
-import stationar_point from '../api/stationar-point';
+import stationarPoint from '../api/stationar-point';
 
 const delimiter = '#@#';
 
@@ -169,7 +169,7 @@ export default {
       return s.split(delimiter)[1];
     },
     async load() {
-      this.data = await stationar_point.aggregateDesc(this, ['pk', 'extract', 'r_type']);
+      this.data = await stationarPoint.aggregateDesc(this, ['pk', 'extract', 'r_type']);
     },
     fix_html(v) {
       let lv = v;

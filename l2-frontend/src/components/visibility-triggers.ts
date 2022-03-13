@@ -19,6 +19,5 @@ export const vGroup = (group: any, groups: any, patient = {}): any => {
   return group.fields.length === 0;
 };
 
-export const vField = (
-  group: any, groups: any, formula: any, patient = {},
-): any => formula === '' || (CalculateVisibility(objFields(groups), formula, patient) && vGroup(group, groups, patient));
+// eslint-disable-next-line max-len
+export const vField = (group: any, groups: any, formula: any, patient = {}): any => formula === '' || (CalculateVisibility(objFields(groups), formula, patient) && vGroup(group, groups, patient));

@@ -429,9 +429,9 @@ export default {
         ].join(''),
       );
     },
-    async load(page_to_load) {
-      if (page_to_load !== null) {
-        this.params.page = page_to_load;
+    async load(pageToLoad) {
+      if (pageToLoad !== null) {
+        this.params.page = pageToLoad;
       } else {
         this.params.page = 1;
       }

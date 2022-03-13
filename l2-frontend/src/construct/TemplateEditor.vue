@@ -154,7 +154,7 @@
 <script lang="ts">
 import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '../ui-cards/SelectedResearches.vue';
-import construct_point from '../api/construct-point';
+import constructPoint from '../api/construct-point';
 import * as actions from '../store/action-types';
 
 const TYPES = [
@@ -336,7 +336,7 @@ export default {
     },
     save() {
       this.$store.dispatch(actions.INC_LOADING);
-      construct_point
+      constructPoint
         .updateTemplate(this, [
           'pk',
           'title',

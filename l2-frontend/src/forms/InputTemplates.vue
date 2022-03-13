@@ -189,6 +189,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     useTemplate(v) {
+      // eslint-disable-next-line vue/no-mutating-props
       this.field.value = v;
       this.open = false;
       this.$root.$emit('msg', 'ok', 'Шаблон применён', 2000);

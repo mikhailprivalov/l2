@@ -81,13 +81,13 @@ export default {
   computed: {},
   watch: {
     selected_researches() {
-      const r_to_load = [];
+      const toLoad = [];
       for (const pk of this.selected_researches) {
         if (!(pk in this.params_directory)) {
-          r_to_load.push(pk);
+          toLoad.push(pk);
         }
       }
-      this.load_params(r_to_load);
+      this.load_params(toLoad);
     },
   },
   mounted() {

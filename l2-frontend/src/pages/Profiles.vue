@@ -735,12 +735,12 @@ const toTranslit = function (text) {
   });
 };
 
-function str_rand(l = 8, v = 1) {
+function strRand(l = 8, v = 1) {
   let result = '';
   const words = v === 1 ? '0123456789-qwertyuiopasdfghjklzxcvbnm01234567890123456789' : '000000000000123456789';
-  const max_position = words.length - 1;
+  const maxPosition = words.length - 1;
   for (let i = 0; i < l; ++i) {
-    const position = Math.floor(Math.random() * max_position);
+    const position = Math.floor(Math.random() * maxPosition);
     result += words.substring(position, position + 1);
   }
   return result;
@@ -946,16 +946,16 @@ export default {
         ls.push(' ');
       }
       v = ls[0] + (ls[1][0] || '') + (ls[2][0] || '');
-      v = toTranslit(v.replace(/\s/g, '')) + str_rand(3, 2);
+      v = toTranslit(v.replace(/\s/g, '')) + strRand(3, 2);
       this.user.username = v;
       this.$root.$emit('msg', 'ok', 'Имя пользователя сгенерировано');
     },
     gen_passwd() {
-      this.user.password = str_rand();
+      this.user.password = strRand();
     },
-    async load_users(prev_clr = false) {
+    async load_users(prevClr = false) {
       await this.$store.dispatch(actions.INC_LOADING);
-      if (!prev_clr) {
+      if (!prevClr) {
         this.departments = [];
       }
       const { departments, specialities, positions } = await usersPoint.loadUsers(this, 'selected_hospital');

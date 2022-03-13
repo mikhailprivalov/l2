@@ -69,7 +69,7 @@
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { mapGetters } from 'vuex';
-import departments_directory from '@/api/departments-directory';
+import departmentsDirectory from '@/api/departments-directory';
 import DepartmentEditRow from '@/forms/DepartmentEditRow.vue';
 import * as actions from '../store/action-types';
 
@@ -139,7 +139,7 @@ export default {
     async insert() {
       if (!this.create_valid) return;
       await this.$store.dispatch(actions.INC_LOADING);
-      const ok = await departments_directory.sendDepartments({
+      const ok = await departmentsDirectory.sendDepartments({
         method: 'POST',
         hospital: this.selected_hospital,
         type: 'insert',
@@ -159,7 +159,7 @@ export default {
     async loadDepartments() {
       await this.$store.dispatch(actions.INC_LOADING);
       this.departments = (
-        await departments_directory.getDepartments({
+        await departmentsDirectory.getDepartments({
           method: 'GET',
           hospital: this.selected_hospital,
           withoutDefault: true,

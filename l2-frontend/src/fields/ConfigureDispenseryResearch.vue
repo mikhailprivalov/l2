@@ -21,7 +21,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="(val, index) in tb_data"
+          v-for="(val, index) in tbData"
           :key="index"
         >
           <td class="cl-td">
@@ -94,7 +94,7 @@
       <div class="col-xs-2">
         <button
           class="btn btn-blue-nb add-row"
-          @click="save_dispensary_data(tb_data)"
+          @click="save_dispensary_data(tbData)"
         >
           Сохранить
         </button>
@@ -133,16 +133,16 @@ export default {
   },
   data() {
     return {
-      tb_data: [makeDefaultRow()],
+      tbData: [makeDefaultRow()],
       types,
       researches: [],
       specialities: [],
     };
   },
   watch: {
-    tb_data: {
+    tbData: {
       handler() {
-        this.changeValue(this.tb_data);
+        this.changeValue(this.tbData);
       },
       immediate: true,
     },
@@ -155,15 +155,15 @@ export default {
       this.specialities = rows;
     });
     this.$api('researches/load-research-by-diagnos', { diagnos_code: this.diagnos_code }).then(rows => {
-      this.tb_data = rows;
+      this.tbData = rows;
     });
   },
   methods: {
-    async save_dispensary_data(tb_data) {
+    async save_dispensary_data(tbData) {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('researches/save-dispensary-data', {
         diagnos: this.diagnos_code,
-        tb_data,
+        tb_data: tbData,
       });
       if (ok) {
         this.$root.$emit('msg', 'ok', message);
@@ -173,11 +173,11 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     add_new_row() {
-      const tl = this.tb_data.length;
-      this.tb_data.push(makeDefaultRow(tl > 0 ? this.tb_data[tl - 1].type : null));
+      const tl = this.tbData.length;
+      this.tbData.push(makeDefaultRow(tl > 0 ? this.tbData[tl - 1].type : null));
     },
     delete_row(index) {
-      this.tb_data.splice(index, 1);
+      this.tbData.splice(index, 1);
     },
     changeValue(newVal) {
       this.$emit('modified', newVal);

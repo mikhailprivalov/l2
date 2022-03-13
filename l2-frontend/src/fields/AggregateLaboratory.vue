@@ -194,7 +194,7 @@
 </template>
 
 <script lang="ts">
-import stationar_point from '../api/stationar-point';
+import stationarPoint from '../api/stationar-point';
 
 const delimiter = '#@#';
 
@@ -295,7 +295,7 @@ export default {
     async load() {
       this.excluded.dateDir = [];
       this.excluded.titles = [];
-      this.data = await stationar_point.aggregateLaboratory(this, ['pk', 'extract']);
+      this.data = await stationarPoint.aggregateLaboratory(this, ['pk', 'extract']);
     },
     excludedTitle(t, group) {
       const title = makeKey(t, group);

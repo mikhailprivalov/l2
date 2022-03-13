@@ -1368,7 +1368,7 @@ def destination_person_passport(text, data):
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
     ]
     col_width = (190 * mm)
-    tbl = gen_table(opinion, col_width, tbl_style, 4 * mm)
+    tbl = gen_table(opinion, col_width, tbl_style, 8 * mm)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
     return text

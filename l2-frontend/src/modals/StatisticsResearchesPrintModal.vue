@@ -104,8 +104,8 @@ export default {
   computed: {
     researches_list() {
       const u = [];
-      for (const u_row of this.researches) {
-        u.push({ value: u_row.pk, label: u_row.title });
+      for (const user of this.researches) {
+        u.push({ value: user.pk, label: user.title });
       }
       return u;
     },
