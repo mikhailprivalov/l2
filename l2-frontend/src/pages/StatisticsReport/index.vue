@@ -167,7 +167,11 @@ export default {
           style: {
             colors: ['#111'],
           },
-          [c.type === 'BAR' ? 'offsetX' : 'offsetY']: c.type === 'BAR' ? 20 : -20,
+          [c.type === 'BAR' ? 'offsetX' : 'offsetY']: c.type === 'BAR' ? 15 : -20,
+        },
+        legend: {
+          show: true,
+          showForSingleSeries: true,
         },
       };
     },
