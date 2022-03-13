@@ -127,7 +127,9 @@ export default {
   },
   methods: {
     emit() {
+      // eslint-disable-next-line vue/no-mutating-props
       this.reference.m = this.makeObj(this.m);
+      // eslint-disable-next-line vue/no-mutating-props
       this.reference.f = this.makeObj(this.f);
     },
     makeObj(o) {

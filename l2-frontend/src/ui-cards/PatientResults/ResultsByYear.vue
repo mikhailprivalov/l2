@@ -195,8 +195,8 @@ export default {
       ]);
       this.data = result.results;
     },
-    print_med_certificate(type_form, direction) {
-      window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank');
+    print_med_certificate(typeForm, direction) {
+      window.open(`/medical_certificates/pdf?type=${typeForm}&dir=${direction}`, '_blank');
     },
     plus_year() {
       this.current_year = moment(this.current_year)

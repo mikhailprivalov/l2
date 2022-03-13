@@ -10,7 +10,7 @@
     :masks="masks"
     @popoverWillShow="onShow"
   >
-    <template v-slot="{ togglePopover }">
+    <template #default="{ togglePopover }">
       <div
         v-tippy="{ html: '#' + tippyId, ...commonTippy, trigger: a.planYear === v.year ? 'mouseenter focus' : 'manual' }"
         class="td-calendar-inner"

@@ -96,7 +96,7 @@ import { debounce } from 'lodash';
 import * as actions from '../store/action-types';
 import patientsPoint from '../api/patients-point';
 
-const tfoms_re = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
+const tfomsRe = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
 export default {
   name: 'PatientPickerDocCall',
@@ -164,7 +164,7 @@ export default {
       return this.fixedQuery.trim();
     },
     tfoms_query() {
-      return this.selected_base.internal_type && this.l2_tfoms && this.normalized_query.match(tfoms_re);
+      return this.selected_base.internal_type && this.l2_tfoms && this.normalized_query.match(tfomsRe);
     },
     query_valid() {
       return this.normalized_query.length > 0;
@@ -487,29 +487,29 @@ export default {
     check_base() {
       if (this.base === -1 && this.bases.length > 0) {
         const params = new URLSearchParams(window.location.search);
-        const rmis_uid = params.get('rmis_uid');
-        const base_pk = params.get('base_pk');
-        const card_pk = params.get('card_pk');
-        const open_edit = params.get('open_edit') === 'true';
+        const rmisUid = params.get('rmis_uid');
+        const basePk = params.get('base_pk');
+        const cardPk = params.get('card_pk');
+        const openEdit = params.get('open_edit') === 'true';
         const ofname = params.get('ofname');
-        const ofname_dep = params.get('ofname_dep');
-        if (rmis_uid) {
+        const ofnameDep = params.get('ofname_dep');
+        if (rmisUid) {
           window.history.pushState('', '', window.location.href.split('?')[0]);
-          let has_internal = false;
+          let hasInternal = false;
           for (const row of this.bases) {
             if (row.internal_type) {
               this.base = row.pk;
-              this.query = rmis_uid;
+              this.query = rmisUid;
               this.search_after_loading = true;
-              has_internal = true;
+              hasInternal = true;
               break;
             }
           }
-          if (!has_internal) {
+          if (!hasInternal) {
             for (const row of this.bases) {
               if (row.code === 'Р') {
                 this.base = row.pk;
-                this.query = rmis_uid;
+                this.query = rmisUid;
                 this.search_after_loading = true;
                 break;
               }
@@ -518,16 +518,16 @@ export default {
           if (this.base === -1) {
             this.base = this.bases[0].pk;
           }
-        } else if (base_pk) {
+        } else if (basePk) {
           window.history.pushState('', '', window.location.href.split('?')[0]);
           if (ofname) {
             this.ofname_to_set = ofname;
           }
-          if (ofname_dep) {
-            this.ofname_to_set_dep = ofname_dep;
+          if (ofnameDep) {
+            this.ofname_to_set_dep = ofnameDep;
           }
           for (const row of this.bases) {
-            if (row.pk === parseInt(base_pk, 10)) {
+            if (row.pk === parseInt(basePk, 10)) {
               this.base = row.pk;
               break;
             }
@@ -535,10 +535,10 @@ export default {
           if (this.base === -1) {
             this.base = this.bases[0].pk;
           }
-          if (card_pk) {
-            this.query = `card_pk:${card_pk}`;
+          if (cardPk) {
+            this.query = `card_pk:${cardPk}`;
             this.search_after_loading = true;
-            this.open_edit_after_loading = open_edit;
+            this.open_edit_after_loading = openEdit;
           }
         } else {
           this.base = this.bases[0].pk;

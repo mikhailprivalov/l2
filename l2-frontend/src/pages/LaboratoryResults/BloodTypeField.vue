@@ -14,7 +14,7 @@
             class="radio-inline"
           >
             <input
-              v-model="r.value"
+              v-model="/* eslint-disable-line vue/no-mutating-props */ r.value"
               type="radio"
               name="blood-type"
               :value="g"

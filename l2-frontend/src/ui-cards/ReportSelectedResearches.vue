@@ -94,6 +94,7 @@ export default {
           this.params_researches.push(this.params_directory[rpk]);
           continue;
         }
+        // eslint-disable-next-line vue/no-mutating-props
         this.params_directory[rpk].selected_params = [];
       }
     },

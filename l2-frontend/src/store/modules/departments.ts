@@ -1,6 +1,6 @@
 import api from '../../api';
-import departments_directory from '../../api/departments-directory';
-import * as mutation_types from '../mutation-types';
+import departmentsDirectory from '../../api/departments-directory';
+import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 
 const stateInitial = {
@@ -25,39 +25,39 @@ const actions = {
     if (lazy && state.all && state.all.length > 0) {
       return;
     }
-    const answer = await departments_directory.getDepartments({ method: 'GET' });
+    const answer = await departmentsDirectory.getDepartments({ method: 'GET' });
     const { departments } = answer;
-    commit(mutation_types.UPDATE_DEPARTMENTS, { departments });
-    commit(mutation_types.UPDATE_OLD_DEPARTMENTS, { departments });
-    commit(mutation_types.SET_CAN_EDIT, { can_edit: answer.can_edit });
-    commit(mutation_types.SET_TYPES, { department_types: answer.types });
+    commit(mutationTypes.UPDATE_DEPARTMENTS, { departments });
+    commit(mutationTypes.UPDATE_OLD_DEPARTMENTS, { departments });
+    commit(mutationTypes.SET_CAN_EDIT, { can_edit: answer.can_edit });
+    commit(mutationTypes.SET_TYPES, { department_types: answer.types });
   },
   async [actionsTypes.LOAD_HOSPITALS]({ commit, state }, { lazy = false } = {}) {
     if (lazy && state.hospitals && state.hospitals.length > 0) {
       return;
     }
     const data = await api('hospitals');
-    commit(mutation_types.SET_HOSPITALS, data);
+    commit(mutationTypes.SET_HOSPITALS, data);
   },
 };
 
 const mutations = {
-  [mutation_types.SET_HOSPITALS](state, { hospitals }) {
+  [mutationTypes.SET_HOSPITALS](state, { hospitals }) {
     state.hospitals = hospitals;
   },
-  [mutation_types.UPDATE_DEPARTMENTS](state, { departments }) {
+  [mutationTypes.UPDATE_DEPARTMENTS](state, { departments }) {
     state.all = departments;
   },
-  [mutation_types.UPDATE_OLD_DEPARTMENTS](state, { departments }) {
+  [mutationTypes.UPDATE_OLD_DEPARTMENTS](state, { departments }) {
     state.old_all = JSON.parse(JSON.stringify(departments));
   },
-  [mutation_types.SET_CAN_EDIT](state, { can_edit }) {
-    state.can_edit = can_edit;
+  [mutationTypes.SET_CAN_EDIT](state, { can_edit: canEdit }) {
+    state.can_edit = canEdit;
   },
-  [mutation_types.SET_TYPES](state, { department_types }) {
-    state.department_types = department_types;
+  [mutationTypes.SET_TYPES](state, { department_types: types }) {
+    state.department_types = types;
   },
-  [mutation_types.SET_UPDATED_DEPARTMENT](state, data) {
+  [mutationTypes.SET_UPDATED_DEPARTMENT](state, data) {
     for (let i = 0; i < state.all.length; i++) {
       if (state.all[i].pk === data.pk) {
         state.all[i].updated = data.value;

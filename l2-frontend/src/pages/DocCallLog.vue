@@ -203,7 +203,7 @@ export default {
 
       const {
         data: {
-          ok, message, status, executor, executor_fio, inLog,
+          ok, message, status, executor, executor_fio: executorFio, inLog,
         },
       } = await axios.post('/api/doctor-call/add-log', formData, {
         headers: {
@@ -223,9 +223,13 @@ export default {
         this.fileSize = '';
         this.$refs.file.value = '';
       }
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.executor = executor;
-      this.r.executor_fio = executor_fio;
+      // eslint-disable-next-line vue/no-mutating-props
+      this.r.executor_fio = executorFio;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.status = status;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.inLog = inLog;
       this.$root.$emit('doc-call:status:updated', this.r.pk);
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -235,6 +239,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { rows } = await this.$api('doctor-call/log', this.r, 'pk');
       this.rows = rows;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.inLog = rows.length;
       await this.$store.dispatch(actions.DEC_LOADING);
     },

@@ -304,7 +304,7 @@
                 :receive-copy="true"
                 edit-title="Адрес проживания"
               >
-                <template v-slot:input-group-append>
+                <template #input-group-append>
                   <button
                     v-if="card.main_address_full"
                     v-tippy
@@ -317,7 +317,7 @@
                     <i class="fa fa-paste" />
                   </button>
                 </template>
-                <template v-slot:extended-edit>
+                <template #extended-edit>
                   <AddressFiasField
                     v-if="card.main_address_full"
                     v-model="card.main_address_full"
@@ -325,12 +325,12 @@
                     :area-full="true"
                     :hide-if-empty="true"
                   >
-                    <template v-slot:input-group-disabled-prepend>
+                    <template #input-group-disabled-prepend>
                       <span class="input-group-addon">
                         <span class="input-group-addon-inner"> Адрес регистрации </span>
                       </span>
                     </template>
-                    <template v-slot:input-group-disabled-append>
+                    <template #input-group-disabled-append>
                       <span class="input-group-btn">
                         <button
                           v-tippy
@@ -1411,8 +1411,8 @@ export default {
   },
   methods: {
     async get_disabled_forms() {
-      const result_data = await this.$api('disabled-forms');
-      this.disabled_forms = result_data.rows;
+      const resultData = await this.$api('disabled-forms');
+      this.disabled_forms = resultData.rows;
     },
     makeForms(formsBase) {
       return formsBase
@@ -1462,7 +1462,7 @@ export default {
     save_hide_modal() {
       this.save(true);
     },
-    async save(hide_after = false) {
+    async save(hideAfter = false) {
       if (!this.valid) {
         return;
       }
@@ -1512,17 +1512,17 @@ export default {
       }
       this.$root.$emit('msg', 'ok', 'Данные сохранены');
       this.$root.$emit('update_card_data');
-      if (hide_after) {
+      if (hideAfter) {
         this.hide_modal();
       }
-      this.update_card(hide_after, data);
+      this.update_card(hideAfter, data);
       await this.$store.dispatch(actions.DEC_LOADING);
     },
-    update_card(hide_after = false, data = null) {
+    update_card(hideAfter = false, data = null) {
       this.$root.$emit('select_card', {
         card_pk: data ? data.card_pk : this.card_pk,
         base_pk: this.base_pk,
-        hide: hide_after,
+        hide: hideAfter,
         inc_archive: true,
       });
     },
@@ -1573,10 +1573,10 @@ export default {
       }
       this.document.who_give = item;
     },
-    onHit(name, no_next) {
+    onHit(name, noNext) {
       return (item, t) => {
         if (t.$el) {
-          if (no_next) {
+          if (noNext) {
             window.$('input', t.$el).focus();
           } else {
             const index = window.$('input', this.$el).index(window.$('input', t.$el)) + 1;
@@ -1616,7 +1616,7 @@ export default {
 
       this.loading = true;
 
-      const { result, forced_gender } = await patientsPoint.individualsSearch(this.card, [
+      const { result, forced_gender: forcedGender } = await patientsPoint.individualsSearch(this.card, [
         'family',
         'name',
         'patronymic',
@@ -1626,8 +1626,8 @@ export default {
       this.individuals = result;
       this.card.individual = result.length === 0 ? -1 : result[0].pk;
       this.card.new_individual = result.length === 0;
-      if (forced_gender) {
-        this.card.sex = forced_gender;
+      if (forcedGender) {
+        this.card.sex = forcedGender;
       }
 
       this.loading = false;
@@ -1701,7 +1701,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async change_directions_owner() {
-      const { ok, individual_fio } = await this.$api('patients/is-card', {
+      const { ok, individual_fio: individualFio } = await this.$api('patients/is-card', {
         number: this.new_card_num,
       });
       if (!ok) {
@@ -1711,7 +1711,7 @@ export default {
       try {
         await this.$dialog.confirm(
           // eslint-disable-next-line max-len
-          `Перенести все услуги из карты №${this.card.number} — ${this.card.family} ${this.card.name} ${this.card.patronymic} в карту №${this.new_card_num} — ${individual_fio} ?`,
+          `Перенести все услуги из карты №${this.card.number} — ${this.card.family} ${this.card.name} ${this.card.patronymic} в карту №${this.new_card_num} — ${individualFio} ?`,
         );
       } catch (e) {
         return;

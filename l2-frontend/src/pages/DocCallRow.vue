@@ -46,7 +46,7 @@
     </td>
     <td v-tippy="{ html: '#template-' + r.pk + '-8', ...commonTippy }">
       <select
-        v-model="r.status"
+        v-model="/* eslint-disable-line vue/no-mutating-props */ r.status"
         :readonly="r.isMainExternal || !r.canEdit"
         @change="onChangeStatus"
       >
@@ -140,7 +140,7 @@ export default {
     async onChangeStatus() {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
-        ok, message, status, executor, executor_fio, inLog,
+        ok, message, status, executor, executor_fio: executorFio, inLog,
       } = await this.$api(
         'doctor-call/change-status',
         this.r,
@@ -152,9 +152,13 @@ export default {
       } else {
         this.$root.$emit('msg', 'ok', 'Статус обновлён успешно');
       }
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.executor = executor;
-      this.r.executor_fio = executor_fio;
+      // eslint-disable-next-line vue/no-mutating-props
+      this.r.executor_fio = executorFio;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.inLog = inLog;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.status = status;
       this.$root.$emit('doc-call:status:updated', this.r.pk);
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -162,7 +166,7 @@ export default {
     async setMeAsExecutor() {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
-        ok, message, status, executor, executor_fio, inLog,
+        ok, message, status, executor, executor_fio: executorFio, inLog,
       } = await this.$api(
         'doctor-call/change-executor',
         this.r,
@@ -176,9 +180,13 @@ export default {
       } else {
         this.$root.$emit('msg', 'ok', 'Исполнитель обновлён успешно');
       }
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.executor = executor;
-      this.r.executor_fio = executor_fio;
+      // eslint-disable-next-line vue/no-mutating-props
+      this.r.executor_fio = executorFio;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.inLog = inLog;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.status = status;
       this.$root.$emit('doc-call:status:updated', this.r.pk);
       await this.$store.dispatch(actions.DEC_LOADING);

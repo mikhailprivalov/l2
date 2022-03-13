@@ -41,7 +41,7 @@
 <script lang="ts">
 import ParaclinicResearchEditor from './ParaclinicResearchEditor.vue';
 import * as actions from '../store/action-types';
-import construct_point from '../api/construct-point';
+import constructPoint from '../api/construct-point';
 import researchesPoint from '../api/researches-point';
 import SelectFieldTitled from '../fields/SelectFieldTitled.vue';
 
@@ -89,7 +89,7 @@ export default {
       const { researches } = await researchesPoint.getResearchesByDepartment({ department: -5 });
       this.researches_list = researches;
       if (this.pk >= 0) {
-        const data = await construct_point.hospServiceDetails(this, 'pk');
+        const data = await constructPoint.hospServiceDetails(this, 'pk');
 
         this.main_service_pk = data.main_service_pk;
         this.slave_service_pk = data.slave_service_pk;

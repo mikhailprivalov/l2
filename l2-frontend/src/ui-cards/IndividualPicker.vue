@@ -208,16 +208,16 @@ export default {
   },
   created() {
     const params = new URLSearchParams(window.location.search);
-    const individual_pk = params.get('individual_pk');
-    const base_pk = params.get('base_pk');
-    const card_pk = params.get('card_pk');
-    if (individual_pk) {
+    const individualPk = params.get('individual_pk');
+    const basePk = params.get('base_pk');
+    const cardPk = params.get('card_pk');
+    if (individualPk) {
       window.history.pushState('', '', window.location.href.split('?')[0]);
-      this.query = `individual_pk:${individual_pk}`;
+      this.query = `individual_pk:${individualPk}`;
       this.search_after_loading = true;
-      if (base_pk && card_pk) {
-        this.return_base = base_pk;
-        this.return_card = card_pk;
+      if (basePk && cardPk) {
+        this.return_base = basePk;
+        this.return_card = cardPk;
       }
     }
 

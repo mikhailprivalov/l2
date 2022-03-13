@@ -283,22 +283,25 @@ export default {
   methods: {
     create() {
       this.$store.dispatch(actions.INC_LOADING);
-      statisticsTicketsPoint.sendTicket(this, [
-        'card_pk',
-        'visit',
-        'info',
-        'first_time',
-        'primary_visit',
-        'disp',
-        'result',
-        'outcome',
-        'ofname',
-        'date_ticket',
-      ],
-      {
-        exclude: this.exclude_val,
-        disp_diagnos: this.disp_diagnos_val,
-      })
+      statisticsTicketsPoint.sendTicket(
+        this,
+        [
+          'card_pk',
+          'visit',
+          'info',
+          'first_time',
+          'primary_visit',
+          'disp',
+          'result',
+          'outcome',
+          'ofname',
+          'date_ticket',
+        ],
+        {
+          exclude: this.exclude_val,
+          disp_diagnos: this.disp_diagnos_val,
+        },
+      )
         .then(() => {
           this.clear();
           this.$root.$emit('msg', 'ok', 'Статталон добавлен');

@@ -845,8 +845,8 @@ export default {
     },
     async researches() {
       const comments = {};
-      const form_params = {};
-      const service_locations = {};
+      const formParams = {};
+      const serviceLocations = {};
       const localizations = {};
       const counts = {};
       this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1);
@@ -880,7 +880,7 @@ export default {
 
             if (res.service_locations && res.service_locations.length > 0) {
               // eslint-disable-next-line prefer-destructuring
-              service_locations[pk] = res.service_locations[0];
+              serviceLocations[pk] = res.service_locations[0];
 
               if (res.service_locations.length > 1 && !this.need_update_service_location.includes(pk)) {
                 this.need_update_service_location.push(pk);
@@ -891,12 +891,12 @@ export default {
             if (this.directions_params_enabled) {
               if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
                 this.need_update_direction_params.push(pk);
-                this.form_params[pk] = {};
+                this.formParams[pk] = {};
                 needShowWindow = true;
-                form_params[pk] = _.cloneDeep(await this.load_direction_params_data(res.direction_params));
-                form_params[pk].show = true;
+                formParams[pk] = _.cloneDeep(await this.load_direction_params_data(res.direction_params));
+                formParams[pk].show = true;
               } else if (this.form_params[pk]) {
-                form_params[pk] = this.form_params[pk];
+                formParams[pk] = this.form_params[pk];
               }
             }
           }
@@ -905,15 +905,15 @@ export default {
         } else {
           comments[pk] = this.comments[pk];
           localizations[pk] = this.localizations[pk];
-          service_locations[pk] = this.service_locations[pk];
+          serviceLocations[pk] = this.service_locations[pk];
           counts[pk] = this.counts[pk];
-          form_params[pk] = this.form_params[pk];
+          formParams[pk] = this.form_params[pk];
         }
       }
       this.comments = comments;
-      this.form_params = form_params;
+      this.form_params = formParams;
       this.localizations = localizations;
-      this.service_locations = service_locations;
+      this.service_locations = serviceLocations;
       this.counts = counts;
       if (needShowWindow) {
         this.show_window();

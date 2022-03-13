@@ -258,7 +258,7 @@
             :rows="2"
             :step="1"
           >
-            <template v-slot="{ inputValue, inputEvents }">
+            <template #default="{ inputValue, inputEvents }">
               <div class="input-group">
                 <span class="input-group-addon">Дата:</span>
                 <input
@@ -728,13 +728,13 @@ export default class Statistics extends Vue {
   }
 
   async get_disabled_categories() {
-    const result_data = await this.$api('disabled-categories');
-    this.disabled_categories = result_data.rows;
+    const resultData = await this.$api('disabled-categories');
+    this.disabled_categories = resultData.rows;
   }
 
   async get_disabled_reports() {
-    const result_data = await this.$api('disabled-reports');
-    this.disabled_reports = result_data.rows;
+    const resultData = await this.$api('disabled-reports');
+    this.disabled_reports = resultData.rows;
   }
 }
 </script>

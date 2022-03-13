@@ -130,8 +130,8 @@ export default {
       this.isOpenChangeParent = false;
     },
     async get_disabled_forms() {
-      const result_data = await this.$api('disabled-forms');
-      this.disabled_forms = result_data.rows;
+      const resultData = await this.$api('disabled-forms');
+      this.disabled_forms = resultData.rows;
     },
   },
 };

@@ -79,7 +79,7 @@ import TypeAhead from 'vue2-typeahead';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '../store/action-types';
-import laboratory_point from '../api/laboratory-point';
+import laboratoryPoint from '../api/laboratory-point';
 
 export default {
   components: { TypeAhead, Treeselect },
@@ -103,7 +103,7 @@ export default {
     async loadData() {
       await this.$store.dispatch(actions.INC_LOADING);
       const [{ fractions, title }, { rows }] = await Promise.all([
-        laboratory_point.getFractions(this, 'pk'),
+        laboratoryPoint.getFractions(this, 'pk'),
         this.$api('/laboratory/units'),
       ]);
 
@@ -114,7 +114,7 @@ export default {
     },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await laboratory_point.saveFsli(this, 'fractions');
+      await laboratoryPoint.saveFsli(this, 'fractions');
       this.$root.$emit('msg', 'ok', 'Сохранено');
       await this.$store.dispatch(actions.DEC_LOADING);
     },

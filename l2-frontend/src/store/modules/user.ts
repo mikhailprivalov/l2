@@ -1,6 +1,6 @@
 import { Menu } from '@/types/menu';
-import user_point from '../../api/user-point';
-import * as mutation_types from '../mutation-types';
+import userPoint from '../../api/user-point';
+import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 
 const stateInitial = {
@@ -56,46 +56,46 @@ const getters = {
 
 const actions = {
   async [actionsTypes.GET_USER_DATA]({ commit }, { loadMenu = false } = {}) {
-    commit(mutation_types.SET_USER_DATA, { loading: true });
+    commit(mutationTypes.SET_USER_DATA, { loading: true });
 
     const [userData, menuData] = await Promise.all([
-      user_point.getCurrentUserInfo(),
-      loadMenu ? user_point.getMenu() : Promise.resolve(null),
+      userPoint.getCurrentUserInfo(),
+      loadMenu ? userPoint.getMenu() : Promise.resolve(null),
     ]);
 
-    commit(mutation_types.SET_USER_DATA, { data: userData });
+    commit(mutationTypes.SET_USER_DATA, { data: userData });
     if (loadMenu) {
-      commit(mutation_types.SET_MENU, { data: menuData });
+      commit(mutationTypes.SET_MENU, { data: menuData });
     }
   },
   async [actionsTypes.GET_DIRECTIVE_FROM]({ commit }) {
-    const { data: directive_from } = await user_point.getDirectiveFrom();
-    commit(mutation_types.SET_DIRECTIVE_FROM, { directive_from });
+    const { data } = await userPoint.getDirectiveFrom();
+    commit(mutationTypes.SET_DIRECTIVE_FROM, { directive_from: data });
   },
   async [actionsTypes.HAS_NEW_VERSION]({ commit }) {
-    commit(mutation_types.SET_HAS_NEW_VERSION);
+    commit(mutationTypes.SET_HAS_NEW_VERSION);
   },
 };
 
 const mutations = {
-  [mutation_types.SET_USER_DATA](state, { data }) {
+  [mutationTypes.SET_USER_DATA](state, { data }) {
     state.data = {
       ...state.data,
       ...data,
     };
   },
-  [mutation_types.SET_HAS_NEW_VERSION](state) {
+  [mutationTypes.SET_HAS_NEW_VERSION](state) {
     state.hasNewVersion = true;
   },
-  [mutation_types.SET_MENU](state, { data }) {
+  [mutationTypes.SET_MENU](state, { data }) {
     state.menu = {
       version: data.version,
       region: data.region,
       buttons: data.buttons.map(b => (['/mainmenu', '/mainmenu/'].includes(b.url) ? { ...b, url: '/ui/menu' } : b)),
     };
   },
-  [mutation_types.SET_DIRECTIVE_FROM](state, { directive_from }) {
-    state.directive_from = directive_from;
+  [mutationTypes.SET_DIRECTIVE_FROM](state, { directive_from: directiveFrom }) {
+    state.directive_from = directiveFrom;
   },
 };
 

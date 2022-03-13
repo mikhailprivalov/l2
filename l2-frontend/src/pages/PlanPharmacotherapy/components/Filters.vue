@@ -12,12 +12,12 @@
     <tbody>
       <tr>
         <td>
-          <DateRange v-model="filters.date" />
+          <DateRange v-model="/* eslint-disable-line vue/no-mutating-props */ filters.date" />
         </td>
         <td />
         <td>
           <Treeselect
-            v-model="filters.department_pk"
+            v-model="/* eslint-disable-line vue/no-mutating-props */ filters.department_pk"
             :multiple="false"
             :disable-branch-nodes="true"
             :options="departments"

@@ -1,6 +1,6 @@
 import { Base } from '@/types/cards';
-import cards_point from '../../api/cards-point';
-import * as mutation_types from '../mutation-types';
+import cardsPoint from '../../api/cards-point';
+import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 
 interface CardsState {
@@ -20,14 +20,14 @@ const actions = {
     if (lazy && state.bases && state.bases.length > 0) {
       return;
     }
-    const answer = await cards_point.getBases();
+    const answer = await cardsPoint.getBases();
     const { bases } = answer;
-    commit(mutation_types.UPDATE_BASES, { bases });
+    commit(mutationTypes.UPDATE_BASES, { bases });
   },
 };
 
 const mutations = {
-  [mutation_types.UPDATE_BASES](state, { bases }) {
+  [mutationTypes.UPDATE_BASES](state, { bases }) {
     state.bases = bases;
   },
 };

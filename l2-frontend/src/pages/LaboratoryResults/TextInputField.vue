@@ -20,7 +20,7 @@
       </span>
       <Typeahead
         :id="`fraction-${r.fraction.pk}`"
-        v-model="r.value"
+        v-model="/* eslint-disable-line vue/no-mutating-props */ r.value"
         class="form-control result-field"
         :class="[
           r.fraction.units.length > 0 && 'with-units',
@@ -43,22 +43,22 @@
 import * as actions from '@/store/action-types';
 import Typeahead from './Typeahead.vue';
 
-function is_float(str) {
+function isFloat(str) {
   return /^-?\d+\.\d+$/.test(str);
 }
 
-function is_lnum(str) {
+function isLnum(str) {
   return /^-?\d+(\.\d+)?$/.test(str);
 }
 
-function ready_formula(formula, resolve, dir_data) {
-  function get_age(s_age) {
-    return parseInt(s_age.split(' ')[0], 10);
+function readyFormula(formula, resolve, dirData) {
+  function getAge(sAge) {
+    return parseInt(sAge.split(' ')[0], 10);
   }
 
   // eslint-disable-next-line no-new-func
-  let v = new Function('dir_data', 'get_age', `return ${formula.tmp};`)(dir_data, get_age);
-  if (is_float(v)) {
+  let v = new Function('dir_data', 'get_age', `return ${formula.tmp};`)(dirData, getAge);
+  if (isFloat(v)) {
     v = Math.round(parseFloat(v) * 1000) / 1000;
   }
   if (!Number.isNaN(v) && Number.isFinite(v)) {
@@ -114,7 +114,7 @@ function ready_formula(formula, resolve, dir_data) {
   resolve(null);
 }
 
-function exec_formula(dir_data, allDirPks, formulaString, resolve) {
+function execFormula(dirData, allDirPks, formulaString, resolve) {
   const formula: any = {};
   formula.body = formulaString;
   formula.necessary = formula.body.match(/{(\d{1,})}/g);
@@ -138,46 +138,46 @@ function exec_formula(dir_data, allDirPks, formulaString, resolve) {
     }
   }
 
-  function perform_complex(k) {
+  function performComplex(k) {
     formula.necessary_complex[k] = formula.necessary_complex[k].split('|');
 
     formula.necessary_complex[k][0] = parseInt(formula.necessary_complex[k][0].replace(/[{}]/g, ''), 10);
     formula.necessary_complex[k][1] = parseInt(formula.necessary_complex[k][1].replace(/[{}]/g, ''), 10);
 
-    const iss_obj = allDirPks.find((i) => i.research_pk === formula.necessary_complex[k][0]);
-    if (iss_obj) {
-      formula.str = formula.str.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, iss_obj.title);
+    const issObj = allDirPks.find((i) => i.research_pk === formula.necessary_complex[k][0]);
+    if (issObj) {
+      formula.str = formula.str.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, issObj.title);
       const fraction = formula.necessary_complex[k][1];
-      window.$.ajax({ url: '/results/get', data: { iss_id: iss_obj.pk } }).done((data) => {
+      window.$.ajax({ url: '/results/get', data: { iss_id: issObj.pk } }).done((data) => {
         let fval = '0';
         if (data.results[fraction]) {
           const g = `${data.results[fraction]}`;
           fval = g.replace(',', '.').trim();
-          if (!is_lnum(fval)) {
+          if (!isLnum(fval)) {
             fval = '0';
           }
         }
-        formula.tmp = formula.tmp.replace(`{${iss_obj.research_pk}|${fraction}}`, fval);
+        formula.tmp = formula.tmp.replace(`{${issObj.research_pk}|${fraction}}`, fval);
         if (k === formula.necessary_complex.length - 1) {
-          ready_formula(formula, resolve, dir_data);
+          readyFormula(formula, resolve, dirData);
         } else {
-          perform_complex(k + 1);
+          performComplex(k + 1);
         }
       });
     } else {
       formula.tmp = formula.tmp.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, '0');
       if (k === formula.necessary_complex.length - 1) {
-        ready_formula(formula, resolve, dir_data);
+        readyFormula(formula, resolve, dirData);
       } else {
-        perform_complex(k + 1);
+        performComplex(k + 1);
       }
     }
   }
 
   if (formula.necessary_complex != null) {
-    perform_complex(0);
+    performComplex(0);
   } else {
-    ready_formula(formula, resolve, dir_data);
+    readyFormula(formula, resolve, dirData);
   }
 }
 
@@ -205,8 +205,11 @@ export default {
     async calcFormula() {
       await this.$store.dispatch(actions.INC_LOADING);
       try {
-        const r = await new Promise((resolve) => exec_formula(this.dirData, this.allDirPks, this.r.fraction.formula, resolve));
+        const r = await new Promise((resolve) => {
+          execFormula(this.dirData, this.allDirPks, this.r.fraction.formula, resolve);
+        });
         if (r !== null) {
+          // eslint-disable-next-line vue/no-mutating-props
           this.r.value = String(r);
           setTimeout(() => {
             window.$(`#fraction-${this.r.fraction.pk}`).focus();

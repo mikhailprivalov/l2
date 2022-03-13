@@ -57,7 +57,9 @@ export default {
         }
       }
       await this.$store.dispatch(actions.INC_LOADING);
+      // eslint-disable-next-line vue/no-mutating-props
       this.data.ok = status;
+      // eslint-disable-next-line vue/no-mutating-props
       this.data.executor = 'загрузка...';
       const { ok, message } = await this.$api('procedural-list/procedure-time-execute', { pk: this.data.pk, status });
       if (ok) {
