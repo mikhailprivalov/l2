@@ -14,7 +14,7 @@
     "ci:lint": "vue-cli-service lint --no-fix"
   },
   "dependencies": {
-    "@braid/vue-formulate": "^2.5.2",
+    "@braid/vue-formulate": "^2.5.3",
     "@braid/vue-formulate-i18n": "^1.16.0",
     "@fortawesome/fontawesome-free": "^5.15.1",
     "@openfonts/open-sans_all": "^1.44.2",
@@ -81,7 +81,7 @@
     "@types/vue-select": "^3.11.2",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
-    "@vue/cli-plugin-babel": "~4.5.15",
+    "@vue/cli-plugin-babel": "~5.0.1",
     "@vue/cli-plugin-eslint": "~4.5.15",
     "@vue/cli-plugin-typescript": "~4.5.15",
     "@vue/cli-plugin-vuex": "~4.5.15",
