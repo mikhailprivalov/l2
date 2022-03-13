@@ -979,7 +979,7 @@ def statistic_research_death_data(ws1, researches, expertise_final_data):
         # ДТП
 
         ws1.cell(row=r, column=28).value = i["ДТП"]
-        ws1.cell(row=r, column=29).value = i["Беременность"]
+        ws1.cell(row=r, column=29).value = i.get("Беременность",0)
 
         if i.get("Заполнил", None):
             who_write = i.get("Заполнил")
@@ -1098,7 +1098,7 @@ def statistic_research_death_data_card(ws1, researches):
         ws1.cell(row=r, column=27).value = i.get("МО", "")
         # ДТП
         ws1.cell(row=r, column=28).value = i["ДТП"]
-        ws1.cell(row=r, column=29).value = i["Беременность"]
+        ws1.cell(row=r, column=29).value = i.get("Беременность",0)
 
         if i.get("Заполнил", None):
             who_write = i.get("Заполнил")
