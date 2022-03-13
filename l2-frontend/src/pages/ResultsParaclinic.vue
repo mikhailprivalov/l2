@@ -1784,6 +1784,9 @@ export default {
     };
   },
   computed: {
+    requiredStattalonFields() {
+      return this.$store.getters.requiredStattalonFields;
+    },
     userServicesFiltered() {
       return this.user_services.filter((s) => !this.slot.data.direction || s.pk === this.slot.data.direction_service);
     },
@@ -2053,6 +2056,8 @@ export default {
     } catch (e) {
       console.log(e);
     }
+
+    this.$store.dispatch(actions.LOAD_REQUIRED_STATTALON_FIELDS);
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
@@ -2192,6 +2197,13 @@ export default {
           }
         }
       }
+
+      for (const [key, value] of Object.entries(this.requiredStattalonFields)) {
+        if (!research[key] || research[key] === -1) {
+          l.push(value);
+        }
+      }
+
       return l.slice(0, 2);
     },
     hide_modal_anamnesis_edit() {
