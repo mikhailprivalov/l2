@@ -90,7 +90,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     title_fields = [
         "Серия",
-        "Префикс номера", "Номер",
+        "Префикс номера",
+        "Номер",
         "Дата выдачи",
         "Вид медицинского свидетельства о смерти",
         "Серия предшествующего",
