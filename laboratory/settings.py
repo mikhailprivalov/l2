@@ -370,6 +370,8 @@ PROTOCOL_PLAIN_TEXT = True
 SPLIT_PRINT_RESULT = False
 REQUIRED_STATTALON_FIELDS = {}
 
+DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
