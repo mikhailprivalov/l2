@@ -63,7 +63,7 @@ const actions = {
       return;
     }
     const answer = await researchesPoint.getRequiredStattalonFields();
-    commit(mutation_types.SET_REQUIRED_STATTALON_FIELDS, { answer });
+    commit(mutationTypes.SET_REQUIRED_STATTALON_FIELDS, { answer });
   },
 };
 
@@ -87,7 +87,7 @@ const mutations = {
       [oid]: data,
     };
   },
-  [mutation_types.SET_REQUIRED_STATTALON_FIELDS](state, { answer }) {
+  [mutationTypes.SET_REQUIRED_STATTALON_FIELDS](state, { answer }) {
     state.requiredStattalonFields = answer;
     state.requiredStattalonFieldsLoaded = true;
   },
