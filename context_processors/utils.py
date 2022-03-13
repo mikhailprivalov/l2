@@ -135,6 +135,7 @@ def menu(request):
                 {"url": '/mainmenu/procedure_list', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": '/ui/monitorings/enter', "title": "Заполнение мониторингов", "nt": False, "access": ["Заполнение мониторингов"], "module": "l2_monitorings"},
                 {"url": '/ui/monitorings/report', "title": "Просмотр мониторингов", "nt": False, "access": ["Просмотр мониторингов"], "module": "l2_monitorings"},
+                {"url": '/ui/statistics/report', "title": "Просмотр графиков статистики", "nt": False, "access": ["Просмотр графиков статистики"], "module": "l2_statistics"},
                 {
                     "url": '/ui/schedule',
                     "title": "Расписание",
