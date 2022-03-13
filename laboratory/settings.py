@@ -368,6 +368,7 @@ QRCODE_OFFSET_SIZE = {}
 LEFT_QRCODE_OFFSET_SIZE = {}
 PROTOCOL_PLAIN_TEXT = True
 SPLIT_PRINT_RESULT = False
+REQUIRED_STATTALON_FIELDS = {}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
