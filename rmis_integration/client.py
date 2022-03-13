@@ -1118,8 +1118,8 @@ class Directions(BaseRequester):
                                     and not case_rmis_id
                                     and not visit_rmis_id
                                 ):
-                                    send_case_data = self.gen_case_rmis(direction, rindiv, x)
-                                    case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
+                                    #send_case_data = self.gen_case_rmis(direction, rindiv, x)
+                                    #case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
                                     if case_rmis_id:
                                         send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
                                     if send_visit_data:
