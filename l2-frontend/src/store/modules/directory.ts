@@ -10,6 +10,8 @@ const stateInitial = {
   tubes: {},
   researches_loaded: false,
   permanentDirectories: {},
+  requiredStattalonFields: {},
+  requiredStattalonFieldsLoaded: false,
 };
 
 const getters = {
@@ -26,6 +28,7 @@ const getters = {
     return o;
   },
   permanentDirectories: (state) => state.permanentDirectories,
+  requiredStattalonFields: (state) => state.requiredStattalonFields,
 };
 
 const actions = {
@@ -56,6 +59,13 @@ const actions = {
     const data = await api('permanent-directory', { oid });
     commit(mutation_types.SET_PERMANENT_DIRECTORY, { oid, data });
   },
+  async [actionsTypes.LOAD_REQUIRED_STATTALON_FIELDS]({ commit, state }) {
+    if (state.requiredStattalonFieldsLoaded) {
+      return;
+    }
+    const answer = await researchesPoint.getRequiredStattalonFields();
+    commit(mutation_types.SET_REQUIRED_STATTALON_FIELDS, { answer });
+  },
 };
 
 const mutations = {
@@ -77,6 +87,10 @@ const mutations = {
       ...state.permanentDirectories,
       [oid]: data,
     };
+  },
+  [mutation_types.SET_REQUIRED_STATTALON_FIELDS](state, { answer }) {
+    state.requiredStattalonFields = answer;
+    state.requiredStattalonFieldsLoaded = true;
   },
 };
 
