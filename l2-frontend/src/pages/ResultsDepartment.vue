@@ -129,11 +129,10 @@ export default class ResultsDepartment extends Vue {
 
   by_doc: boolean;
 
-  async print(by_doc) {
+  async print(byDoc) {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { results } = await directionsPoint.getDirectionsTypeDate(
-      this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date'], { by_doc },
-    );
+    // eslint-disable-next-line max-len
+    const { results } = await directionsPoint.getDirectionsTypeDate(this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date'], { by_doc: byDoc });
     if (!results || results.length === 0) {
       this.$root.$emit('msg', 'error', 'Результатов не найдено');
     }

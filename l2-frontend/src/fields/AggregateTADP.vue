@@ -38,7 +38,7 @@
 <script lang="ts">
 import VueApexCharts from 'vue-apexcharts';
 
-import stationar_point from '../api/stationar-point';
+import stationarPoint from '../api/stationar-point';
 
 const charts = ['Температура (°C)', 'Пульс (уд/с)', 'Давление'];
 
@@ -94,7 +94,7 @@ export default {
   },
   methods: {
     async load() {
-      this.data = await stationar_point.aggregateTADP(this, ['directions']);
+      this.data = await stationarPoint.aggregateTADP(this, ['directions']);
     },
     get_options(data) {
       return {

@@ -275,14 +275,14 @@ export default {
     },
     valid() {
       if (this.selected_direction === -1 || Object.keys(this.direction_data).length === 0) return false;
-      let has_n_ex = false;
+      let hasNEx = false;
       for (const r of this.direction_data.services) {
         if (r.selected_local_service === -1 && !r.exclude_direction) {
           return false;
         }
-        if (!r.exclude_direction) has_n_ex = true;
+        if (!r.exclude_direction) hasNEx = true;
       }
-      return has_n_ex;
+      return hasNEx;
     },
     has_excluded() {
       if (!this.valid) return false;

@@ -2,12 +2,12 @@
   <div>
     <div
       class="sidebar-anesthesia-overlay"
-      :class="{ showOverlay: this.$store.state.showMenuAnesthesiaStatus }"
+      :class="{ showOverlay: $store.state.showMenuAnesthesiaStatus }"
       @click="show_anesthesia_sidebar"
     />
     <div
       class="sidebar-anesthesia"
-      :class="{ show: this.$store.state.showMenuAnesthesiaStatus }"
+      :class="{ show: $store.state.showMenuAnesthesiaStatus }"
     >
       <div class="sidebar-anesthesia-inner">
         <div class="title-anesthesia">
@@ -284,7 +284,7 @@
                 :class="j + 1 === row.length && 'no-hover'"
                 @click="editColumn(j)"
               >
-                <div :style="{ height: `${tb_heights[i]}px` }">
+                <div :style="{ height: `${tbHeights[i]}px` }">
                   <template v-if="i === 0 && j > 0 && item !== 'Сумма'">
                     <DisplayDateTime :value="item" /><i class="display-only-hover fa fa-pencil" />
                   </template>
@@ -351,7 +351,7 @@ export default {
       actionDelete: false,
       isEdit: false,
       tb_data: [],
-      tb_heights: [],
+      tbHeights: [],
       row_category: {},
     };
   },
@@ -418,16 +418,16 @@ export default {
       this.narcotic_drugs_used = data.narcotic_drugs;
     },
     sync_heights() {
-      const tb_heights = [];
+      const tbHeights = [];
       if (this.$refs.firstTable) {
         window
           .$(this.$refs.firstTable)
           .find('tr td div')
           .each(function () {
-            tb_heights.push(window.$(this).height());
+            tbHeights.push(window.$(this).height());
           });
       }
-      this.tb_heights = tb_heights;
+      this.tbHeights = tbHeights;
     },
     focus_next(e) {
       window.$('input', window.$(e.target).next()).focus();
@@ -455,17 +455,17 @@ export default {
     async save_data() {
       await this.$store.dispatch(actions.INC_LOADING);
       this.patient_params_used.temperature = this.temperature;
-      const temp_result = {
+      const tempResult = {
         time: this.timeValue,
         potent_drugs: this.potent_drugs_used,
         narcotic_drugs: this.narcotic_drugs_used,
         patient_params: this.patient_params_used,
       };
-      const research_data = { iss_pk: this.iss, field_pk: this.field_pk };
-      this.tb_data.push(temp_result);
+      const researchData = { iss_pk: this.iss, field_pk: this.field_pk };
+      this.tb_data.push(tempResult);
       await directionsPoint.anesthesiaResultSave({
-        temp_result,
-        research_data,
+        temp_result: tempResult,
+        research_data: researchData,
       });
       setTimeout(() => this.sync_heights(), 10);
       await this.load_data();
@@ -480,16 +480,16 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const research_data = { iss_pk: this.iss, field_pk: this.field_pk };
-      const temp_result = {
+      const researchData = { iss_pk: this.iss, field_pk: this.field_pk };
+      const tempResult = {
         time: this.timeValue,
         potent_drugs: this.potent_drugs_used,
         narcotic_drugs: this.narcotic_drugs_used,
         patient_params: this.patient_params_used,
       };
       await directionsPoint.anesthesiaResultSave({
-        temp_result,
-        research_data,
+        temp_result: tempResult,
+        research_data: researchData,
         action: 'del',
       });
       setTimeout(() => this.sync_heights(), 10);
@@ -500,9 +500,9 @@ export default {
     },
     async load_data() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const research_data = { iss_pk: this.iss, field_pk: this.field_pk };
+      const researchData = { iss_pk: this.iss, field_pk: this.field_pk };
       const data = await directionsPoint.anesthesiaLoadData({
-        research_data,
+        research_data: researchData,
       });
       this.tb_data = [...data.data];
       this.row_category = data.row_category;

@@ -1651,7 +1651,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import { vField, vGroup } from '@/components/visibility-triggers';
 import { cleanCaches } from '@/utils';
-import { enter_field, leave_field } from '@/forms/utils';
+import { enterField, leaveField } from '@/forms/utils';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
@@ -1709,6 +1709,20 @@ export default {
     ScreeningButton,
     Treeselect,
     FileAdd: () => import('@/ui-cards/FileAdd.vue'),
+  },
+  async beforeRouteLeave(to, from, next) {
+    const msg = this.unload();
+
+    if (msg) {
+      try {
+        await this.$dialog.confirm(msg);
+      } catch (_) {
+        next(false);
+        return;
+      }
+    }
+
+    next();
   },
   data() {
     return {
@@ -1939,8 +1953,8 @@ export default {
       this.load_history();
     },
     user_data: {
-      async handler({ rmis_location }) {
-        if (!this.location.init && rmis_location) {
+      async handler({ rmis_location: rmisLocation }) {
+        if (!this.location.init && rmisLocation) {
           await this.load_location();
           this.location.init = true;
         }
@@ -2047,20 +2061,6 @@ export default {
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
-  },
-  async beforeRouteLeave(to, from, next) {
-    const msg = this.unload();
-
-    if (msg) {
-      try {
-        await this.$dialog.confirm(msg);
-      } catch (_) {
-        next(false);
-        return;
-      }
-    }
-
-    next();
   },
   methods: {
     async add_services() {
@@ -2290,7 +2290,9 @@ export default {
             setTimeout(async () => {
               this.$root.$emit('open-pk', data.direction.pk);
               for (let i = 0; i < 10; i++) {
-                await new Promise((r) => setTimeout(r, 100));
+                await new Promise((r) => {
+                  setTimeout(() => r, 100);
+                });
                 if (this.hasPreselectOk) {
                   break;
                 }
@@ -2600,8 +2602,8 @@ export default {
           list_all_cards: false,
           inc_rmis: true,
         });
-        const card_pk = (cards.results || [{}])[0].pk;
-        const { direction } = await usersPoint.fillSlot({ slot: { ...this.slot, card_pk } });
+        const cardPk = (cards.results || [{}])[0].pk;
+        const { direction } = await usersPoint.fillSlot({ slot: { ...this.slot, card_pk: cardPk } });
         await this.$store.dispatch(actions.DEC_LOADING);
         this.load_location();
         this.open_fill_slot(direction);
@@ -2663,17 +2665,17 @@ export default {
       field.value = '';
     },
     append_value(field, value) {
-      let add_val = value;
-      if (add_val !== ',' && add_val !== '.') {
+      let addVal = value;
+      if (addVal !== ',' && addVal !== '.') {
         if (
           field.value.length > 0
           && field.value[field.value.length - 1] !== ' '
           && field.value[field.value.length - 1] !== '\n'
         ) {
           if (field.value[field.value.length - 1] === '.') {
-            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
+            addVal = addVal.replace(/./, addVal.charAt(0).toUpperCase());
           }
-          add_val = ` ${add_val}`;
+          addVal = ` ${addVal}`;
         } else if (
           (field.value.length === 0
             || (field.value.length >= 2
@@ -2681,11 +2683,11 @@ export default {
               && field.value[field.value.length - 1] === '\n'))
           && field.title === ''
         ) {
-          add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
+          addVal = addVal.replace(/./, addVal.charAt(0).toUpperCase());
         }
       }
       // eslint-disable-next-line no-param-reassign
-      field.value += add_val;
+      field.value += addVal;
     },
     select_research(pk) {
       if (this.slot.data.direction) {
@@ -2743,10 +2745,10 @@ export default {
       };
     },
     enter_field(...args) {
-      return enter_field.apply(this, args);
+      return enterField.apply(this, args);
     },
     leave_field(...args) {
-      return leave_field.apply(this, args);
+      return leaveField.apply(this, args);
     },
     needFillWorkBy(row) {
       if (!this.can_confirm_by_other_user || row.confirmed) {

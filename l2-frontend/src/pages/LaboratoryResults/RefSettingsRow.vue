@@ -5,7 +5,7 @@
     </td>
     <td>
       <select
-        v-model.number="r.selectedReference"
+        v-model.number="/* eslint-disable-line vue/no-mutating-props */ r.selectedReference"
         class="form-control"
       >
         <option

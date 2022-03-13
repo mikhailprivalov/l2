@@ -41,7 +41,7 @@ export default generator({
   },
   getRequiredStattalonFields: {
     method: 'get',
-    url: 'researches/required-stattalon-field',
-    onReject: { researches: [] },
+    url: 'researches/required-stattalon-fields',
+    onReject: {},
   },
 });

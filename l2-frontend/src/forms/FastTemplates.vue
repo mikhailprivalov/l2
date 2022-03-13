@@ -56,22 +56,22 @@ export default {
   },
   methods: {
     append_value(value) {
-      let add_val = value;
+      let addVal = value;
       const val = this.localValue;
-      if (add_val !== ',' && add_val !== '.') {
+      if (addVal !== ',' && addVal !== '.') {
         if (val.length > 0 && val[val.length - 1] !== ' ' && val[val.length - 1] !== '\n') {
           if (val[val.length - 1] === '.') {
-            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
+            addVal = addVal.replace(/./, addVal.charAt(0).toUpperCase());
           }
-          add_val = ` ${add_val}`;
+          addVal = ` ${addVal}`;
         } else if (
           (val.length === 0 || (val.length >= 2 && val[val.length - 2] === '.' && val[val.length - 1] === '\n'))
           && this.field_title === ''
         ) {
-          add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
+          addVal = addVal.replace(/./, addVal.charAt(0).toUpperCase());
         }
       }
-      this.update_value(val + add_val);
+      this.update_value(val + addVal);
     },
   },
 };

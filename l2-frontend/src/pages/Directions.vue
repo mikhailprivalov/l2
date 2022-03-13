@@ -217,6 +217,20 @@ export default {
     RmisDirectionsViewer,
     LastResult,
   },
+  async beforeRouteLeave(to, from, next) {
+    const msg = this.unload();
+
+    if (msg) {
+      try {
+        await this.$dialog.confirm(msg);
+      } catch (_) {
+        next(false);
+        return;
+      }
+    }
+
+    next();
+  },
   data() {
     return {
       selected_card: {
@@ -356,24 +370,10 @@ export default {
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
   },
-  async beforeRouteLeave(to, from, next) {
-    const msg = this.unload();
-
-    if (msg) {
-      try {
-        await this.$dialog.confirm(msg);
-      } catch (_) {
-        next(false);
-        return;
-      }
-    }
-
-    next();
-  },
   methods: {
     async get_disabled_forms() {
-      const result_data = await this.$api('disabled-forms');
-      this.disabled_forms = result_data.rows;
+      const resultData = await this.$api('disabled-forms');
+      this.disabled_forms = resultData.rows;
     },
     unload() {
       if (

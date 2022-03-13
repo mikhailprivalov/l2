@@ -41,8 +41,8 @@ export default class SomeLinks extends Vue {
 
   async init() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const result_data = await this.$api('get-links');
-    this.link_rows = result_data.rows;
+    const resultData = await this.$api('get-links');
+    this.link_rows = resultData.rows;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 }

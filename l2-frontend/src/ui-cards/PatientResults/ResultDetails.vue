@@ -84,15 +84,15 @@ export default {
     };
   },
   methods: {
-    show_results_debounce: _.debounce(function (with_hide) {
-      this.show_results(with_hide);
+    show_results_debounce: _.debounce(function (withHide) {
+      this.show_results(withHide);
     }, 300),
-    async show_results(with_hide) {
-      if (with_hide) {
+    async show_results(withHide) {
+      if (withHide) {
         return;
       }
       this.active = true;
-      const result_data = await this.$api(
+      const resultData = await this.$api(
         'directions/result-patient-by-direction',
         this,
         ['isLab', 'isDocReferral', 'isParaclinic'],
@@ -100,7 +100,7 @@ export default {
           dir: this.direction,
         },
       );
-      this.result = result_data.results[0] || [];
+      this.result = resultData.results[0] || [];
     },
     hide_results() {
       this.show_results_debounce(true);

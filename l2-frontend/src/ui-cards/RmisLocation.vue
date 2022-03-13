@@ -30,11 +30,11 @@ export default {
     }),
   },
   watch: {
-    async user_data({ rmis_location }) {
-      if (!this.init && rmis_location) {
+    async user_data({ rmis_location: rl }) {
+      if (!this.init && rl) {
         // this.init = true;
         // this.loading = true;
-        // console.log('rmis_location', rmis_location);
+        // console.log('rmis_location', rl);
         // this.data = await usersPoint.loadLocation();
         // this.loading = false;
       }

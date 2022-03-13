@@ -189,13 +189,13 @@ export default {
       this.changeValue();
     }, 500),
     async insertLaboratoryResult(direction) {
-      const result_data = await this.$api('directions/result-patient-by-direction', {
+      const resultData = await this.$api('directions/result-patient-by-direction', {
         isLab: true,
         isDocReferral: false,
         isParaclinic: false,
         dir: direction,
       });
-      this.result = result_data.results[0] || {};
+      this.result = resultData.results[0] || {};
       const researches: Research[] = Object.values(this.result.researches);
 
       for (const r of researches) {

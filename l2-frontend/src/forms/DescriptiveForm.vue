@@ -465,7 +465,7 @@ import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
 import FastTemplates from './FastTemplates.vue';
 import InputTemplates from './InputTemplates.vue';
-import { enter_field, leave_field } from './utils';
+import { enterField, leaveField } from './utils';
 
 export default {
   name: 'DescriptiveForm',
@@ -586,6 +586,7 @@ export default {
   },
   methods: {
     inc_version() {
+      // eslint-disable-next-line vue/no-mutating-props
       this.research.version = (this.research.version || 0) + 1;
     },
     updateValue(field) {
@@ -610,10 +611,10 @@ export default {
       }
     },
     enter_field(...args) {
-      return enter_field.apply(this, args);
+      return enterField.apply(this, args);
     },
     leave_field(...args) {
-      return leave_field.apply(this, args);
+      return leaveField.apply(this, args);
     },
   },
 };

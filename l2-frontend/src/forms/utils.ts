@@ -1,4 +1,4 @@
-export function enter_field(skip) {
+export function enterField(skip = false) {
   if (!skip) {
     return () => {
       // pass
@@ -13,7 +13,7 @@ export function enter_field(skip) {
   };
 }
 
-export function leave_field(skip) {
+export function leaveField(skip = false) {
   if (!skip) {
     return () => {
       // pass

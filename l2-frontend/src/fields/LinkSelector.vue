@@ -61,7 +61,7 @@ export default {
   },
   mounted() {
     const $link = window.$('.link', this.$el);
-    const $popover_content = window.$('.popover_content', this.$el);
+    const $popoverContent = window.$('.popover_content', this.$el);
     $link
       .popover({
         animation: false,
@@ -70,7 +70,7 @@ export default {
         placement: 'auto',
       })
       .on('show.bs.popover', () => {
-        $link.attr('data-content', $popover_content.html());
+        $link.attr('data-content', $popoverContent.html());
       })
       .click((e) => e.preventDefault());
   },

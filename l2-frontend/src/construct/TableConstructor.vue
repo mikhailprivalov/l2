@@ -360,6 +360,7 @@ export default {
       this.updateValue();
     }, 100),
     updateValue: debounce(function () {
+      // eslint-disable-next-line vue/no-mutating-props
       this.row.values_to_input = [JSON.stringify(this.result)];
     }, 100),
     checkTable() {

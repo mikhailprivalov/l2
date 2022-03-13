@@ -179,7 +179,7 @@ export default {
     createjournal() {
       const { date } = this;
       const v = this.fin_sources;
-      const { lab_pk } = this;
+      const { lab_pk: labPk } = this;
       const { group } = this;
       if (v.length === 0) {
         // @ts-ignore
@@ -198,12 +198,12 @@ export default {
         return;
       }
       const arr = JSON.parse(`[${v}]`);
-      window.open(`/results/journal?date=${date}&ist_f=${JSON.stringify(arr)}&group=${group}&lab_pk=${lab_pk}`, '_blank');
+      window.open(`/results/journal?date=${date}&ist_f=${JSON.stringify(arr)}&group=${group}&lab_pk=${labPk}`, '_blank');
     },
     createjournaltable() {
       const { date } = this;
       const v = this.fin_sources;
-      const { lab_pk } = this;
+      const { lab_pk: labPk } = this;
       if (v.length === 0) {
         // @ts-ignore
         // eslint-disable-next-line no-undef
@@ -221,12 +221,12 @@ export default {
         return;
       }
       const arr = JSON.parse(`[${v}]`);
-      window.open(`/results/journal_table?date=${date}&ist_f=${JSON.stringify(arr)}&lab_pk=${lab_pk}`, '_blank');
+      window.open(`/results/journal_table?date=${date}&ist_f=${JSON.stringify(arr)}&lab_pk=${labPk}`, '_blank');
     },
     createjournalcodes() {
       const { date } = this;
       const v = this.fin_sources;
-      const { lab_pk } = this;
+      const { lab_pk: labPk } = this;
       const { group } = this;
       if (v.length === 0) {
         // @ts-ignore
@@ -245,7 +245,7 @@ export default {
         return;
       }
       const arr = JSON.parse(`[${v}]`);
-      window.open(`/results/journal?date=${date}&ist_f=${JSON.stringify(arr)}&group=${group}&codes=1&lab_pk=${lab_pk}`, '_blank');
+      window.open(`/results/journal?date=${date}&ist_f=${JSON.stringify(arr)}&group=${group}&codes=1&lab_pk=${labPk}`, '_blank');
     },
   },
 };

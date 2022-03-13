@@ -672,12 +672,12 @@ export default {
       }
       this.$store.dispatch(actions.INC_LOADING);
       this.$api('patients/individuals/load-dreg', this, ['card_pk', 'year'])
-        .then(({ rows, researches_data, year }) => {
+        .then(({ rows, researches_data: researchesData, year }) => {
           this.rows = rows;
-          this.researches_data = researches_data;
-          this.researches_data_def = cloneDeep(researches_data);
+          this.researches_data = researchesData;
+          this.researches_data_def = cloneDeep(researchesData);
           this.all_selected = false;
-          if (researches_data && researches_data.length > 0 && !isInitial) {
+          if (researchesData && researchesData.length > 0 && !isInitial) {
             this.$root.$emit('msg', 'ok', `Загружен ${year} год`);
           }
           this.year = year;

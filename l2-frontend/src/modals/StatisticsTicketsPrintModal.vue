@@ -143,15 +143,15 @@ export default {
     },
     users_list() {
       const u = [];
-      for (const u_row of this.users) {
-        u.push({ value: u_row.pk, label: u_row.fio });
+      for (const user of this.users) {
+        u.push({ value: user.pk, label: user.fio });
       }
       return u;
     },
     deps_list() {
       const u = [];
-      for (const u_row of this.deps) {
-        u.push({ value: u_row.pk, label: u_row.title });
+      for (const user of this.deps) {
+        u.push({ value: user.pk, label: user.title });
       }
       return u;
     },

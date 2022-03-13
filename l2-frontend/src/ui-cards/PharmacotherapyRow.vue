@@ -16,7 +16,7 @@
         </td>
         <td class="cl-td">
           <select
-            v-model.number="data.form_release"
+            v-model.number="/* eslint-disable-line vue/no-mutating-props */ data.form_release"
             class="form-control nbr"
             :class="!isValidFormRelease && 'invalid'"
             :readonly="confirmed"
@@ -39,7 +39,7 @@
         </td>
         <td class="cl-td">
           <select
-            v-model.number="data.method"
+            v-model.number="/* eslint-disable-line vue/no-mutating-props */ data.method"
             class="form-control nbr"
             :class="!isValidMethod && 'invalid'"
             :readonly="confirmed"
@@ -62,7 +62,7 @@
         </td>
         <td class="cl-td">
           <input
-            v-model.number="data.dosage"
+            v-model.number="/* eslint-disable-line vue/no-mutating-props */ data.dosage"
             class="form-control"
             type="number"
             min="0"
@@ -72,7 +72,7 @@
         </td>
         <td class="cl-td">
           <select
-            v-model="data.units"
+            v-model="/* eslint-disable-line vue/no-mutating-props */ data.units"
             class="form-control nbr"
             :class="!isValidUnits && 'invalid'"
             :readonly="confirmed"
@@ -95,7 +95,7 @@
         </td>
         <td class="cl-td">
           <Treeselect
-            v-model="data.timesSelected"
+            v-model="/* eslint-disable-line vue/no-mutating-props */ data.timesSelected"
             class="treeselect-noborder"
             :multiple="true"
             :disable-branch-nodes="true"
@@ -108,7 +108,7 @@
         </td>
         <td class="cl-td">
           <input
-            v-model="data.dateStart"
+            v-model="/* eslint-disable-line vue/no-mutating-props */ data.dateStart"
             class="form-control"
             style="padding-left: 5px;padding-right: 0;"
             type="date"
@@ -119,7 +119,7 @@
         </td>
         <td class="cl-td">
           <input
-            v-model.number="data.countDays"
+            v-model.number="/* eslint-disable-line vue/no-mutating-props */ data.countDays"
             class="form-control"
             type="number"
             min="1"
@@ -129,7 +129,7 @@
         </td>
         <td class="cl-td">
           <input
-            v-model.number="data.step"
+            v-model.number="/* eslint-disable-line vue/no-mutating-props */ data.step"
             class="form-control"
             type="number"
             min="1"
@@ -148,7 +148,7 @@
           class="cl-td"
         >
           <input
-            v-model="data.comment"
+            v-model="/* eslint-disable-line vue/no-mutating-props */ data.comment"
             class="form-control"
             :readonly="confirmed"
             placeholder="Комментарий"
@@ -230,12 +230,14 @@ export default {
     dateEnd: {
       immediate: true,
       handler() {
+        // eslint-disable-next-line vue/no-mutating-props
         this.data.dateEnd = this.dateEnd;
       },
     },
   },
   methods: {
     delete_row() {
+      // eslint-disable-next-line vue/no-mutating-props
       this.data.remove = true;
     },
   },

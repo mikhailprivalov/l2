@@ -166,9 +166,9 @@ export default {
         this.$refs.modalEdit.$el.style.display = 'none';
       }
     },
-    async load_data(plan_pk) {
+    async load_data(planPk) {
       this.$store.dispatch(actions.INC_LOADING);
-      const { rows } = await this.$api('plans/plan-messages', { plan_pk });
+      const { rows } = await this.$api('plans/plan-messages', { plan_pk: planPk });
       this.rows = rows;
       this.$store.dispatch(actions.DEC_LOADING);
     },

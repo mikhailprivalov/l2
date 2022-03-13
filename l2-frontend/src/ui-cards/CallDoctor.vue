@@ -392,10 +392,10 @@ export default {
     getResponse(resp) {
       return [...resp.data.data];
     },
-    onHit(name, no_next) {
+    onHit(name, noNext) {
       return (item, t) => {
         if (t.$el) {
-          if (no_next) {
+          if (noNext) {
             window.$('input', t.$el).focus();
           } else {
             const index = window.$('input', this.$el).index(window.$('input', t.$el)) + 1;

@@ -924,7 +924,7 @@ import Vue2Filters from 'vue2-filters';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-import construct_point from '@/api/construct-point';
+import constructPoint from '@/api/construct-point';
 import * as actions from '@/store/action-types';
 import NumberRangeField from '@/fields/NumberRangeField.vue';
 import ConfigureAnesthesiaField from '@/fields/ConfigureAnesthesiaField.vue';
@@ -1210,36 +1210,36 @@ export default {
     },
     inc_group_order(row) {
       if (row.order === this.min_max_order_groups.max) return;
-      const next_row = this.find_group_by_order(row.order + 1);
-      if (next_row) {
-        next_row.order--;
+      const nextRow = this.find_group_by_order(row.order + 1);
+      if (nextRow) {
+        nextRow.order--;
       }
       // eslint-disable-next-line no-param-reassign
       row.order++;
     },
     dec_group_order(row) {
       if (row.order === this.min_max_order_groups.min) return;
-      const prev_row = this.find_group_by_order(row.order - 1);
-      if (prev_row) {
-        prev_row.order++;
+      const prevRow = this.find_group_by_order(row.order - 1);
+      if (prevRow) {
+        prevRow.order++;
       }
       // eslint-disable-next-line no-param-reassign
       row.order--;
     },
     inc_order(group, row) {
       if (row.order === this.min_max_order(group).max) return;
-      const next_row = this.find_by_order(group, row.order + 1);
-      if (next_row) {
-        next_row.order--;
+      const nextRow = this.find_by_order(group, row.order + 1);
+      if (nextRow) {
+        nextRow.order--;
       }
       // eslint-disable-next-line no-param-reassign
       row.order++;
     },
     dec_order(group, row) {
       if (row.order === this.min_max_order(group).min) return;
-      const prev_row = this.find_by_order(group, row.order - 1);
-      if (prev_row) {
-        prev_row.order++;
+      const prevRow = this.find_by_order(group, row.order - 1);
+      if (prevRow) {
+        prevRow.order++;
       }
       // eslint-disable-next-line no-param-reassign
       row.order--;
@@ -1322,7 +1322,7 @@ export default {
       this.type_period = null;
       if (this.pk >= 0) {
         this.$store.dispatch(actions.INC_LOADING);
-        construct_point
+        constructPoint
           .researchDetails(this, 'pk')
           .then(data => {
             this.title = data.title;
@@ -1400,7 +1400,7 @@ export default {
       if (this.simple) {
         props.push('main_service_pk', 'hide_main', 'hs_pk');
       }
-      construct_point
+      constructPoint
         .updateResearch(this, props, moreData)
         .then(() => {
           this.has_unsaved = false;

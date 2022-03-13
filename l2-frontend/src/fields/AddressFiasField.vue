@@ -695,13 +695,13 @@ export default class AddressFiasField extends Vue {
   onHit(itm, vue, index) {
     const item = vue.data[index];
     const {
-      data: { fias_id, ...details },
-      unrestricted_value,
+      data: { fias_id: fias, ...details },
+      unrestricted_value: address,
     } = item;
 
-    this.address = unrestricted_value;
+    this.address = address;
     this.details = getDetails(details);
-    this.fias = fias_id;
+    this.fias = fias;
     clearTimeout(this.clearFiasTimer);
   }
 

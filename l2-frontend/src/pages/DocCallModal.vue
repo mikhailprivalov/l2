@@ -174,7 +174,7 @@ export default {
     async setMeAsExecutor() {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
-        ok, message, status, executor, executor_fio, inLog,
+        ok, message, status, executor, executor_fio: executorFio, inLog,
       } = await this.$api(
         'doctor-call/change-executor',
         this.r,
@@ -186,9 +186,13 @@ export default {
       } else {
         this.$root.$emit('msg', 'ok', 'Исполнитель обновлён успешно');
       }
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.executor = executor;
-      this.r.executor_fio = executor_fio;
+      // eslint-disable-next-line vue/no-mutating-props
+      this.r.executor_fio = executorFio;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.status = status;
+      // eslint-disable-next-line vue/no-mutating-props
       this.r.inLog = inLog;
       this.$root.$emit('doc-call:log:update');
       this.$root.$emit('doc-call:status:updated', this.r.pk);

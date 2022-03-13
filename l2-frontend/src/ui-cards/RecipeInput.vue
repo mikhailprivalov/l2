@@ -193,6 +193,7 @@ export default {
   },
   methods: {
     add(value) {
+      // eslint-disable-next-line vue/no-mutating-props
       this.value.push({
         pk: Math.random() + Math.random(),
         prescription: value,
@@ -209,6 +210,7 @@ export default {
           } catch (_) {
             return;
           }
+          // eslint-disable-next-line vue/no-mutating-props
           this.value[i].remove = true;
           this.toRemove.push(pk);
           break;
