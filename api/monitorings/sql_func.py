@@ -269,4 +269,3 @@ def dashboard_sql_by_day_filter_hosp(charts_id=None, start_date=None, end_date=N
         )
         rows = namedtuplefetchall(cursor)
     return rows
-

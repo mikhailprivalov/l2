@@ -116,7 +116,7 @@ def get_all_tubes(request):
 @csrf_exempt
 @login_required
 def tubes_control(request):
-    """ Создание новых и настройка существующих пробирок """
+    """Создание новых и настройка существующих пробирок"""
     if request.method == "PUT":
         if hasattr(request, '_post'):
             del request._post
@@ -163,7 +163,7 @@ def tubes_control(request):
 @csrf_exempt
 @login_required
 def tubes_relation(request):
-    """ Создание связи пробирка-фракция """
+    """Создание связи пробирка-фракция"""
     return_result = {}
     if request.method == "PUT":
         if hasattr(request, '_post'):

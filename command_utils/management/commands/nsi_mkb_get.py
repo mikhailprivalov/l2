@@ -99,17 +99,10 @@ class Command(BaseCommand):
                         n_str = f"({i + 1}/{data_parts}) ({n}/{len(diagnoses)}): {diag_key}-{mkb_code}-{title}-{nsi_code}"
 
                         if is_empty:
-                            bulk_create.append(
-                                Diagnoses(
-                                    code=mkb_code, d_type=diag_key, title=title, nsi_id=nsi_code, hide=False, m_type=2 
-                                )
-                            )
+                            bulk_create.append(Diagnoses(code=mkb_code, d_type=diag_key, title=title, nsi_id=nsi_code, hide=False, m_type=2))
                             print(f"добавлено в очередь создания {n_str}")  # noqa: T001
                         else:
-                            _, created = Diagnoses.objects.update_or_create(
-                                code=mkb_code, d_type=diag_key, title=title,
-                                defaults={'nsi_id': nsi_code, 'hide': False, 'm_type': 2}
-                            )
+                            _, created = Diagnoses.objects.update_or_create(code=mkb_code, d_type=diag_key, title=title, defaults={'nsi_id': nsi_code, 'hide': False, 'm_type': 2})
                             if not created:
                                 print(f"обновлено {n_str}")  # noqa: T001
                             else:

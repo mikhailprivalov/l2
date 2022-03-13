@@ -780,6 +780,7 @@ def form_05(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
                 print_frame.split(p, c)
                 c.showPage()
                 print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+
     count = 0
     for dir in dir_obj:
         count += 1
@@ -866,8 +867,11 @@ def form_06(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
         tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))
-        objs.append(Paragraph('Заявление пациента (законного представителя пациента) о<br/>'
-                              'рассмотрении медицинских документов и оказание<br/>высокотехнологичной медицинской помощи.', styleCenterBold))
+        objs.append(
+            Paragraph(
+                'Заявление пациента (законного представителя пациента) о<br/>' 'рассмотрении медицинских документов и оказание<br/>высокотехнологичной медицинской помощи.', styleCenterBold
+            )
+        )
 
         objs.append(Spacer(1, 5 * mm))
 
@@ -904,7 +908,7 @@ def form_06(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
         objs.append(
             Paragraph(
                 'Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.format(person_data['type_doc'], person_data['passport_serial'], person_data['passport_num']),
-                styleSign
+                styleSign,
             )
         )
         objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))

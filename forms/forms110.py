@@ -1,5 +1,4 @@
 from reportlab.lib.pagesizes import A4
-from forms.sql_func import get_extra_notification_data_for_pdf
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
@@ -13,8 +12,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 import simplejson as json
 from io import BytesIO
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
-from utils.dates import normalize_date
 
 
 def form_01(request_data):

@@ -33,7 +33,8 @@ from clients.models import (
     Phones,
     AmbulatoryData,
     AmbulatoryDataHistory,
-    DispensaryRegPlans, ScreeningRegPlan,
+    DispensaryRegPlans,
+    ScreeningRegPlan,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
@@ -168,21 +169,23 @@ def patients_search_card(request):
             normalized_phones = Phones.normalize_to_search(phone)
             if normalized_phones:
                 objects = objects.filter(
-                    Q(card__phones__normalized_number__in=normalized_phones) |
-                    Q(card__phones__number__in=normalized_phones) |
-                    Q(card__phone__in=normalized_phones) |
-                    Q(card__doctorcall__phone__in=normalized_phones)
+                    Q(card__phones__normalized_number__in=normalized_phones)
+                    | Q(card__phones__number__in=normalized_phones)
+                    | Q(card__phone__in=normalized_phones)
+                    | Q(card__doctorcall__phone__in=normalized_phones)
                 )
     elif p5i or (always_phone_search and len(query) == 11 and query.isdigit()):
         has_phone_search = True
         phone = query.replace('phone:', '')
         normalized_phones = Phones.normalize_to_search(phone)
-        objects = list(Individual.objects.filter(
-            Q(card__phones__normalized_number__in=normalized_phones) |
-            Q(card__phones__number__in=normalized_phones) |
-            Q(card__phone__in=normalized_phones) |
-            Q(card__doctorcall__phone__in=normalized_phones)
-        ))
+        objects = list(
+            Individual.objects.filter(
+                Q(card__phones__normalized_number__in=normalized_phones)
+                | Q(card__phones__number__in=normalized_phones)
+                | Q(card__phone__in=normalized_phones)
+                | Q(card__doctorcall__phone__in=normalized_phones)
+            )
+        )
     elif p_enp:
         if tfoms_module and not suggests:
             from_tfoms = match_enp(query)
@@ -317,8 +320,7 @@ def patients_search_card(request):
 
     row: Card
     for row in (
-        cards
-        .select_related("individual", "base")
+        cards.select_related("individual", "base")
         .prefetch_related(
             Prefetch(
                 'individual__document_set',
@@ -392,8 +394,10 @@ def patients_search_card(request):
                                 "from_rmis": False,
                                 "rmis_uid": None,
                             }
-                        ] if row.medbook_number else []
-                    )
+                        ]
+                        if row.medbook_number
+                        else []
+                    ),
                 ],
                 "medbookNumber": f"{row.medbook_prefix} {row.medbook_number}".strip(),
                 "status_disp": status_disp,

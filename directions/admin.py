@@ -25,7 +25,8 @@ from .models import (
     MonitoringSumFieldTotal,
     NumberGenerator,
     DirectionDocument,
-    DocumentSign, AdditionNapravleniya,
+    DocumentSign,
+    AdditionNapravleniya,
     IssledovaniyaFiles,
 )
 
@@ -46,9 +47,7 @@ class NapravleniyaAdmin(admin.ModelAdmin):
 
 @admin.register(DirectionDocument)
 class DirectionDocumentAdmin(admin.ModelAdmin):
-    autocomplete_fields = (
-        'direction',
-    )
+    autocomplete_fields = ('direction',)
     search_fields = ('direction',)
 
 
@@ -58,7 +57,10 @@ class DocumentSignAdmin(admin.ModelAdmin):
         'document',
         'executor',
     )
-    search_fields = ('document', 'executor',)
+    search_fields = (
+        'document',
+        'executor',
+    )
 
 
 @admin.register(Issledovaniya)
@@ -68,17 +70,13 @@ class IssAdmin(admin.ModelAdmin):
         'research',
         'parent',
     )
-    raw_id_fields = (
-        'tubes',
-    )
+    raw_id_fields = ('tubes',)
     search_fields = ('napravleniye__pk',)
 
 
 @admin.register(NumberGenerator)
 class NumberGeneratorAdmin(admin.ModelAdmin):
-    autocomplete_fields = (
-        'hospital',
-    )
+    autocomplete_fields = ('hospital',)
     search_fields = ('hospital', 'year', 'key')
     list_display = (
         'hospital',
@@ -135,7 +133,11 @@ class ResPersonContract(admin.ModelAdmin):
         'dir_list',
         'protect_code',
     )
-    raw_id_fields = ('patient_card', 'payer_card', 'agent_card',)
+    raw_id_fields = (
+        'patient_card',
+        'payer_card',
+        'agent_card',
+    )
     search_fields = ('num_contract',)
 
 
@@ -181,7 +183,6 @@ class ResDashboardChartFields(admin.ModelAdmin):
         'charts',
         'field',
         'title_for_field',
-
     )
     search_fields = ('charts__title',)
 
@@ -201,7 +202,10 @@ class ResAdditionNapravleniya(admin.ModelAdmin):
         'target_direction',
         'addition_direction',
     )
-    search_fields = ('target_direction__pk', 'addition_direction__pk', )
+    search_fields = (
+        'target_direction__pk',
+        'addition_direction__pk',
+    )
 
 
 class ResIssledovaniyaFiles(admin.ModelAdmin):
@@ -210,7 +214,7 @@ class ResIssledovaniyaFiles(admin.ModelAdmin):
         'uploaded_file',
         'created_at',
     )
-    search_fields = ('issledovaniye__pk', )
+    search_fields = ('issledovaniye__pk',)
 
 
 admin.site.register(TubesRegistration)

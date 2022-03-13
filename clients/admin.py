@@ -46,9 +46,7 @@ class CardAdmin(admin.ModelAdmin):
 
 @admin.register(models.ScreeningRegPlan)
 class ScreeningRegPlanAdmin(admin.ModelAdmin):
-    autocomplete_fields = (
-        'card',
-    )
+    autocomplete_fields = ('card',)
 
     search_fields = ('research__title',)
 

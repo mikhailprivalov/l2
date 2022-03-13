@@ -108,9 +108,9 @@ def get_slot_fact(plan_pk_tuple):
             FROM public.doctor_schedule_slotfact
             WHERE plan_id in %(plan_pk_tuple)s 
         """,
-            params={'plan_pk_tuple': plan_pk_tuple, },
+            params={
+                'plan_pk_tuple': plan_pk_tuple,
+            },
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
-

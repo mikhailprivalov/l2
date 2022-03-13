@@ -34,12 +34,14 @@ def get_expertise(pk, with_check_available=False):
                     if content and content.get("Наличие замечаний"):
                         if content["Наличие замечаний"].lower() == "нет":
                             without_remarks = True
-                expertise_data['directions'].append({
-                    "pk": i.napravleniye_id,
-                    "confirmedAt": f"{i.date_confirm} {i.time_confirm}" if i.date_confirm else None,
-                    "withoutRemarks": without_remarks,
-                    "serviceTitle": i.title,
-                })
+                expertise_data['directions'].append(
+                    {
+                        "pk": i.napravleniye_id,
+                        "confirmedAt": f"{i.date_confirm} {i.time_confirm}" if i.date_confirm else None,
+                        "withoutRemarks": without_remarks,
+                        "serviceTitle": i.title,
+                    }
+                )
                 if i.date_confirm:
                     expertise_data['status'] = 'ok' if without_remarks else 'error'
     return expertise_data

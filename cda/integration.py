@@ -39,4 +39,3 @@ def get_required_signatures(service: str) -> dict:
 
 def render_cda(service: str, direction_data: dict) -> dict:
     return make_request('/render/njk.xml', as_json=False, data=json.dumps({"title": str(service), **direction_data}))
-

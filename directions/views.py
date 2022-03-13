@@ -975,7 +975,7 @@ def print_history(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 if len(research_tmp) > 38:
-                    research_tmp = research_tmp[0:-(len(research_tmp) - 38)] + "..."
+                    research_tmp = research_tmp[0 : -(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
                 tmp.append(Paragraph("", styleSheet["BodyText"]))
 
@@ -1044,7 +1044,7 @@ def draw_tituls(c, pages, page, paddingx, obj, hospital_title):
 
 @login_required
 def get_issledovaniya(request):
-    """ Получение списка исследований и направления для ввода результатов"""
+    """Получение списка исследований и направления для ввода результатов"""
     import time
 
     res = {"issledovaniya": [], "ok": False, "labs": [], "labs_objects": [], "msg": None}

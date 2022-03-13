@@ -107,12 +107,7 @@ class DoctorProfile(models.Model):
         self.user.set_password(new_password)
         self.user.save()
 
-        send_new_password.delay(
-            self.email,
-            self.user.username,
-            new_password,
-            self.hospital_safe_title
-        )
+        send_new_password.delay(self.email, self.user.username, new_password, self.hospital_safe_title)
 
         return True
 
@@ -120,24 +115,14 @@ class DoctorProfile(models.Model):
         if not self.user or not self.email or not EMAIL_HOST:
             return
 
-        send_login.delay(
-            self.email,
-            self.user.username,
-            ip,
-            self.hospital_safe_title
-        )
+        send_login.delay(self.email, self.user.username, ip, self.hospital_safe_title)
 
     def old_email_send_code(self, request):
         if not self.user or not EMAIL_HOST:
             return
         request.session['old_email_code'] = User.objects.make_random_password()
 
-        send_old_email_code.delay(
-            self.email,
-            self.user.username,
-            request.session['old_email_code'],
-            self.hospital_safe_title
-        )
+        send_old_email_code.delay(self.email, self.user.username, request.session['old_email_code'], self.hospital_safe_title)
 
     def check_old_email_code(self, code: str, request):
         if not self.user:
@@ -157,12 +142,7 @@ class DoctorProfile(models.Model):
         request.session['new_email'] = new_email
         request.session['new_email_code'] = User.objects.make_random_password()
 
-        send_new_email_code.delay(
-            new_email,
-            self.user.username,
-            request.session['new_email_code'],
-            self.hospital_safe_title
-        )
+        send_new_email_code.delay(new_email, self.user.username, request.session['new_email_code'], self.hospital_safe_title)
 
     def new_email_check_code(self, new_email: str, code: str, request):
         if not self.user or not code or not new_email:
@@ -170,7 +150,7 @@ class DoctorProfile(models.Model):
 
         return request.session.get('new_email') == new_email and code == request.session.get('new_email_code')
 
-    def set_new_email(self, new_email: str,request):
+    def set_new_email(self, new_email: str, request):
         self.email = new_email
         self.save(update_fields=['email'])
         request.session['new_email'] = None
@@ -314,8 +294,9 @@ class AssignmentTemplates(models.Model):
     global_template = models.BooleanField(default=True, blank=True)
 
     show_in_research_picker = models.BooleanField(default=False, blank=True)
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="template_department", help_text="Лаборатория",
-                                       db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    podrazdeleniye = models.ForeignKey(
+        Podrazdeleniya, related_name="template_department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE
+    )
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклинический шаблон", db_index=True)
     is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление шаблон к врачу", db_index=True)
     is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение — шаблон", db_index=True)
@@ -324,8 +305,9 @@ class AssignmentTemplates(models.Model):
     is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологический шаблон", db_index=True)
     is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологический шаблон", db_index=True)
     is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологический шаблон", db_index=True)
-    site_type = models.ForeignKey("directory.ResearchSite", related_name='site_type_in_template', default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL,
-                                  db_index=True)
+    site_type = models.ForeignKey(
+        "directory.ResearchSite", related_name='site_type_in_template', default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True
+    )
 
     def get_show_type(self):
         if self.is_paraclinic:

@@ -33,8 +33,15 @@ def delta_to_string(d):
     return None if d is None else ':'.join([x.rjust(2, '0') for x in str(d).split(':')[:2]])
 
 
-COMMON_SCHEDULE_GROUPS = ['Лечащий врач', 'Оператор лечащего врача', 'Врач консультаций', 'Врач стационара',
-                          'Врач параклиники', 'Управление расписанием', 'Создание и редактирование пользователей']
+COMMON_SCHEDULE_GROUPS = [
+    'Лечащий врач',
+    'Оператор лечащего врача',
+    'Врач консультаций',
+    'Врач стационара',
+    'Врач параклиники',
+    'Управление расписанием',
+    'Создание и редактирование пользователей',
+]
 ADMIN_SCHEDULE_GROUPS = ['Управление расписанием', 'Создание и редактирование пользователей']
 
 
@@ -230,8 +237,11 @@ def details(request):
 @login_required
 @group_required(*COMMON_SCHEDULE_GROUPS)
 def save(request):
-    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int, 'date': str, 'resource': str},
-                      {'planId': None, 'cardId': None, 'serviceId': None, 'status': 'reserved', 'date': None, 'resource': None})
+    data = data_parse(
+        request.body,
+        {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int, 'date': str, 'resource': str},
+        {'planId': None, 'cardId': None, 'serviceId': None, 'status': 'reserved', 'date': None, 'resource': None},
+    )
     pk: int = data[0]
     card_pk: int = data[1]
     status: str = data[2]
@@ -427,12 +437,16 @@ def available_slots(request):
 
 @login_required
 def available_hospitalization_plan(request):
-    data = data_parse(request.body, {'research_pk': int, 'resource_id': int, 'date_start': str, 'date_end': str}, {
-        'research_pk': None,
-        'resource_id': None,
-        'date_start': None,
-        'date_end': None,
-    })
+    data = data_parse(
+        request.body,
+        {'research_pk': int, 'resource_id': int, 'date_start': str, 'date_end': str},
+        {
+            'research_pk': None,
+            'resource_id': None,
+            'date_start': None,
+            'date_end': None,
+        },
+    )
     research_pk = data[0]
     resource_id = data[1]
     date_start = data[2]
@@ -446,11 +460,15 @@ def available_hospitalization_plan(request):
 
 @login_required
 def check_hosp_slot_before_save(request):
-    data = data_parse(request.body, {'research_pk': int, 'resource_id': int, 'date': str}, {
-        'research_pk': None,
-        'resource_id': None,
-        'date': None,
-    })
+    data = data_parse(
+        request.body,
+        {'research_pk': int, 'resource_id': int, 'date': str},
+        {
+            'research_pk': None,
+            'resource_id': None,
+            'date': None,
+        },
+    )
     research_pk = data[0]
     resource_id = data[1]
     date = data[2]

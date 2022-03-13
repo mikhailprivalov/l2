@@ -130,7 +130,11 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
     return row
 
 
-def get_patient_contract(d_s, d_e, card_pk,):
+def get_patient_contract(
+    d_s,
+    d_e,
+    card_pk,
+):
     with connection.cursor() as cursor:
         cursor.execute(
             """

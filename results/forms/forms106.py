@@ -404,7 +404,11 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
         ],
     ]
 
-    col_width = (93 * mm, 5 * mm, 93 * mm, )
+    col_width = (
+        93 * mm,
+        5 * mm,
+        93 * mm,
+    )
     tbl_style = [
         ('GRID', (0, 0), (0, 0), 0.75, colors.white),
         ('GRID', (2, 0), (2, 0), 0.75, colors.white),

@@ -59,6 +59,7 @@ def values_from_structure_data(data):
 def values_as_structure_data(data):
     values = []
     from directions.models import ParaclinicResult
+
     for v in data:
         for field in v['fields']:
             s = ''
@@ -74,9 +75,11 @@ def values_as_structure_data(data):
                 t = field['field_type']
                 is_table = t == 27
 
-                values.append({
-                    "title": s,
-                    "value": json.loads(vv) if is_table else ParaclinicResult.JsonParser.from_static_json_to_string_value(vv, t),
-                    "table": is_table,
-                })
+                values.append(
+                    {
+                        "title": s,
+                        "value": json.loads(vv) if is_table else ParaclinicResult.JsonParser.from_static_json_to_string_value(vv, t),
+                        "table": is_table,
+                    }
+                )
     return values

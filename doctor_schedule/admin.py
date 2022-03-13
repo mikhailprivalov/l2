@@ -4,7 +4,11 @@ from .models import ScheduleResource, SlotPlan, SlotFact, UserResourceModifyRigh
 
 class ScheduleResourceAdmin(admin.ModelAdmin):
     list_display = ('title', 'executor', 'room', 'department', 'speciality')
-    autocomplete_fields = ('executor', 'room', 'department',)
+    autocomplete_fields = (
+        'executor',
+        'room',
+        'department',
+    )
     search_fields = ('title', 'executor', 'service', 'room', 'department', 'speciality')
     filter_horizontal = ('service',)
 

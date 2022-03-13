@@ -269,9 +269,7 @@ def receive_execlist(request):
             if t == "received":
                 tubes = [
                     x.pk
-                    for x in
-                    TubesRegistration.objects
-                    .filter(time_recive__range=(date1, date2), doc_recive=request.user.doctorprofile, issledovaniya__research=research)
+                    for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), doc_recive=request.user.doctorprofile, issledovaniya__research=research)
                     .order_by("daynum")
                     .distinct()
                 ]
@@ -370,7 +368,7 @@ def receive_execlist(request):
 
 @login_required
 def tubes_get(request):
-    """ Получение списка не принятых пробирок """
+    """Получение списка не принятых пробирок"""
     result = []
     k = set()
     if (
@@ -602,7 +600,7 @@ def receive_journal(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 if len(research_tmp) > 44:
-                    research_tmp = research_tmp[0:-(len(research_tmp) - 44)] + "..."
+                    research_tmp = research_tmp[0 : -(len(research_tmp) - 44)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
 
                 data.append(tmp)

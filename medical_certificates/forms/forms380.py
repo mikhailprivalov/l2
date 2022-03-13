@@ -976,9 +976,12 @@ def form_08(request_data):
     fwb.append(Paragraph(f'6. Адрес места жительства: {patient_data["main_address"]}', style))
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph(f'7. Врачебное  заключение о   профессиональной   пригодности: <u>{identified_fianl}</u>', style))
-    fwb.append(Paragraph(
-        '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
-        style, ))
+    fwb.append(
+        Paragraph(
+            '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',  # noqa: E501
+            style,
+        )
+    )
     fwb.append(Spacer(1, 4 * mm))
     fwb.append(Paragraph("Подпись лица, заполнившего освидетельствование ________________________", style))
     fwb.append(Spacer(1, 2 * mm))

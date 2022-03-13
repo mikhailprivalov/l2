@@ -1,6 +1,6 @@
 import json
 
-from django.db import transaction 
+from django.db import transaction
 from django.core.management import BaseCommand
 from directory.models import Fractions, Unit
 

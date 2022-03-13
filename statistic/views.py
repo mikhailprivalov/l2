@@ -40,7 +40,9 @@ from .sql_func import (
     screening_plan_for_month_all_count,
     sql_pass_pap_analysis_count,
     sql_pass_pap_fraction_result_value,
-    sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value, sql_get_result_by_direction, sql_get_documents_by_card_id,
+    sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
+    sql_get_result_by_direction,
+    sql_get_documents_by_card_id,
 )
 
 from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK, COVID_QUESTION_ID, RESEARCH_SPECIAL_REPORT

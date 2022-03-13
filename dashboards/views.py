@@ -17,12 +17,37 @@ def exec_query(dashboard_pk):
     for md in metadata_charts:
         if not data_chart.get(md.chart_id):
             data_chart[md.chart_id] = [
-                {"chart_title": md.chart_title, "chart_type": md.chart_type, "database": md.database, "user": md.login, "password": md.password, "address": md.ip_address,
-                 "port": md.port, "query": md.sql_query, "sql_param": md.sql_columns_settings, "chart_order": md.chart_order, "field_title": md.field_title}]
+                {
+                    "chart_title": md.chart_title,
+                    "chart_type": md.chart_type,
+                    "database": md.database,
+                    "user": md.login,
+                    "password": md.password,
+                    "address": md.ip_address,
+                    "port": md.port,
+                    "query": md.sql_query,
+                    "sql_param": md.sql_columns_settings,
+                    "chart_order": md.chart_order,
+                    "field_title": md.field_title,
+                }
+            ]
         else:
             temp_data_chart = data_chart.get(md.chart_id, None)
-            temp_data_chart.append({"chart_title": md.chart_title, "chart_type": md.chart_type, "database": md.database, "user": md.login, "password": md.password, "address": md.ip_address,
-                                    "port": md.port, "query": md.sql_query, "sql_param": md.sql_columns_settings, "chart_order": md.chart_order, "field_title": md.field_title})
+            temp_data_chart.append(
+                {
+                    "chart_title": md.chart_title,
+                    "chart_type": md.chart_type,
+                    "database": md.database,
+                    "user": md.login,
+                    "password": md.password,
+                    "address": md.ip_address,
+                    "port": md.port,
+                    "query": md.sql_query,
+                    "sql_param": md.sql_columns_settings,
+                    "chart_order": md.chart_order,
+                    "field_title": md.field_title,
+                }
+            )
             data_chart[md.chart_id] = temp_data_chart.copy()
 
     tmp_chart = {

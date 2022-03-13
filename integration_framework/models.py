@@ -58,16 +58,11 @@ class ExternalServiceRights(models.Model):
 class ExternalService(models.Model):
     ACCESS_RIGHT_QR_CHECK_RESULT = 'qr_check_result'
 
-    ACCESS_RIGHTS = (
-        (ACCESS_RIGHT_QR_CHECK_RESULT, 'QR check result'),
-    )
+    ACCESS_RIGHTS = ((ACCESS_RIGHT_QR_CHECK_RESULT, 'QR check result'),)
 
     title = models.CharField(max_length=127, help_text="Название")
     token = models.UUIDField(default=uuid.uuid4, editable=False, help_text="Токен, генерируется автоматически", db_index=True)
-    rights = ChoiceArrayField(
-        models.CharField(max_length=16, choices=ACCESS_RIGHTS),
-        help_text='Права доступа'
-    )
+    rights = ChoiceArrayField(models.CharField(max_length=16, choices=ACCESS_RIGHTS), help_text='Права доступа')
     is_active = models.BooleanField(default=True, help_text="Сервис активен")
     extension_right = models.CharField(max_length=300, default="", blank=True, null=True, help_text="Название роли")
     external_service_rights = models.ForeignKey(ExternalServiceRights, default=None, null=True, blank=True, help_text='роль в базе', on_delete=models.SET_NULL)

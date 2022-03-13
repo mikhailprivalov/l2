@@ -67,8 +67,7 @@ def get_extra_notification_data_for_pdf(directions, extra_master_research_id, ex
                 AND directions_issledovaniya.research_id = %(slave_research_id)s and master_direction.master_research_id = %(master_research_id)s
                 ORDER BY master_dir, master_field_sort
         """,
-            params={'num_dirs': directions, 'master_research_id': extra_master_research_id, 'slave_research_id': extra_slave_research_id,
-                    'with_confirm': with_confirm},
+            params={'num_dirs': directions, 'master_research_id': extra_master_research_id, 'slave_research_id': extra_slave_research_id, 'with_confirm': with_confirm},
         )
         rows = namedtuplefetchall(cursor)
     return rows

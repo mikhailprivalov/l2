@@ -5,7 +5,6 @@ from random import randint
 
 from django.contrib.auth import authenticate, login
 
-from laboratory.utils import current_time
 from users.tasks import send_password_reset_code
 
 from utils.response import status_response
@@ -57,11 +56,7 @@ def loose_password(request):
             doc: DoctorProfile = DoctorProfile.objects.filter(email__iexact=email)[0]
             request.session['email'] = email
             request.session['code'] = str(randint(10000, 999999))
-            send_password_reset_code.delay(
-                email,
-                request.session['code'],
-                doc.hospital_safe_title
-            )
+            send_password_reset_code.delay(email, request.session['code'], doc.hospital_safe_title)
             slog.Log(key=email, type=121000, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=doc).save()
         return status_response(True)
     elif step == 'check-code':
@@ -129,11 +124,18 @@ def set_new_email(request):
         if check_new_email_code:
             old_email = doc.email
             doc.set_new_email(new_email, request)
-            slog.Log(key=new_email, type=120001, body=json.dumps({
-                "ip": slog.Log.get_client_ip(request),
-                "old": old_email,
-                "new": new_email,
-            }), user=request.user.doctorprofile).save()
+            slog.Log(
+                key=new_email,
+                type=120001,
+                body=json.dumps(
+                    {
+                        "ip": slog.Log.get_client_ip(request),
+                        "old": old_email,
+                        "new": new_email,
+                    }
+                ),
+                user=request.user.doctorprofile,
+            ).save()
             return status_response(True)
         else:
             return status_response(False, message='Некорректный код')

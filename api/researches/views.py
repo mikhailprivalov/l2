@@ -215,7 +215,7 @@ def get_researches(request):
                     for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
                         tpls.append(at.as_research())
             if tpls:
-                deps[r.reversed_type].extend(tpls)    
+                deps[r.reversed_type].extend(tpls)
             deps[r.reversed_type].append(research_data)
 
         for dk in deps:

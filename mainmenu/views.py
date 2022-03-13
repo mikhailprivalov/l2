@@ -84,7 +84,7 @@ def load_logs(request):
     if check_new == 0:
         offset = int(request.POST.get("offset", request.GET.get("offset", 0)))
         size = int(request.POST.get("size", request.GET.get("size", 0)))
-        rows = obj.order_by("-pk")[offset:size + offset]
+        rows = obj.order_by("-pk")[offset : size + offset]
     else:
         pkgt = int(request.POST.get("last_n", request.GET.get("last_n", 0)))
         rows = obj.filter(pk__gt=pkgt).order_by("pk")
@@ -167,7 +167,7 @@ def confirm_reset(request):
 @login_required
 @group_required("Создание и редактирование пользователей")
 def create_pod(request):
-    """ Создание подразделения """
+    """Создание подразделения"""
     p = False
     e = True
     mess = ''
@@ -205,7 +205,7 @@ def create_pod(request):
 @staff_member_required
 @ensure_csrf_cookie
 def ldap_sync(request):
-    """ Страница синхронизации с LDAP """
+    """Страница синхронизации с LDAP"""
     return render(request, 'dashboard/ldap_sync.html')
 
 
@@ -417,7 +417,7 @@ def discharge_search(request):
 @login_required
 @group_required("Создание и редактирование пользователей")
 def users_count(request):
-    """ Получение количества пользователей """
+    """Получение количества пользователей"""
     result = {"all": User.objects.all().count(), "ldap": DoctorProfile.objects.filter(isLDAP_user=True).count()}
 
     return JsonResponse(result)
@@ -451,7 +451,7 @@ def results_history_search(request):
 @login_required
 @group_required("Получатель биоматериала")
 def dashboard_from(request):
-    """ Получение отделений и кол-ва пробирок """
+    """Получение отделений и кол-ва пробирок"""
     date_start = request.GET["datestart"]
     date_end = request.GET["dateend"]
     filter_type = request.GET.get("type", "wait")
@@ -504,7 +504,7 @@ def get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazl
 
 @login_required
 def dir_multiprint(request):
-    """ Страница пакетной печати направлений """
+    """Страница пакетной печати направлений"""
     return render(request, 'dashboard/dir_multiprint.html')
 
 

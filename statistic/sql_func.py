@@ -1043,7 +1043,9 @@ def sql_get_documents_by_card_id(card_tuple):
             LEFT JOIN  clients_document on clients_document.id=clients_carddocusage.document_id
             WHERE clients_carddocusage.card_id in %(cards)s
             """,
-            params={'cards': card_tuple, },
+            params={
+                'cards': card_tuple,
+            },
         )
 
         rows = namedtuplefetchall(cursor)

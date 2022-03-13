@@ -3,7 +3,6 @@ from users.models import DoctorProfile
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **kwargs):
         doctors_users = DoctorProfile.objects.all()
         for doctor in doctors_users:

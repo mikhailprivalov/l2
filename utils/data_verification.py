@@ -9,7 +9,8 @@ from clients.models import Card
 
 def as_model(model: models.Model):
     def internal(pk: Union[int, str]):
-        return model.objects.filter(pk=pk).first()    
+        return model.objects.filter(pk=pk).first()
+
     return internal
 
 

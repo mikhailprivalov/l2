@@ -65,9 +65,7 @@ class Command(BaseCommand):
                 f.write(f"        'title': '{NSI_DIRECTORIES_TO_SAVE[oid]}',\n")
                 f.write("        'values': {\n")
                 for i in range(1, data_parts):
-                    response = requests.get(
-                        f'https://nsi.rosminzdrav.ru:443/port/rest/data?userKey={nsi_key}&identifier={oid}&page={i}&size=500'
-                    )
+                    response = requests.get(f'https://nsi.rosminzdrav.ru:443/port/rest/data?userKey={nsi_key}&identifier={oid}&page={i}&size=500')
                     for data in response.json()['list']:
                         code, title = None, None
                         for p in data:
