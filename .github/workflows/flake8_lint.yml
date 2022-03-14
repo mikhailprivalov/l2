@@ -21,3 +21,4 @@ jobs:
           flake8_args: --enable-extensions BLK
           filter_mode: file
           reporter: github-pr-review
+          level: info
