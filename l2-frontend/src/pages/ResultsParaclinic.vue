@@ -2185,11 +2185,11 @@ export default {
           n++;
           if (
             (((f.required
-              && (f.value === ''
-                || f.value === '- Не выбрано'
-                || !f.value
-                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
-              || this.tableFieldsErrors[f.pk])
+                  && (f.value === ''
+                    || f.value === '- Не выбрано'
+                    || !f.value
+                    || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+                || this.tableFieldsErrors[f.pk])
               && vField(g, research.research.groups, f.visibility, this.data.patient))
             || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {
@@ -2197,10 +2197,11 @@ export default {
           }
         }
       }
-
-      for (const [key, value] of Object.entries(this.requiredStattalonFields)) {
-        if (!research[key] || research[key] === -1) {
-          l.push(value);
+      if (research.is_doc_refferal) {
+        for (const [key, value] of Object.entries(this.requiredStattalonFields)) {
+          if (!research[key] || research[key] === -1) {
+            l.push(value);
+          }
         }
       }
 
