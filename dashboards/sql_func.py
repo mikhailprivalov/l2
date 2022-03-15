@@ -56,6 +56,7 @@ def execute_select(database, user, password, address, port, query):
         rows = namedtuplefetchall(cursor)
         cursor.close()
         connection.close()
+        rows = [i._asdict() for i in rows]
         if DASHBOARD_CHARTS_CACHE_TIME_SEC > 0:
             cache.set(key, pickle.dumps(rows, protocol=4), DASHBOARD_CHARTS_CACHE_TIME_SEC)
     else:

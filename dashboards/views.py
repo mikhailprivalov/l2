@@ -86,8 +86,7 @@ def exec_query(dashboard_pk):
             r = execute_select(datachart['database'], datachart['user'], datachart['password'], datachart['address'], datachart['port'], datachart['query'])
             values = []
             dates = []
-            for i in r:
-                tmp_dict = i._asdict()
+            for tmp_dict in r:
                 for current_key in tmp_data.keys():
                     if tmp_data[current_key] == 'value':
                         values.append(tmp_dict[current_key])
