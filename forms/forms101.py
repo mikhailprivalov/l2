@@ -3370,3 +3370,188 @@ def form_13(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
+
+def form_14(request_data):
+    """
+    Согласие на оперативное вмешательство
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer,
+                            pagesize=A4,
+                            rightMargin=20,
+                            leftMargin=45,
+                            topMargin=20,
+                            bottomMargin=20,
+                            title='Согласие на оперативное вмешательство')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph(
+        'ИНФОРМАЦИОННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА ОПЕРАТИВНОЕ ВМЕШАТЕЛЬСТВО, В Т.Ч. ПЕРЕЛИВАНИЕ КРОВИ И ЕЕ КОМПОНЕНТОВ', style=styleHeader))
+    objs.append(Spacer(1, 12))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(
+            f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft
+        )
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(
+                    f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft
+                )
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(
+                    f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft
+                )
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    objs.append(Spacer(1, 10))
+    objs.append(Paragraph('Находясь на лечении в ____________________________________________', style=styleLeft))
+    objs.append(Paragraph('Добровольно даю свое согласие на проведение представляемому операции:', style=styleLeft))
+    objs.append(Spacer(1, 20))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    operation_name = '(название операции)'
+    objs.append(Paragraph(f'{operation_name}', styleFCenterMin))
+    objs.append(Spacer(1, 5))
+
+    objs.append(Paragraph('И прошу персонал медицинского учреждения о ее проведении.', style=style))
+    objs.append(Paragraph(
+        'Подтверждаю, что я ознакомлен(на) с характером предстоящей представляемому операции. Мне разъяснены, и я понимаю особенности и ход предстоящего '
+        'оперативного лечения.', style=style))
+    objs.append(Paragraph(
+        'Мне разъяснено, и я осознаю, что во время операции могут возникнуть непредвиденные обстоятельства и осложнения. В таком случае я согласен(на) на то, '
+        'что ход операции может быть изменен врачами по их усмотрению.', style=style))
+    objs.append(Paragraph(
+        'Я предупрежден(на) о фактах риска и понимаю, что проведение операции сопряжено с риском потери крови, возможностью инфекционных осложнений, нарушений со стороны ' 
+        'сердечно-сосудистой и других систем жизнедеятельности организма непреднамеренного причинения вреда здоровью и даже неблагоприятного исхода', style=style))
+    objs.append(Paragraph(
+        'Я предупрежден(на), что в ряде случаев могут потребляться повторные операции, в т.ч. в связи с возможными послеоперационными осложнениями течения заболевания, '
+        'и даю свое согласие на это', style=style))
+    objs.append(Paragraph(
+        'Я поставил(ла) в известность врача обо всех проблемах, связанных со здоровьем, в том числе об аллергических проявлениях или индивидуальной непереносимости '
+        'лекарственных препаратов, обо всех перенесенных мною (представляемым) и известных мне травмах, операциях, заболеваниях в т.ч. носительстве ВИЧ-инфекции, вирусных '
+        'гепатитах, туберкулезе, инфекциях, передаваемых половым путем, об экологических и производственных факторах физической, химической или биологической природы, '
+        'воздействующих на меня (представляемого) во время жизнедеятельности, принимаемых лекарственных средствах, проводившихся ранее переливаниях крови и ее '
+        'компонентов. Сообщил(а) правдивые сведения о наследственности, а также об употреблении алкоголя, наркотических и токсических средств.', style=style))
+    objs.append(Paragraph('Я знаю, что во время операции возможна потеря крови и даю согласие на переливание донорской или ауто (собственной) крови и ее компонентов.', style=style))
+    objs.append(Paragraph(
+        'Я согласен(на) на запись хода операции на информационные носители и демонстрацию лицам с медицинским образованием исключительно медицинских, научных '
+        'или обучающих целях с учетом сохранения врачебной тайны.', style=style))
+    objs.append(Paragraph(
+        'Мне  была предоставлена возможность задать вопросы о степени риска и пользе хирургического вмешательства (манипуляции), и врач дал понятные мне '
+        'исчерпывающие ответы.', style=style))
+    objs.append(Paragraph(
+        'Я ознакомлен(на) и согласен(на) со всеми пунктами настоящего документа, положения которого мне разъяснены, мною поняты и добровольно '
+        'даю свое согласие на', style=style))
+
+    space_symbol = '&nbsp;'
+
+    objs.append(Spacer(1, 20))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    operation_name = '(название операции)'
+    objs.append(Paragraph(f'{operation_name}', styleFCenterMin))
+
+    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph('', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{73 * space_symbol} {sign_fio_person}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
