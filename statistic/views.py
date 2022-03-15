@@ -763,8 +763,6 @@ def statistic_xls(request):
         elif research_id in [RESEARCH_SPECIAL_REPORT.get("weapon_research_pk", -1), RESEARCH_SPECIAL_REPORT.get("driver_research", -1)]:
             researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date, hospital_id)
             data = weapon_form_result_parse(researches_sql, reserved=False)
-            # wb.remove(wb.get_sheet_by_name('Отчет'))
-            # ws = wb.create_sheet("Справки")
             ws = structure_sheet.statistic_research_wepon_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_weapon_data(ws, data)
         else:

@@ -42,7 +42,7 @@ class NapravleniyaAdmin(admin.ModelAdmin):
         'parent_auto_gen',
         'parent_slave_hosp',
     )
-    search_fields = ('pk', 'client')
+    search_fields = ('pk', 'client',)
 
 
 @admin.register(DirectionDocument)
