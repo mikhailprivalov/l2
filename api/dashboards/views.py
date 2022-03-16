@@ -30,6 +30,6 @@ def dashboard_charts(request):
     except Exception as e:
         logger.exception(e)
         return JsonResponse({"ok": False})
-    dash=Dashboard.objects.get(pk=dashboard_pk)
 
+    dash = Dashboard.objects.get(pk=dashboard_pk)
     return JsonResponse({'rows': result, "ok": True, "intervalReloadSeconds": dash.interval_reload_seconds})
