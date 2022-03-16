@@ -5,7 +5,7 @@ class Dashboard(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
     order = models.SmallIntegerField(default=-99, blank=True, null=True)
-    interval_reload_seconds = models.SmallIntegerField(default=-99, blank=True, null=True, help_text='Частота обновления дашборда в секундах')
+    interval_reload_seconds = models.SmallIntegerField(default=None, blank=True, null=True, help_text='Частота обновления дашборда в секундах')
 
     def __str__(self):
         return f"{self.title}"
