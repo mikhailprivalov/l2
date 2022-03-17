@@ -50,6 +50,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
+from utils.xh import visit_purposes
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
@@ -1818,6 +1819,11 @@ def screening_save(request):
 def companies(request):
     rows = [{'id': x.pk, 'label': x.short_title or x.title} for x in Company.objects.filter(active_status=True).order_by('short_title')]
 
+    return JsonResponse({'rows': rows})
+
+@login_required
+def purposes(request):
+    rows = visit_purposes()
     return JsonResponse({'rows': rows})
 
 

@@ -24,6 +24,7 @@ from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
 from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
+from utils.xh import visit_purposes
 from . import sql_func
 from . import structure_sheet
 import datetime
@@ -682,7 +683,11 @@ def statistic_xls(request):
         research_id = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
-
+        purposes = request_data.get("purposes", "")
+        is_purpose = 0
+        if purposes != "-1":
+            purposes = tuple(purposes.split(","))
+            is_purpose = 1
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
@@ -765,6 +770,10 @@ def statistic_xls(request):
             data = weapon_form_result_parse(researches_sql, reserved=False)
             ws = structure_sheet.statistic_research_wepon_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_weapon_data(ws, data)
+        elif is_purpose == 1:
+            ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
+            researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
+            ws = structure_sheet.statistic_research_data(ws, researches_sql)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)

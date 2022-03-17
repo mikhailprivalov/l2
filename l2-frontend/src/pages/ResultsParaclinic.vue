@@ -2198,7 +2198,7 @@ export default {
         }
       }
 
-      if (research.is_doc_refferal) {
+      if (research.research.is_doc_refferal) {
         for (const [key, value] of Object.entries(this.requiredStattalonFields)) {
           if (!research[key] || research[key] === -1) {
             l.push(value);

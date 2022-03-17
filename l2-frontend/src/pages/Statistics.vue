@@ -289,6 +289,20 @@
               :values.sync="values.dateValues"
             />
           </div>
+          <div
+            v-if="PARAMS_TYPES.PURPOSE_REPORTS.includes(currentReport.title)"
+            class="input-group"
+          >
+            <span class="input-group-addon">Цель:</span>
+            <treeselect
+              v-model="values.purposes"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="true"
+              :disable-branch-nodes="true"
+              :options="purposes"
+              placeholder="Цели не выбраны"
+            />
+          </div>
 
           <a
             v-if="reportUrl"
@@ -334,6 +348,7 @@ const PARAMS_TYPES = {
   RESEARCH: 'RESEARCH',
   COMPANY: 'COMPANY',
   MONTH_YEAR: 'MONTH_YEAR',
+  PURPOSE_REPORTS: ['По услуге'],
 };
 
 const STATS_CATEGORIES = {
@@ -397,7 +412,8 @@ const STATS_CATEGORIES = {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
         title: 'По услуге',
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH],
-        url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>',
+        url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
+          + 'purposes=<purposes>',
       },
     },
   },
@@ -486,6 +502,7 @@ const getVaues = () => ({
   company: null,
   month: moment().month() + 1,
   year: moment().year(),
+  purposes: [],
 });
 
 const formatDate = (date: Date) => moment(date).format('DD.MM.YYYY');
@@ -515,6 +532,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       companies: [],
       disabled_categories: [],
       disabled_reports: [],
+      purposes: [],
     };
   },
   watch: {
@@ -533,6 +551,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
   mounted() {
     this.loadUsers();
     this.loadCompanies();
+    this.loadPurposes();
     this.get_disabled_categories();
     this.get_disabled_reports();
   },
@@ -553,6 +572,8 @@ export default class Statistics extends Vue {
   users: any[];
 
   companies: any[];
+
+  purposes: any[];
 
   disabled_categories: any[];
 
@@ -579,6 +600,13 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { rows } = await this.$api('companies');
     this.companies = rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadPurposes() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { rows } = await this.$api('purposes');
+    this.purposes = rows;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -687,6 +715,11 @@ export default class Statistics extends Vue {
         }
 
         url = url.replace('<research>', this.values.research);
+        if (this.values.purposes.length > 0) {
+          url = url.replace('<purposes>', this.values.purposes);
+        } else {
+          url = url.replace('<purposes>', -1);
+        }
       }
 
       if (this.PARAMS_TYPES.COMPANY === p) {

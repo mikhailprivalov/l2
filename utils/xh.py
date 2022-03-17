@@ -1,6 +1,7 @@
 from api.directions.sql_func import get_lab_podr
 from directions.models import Issledovaniya
 from podrazdeleniya.models import Podrazdeleniya
+from statistics_tickets.models import VisitPurpose
 
 
 def fix(s: str):
@@ -61,3 +62,8 @@ def check_type_research(pk):
         if research.podrazdeleniye and research.podrazdeleniye.pk in lab_podr:
             return "is_lab"
     return "error"
+
+
+def visit_purposes():
+    rows = [{'id': x.pk, 'label': x.title} for x in VisitPurpose.objects.filter(hide=False)]
+    return rows

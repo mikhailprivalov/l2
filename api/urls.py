@@ -50,6 +50,7 @@ urlpatterns = [
     path('screening/get-directory', views.screening_get_directory),
     path('screening/save', views.screening_save),
     path('companies', views.companies),
+    path('purposes', views.purposes),
     path('input-templates/add', views.input_templates_add),
     path('input-templates/get', views.input_templates_get),
     path('input-templates/delete', views.input_templates_delete),

@@ -1,7 +1,9 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
 from utils.db import namedtuplefetchall
+from utils.xh import visit_purposes
 
+global_purposes = tuple([i['id'] for i in visit_purposes()])
 
 def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
     """
@@ -199,7 +201,7 @@ def passed_research(d_s, d_e):
     return row
 
 
-def statistics_research(research_id, d_s, d_e, hospital_id_filter):
+def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=global_purposes):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
     выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
@@ -221,20 +223,31 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter):
         directions_issledovaniya.coast, directions_issledovaniya.discount,
         directions_issledovaniya.how_many, directions_napravleniya.data_sozdaniya, directions_napravleniya.istochnik_f_id,
         directions_istochnikifinansirovaniya.title as ist_f,
-        directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation
+        directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation,
+        statistics_tickets_visitpurpose.title as purpose_title,
+        directions_issledovaniya.purpose_id
         FROM directions_issledovaniya
         LEFT JOIN directions_napravleniya 
            ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
         LEFT JOIN users_doctorprofile
            ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
         LEFT JOIN directions_istochnikifinansirovaniya
-        ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id 
+        ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id
+        LEFT JOIN statistics_tickets_visitpurpose
+        ON statistics_tickets_visitpurpose.id=directions_issledovaniya.purpose_id
         WHERE directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
         AND directions_issledovaniya.research_id=%(research_id)s 
         AND 
-                CASE WHEN %(hospital_id_filter)s > 0 THEN
-                    directions_napravleniya.hospital_id = %(hospital_id_filter)s 
-                END),
+            CASE WHEN %(hospital_id_filter)s > 0 THEN
+                directions_napravleniya.hospital_id = %(hospital_id_filter)s
+            END
+        AND
+            CASE WHEN  %(is_purpose)s = 0 THEN
+                directions_issledovaniya.purpose_id in %(purposes)s or directions_issledovaniya.purpose_id is NULL
+            when  %(is_purpose)s = 1 THEN
+                directions_issledovaniya.purpose_id in %(purposes)s
+            END
+           ),
     t_card AS
        (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS num_card, 
         clients_individual.family as ind_family,
@@ -247,11 +260,13 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter):
         SELECT napr, date_confirm, time_confirm, create_date_napr, create_time_napr, doc_fio, coast, discount, 
         how_many, ((coast + (coast/100 * discount)) * how_many)::NUMERIC(10,2) AS sum_money, ist_f, time_confirmation, num_card, 
         ind_family, ind_name, patronymic, birthday, date_born,
-        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title FROM t_iss
+        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title, t_iss.purpose_title FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
         LEFT JOIN t_hosp ON t_iss.hospital_id = t_hosp.id
+
         ORDER BY time_confirmation""",
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'hospital_id_filter': hospital_id_filter},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'hospital_id_filter': hospital_id_filter,
+                    'purposes': purposes, 'is_purpose': is_purpose},
         )
 
         row = cursor.fetchall()
