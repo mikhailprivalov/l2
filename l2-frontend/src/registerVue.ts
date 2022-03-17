@@ -13,6 +13,7 @@ import PortalVue from 'portal-vue';
 // @ts-ignore
 import Inputmask from 'inputmask';
 import Toast from 'vue-toastification';
+import VueFullscreen from 'vue-fullscreen';
 import 'vue-toastification/dist/index.css';
 // @ts-ignore
 import plural from 'plural-ru';
@@ -53,6 +54,7 @@ export default (): void => {
   Vue.use(VueInputMask);
   Vue.use(VueCollapse);
   Vue.use(PortalVue);
+  Vue.use(VueFullscreen);
   Vue.use(VueFormulate, {
     plugins: [ru],
     locale: 'ru',
