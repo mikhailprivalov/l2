@@ -1,9 +1,13 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
+from statistics_tickets.models import VisitPurpose
+from utils.common import non_selected_visible_type
 from utils.db import namedtuplefetchall
-from utils.xh import visit_purposes
 
-global_purposes = tuple([i['id'] for i in visit_purposes()])
+
+purposes_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
+result_treatment_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
+
 
 def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
     """
@@ -201,7 +205,7 @@ def passed_research(d_s, d_e):
     return row
 
 
-def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=global_purposes):
+def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=purposes_list):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
     выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
@@ -1169,6 +1173,30 @@ def statistics_death_research_by_card(research_id, card_tuple, hospital_id_filte
                 order by directions_napravleniya.client_id, directions_issledovaniya.time_confirmation DESC
             """,
             params={'cards': card_tuple, 'research_id': research_id, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK, 'hospital_id_filter': hospital_id_filter},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def statistics_dispanserization(researches_tuple, d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_issledovaniya.napravleniye_id,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm_time,
+                directions_issledovaniya.time_confirmation,
+                directions_issledovaniya.research_id,
+                directions_issledovaniya.doc_confirmation_id,
+                concat(ud.family, ' ', ud.name, ' ', ud.patronymic) as fio_doctor
+                FROM directions_issledovaniya
+                LEFT JOIN users_doctorprofile ud on directions_issledovaniya.doc_confirmation_id = ud.id
+                WHERE directions_issledovaniya.research_id in %(researches_tuple)s
+                AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                ORDER BY directions_issledovaniya.doc_confirmation_id
+            """,
+            params={'researches_tuple': researches_tuple, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
         )
 
         rows = namedtuplefetchall(cursor)

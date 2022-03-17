@@ -290,7 +290,7 @@
             />
           </div>
           <div
-            v-if="PARAMS_TYPES.PURPOSE_REPORTS.includes(currentReport.title)"
+            v-if="titleReportStattalonFields.includes(currentReport.title)"
             class="input-group"
           >
             <span class="input-group-addon">Цель:</span>
@@ -301,6 +301,20 @@
               :disable-branch-nodes="true"
               :options="purposes"
               placeholder="Цели не выбраны"
+            />
+          </div>
+          <div
+            v-if="titleReportStattalonFields.includes(currentReport.title)"
+            class="input-group"
+          >
+            <span class="input-group-addon">Результат:</span>
+            <treeselect
+              v-model="values.resultTreatment"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="true"
+              :disable-branch-nodes="true"
+              :options="resultTreatment"
+              placeholder="Результат обращения"
             />
           </div>
 
@@ -348,7 +362,6 @@ const PARAMS_TYPES = {
   RESEARCH: 'RESEARCH',
   COMPANY: 'COMPANY',
   MONTH_YEAR: 'MONTH_YEAR',
-  PURPOSE_REPORTS: ['По услуге'],
 };
 
 const STATS_CATEGORIES = {
@@ -414,6 +427,12 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
           + 'purposes=<purposes>',
+      },
+      dispanserization: {
+        groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
+        title: 'Диспасеризация',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-dispanserization&date-start=<date-start>&date-end=<date-end>',
       },
     },
   },
@@ -503,6 +522,7 @@ const getVaues = () => ({
   month: moment().month() + 1,
   year: moment().year(),
   purposes: [],
+  resultTreatment: [],
 });
 
 const formatDate = (date: Date) => moment(date).format('DD.MM.YYYY');
@@ -533,6 +553,8 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       disabled_categories: [],
       disabled_reports: [],
       purposes: [],
+      resultTreatment: [],
+      titleReportStattalonFields: [],
     };
   },
   watch: {
@@ -552,6 +574,8 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
     this.loadUsers();
     this.loadCompanies();
     this.loadPurposes();
+    this.loadResultTreatment();
+    this.loadTitleReportStattalonFields();
     this.get_disabled_categories();
     this.get_disabled_reports();
   },
@@ -574,6 +598,10 @@ export default class Statistics extends Vue {
   companies: any[];
 
   purposes: any[];
+
+  resultTreatment: any[];
+
+  titleReportStattalonFields: any[];
 
   disabled_categories: any[];
 
@@ -607,6 +635,20 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { rows } = await this.$api('purposes');
     this.purposes = rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadResultTreatment() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { rows } = await this.$api('result-treatment');
+    this.resultTreatment = rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadTitleReportStattalonFields() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { rows } = await this.$api('title-report-filter-stattalon-fields');
+    this.titleReportStattalonFields = rows;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 

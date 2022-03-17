@@ -8,7 +8,7 @@ from typing import Optional, Union
 import pytz
 
 from doctor_schedule.models import ScheduleResource
-from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS, TIME_ZONE
+from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS, TIME_ZONE, TITLE_REPORT_FILTER_STATTALON_FIELDS
 from utils.response import status_response
 
 from django.core.validators import validate_email
@@ -50,7 +50,6 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from utils.xh import visit_purposes
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
@@ -1824,7 +1823,19 @@ def companies(request):
 
 @login_required
 def purposes(request):
-    rows = visit_purposes()
+    rows = non_selected_visible_type(VisitPurpose, for_treeselect=True)
+    return JsonResponse({'rows': rows})
+
+
+@login_required
+def result_of_treatment(request):
+    rows = non_selected_visible_type(ResultOfTreatment, for_treeselect=True)
+    return JsonResponse({'rows': rows})
+
+
+@login_required
+def title_report_filter_stattalon_fields(request):
+    rows = TITLE_REPORT_FILTER_STATTALON_FIELDS
     return JsonResponse({'rows': rows})
 
 
