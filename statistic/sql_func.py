@@ -242,9 +242,9 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
                 directions_napravleniya.hospital_id = %(hospital_id_filter)s
             END
         AND
-            CASE WHEN  %(is_purpose)s = 0 THEN
+            CASE WHEN %(is_purpose)s = 0 THEN
                 directions_issledovaniya.purpose_id in %(purposes)s or directions_issledovaniya.purpose_id is NULL
-            when  %(is_purpose)s = 1 THEN
+            WHEN %(is_purpose)s = 1 THEN
                 directions_issledovaniya.purpose_id in %(purposes)s
             END
            ),
