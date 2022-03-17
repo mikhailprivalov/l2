@@ -24,7 +24,6 @@ from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
 from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
-from utils.xh import visit_purposes
 from . import sql_func
 from . import structure_sheet
 import datetime
