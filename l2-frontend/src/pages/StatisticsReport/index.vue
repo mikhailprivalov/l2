@@ -1,5 +1,9 @@
 <template>
-  <div class="dash-root">
+  <div
+    ref="dashboardRoot"
+    class="dash-root"
+    :class="fullscreen && 'dash-fullscreen'"
+  >
     <div class="dashboard">
       <div class="filters">
         <div class="row">
@@ -15,29 +19,37 @@
               placeholder="Дэшборд не выбран"
               :append-to-body="true"
               class="treeselect-wide treeselect-32px"
+              :clearable="false"
             />
           </div>
-          <div
-            class="col-xs-6"
-            style="padding-left: 5px"
-          >
-            <button
-              class="btn btn-blue-nb"
-              @click="loadDashboard"
+          <div class="col-xs-6 text-right">
+            <a
+              v-tippy
+              href="#"
+              class="a-under fullscreen-link"
+              title="Полный экран"
+              @click.prevent="toggleFullscreen"
             >
-              Загрузить
-            </button>
+              <i
+                v-if="!fullscreen"
+                class="fas fa-expand"
+              />
+              <i
+                v-else
+                class="fas fa-compress"
+              />
+            </a>
           </div>
         </div>
       </div>
       <h4 v-if="dashboard.title">
         {{ dashboard.title }} — {{ loadedDashboardDateString }}
       </h4>
-      <div class="row">
+      <div :class="fullpage ? 'fullpage-charts' : 'row'">
         <div
           v-for="c in charts"
           :key="c.pk"
-          class="col-xs-12 col-md-6 col-xl-4"
+          :class="fullpage ? 'fullpage-chart' : 'col-xs-12 col-md-6 col-xl-4'"
         >
           <div class="card-no-hover card card-1 chart">
             <h6>{{ c.title }}</h6>
@@ -51,6 +63,10 @@
             </div>
           </div>
         </div>
+        <div
+          v-for="i in emptyCharts"
+          :key="`placeholder-${i}`"
+        />
       </div>
     </div>
   </div>
@@ -91,6 +107,7 @@ export default {
         title: null,
       },
       charts: [],
+      fullscreen: false,
     };
   },
   computed: {
@@ -102,11 +119,36 @@ export default {
 
       return `${parts[2]}.${parts[1]}.${parts[0]}`;
     },
+    fullpage() {
+      return this.charts.length <= 4;
+    },
+    emptyCharts() {
+      const r = [];
+
+      for (let i = 0; i < 4 - this.charts.length; i++) {
+        r.push(i);
+      }
+
+      return r;
+    },
+  },
+  watch: {
+    dashboardPk() {
+      this.loadDashboard();
+    },
   },
   mounted() {
     this.entryToDashboard();
   },
   methods: {
+    async toggleFullscreen() {
+      await this.$fullscreen.toggle(this.$refs.dashboardRoot, {
+        teleport: true,
+        callback: (isFullscreen) => {
+          this.fullscreen = isFullscreen;
+        },
+      });
+    },
     async entryToDashboard() {
       if (Object.keys(this.dashboards).length === 0) {
         await this.$store.dispatch(actions.INC_LOADING);
@@ -120,6 +162,13 @@ export default {
       }
     },
     async loadDashboard() {
+      if (!this.dashboardPk) {
+        this.charts = [];
+        this.dashboard = {
+          title: null,
+        };
+        return;
+      }
       await this.$store.dispatch(actions.INC_LOADING);
       this.loadedDashboardDate = moment().format('YYYY-MM-DD');
       this.dashboard = {
@@ -135,6 +184,9 @@ export default {
       }
     },
     getHeight(c) {
+      if (this.fullpage) {
+        return '100%';
+      }
       return Math.max(c.type === 'BAR' ? c.data.length * 15 * c.fields.length : 0, 390);
     },
     getOptions(c) {
@@ -148,6 +200,7 @@ export default {
             enabled: false,
           },
           fontFamily: 'Open Sans, Helvetica, Arial, sans-serif',
+          parentHeightOffset: 5,
         },
         [{ BAR: 'xaxis', COLUMN: 'xaxis', PIE: 'labels' }[c.type] || 'xaxis']:
           c.type === 'PIE'
@@ -168,6 +221,11 @@ export default {
             colors: ['#111'],
           },
           [c.type === 'BAR' ? 'offsetX' : 'offsetY']: c.type === 'BAR' ? 15 : -20,
+        },
+        grid: {
+          padding: {
+            bottom: -20,
+          },
         },
         legend: {
           show: true,
@@ -209,6 +267,12 @@ export default {
 .dash-root {
   overflow-x: hidden;
   margin-top: -20px;
+  background: #f2f2f2;
+
+  &.dash-fullscreen {
+    margin-top: 0;
+    padding-top: 10px;
+  }
 }
 
 .filters {
@@ -315,7 +379,41 @@ export default {
   border-right-width: 3px;
 }
 
-.font-settings {
-  font-weight: bold;
+.fullscreen-link {
+  font-size: 16px;
+}
+
+.fullpage-charts {
+  position: absolute;
+  top: 122px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  grid-column-gap: 5px;
+  grid-row-gap: 5px;
+
+  .fullpage-chart {
+    height: 100%;
+    position: relative;
+
+    .chart {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      margin: 0;
+    }
+
+    .chart-inner {
+      min-height: unset;
+      max-height: unset;
+      height: calc(100% - 45px);
+      overflow-y: hidden;
+    }
+  }
 }
 </style>
