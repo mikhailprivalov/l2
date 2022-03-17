@@ -133,12 +133,13 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/statistics/report',
+      path: '/ui/statistics/report/:id?',
       name: 'statistics_report',
       component: () => import('@/pages/StatisticsReport/index.vue'),
       meta: {
+        allowWithoutLogin: true,
+        hideHeaderWithoutLogin: true,
         title: 'Просмотр графиков статистики',
-        groups: ['Просмотр графиков статистики'],
         module: 'l2_statistics',
       },
     },

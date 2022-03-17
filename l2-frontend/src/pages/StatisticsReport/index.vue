@@ -2,7 +2,7 @@
   <div
     ref="dashboardRoot"
     class="dash-root"
-    :class="fullscreen && 'dash-fullscreen'"
+    :class="[fullscreen && 'dash-fullscreen', withoutLogin && 'dash-without-login']"
   >
     <div class="dashboard">
       <div class="filters">
@@ -12,6 +12,7 @@
             style="padding-right: 5px"
           >
             <Treeselect
+              v-if="!fullscreen"
               v-model="dashboardPk"
               :multiple="false"
               :disable-branch-nodes="true"
@@ -21,8 +22,16 @@
               class="treeselect-wide treeselect-32px"
               :clearable="false"
             />
+
+            <h4 v-if="dashboard.title">
+              {{ dashboard.title }} — {{ loadedDashboardDateString }}
+            </h4>
           </div>
           <div class="col-xs-6 text-right">
+            {{ reloadingText }}
+            &nbsp;
+            &nbsp;
+            &nbsp;
             <a
               v-tippy
               href="#"
@@ -42,32 +51,12 @@
           </div>
         </div>
       </div>
-      <h4 v-if="dashboard.title">
-        {{ dashboard.title }} — {{ loadedDashboardDateString }}
-      </h4>
-      <div :class="fullpage ? 'fullpage-charts' : 'row'">
-        <div
-          v-for="c in charts"
-          :key="c.pk"
-          :class="fullpage ? 'fullpage-chart' : 'col-xs-12 col-md-6 col-xl-4'"
-        >
-          <div class="card-no-hover card card-1 chart">
-            <h6>{{ c.title }}</h6>
-            <div class="chart-inner">
-              <VueApexCharts
-                :type="CHART_TYPES[c.type] || c.type.toLowerCase()"
-                :options="getOptions(c)"
-                :series="getSeries(c)"
-                :height="getHeight(c)"
-              />
-            </div>
-          </div>
-        </div>
-        <div
-          v-for="i in emptyCharts"
-          :key="`placeholder-${i}`"
-        />
-      </div>
+
+      <Charts
+        :charts="charts"
+        :fullscreen="fullscreen"
+        :without-login="withoutLogin"
+      />
     </div>
   </div>
 </template>
@@ -76,30 +65,19 @@
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import VueApexCharts from 'vue-apexcharts';
 
 import * as actions from '@/store/action-types';
-
-const CHART_TYPES = {
-  BAR: 'bar',
-  COLUMN: 'bar',
-  PIE: 'pie',
-  RADAR: 'radar',
-};
-
-const CHART_OPTIONS = {};
+import Charts from './Charts.vue';
 
 export default {
   components: {
     Treeselect,
-    VueApexCharts,
+    Charts,
   },
   data() {
     return {
       loadedDate: '',
       hour: '-',
-      CHART_TYPES,
-      CHART_OPTIONS,
       dashboards: [],
       dashboardPk: null,
       loadedDashboardDate: '',
@@ -108,6 +86,11 @@ export default {
       },
       charts: [],
       fullscreen: false,
+      hasMount: false,
+      loading: false,
+      intervalReloadSeconds: 0,
+      restMsToReload: 0,
+      checkReloadInterval: null,
     };
   },
   computed: {
@@ -119,26 +102,60 @@ export default {
 
       return `${parts[2]}.${parts[1]}.${parts[0]}`;
     },
-    fullpage() {
-      return this.charts.length <= 4;
+    dashboardUrlPk() {
+      return Number(this.$route.params.id);
     },
-    emptyCharts() {
-      const r = [];
-
-      for (let i = 0; i < 4 - this.charts.length; i++) {
-        r.push(i);
+    withoutLogin() {
+      return Boolean(this?.$route?.meta?.hideHeaderWithoutLogin);
+    },
+    reloadingText() {
+      if (this.intervalReloadSeconds > 0) {
+        return `${Math.max(Math.round(this.restMsToReload / 100) / 10, 0).toFixed(1)} сек. до перезагрузки`;
       }
-
-      return r;
+      return null;
     },
   },
   watch: {
     dashboardPk() {
-      this.loadDashboard();
+      if (this.dashboardPk !== this.dashboardUrlPk) {
+        this.$router.push({ name: 'statistics_report', params: this.dashboardPk ? { id: this.dashboardPk } : {} });
+
+        if (this.hasMount) {
+          this.loading = false;
+          this.loadDashboard();
+        }
+      }
+    },
+    dashboardUrlPk() {
+      if (this.hasMount && this.dashboardUrlPk !== this.dashboardPk) {
+        this.dashboardPk = this.dashboardUrlPk;
+        this.loading = false;
+        this.loadDashboard();
+      }
+    },
+    intervalReloadSeconds: {
+      immediate: true,
+      handler() {
+        this.restMsToReload = this.intervalReloadSeconds * 1000;
+      },
+    },
+    async restMsToReload() {
+      if (this.intervalReloadSeconds > 0 && this.restMsToReload === 0) {
+        await this.loadDashboard(true);
+        this.restMsToReload = this.intervalReloadSeconds * 1000;
+      }
     },
   },
-  mounted() {
-    this.entryToDashboard();
+  async mounted() {
+    await this.entryToDashboard();
+    this.checkReloadInterval = setInterval(() => {
+      if (this.restMsToReload > 0) {
+        this.restMsToReload = Math.max(this.restMsToReload - 200, 0);
+      }
+    }, 200);
+  },
+  beforeDestroy() {
+    clearInterval(this.checkReloadInterval);
   },
   methods: {
     async toggleFullscreen() {
@@ -157,87 +174,49 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
       }
       if (this.dashboards.length > 0 && this.dashboardPk === null) {
-        this.dashboardPk = this.dashboards[0].id;
+        this.dashboardPk = (this.dashboardUrlPk && this.dashboards.find(d => d.id === this.dashboardUrlPk))
+          ? this.dashboardUrlPk
+          : this.dashboards[0].id;
+        this.loading = false;
         await this.loadDashboard();
       }
+      this.hasMount = true;
     },
-    async loadDashboard() {
-      if (!this.dashboardPk) {
-        this.charts = [];
-        this.dashboard = {
-          title: null,
-        };
+    async loadDashboard(hidden = false) {
+      if (this.loading) {
         return;
       }
-      await this.$store.dispatch(actions.INC_LOADING);
+      if (!this.dashboardPk) {
+        if (!hidden) {
+          this.charts = [];
+          this.dashboard = {
+            title: null,
+          };
+        }
+        return;
+      }
+
+      this.loading = true;
+      if (!hidden) {
+        await this.$store.dispatch(actions.INC_LOADING);
+      }
       this.loadedDashboardDate = moment().format('YYYY-MM-DD');
       this.dashboard = {
         title: (this.dashboards.find((d) => d.id === this.dashboardPk) || {}).label,
       };
-      const { rows, ok } = await this.$api('/dashboards/dashboard-charts', {
+      const { rows, ok, intervalReloadSeconds } = await this.$api('/dashboards/dashboard-charts', {
         dashboard: this.dashboardPk,
       });
       this.charts = rows || [];
-      await this.$store.dispatch(actions.DEC_LOADING);
+      this.intervalReloadSeconds = intervalReloadSeconds || 0;
+      if (!hidden) {
+        await this.$store.dispatch(actions.DEC_LOADING);
+      }
       if (!ok) {
-        this.$root.$emit('msg', 'error', 'Ошибка выполнения запроса');
+        this.$root.$emit('msg', 'error', 'Ошибка выполнения запроса', this.intervalReloadSeconds * 1000 || 4000);
       }
-    },
-    getHeight(c) {
-      if (this.fullpage) {
-        return '100%';
-      }
-      return Math.max(c.type === 'BAR' ? c.data.length * 15 * c.fields.length : 0, 390);
-    },
-    getOptions(c) {
-      return {
-        chart: {
-          id: `${c.type}_${c.pk}`,
-          toolbar: {
-            show: false,
-          },
-          zoom: {
-            enabled: false,
-          },
-          fontFamily: 'Open Sans, Helvetica, Arial, sans-serif',
-          parentHeightOffset: 5,
-        },
-        [{ BAR: 'xaxis', COLUMN: 'xaxis', PIE: 'labels' }[c.type] || 'xaxis']:
-          c.type === 'PIE'
-            ? c.fields
-            : {
-              categories: c.dates,
-            },
-        plotOptions: {
-          bar: {
-            horizontal: c.type === 'BAR',
-            dataLabels: {
-              position: 'top',
-            },
-          },
-        },
-        dataLabels: {
-          style: {
-            colors: ['#111'],
-          },
-          [c.type === 'BAR' ? 'offsetX' : 'offsetY']: c.type === 'BAR' ? 15 : -20,
-        },
-        grid: {
-          padding: {
-            bottom: -20,
-          },
-        },
-        legend: {
-          show: true,
-          showForSingleSeries: true,
-        },
-      };
-    },
-    getSeries(c) {
-      if (c.type === 'PIE' && c.fields.length === 1) {
-        return c.data.map((d) => d.values[0]);
-      }
-      return c.fields.map((name, i) => ({ name, data: c.data[i].values.map((v) => Number(v) || 0) }));
+
+      this.loading = false;
     },
   },
 };
@@ -252,26 +231,13 @@ export default {
   }
 }
 
-.chart {
-  margin: 0 0 10px 0;
-  padding: 10px;
-
-  .chart-inner {
-    overflow-x: hidden;
-    overflow-y: auto;
-    min-height: 410px;
-    max-height: 410px;
-  }
-}
-
 .dash-root {
   overflow-x: hidden;
   margin-top: -20px;
   background: #f2f2f2;
 
-  &.dash-fullscreen {
+  &.dash-fullscreen, &.dash-without-login {
     margin-top: 0;
-    padding-top: 10px;
   }
 }
 
@@ -381,39 +347,5 @@ export default {
 
 .fullscreen-link {
   font-size: 16px;
-}
-
-.fullpage-charts {
-  position: absolute;
-  top: 122px;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  grid-column-gap: 5px;
-  grid-row-gap: 5px;
-
-  .fullpage-chart {
-    height: 100%;
-    position: relative;
-
-    .chart {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      margin: 0;
-    }
-
-    .chart-inner {
-      min-height: unset;
-      max-height: unset;
-      height: calc(100% - 45px);
-      overflow-y: hidden;
-    }
-  }
 }
 </style>
