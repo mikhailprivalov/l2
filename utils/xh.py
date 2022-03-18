@@ -1,7 +1,6 @@
 from api.directions.sql_func import get_lab_podr
 from directions.models import Issledovaniya
 from podrazdeleniya.models import Podrazdeleniya
-from statistics_tickets.models import VisitPurpose
 
 
 def fix(s: str):
