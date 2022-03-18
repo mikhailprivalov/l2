@@ -204,7 +204,7 @@ def passed_research(d_s, d_e):
     return row
 
 
-def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=tuple([i['pk'] for i in non_selected_visible_type(VisitPurpose)])):
+def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=()):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
     выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
@@ -246,7 +246,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
             END
         AND
             CASE WHEN %(is_purpose)s = 0 THEN
-                directions_issledovaniya.purpose_id in %(purposes)s or directions_issledovaniya.purpose_id is NULL
+                directions_issledovaniya.purpose_id in (SELECT id FROM statistics_tickets_visitpurpose) or directions_issledovaniya.purpose_id is NULL
             WHEN %(is_purpose)s = 1 THEN
                 directions_issledovaniya.purpose_id in %(purposes)s
             END
