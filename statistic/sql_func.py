@@ -1,5 +1,7 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
+from statistics_tickets.models import VisitPurpose
+from utils.common import non_selected_visible_type
 from utils.db import namedtuplefetchall
 
 
@@ -199,7 +201,10 @@ def passed_research(d_s, d_e):
     return row
 
 
-def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=()):
+purposes_list = tuple([i["pk"] for i in non_selected_visible_type(VisitPurpose)])
+
+
+def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=purposes_list):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
     выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
