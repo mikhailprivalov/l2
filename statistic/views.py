@@ -45,8 +45,15 @@ from .sql_func import (
     sql_get_documents_by_card_id,
 )
 
-from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK, COVID_QUESTION_ID, RESEARCH_SPECIAL_REPORT, \
-    DISPANSERIZATION_SERVICE_PK
+from laboratory.settings import (
+    PAP_ANALYSIS_ID,
+    PAP_ANALYSIS_FRACTION_QUALITY_ID,
+    PAP_ANALYSIS_FRACTION_CONTAIN_ID,
+    DEATH_RESEARCH_PK,
+    COVID_QUESTION_ID,
+    RESEARCH_SPECIAL_REPORT,
+    DISPANSERIZATION_SERVICE_PK,
+)
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
