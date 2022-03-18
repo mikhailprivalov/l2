@@ -1,12 +1,7 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
-from statistics_tickets.models import VisitPurpose
-from utils.common import non_selected_visible_type
 from utils.db import namedtuplefetchall
 
-
-# purposes_list = tuple([i['pk'] for i in non_selected_visible_type(VisitPurpose)])
-# result_treatment_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
 
 def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
     """
