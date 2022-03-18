@@ -1136,9 +1136,9 @@ def statistic_xls(request):
         services.extend(service_end)
         query = sql_func.statistics_dispanserization(tuple(services), start_date, end_date)
 
-        result_data = dispanserization.dispanserization_data(query, services_start, service_end)
-        
-        ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
+        result_dates = dispanserization.dispanserization_data(query, services_start, service_end)
+        ws = dispanserization.dispanserization_base(ws, d1, d2, result_dates)
+        ws = dispanserization.dispanserization_fill_data(ws, result_dates)
 
     elif tp == "covid_sum":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
