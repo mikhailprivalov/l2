@@ -94,8 +94,8 @@ def dispanserization_fill_data(ws1, result_query, row=6):
     start_row = r + 1
     for i in result_query["result"]:
         r += 1
-        val_start_sum = f'=SUM('
-        val_end_sum = f'=SUM('
+        val_start_sum = '=SUM('
+        val_end_sum = '=SUM('
         for k in i.values():
             ws1.cell(row=r, column=1).value = k["fio_doc"]
             column = 1
