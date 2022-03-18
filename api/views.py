@@ -1822,6 +1822,7 @@ def companies(request):
     return JsonResponse({'rows': rows})
 
 
+
 @login_required
 def purposes(request):
     rows = visit_purposes()
