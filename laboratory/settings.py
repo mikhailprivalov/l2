@@ -372,6 +372,10 @@ REQUIRED_STATTALON_FIELDS = {}
 
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
 
+TITLE_REPORT_FILTER_STATTALON_FIELDS = []
+
+DISPANSERIZATION_SERVICE_PK = {}  # {"pkServiceStart": [12, 13], "pkServiceEnd": [15])}
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

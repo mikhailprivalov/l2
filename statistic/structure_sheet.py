@@ -673,6 +673,8 @@ def statistic_research_base(ws1, d1, d2, research_titile):
         ('Дата рождения', 12),
         ('Возраст', 8),
         ('Карта', 15),
+        ('МО', 30),
+        ('Цель', 14),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -714,6 +716,7 @@ def statistic_research_data(ws1, researches):
         current_born = res[16]
         current_age = res[18]
         current_num_card = res[12]
+        current_purpose = res[20]
 
         ws1.cell(row=r, column=1).value = current_doc
         ws1.cell(row=r, column=2).value = f'{current_napr}, {current_napr_atcreate}'
@@ -729,8 +732,9 @@ def statistic_research_data(ws1, researches):
         ws1.cell(row=r, column=12).value = current_age
         ws1.cell(row=r, column=13).value = current_num_card
         ws1.cell(row=r, column=14).value = res[19]
+        ws1.cell(row=r, column=15).value = current_purpose
 
-        rows = ws1[f'A{r}:M{r}']
+        rows = ws1[f'A{r}:O{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res

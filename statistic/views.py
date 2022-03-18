@@ -30,7 +30,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork
+from .report import call_patient, swab_covid, cert_notwork, dispanserization
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -45,7 +45,15 @@ from .sql_func import (
     sql_get_documents_by_card_id,
 )
 
-from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID, DEATH_RESEARCH_PK, COVID_QUESTION_ID, RESEARCH_SPECIAL_REPORT
+from laboratory.settings import (
+    PAP_ANALYSIS_ID,
+    PAP_ANALYSIS_FRACTION_QUALITY_ID,
+    PAP_ANALYSIS_FRACTION_CONTAIN_ID,
+    DEATH_RESEARCH_PK,
+    COVID_QUESTION_ID,
+    RESEARCH_SPECIAL_REPORT,
+    DISPANSERIZATION_SERVICE_PK,
+)
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -682,7 +690,11 @@ def statistic_xls(request):
         research_id = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
-
+        purposes = request_data.get("purposes", "")
+        is_purpose = 0
+        if purposes != "-1":
+            purposes = tuple(purposes.split(","))
+            is_purpose = 1
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
@@ -765,6 +777,10 @@ def statistic_xls(request):
             data = weapon_form_result_parse(researches_sql, reserved=False)
             ws = structure_sheet.statistic_research_wepon_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_weapon_data(ws, data)
+        elif is_purpose == 1:
+            ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
+            researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
+            ws = structure_sheet.statistic_research_data(ws, researches_sql)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
@@ -1111,6 +1127,25 @@ def statistic_xls(request):
         researches_deatails = sql_func.statistics_details_research_by_lab(lab_podr, start_date, end_date)
         ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
         ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
+    elif tp == "statistics-dispanserization":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспасеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Диспансеризация")
+
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        services_start = DISPANSERIZATION_SERVICE_PK.get("pkServiceStart", [])
+        service_end = DISPANSERIZATION_SERVICE_PK.get("pkServiceEnd", [])
+        services = services_start.copy()
+        services.extend(service_end)
+        query = sql_func.statistics_dispanserization(tuple(services), start_date, end_date)
+
+        result_dates = dispanserization.dispanserization_data(query, services_start, service_end)
+        ws = dispanserization.dispanserization_base(ws, d1, d2, result_dates)
+        ws = dispanserization.dispanserization_fill_data(ws, result_dates)
 
     elif tp == "covid_sum":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)

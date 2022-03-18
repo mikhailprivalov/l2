@@ -21,13 +21,17 @@ def replace_values_by_keys(value: str, to_replace: Dict[str, str]):
     return value
 
 
-def non_selected_visible_type(orig, more_filters=None):
+def non_selected_visible_type(orig, more_filters=None, for_treeselect=None):
     if not more_filters:
         more_filters = {}
+    if for_treeselect:
+        return list_non_selected_visible_type(orig.objects.filter(hide=False, **more_filters).values("pk", "title").order_by("pk"), for_treeselect)
     return list_non_selected_visible_type(orig.objects.filter(hide=False, **more_filters).values("pk", "title").order_by("pk"))
 
 
-def list_non_selected_visible_type(orig):
+def list_non_selected_visible_type(orig, for_treeselect=None):
+    if for_treeselect:
+        return [{"id": i['pk'], "label": i['title']} for i in list(orig)]
     return [{"pk": -1, "title": "Не выбрано"}, *list(orig)]
 
 
