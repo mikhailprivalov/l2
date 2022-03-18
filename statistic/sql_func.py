@@ -5,7 +5,7 @@ from utils.common import non_selected_visible_type
 from utils.db import namedtuplefetchall
 
 
-# purposes_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
+purposes_list = tuple([i['pk'] for i in non_selected_visible_type(VisitPurpose)])
 # result_treatment_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
 
 
