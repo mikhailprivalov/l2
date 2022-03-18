@@ -1,5 +1,6 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
+from statistics_tickets.models import VisitPurpose
 from utils.db import namedtuplefetchall
 
 
@@ -199,13 +200,16 @@ def passed_research(d_s, d_e):
     return row
 
 
-def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=()):
+def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=None):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
     выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
         Направление, создано направление(дата), Дата подтверждения услуги, Время подтверждения.
     :return:
     """
+    if not purposes:
+        purposes = tuple(VisitPurpose.objects.values_list('pk').all())
+
     with connection.cursor() as cursor:
         cursor.execute(
             """ WITH
