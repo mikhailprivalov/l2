@@ -1821,6 +1821,7 @@ def companies(request):
     return JsonResponse({'rows': rows})
 
 
+
 @login_required
 def purposes(request):
     rows = non_selected_visible_type(VisitPurpose, for_treeselect=True)
