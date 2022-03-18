@@ -128,4 +128,4 @@ def dispanserization_fill_data(ws1, result_query, row=6):
         ws1.cell(row=r, column=column).value = f'=SUM({get_column_letter(column)}{start_row}:{get_column_letter(column)}{r - 1})'
         ws1.cell(row=r, column=column).style = style_border1
 
-    return (ws1, r + 1)
+    return ws1
