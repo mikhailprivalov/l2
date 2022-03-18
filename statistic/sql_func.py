@@ -9,6 +9,7 @@ purposes_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, 
 result_treatment_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
 
 
+
 def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
     """
     парам: d_conf - doctor_confirm, d_s - date-start,  d_e - date-end,  fin - источник финансирвоания
