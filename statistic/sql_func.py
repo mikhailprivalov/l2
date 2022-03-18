@@ -200,10 +200,11 @@ def passed_research(d_s, d_e):
     return row
 
 
-purposes_list = tuple(VisitPurpose.objects.values_list('pk').all())
+def purposes_list():
+    return tuple(VisitPurpose.objects.values_list('pk').all())
 
 
-def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=purposes_list):
+def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=purposes_list()):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
     выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
