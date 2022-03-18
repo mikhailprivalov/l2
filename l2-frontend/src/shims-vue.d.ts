@@ -5,6 +5,7 @@ declare module '*.vue' {
     interface Vue {
       $dialog: any;
       $api: any;
+      $fullscreen: any;
       $systemTitle: () => string;
       $asVI: () => boolean;
       $l2LogoClass: () => string;

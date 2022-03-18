@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Navbar v-if="!embedded" />
+    <Navbar v-if="!embedded && !hideHeaderWithoutLogin" />
 
     <div :class="isNarrowLayout && 'container'">
       <router-view />
@@ -74,6 +74,10 @@ export default class App extends Vue {
 
   get isNarrowLayout() {
     return Boolean(this?.$route?.meta?.narrowLayout);
+  }
+
+  get hideHeaderWithoutLogin() {
+    return Boolean(this?.$route?.meta?.hideHeaderWithoutLogin);
   }
 
   get system() {
