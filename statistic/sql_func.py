@@ -270,8 +270,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
         LEFT JOIN t_hosp ON t_iss.hospital_id = t_hosp.id
 
         ORDER BY time_confirmation""",
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'hospital_id_filter': hospital_id_filter,
-                    'purposes': purposes, 'is_purpose': is_purpose},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'hospital_id_filter': hospital_id_filter, 'purposes': purposes, 'is_purpose': is_purpose},
         )
 
         row = cursor.fetchall()
