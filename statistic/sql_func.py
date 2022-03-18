@@ -5,8 +5,8 @@ from utils.common import non_selected_visible_type
 from utils.db import namedtuplefetchall
 
 
-purposes_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
-result_treatment_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
+# purposes_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
+# result_treatment_list = tuple([i['id'] for i in non_selected_visible_type(VisitPurpose, for_treeselect=True)])
 
 
 def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
@@ -205,7 +205,7 @@ def passed_research(d_s, d_e):
     return row
 
 
-def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=purposes_list):
+def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0, purposes=[]):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
     выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
