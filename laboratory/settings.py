@@ -370,8 +370,8 @@ QRCODE_OFFSET_SIZE = {}
 LEFT_QRCODE_OFFSET_SIZE = {}
 PROTOCOL_PLAIN_TEXT = True
 SPLIT_PRINT_RESULT = False
-REQUIRED_STATTALON_FIELDS = {} # {"purpose": "Данные статталона - Цель не указана"}
-RESEARCHES_PK_REQUIRED_STATTALON_FIELDS = {} # {358: {"purpose": "Данные статталона - Цель не указана"}}
+REQUIRED_STATTALON_FIELDS = {}  # {"purpose": "Данные статталона - Цель не указана"}
+RESEARCHES_PK_REQUIRED_STATTALON_FIELDS = {}  # {358: {"purpose": "Данные статталона - Цель не указана"}}
 DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK = []
 DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK = []
 
