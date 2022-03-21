@@ -53,6 +53,8 @@ from laboratory.settings import (
     COVID_QUESTION_ID,
     RESEARCH_SPECIAL_REPORT,
     DISPANSERIZATION_SERVICE_PK,
+    DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK,
+    DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK,
 )
 
 
@@ -1141,7 +1143,19 @@ def statistic_xls(request):
         service_end = DISPANSERIZATION_SERVICE_PK.get("pkServiceEnd", [])
         services = services_start.copy()
         services.extend(service_end)
-        query = sql_func.statistics_dispanserization(tuple(services), start_date, end_date)
+
+        is_result = 0
+        is_purpose = 0
+        disp_purposes_pks, disp_results_pks = None, None
+        if len(DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK) > 0:
+            is_result = 1
+            disp_results_pks = tuple(DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK)
+        if len(DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK) > 0:
+            is_purpose = 1
+            disp_purposes_pks = tuple(DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK)
+
+        query = sql_func.statistics_dispanserization(
+            tuple(services), start_date, end_date, is_purpose, is_result, disp_results_pks, disp_purposes_pks)
 
         result_dates = dispanserization.dispanserization_data(query, services_start, service_end)
         ws = dispanserization.dispanserization_base(ws, d1, d2, result_dates)
