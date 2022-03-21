@@ -1154,8 +1154,7 @@ def statistic_xls(request):
             is_purpose = 1
             disp_purposes_pks = tuple(DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK)
 
-        query = sql_func.statistics_dispanserization(
-            tuple(services), start_date, end_date, is_purpose, is_result, disp_results_pks, disp_purposes_pks)
+        query = sql_func.statistics_dispanserization(tuple(services), start_date, end_date, is_purpose, is_result, disp_results_pks, disp_purposes_pks)
 
         result_dates = dispanserization.dispanserization_data(query, services_start, service_end)
         ws = dispanserization.dispanserization_base(ws, d1, d2, result_dates)
