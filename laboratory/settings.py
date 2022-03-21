@@ -370,7 +370,9 @@ QRCODE_OFFSET_SIZE = {}
 LEFT_QRCODE_OFFSET_SIZE = {}
 PROTOCOL_PLAIN_TEXT = True
 SPLIT_PRINT_RESULT = False
-REQUIRED_STATTALON_FIELDS = {}
+REQUIRED_STATTALON_FIELDS = {} # {"purpose": "Данные статталона - Цель не указана"}
+RESEARCHES_PK_REQUIRED_STATTALON_FIELDS = {} # {358: {"purpose": "Данные статталона - Цель не указана"}}
+
 
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
 

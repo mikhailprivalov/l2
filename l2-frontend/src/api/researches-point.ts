@@ -44,4 +44,9 @@ export default generator({
     url: 'researches/required-stattalon-fields',
     onReject: {},
   },
+  getResearchesPkRequiredStattalonFields: {
+    method: 'get',
+    url: 'researches/researches-required-stattalon-fields',
+    onReject: {},
+  },
 });

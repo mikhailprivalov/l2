@@ -24,7 +24,7 @@ from directory.models import (
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
-from laboratory.settings import REQUIRED_STATTALON_FIELDS
+from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from rmis_integration.client import get_md5
@@ -826,3 +826,7 @@ def load_research_by_diagnos(request):
 @login_required
 def required_stattalon_fields(request):
     return JsonResponse(REQUIRED_STATTALON_FIELDS)
+
+
+def researches_required_stattalon_fields(request):
+    return JsonResponse(RESEARCHES_PK_REQUIRED_STATTALON_FIELDS)
