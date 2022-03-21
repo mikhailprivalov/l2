@@ -308,6 +308,39 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
     return rows
 
 
+def get_confirm_direction_patient_year_is_extract(d_s, d_e, card_pk1, extract_research_pks):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT 
+            directions_napravleniya.id as direction,
+            directions_issledovaniya.time_confirmation,
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as ch_time_confirmation,
+            directions_issledovaniya.research_id,
+            directory_researches.title as research_title
+            FROM directions_napravleniya
+            INNER JOIN directions_issledovaniya ON (directions_napravleniya.id = directions_issledovaniya.napravleniye_id)
+            AND directions_issledovaniya.research_id IN %(extract_research_pks)s
+            LEFT JOIN directory_researches ON
+            directions_issledovaniya.research_id=directory_researches.id
+            WHERE directions_issledovaniya.time_confirmation IS NOT NULL
+            AND directions_issledovaniya.research_id in %(extract_research_pks)s
+            AND directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/Irkutsk' BETWEEN %(d_start)s AND %(d_end)s
+            AND client_id=%(card_pk)s
+            ORDER BY directions_issledovaniya.time_confirmation DESC, directions_napravleniya.id
+        """,
+            params={
+                'd_start': d_s,
+                'd_end': d_e,
+                'tz': TIME_ZONE,
+                'card_pk': card_pk1,
+                'extract_research_pks': extract_research_pks,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def direction_by_card(d_s, d_e, card_id):
     with connection.cursor() as cursor:
         cursor.execute(
