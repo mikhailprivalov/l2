@@ -1176,7 +1176,7 @@ def statistics_death_research_by_card(research_id, card_tuple, hospital_id_filte
     return rows
 
 
-def statistics_dispanserization(researches_tuple, d_s, d_e, is_purpose=0, is_result=0, pk_results=None , pk_purposes=None):
+def statistics_dispanserization(researches_tuple, d_s, d_e, is_purpose=0, is_result=0, pk_results=None, pk_purposes=None):
 
     if not pk_purposes:
         pk_purposes = tuple(VisitPurpose.objects.values_list('pk', flat=True).all())
