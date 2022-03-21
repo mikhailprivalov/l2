@@ -12,6 +12,8 @@ const stateInitial = {
   permanentDirectories: {},
   requiredStattalonFields: {},
   requiredStattalonFieldsLoaded: false,
+  researchesPkRequiredStattalonFields: [],
+  researchesPkRequiredStattalonFieldsLoaded: false,
 };
 
 const getters = {
@@ -29,6 +31,7 @@ const getters = {
   },
   permanentDirectories: (state) => state.permanentDirectories,
   requiredStattalonFields: (state) => state.requiredStattalonFields,
+  researchesPkRequiredStattalonFields: (state) => state.researchesPkRequiredStattalonFields,
 };
 
 const actions = {
@@ -65,6 +68,13 @@ const actions = {
     const answer = await researchesPoint.getRequiredStattalonFields();
     commit(mutationTypes.SET_REQUIRED_STATTALON_FIELDS, { answer });
   },
+  async [actionsTypes.LOAD_RESEARCHES_PK_REQUIRED_STATTALON_FIELDS]({ commit, state }) {
+    if (state.researchesPkRequiredStattalonFieldsLoaded) {
+      return;
+    }
+    const answer = await researchesPoint.getResearchesPkRequiredStattalonFields();
+    commit(mutationTypes.SET_RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, { answer });
+  },
 };
 
 const mutations = {
@@ -90,6 +100,10 @@ const mutations = {
   [mutationTypes.SET_REQUIRED_STATTALON_FIELDS](state, { answer }) {
     state.requiredStattalonFields = answer;
     state.requiredStattalonFieldsLoaded = true;
+  },
+  [mutationTypes.SET_RESEARCHES_PK_REQUIRED_STATTALON_FIELDS](state, { answer }) {
+    state.researchesPkRequiredStattalonFields = answer;
+    state.researchesPkRequiredStattalonFieldsLoaded = true;
   },
 };
 

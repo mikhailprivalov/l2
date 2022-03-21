@@ -1,6 +1,6 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
-from statistics_tickets.models import VisitPurpose
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment
 from utils.db import namedtuplefetchall
 
 
@@ -1176,7 +1176,13 @@ def statistics_death_research_by_card(research_id, card_tuple, hospital_id_filte
     return rows
 
 
-def statistics_dispanserization(researches_tuple, d_s, d_e):
+def statistics_dispanserization(researches_tuple, d_s, d_e, is_purpose=0, is_result=0, pk_results=None, pk_purposes=None):
+
+    if not pk_purposes:
+        pk_purposes = tuple(VisitPurpose.objects.values_list('pk', flat=True).all())
+    if not pk_results:
+        pk_results = tuple(ResultOfTreatment.objects.values_list('pk', flat=True).all())
+
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -1191,9 +1197,23 @@ def statistics_dispanserization(researches_tuple, d_s, d_e):
                 LEFT JOIN users_doctorprofile ud on directions_issledovaniya.doc_confirmation_id = ud.id
                 WHERE directions_issledovaniya.research_id in %(researches_tuple)s
                 AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                AND 
+                  CASE WHEN %(is_result)s = 1 THEN
+                    directions_issledovaniya.result_reception_id in %(pk_results)s
+                    WHEN %(is_result)s = 0 THEN
+                    directions_issledovaniya.result_reception_id in (SELECT id FROM statistics_tickets_resultoftreatment) or directions_issledovaniya.result_reception_id is NULL
+                  END
+                AND
+                  CASE WHEN %(is_purpose)s = 1 THEN
+                    directions_issledovaniya.purpose_id in %(pk_purposes)s
+                      WHEN %(is_purpose)s = 0 THEN
+                    directions_issledovaniya.purpose_id in (SELECT id FROM statistics_tickets_visitpurpose) or directions_issledovaniya.purpose_id is NULL
+                  END
+                    
                 ORDER BY directions_issledovaniya.doc_confirmation_id
             """,
-            params={'researches_tuple': researches_tuple, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+            params={'researches_tuple': researches_tuple, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_purpose': is_purpose, 'is_result': is_result,
+                    'pk_results': pk_results, 'pk_purposes': pk_purposes},
         )
 
         rows = namedtuplefetchall(cursor)

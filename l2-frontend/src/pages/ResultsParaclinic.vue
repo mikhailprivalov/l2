@@ -1787,6 +1787,9 @@ export default {
     requiredStattalonFields() {
       return this.$store.getters.requiredStattalonFields;
     },
+    researchesPkRequiredStattalonFields() {
+      return this.$store.getters.researchesPkRequiredStattalonFields;
+    },
     userServicesFiltered() {
       return this.user_services.filter((s) => !this.slot.data.direction || s.pk === this.slot.data.direction_service);
     },
@@ -2058,6 +2061,7 @@ export default {
     }
 
     this.$store.dispatch(actions.LOAD_REQUIRED_STATTALON_FIELDS);
+    this.$store.dispatch(actions.LOAD_RESEARCHES_PK_REQUIRED_STATTALON_FIELDS);
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
@@ -2200,6 +2204,15 @@ export default {
 
       if (research.research.is_doc_refferal) {
         for (const [key, value] of Object.entries(this.requiredStattalonFields)) {
+          if (!research[key] || research[key] === -1) {
+            l.push(value);
+          }
+        }
+      }
+
+      const keysData = Object.keys(this.researchesPkRequiredStattalonFields).map(key => Number(key));
+      if (keysData.includes(research.research.pk)) {
+        for (const [key, value] of Object.entries(this.researchesPkRequiredStattalonFields[research.research.pk])) {
           if (!research[key] || research[key] === -1) {
             l.push(value);
           }

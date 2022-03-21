@@ -8,7 +8,7 @@ import logging
 import pytz
 from django.utils.module_loading import import_string
 
-from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction
+from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
 from clients.utils import find_patient
@@ -39,7 +39,7 @@ import directions.models as directions
 from appconf.manager import SettingManager
 from clients.models import Individual, Card
 from clients.sql_func import last_results_researches_by_time_ago
-from directory.models import Researches, Fractions, ReleationsFT
+from directory.models import Researches, Fractions, ReleationsFT, HospitalService
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
 from laboratory.settings import (
@@ -52,6 +52,7 @@ from laboratory.settings import (
     LK_USER,
     LK_FILE_SIZE_BYTES,
     LK_FILE_COUNT,
+    LK_DAY_MONTH_START_SHOW_RESULT,
 )
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -1763,18 +1764,19 @@ def directions_by_category_result_year(request):
     is_lab = request_data.get('isLab', mode == 'laboratory')
     is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
     is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
+    is_extract = request_data.get('isExtract', mode == 'extract')
     year = request_data['year']
 
     card: Card = find_patient(request_data.get('snils'), request_data.get('enp'))
     if not card:
         return Response({"results": [], 'message': 'Карта не найдена'})
 
-    d1 = datetime.datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
+    d1 = datetime.datetime.strptime(f'{LK_DAY_MONTH_START_SHOW_RESULT}{year}', '%d.%m.%Y')
     start_date = datetime.datetime.combine(d1, datetime.time.min)
     d2 = datetime.datetime.strptime(f'31.12.{year}', '%d.%m.%Y')
     end_date = datetime.datetime.combine(d2, datetime.time.max)
 
-    if not is_lab and not is_doc_refferal and not is_paraclinic:
+    if not is_lab and not is_doc_refferal and not is_paraclinic and not is_extract:
         return JsonResponse({"results": []})
 
     if is_lab:
@@ -1783,7 +1785,15 @@ def directions_by_category_result_year(request):
     else:
         lab_podr = [-1]
 
-    confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card.pk, is_lab, is_paraclinic, is_doc_refferal)
+    confirmed_directions = None
+    if is_extract:
+        extract_research_pks = tuple(HospitalService.objects.values_list('slave_research__id', flat=True).filter(site_type=7))
+        if extract_research_pks:
+            confirmed_directions = get_confirm_direction_patient_year_is_extract(start_date, end_date, card.pk, extract_research_pks)
+
+    if not is_extract and not confirmed_directions:
+        confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card.pk, is_lab, is_paraclinic, is_doc_refferal)
+
     if not confirmed_directions:
         return JsonResponse({"results": []})
 
