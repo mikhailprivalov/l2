@@ -66,7 +66,7 @@ def search_dicom_study(direction=None):
                         print('FAIL send_task_result')  # noqa: T001
                         print(e)  # noqa: T001
 
-                    return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study_link}'
+                    return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study_link[0]}'
 
             except Exception as e:
                 print(e)  # noqa: T001
