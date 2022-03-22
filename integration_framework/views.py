@@ -1805,8 +1805,8 @@ def directions_by_category_result_year(request):
                 'pk': d.direction,
                 'confirmedAt': d.ch_time_confirmation,
                 'services': [],
+                'study': d.study_instance_uid_tag
             }
-
         directions[d.direction]['services'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})
 
