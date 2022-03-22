@@ -1,4 +1,5 @@
 from django.db import models
+from jsonfield import JSONField
 
 
 class Dashboard(models.Model):
@@ -65,7 +66,7 @@ class DashboardDataSet(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название набора данных')
     connect = models.ForeignKey(DatabaseConnectSettings, null=True, help_text='База данных', on_delete=models.CASCADE)
     sql_query = models.TextField(default="", help_text='SQL-запрос')
-    sql_columns_settings = models.JSONField(default=dict, help_text="{sql-название: {синоним: название, x:true}, sql-название: {синоним: название, x:false}")
+    sql_columns_settings = JSONField(default=dict, help_text="{sql-название: {синоним: название, x:true}, sql-название: {синоним: название, x:false}")
 
     def __str__(self):
         return f"{self.title} {self.sql_columns_settings}"
