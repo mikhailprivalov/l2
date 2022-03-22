@@ -411,3 +411,46 @@ class AvailableResearchByGroup(models.Model):
         unique_together = ('group', 'research')
         verbose_name = 'Услуга для групп'
         verbose_name_plural = 'Услуги для групп'
+
+
+class DistrictGroup(models.Model):
+    title = models.CharField(max_length=255, help_text='Название учатсковой службы')
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = 'Участковая группа'
+        verbose_name_plural = 'Участковая групп'
+
+
+class DistrictMembers(models.Model):
+    dicstrict_group = models.ForeignKey(DistrictGroup, blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
+    docprofile = models.ForeignKey(DoctorProfile, blank=True, default=None, null=True, help_text='Член участковой службы', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.dicstrict_group} - {self.docprofile}"
+
+    class Meta:
+        verbose_name = 'Член участковой группы'
+        verbose_name_plural = 'Члены участковой группы'
+
+
+class DistrictResearchLimitAssign(models.Model):
+    PERIOD_TYPES = (
+        (0, 'День'),
+        (1, 'Неделя'),
+        (2, 'Месяц'),
+        (3, 'Квартал'),
+    )
+    dicstrict_group = models.ForeignKey(DistrictGroup, blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
+    research = models.ForeignKey('directory.Researches', help_text='услуга', on_delete=models.CASCADE)
+    limit_count = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    type_period_limit = models.SmallIntegerField(choices=PERIOD_TYPES, help_text='Тип ограничения на период', default=0)
+
+    def __str__(self):
+        return f"{self.dicstrict_group} - {self.research} - {self.limit_count} - {self.type_period_limit}"
+
+    class Meta:
+        verbose_name = 'Ограничения назначений услуг'
+        verbose_name_plural = 'Ограничения назначений услуг'
