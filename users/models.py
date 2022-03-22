@@ -421,7 +421,7 @@ class DistrictGroup(models.Model):
 
     class Meta:
         verbose_name = 'Участковая группа'
-        verbose_name_plural = 'Участковая групп'
+        verbose_name_plural = 'Участковая группа'
 
 
 class DistrictMembers(models.Model):
@@ -432,8 +432,8 @@ class DistrictMembers(models.Model):
         return f"{self.dicstrict_group} - {self.docprofile}"
 
     class Meta:
-        verbose_name = 'Член участковой группы'
-        verbose_name_plural = 'Члены участковой группы'
+        verbose_name = 'Участковая группа - член'
+        verbose_name_plural = 'Члены участковой группы - члены'
 
 
 class DistrictResearchLimitAssign(models.Model):
@@ -444,7 +444,7 @@ class DistrictResearchLimitAssign(models.Model):
         (3, 'Квартал'),
     )
     dicstrict_group = models.ForeignKey(DistrictGroup, blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
-    research = models.ForeignKey('directory.Researches', help_text='услуга', on_delete=models.CASCADE)
+    research = models.ManyToManyField('directory.Researches', related_name='услуга', blank=True, help_text='Запрещены для просмотра мониторинги')
     limit_count = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     type_period_limit = models.SmallIntegerField(choices=PERIOD_TYPES, help_text='Тип ограничения на период', default=0)
 
@@ -452,5 +452,5 @@ class DistrictResearchLimitAssign(models.Model):
         return f"{self.dicstrict_group} - {self.research} - {self.limit_count} - {self.type_period_limit}"
 
     class Meta:
-        verbose_name = 'Ограничения назначений услуг'
-        verbose_name_plural = 'Ограничения назначений услуг'
+        verbose_name = 'Участковая группа - ограничения назначений услуг'
+        verbose_name_plural = 'Участковая группа - ограничения назначений услуг'

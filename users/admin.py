@@ -11,6 +11,12 @@ class DocAdmin(admin.ModelAdmin):
     filter_horizontal = ('white_list_monitoring', 'black_list_monitoring', 'disabled_fin_source')
 
 
+class ResDistrictResearchLimitAssign(admin.ModelAdmin):
+    list_display = ('dicstrict_group', 'type_period_limit', 'limit_count')
+    list_display_links = ('dicstrict_group', 'type_period_limit', 'limit_count')
+    filter_horizontal = ('research',)
+
+
 admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке
 admin.site.register(AssignmentTemplates)
 admin.site.register(AssignmentResearches)
@@ -20,4 +26,4 @@ admin.site.register(AvailableResearchByGroup)
 
 admin.site.register(DistrictGroup)
 admin.site.register(DistrictMembers)
-admin.site.register(DistrictResearchLimitAssign)
+admin.site.register(DistrictResearchLimitAssign, ResDistrictResearchLimitAssign)
