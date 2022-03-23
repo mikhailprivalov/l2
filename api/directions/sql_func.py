@@ -274,7 +274,8 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
             directions_issledovaniya.time_confirmation,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as ch_time_confirmation,
             directions_issledovaniya.research_id,
-            directory_researches.title as research_title
+            directory_researches.title as research_title,
+            directions_issledovaniya.study_instance_uid_tag
             FROM directions_napravleniya
             INNER JOIN directions_issledovaniya ON (directions_napravleniya.id = directions_issledovaniya.napravleniye_id)
             AND directions_issledovaniya.research_id IN 
@@ -317,7 +318,8 @@ def get_confirm_direction_patient_year_is_extract(d_s, d_e, card_pk1, extract_re
             directions_issledovaniya.time_confirmation,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as ch_time_confirmation,
             directions_issledovaniya.research_id,
-            directory_researches.title as research_title
+            directory_researches.title as research_title,
+            directions_issledovaniya.study_instance_uid_tag
             FROM directions_napravleniya
             INNER JOIN directions_issledovaniya ON (directions_napravleniya.id = directions_issledovaniya.napravleniye_id)
             AND directions_issledovaniya.research_id IN %(extract_research_pks)s
