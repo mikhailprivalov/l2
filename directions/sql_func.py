@@ -3,7 +3,9 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
-def check_limit_assign_researches(district_group_id,):
+def check_limit_assign_researches(
+    district_group_id,
+):
 
     with connection.cursor() as cursor:
         cursor.execute(
