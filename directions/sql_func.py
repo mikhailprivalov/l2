@@ -28,7 +28,7 @@ def check_limit_assign_researches(
     return rows
 
 
-def get_count_researches_by_doc(doctor_pks,  d_s, d_e):
+def get_count_researches_by_doc(doctor_pks, d_s, d_e):
 
     with connection.cursor() as cursor:
         cursor.execute(
