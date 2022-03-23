@@ -1123,7 +1123,7 @@ class Napravleniya(models.Model):
         start_date = f"{current_year()}-{current_month()}-01 00:00:00"
         end_date = f"{current_year()}-{current_month()}-{daysnmonth} 23:59:59"
         month_reserches_limit = get_count_researches_by_doc(doctors_pks, start_date, end_date)
-        month_reserches_limit_data = {i.research_id: i.count for i in  month_reserches_limit}
+        month_reserches_limit_data = {i.research_id: i.count for i in month_reserches_limit}
 
         day = normalize_dots_date(strdate(current_time(only_date=True)))
         day_reserches_limit = get_count_researches_by_doc(doctors_pks, f"{day} 00:00:00", f"{day} 23:59:59")
