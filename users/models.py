@@ -97,6 +97,7 @@ class DoctorProfile(models.Model):
     disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещеные источники финансирвоания')
     external_access = models.BooleanField(default=False, blank=True, help_text='Разрешен внешний доступ')
     date_stop_external_access = models.DateField(help_text='Окончание внешнего доступа', db_index=True, default=None, blank=True, null=True)
+    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
 
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:
@@ -413,43 +414,18 @@ class AvailableResearchByGroup(models.Model):
         verbose_name_plural = 'Услуги для групп'
 
 
-class DistrictGroup(models.Model):
-    title = models.CharField(max_length=255, help_text='Название учатсковой службы')
-
-    def __str__(self):
-        return str(self.title)
-
-    class Meta:
-        verbose_name = 'Участковая группа'
-        verbose_name_plural = 'Участковая группа'
-
-
-class DistrictMembers(models.Model):
-    dicstrict_group = models.ForeignKey(DistrictGroup, blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
-    docprofile = models.ForeignKey(DoctorProfile, blank=True, default=None, null=True, help_text='Член участковой службы', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.dicstrict_group} - {self.docprofile}"
-
-    class Meta:
-        verbose_name = 'Участковая группа - член'
-        verbose_name_plural = 'Члены участковой группы - члены'
-
-
 class DistrictResearchLimitAssign(models.Model):
     PERIOD_TYPES = (
         (0, 'День'),
-        (1, 'Неделя'),
-        (2, 'Месяц'),
-        (3, 'Квартал'),
+        (1, 'Месяц'),
     )
-    dicstrict_group = models.ForeignKey(DistrictGroup, blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
+    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
     research = models.ManyToManyField('directory.Researches', related_name='услуга', blank=True, help_text='Запрещены для просмотра мониторинги')
     limit_count = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     type_period_limit = models.SmallIntegerField(choices=PERIOD_TYPES, help_text='Тип ограничения на период', default=0)
 
     def __str__(self):
-        return f"{self.dicstrict_group} - {self.research} - {self.limit_count} - {self.type_period_limit}"
+        return f"{self.district_group} - {self.research} - {self.limit_count} - {self.type_period_limit}"
 
     class Meta:
         verbose_name = 'Участковая группа - ограничения назначений услуг'

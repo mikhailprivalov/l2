@@ -152,7 +152,8 @@ export default (instance: Vue): void => {
             } else if (type === 'barcode') {
               instance.$root.$emit('print:barcodes', data.directions, data.directionsStationar);
             } else if (type === 'just-save' || type === 'barcode') {
-              instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}`);
+              instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}
+              ${data.messageLimit}`);
             } else if (type === 'save-and-open-embedded-form' && monitoring) {
               instance.$root.$emit('embedded-form:open', data.directions[0]);
             }

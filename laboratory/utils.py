@@ -67,6 +67,10 @@ def current_year():
     return strdate(current_time(only_date=True))[-4:]
 
 
+def current_month():
+    return strdate(current_time(only_date=True))[3:5]
+
+
 def start_end_year():
     # возвращает даты-время(начало конец в году): 01.01.ГОД 00:00:00 00:00:01 И 31.12.ГОД 23:59:59 59:59:59
     user_timezone = pytz.timezone(TIME_ZONE)

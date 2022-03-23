@@ -148,6 +148,8 @@ def directions_generate(request):
             if "message" in rc:
                 result["message"] = rc["message"]
             result["directions"].extend(rc["list_id"])
+            if "messageLimit" in rc:
+                result["messageLimit"] = rc["messageLimit"]
             result["directionsStationar"].extend(rc["list_stationar_id"])
             if not result["ok"]:
                 break
