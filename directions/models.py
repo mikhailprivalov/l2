@@ -1114,20 +1114,23 @@ class Napravleniya(models.Model):
         current_global_direction_params=None,
         hospital_department_override=-1,
     ):
-        limit_researches = check_limit_assign_researches(doc_current.district_group.pk)
-        limit_researches_by_period = {i.researches_id: {"count": i.limit_count, "period": i.type_period_limit} for i in limit_researches}
-        doctors_pks = tuple(DoctorProfile.objects.values_list('pk', flat=True).filter(district_group=doc_current.district_group))
+        limit_researches_by_period = None
+        month_reserches_limit_data, day_reserches_limit_data = None, None
+        if doc_current.district_group and doc_current.district_group.pk:
+            limit_researches = check_limit_assign_researches(doc_current.district_group.pk)
+            limit_researches_by_period = {i.researches_id: {"count": i.limit_count, "period": i.type_period_limit} for i in limit_researches}
+            doctors_pks = tuple(DoctorProfile.objects.values_list('pk', flat=True).filter(district_group=doc_current.district_group))
 
-        daysnmonth = calendar.monthrange(int(current_year()), int(current_month()))[1]
+            daysnmonth = calendar.monthrange(int(current_year()), int(current_month()))[1]
 
-        start_date = f"{current_year()}-{current_month()}-01 00:00:00"
-        end_date = f"{current_year()}-{current_month()}-{daysnmonth} 23:59:59"
-        month_reserches_limit = get_count_researches_by_doc(doctors_pks, start_date, end_date)
-        month_reserches_limit_data = {i.research_id: i.count for i in month_reserches_limit}
+            start_date = f"{current_year()}-{current_month()}-01 00:00:00"
+            end_date = f"{current_year()}-{current_month()}-{daysnmonth} 23:59:59"
+            month_reserches_limit = get_count_researches_by_doc(doctors_pks, start_date, end_date)
+            month_reserches_limit_data = {i.research_id: i.count for i in month_reserches_limit}
 
-        day = normalize_dots_date(strdate(current_time(only_date=True)))
-        day_reserches_limit = get_count_researches_by_doc(doctors_pks, f"{day} 00:00:00", f"{day} 23:59:59")
-        day_reserches_limit_data = {i.research_id: i.count for i in day_reserches_limit}
+            day = normalize_dots_date(strdate(current_time(only_date=True)))
+            day_reserches_limit = get_count_researches_by_doc(doctors_pks, f"{day} 00:00:00", f"{day} 23:59:59")
+            day_reserches_limit_data = {i.research_id: i.count for i in day_reserches_limit}
 
         if not visited:
             visited = []
@@ -1184,7 +1187,7 @@ class Napravleniya(models.Model):
 
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
-                    if finsource and finsource.title.lower() != "платно" and limit_researches_by_period.get(vv, None):
+                    if finsource and finsource.title.lower() != "платно" and limit_researches_by_period and limit_researches_by_period.get(vv, None):
                         template_research_assign = limit_researches_by_period.get(vv)
                         if template_research_assign["period"] == 1:
                             if month_reserches_limit_data[vv] >= template_research_assign["count"]:
