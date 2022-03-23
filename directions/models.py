@@ -22,6 +22,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
+from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
 from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK
 from odii.integration import add_task_request, add_task_result
@@ -30,7 +31,7 @@ import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals, HospitalsGroup
-from laboratory.utils import strdate, localtime, current_time, strdatetime, strfdatetime
+from laboratory.utils import strdate, localtime, current_time, strdatetime, strfdatetime, current_year, current_month
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
@@ -39,7 +40,7 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes,
 
 
 from appconf.manager import SettingManager
-
+from utils.dates import normalize_dots_date
 
 logger = logging.getLogger(__name__)
 
@@ -1113,6 +1114,21 @@ class Napravleniya(models.Model):
         current_global_direction_params=None,
         hospital_department_override=-1,
     ):
+        limit_researches = check_limit_assign_researches(doc_current.district_group.pk)
+        limit_researches_by_period = {i.researches_id: {"count": i.limit_count, "period": i.type_period_limit} for i in limit_researches}
+        doctors_pks = tuple(DoctorProfile.objects.values_list('pk', flat=True).filter(district_group=doc_current.district_group))
+
+        daysnmonth = calendar.monthrange(int(current_year()), int(current_month()))[1]
+
+        start_date = f"{current_year()}-{current_month()}-01 00:00:00"
+        end_date = f"{current_year()}-{current_month()}-{daysnmonth} 23:59:59"
+        month_reserches_limit = get_count_researches_by_doc(doctors_pks, start_date, end_date)
+        month_reserches_limit_data = {i.research_id: i.count for i in month_reserches_limit}
+
+        day = normalize_dots_date(strdate(current_time(only_date=True)))
+        day_reserches_limit = get_count_researches_by_doc(doctors_pks, f"{day} 00:00:00", f"{day} 23:59:59")
+        day_reserches_limit_data = {i.research_id: i.count for i in day_reserches_limit}
+
         if not visited:
             visited = []
         if counts is None:
@@ -1135,7 +1151,7 @@ class Napravleniya(models.Model):
             current_global_direction_params = None
 
         i = 0
-        result = {"r": False, "list_id": [], "list_stationar_id": []}
+        result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         ofname_id = ofname_id or -1
         ofname = None
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -1160,17 +1176,29 @@ class Napravleniya(models.Model):
             no_attach = False
             conflict_list = []
             conflict_keys = []
+            limit_research_to_assign = {}
+            finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
+
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
 
                 for vv in researches[v]:
+                    research_tmp = directory.Researches.objects.get(pk=vv)
+                    if finsource and finsource.title.lower() != "платно" and limit_researches_by_period.get(vv, None):
+                        template_research_assign = limit_researches_by_period.get(vv)
+                        if template_research_assign["period"] == 1:
+                            if month_reserches_limit_data[vv] >= template_research_assign["count"]:
+                                limit_research_to_assign[vv] = f'{research_tmp.title}-Не более {template_research_assign["count"]} в месяц'
+                        if template_research_assign["period"] == 0:
+                            if day_reserches_limit_data[vv] >= template_research_assign["count"]:
+                                limit_research_to_assign[vv] = f'{research_tmp.title}- Не более {template_research_assign["count"]} в день'
+
                     if vv == PERINATAL_DEATH_RESEARCH_PK:
                         client_days_age = card.individual.age(days_monthes_years=True)
                         if client_days_age[0] > 11 and client_days_age[1] == 0 and client_days_age[2] == 0 or client_days_age[1] > 0 or client_days_age[2] > 0:
                             result["message"] = "Св-во о перинатальной смерти оформляется до 7 дней"
                             return result
 
-                    research_tmp = directory.Researches.objects.get(pk=vv)
                     if research_tmp.no_attach and research_tmp.no_attach > 0:
                         if research_tmp.no_attach not in conflict_keys:
                             conflict_keys.append(research_tmp.no_attach)
@@ -1180,7 +1208,6 @@ class Napravleniya(models.Model):
                             no_attach = True
                             conflict_list.append(research_tmp.title)
                 i += 1
-
             res = []
             only_lab_researches = []
             dir_group_onlylab = ''
@@ -1196,8 +1223,6 @@ class Napravleniya(models.Model):
                 directions_for_researches = {}  # Словарь для временной записи направлений.
                 # Исследования привязываются к направлению по группе
 
-                finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
-
                 # получить прайс
                 work_place_link = card.work_place_db
                 price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource, work_place_link)
@@ -1211,6 +1236,9 @@ class Napravleniya(models.Model):
                             return result
                     # пользователю добавлять данные услуги в направления(не будут добавлены)
                     if research in doc_current.restricted_to_direct.all():
+                        continue
+                    if limit_research_to_assign.get(v):
+                        result["messageLimit"] = f"{result.get('messageLimit', '')} \n {limit_research_to_assign[v]}"
                         continue
 
                     dir_group = -1
