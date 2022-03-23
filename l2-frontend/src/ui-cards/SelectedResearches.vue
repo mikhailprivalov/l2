@@ -891,7 +891,7 @@ export default {
             if (this.directions_params_enabled) {
               if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
                 this.need_update_direction_params.push(pk);
-                this.formParams[pk] = {};
+                this.form_params[pk] = {};
                 needShowWindow = true;
                 formParams[pk] = _.cloneDeep(await this.load_direction_params_data(res.direction_params));
                 formParams[pk].show = true;
