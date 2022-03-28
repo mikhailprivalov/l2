@@ -28,7 +28,7 @@ class DatabaseConnectSettings(models.Model):
         return f"{self.title} - {self.database}"
 
     class Meta:
-        verbose_name = 'Подключения к БД'
+        verbose_name = 'Подключение к БД'
         verbose_name_plural = 'Подключения к БД'
 
 
@@ -58,7 +58,7 @@ class DashboardCharts(models.Model):
         return f"({self.dashboard.title}) - {self.title}"
 
     class Meta:
-        verbose_name = 'Графики'
+        verbose_name = 'График'
         verbose_name_plural = 'Графики'
 
 
@@ -73,7 +73,7 @@ class DashboardDataSet(models.Model):
 
     class Meta:
         verbose_name = 'Набор данных по координатам'
-        verbose_name_plural = 'Набор данных по координатам'
+        verbose_name_plural = 'Наборы данных по координатам'
 
 
 class DashboardChartData(models.Model):
@@ -87,4 +87,4 @@ class DashboardChartData(models.Model):
 
     class Meta:
         verbose_name = 'График + набор данных'
-        verbose_name_plural = 'График + набор данных'
+        verbose_name_plural = 'Графики + набор данных'
