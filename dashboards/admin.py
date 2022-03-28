@@ -23,8 +23,26 @@ class ResDashboardDataSet(admin.ModelAdmin):
     )
 
 
+class ResDashboardChartData(admin.ModelAdmin):
+    list_display = (
+        'chart',
+        'data_set',
+        'order',
+        'hide',
+    )
+
+
+class ResDashboardCharts(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'default_type',
+        'order',
+        'hide',
+    )
+
+
 admin.site.register(DatabaseConnectSettings, ResDatabaseConnectSettings)
 admin.site.register(Dashboard)
-admin.site.register(DashboardCharts)
-admin.site.register(DashboardDataSet)
-admin.site.register(DashboardChartData)
+admin.site.register(DashboardCharts, ResDashboardCharts)
+admin.site.register(DashboardDataSet, ResDashboardDataSet)
+admin.site.register(DashboardChartData, ResDashboardChartData)
