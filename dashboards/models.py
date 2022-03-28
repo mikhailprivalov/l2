@@ -29,7 +29,7 @@ class DatabaseConnectSettings(models.Model):
 
     class Meta:
         verbose_name = 'Подключения к БД'
-        verbose_name_plural = 'Пподключения к БД'
+        verbose_name_plural = 'Подключения к БД'
 
 
 class DashboardCharts(models.Model):
