@@ -28,8 +28,8 @@ class DatabaseConnectSettings(models.Model):
         return f"{self.title} - {self.database}"
 
     class Meta:
-        verbose_name = 'Дашборд-подключения к БД'
-        verbose_name_plural = 'Дашборд-подключения к БД'
+        verbose_name = 'Подключение к БД'
+        verbose_name_plural = 'Подключения к БД'
 
 
 class DashboardCharts(models.Model):
@@ -55,11 +55,11 @@ class DashboardCharts(models.Model):
     default_type = models.CharField(max_length=20, db_index=True, choices=DEFAULT_TYPE, default=COLUMN, help_text="Тип графика по умолчанию")
 
     def __str__(self):
-        return f"({self.dashboard.title}) - {self.title} "
+        return f"({self.dashboard.title}) - {self.title}"
 
     class Meta:
-        verbose_name = 'Дашборд-Графики'
-        verbose_name_plural = 'Дашборд-Графики'
+        verbose_name = 'График'
+        verbose_name_plural = 'Графики'
 
 
 class DashboardDataSet(models.Model):
@@ -72,8 +72,8 @@ class DashboardDataSet(models.Model):
         return f"{self.title} {self.sql_columns_settings}"
 
     class Meta:
-        verbose_name = 'Дашборд-набор данных по координатам'
-        verbose_name_plural = 'Дашборд-набор данных по координатам'
+        verbose_name = 'Набор данных по координатам'
+        verbose_name_plural = 'Наборы данных по координатам'
 
 
 class DashboardChartData(models.Model):
@@ -86,5 +86,5 @@ class DashboardChartData(models.Model):
         return f"{self.chart.title}"
 
     class Meta:
-        verbose_name = 'Дашборд-график набор данных'
-        verbose_name_plural = 'Дашборд-график набор данных'
+        verbose_name = 'График + набор данных'
+        verbose_name_plural = 'Графики + набор данных'

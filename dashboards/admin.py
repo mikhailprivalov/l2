@@ -82,6 +82,7 @@ class ResDashboard(admin.ModelAdmin):
         'hide',
     )
 
+
 admin.site.register(DatabaseConnectSettings, ResDatabaseConnectSettings)
 admin.site.register(Dashboard, ResDashboard)
 admin.site.register(DashboardCharts, ResDashboardCharts)
