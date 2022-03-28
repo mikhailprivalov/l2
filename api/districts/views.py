@@ -1,13 +1,8 @@
-import datetime
 import json
-import os
-
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-
 from api.districts.sql_func import get_district_limit_research
 from clients.models import District
-from users.models import DistrictResearchLimitAssign
 
 
 @login_required

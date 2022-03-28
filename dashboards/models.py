@@ -55,7 +55,7 @@ class DashboardCharts(models.Model):
     default_type = models.CharField(max_length=20, db_index=True, choices=DEFAULT_TYPE, default=COLUMN, help_text="Тип графика по умолчанию")
 
     def __str__(self):
-        return f"{self.title} - Дашборд: {self.dashboard.title}"
+        return f"({self.dashboard.title}) - {self.title} "
 
     class Meta:
         verbose_name = 'Дашборд-Графики'
