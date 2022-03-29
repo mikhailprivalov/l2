@@ -23,7 +23,7 @@
               :clearable="false"
             />
 
-            <h4 v-if="dashboard.title">
+            <h4 v-if="dashboard.title && fullscreen">
               {{ dashboard.title }} — {{ loadedDashboardDateString }}
             </h4>
           </div>
@@ -48,6 +48,11 @@
                 class="fas fa-compress"
               />
             </a>
+          </div>
+          <div class="col-xs-12" v-if="dashboard.title && !fullscreen">
+            <h4 class="simple-header">
+              {{ dashboard.title }} — {{ loadedDashboardDateString }}
+            </h4>
           </div>
         </div>
       </div>
@@ -239,6 +244,10 @@ export default {
   &.dash-fullscreen, &.dash-without-login {
     margin-top: 0;
   }
+}
+
+.dash-fullscreen .filters h4 {
+  margin-top: 5px;
 }
 
 .filters {
