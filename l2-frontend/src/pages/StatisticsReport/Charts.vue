@@ -87,7 +87,7 @@ export default {
         },
         [{ BAR: 'xaxis', COLUMN: 'xaxis', PIE: 'labels' }[c.type] || 'xaxis']:
           c.type === 'PIE'
-            ? c.fields
+            ? c.dates
             : {
               categories: c.dates,
             },
@@ -117,8 +117,8 @@ export default {
       };
     },
     getSeries(c) {
-      if (c.type === 'PIE' && c.fields.length === 1) {
-        return c.data.map((d) => d.values[0]);
+      if (c.type === 'PIE' && c.data.length === 1) {
+        return c.data[0].values;
       }
       return c.fields.map((name, i) => ({ name, data: c.data[i].values.map((v) => Number(v) || 0) }));
     },
