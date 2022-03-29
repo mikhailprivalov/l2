@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from api.districts.sql_func import get_district_limit_research
 from clients.models import District
+from users.models import DistrictResearchLimitAssign
 
 
 @login_required
@@ -22,6 +23,20 @@ def district_edit(request):
     request_data = json.loads(request.body)
     district_pk = int(request_data.get("pk", -1))
     district_limit = get_district_limit_research(district_pk)
-    result = [{"limit_count": i.limit_count, "type_period_limit": i.type_period_limit, "researches_id": i.researches_id} for i in district_limit]
+    result = [{"count": i.limit_count, "type": 'День' if i.type_period_limit == 0 else 'Месяц', "current_researches": i.research_id} for i in district_limit]
 
     return JsonResponse({"result": result})
+
+
+@login_required
+def district_save_limit(request):
+    request_data = json.loads(request.body)
+    tb_data = request_data.get('tb_data', '')
+    district_pk = request_data.get('district', -1)
+    for t_b in tb_data:
+        if int(t_b.get('count', 0)) < 1:
+            return JsonResponse({'message': 'Ошибка в количестве'})
+    DistrictResearchLimitAssign.save_limit_assign(district_pk, tb_data)
+
+    return JsonResponse({'ok': True, 'message': 'Сохранено'})
+

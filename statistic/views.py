@@ -1134,7 +1134,6 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Диспансеризация")
-
         d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
         d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
         start_date = datetime.datetime.combine(d1, datetime.time.min)

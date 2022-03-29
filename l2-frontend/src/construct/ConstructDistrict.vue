@@ -43,30 +43,166 @@
     <div class="district-content">
       <div>
         <h5 style="text-align: center">
-          {{ currentDistrictTitle }}
+          {{ district.title }}
         </h5>
+        <div
+          v-if="district.title"
+          class="district-limit-research"
+        >
+          <table class="table table-bordered">
+            <colgroup>
+              <col>
+              <col width="150">
+              <col width="140">
+              <col width="30">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Наименование</th>
+                <th>Лимит </th>
+                <th>Период</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(val, index) in tbData"
+                :key="index"
+              >
+                <td class="cl-td">
+                  <Treeselect
+                    v-model="val.current_researches"
+                    class="treeselect-noborder"
+                    :multiple="false"
+                    :options="researches"
+                    placeholder="Не выбран"
+                    :align="left"
+                  />
+                </td>
+                <td class="cl-td">
+                  <div class="input-group">
+                    <input
+                      v-model="val.count"
+                      type="number"
+                      class="form-control"
+                      style="border: none"
+                      placeholder="Кол-во в месяц"
+                    >
+                  </div>
+                </td>
+                <td class="cl-td">
+                  <select
+                    v-model="val.type"
+                    class="form-control"
+                    style="border: none"
+                  >
+                    <option
+                      v-for="t in types"
+                      :key="t"
+                      :value="t"
+                    >
+                      {{ t }}
+                    </option>
+                  </select>
+                </td>
+                <td class="text-center cl-td">
+                  <button
+                    v-tippy="{ placement: 'bottom' }"
+                    class="btn btn-blue-nb"
+                    title="Удалить строку"
+                    @click="delete_row(index)"
+                  >
+                    <i class="fa fa-times" />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="row">
+            <div class="col-xs-8" />
+            <div class="col-xs-4">
+              <button
+                class="btn btn-blue-nb add-row"
+                @click="save_limit_data(tbData)"
+              >
+                Сохранить
+              </button>
+              <button
+                class="btn btn-blue-nb add-row"
+                @click="add_new_row"
+              >
+                Добавить
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 
+const types = ['День', 'Месяц'];
+const makeDefaultRow = (type = null) => ({ count: 0, type: type || types[0] });
+
 export default {
   name: 'ConstructDistrict',
+  components: { Treeselect },
+  model: {
+    event: 'modified',
+  },
   data() {
     return {
+      tbData: [makeDefaultRow()],
       data: [],
+      types,
+      researches: [],
       district: {},
       currentDistrictTitle: '',
     };
   },
+  watch: {
+    tbData: {
+      handler() {
+        this.changeValue(this.tbData);
+      },
+      immediate: true,
+    },
+  },
   mounted() {
+    this.$api('researches/research-dispensary').then(rows => {
+      this.researches = rows;
+    });
     this.load_district();
   },
   methods: {
+    async save_limit_data(tbData) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('districts/district-save-limit', {
+        district: this.district.pk,
+        tb_data: tbData,
+      });
+      if (ok) {
+        this.$root.$emit('msg', 'ok', message);
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    add_new_row() {
+      const tl = this.tbData.length;
+      this.tbData.push(makeDefaultRow(tl > 0 ? this.tbData[tl - 1].type : null));
+    },
+    delete_row(index) {
+      this.tbData.splice(index, 1);
+    },
+    changeValue(newVal) {
+      this.$emit('modified', newVal);
+    },
     async load_district() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { result } = await this.$api('districts/districts-load');
@@ -75,9 +211,9 @@ export default {
     },
     async editDistrict(row) {
       await this.$store.dispatch(actions.INC_LOADING);
-      this.currentDistrictTitle = row.title;
+      this.district = row;
       const { result } = await this.$api('districts/district-edit', { pk: row.pk });
-      this.district = result;
+      this.tbData = result;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
@@ -114,6 +250,13 @@ export default {
   display: flex;
   flex-direction: column;
   width: calc(100% - 280px);
+}
+
+.district-limit-research {
+  width: calc(100% - 250px);
+  display: flex;
+  flex-direction: column;
+  margin-left: 125px;
 }
 
 .side-bottom {
@@ -159,6 +302,17 @@ export default {
 
   .sidebar-btn:first-child {
     flex: 1 1 auto;
+  }
+}
+
+.add-row {
+  float: right;
+  margin-left: 10px;
+}
+
+.cl-td ::v-deep {
+  label {
+    justify-content: left;
   }
 }
 
