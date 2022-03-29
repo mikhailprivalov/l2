@@ -36,7 +36,7 @@ def get_charts_dataset(dashboard_pk):
                 dashboards_dashboardcharts.id = dashboards_dashboardchartdata.chart_id
                 WHERE chart_id in (SELECT id from dashboards_dashboardcharts where dashboard_id = %(dashboard_pk)s and hide=False) and
                 dashboards_dashboardchartdata.hide=False and dashboards_dashboardcharts.hide=False
-                order by dashboards_dashboardcharts.order
+                order by dashboards_dashboardcharts.order, dashboards_dashboardchartdata.order
         """,
             params={'dashboard_pk': dashboard_pk},
         )
