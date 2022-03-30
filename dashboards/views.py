@@ -116,4 +116,22 @@ def exec_query(dashboard_pk):
                 values[index_el] = current_result_el
             i["values"] = values.copy()
 
+    for row in result:
+        if row["type"] == "PIE":
+            row_data = row.get("data", [])
+            if len(row_data) > 1:
+                dates = row.get("dates", "")
+                fields = row.get("fields", "")
+                title = row.get("title", "")
+                final_row_data = row_data[0]
+                step = 0
+                for i in row_data:
+                    step += 1
+                    if step == 1:
+                        continue
+                    final_row_data['values'].append(i['values'][0])
+                row["data"] = [final_row_data]
+                row["dates"] = fields
+                row["title"] = f"{title} за {dates[0]}"
+
     return result
