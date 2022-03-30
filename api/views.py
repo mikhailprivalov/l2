@@ -1272,7 +1272,7 @@ def users_view(request):
             data.append(otd)
 
     spec = users.Speciality.objects.filter(hide=False).order_by("title")
-    spec_data = [{"pk": -1, "title": "Не выбрано"}, * [{"pk": s.pk, "title": s.title} for s in spec]]
+    spec_data = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in spec]]
 
     positions_qs = users.Position.objects.filter(hide=False).order_by("title")
     positions = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in positions_qs]]
