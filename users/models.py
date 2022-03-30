@@ -1,7 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import User, Group
-from django.db import models
+from django.db import models, transaction
 
 from appconf.manager import SettingManager
 from laboratory.settings import EMAIL_HOST
@@ -420,7 +420,7 @@ class DistrictResearchLimitAssign(models.Model):
         (1, 'Месяц'),
     )
     district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
-    research = models.ManyToManyField('directory.Researches', related_name='услуга', blank=True, help_text='Запрещены для просмотра мониторинги')
+    research = models.ForeignKey('directory.Researches', related_name='услуга', blank=True, default=None, null=True, help_text='Услуга', on_delete=models.CASCADE)
     limit_count = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     type_period_limit = models.SmallIntegerField(choices=PERIOD_TYPES, help_text='Тип ограничения на период', default=0)
 
@@ -430,3 +430,12 @@ class DistrictResearchLimitAssign(models.Model):
     class Meta:
         verbose_name = 'Участковая группа - ограничения назначений услуг'
         verbose_name_plural = 'Участковая группа - ограничения назначений услуг'
+
+    @staticmethod
+    def save_limit_assign(district_pk, data):
+        with transaction.atomic():
+            DistrictResearchLimitAssign.objects.filter(district_group_id=district_pk).delete()
+            for t_b in data:
+                type_period = 0 if t_b['type'] == 'День' else 1
+                d = DistrictResearchLimitAssign(district_group_id=district_pk, research_id=t_b['current_researches'], limit_count=t_b['count'], type_period_limit=type_period)
+                d.save()

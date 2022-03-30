@@ -103,6 +103,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/district',
+      name: 'construct_district',
+      component: () => import('@/construct/ConstructDistrict.vue'),
+      meta: {
+        title: 'Настройка участков',
+        groups: ['Конструктор: Настройка организации'],
+
+      },
+    },
+    {
       path: '/ui/extra-notification',
       name: 'extra_notification',
       component: () => import('@/pages/ExtraNotification.vue'),

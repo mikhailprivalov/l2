@@ -1118,7 +1118,7 @@ class Napravleniya(models.Model):
         month_reserches_limit_data, day_reserches_limit_data = None, None
         if doc_current.district_group and doc_current.district_group.pk:
             limit_researches = check_limit_assign_researches(doc_current.district_group.pk)
-            limit_researches_by_period = {i.researches_id: {"count": i.limit_count, "period": i.type_period_limit} for i in limit_researches}
+            limit_researches_by_period = {i.research_id: {"count": i.limit_count, "period": i.type_period_limit} for i in limit_researches}
             doctors_pks = tuple(DoctorProfile.objects.values_list('pk', flat=True).filter(district_group=doc_current.district_group))
 
             daysnmonth = calendar.monthrange(int(current_year()), int(current_month()))[1]
