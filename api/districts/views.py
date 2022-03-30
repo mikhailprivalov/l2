@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from api.districts.sql_func import get_district_limit_research
 from clients.models import District
+from laboratory.decorators import group_required
 from users.models import DistrictResearchLimitAssign
 
 
@@ -18,6 +19,7 @@ def district_create(request):
 
 
 @login_required
+@group_required("Конструктор: Настройка организации")
 def districts_load(request):
     districts = District.objects.all().order_by("sort_weight")
     result = [{"pk": i.pk, "title": i.title, "is_ginekolog": i.is_ginekolog} for i in districts]
@@ -25,6 +27,7 @@ def districts_load(request):
 
 
 @login_required
+@group_required("Конструктор: Настройка организации")
 def district_edit(request):
     request_data = json.loads(request.body)
     district_pk = int(request_data.get("pk", -1))
@@ -35,6 +38,7 @@ def district_edit(request):
 
 
 @login_required
+@group_required("Конструктор: Настройка организации")
 def district_save_limit(request):
     request_data = json.loads(request.body)
     tb_data = request_data.get('tb_data', '')
