@@ -49,7 +49,10 @@
               />
             </a>
           </div>
-          <div class="col-xs-12" v-if="dashboard.title && !fullscreen">
+          <div
+            v-if="dashboard.title && !fullscreen"
+            class="col-xs-12"
+          >
             <h4 class="simple-header">
               {{ dashboard.title }} — {{ loadedDashboardDateString }}
             </h4>
@@ -61,6 +64,7 @@
         :charts="charts"
         :fullscreen="fullscreen"
         :without-login="withoutLogin"
+        :is-narrow="isNarrow"
       />
     </div>
   </div>
@@ -96,6 +100,7 @@ export default {
       intervalReloadSeconds: 0,
       restMsToReload: 0,
       checkReloadInterval: null,
+      isNarrow: false,
     };
   },
   computed: {
@@ -115,7 +120,8 @@ export default {
     },
     reloadingText() {
       if (this.intervalReloadSeconds > 0) {
-        return `${Math.max(Math.round(this.restMsToReload / 100) / 10, 0).toFixed(1)} сек. до перезагрузки`;
+        const appendString = this.isNarrow ? 'c.' : 'сек. до перезагрузки';
+        return `${Math.max(Math.round(this.restMsToReload / 100) / 10, 0).toFixed(1)} ${appendString}`;
       }
       return null;
     },
@@ -151,6 +157,13 @@ export default {
       }
     },
   },
+  created() {
+    window.addEventListener('resize', this.onWindowResize);
+    this.onWindowResize();
+  },
+  destroyed() {
+    window.removeEventListener('resize', this.onWindowResize);
+  },
   async mounted() {
     await this.entryToDashboard();
     this.checkReloadInterval = setInterval(() => {
@@ -163,6 +176,10 @@ export default {
     clearInterval(this.checkReloadInterval);
   },
   methods: {
+    onWindowResize() {
+      const { innerWidth: width } = window;
+      this.isNarrow = width <= 550;
+    },
     async toggleFullscreen() {
       await this.$fullscreen.toggle(this.$refs.dashboardRoot, {
         teleport: true,

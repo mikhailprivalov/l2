@@ -17,6 +17,7 @@
         </h6>
         <div class="chart-inner">
           <VueApexCharts
+            :key="`${c.pk}-${fullpage}`"
             :type="CHART_TYPES[c.type] || c.type.toLowerCase()"
             :options="getOptions(c)"
             :series="getSeries(c)"
@@ -47,7 +48,7 @@ export default {
   components: {
     VueApexCharts,
   },
-  props: ['charts', 'fullscreen', 'withoutLogin'],
+  props: ['charts', 'fullscreen', 'withoutLogin', 'isNarrow'],
   data() {
     return {
       CHART_TYPES,
@@ -55,7 +56,7 @@ export default {
   },
   computed: {
     fullpage() {
-      return this.charts.length <= 4;
+      return this.charts.length <= 4 && !this.isNarrow;
     },
     emptyCharts() {
       const r = [];
@@ -72,7 +73,7 @@ export default {
       if (this.fullpage) {
         return '100%';
       }
-      return Math.max(c.type === 'BAR' ? c.data.length * 15 * c.fields.length : 0, 390);
+      return Math.max(c.type === 'BAR' ? c.data.length * 15 * c.fields.length : 0, 330);
     },
     getOptions(c) {
       return {
@@ -85,7 +86,7 @@ export default {
             enabled: false,
           },
           fontFamily: 'Open Sans, Helvetica, Arial, sans-serif',
-          parentHeightOffset: 0,
+          parentHeightOffset: 5,
         },
         [{ BAR: 'xaxis', COLUMN: 'xaxis', PIE: 'labels' }[c.type] || 'xaxis']:
           c.type === 'PIE'
@@ -116,7 +117,7 @@ export default {
         grid: {
           padding: {
             top: c.type === 'PIE' ? 0 : -15,
-            bottom: c.type === 'PIE' ? -10 : -30,
+            bottom: c.type === 'PIE' ? -10 : -10,
           },
         },
         legend: {
@@ -147,8 +148,8 @@ h6 {
   .chart-inner {
     overflow-x: hidden;
     overflow-y: auto;
-    min-height: 410px;
-    max-height: 410px;
+    min-height: 350px;
+    max-height: 350px;
   }
 }
 
