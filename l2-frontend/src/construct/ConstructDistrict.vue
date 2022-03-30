@@ -25,6 +25,7 @@
           style="width: 280px"
         >
           <input
+            v-model="newDistrictTitle"
             type="text"
             class="form-control"
             autofocus
@@ -35,6 +36,7 @@
               class="btn last btn-blue-nb nbr"
               type="button"
               style="margin-right: -1px"
+              @click="add_new_district"
             >Добавить</button>
           </span>
         </div>
@@ -50,6 +52,7 @@
           class="district-limit-research"
         >
           <table class="table table-bordered">
+            <caption>Ограничения назначения услуг</caption>
             <colgroup>
               <col>
               <col width="150">
@@ -162,7 +165,7 @@ export default {
       types,
       researches: [],
       district: {},
-      currentDistrictTitle: '',
+      newDistrictTitle: '',
     };
   },
   watch: {
@@ -196,6 +199,20 @@ export default {
     add_new_row() {
       const tl = this.tbData.length;
       this.tbData.push(makeDefaultRow(tl > 0 ? this.tbData[tl - 1].type : null));
+    },
+    async add_new_district() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('districts/district-create', {
+        district: this.newDistrictTitle,
+      });
+      if (ok) {
+        this.$root.$emit('msg', 'ok', message);
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+      await this.load_district();
+      this.newDistrictTitle = '';
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     delete_row(index) {
       this.tbData.splice(index, 1);

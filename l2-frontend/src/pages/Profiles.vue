@@ -451,7 +451,7 @@
             </div>
             <div
               class="col-xs-2"
-              style="padding-left: 0"
+              style="padding-left: 0; padding-right: 0 "
             >
               <div
                 class="input-group"
@@ -465,7 +465,30 @@
                 >
               </div>
             </div>
-            <div class="col-xs-8" />
+            <div
+              class="col-xs-6"
+              style="padding-left: 0; padding-right: 0 "
+            >
+              <div
+                class=" input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Участок</span>
+                <select
+                  v-model="user.district"
+                  class="form-control"
+                >
+                  <option
+                    v-for="d in districts"
+                    :key="d.pk"
+                    :value="d.pk"
+                  >
+                    {{ d.title }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="col-xs-2" />
           </div>
           <div class="more-title">
             Запрет на создание направлений с назначениями:
@@ -755,6 +778,7 @@ export default {
       departments: [],
       specialities: [],
       positions: [],
+      districts: [],
       resource_researches: [],
       setup_forbidden: false,
       setup_resource: false,
@@ -958,10 +982,13 @@ export default {
       if (!prevClr) {
         this.departments = [];
       }
-      const { departments, specialities, positions } = await usersPoint.loadUsers(this, 'selected_hospital');
+      const {
+        departments, specialities, positions, districts,
+      } = await usersPoint.loadUsers(this, 'selected_hospital');
       this.departments = departments;
       this.specialities = specialities;
       this.positions = positions;
+      this.districts = districts;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async open(pk, dep = null) {

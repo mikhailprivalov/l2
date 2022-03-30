@@ -1272,16 +1272,15 @@ def users_view(request):
             data.append(otd)
 
     spec = users.Speciality.objects.filter(hide=False).order_by("title")
-    spec_data = [{"pk": -1, "title": "Не выбрано"}]
-    for s in spec:
-        spec_data.append({"pk": s.pk, "title": s.title})
+    spec_data = [{"pk": -1, "title": "Не выбрано"}, * [{"pk": s.pk, "title": s.title} for s in spec]]
 
     positions_qs = users.Position.objects.filter(hide=False).order_by("title")
-    positions = [{"pk": -1, "title": "Не выбрано"}]
-    for s in positions_qs:
-        positions.append({"pk": s.pk, "title": s.title})
+    positions = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in positions_qs]]
 
-    return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions})
+    distrits_qs = District.objects.all().order_by("title")
+    districts = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in distrits_qs]]
+
+    return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions, "districts": districts})
 
 
 @login_required
@@ -1313,6 +1312,7 @@ def user_view(request):
             "rmis_service_id_time_table": '',
             "snils": '',
             "position": -1,
+            "district": -1,
             "sendPassword": False,
             "external_access": False,
             "date_stop_external_access": None,
@@ -1358,6 +1358,7 @@ def user_view(request):
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
             "snils": doc.snils,
             "position": doc.position_id or -1,
+            "district": doc.district_group_id or -1,
             "sendPassword": False,
             "external_access": doc.external_access,
             "date_stop_external_access": doc.date_stop_external_access,
@@ -1386,6 +1387,7 @@ def user_save_view(request):
     snils = ud.get("snils").strip() or ''
     email = ud.get("email").strip() or None
     position = ud.get("position", -1)
+    district = ud.get("district", -1)
     send_password = ud.get("sendPassword", False)
     external_access = ud.get("external_access", False)
     date_stop_external_access = ud.get("date_stop_external_access")
@@ -1393,6 +1395,8 @@ def user_save_view(request):
         date_stop_external_access = None
     if position == -1:
         position = None
+    if district == -1:
+        district = None
     user_hospital_pk = request.user.doctorprofile.get_hospital_id()
     hospital_pk = request_data.get('hospital_pk', user_hospital_pk)
 
@@ -1473,6 +1477,7 @@ def user_save_view(request):
             doc.snils = snils
             doc.email = email
             doc.position_id = position
+            doc.district_group_id = district
             doc.external_access = external_access
             doc.date_stop_external_access = date_stop_external_access
             if rmis_login:

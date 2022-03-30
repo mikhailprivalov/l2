@@ -8,7 +8,13 @@ from users.models import DistrictResearchLimitAssign
 
 @login_required
 def district_create(request):
-    pass
+    request_data = json.loads(request.body)
+    district_title = request_data.get("district", "")
+    if District.objects.filter(title__iexact=district_title).exists():
+        return JsonResponse({'ok': False, 'message': 'Название уже существует'})
+    d = District(title=district_title)
+    d.save()
+    return JsonResponse({'ok': True, 'message': f'Создан {district_title}'})
 
 
 @login_required
