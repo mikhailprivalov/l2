@@ -511,7 +511,7 @@ def title_data(title_name, title_form, text, serial, number, date_issue, type_do
         text.append(Paragraph(f"серия {data_fields['Серия предшествующего']} No {data_fields['Номер предшествующего']} от {data_fields['Дата выдачи предшествующего']} г.", styleCentre))
     else:
         text.append(Paragraph("ранее выданное свидетельство", styleCentre))
-        text.append(Paragraph('серия _____ No ______ от "___"__________" г.', styleCentre))
+        text.append(Paragraph('серия _____  No___________ от "___"__________" г.', styleCentre))
     return text
 
 
