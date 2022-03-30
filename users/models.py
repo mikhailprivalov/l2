@@ -438,4 +438,4 @@ class DistrictResearchLimitAssign(models.Model):
             for t_b in data:
                 type_period = 0 if t_b['type'] == 'День' else 1
                 d = DistrictResearchLimitAssign(district_group_id=district_pk, research_id=t_b['current_researches'], limit_count=t_b['count'], type_period_limit=type_period)
-            d.save()
+                d.save()
