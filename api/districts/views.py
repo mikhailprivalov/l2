@@ -45,4 +45,3 @@ def district_save_limit(request):
     DistrictResearchLimitAssign.save_limit_assign(district_pk, tb_data)
 
     return JsonResponse({'ok': True, 'message': 'Сохранено'})
-
