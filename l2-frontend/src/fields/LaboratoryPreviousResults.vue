@@ -37,7 +37,7 @@
       <tbody>
         <tr
           v-for="(val, index) in tb_data"
-          :key="`${val.researchTitle}_${val.fractionTitle}_${index}`"
+          :key="index"
         >
           <td class="cl-td">
             <input
