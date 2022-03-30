@@ -8,6 +8,7 @@ from users.models import DistrictResearchLimitAssign
 
 
 @login_required
+@group_required("Конструктор: Настройка организации")
 def district_create(request):
     request_data = json.loads(request.body)
     district_title = request_data.get("district", "")
