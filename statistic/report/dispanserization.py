@@ -5,7 +5,6 @@ from laboratory.settings import DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK
 
 
 def dispanserization_data(query_sql, pk_service_start, pk_service_end):
-    print(pk_service_end, pk_service_start)
     dates = [i.confirm_time for i in query_sql]
     dates = sorted(set(dates))
     dates_val = [{"val_start": 0, "val_end": 0} for i in range(len(dates))]
