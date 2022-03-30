@@ -21,8 +21,8 @@
         side-bottom"
       >
         <div
-          class="input-group"
-          style="width: 280px"
+          class="input-group width-side"
+
         >
           <input
             v-model="newDistrictTitle"
@@ -33,10 +33,9 @@
           >
           <span class="input-group-btn">
             <button
-              class="btn last btn-blue-nb nbr"
+              class="btn last btn-blue-nb nbr margin-right-btn"
               type="button"
-              style="margin-right: -1px"
-              @click="add_new_district"
+              @click="addNewDistrict"
             >Добавить</button>
           </span>
         </div>
@@ -44,7 +43,7 @@
     </div>
     <div class="district-content">
       <div>
-        <h5 style="text-align: center">
+        <h5 class="text-align-center">
           {{ district.title }}
         </h5>
         <div
@@ -87,8 +86,7 @@
                     <input
                       v-model="val.count"
                       type="number"
-                      class="form-control"
-                      style="border: none"
+                      class="form-control border-none"
                       placeholder="Кол-во в месяц"
                     >
                   </div>
@@ -96,8 +94,7 @@
                 <td class="cl-td">
                   <select
                     v-model="val.type"
-                    class="form-control"
-                    style="border: none"
+                    class="form-control border-none"
                   >
                     <option
                       v-for="t in types"
@@ -113,7 +110,7 @@
                     v-tippy="{ placement: 'bottom' }"
                     class="btn btn-blue-nb"
                     title="Удалить строку"
-                    @click="delete_row(index)"
+                    @click="deleteRow(index)"
                   >
                     <i class="fa fa-times" />
                   </button>
@@ -126,15 +123,15 @@
             <div class="col-xs-4">
               <button
                 class="btn btn-blue-nb add-row"
-                @click="save_limit_data(tbData)"
+                @click="saveLimitData(tbData)"
               >
                 Сохранить
               </button>
               <button
                 class="btn btn-blue-nb add-row"
-                @click="add_new_row"
+                @click="addNewRow"
               >
-                Добавить
+                Добавить ограничение
               </button>
             </div>
           </div>
@@ -180,10 +177,10 @@ export default {
     this.$api('researches/research-dispensary').then(rows => {
       this.researches = rows;
     });
-    this.load_district();
+    this.loadDistrict();
   },
   methods: {
-    async save_limit_data(tbData) {
+    async saveLimitData(tbData) {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('districts/district-save-limit', {
         district: this.district.pk,
@@ -196,11 +193,11 @@ export default {
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },
-    add_new_row() {
+    addNewRow() {
       const tl = this.tbData.length;
       this.tbData.push(makeDefaultRow(tl > 0 ? this.tbData[tl - 1].type : null));
     },
-    async add_new_district() {
+    async addNewDistrict() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('districts/district-create', {
         district: this.newDistrictTitle,
@@ -210,17 +207,17 @@ export default {
       } else {
         this.$root.$emit('msg', 'error', message);
       }
-      await this.load_district();
+      await this.loadDistrict();
       this.newDistrictTitle = '';
       await this.$store.dispatch(actions.DEC_LOADING);
     },
-    delete_row(index) {
+    deleteRow(index) {
       this.tbData.splice(index, 1);
     },
     changeValue(newVal) {
       this.$emit('modified', newVal);
     },
-    async load_district() {
+    async loadDistrict() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { result } = await this.$api('districts/districts-load');
       this.data = result;
@@ -289,6 +286,9 @@ export default {
       height: 34px;
       border-radius: 0;
     }
+    .width-side {
+      width: 280px;
+    }
   }
 
 .sidebar-btn {
@@ -331,6 +331,18 @@ export default {
   label {
     justify-content: left;
   }
+}
+
+.border-none {
+  border: none;
+}
+
+.text-align-center {
+  text-align: center;
+}
+
+.margin-right-btn {
+  margin-right: -1px;
 }
 
 </style>
