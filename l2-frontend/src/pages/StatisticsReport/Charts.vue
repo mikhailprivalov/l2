@@ -86,7 +86,7 @@ export default {
             enabled: false,
           },
           fontFamily: 'Open Sans, Helvetica, Arial, sans-serif',
-          parentHeightOffset: 5,
+          parentHeightOffset: 0,
         },
         [{ BAR: 'xaxis', COLUMN: 'xaxis', PIE: 'labels' }[c.type] || 'xaxis']:
           c.type === 'PIE'
@@ -94,6 +94,7 @@ export default {
             : {
               categories: c.dates,
               labels: {
+                maxHeight: 100,
                 style: {
                   fontSize: '10px',
                 },
