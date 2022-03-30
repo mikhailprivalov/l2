@@ -1,7 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import User, Group
-from django.db import models
+from django.db import models, transaction
 
 from appconf.manager import SettingManager
 from laboratory.settings import EMAIL_HOST
@@ -433,8 +433,9 @@ class DistrictResearchLimitAssign(models.Model):
 
     @staticmethod
     def save_limit_assign(district_pk, data):
-        DistrictResearchLimitAssign.objects.filter(district_group_id=district_pk).delete()
-        for t_b in data:
-            type_period = 0 if t_b['type'] == 'День' else 1
-            d = DistrictResearchLimitAssign(district_group_id=district_pk, research_id=t_b['current_researches'], limit_count=t_b['count'], type_period_limit=type_period)
+        with transaction.atomic():
+            DistrictResearchLimitAssign.objects.filter(district_group_id=district_pk).delete()
+            for t_b in data:
+                type_period = 0 if t_b['type'] == 'День' else 1
+                d = DistrictResearchLimitAssign(district_group_id=district_pk, research_id=t_b['current_researches'], limit_count=t_b['count'], type_period_limit=type_period)
             d.save()
