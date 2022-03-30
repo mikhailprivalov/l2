@@ -84,4 +84,5 @@ urlpatterns = [
     path('schedule/', include('api.schedule.urls')),
     path('external-system/', include('api.external_system.urls')),
     path('dashboards/', include('api.dashboards.urls')),
+    path('districts/', include('api.districts.urls')),
 ]

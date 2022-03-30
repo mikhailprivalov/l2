@@ -1,6 +1,8 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
+from laboratory.settings import DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK
+
 
 def dispanserization_data(query_sql, pk_service_start, pk_service_end):
     dates = [i.confirm_time for i in query_sql]
@@ -10,27 +12,32 @@ def dispanserization_data(query_sql, pk_service_start, pk_service_end):
     prev_doc = None
     step = 0
     current_tmp_data = {}
+    check_result_reception_id = False
+    if len(DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK) > 0:
+        check_result_reception_id = True
     for i in query_sql:
         current_index = dates.index(i.confirm_time)
         if i.doc_confirmation_id != prev_doc:
             if step != 0:
                 result.append(current_tmp_data.copy())
-            current_doc = {"fio_doc": i.fio_doctor, "dates": dates.copy(), "dates_val": dates_val.copy()}
-            tmp_val = current_doc.get("dates_val", [])[current_index]
-            if i.research_id in pk_service_start:
-                tmp_val["val_start"] += 1
-            else:
-                tmp_val["val_end"] += 1
-            current_doc["dates_val"][current_index] = tmp_val.copy()
-            current_tmp_data = {i.doc_confirmation_id: current_doc.copy()}
-
-        current_doc = current_tmp_data.get(i.doc_confirmation_id)
-        tmp_val = current_doc.get("dates_val", [])[current_index]
+            current_doc = {"fio_doc": i.fio_doctor, "dates_val": dates_val.copy(), "dates": dates.copy()}
+            current_tmp_data[i.doc_confirmation_id] = current_doc.copy()
+        current_doc = current_tmp_data.get(i.doc_confirmation_id, {})
+        tmp_val = current_doc.get("dates_val", [])[current_index].copy()
         if i.research_id in pk_service_start:
-            tmp_val["val_start"] += 1
-        else:
-            tmp_val["val_end"] += 1
-        current_doc.get("dates_val", [])[current_index] = tmp_val.copy()
+            val_start = tmp_val.get("val_start", 0)
+            val_start += 1
+            tmp_val["val_start"] = val_start
+        elif i.research_id in pk_service_end:
+            if check_result_reception_id and i.result_reception_id in DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK:
+                val_end = tmp_val.get("val_end", 0)
+                val_end += 1
+                tmp_val["val_end"] = val_end
+            elif not check_result_reception_id:
+                val_end = tmp_val.get("val_end", 0)
+                val_end += 1
+                tmp_val["val_end"] = val_end
+        current_doc["dates_val"][current_index] = tmp_val.copy()
         current_tmp_data = {i.doc_confirmation_id: current_doc.copy()}
         prev_doc = i.doc_confirmation_id
         step += 1
