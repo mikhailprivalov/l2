@@ -83,7 +83,6 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'Регистрация по месту жительства: {address}', style))
     fwb.append(Paragraph(f"Страховой полис серия: _______ №{polis_num}", style))
     fwb.append(Paragraph(f"Страховая компания (наименование): {polis_issue}", style))
-    external_org = direction.external_organization.title if direction.external_organization else ""
     fwb.append(Paragraph(f"Направляется в: {data['Куда направляется']}", style))
     fwb.append(Paragraph("Дата приема _______________________ Время приема _________________", style))
     fwb.append(Paragraph(f"Наименование медицинской организации по месту прикрепления: {direction.hospital_address} {direction.hospital_title}", style))
