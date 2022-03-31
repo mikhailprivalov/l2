@@ -13,11 +13,9 @@ def check_limit_assign_researches(
                 SELECT users_districtresearchlimitassign.id, 
                 users_districtresearchlimitassign.limit_count, 
                 users_districtresearchlimitassign.type_period_limit,
-                users_districtresearchlimitassign_research.researches_id,
+                users_districtresearchlimitassign.research_id,
                 users_districtresearchlimitassign.district_group_id
-                from users_districtresearchlimitassign 
-                LEFT JOIN users_districtresearchlimitassign_research ON
-                users_districtresearchlimitassign.id = users_districtresearchlimitassign_research.districtresearchlimitassign_id
+                from users_districtresearchlimitassign
                 where
                 district_group_id = %(district_group_id)s
             """,

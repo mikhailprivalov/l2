@@ -12,9 +12,8 @@ class DocAdmin(admin.ModelAdmin):
 
 
 class ResDistrictResearchLimitAssign(admin.ModelAdmin):
-    list_display = ('district_group', 'type_period_limit', 'limit_count')
-    list_display_links = ('district_group', 'type_period_limit', 'limit_count')
-    filter_horizontal = ('research',)
+    list_display = ('district_group', 'research', 'type_period_limit', 'limit_count')
+    list_display_links = ('district_group', 'research', 'type_period_limit', 'limit_count')
 
 
 admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке
