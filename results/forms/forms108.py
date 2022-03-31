@@ -1,13 +1,11 @@
 from laboratory.utils import strdate
-from utils.dates import normalize_date
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
-from directions.models import Napravleniya
-from results.prepare_data import fields_result_only_title_fields, fields_result, previous_doc_refferal_result, previous_laboratory_result, table_part_result
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from results.prepare_data import fields_result_only_title_fields, previous_doc_refferal_result, previous_laboratory_result, table_part_result
 from directions.models import Issledovaniya
 from laboratory.settings import FONTS_FOLDER
 import os.path
@@ -19,8 +17,6 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Утверждено Приказом Министерства здравоохранения Иркутской области от 22 мая 2013 г. N 83-МПР
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-    
-    title_research = iss.research.title
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -88,41 +84,39 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f"Страховой полис серия: _______ №{polis_num}", style))
     fwb.append(Paragraph(f"Страховая компания (наименование): {polis_issue}", style))
     external_org = direction.external_organization.title if direction.external_organization else ""
-    fwb.append(Paragraph(f"Направляется в: ", style))
+    fwb.append(Paragraph(f"Направляется в: {data['Куда направляется']}", style))
     fwb.append(Paragraph("Дата приема _______________________ Время приема _________________", style))
     fwb.append(Paragraph(f"Наименование медицинской организации по месту прикрепления: {direction.hospital_address} {direction.hospital_title}", style))
     fwb.append(Paragraph(f"Наименование направившей медицинской организации: {direction.hospital_address} {direction.hospital_title}", style))
     fwb.append(Paragraph("Направлен(а) на:", style))
     fwb.append(Paragraph("1) консультацию (вписать специалистов)", style))
-    if iss.research.is_doc_refferal:
-        fwb.append(Paragraph(f"{title_research}", styleBold))
+    if data["Направлен(а) на"] == "Консультацию":
+        fwb.append(Paragraph(f"{data['Наименование (консультации, исследования, отделения)']}", styleBold))
     fwb.append(Paragraph("2) исследование (указать вид исследования)", style))
-    if iss.research.is_doc_refferal:
-        fwb.append(Paragraph(f"{title_research}", styleBold))
+    if data["Направлен(а) на"] == "Исследование":
+        fwb.append(Paragraph(f"{data['Наименование (консультации, исследования, отделения)']}", styleBold))
     fwb.append(Paragraph("3) госпитализацию", style))
-    fwb.append(Paragraph("____________________________________________________", style))
+    if data["Направлен(а) на"] == "Госпитализацию":
+        fwb.append(Paragraph(f"{data['Наименование (консультации, исследования, отделения)']}", styleBold))
     fwb.append(Paragraph("Цель консультации (и, или) исследования (нужное обвести):", style))
     descriptive_values = []
     laboratory_value, purpose, table_value = None, None, None
     main_diagnos, near_diagnos, anamnes, other_purpose = '', '', '', ''
-
-    # for param in directionection_params:
-    #     if param.field_type == 24:
-    #         laboratory_value = param.value
-    #     if param.field_type == 27:
-    #         table_value = param.value
-    #     if param.field_type in [26, 25]:
-    #         descriptive_values.append(param.value)
-    #     if param.title == 'Цель':
-    #         purpose = param.value
-    #     if param.title == 'Прочие цели':
-    #         other_purpose = param.value
-    #     if param.title == 'Диагноз основной':
-    #         main_diagnos = param.value
-    #     if param.title == 'Диагноз сопутствующий':
-    #         near_diagnos = f"{near_diagnos} {param.value}"
-    #     if param.title == 'Данные анамнеза':
-    #         anamnes = param.value
+    for key, value in data.items():
+        if key == "Результаты лабораторные":
+            laboratory_value = value
+        if key in ["Результаты диагностические", "Результаты консультационные"]:
+            descriptive_values.append(value)
+        if key == 'Цель':
+            purpose = value
+        if key == 'Прочие цели':
+            other_purpose = value
+        if key == 'Диагноз основной':
+            main_diagnos = value
+        if key == 'Диагноз сопутствующий':
+            near_diagnos = f"{near_diagnos} {value}"
+        if key == 'Данные анамнеза':
+            anamnes = value
 
     if purpose:
         fwb.append(Paragraph(f"{space_symbol * 10} {purpose} {other_purpose}", style))
@@ -131,12 +125,10 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
         fwb.append(Paragraph(f"{space_symbol * 10}02 - уточнение диагноза;", style))
         fwb.append(Paragraph(f"{space_symbol * 10}03 - для коррекции лечения;", style))
         fwb.append(Paragraph(f"{space_symbol * 10}04 - дообследование для госпитализации;", style))
-        fwb.append(Paragraph(f"{space_symbol * 10}05 - и прочие цели (нужное вписать) __________________", style))
+        fwb.append(Paragraph(f"{space_symbol * 10}05 - и прочие цели (нужное вписать) {data['Прочие цели']}", style))
     fwb.append(Paragraph("Диагноз направившей медицинской организации (диагноз/ код диагноза в соответствии с МКБ10):", style))
     if main_diagnos:
-        fwb.append(Paragraph(f"Основной{main_diagnos}", style))
-    else:
-        fwb.append(Paragraph("Основной ______________________________________________________________________________________", style))
+        fwb.append(Paragraph(f"Основной {main_diagnos}", style))
     if near_diagnos:
         fwb.append(Paragraph(f"Сопутствующий {near_diagnos}", style))
     else:
@@ -144,14 +136,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph("Выписка из амбулаторной карты:", style))
     fwb.append(Paragraph("(данные анамнеза, клиники, предварительного обследования и проведенного лечения)", style))
-    if anamnes:
-        fwb.append(Paragraph(f"{anamnes}", style))
-    else:
-        fwb.append(Paragraph("______________________________________________________________________________________", style))
-        fwb.append(Paragraph("______________________________________________________________________________________", style))
-        fwb.append(Paragraph("______________________________________________________________________________________", style))
-        fwb.append(Paragraph("______________________________________________________________________________________", style))
-        fwb.append(Paragraph("______________________________________________________________________________________", style))
+    fwb.append(Paragraph(f"{anamnes}", style))
     for v in descriptive_values:
         fwb = previous_doc_refferal_result(v, fwb)
     if laboratory_value:
@@ -163,12 +148,10 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
         if table_value_result:
             fwb.extend(table_value_result)
 
-    fwb.append(Paragraph("______________________________________________________________________________________", style))
     fwb.append(Paragraph("Сведения о профилактических прививках (для детей до 18 лет) ________________________", style))
-    fwb.append(Paragraph("______________________________________________________________________________________", style))
-    fwb.append(Paragraph("______________________________________________________________________________________", style))
-    fwb.append(Paragraph("______________________________________________________________________________________", style))
+    fwb.append(Paragraph(f"{data['Сведения о профилактических прививках']} ", style))
     fwb.append(Paragraph("Справка об отсутствии инфекционных контактов (для детей до 18 лет), выданная не ранее 3 дней на дату поступления в ОГУЗ ", style))
+    fwb.append(Paragraph("______________________________________________________________________________________", style))
     fwb.append(Paragraph("______________________________________________________________________________________", style))
     fwb.append(Paragraph("Врач ___________________________________________________________________________", style))
     fwb.append(Paragraph('телефон ____________________________ "_____" _____________ 20__ г.', style))
@@ -180,7 +163,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
 
 def title_fields(iss):
     title_fields = [
-        "Куда направляется"
+        "Куда направляется",
         "Цель",
         "Диагноз основной",
         "Дата приема",
@@ -190,12 +173,36 @@ def title_fields(iss):
         "Результаты лабораторные",
         "Результаты диагностические",
         "Результаты консультационные",
+        "Сведения о профилактических прививках",
+        "Прочие цели",
+        "Диагноз сопутствующий",
     ]
 
     result = fields_result_only_title_fields(iss, title_fields, False)
-
     data = {i['title']: i['value'] for i in result}
-    print(data)
 
-    return result
+    for i in result:
+        data[i["title"]] = i["value"]
 
+    if not data.get("Куда направляется", None):
+        data["Куда направляется"] = ""
+    if not data.get("Цель", None):
+        data["Цель"] = ""
+    if not data.get("Диагноз основной", None):
+        data["Диагноз основной"] = ""
+    if not data.get("Дата приема", None):
+        data["Дата приема"] = ""
+    if not data.get("Направлен(а) на", None):
+        data["Направлен(а) на"] = ""
+    if not data.get("Наименование (консультации, исследования, отделения)", None):
+        data["Наименование (консультации, исследования, отделения)"] = ""
+    if not data.get("Данные анамнеза", None):
+        data["Данные анамнеза"] = ""
+    if not data.get("Сведения о профилактических прививках", None):
+        data["Сведения о профилактических прививках"] = ""
+    if not data.get("Прочие цели", None):
+        data["Прочие цели"] = ""
+    if not data.get("Диагноз сопутствующий", None):
+        data["Диагноз сопутствующий"] = ""
+
+    return data
