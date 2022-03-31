@@ -5,7 +5,7 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from results.prepare_data import fields_result_only_title_fields, previous_doc_refferal_result, previous_laboratory_result, table_part_result
+from results.prepare_data import fields_result_only_title_fields, previous_doc_refferal_result, previous_laboratory_result, table_part_result, get_doctor_data
 from directions.models import Issledovaniya
 from laboratory.settings import FONTS_FOLDER
 import os.path
@@ -116,7 +116,6 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
             near_diagnos = f"{near_diagnos} {value}"
         if key == 'Данные анамнеза':
             anamnes = value
-
     if purpose:
         fwb.append(Paragraph(f"{space_symbol * 10} {purpose} {other_purpose}", style))
     else:
@@ -151,10 +150,12 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f"{data['Сведения о профилактических прививках']} ", style))
     fwb.append(Paragraph("Справка об отсутствии инфекционных контактов (для детей до 18 лет), выданная не ранее 3 дней на дату поступления в ОГУЗ ", style))
     fwb.append(Paragraph("______________________________________________________________________________________", style))
-    fwb.append(Paragraph("______________________________________________________________________________________", style))
-    fwb.append(Paragraph("Врач ___________________________________________________________________________", style))
+    doctor_data = "________________________________"
+    if data["Врач"]:
+        doctor_data = data["Врач"]["fio"]
+    fwb.append(Paragraph(f"Врач: {doctor_data}", style))
     fwb.append(Paragraph('телефон ____________________________ "_____" _____________ 20__ г.', style))
-    fwb.append(Paragraph("Руководитель направившей медицинской организации", style))
+    fwb.append(Paragraph(f"Руководитель: направившей медицинской организации {data['Руководитель МО']}", style))
     fwb.append(Paragraph("Согласие пациента на передачу сведений электронной почтой для осуществления предварительной записи и передачи заключения:", style))
 
     return fwb
@@ -175,6 +176,8 @@ def title_fields(iss):
         "Сведения о профилактических прививках",
         "Прочие цели",
         "Диагноз сопутствующий",
+        "Врач",
+        "Руководитель МО",
     ]
 
     result = fields_result_only_title_fields(iss, title_fields, False)
@@ -203,5 +206,10 @@ def title_fields(iss):
         data["Прочие цели"] = ""
     if not data.get("Диагноз сопутствующий", None):
         data["Диагноз сопутствующий"] = ""
-
+    if not data.get("Руководитель МО", None):
+        data["Руководитель МО"] = ""
+    if not data.get("Врач", None):
+        data["Врач"] = ""
+    else:
+        data["Врач"] = get_doctor_data(data["Врач"])
     return data
