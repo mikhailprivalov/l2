@@ -1279,6 +1279,7 @@ export default {
       this.openPlusMode = null;
       this.forbidden_edit = false;
       this.every = false;
+      this.every = false;
       this.stationar_research = -1;
       this.create_directions_data = [];
       this.tree = [];

@@ -439,6 +439,16 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 38"
+                class="field-value"
+              >
+                <ProcedureListresult
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :pk="pk"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -499,6 +509,7 @@ export default {
     NumberGeneratorField: () => import('../fields/NumberGeneratorField.vue'),
     TfomsAttachmentField: () => import('../fields/TfomsAttachmentField.vue'),
     DoctorProfileTreeselectField: () => import('../fields/DoctorProfileTreeselectField.vue'),
+    ProcedureListresult: () => import('../fields/ProcedureListResult.vue'),
   },
   props: {
     research: {

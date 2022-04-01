@@ -4,7 +4,8 @@ from django.db.models import Prefetch
 from django.http import JsonResponse
 
 from api.procedure_list.sql_func import get_procedure_by_params, get_procedure_all_times
-from api.stationar.stationar_func import forbidden_edit_dir
+from api.stationar.stationar_func import forbidden_edit_dir, hosp_get_hosp_direction
+from directions.models import Issledovaniya
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, FormRelease, MethodsReception
 from django.contrib.auth.decorators import login_required
@@ -256,3 +257,13 @@ def get_suitable_departments(request):
     if hasattr(request, 'plain_response') and request.plain_response:
         return data
     return JsonResponse(data)
+
+
+@login_required
+def procedure_for_extract(request):
+    request_data = json.loads(request.body)
+    iss_pk = request_data.get('pk', -1)
+    obj_iss = Issledovaniya.objects.get(pk=iss_pk)
+    hosp_direction = hosp_get_hosp_direction(obj_iss.napravleniye_id)
+
+    return JsonResponse({"data": True})
