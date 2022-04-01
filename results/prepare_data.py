@@ -1017,3 +1017,15 @@ def get_direction_params(direction_params, titles):
         if param.title in titles:
             result[param.title] = param.string_value
     return result
+
+
+def get_doctor_data(value):
+    try:
+        value = json.loads(value)
+    except:
+        return None
+
+    if not value:
+        return None
+
+    return value

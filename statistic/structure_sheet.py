@@ -903,8 +903,8 @@ def statistic_research_death_data(ws1, researches, expertise_final_data):
             continue
 
         r += 1
-        ws1.cell(row=r, column=1).value = i["Серия"]
-        ws1.cell(row=r, column=2).value = i["Номер"]
+        ws1.cell(row=r, column=1).value = i.get("Серия", "")
+        ws1.cell(row=r, column=2).value = i.get("Номер", "")
 
         ws1.cell(row=r, column=3).value = type_doc_death
         ws1.cell(row=r, column=4).value = i["hosp_title"]
@@ -918,12 +918,12 @@ def statistic_research_death_data(ws1, researches, expertise_final_data):
         ws1.cell(row=r, column=5).value = mo_attachment
         ws1.cell(row=r, column=6).value = mo_district
         ws1.cell(row=r, column=7).value = normalize_dash_date(i["Дата смерти"])
-        ws1.cell(row=r, column=8).value = i["Дата рождения"]
+        ws1.cell(row=r, column=8).value = i.get("Дата рождения", "-")
         ws1.cell(row=r, column=9).value = i["fio_patient"]
         ws1.cell(row=r, column=10).value = i["sex"]
         d1 = du_parse(i["Дата смерти"])
         try:
-            d2 = du_parse(i["Дата рождения"])
+            d2 = du_parse(i.get("Дата рождения", ""))
             delta = relativedelta(d1, d2)
             ws1.cell(row=r, column=11).value = delta.years
         except:
@@ -1641,14 +1641,15 @@ def statistic_research_weapon_data(ws1, researches):
             return ws1
 
         r += 1
-        ws1.cell(row=r, column=1).value = i["Серия"]
-        ws1.cell(row=r, column=2).value = i["Номер"]
-        ws1.cell(row=r, column=3).value = i["hosp_title"]
-        ws1.cell(row=r, column=4).value = normalize_date(i["Дата выдачи"])
-        ws1.cell(row=r, column=5).value = i["Дата рождения пациента"]
-        ws1.cell(row=r, column=6).value = i["fio_patient"]
-        ws1.cell(row=r, column=7).value = i["Место постоянного жительства (регистрации) пациента"]
-        ws1.cell(row=r, column=8).value = i["Врач"]
+        ws1.cell(row=r, column=1).value = i.get("Серия", "")
+        ws1.cell(row=r, column=2).value = i.get("Номер", "")
+        ws1.cell(row=r, column=3).value = i.get("hosp_title", "")
+        if i.get("Дата выдачи", None):
+            ws1.cell(row=r, column=4).value = normalize_date(i["Дата выдачи"])
+        ws1.cell(row=r, column=5).value = i.get("Дата рождения пациента", "")
+        ws1.cell(row=r, column=6).value = i.get("fio_patient", "")
+        ws1.cell(row=r, column=7).value = i.get("Место постоянного жительства (регистрации) пациента", "")
+        ws1.cell(row=r, column=8).value = i.get("Врач", "")
         ws1.cell(row=r, column=9).value = i.get("napravleniye_id", "")
 
         rows = ws1[f'A{r}:I{r}']
