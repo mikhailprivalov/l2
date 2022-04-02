@@ -469,6 +469,14 @@ def structure_data_for_result(iss, fwb, doc, leftnone, med_certificate):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(previous_laboratory)
                         continue
+                    elif field_type == 38:
+                        previous_procedure_result = previous_procedure_list_result(v)
+                        if not previous_procedure_result:
+                            continue
+                        fwb.append(Spacer(1, 2 * mm))
+                        fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                        fwb.extend(previous_procedure_result)
+                        continue
                     elif field_type in [26, 25]:
                         if v:
                             fwb.append(Spacer(1, 2 * mm))
@@ -596,6 +604,18 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_cert
                     if not previous_laboratory:
                         continue
                     fwb.extend(previous_laboratory)
+                    continue
+                elif field_type == 38:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    previous_procedure_result = previous_procedure_list_result(v)
+                    if not previous_procedure_result:
+                        continue
+                    fwb.extend(previous_procedure_result)
                     continue
                 elif field_type in [26, 25]:
                     txt += "; ".join(vals)
@@ -796,6 +816,52 @@ def previous_laboratory_result(value):
             15 * mm,
             20 * mm,
             30 * mm,
+        ),
+    )
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+            ]
+        )
+    )
+
+    return [tbl]
+
+
+def previous_procedure_list_result(value):
+    try:
+        value = json.loads(value)
+    except:
+        return None
+
+    if not value:
+        return None
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 8
+    style.alignment = TA_JUSTIFY
+
+    opinion = [[Paragraph('Наименование', style), Paragraph('Режим', style)]]
+
+    temp_data = [
+        [
+            Paragraph(f"{data.get('pharmaTitle', '')}", style),
+            Paragraph(f"{data.get('mode', '')}", style),
+        ]
+        for data in value
+    ]
+    opinion.extend(temp_data)
+
+    tbl = Table(
+        opinion,
+        hAlign='LEFT',
+        colWidths=(
+            70 * mm,
+            105 * mm,
         ),
     )
     tbl.setStyle(

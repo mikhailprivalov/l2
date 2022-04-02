@@ -19,8 +19,8 @@ def get_pharmacotherapy_exec_by_directions(directions_tuple):
                 pharmacotherapy_procedurelist.dosage,
                 pharmacotherapy_procedurelist.units,
                 pharmacotherapy_procedurelist.comment,
-                to_char(pharmacotherapy_procedurelisttimes.times_medication, 'DD.MM.YYYY') as date_char,
-                to_char(pharmacotherapy_procedurelisttimes.times_medication, 'HH:MI') as time_char,
+                to_char(pharmacotherapy_procedurelisttimes.times_medication at time zone %(tz)s, 'DD.MM.YYYY') as date_char,
+                to_char(pharmacotherapy_procedurelisttimes.times_medication at time zone %(tz)s, 'HH:MI') as time_char,
                 pharmacotherapy_procedurelisttimes.times_medication,
                 pharmacotherapy_procedurelisttimes.executor_id
                 FROM pharmacotherapy_procedurelisttimes
@@ -34,7 +34,7 @@ def get_pharmacotherapy_exec_by_directions(directions_tuple):
                 ON pharmacotherapy_procedurelist.method_id = pharmacotherapy_methodsreception.id
                 where pharmacotherapy_procedurelist.history_id in %(directions_tuple)s and
                 pharmacotherapy_procedurelisttimes.executor_id is not null
-                ORDER BY pharmacotherapy_procedurelist.history_id, drug_id, pharmacotherapy_procedurelisttimes.prescription_id, times_medication
+                ORDER BY pharmacotherapy_procedurelist.history_id, drug_id, times_medication
             """,
             params={'directions_tuple': directions_tuple, 'tz': TIME_ZONE},
         )

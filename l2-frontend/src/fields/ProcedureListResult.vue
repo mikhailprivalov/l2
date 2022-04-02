@@ -5,7 +5,7 @@
       style="table-layout: fixed"
     >
       <colgroup>
-        <col width="30%">
+        <col width="40%">
         <col>
         <col width="36">
       </colgroup>
@@ -33,7 +33,7 @@
         >
           <td class="cl-td">
             <input
-              v-model="val.researchTitle"
+              v-model="val.pharmaTitle"
               type="text"
               class="form-control"
               :readonly="disabled"
@@ -43,7 +43,7 @@
 
           <td class="cl-td">
             <input
-              v-model="val.fractionTitle"
+              v-model="val.mode"
               type="text"
               class="form-control"
               :readonly="disabled"
@@ -105,8 +105,7 @@ export default {
   },
   data() {
     return {
-      tb_data: (this.value && this.value !== 'undefined' ? JSON.parse(this.value) : null) || [],
-      result: [],
+      tb_data: [],
     };
   },
   watch: {
@@ -141,7 +140,12 @@ export default {
       const resultData = await this.$api('procedural-list/procedure-for-extract', {
         pk: this.pk,
       });
-      console.log(resultData);
+      for (const r of resultData.data) {
+        this.tb_data.push({
+          pharmaTitle: r.title,
+          mode: r.dates,
+        });
+      }
     },
   },
 };
