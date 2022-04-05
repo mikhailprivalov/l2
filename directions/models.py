@@ -1145,8 +1145,10 @@ class Napravleniya(models.Model):
                 for d_pk in dispanserization_service:
                     if d_pk == pk_reseerches[0]:
                         direction_is_anketa = True
-                if not Issledovaniya.objects.filter(time_confirmation__range=(d1, d2), research_id__in=dispanserization_service,
-                                                    napravleniye__client=card).exists() and not direction_is_anketa:
+                if (
+                    not Issledovaniya.objects.filter(time_confirmation__range=(d1, d2), research_id__in=dispanserization_service, napravleniye__client=card).exists()
+                    and not direction_is_anketa
+                ):
                     result["message"] = "Диспансеризация не начата (АНКЕТА не заполнена)"
                     return result
 
