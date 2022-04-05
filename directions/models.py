@@ -1200,8 +1200,6 @@ class Napravleniya(models.Model):
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
                     if finsource and finsource.title.lower() != "платно" and limit_researches_by_period and limit_researches_by_period.get(vv, None):
-                        print(limit_researches_by_period)
-                        print(month_reserches_limit_data)
                         template_research_assign = limit_researches_by_period.get(vv)
                         if template_research_assign["period"] == 1:
                             if month_reserches_limit_data.get(vv, None) and month_reserches_limit_data[vv] >= template_research_assign["count"]:
