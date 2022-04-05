@@ -1119,6 +1119,9 @@ class Napravleniya(models.Model):
         if not Clients.Card.objects.filter(pk=client_id).exists():
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result
+        pk_reseerches = []
+        for v in researches.values():
+            pk_reseerches.extend(v)
         card = Clients.Card.objects.get(pk=client_id)
         control_anketa_dispanserization = SettingManager.get("control_anketa_dispanserization", default='false', default_type='b')
 
@@ -1138,7 +1141,14 @@ class Napravleniya(models.Model):
             disp_data = dispensarization_research(card.individual.sex, card.individual.age_for_year(), card.pk, d1, d2)
             if len(disp_data) > 0:
                 dispanserization_service = DISPANSERIZATION_SERVICE_PK.get("pkServiceStart", [])
-                if not Issledovaniya.objects.filter(time_confirmation__range=(d1, d2), research_id__in=dispanserization_service, napravleniye__client=card).exists():
+                direction_is_anketa = False
+                for d_pk in dispanserization_service:
+                    if d_pk == pk_reseerches[0]:
+                        direction_is_anketa = True
+                if (
+                    not Issledovaniya.objects.filter(time_confirmation__range=(d1, d2), research_id__in=dispanserization_service, napravleniye__client=card).exists()
+                    and not direction_is_anketa
+                ):
                     result["message"] = "Диспансеризация не начата (АНКЕТА не заполнена)"
                     return result
 
