@@ -4,11 +4,13 @@ from django.db.models import Prefetch
 from django.http import JsonResponse
 
 from api.procedure_list.sql_func import get_procedure_by_params, get_procedure_all_times
-from api.stationar.stationar_func import forbidden_edit_dir
+from api.stationar.stationar_func import forbidden_edit_dir, hosp_get_hosp_direction
+from directions.models import Issledovaniya
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, FormRelease, MethodsReception
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
+from pharmacotherapy.sql_func import get_pharmacotherapy_exec_by_directions
 from utils.dates import date_iter_range
 from datetime import datetime, time as dtime
 from utils.xh import get_hospitals_podrazdeleniya
@@ -256,3 +258,45 @@ def get_suitable_departments(request):
     if hasattr(request, 'plain_response') and request.plain_response:
         return data
     return JsonResponse(data)
+
+
+@login_required
+def procedure_for_extract(request):
+    request_data = json.loads(request.body)
+    iss_pk = request_data.get('pk', -1)
+    obj_iss = Issledovaniya.objects.get(pk=iss_pk)
+    hosp_direction = hosp_get_hosp_direction(obj_iss.napravleniye_id)
+    result_dir = [i["direction"] for i in hosp_direction]
+    pharma_result = get_pharmacotherapy_exec_by_directions(tuple(result_dir))
+
+    prev_prescription = None
+    step = 0
+    tmp_prescription = {"pharmaTitle": "", "mode": ""}
+    result = []
+    for i in pharma_result:
+        if i.prescription_id != prev_prescription and step != 0:
+            tmp_result = ""
+            for k, v in tmp_prescription["mode"].items():
+                tmp_result = f"{tmp_result} {k}-{len(v)}р/д; "
+            tmp_prescription["mode"] = tmp_result
+            result.append(tmp_prescription.copy())
+            tmp_prescription = {"pharmaTitle": "", "mode": ""}
+
+        title = i.mnn if i.mnn else i.trade_name
+        current_title = f"{title} {i.form_title} {i.method_title} {i.dosage} {i.units} {i.comment}"
+        if tmp_prescription["pharmaTitle"] != current_title:
+            tmp_prescription["pharmaTitle"] = current_title
+            tmp_prescription["mode"] = {i.date_char: []}
+        current_time = tmp_prescription["mode"].get(i.date_char, [])
+        current_time.append(i.time_char)
+        tmp_prescription["mode"][i.date_char] = current_time.copy()
+        step += 1
+        prev_prescription = i.prescription_id
+
+    tmp_result = ""
+    for k, v in tmp_prescription["mode"].items():
+        tmp_result = f"{tmp_result} {k} {len(v)} р/д;"
+    tmp_prescription["mode"] = tmp_result
+    result.append(tmp_prescription.copy())
+
+    return JsonResponse({"data": result})

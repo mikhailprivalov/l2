@@ -613,6 +613,9 @@
                   <div v-else-if="row.field_type === 26">
                     <strong>Результаты консультационные:</strong>
                   </div>
+                  <div v-else-if="row.field_type === 38">
+                    <strong>Результаты процедурного листа:</strong>
+                  </div>
                   <div v-else-if="row.field_type === 27">
                     <strong>Таблица:</strong>
                   </div>
@@ -831,6 +834,7 @@
                       <option value="24">Результаты лабораторные</option>
                       <option value="25">Результаты диагностические</option>
                       <option value="26">Результаты консультаций</option>
+                      <option value="38">Результаты процедурного листа</option>
                       <option value="27">Таблица</option>
                       <option value="28">НСИ-справочник</option>
                       <option value="29">Адрес по ФИАС</option>

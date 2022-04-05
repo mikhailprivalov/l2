@@ -161,7 +161,6 @@ def hosp_get_hosp_direction(num_dir):
         data_sort.append(row.node.name)
 
     data_sort.pop(0)
-
     return data_sort
 
 

@@ -523,6 +523,7 @@ class ParaclinicInputField(models.Model):
         (35, 'Врач'),
         (36, 'МКБ-10(комбинация 1489, 692)'),
         (37, 'Генератор номера перинатального МСС'),
+        (38, 'Procedure list result'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
