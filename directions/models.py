@@ -4,6 +4,7 @@ import collections
 import logging
 import uuid
 
+from api.sql_func import dispensarization_research
 from cda.integration import get_required_signatures
 import datetime
 import os
@@ -24,14 +25,14 @@ import clients.models as Clients
 import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK
+from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals, HospitalsGroup
-from laboratory.utils import strdate, localtime, current_time, strdatetime, strfdatetime, current_year, current_month
+from laboratory.utils import strdate, localtime, current_time, strdatetime, strfdatetime, current_year, current_month, start_end_year
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
@@ -1114,6 +1115,33 @@ class Napravleniya(models.Model):
         current_global_direction_params=None,
         hospital_department_override=-1,
     ):
+        result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
+        if not Clients.Card.objects.filter(pk=client_id).exists():
+            result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
+            return result
+        card = Clients.Card.objects.get(pk=client_id)
+        control_anketa_dispanserization = SettingManager.get("control_anketa_dispanserization", default='false', default_type='b')
+
+        if (finsource and isinstance(finsource, str) and not finsource.isdigit()) or not finsource:
+            f_obj: Optional[IstochnikiFinansirovaniya] = (
+                IstochnikiFinansirovaniya.objects.filter(base=card.base, title="ОМС", hide=False).first()
+                or IstochnikiFinansirovaniya.objects.filter(base=card.base, hide=False).order_by('-order_weight').first()
+            )
+            if not f_obj:
+                finsource = None
+            else:
+                finsource = f_obj.pk
+        finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
+
+        if control_anketa_dispanserization and finsource and "омс" in finsource.title.lower():
+            d1, d2 = start_end_year()
+            disp_data = dispensarization_research(card.individual.sex, card.individual.age_for_year(), card.pk, d1, d2)
+            if len(disp_data) > 0:
+                dispanserization_service = DISPANSERIZATION_SERVICE_PK.get("pkServiceStart", [])
+                if not Issledovaniya.objects.filter(time_confirmation__range=(d1, d2), research_id__in=dispanserization_service, napravleniye__client=card).exists():
+                    result["message"] = "Диспансеризация не начата (АНКЕТА не заполнена)"
+                    return result
+
         limit_researches_by_period = None
         month_reserches_limit_data, day_reserches_limit_data = None, None
         if doc_current.district_group and doc_current.district_group.pk:
@@ -1154,23 +1182,9 @@ class Napravleniya(models.Model):
             current_global_direction_params = None
 
         i = 0
-        result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
+
         ofname_id = ofname_id or -1
         ofname = None
-        if not Clients.Card.objects.filter(pk=client_id).exists():
-            result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
-            return result
-        card = Clients.Card.objects.get(pk=client_id)
-
-        if (finsource and isinstance(finsource, str) and not finsource.isdigit()) or not finsource:
-            f_obj: Optional[IstochnikiFinansirovaniya] = (
-                IstochnikiFinansirovaniya.objects.filter(base=card.base, title="ОМС", hide=False).first()
-                or IstochnikiFinansirovaniya.objects.filter(base=card.base, hide=False).order_by('-order_weight').first()
-            )
-            if not f_obj:
-                finsource = None
-            else:
-                finsource = f_obj.pk
 
         if client_id and researches:  # если client_id получен и исследования получены
             if ofname_id > -1:
@@ -1180,8 +1194,6 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             limit_research_to_assign = {}
-            finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
-
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
 
@@ -1190,10 +1202,10 @@ class Napravleniya(models.Model):
                     if finsource and finsource.title.lower() != "платно" and limit_researches_by_period and limit_researches_by_period.get(vv, None):
                         template_research_assign = limit_researches_by_period.get(vv)
                         if template_research_assign["period"] == 1:
-                            if month_reserches_limit_data[vv] >= template_research_assign["count"]:
+                            if month_reserches_limit_data.get(vv, None) and month_reserches_limit_data[vv] >= template_research_assign["count"]:
                                 limit_research_to_assign[vv] = f'{research_tmp.title}-Не более {template_research_assign["count"]} в месяц'
                         if template_research_assign["period"] == 0:
-                            if day_reserches_limit_data[vv] >= template_research_assign["count"]:
+                            if day_reserches_limit_data.get(vv, None) and day_reserches_limit_data[vv] >= template_research_assign["count"]:
                                 limit_research_to_assign[vv] = f'{research_tmp.title}- Не более {template_research_assign["count"]} в день'
 
                     if vv == PERINATAL_DEATH_RESEARCH_PK:
