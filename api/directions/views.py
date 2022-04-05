@@ -1518,7 +1518,6 @@ def directions_paraclinic_form(request):
 
     if not f:
         response["message"] = "Направление не найдено"
-
     return JsonResponse(response)
 
 

@@ -271,32 +271,32 @@ def procedure_for_extract(request):
 
     prev_prescription = None
     step = 0
-    tmp_prescription = {"title": "", "dates": ""}
+    tmp_prescription = {"pharmaTitle": "", "mode": ""}
     result = []
     for i in pharma_result:
         if i.prescription_id != prev_prescription and step != 0:
             tmp_result = ""
-            for k, v in tmp_prescription["dates"].items():
+            for k, v in tmp_prescription["mode"].items():
                 tmp_result = f"{tmp_result} {k}-{len(v)}р/д; "
-            tmp_prescription["dates"] = tmp_result
+            tmp_prescription["mode"] = tmp_result
             result.append(tmp_prescription.copy())
-            tmp_prescription = {"title": "", "dates": ""}
+            tmp_prescription = {"pharmaTitle": "", "mode": ""}
 
         title = i.mnn if i.mnn else i.trade_name
         current_title = f"{title} {i.form_title} {i.method_title} {i.dosage} {i.units} {i.comment}"
-        if tmp_prescription["title"] != current_title :
-            tmp_prescription["title"] = current_title
-            tmp_prescription["dates"] = {i.date_char: []}
-        current_time = tmp_prescription["dates"].get(i.date_char, [])
+        if tmp_prescription["pharmaTitle"] != current_title :
+            tmp_prescription["pharmaTitle"] = current_title
+            tmp_prescription["mode"] = {i.date_char: []}
+        current_time = tmp_prescription["mode"].get(i.date_char, [])
         current_time.append(i.time_char)
-        tmp_prescription["dates"][i.date_char] = current_time.copy()
+        tmp_prescription["mode"][i.date_char] = current_time.copy()
         step += 1
         prev_prescription = i.prescription_id
 
     tmp_result = ""
-    for k, v in tmp_prescription["dates"].items():
+    for k, v in tmp_prescription["mode"].items():
         tmp_result = f"{tmp_result} {k} {len(v)} р/д;"
-    tmp_prescription["dates"] = tmp_result
+    tmp_prescription["mode"] = tmp_result
     result.append(tmp_prescription.copy())
 
     return JsonResponse({"data": result})

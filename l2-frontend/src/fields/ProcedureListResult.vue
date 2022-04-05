@@ -1,5 +1,12 @@
 <template>
   <div>
+    <button
+      class="btn btn-blue-nb add-row"
+      :disabled="disabled"
+      @click="insertProcedureListResult"
+    >
+      Загрузить из процедурного листа
+    </button>
     <table
       class="table table-bordered table-condensed"
       style="table-layout: fixed"
@@ -12,7 +19,7 @@
       <thead>
         <tr>
           <th>Наименование</th>
-          <th>Режим</th>
+          <th>Параметры</th>
           <th class="cl-td">
             <button
               v-tippy="{ placement: 'bottom' }"
@@ -70,7 +77,7 @@
       :disabled="disabled"
       @click="addNewRow"
     >
-      Добавить
+      Добавить строку
     </button>
   </div>
 </template>
@@ -118,7 +125,8 @@ export default {
     },
   },
   mounted() {
-    this.insertProcedureListResult();
+    const jsonObject = JSON.parse(this.value);
+    this.insertProcedureData(jsonObject);
   },
   methods: {
     addNewRow() {
@@ -136,16 +144,19 @@ export default {
     changeValueDebounce: debounce(function () {
       this.changeValue();
     }, 500),
+    insertProcedureData(procedureData) {
+      for (const r of procedureData) {
+        this.tb_data.push({
+          pharmaTitle: r.pharmaTitle,
+          mode: r.mode,
+        });
+      }
+    },
     async insertProcedureListResult() {
       const resultData = await this.$api('procedural-list/procedure-for-extract', {
         pk: this.pk,
       });
-      for (const r of resultData.data) {
-        this.tb_data.push({
-          pharmaTitle: r.title,
-          mode: r.dates,
-        });
-      }
+      this.insertProcedureData(resultData.data);
     },
   },
 };

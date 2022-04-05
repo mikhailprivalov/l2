@@ -442,8 +442,9 @@
                 v-else-if="field.field_type === 38"
                 class="field-value"
               >
-                <ProcedureListresult
+                <ProcedureListResult
                   v-model="field.value"
+                  istresult
                   :disabled="confirmed"
                   :pk="pk"
                 />
@@ -509,7 +510,7 @@ export default {
     NumberGeneratorField: () => import('../fields/NumberGeneratorField.vue'),
     TfomsAttachmentField: () => import('../fields/TfomsAttachmentField.vue'),
     DoctorProfileTreeselectField: () => import('../fields/DoctorProfileTreeselectField.vue'),
-    ProcedureListresult: () => import('../fields/ProcedureListResult.vue'),
+    ProcedureListResult: () => import('../fields/ProcedureListResult.vue'),
   },
   props: {
     research: {
