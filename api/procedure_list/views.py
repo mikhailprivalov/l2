@@ -284,7 +284,7 @@ def procedure_for_extract(request):
 
         title = i.mnn if i.mnn else i.trade_name
         current_title = f"{title} {i.form_title} {i.method_title} {i.dosage} {i.units} {i.comment}"
-        if tmp_prescription["pharmaTitle"] != current_title :
+        if tmp_prescription["pharmaTitle"] != current_title:
             tmp_prescription["pharmaTitle"] = current_title
             tmp_prescription["mode"] = {i.date_char: []}
         current_time = tmp_prescription["mode"].get(i.date_char, [])
