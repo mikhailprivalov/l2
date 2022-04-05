@@ -25,7 +25,7 @@ import clients.models as Clients
 import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK
+from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
@@ -1136,7 +1136,7 @@ class Napravleniya(models.Model):
                 finsource = f_obj.pk
         finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
 
-        if control_anketa_dispanserization and finsource and "омс" in finsource.title.lower():
+        if control_anketa_dispanserization and finsource and "омс" in finsource.title.lower() and doc_current.pk not in EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED:
             d1, d2 = start_end_year()
             disp_data = dispensarization_research(card.individual.sex, card.individual.age_for_year(), card.pk, d1, d2)
             if len(disp_data) > 0:
