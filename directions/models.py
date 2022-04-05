@@ -1205,7 +1205,7 @@ class Napravleniya(models.Model):
                             if month_reserches_limit_data.get(vv, None) and month_reserches_limit_data[vv] >= template_research_assign["count"]:
                                 limit_research_to_assign[vv] = f'{research_tmp.title}-Не более {template_research_assign["count"]} в месяц'
                         if template_research_assign["period"] == 0:
-                            if day_reserches_limit_data. get(vv, None) and day_reserches_limit_data[vv] >= template_research_assign["count"]:
+                            if day_reserches_limit_data.get(vv, None) and day_reserches_limit_data[vv] >= template_research_assign["count"]:
                                 limit_research_to_assign[vv] = f'{research_tmp.title}- Не более {template_research_assign["count"]} в день'
 
                     if vv == PERINATAL_DEATH_RESEARCH_PK:
