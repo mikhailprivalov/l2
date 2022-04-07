@@ -4,10 +4,19 @@ from openpyxl.utils import get_column_letter
 from laboratory.settings import DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK
 
 
-def dispanserization_data(query_sql, pk_service_start, pk_service_end):
+def dispanserization_data(query_sql, pk_service_start, pk_service_end, doctors_count_pass_patient):
+    doctors_count_pass = {}
+    for i in doctors_count_pass_patient:
+        if not doctors_count_pass.get(i.doc_confirmation_id, None):
+            doctors_count_pass[i.doc_confirmation_id] = {i.confirm_time: i.count}
+        else:
+            tmp_doctors_count_pass = doctors_count_pass.get(i.doc_confirmation_id, {})
+            tmp_doctors_count_pass[i.confirm_time] = i.count
+            doctors_count_pass[i.doc_confirmation_id] = tmp_doctors_count_pass.copy()
+
     dates = [i.confirm_time for i in query_sql]
     dates = sorted(set(dates))
-    dates_val = [{"val_start": 0, "val_end": 0} for i in range(len(dates))]
+    dates_val = [{"val_start": 0, "val_end": 0, "patient_date": 0} for i in range(len(dates))]
     result = []
     prev_doc = None
     step = 0
@@ -19,6 +28,18 @@ def dispanserization_data(query_sql, pk_service_start, pk_service_end):
         current_index = dates.index(i.confirm_time)
         if i.doc_confirmation_id != prev_doc:
             if step != 0:
+                tmp_doctor_data = current_tmp_data[prev_doc]
+                tmp_dates_val = tmp_doctor_data.get("dates_val", [])
+                tmp_dates = tmp_doctor_data.get("dates", [])
+                for k, v in doctors_count_pass[prev_doc].items():
+                    if k not in tmp_dates:
+                        continue
+                    tmp_index = tmp_dates.index(k)
+                    tmp_data = tmp_dates_val[tmp_index]
+                    tmp_data["patient_date"] = v
+                    tmp_dates_val[tmp_index] = tmp_data.copy()
+                tmp_doctor_data["dates_val"] = tmp_dates_val.copy()
+                current_tmp_data[prev_doc] = tmp_doctor_data.copy()
                 result.append(current_tmp_data.copy())
             current_doc = {"fio_doc": i.fio_doctor, "dates_val": dates_val.copy(), "dates": dates.copy()}
             current_tmp_data[i.doc_confirmation_id] = current_doc.copy()
@@ -41,9 +62,25 @@ def dispanserization_data(query_sql, pk_service_start, pk_service_end):
         current_tmp_data = {i.doc_confirmation_id: current_doc.copy()}
         prev_doc = i.doc_confirmation_id
         step += 1
+    tmp_doctor_data = current_tmp_data[prev_doc]
+    tmp_dates_val = tmp_doctor_data.get("dates_val", [])
+    tmp_dates = tmp_doctor_data.get("dates", [])
+    for k, v in doctors_count_pass[prev_doc].items():
+        if k not in tmp_dates:
+            continue
+        tmp_index = tmp_dates.index(k)
+        tmp_data = tmp_dates_val[tmp_index]
+        tmp_data["patient_date"] = v
+        tmp_dates_val[tmp_index] = tmp_data.copy()
+    tmp_doctor_data["dates_val"] = tmp_dates_val.copy()
+    current_tmp_data[prev_doc] = tmp_doctor_data.copy()
     result.append(current_tmp_data.copy())
 
     return {"result": result, "dates": list(dates)}
+
+
+def get_doctors_dispanserization(query_sql):
+    return [i.doc_confirmation_id for i in query_sql]
 
 
 def dispanserization_base(ws1, d1, d2, result_query, row=5):
@@ -62,11 +99,15 @@ def dispanserization_base(ws1, d1, d2, result_query, row=5):
     for i in result_query["dates"]:
         columns.append(("начато", 6))
         columns.append(("завершено", 10))
+        columns.append(("принято пациентов", 10))
         columns_date.append((i, 6))
+        columns_date.append(("", 10))
         columns_date.append(("", 10))
     columns.append(("начато", 6))
     columns.append(("завершено", 10))
+    columns.append(("принято пациентов", 10))
     columns_date.append(("За период", 6))
+    columns_date.append(("", 10))
     columns_date.append(("", 10))
 
     for idx, column in enumerate(columns_date, 1):
@@ -74,10 +115,10 @@ def dispanserization_base(ws1, d1, d2, result_query, row=5):
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
         ws1.cell(row=row, column=idx).style = style_border
 
-    column_count = 0
+    column_count = 2
     for i in range(len(result_query["dates"]) + 2):
-        column_count += 2
-        ws1.merge_cells(start_row=row, start_column=column_count, end_row=row, end_column=column_count + 1)
+        ws1.merge_cells(start_row=row, start_column=column_count, end_row=row, end_column=column_count + 2)
+        column_count += 3
 
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=row + 1, column=idx).value = column[0]
@@ -95,7 +136,7 @@ def dispanserization_fill_data(ws1, result_query, row=6):
     style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
     alignment1 = Alignment(wrap_text=True, horizontal='left', vertical='center')
-    len_dates_count = len(result_query["dates"]) * 2
+    len_dates_count = len(result_query["dates"]) * 3
 
     r = row
     start_row = r + 1
@@ -103,6 +144,7 @@ def dispanserization_fill_data(ws1, result_query, row=6):
         r += 1
         val_start_sum = '=SUM('
         val_end_sum = '=SUM('
+        patient_date_sum = '=SUM('
         for k in i.values():
             ws1.cell(row=r, column=1).value = k["fio_doc"]
             column = 1
@@ -113,13 +155,18 @@ def dispanserization_fill_data(ws1, result_query, row=6):
                 column += 1
                 ws1.cell(row=r, column=column).value = j["val_end"]
                 val_end_sum = f'{val_end_sum} + {get_column_letter(column)}{r}'
+                column += 1
+                ws1.cell(row=r, column=column).value = j["patient_date"]
+                patient_date_sum = f'{patient_date_sum} + {get_column_letter(column)}{r}'
 
             val_start_sum = f'{val_start_sum})'
             val_end_sum = f'{val_end_sum})'
+            patient_date_sum = f'{patient_date_sum})'
             ws1.cell(row=r, column=column + 1).value = val_start_sum
             ws1.cell(row=r, column=column + 2).value = val_end_sum
+            ws1.cell(row=r, column=column + 3).value = patient_date_sum
 
-        for z in range(1, len_dates_count + 4):
+        for z in range(1, len_dates_count + 5):
             ws1.cell(row=r, column=z).style = style_border1
         ws1.cell(row=r, column=1).alignment = alignment1
 
@@ -130,7 +177,7 @@ def dispanserization_fill_data(ws1, result_query, row=6):
     ws1.cell(row=r, column=column).style = style_border1
     ws1.cell(row=r, column=column).alignment = alignment1
 
-    for i in range(len_dates_count + 2):
+    for i in range(len_dates_count + 3):
         column += 1
         ws1.cell(row=r, column=column).value = f'=SUM({get_column_letter(column)}{start_row}:{get_column_letter(column)}{r - 1})'
         ws1.cell(row=r, column=column).style = style_border1

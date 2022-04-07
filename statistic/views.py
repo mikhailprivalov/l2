@@ -1143,7 +1143,10 @@ def statistic_xls(request):
         services = services_start.copy()
         services.extend(service_end)
         query = sql_func.statistics_dispanserization(tuple(services), start_date, end_date)
-        result_dates = dispanserization.dispanserization_data(query, services_start, service_end)
+        doctors = dispanserization.get_doctors_dispanserization(query)
+        doctors_count_pass_patient = sql_func.doctors_pass_count_patient_by_date(tuple(doctors), start_date, end_date)
+        result_dates = dispanserization.dispanserization_data(query, services_start, service_end, doctors_count_pass_patient)
+
         ws = dispanserization.dispanserization_base(ws, d1, d2, result_dates)
         ws = dispanserization.dispanserization_fill_data(ws, result_dates)
 
