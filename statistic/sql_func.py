@@ -1177,7 +1177,6 @@ def statistics_death_research_by_card(research_id, card_tuple, hospital_id_filte
 
 
 def statistics_dispanserization(researches_tuple, d_s, d_e):
-
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -1201,3 +1200,32 @@ def statistics_dispanserization(researches_tuple, d_s, d_e):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def doctors_pass_count_patient_by_date(doctors_tuple, d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                 SELECT
+                        directions_issledovaniya.doc_confirmation_id,
+                        to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm_time,
+                        to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'YYYY.MM.DD') AS confirm_time_sort,
+                        count(dn.client_id)
+                    FROM directions_issledovaniya
+                    LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
+                    WHERE directions_issledovaniya.doc_confirmation_id in %(doctors_tuple)s
+                    AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                    GROUP by 
+                        directions_issledovaniya.doc_confirmation_id, 
+                        confirm_time,
+                        confirm_time_sort
+                    ORDER BY 
+                        directions_issledovaniya.doc_confirmation_id,
+                        confirm_time_sort
+            """,
+            params={'doctors_tuple': doctors_tuple, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
