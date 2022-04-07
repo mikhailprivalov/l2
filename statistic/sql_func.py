@@ -1228,4 +1228,3 @@ def doctors_pass_count_patient_by_date(doctors_tuple, d_s, d_e):
 
         rows = namedtuplefetchall(cursor)
     return rows
-
