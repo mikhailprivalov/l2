@@ -466,7 +466,7 @@
               </div>
             </div>
             <div
-              class="col-xs-6"
+              class="col-xs-4"
               style="padding-left: 0; padding-right: 0 "
             >
               <div
@@ -488,7 +488,25 @@
                 </select>
               </div>
             </div>
-            <div class="col-xs-2" />
+            <div
+              class="col-xs-4"
+              style="padding-left: 0; padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <label
+                  class="input-group-addon"
+                  style="height: 34px; text-align: left"
+                >
+                  <input
+                    v-model="user.notControlAnketa"
+                    type="checkbox"
+                  > Не контролировать АНКЕТУ
+                </label>
+              </div>
+            </div>
           </div>
           <div class="more-title">
             Запрет на создание направлений с назначениями:
@@ -801,6 +819,7 @@ export default {
         external_access: false,
         date_stop_external_access: '',
         resource_schedule: [],
+        notControlAnketa: false,
       },
       selected_hospital: -1,
       open_pk: -2,

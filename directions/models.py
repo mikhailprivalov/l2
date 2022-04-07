@@ -1136,21 +1136,22 @@ class Napravleniya(models.Model):
                 finsource = f_obj.pk
         finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
 
-        if control_anketa_dispanserization and finsource and "омс" in finsource.title.lower() and doc_current.pk not in EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED:
-            d1, d2 = start_end_year()
-            disp_data = dispensarization_research(card.individual.sex, card.individual.age_for_year(), card.pk, d1, d2)
-            if len(disp_data) > 0:
-                dispanserization_service = DISPANSERIZATION_SERVICE_PK.get("pkServiceStart", [])
-                direction_is_anketa = False
-                for d_pk in dispanserization_service:
-                    if d_pk == pk_reseerches[0]:
-                        direction_is_anketa = True
-                if (
-                    not Issledovaniya.objects.filter(time_confirmation__range=(d1, d2), research_id__in=dispanserization_service, napravleniye__client=card).exists()
-                    and not direction_is_anketa
-                ):
-                    result["message"] = "Диспансеризация не начата (АНКЕТА не заполнена)"
-                    return result
+        if not doc_current.not_control_anketa:
+            if control_anketa_dispanserization and finsource and "омс" in finsource.title.lower() and doc_current.pk not in EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED:
+                d1, d2 = start_end_year()
+                disp_data = dispensarization_research(card.individual.sex, card.individual.age_for_year(), card.pk, d1, d2)
+                if len(disp_data) > 0:
+                    dispanserization_service = DISPANSERIZATION_SERVICE_PK.get("pkServiceStart", [])
+                    direction_is_anketa = False
+                    for d_pk in dispanserization_service:
+                        if d_pk == pk_reseerches[0]:
+                            direction_is_anketa = True
+                    if (
+                        not Issledovaniya.objects.filter(time_confirmation__range=(d1, d2), research_id__in=dispanserization_service, napravleniye__client=card).exists()
+                        and not direction_is_anketa
+                    ):
+                        result["message"] = "Диспансеризация не начата (АНКЕТА не заполнена)"
+                        return result
 
         limit_researches_by_period = None
         month_reserches_limit_data, day_reserches_limit_data = None, None

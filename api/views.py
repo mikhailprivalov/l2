@@ -1317,6 +1317,7 @@ def user_view(request):
             "external_access": False,
             "date_stop_external_access": None,
             "resource_schedule": resource_researches,
+            "notControlAnketa": False
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1363,6 +1364,7 @@ def user_view(request):
             "external_access": doc.external_access,
             "date_stop_external_access": doc.date_stop_external_access,
             "resource_schedule": resource_researches,
+            "notControlAnketa": doc.not_control_anketa,
         }
 
     return JsonResponse({"user": data})
@@ -1390,6 +1392,7 @@ def user_save_view(request):
     district = ud.get("district", -1)
     send_password = ud.get("sendPassword", False)
     external_access = ud.get("external_access", False)
+    not_control_anketa = ud.get("notControlAnketa", False)
     date_stop_external_access = ud.get("date_stop_external_access")
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1479,6 +1482,7 @@ def user_save_view(request):
             doc.position_id = position
             doc.district_group_id = district
             doc.external_access = external_access
+            doc.not_control_anketa = not_control_anketa
             doc.date_stop_external_access = date_stop_external_access
             if rmis_login:
                 doc.rmis_login = rmis_login
