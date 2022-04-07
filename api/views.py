@@ -1317,7 +1317,7 @@ def user_view(request):
             "external_access": False,
             "date_stop_external_access": None,
             "resource_schedule": resource_researches,
-            "notControlAnketa": False
+            "notControlAnketa": False,
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
