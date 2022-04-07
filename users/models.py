@@ -98,6 +98,7 @@ class DoctorProfile(models.Model):
     external_access = models.BooleanField(default=False, blank=True, help_text='Разрешен внешний доступ')
     date_stop_external_access = models.DateField(help_text='Окончание внешнего доступа', db_index=True, default=None, blank=True, null=True)
     district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
+    not_control_anketa = models.BooleanField(default=False, blank=True, help_text='Не контролировать заполнение Анкет')
 
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:
