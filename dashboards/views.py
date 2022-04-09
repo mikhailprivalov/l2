@@ -1,5 +1,6 @@
 import json
 
+from appconf.manager import SettingManager
 from dashboards.models import Dashboard
 from dashboards.sql_func import get_charts_dataset, execute_select
 
@@ -8,7 +9,7 @@ def get_dashboard():
     return [{"label": dashboard.title, "id": dashboard.pk} for dashboard in Dashboard.objects.filter(hide=False).order_by('-order')]
 
 
-def exec_query(dashboard_pk):
+def exec_query(dashboard_pk, dates_param):
     # data_chart = {"chart_id": [{"chart_title": "", "chart_type": "", "database": "", "user": "", "password": "", "address": "", "port": "", "query": "", sql_param: ""}]}
     result = []
     data_chart = {}
@@ -83,7 +84,13 @@ def exec_query(dashboard_pk):
                         tmp_data[param] = "value"
                     elif key == "date":
                         tmp_data[param] = "date"
-            r = execute_select(datachart['database'], datachart['user'], datachart['password'], datachart['address'], datachart['port'], datachart['query'])
+            dash_with_param = SettingManager.get("dash_with_param", default='False', default_type='b')
+            if not dash_with_param:
+                r = execute_select(datachart['database'], datachart['user'], datachart['password'], datachart['address'], datachart['port'], datachart['query'])
+            else:
+                dates_server = sql_param.get("between", {})
+                query_result = cast_dates(dates_server, dates_param, datachart['query'])
+                r = execute_select(datachart['database'], datachart['user'], datachart['password'], datachart['address'], datachart['port'], query_result)
             values = []
             dates = []
             for tmp_dict in r:
@@ -135,3 +142,19 @@ def exec_query(dashboard_pk):
                 row["title"] = f"{title} за {dates[0]}"
 
     return result
+
+
+def cast_dates(default_dates, dates_param, query_data):
+    q = query_data
+    if dates_param.get("date_start", None) and dates_param.get("date_end", None):
+        date_start = dates_param["date_start"].strftime("%Y-%m-%d %H:%M:%S")
+        date_end = dates_param["date_end"].strftime("%Y-%m-%d %H:%M:%S")
+        q = q.replace("@date_start", f"'{date_start}'")
+        q = q.replace("@date_end", f"'{date_end}'")
+        return q
+    elif default_dates.get("date_start", None) and default_dates.get("date_end", None):
+        date_start = default_dates["date_start"]
+        date_end = default_dates["date_end"]
+        q = q.replace("@date_start", f"'{date_start}'")
+        q = q.replace("@date_end", f"'{date_end}'")
+        return q
