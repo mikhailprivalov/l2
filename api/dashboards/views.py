@@ -26,15 +26,12 @@ def dashboard_charts(request):
 
     date_end = request_data.get("date_end", None)
     date_start = request_data.get("date_start", None)
-    date_end = "09.04.2022"
-    date_start = "01.12.2021"
     if date_end and date_end:
         try:
             date_end = str_date(date_end)
         except Exception as e:
             logger.exception(e)
             date_end = None
-
         try:
             date_start = str_date(date_start, indicator="min")
         except Exception as e:

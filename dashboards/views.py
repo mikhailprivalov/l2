@@ -1,8 +1,12 @@
 import json
 
+from dateutil.relativedelta import relativedelta
+
 from appconf.manager import SettingManager
 from dashboards.models import Dashboard
 from dashboards.sql_func import get_charts_dataset, execute_select
+from laboratory.utils import current_time, str_date
+from utils.dates import normalize_date
 
 
 def get_dashboard():
@@ -145,16 +149,47 @@ def exec_query(dashboard_pk, dates_param):
 
 
 def cast_dates(default_dates, dates_param, query_data):
-    q = query_data
+    date_start, date_end = None, None
     if dates_param.get("date_start", None) and dates_param.get("date_end", None):
         date_start = dates_param["date_start"].strftime("%Y-%m-%d %H:%M:%S")
         date_end = dates_param["date_end"].strftime("%Y-%m-%d %H:%M:%S")
-        q = q.replace("@date_start", f"'{date_start}'")
-        q = q.replace("@date_end", f"'{date_end}'")
-        return q
     elif default_dates.get("date_start", None) and default_dates.get("date_end", None):
-        date_start = default_dates["date_start"]
-        date_end = default_dates["date_end"]
-        q = q.replace("@date_start", f"'{date_start}'")
-        q = q.replace("@date_end", f"'{date_end}'")
-        return q
+        date_start = cast_sql_syntax_dates(default_dates["date_start"], "min")
+        date_end = cast_sql_syntax_dates(default_dates["date_end"], "max")
+    if date_start and date_end:
+        query_data = query_data.replace("@date_start", f"'{date_start}'")
+        query_data = query_data.replace("@date_end", f"'{date_end}'")
+    return query_data
+
+
+def cast_sql_syntax_dates(params, indicator):
+    date = None
+    if "current_date" in params.lower():
+        current_date = current_time()
+        if "interval" in params.lower():
+            interval = params.split("interval")
+            period = interval[1].replace("'", "")
+            period = period.strip().split(" ")
+            period_duration = int(period[0])
+            period_type = int(period[1])
+            years, months, weeks, days = 0, 0, 0, 0
+            if period_type == "years":
+                years = period_duration
+            elif period_type == "months":
+                months = period_duration
+            elif period_type == "days":
+                days = period_duration
+            elif period_type == "weeks":
+                weeks = period_duration
+            if "+" in params:
+                date = current_date + relativedelta(years=years, months=months, weeks=weeks, days=days)
+            if "-" in params:
+                date = current_date + relativedelta(years=-years, months=-months, weeks=-weeks, days=-days)
+    else:
+        try:
+            if "-" in params:
+                params = normalize_date(params)
+            date = str_date(params, indicator=indicator).strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            date = None
+    return date
