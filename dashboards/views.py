@@ -1,5 +1,4 @@
 import json
-
 from dateutil.relativedelta import relativedelta
 
 from appconf.manager import SettingManager
