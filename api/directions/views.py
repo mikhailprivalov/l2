@@ -928,8 +928,9 @@ def directions_visit_journal(request):
         ),
         visit_who_mark=request.user.doctorprofile,
     ).order_by("-visit_date"):
-        response["data"].append({"pk": v.pk, "additionalNumber": v.additional_number, "client": v.client.individual.fio(
-            full=True), "card": v.client.number_with_type(), "datetime": strdatetime(v.visit_date)})
+        response["data"].append(
+            {"pk": v.pk, "additionalNumber": v.additional_number, "client": v.client.individual.fio(full=True), "card": v.client.number_with_type(), "datetime": strdatetime(v.visit_date)}
+        )
     return JsonResponse(response)
 
 
