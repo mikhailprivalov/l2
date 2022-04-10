@@ -91,6 +91,7 @@ export default (instance: Vue): void => {
       current_global_direction_params: currentGlobalDirectionParams = {},
       hospital_department_override: hospitalDepartmentOverride = -1,
       monitoring = false,
+      priceCategory = null,
     }) => {
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
@@ -134,6 +135,7 @@ export default (instance: Vue): void => {
           direction_form_params: directionFormParams,
           current_global_direction_params: currentGlobalDirectionParams,
           hospital_department_override: hospitalDepartmentOverride,
+          priceCategory,
         })
         .then(data => {
           instance.$store.dispatch(actions.DEC_LOADING);

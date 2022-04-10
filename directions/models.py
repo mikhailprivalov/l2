@@ -390,6 +390,7 @@ class Napravleniya(models.Model):
     client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     doc = models.ForeignKey(DoctorProfile, db_index=True, null=True, help_text='Лечащий врач', on_delete=models.CASCADE)
     istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True, help_text='Источник финансирования', on_delete=models.CASCADE)
+    price_category = models.ForeignKey('contracts.PriceCategory', blank=True, null=True, help_text='Категория прайса', on_delete=models.SET_NULL)
     history_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Номер истории')
     additional_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Дополнительный номер')
     microbiology_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Микробиология номер')
@@ -455,6 +456,10 @@ class Napravleniya(models.Model):
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
+    co_executor = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, related_name="doc_co_executor", db_index=True, help_text='Со-исполнитель', on_delete=models.SET_NULL
+    )
+    additional_number = models.CharField(max_length=24, blank=True, default='', help_text="Дополнительный номер", db_index=True)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -901,6 +906,7 @@ class Napravleniya(models.Model):
         rmis_slot=None,
         direction_purpose="NONE",
         external_organization="NONE",
+        price_category=-1,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -957,6 +963,8 @@ class Napravleniya(models.Model):
             dir.purpose = direction_purpose
         if external_organization != "NONE":
             dir.external_organization_id = int(external_organization)
+        if price_category is not None and price_category > -1:
+            dir.price_category_id = price_category
         if save:
             dir.save()
         dir.set_polis()
@@ -1114,6 +1122,7 @@ class Napravleniya(models.Model):
         direction_form_params=None,
         current_global_direction_params=None,
         hospital_department_override=-1,
+        price_category=-1,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -1342,6 +1351,7 @@ class Napravleniya(models.Model):
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
+                            price_category=price_category,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1368,6 +1378,7 @@ class Napravleniya(models.Model):
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
+                            price_category=price_category,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)

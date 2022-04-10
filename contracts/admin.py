@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import PriceName, PriceCoast, Contract, Company
+from .models import PriceName, PriceCoast, Contract, Company, PriceCategory
 
 
 class ResPriceCoast(admin.ModelAdmin):
@@ -73,6 +73,7 @@ class ResContract(admin.ModelAdmin):
     )
 
 
+admin.site.register(PriceCategory)
 admin.site.register(PriceName)
 admin.site.register(Contract, ResContract)
 admin.site.register(Company, ResCompany)
