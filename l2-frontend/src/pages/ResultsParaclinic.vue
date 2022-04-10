@@ -11,28 +11,36 @@
     >
       <div class="sidebar-top">
         <div class="input-group">
-          <span
-            v-if="l2_microbiology"
-            class="input-group-btn"
-          >
-            <label
-              v-tippy
-              class="btn btn-blue-nb nbr height34"
-              style="padding: 5px 11px"
-              title="Использовать номер микробиологического анализа"
+          <span class="input-group-btn">
+            <button
+              class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
+              type="button"
+              data-toggle="dropdown"
             >
-              <input
-                v-model="iss_search"
-                type="checkbox"
+              <span class="caret" />
+              {{ selectedModeTitle }}
+            </button>
+            <ul
+              class="dropdown-menu"
+              style="margin-top: 1px"
+            >
+              <li
+                v-for="row in SEARCH_MODES"
+                :key="row.id"
               >
-            </label>
+                <a
+                  href="#"
+                  @click.prevent="searchMode = row.id"
+                >{{ row.title }}</a>
+              </li>
+            </ul>
           </span>
           <input
             v-model="pk"
             type="text"
             class="form-control"
             autofocus
-            :placeholder="iss_search ? 'Номер м/б анализа' : 'Номер направления'"
+            placeholder="номер"
             @keyup.enter="load()"
           >
           <span class="input-group-btn">
@@ -52,6 +60,7 @@
           :def="date"
           :val.sync="date"
           w="100px"
+          light
         />
       </div>
       <div
@@ -1158,7 +1167,7 @@
             </div>
           </div>
           <div
-            v-if="row.whoSaved || row.whoConfirmed || row.whoExecuted"
+            v-if="needShowAdditionalParams(row)"
             class="group"
           >
             <div class="fields">
@@ -1187,6 +1196,33 @@
                 <label class="field-title"> Оператор </label>
                 <div class="field-value simple-value">
                   {{ row.whoExecuted }}
+                </div>
+              </div>
+              <div
+                v-if="data.direction.coExecutor"
+                class="field"
+              >
+                <label class="field-title">Со-исполнитель</label>
+                <div class="field-value simple-value">
+                  {{ data.direction.coExecutor }}
+                </div>
+              </div>
+              <div
+                v-if="data.direction.priceCategory"
+                class="field"
+              >
+                <label class="field-title">Платная категоря</label>
+                <div class="field-value simple-value">
+                  {{ data.direction.priceCategory }}
+                </div>
+              </div>
+              <div
+                v-if="data.direction.additionalNumber"
+                class="field"
+              >
+                <label class="field-title">Дополнительный номер</label>
+                <div class="field-value simple-value">
+                  {{ data.direction.additionalNumber }}
                 </div>
               </div>
             </div>
@@ -1681,6 +1717,21 @@ import UrlData from '../UrlData';
 import MedicalCertificates from '../ui-cards/MedicalCertificates.vue';
 import FastTemplates from '../forms/FastTemplates.vue';
 
+const SEARCH_MODES = [
+  {
+    id: 'direction',
+    title: 'Направление',
+  },
+  {
+    id: 'mk',
+    title: 'Микробиология',
+  },
+  {
+    id: 'additional',
+    title: 'Доп. номер',
+  },
+];
+
 export default {
   name: 'ResultsParaclinic',
   components: {
@@ -1727,7 +1778,8 @@ export default {
   data() {
     return {
       pk: '',
-      iss_search: false,
+      searchMode: SEARCH_MODES[0].id,
+      SEARCH_MODES,
       data: { ok: false, direction: {} },
       date: moment().format('DD.MM.YYYY'),
       td: moment().format('YYYY-MM-DD'),
@@ -1784,6 +1836,9 @@ export default {
     };
   },
   computed: {
+    selectedModeTitle() {
+      return this.SEARCH_MODES.find(m => m.id === this.searchMode)?.title;
+    },
     requiredStattalonFields() {
       return this.$store.getters.requiredStattalonFields;
     },
@@ -1850,6 +1905,9 @@ export default {
     },
     pk_c() {
       const lpk = this.pk.trim();
+      if (this.searchMode === 'additional') {
+        return lpk;
+      }
       if (lpk === '') return -1;
       try {
         return parseInt(lpk, 10);
@@ -2067,6 +2125,14 @@ export default {
     window.$(window).off('beforeunload', this.unload);
   },
   methods: {
+    needShowAdditionalParams(row) {
+      return row.whoSaved
+      || row.whoConfirmed
+      || row.whoExecuted
+      || this.data.direction.additionalNumber
+      || this.data.direction.coExecutor
+      || this.data.direction.paymentCategory;
+    },
     async add_services() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { pks, ok, message } = await this.$api('directions/add-additional-issledovaniye', {
@@ -2281,7 +2347,7 @@ export default {
       }
       this.$store.dispatch(actions.INC_LOADING);
       await directionsPoint
-        .getParaclinicForm({ pk: this.pk_c, byIssledovaniye: this.iss_search, withoutIssledovaniye })
+        .getParaclinicForm({ pk: this.pk_c, searchMode: this.searchMode, withoutIssledovaniye })
         .then((data) => {
           if (withoutIssledovaniye) {
             this.data.researches = [...this.data.researches, ...data.researches];
@@ -3042,6 +3108,15 @@ export default {
 .embeddedFull {
   .results-editor {
     height: 100%;
+  }
+}
+
+.sidebar-top {
+  .dropdown-toggle {
+    border-radius: 0;
+    padding: 6px;
+    font-size: 12px;
+    height: 34px;
   }
 }
 

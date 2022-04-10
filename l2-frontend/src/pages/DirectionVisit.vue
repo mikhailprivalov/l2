@@ -82,6 +82,10 @@
                     <td>Источник финансирования</td>
                     <td>{{ direction_data.fin_source }}</td>
                   </tr>
+                  <tr v-if="!direction_data.imported_from_rmis && direction_data.priceCategory">
+                    <td>Платная категория</td>
+                    <td>{{ direction_data.priceCategory }}</td>
+                  </tr>
                   <tr v-if="!direction_data.imported_from_rmis">
                     <td>Диагноз</td>
                     <td>{{ direction_data.diagnos }}</td>
@@ -89,6 +93,32 @@
                   <tr v-else>
                     <td>Огранизация</td>
                     <td>{{ direction_data.imported_org }}</td>
+                  </tr>
+                  <tr v-if="l2_decriptive_coexecutor">
+                    <td>Со-исполнитель</td>
+                    <td class="cl-td text-left">
+                      <Treeselect
+                        v-model="direction_data.coExecutor"
+                        class="treeselect-noborder"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="users"
+                        placeholder="Исполнитель не выбран"
+                        :disabled="visit_status"
+                      />
+                    </td>
+                  </tr>
+                  <tr v-if="l2_decriptive_additional_number">
+                    <td>Доп. номер</td>
+                    <td class="cl-td">
+                      <input
+                        v-model.trim="direction_data.additionalNumber"
+                        type="text"
+                        class="form-control"
+                        maxlength="24"
+                        :readonly="visit_status"
+                      >
+                    </td>
                   </tr>
                 </table>
               </li>
@@ -156,7 +186,7 @@
                         class="btn btn-blue-nb"
                         @click="make_visit()"
                       >
-                        Зарегистрировать посещение
+                        Зарегистрировать направление
                       </button>
                     </div>
                     <div
@@ -179,7 +209,7 @@
                           class="a-under"
                           href="#"
                           @click.prevent="cancel_visit"
-                        >отменить посещение</a>
+                        >отменить регистрацию</a>
                       </div>
                     </div>
                     <div
@@ -234,7 +264,7 @@
               :val.sync="journal_date"
               :def="journal_date"
             />
-            <span style="margin-top: 7px;display: inline-block;">Журнал посещений</span>
+            <span style="margin-top: 7px;display: inline-block;">Журнал регистраций</span>
           </div>
           <div
             class="panel-body"
@@ -273,7 +303,12 @@
                   v-for="r in journal_data"
                   :key="r.pk"
                 >
-                  <td>{{ r.pk }}</td>
+                  <td>
+                    {{ r.pk }}
+                    <div v-if="r.additionalNumber">
+                      {{ r.additionalNumber }}
+                    </div>
+                  </td>
                   <td>{{ r.datetime }}</td>
                   <td>{{ r.client }}</td>
                 </tr>
@@ -383,9 +418,12 @@
 
 <script lang="ts">
 import moment from 'moment';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import DateFieldNav from '../fields/DateFieldNav.vue';
 import DateRange from '../ui-cards/DateRange.vue';
 import directionsPoint from '../api/directions-point';
+import usersPoint from '../api/user-point';
 import * as actions from '../store/action-types';
 import Modal from '../ui-cards/Modal.vue';
 
@@ -410,6 +448,7 @@ export default {
     DateFieldNav,
     Modal,
     DateRange,
+    Treeselect,
   },
   data() {
     return {
@@ -429,6 +468,7 @@ export default {
       journal_recv_date: moment().format('DD.MM.YYYY'),
       journal_recv_data: [],
       date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+      users: [],
     };
   },
   computed: {
@@ -465,6 +505,12 @@ export default {
       }
       return false;
     },
+    l2_decriptive_coexecutor() {
+      return this.$store.getters.modules.l2_decriptive_coexecutor;
+    },
+    l2_decriptive_additional_number() {
+      return this.$store.getters.modules.l2_decriptive_additional_number;
+    },
   },
   watch: {
     journal_date() {
@@ -472,6 +518,15 @@ export default {
     },
     journal_recv_date() {
       this.load_recv_journal();
+    },
+    l2_decriptive_coexecutor: {
+      immediate: true,
+      async handler() {
+        const { users } = await usersPoint.loadUsersByGroup({
+          group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
+        });
+        this.users = users;
+      },
     },
   },
   mounted() {
@@ -559,7 +614,7 @@ export default {
     },
     cancel_visit() {
       // eslint-disable-next-line no-restricted-globals,no-alert
-      if (confirm('Вы уверены, что хотите отменить посещение?')) {
+      if (confirm('Вы уверены, что хотите отменить регистрацию?')) {
         this.make_visit(true);
       }
     },
@@ -567,7 +622,12 @@ export default {
       if (this.loaded_pk === -1 || this.in_load) return;
       this.$store.dispatch(actions.INC_LOADING);
       this.in_load = true;
-      directionsPoint.getMarkDirectionVisit({ pk: this.loaded_pk, cancel }).then((data) => {
+      directionsPoint.getMarkDirectionVisit({
+        pk: this.loaded_pk,
+        cancel,
+        coExecutor: this.direction_data.coExecutor,
+        additionalNumber: this.direction_data.additionalNumber,
+      }).then((data) => {
         if (data.ok) {
           this.visit_status = data.visit_status;
           this.visit_date = data.visit_date;
@@ -620,7 +680,7 @@ export default {
     border: 1px solid #ddd;
   }
 
-  .dirtb tr td:last-child {
+  .dirtb tr td:not(.cl-td):last-child {
     text-align: left;
   }
 

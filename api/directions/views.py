@@ -141,6 +141,7 @@ def directions_generate(request):
             direction_form_params=p.get("direction_form_params", {}),
             current_global_direction_params=p.get("current_global_direction_params", {}),
             hospital_department_override=p.get("hospital_department_override", -1),
+            price_category=p.get("priceCategory", -1),
         )
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
@@ -786,6 +787,9 @@ def directions_services(request):
                 "imported_org": "" if not n.imported_org else n.imported_org.title,
                 "visit_who_mark": "" if not n.visit_who_mark else "{}, {}".format(n.visit_who_mark.get_fio(), n.visit_who_mark.podrazdeleniye.title),
                 "fin_source": "" if not n.istochnik_f else "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title),
+                "priceCategory": "" if not n.price_category else n.price_category.title,
+                "coExecutor": n.co_executor_id,
+                "additionalNumber": n.additional_number,
             }
             response["researches"] = researches
             response["loaded_pk"] = pk
@@ -811,10 +815,21 @@ def directions_mark_visit(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1)
     cancel = request_data.get("cancel", False)
+    co_executor = request_data.get("coExecutor", None)
+    additional_number = request_data.get("additionalNumber", '')
     dn = Napravleniya.objects.filter(pk=pk)
     f = False
     if dn.exists():
         n = dn[0]
+        if additional_number and n.additional_number != additional_number:
+            if Napravleniya.objects.filter(additional_number=additional_number).exclude(pk=pk).exists():
+                response["message"] = f'Номер "{additional_number}" уже занят'
+                return JsonResponse(response)
+            n.additional_number = additional_number
+            n.save(update_fields=['additional_number'])
+        if co_executor and n.co_executor_id != co_executor:
+            n.co_executor_id = co_executor
+            n.save(update_fields=['co_executor_id'])
         if Issledovaniya.objects.filter(Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
             if not cancel:
                 n.visit_date = timezone.now()
@@ -857,7 +872,13 @@ def directions_mark_visit(request):
                     n.save()
                 else:
                     response["message"] = "Отмена посещения возможна только в течении {} мин.".format(rtm)
-            Log(key=pk, type=5001, body=json.dumps({"Посещение": "отмена" if cancel else "да", "Дата и время": response["visit_date"]}), user=request.user.doctorprofile).save()
+            log_data = {
+                "Посещение": "отмена" if cancel else "да",
+                "Дата и время": response["visit_date"],
+                "Дополнительный номер": additional_number,
+                "Со-исполнитель": co_executor,
+            }
+            Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
             f = True
     if not f:
         response["message"] = "Направление не найдено"
@@ -907,7 +928,9 @@ def directions_visit_journal(request):
         ),
         visit_who_mark=request.user.doctorprofile,
     ).order_by("-visit_date"):
-        response["data"].append({"pk": v.pk, "client": v.client.individual.fio(full=True), "card": v.client.number_with_type(), "datetime": strdatetime(v.visit_date)})
+        response["data"].append(
+            {"pk": v.pk, "additionalNumber": v.additional_number, "client": v.client.individual.fio(full=True), "card": v.client.number_with_type(), "datetime": strdatetime(v.visit_date)}
+        )
     return JsonResponse(response)
 
 
@@ -1123,10 +1146,10 @@ def directions_paraclinic_form(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
-    by_issledovaniye = request_data.get("byIssledovaniye", False)
+    search_mode = request_data.get("searchMode", 'direction')
     force_form = request_data.get("force", False)
     without_issledovaniye = request_data.get("withoutIssledovaniye", None)
-    if pk >= 4600000000000:
+    if isinstance(pk, int) and pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
     add_fr = {}
@@ -1136,9 +1159,14 @@ def directions_paraclinic_form(request):
     if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
-    if by_issledovaniye:
+    if search_mode == 'mk':
         if Issledovaniya.objects.filter(pk=pk, research__is_microbiology=True).exists():
             pk = Issledovaniya.objects.get(pk=pk).napravleniye_id
+        else:
+            pk = -1
+    elif search_mode == 'additional':
+        if Napravleniya.objects.filter(additional_number=pk).exists():
+            pk = Napravleniya.objects.filter(additional_number=pk)[0].pk
         else:
             pk = -1
 
@@ -1224,6 +1252,9 @@ def directions_paraclinic_form(request):
                 "diagnos": d.diagnos,
                 "fin_source": d.fin_title,
                 "fin_source_id": d.istochnik_f_id,
+                "priceCategory": "" if not d.price_category else d.price_category.title,
+                "additionalNumber": d.additional_number,
+                "coExecutor": "" if not d.co_executor else d.co_executor.get_fio(dots=True),
                 "tube": None,
                 "amd": d.amd_status,
                 "amd_number": d.amd_number,

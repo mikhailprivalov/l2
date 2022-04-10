@@ -8,8 +8,8 @@
   },
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build --mode development",
-    "build_prod": "vue-cli-service build",
+    "build": "vue-cli-service build --mode development --modern",
+    "build_prod": "vue-cli-service build --modern",
     "lint": "vue-cli-service lint",
     "ci:lint": "vue-cli-service lint --no-fix"
   },
@@ -105,7 +105,9 @@
     "webpack-manifest-plugin": "^3.1.1"
   },
   "browserslist": [
-    "last 2 years"
+    "last 2 years",
+    "not dead",
+    "not ie 11"
   ],
   "_id": "l2-frontend@2.0.0",
   "readme": "ERROR: No README data found!"

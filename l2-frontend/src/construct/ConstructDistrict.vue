@@ -22,7 +22,6 @@
       >
         <div
           class="input-group width-side"
-
         >
           <input
             v-model="newDistrictTitle"

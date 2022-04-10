@@ -5,6 +5,18 @@ from django.db import models
 import directory.models as directory
 
 
+class PriceCategory(models.Model):
+    title = models.CharField(max_length=50, unique=True, help_text='Наименование категории Прайса', db_index=True)
+    hide = models.BooleanField(default=False, help_text='Скрыть', db_index=True)
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = 'Категория прайса'
+        verbose_name_plural = 'Категории прайса'
+
+
 class PriceName(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text='Наименование Прайса', db_index=True)
     active_status = models.BooleanField(default=True, help_text='Статус активности', db_index=True)
@@ -19,8 +31,8 @@ class PriceName(models.Model):
         return self.active_status
 
     class Meta:
-        verbose_name = 'Прайс - название'
-        verbose_name_plural = 'Прайс - название'
+        verbose_name = 'Название прайса'
+        verbose_name_plural = 'Названия прайса'
 
 
 class PriceCoast(models.Model):
@@ -53,8 +65,8 @@ class PriceCoast(models.Model):
 
     class Meta:
         unique_together = ('price_name', 'research')
-        verbose_name = 'Прайс - цены'
-        verbose_name_plural = 'Прайс - цены'
+        verbose_name = 'Цена прайса'
+        verbose_name_plural = 'Цены прайса'
 
 
 class Contract(models.Model):
@@ -70,6 +82,10 @@ class Contract(models.Model):
 
     def __str__(self):
         return "{}".format(self.title)
+
+    class Meta:
+        verbose_name = 'Договор'
+        verbose_name_plural = 'Договоры'
 
 
 class Company(models.Model):
@@ -98,3 +114,7 @@ class Company(models.Model):
             return "{}".format(self.contract.modifier)
         else:
             return ""
+
+    class Meta:
+        verbose_name = 'Компания'
+        verbose_name_plural = 'Компании'

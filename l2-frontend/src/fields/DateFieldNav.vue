@@ -2,13 +2,15 @@
   <div class="flex">
     <template v-if="!right">
       <button
-        class="btn btn-blue-nb"
+        class="btn"
+        :class="light ? 'btn-blue-nb-light' : 'btn-blue-nb'"
         @click="decDate"
       >
         <i class="glyphicon glyphicon-arrow-left" />
       </button>
       <button
-        class="btn btn-blue-nb"
+        class="btn"
+        :class="light ? 'btn-blue-nb-light' : 'btn-blue-nb'"
         @click="incDate"
       >
         <i class="glyphicon glyphicon-arrow-right" />
@@ -78,6 +80,10 @@ export default {
       type: Boolean,
     },
     right: {
+      default: false,
+      type: Boolean,
+    },
+    light: {
       default: false,
       type: Boolean,
     },
