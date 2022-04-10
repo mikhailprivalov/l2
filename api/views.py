@@ -29,7 +29,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company
+from contracts.models import Company, PriceCategory
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -619,6 +619,7 @@ def current_user_info(request):
             ret["modules"] = SettingManager.l2_modules()
             ret["rmis_enabled"] = SettingManager.get("rmis_enabled", default='false', default_type='b')
             ret["directions_params_org_form_default_pk"] = SettingManager.get("directions_params_org_form_default_pk", default='', default_type='s')
+            ret["priceCategories"] = [{"pk": -1, "title": " – Не выбрано"}, *[{"pk": x.pk, "title": x.title} for x in PriceCategory.objects.filter(hide=False).order_by('title')]]
 
             en = SettingManager.en()
             ret["extended_departments"] = {}

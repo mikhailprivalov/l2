@@ -140,6 +140,17 @@
           <col>
         </colgroup>
         <tbody>
+          <tr v-if="needShowPriceCategory">
+            <th :class="priceCategory === -1 && 'has-error-message'">
+              Платная категория:
+            </th>
+            <td class="cl-td">
+              <SelectFieldTitled
+                v-model="priceCategory"
+                :variants="priceCategories"
+              />
+            </td>
+          </tr>
           <tr v-if="direction_purpose_enabled && !hide_params">
             <th>Цель направления:</th>
             <td class="cl-td">
@@ -535,8 +546,8 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 // @ts-ignore
 import TypeAhead from 'vue2-typeahead';
 import { vField, vGroup } from '@/components/visibility-triggers';
-import directionsPoint from '../api/directions-point';
-import * as actions from '../store/action-types';
+import directionsPoint from '@/api/directions-point';
+import * as actions from '@/store/action-types';
 import ResearchDisplay from './ResearchDisplay.vue';
 import Modal from './Modal.vue';
 import 'vue-select/dist/vue-select.css';
@@ -663,6 +674,7 @@ export default {
       discount: 0,
       purposes: [],
       externalOrganizations: [],
+      priceCategory: -1,
       direction_purpose: 'NONE',
       external_organization: 'NONE',
       directions_count: '1',
@@ -699,11 +711,17 @@ export default {
     directions_params_enabled() {
       return this.$store.getters.modules.directions_params && this.kk !== 'stationar' && !this.simple;
     },
+    l2_price_with_categories() {
+      return this.$store.getters.modules.l2_price_with_categories;
+    },
     l2_user_data() {
       return this.$store.getters.user_data || {};
     },
     directions_params_org_form_default_pk() {
       return this.l2_user_data.directions_params_org_form_default_pk;
+    },
+    priceCategories() {
+      return this.l2_user_data.priceCategories || [];
     },
     show_additions() {
       return this.researches.length > 0 && !this.simple;
@@ -713,6 +731,9 @@ export default {
     },
     pay_source() {
       return this.current_fin.title.toLowerCase() === 'платно';
+    },
+    needShowPriceCategory() {
+      return this.pay_source && this.priceCategories.length > 0 && this.show_additions;
     },
     researches_departments() {
       const r = {};
@@ -769,6 +790,10 @@ export default {
           return false;
         }
       } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1 || this.selected_card?.isArchive) {
+        return false;
+      }
+
+      if (this.needShowPriceCategory && this.priceCategory === -1) {
         return false;
       }
 
@@ -1198,6 +1223,7 @@ export default {
       this.fin = pk;
       this.count = 1;
       this.discount = 0;
+      this.priceCategory = -1;
       if (this.get_def_diagnosis(cfin) === this.diagnos || this.diagnos.trim() === '') {
         this.diagnos = this.get_def_diagnosis();
       }
@@ -1233,6 +1259,7 @@ export default {
         vich_code: this.need_vich_code ? this.vich_code : '',
         count: this.count,
         discount: this.discount,
+        priceCategory: this.priceCategory,
         need_contract: this.pay_source,
         parent_iss: this.parent_iss,
         parent_slave_hosp: this.parent_slave_iss,

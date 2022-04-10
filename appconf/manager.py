@@ -126,6 +126,9 @@ class SettingManager:
                     "some_links",
                     "without_lab_and_paraclinic",
                     "statistics",
+                    "price_with_categories",
+                    "decriptive_coexecutor",
+                    "decriptive_additional_number",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
