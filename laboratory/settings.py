@@ -381,6 +381,7 @@ TITLE_REPORT_FILTER_STATTALON_FIELDS = []
 
 DISPANSERIZATION_SERVICE_PK = {}  # {"pkServiceStart": [12, 13], "pkServiceEnd": [15])}
 EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED = []
+DASH_REPORT_LIMIT_DURATION_DAYS = {"years": 2, "months": 13, "weeks": 50, "days": 90, "max_delta_days": 740 }
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

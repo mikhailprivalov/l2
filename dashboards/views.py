@@ -13,6 +13,7 @@ def get_dashboard():
 
 
 def exec_query(dashboard_pk, dates_param):
+    show_dates_param = False
     # data_chart = {"chart_id": [{"chart_title": "", "chart_type": "", "database": "", "user": "", "password": "", "address": "", "port": "", "query": "", sql_param: ""}]}
     result = []
     data_chart = {}
@@ -92,6 +93,8 @@ def exec_query(dashboard_pk, dates_param):
                 r = execute_select(datachart['database'], datachart['user'], datachart['password'], datachart['address'], datachart['port'], datachart['query'])
             else:
                 dates_server = sql_param.get("between", {})
+                if "@date_start" in datachart['query']:
+                    show_dates_param = True
                 query_result = cast_dates(dates_server, dates_param, datachart['query'])
                 r = execute_select(datachart['database'], datachart['user'], datachart['password'], datachart['address'], datachart['port'], query_result)
             values = []
@@ -144,7 +147,7 @@ def exec_query(dashboard_pk, dates_param):
                 row["dates"] = fields
                 row["title"] = f"{title} за {dates[0]}"
 
-    return result
+    return {"result": result, "show_dates_param": show_dates_param}
 
 
 def cast_dates(default_dates, dates_param, query_data):
