@@ -53,7 +53,7 @@ def dashboard_charts(request):
 
     if date_end and date_start:
         d = date_end - date_start
-        if d.days > DASH_REPORT_LIMIT_DURATION_DAYS["max_delta_days"]:
+        if d.days > DASH_REPORT_LIMIT_DURATION_DAYS["max_delta_days"] or d.days < 0:
             date_end = None
             date_start = None
     try:
