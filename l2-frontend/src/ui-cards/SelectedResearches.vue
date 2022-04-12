@@ -733,7 +733,7 @@ export default {
       return this.current_fin.title.toLowerCase() === 'платно';
     },
     needShowPriceCategory() {
-      return this.pay_source && this.priceCategories.length > 0 && this.show_additions;
+      return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 0 && this.show_additions;
     },
     researches_departments() {
       const r = {};
