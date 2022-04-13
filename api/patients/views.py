@@ -35,6 +35,7 @@ from clients.models import (
     AmbulatoryDataHistory,
     DispensaryRegPlans,
     ScreeningRegPlan,
+    AdditionalPatientDispensaryPlan,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
@@ -535,6 +536,7 @@ def patients_get_card_data(request, card_id):
             "medbookType": card.medbook_type,
             "medbookTypePrev": card.medbook_type,
             "isArchive": card.is_archive,
+            "contactTrustHealth": card.contact_trust_health,
         }
     )
 
@@ -620,6 +622,7 @@ def patients_card_save(request):
     c.work_position = request_data["work_position"]
     c.phone = request_data["phone"]
     c.harmful_factor = request_data.get("harmful", "")
+    c.contact_trust_health = request_data.get("contactTrustHealth", "")
     medbook_type = request_data.get("medbookType", "")
     medbook_prefix = str(request_data.get("medbookPrefix", "")).strip()
     medbook_number = str(request_data.get("medbookNumber", "-1"))
@@ -899,12 +902,14 @@ def load_dreg(request):
     card = Card.objects.get(pk=request_data["card_pk"])
     visits = VisitPurpose.objects.filter(title__icontains="диспансерн")
     year = request_data.get('year', '2020')
+    unique_research_pk = []
     for d in sorted(diagnoses):
         need = DispensaryPlan.objects.filter(diagnos=d)
         for i in need:
             if i.research:
                 if i.research not in researches:
                     researches.append(i.research)
+                    unique_research_pk.append(i.research.pk)
                     results = research_last_result_every_month([i.research], card, year)
                     plans = get_dispensary_reg_plans(card, i.research, None, year)
                     researches_data.append(
@@ -948,7 +953,31 @@ def load_dreg(request):
 
     researches_data.extend(specialities_data)
 
-    return JsonResponse({"rows": data, "researches_data": researches_data, "year": year})
+    # Индивидуальный план
+    researches = []
+    need = AdditionalPatientDispensaryPlan.objects.filter(card=card)
+    for i in need:
+        if i.research:
+            if i.research not in researches:
+                researches.append(i.research)
+                results = research_last_result_every_month([i.research], card, year)
+                plans = get_dispensary_reg_plans(card, i.research, None, year)
+                researches_data.append(
+                    {
+                        "type": "research",
+                        "research_title": i.research.title,
+                        "research_pk": i.research.pk,
+                        "assign_research_pk": i.research.pk,
+                        "assignment": False,
+                        "diagnoses_time": [{"diagnos": "И.П.Н.", "times": i.repeat}],
+                        "results": results,
+                        "plans": plans,
+                        "max_time": 1,
+                        "times": len([x for x in results if x]),
+                    }
+                )
+
+    return JsonResponse({"rows": data, "researches_data": researches_data, "year": year, "unique_research_pk": unique_research_pk})
 
 
 def load_screening(request):

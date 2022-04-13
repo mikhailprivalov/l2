@@ -1,7 +1,16 @@
 <template>
   <div style="margin-top: 10px">
-    <h5 style="text-align: center">
+    <h5
+      v-if="type_plan==='Глобальный план' && diagnos_code"
+      style="text-align: center"
+    >
       Глобальная настройка для всей системы
+    </h5>
+    <h5
+      v-else-if="type_plan==='Индивидуальный план'"
+      style="text-align: center"
+    >
+      Индивидуальная настройка для пациента
     </h5>
     <table class="table table-bordered">
       <colgroup>
@@ -89,11 +98,18 @@
         </tr>
       </tbody>
     </table>
+    <div
+      v-if="disabledButtons"
+      style="color: red"
+    >
+      Выбранная услуга уже добавлена в глобальных настройках
+    </div>
     <div class="row">
       <div class="col-xs-8" />
       <div class="col-xs-2">
         <button
           class="btn btn-blue-nb add-row"
+          :disabled="disabledButtons"
           @click="save_dispensary_data(tbData)"
         >
           Сохранить
@@ -102,6 +118,7 @@
       <div class="col-xs-2">
         <button
           class="btn btn-blue-nb add-row"
+          :disabled="disabledButtons"
           @click="add_new_row"
         >
           Добавить
@@ -130,6 +147,19 @@ export default {
       default: '',
       required: false,
     },
+    card_pk: {
+      default: -1,
+      required: false,
+    },
+    type_plan: {
+      default: 'Глобальный план',
+      required: false,
+    },
+    unique_research_pks: {
+      type: Array,
+      default: () => ([]),
+      required: false,
+    },
   },
   data() {
     return {
@@ -137,12 +167,23 @@ export default {
       types,
       researches: [],
       specialities: [],
+      disabledButtons: false,
     };
   },
   watch: {
     tbData: {
       handler() {
         this.changeValue(this.tbData);
+        if (this.tbData.length > 0) {
+          this.disabledButtons = this.unique_research_pks.includes(this.tbData.slice(-1)[0].current_researches)
+            && this.type_plan === 'Индивидуальный план';
+        }
+      },
+      immediate: true,
+    },
+    type_plan: {
+      handler() {
+        this.load_data();
       },
       immediate: true,
     },
@@ -154,7 +195,11 @@ export default {
     this.$api('researches/research-specialities').then(rows => {
       this.specialities = rows;
     });
-    this.$api('researches/load-research-by-diagnos', { diagnos_code: this.diagnos_code }).then(rows => {
+    this.$api('researches/load-research-by-diagnos', {
+      diagnos_code: this.diagnos_code,
+      typePlan: this.type_plan,
+      card_pk: this.card_pk,
+    }).then(rows => {
       this.tbData = rows;
     });
   },
@@ -164,12 +209,24 @@ export default {
       const { ok, message } = await this.$api('researches/save-dispensary-data', {
         diagnos: this.diagnos_code,
         tb_data: tbData,
+        typePlan: this.type_plan,
+        card_pk: this.card_pk,
       });
       if (ok) {
         this.$root.$emit('msg', 'ok', message);
       } else {
         this.$root.$emit('msg', 'error', message);
       }
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async load_data() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const rows = await this.$api('researches/load-research-by-diagnos', {
+        diagnos_code: this.diagnos_code,
+        typePlan: this.type_plan,
+        card_pk: this.card_pk,
+      });
+      this.tbData = rows;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     add_new_row() {

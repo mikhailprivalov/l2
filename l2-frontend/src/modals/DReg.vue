@@ -346,17 +346,22 @@
                 class="form-control"
               >
             </div>
-
-            <div class="checkbox pl15">
-              <label> <input
-                v-model="enable_construct"
-                type="checkbox"
-              > настройка обследований для диагноза: </label>
+            <div class="radio-button-object radio-button-groups">
+              <label>Настройка плана обследования</label>
+              <RadioField
+                v-model="typePlan"
+                :variants="variant_construct"
+                full-width
+                @modified="change_index"
+              />
             </div>
             <div class="form-group">
               <ConfigureDispenseryResearch
-                v-if="enable_construct && edit_data.diagnos"
+                v-if="typePlan === 'Глобальный план' && edit_data.diagnos || typePlan === 'Индивидуальный план'"
                 :diagnos_code="edit_data.diagnos"
+                :card_pk="card_pk"
+                :type_plan="typePlan"
+                :unique_research_pks="uniqueResearchPks"
               />
             </div>
           </div>
@@ -465,6 +470,7 @@ export default {
       td: moment().format('YYYY-MM-DD'),
       message: '<br>',
       rows: [],
+      uniqueResearchPks: [],
       researches_data: [],
       researches_data_def: [],
       year: Number(moment().format('YYYY')),
@@ -487,7 +493,10 @@ export default {
       how_identified: '',
       variant_is_first_time: ['не указано', 'впервые', 'повторно'],
       variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
+      variant_construct: ['не указано', 'Глобальный план', 'Индивидуальный план'],
+      typePlan: '',
       enable_construct: false,
+      enableIndividualConstruct: false,
       selectedResearchesDReg: [],
     };
   },
@@ -672,7 +681,9 @@ export default {
       }
       this.$store.dispatch(actions.INC_LOADING);
       this.$api('patients/individuals/load-dreg', this, ['card_pk', 'year'])
-        .then(({ rows, researches_data: researchesData, year }) => {
+        .then(({
+          rows, researches_data: researchesData, year, unique_research_pk: uniqueResearchPks,
+        }) => {
           this.rows = rows;
           this.researches_data = researchesData;
           this.researches_data_def = cloneDeep(researchesData);
@@ -681,6 +692,7 @@ export default {
             this.$root.$emit('msg', 'ok', `Загружен ${year} год`);
           }
           this.year = year;
+          this.uniqueResearchPks = uniqueResearchPks;
         })
         .finally(() => {
           this.$store.dispatch(actions.DEC_LOADING);
