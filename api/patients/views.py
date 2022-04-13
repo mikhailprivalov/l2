@@ -535,6 +535,7 @@ def patients_get_card_data(request, card_id):
             "medbookType": card.medbook_type,
             "medbookTypePrev": card.medbook_type,
             "isArchive": card.is_archive,
+            "contactTrustHealth": card.contact_trust_health
         }
     )
 
@@ -620,6 +621,7 @@ def patients_card_save(request):
     c.work_position = request_data["work_position"]
     c.phone = request_data["phone"]
     c.harmful_factor = request_data.get("harmful", "")
+    c.contact_trust_health = request_data.get("contactTrustHealth", "")
     medbook_type = request_data.get("medbookType", "")
     medbook_prefix = str(request_data.get("medbookPrefix", "")).strip()
     medbook_number = str(request_data.get("medbookNumber", "-1"))

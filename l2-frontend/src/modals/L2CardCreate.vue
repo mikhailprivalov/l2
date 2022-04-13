@@ -657,6 +657,23 @@
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
               <div class="row-t">
+                Кому доверяю
+              </div>
+              <input
+                v-model="card.contactTrustHealth"
+                class="form-control"
+                maxlength="20"
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="row"
+          style="margin-bottom: 10px"
+        >
+          <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+              <div class="row-t">
                 Номер карты ТФОМС
               </div>
               <input
@@ -1248,6 +1265,7 @@ export default {
         medbookType: MEDBOOK_TYPES[0].type,
         medbookTypePrev: MEDBOOK_TYPES[0].type,
         isArchive: false,
+        contactTrustHealth: '',
       },
       disabled_forms: [],
       individuals: [],
@@ -1492,6 +1510,7 @@ export default {
           'medbookNumber',
           'medbookType',
           'medbookNumberCustom',
+          'contactTrustHealth',
         ],
         {
           card_pk: this.card_pk,

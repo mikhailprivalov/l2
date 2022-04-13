@@ -964,6 +964,7 @@ class Card(models.Model):
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     death_date = models.DateField(help_text='Дата смерти', db_index=True, default=None, blank=True, null=True)
+    contact_trust_health = models.CharField(max_length=400, help_text='Кому доверяю состояние здоровья', blank=True, default="")
 
     @property
     def main_address_full(self):
