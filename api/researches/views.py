@@ -817,7 +817,7 @@ def update_dispensary_plan_researches(type_object, tb_data, diagnos, card_pk):
             speciality_obj = Speciality.objects.get(pk=t_b['current_researches'])
         d = type_object(diagnos=diagnos, research=research_obj, repeat=t_b['count'], speciality=speciality_obj, is_visit=t_b.get('is_visit', False))
         if card_pk > 0:
-            d.card_id=card_pk
+            d.card_id = card_pk
         d.save()
 
 
