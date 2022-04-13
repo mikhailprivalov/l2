@@ -535,7 +535,7 @@ def patients_get_card_data(request, card_id):
             "medbookType": card.medbook_type,
             "medbookTypePrev": card.medbook_type,
             "isArchive": card.is_archive,
-            "contactTrustHealth": card.contact_trust_health
+            "contactTrustHealth": card.contact_trust_health,
         }
     )
 
