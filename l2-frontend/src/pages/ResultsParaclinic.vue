@@ -704,7 +704,7 @@
           />
           <div
             v-if="
-              !data.has_microbiology &&
+              !data.has_microbiology && !data.has_gistology &&
                 row.research.show_more_services &&
                 (!row.confirmed || row.more.length > 0) &&
                 !data.has_monitoring &&
@@ -877,15 +877,20 @@
             </div>
           </div>
           <div
-            v-if="row.research.is_doc_refferal && stat_btn"
+            v-if="(row.research.is_doc_refferal || row.research.is_gistology) && stat_btn"
             class="group"
           >
             <div class="group-title">
               Данные статталона
             </div>
             <div class="fields">
-              <div class="field">
-                <div class="field-title">
+              <div
+                v-if="row.research.is_doc_refferal"
+                class="field"
+              >
+                <div
+                  class="field-title"
+                >
                   Цель посещения
                 </div>
                 <div class="field-value">
@@ -903,7 +908,10 @@
                   </select>
                 </div>
               </div>
-              <div class="field">
+              <div
+                v-if="row.research.is_doc_refferal"
+                class="field"
+              >
                 <label
                   class="field-title"
                   for="first-time"
@@ -917,7 +925,10 @@
                   >
                 </div>
               </div>
-              <div class="field">
+              <div
+                v-if="row.research.is_doc_refferal"
+                class="field"
+              >
                 <div class="field-title">
                   Результат обращения
                 </div>
@@ -936,7 +947,10 @@
                   </select>
                 </div>
               </div>
-              <div class="field">
+              <div
+                v-if="row.research.is_doc_refferal"
+                class="field"
+              >
                 <div class="field-title">
                   Исход
                 </div>
@@ -996,7 +1010,10 @@
                   >
                 </label>
               </div>
-              <div class="field">
+              <div
+                v-if="row.research.is_doc_refferal"
+                class="field"
+              >
                 <div class="field-title">
                   Место оказания
                 </div>
@@ -1884,7 +1901,7 @@ export default {
       }
       return (
         this.l2_morfology_additional
-        && (this.data.has_microbiology || this.data.has_citology || this.data.has_gistology)
+        && this.data.has_microbiology
         && !this.data.direction.all_confirmed
       );
     },
