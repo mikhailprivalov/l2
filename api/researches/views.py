@@ -10,6 +10,7 @@ from django.http import JsonResponse
 
 import users.models as users
 from api.directions.views import get_research_for_direction_params
+from clients.models import AdditionalPatientDispensaryPlan
 from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
@@ -789,12 +790,24 @@ def save_dispensary_data(request):
     request_data = json.loads(request.body)
     tb_data = request_data.get('tb_data', '')
     diagnos = request_data.get('diagnos', '')
-    diagnos = diagnos.split(' ')[0]
+    type_plan = request_data.get('typePlan', '')
+    card_pk = int(request_data.get('card_pk', -1))
     for t_b in tb_data:
         if int(t_b.get('count', 0)) < 1:
             return JsonResponse({'message': 'Ошибка в количестве'})
+    diagnos = diagnos.split(' ')[0]
+    if type_plan == "Глобальный план" and diagnos:
+        DispensaryPlan.objects.filter(diagnos=diagnos).delete()
+        update_dispensary_plan_researches(DispensaryPlan, tb_data, diagnos, card_pk)
 
-    DispensaryPlan.objects.filter(diagnos=diagnos).delete()
+    if type_plan == "Индивидуальный план" and card_pk > 0:
+        AdditionalPatientDispensaryPlan.objects.filter(card_id=card_pk).delete()
+        update_dispensary_plan_researches(AdditionalPatientDispensaryPlan, tb_data, diagnos, card_pk)
+
+    return JsonResponse({'ok': True, 'message': 'Сохранено'})
+
+
+def update_dispensary_plan_researches(type_object, tb_data, diagnos, card_pk):
     for t_b in tb_data:
         research_obj = None
         speciality_obj = None
@@ -802,28 +815,38 @@ def save_dispensary_data(request):
             research_obj = DResearches.objects.get(pk=t_b['current_researches'])
         else:
             speciality_obj = Speciality.objects.get(pk=t_b['current_researches'])
-        d = DispensaryPlan(diagnos=diagnos, research=research_obj, repeat=t_b['count'], speciality=speciality_obj, is_visit=t_b.get('is_visit', False))
+        d = type_object(diagnos=diagnos, research=research_obj, repeat=t_b['count'], speciality=speciality_obj, is_visit=t_b.get('is_visit', False))
+        if card_pk > 0:
+            d.card_id = card_pk
         d.save()
-
-    return JsonResponse({'ok': True, 'message': 'Сохранено'})
 
 
 @login_required
 def load_research_by_diagnos(request):
     request_data = json.loads(request.body)
     diagnos_code = request_data.get('diagnos_code', '')
+    type_plan = request_data.get('typePlan', 'Глобальный план')
+    card_pk = int(request_data.get('card_pk', -1))
+    d_plan = None
     diagnos = diagnos_code.split(' ')[0]
-    d_plan = DispensaryPlan.objects.filter(diagnos=diagnos)
+    if type_plan == "Глобальный план" and diagnos:
+        d_plan = DispensaryPlan.objects.filter(diagnos=diagnos)
+    if type_plan == "Индивидуальный план" and card_pk > 0:
+        d_plan = AdditionalPatientDispensaryPlan.objects.filter(card_id=card_pk)
+
+    rows = reserches_in_dplan(d_plan)
+    return JsonResponse(rows, safe=False)
+
+
+def reserches_in_dplan(d_plan):
     rows = []
     for d_p in d_plan:
         type = 'Услуга' if d_p.research else 'Врач'
         code_id = d_p.research.pk if d_p.research else d_p.speciality.pk
         rows.append({'type': type, 'is_visit': d_p.is_visit, 'current_researches': code_id, 'count': d_p.repeat})
+    return rows
 
-    return JsonResponse(rows, safe=False)
 
-
-@login_required
 def required_stattalon_fields(request):
     return JsonResponse(REQUIRED_STATTALON_FIELDS)
 
