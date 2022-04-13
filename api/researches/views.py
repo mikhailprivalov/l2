@@ -846,6 +846,7 @@ def reserches_in_dplan(d_plan):
         rows.append({'type': type, 'is_visit': d_p.is_visit, 'current_researches': code_id, 'count': d_p.repeat})
     return rows
 
+
 @login_required
 def required_stattalon_fields(request):
     return JsonResponse(REQUIRED_STATTALON_FIELDS)
