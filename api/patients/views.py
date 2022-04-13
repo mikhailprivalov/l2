@@ -967,7 +967,7 @@ def load_dreg(request):
                         "research_pk": i.research.pk,
                         "assign_research_pk": i.research.pk,
                         "assignment": False,
-                        "diagnoses_time": [{"diagnos": "Д.К.П.", "times": i.repeat}],
+                        "diagnoses_time": [{"diagnos": "И.П.Н.", "times": i.repeat}],
                         "results": results,
                         "plans": plans,
                         "max_time": 1,
