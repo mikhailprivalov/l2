@@ -34,7 +34,8 @@ from clients.models import (
     AmbulatoryData,
     AmbulatoryDataHistory,
     DispensaryRegPlans,
-    ScreeningRegPlan, AdditionalPatientDispensaryPlan,
+    ScreeningRegPlan,
+    AdditionalPatientDispensaryPlan,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
