@@ -847,8 +847,6 @@ def reserches_in_dplan(d_plan):
     return rows
 
 
-
-
 def required_stattalon_fields(request):
     return JsonResponse(REQUIRED_STATTALON_FIELDS)
 
