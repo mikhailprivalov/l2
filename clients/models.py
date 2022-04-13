@@ -1310,10 +1310,24 @@ class DispensaryReg(models.Model):
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
     what_times = models.SmallIntegerField(choices=TIMES, default=0, help_text="Как установлен диагноз")
     how_identified = models.SmallIntegerField(choices=IDENTIFIEDS, default=0, help_text="как установлен диагноз")
+    is_additional = models.BooleanField(help_text="Дополнение к пациенту", default=False)
 
     class Meta:
         verbose_name = 'Д-учет'
         verbose_name_plural = 'Д-учет'
+
+
+class AdditionalPatientDispensaryPlan(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
+    repeat = models.PositiveSmallIntegerField(db_index=True, help_text='Кол-во в год', null=False, blank=False)
+    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
+    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальности консультации врача', on_delete=models.CASCADE)
+    is_visit = models.BooleanField(default=False, blank=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Индивидуальное дополнение к диспансерному учету'
+        verbose_name_plural = 'Индивидуальные дополнение к диспансерному учету'
 
 
 class DispensaryRegPlans(models.Model):
