@@ -1309,6 +1309,7 @@ def directions_paraclinic_form(request):
                         "version": i.pk * 10000,
                         "is_paraclinic": i.research.is_paraclinic or i.research.is_citology or i.research.is_gistology,
                         "is_doc_refferal": i.research.is_doc_refferal,
+                        "is_gistology": i.research.is_gistology,
                         "is_microbiology": i.research.is_microbiology,
                         "is_treatment": i.research.is_treatment,
                         "is_stom": i.research.is_stom,
@@ -1436,7 +1437,7 @@ def directions_paraclinic_form(request):
                         }
                     )
 
-                if not force_form and iss["research"]["is_doc_refferal"]:
+                if not force_form and (iss["research"]["is_doc_refferal"] or iss["research"]["is_gistology"]):
                     iss = {
                         **iss,
                         "purpose": i.purpose_id or -1,

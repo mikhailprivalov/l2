@@ -96,15 +96,16 @@
                   </tr>
                   <tr v-if="l2_decriptive_coexecutor">
                     <td>Со-исполнитель</td>
-                    <td class="cl-td text-left">
+                    <td class="cl-td">
                       <Treeselect
                         v-model="direction_data.coExecutor"
-                        class="treeselect-noborder"
+                        class="reeselect-noborder-left treeselect-wide treeselect-34px"
                         :multiple="false"
                         :disable-branch-nodes="true"
                         :options="users"
                         placeholder="Исполнитель не выбран"
                         :disabled="visit_status"
+                        :align="left"
                       />
                     </td>
                   </tr>
