@@ -156,7 +156,8 @@ export default {
       required: false,
     },
     unique_research_pks: {
-      default: [],
+      type: Array,
+      default: () => ([]),
       required: false,
     },
   },
@@ -173,8 +174,10 @@ export default {
     tbData: {
       handler() {
         this.changeValue(this.tbData);
-        this.disabledButtons = this.unique_research_pks.includes(this.tbData.slice(-1)[0].current_researches)
-          && this.type_plan === 'Индивидуальный план';
+        if (this.tbData.length > 0) {
+          this.disabledButtons = this.unique_research_pks.includes(this.tbData.slice(-1)[0].current_researches)
+            && this.type_plan === 'Индивидуальный план';
+        }
       },
       immediate: true,
     },
