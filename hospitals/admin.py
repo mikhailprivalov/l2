@@ -8,7 +8,6 @@ class RefHospitals(admin.ModelAdmin):
         'short_title',
         'code_tfoms',
         'is_default',
-
     )
     list_display_links = (
         'title',
