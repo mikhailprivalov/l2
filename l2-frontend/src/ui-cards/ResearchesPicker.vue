@@ -365,7 +365,6 @@ export default {
           && row.pk !== '13'
           && (!this.l2_without_lab_and_paraclinic || (row.pk !== '2' && row.pk !== '3')),
       );
-      console.log('without l2', this.l2_without_lab_and_paraclinic);
       if (this.typesOnly && this.typesOnly.length > 0) {
         result = this.typesOnly.map((t) => result.find((r) => Number(r.pk) === Number(t))).filter(Boolean);
       } else {
