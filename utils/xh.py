@@ -46,7 +46,6 @@ def get_all_hospitals():
     return [{"id": x["pk"], "label": x['short_title'] or x['title']} for x in hospitals_data]
 
 
-
 def short_fio_dots(fio):
     fio_list = fio.split(' ')
     f = fio_list[0]
