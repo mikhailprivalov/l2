@@ -160,12 +160,18 @@
               />
             </td>
           </tr>
-          <tr v-if="external_organizations_enabled && !hide_params">
+          <tr v-if="external_organizations_enabled">
             <th>Внешняя организация:</th>
             <td class="cl-td">
-              <SelectFieldTitled
-                v-model="external_organization"
-                :variants="externalOrganizations"
+              <Treeselect
+                v-model="hospital_override"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                class="treeselect-noborder treeselect-wide"
+                :options="hospital_overrides"
+                :append-to-body="true"
+                placeholder="По умолчанию"
+                :clearable="false"
               />
             </td>
           </tr>
@@ -659,6 +665,8 @@ export default {
       global_research_direction_param: {},
       hospital_department_overrides: [{ id: -1, label: 'По умолчанию' }],
       hospital_department_override: -1,
+      hospital_overrides: [{ id: -1, label: 'По умолчанию' }],
+      hospital_override: -1,
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -1270,6 +1278,7 @@ export default {
         direction_form_params: this.form_params,
         current_global_direction_params: this.global_research_direction_param,
         hospital_department_override: this.hospital_department_override,
+        hospital_override: this.hospital_override,
         monitoring: this.monitoring,
       });
     },
@@ -1281,6 +1290,7 @@ export default {
       this.directions_count = '1';
       this.global_current_direction_param = -1;
       this.hospital_department_override = -1;
+      this.hospital_override = -1;
       this.tableFieldsErrors = {};
     },
     clear_fin() {
@@ -1339,8 +1349,9 @@ export default {
       return res.department_pk === -5;
     },
     async load_stationar_deparments() {
-      const { data } = await this.$api('procedural-list/suitable-departments');
+      const { data, hospitals } = await this.$api('procedural-list/suitable-departments');
       this.hospital_department_overrides = [{ id: -1, label: 'По умолчанию' }, ...data];
+      this.hospital_overrides = [{ id: -1, label: 'По умолчанию' }, ...hospitals];
     },
   },
 };

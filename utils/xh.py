@@ -1,5 +1,6 @@
 from api.directions.sql_func import get_lab_podr
 from directions.models import Issledovaniya
+from hospitals.models import Hospitals
 from podrazdeleniya.models import Podrazdeleniya
 
 
@@ -38,6 +39,12 @@ def check_float_is_valid(val):
 def get_hospitals_podrazdeleniya(hospital):
     podrazdeleniya = Podrazdeleniya.objects.values('pk', 'short_title', 'title').filter(p_type=7, hide=False, hospital_id=hospital).order_by('title')
     return [{"id": x["pk"], "label": x['short_title'] or x['title']} for x in podrazdeleniya]
+
+
+def get_all_hospitals():
+    hospitals_data = Hospitals.objects.values('pk', 'short_title', 'title').all().order_by('title')
+    return [{"id": x["pk"], "label": x['short_title'] or x['title']} for x in hospitals_data]
+
 
 
 def short_fio_dots(fio):
