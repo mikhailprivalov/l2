@@ -7,11 +7,13 @@ class RefHospitals(admin.ModelAdmin):
         'title',
         'short_title',
         'code_tfoms',
+        'is_default',
     )
     list_display_links = (
         'title',
         'short_title',
         'code_tfoms',
+        'is_default',
     )
     search_fields = ('title',)
     autocomplete_fields = ('client',)
