@@ -160,7 +160,7 @@
               />
             </td>
           </tr>
-          <tr v-if="external_organizations_enabled">
+          <tr v-if="external_organizations_enabled && canChangeHospitalDirection">
             <th>Внешняя организация:</th>
             <td class="cl-td">
               <Treeselect
@@ -846,6 +846,10 @@ export default {
       }
       return r;
     },
+    canChangeHospitalDirection() {
+      const groups = this.$store.getters.user_data.groups || [];
+      return groups.includes('Изменение больницы в направлении');
+    },
   },
   watch: {
     directions_count() {
@@ -1098,6 +1102,9 @@ export default {
     });
   },
   methods: {
+    async loadUserGroups() {
+      this.userGroups = this.$store.getters.user_data.groups || [];
+    },
     async changeSelectGlobalResearchDirectionParam(pk) {
       if (!this.researches_direction_params[pk]) {
         this.global_research_direction_param = {};
