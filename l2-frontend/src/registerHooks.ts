@@ -90,6 +90,7 @@ export default (instance: Vue): void => {
       direction_form_params: directionFormParams = {},
       current_global_direction_params: currentGlobalDirectionParams = {},
       hospital_department_override: hospitalDepartmentOverride = -1,
+      hospital_override: hospitalOverride = -1,
       monitoring = false,
       priceCategory = null,
     }) => {
@@ -135,6 +136,7 @@ export default (instance: Vue): void => {
           direction_form_params: directionFormParams,
           current_global_direction_params: currentGlobalDirectionParams,
           hospital_department_override: hospitalDepartmentOverride,
+          hospital_override: hospitalOverride,
           priceCategory,
         })
         .then(data => {
