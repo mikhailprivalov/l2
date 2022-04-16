@@ -29,6 +29,10 @@ def dashboard_charts(request):
 
     date_end = request_data.get("date_end", None)
     date_start = request_data.get("date_start", None)
+
+    date_period_start = request_data.get("dateStart", None)
+    date_period_end = request_data.get("dateEnd", None)
+
     if date_end and date_start:
         try:
             date_end = str_date(date_end)
@@ -57,13 +61,15 @@ def dashboard_charts(request):
             date_end = None
             date_start = None
     try:
-        result = exec_query(dashboard_pk, {"date_start": date_start, "date_end": date_end})
+        result = exec_query(dashboard_pk, {"date_start": date_period_start or date_start, "date_end": date_period_end or date_end})
     except Exception as e:
         logger.exception(e)
         return JsonResponse({"ok": False})
 
     dash = Dashboard.objects.get(pk=dashboard_pk)
-    return JsonResponse({'rows': result["result"], "ok": True, "intervalReloadSeconds": dash.interval_reload_seconds, "showDatesParam": result["show_dates_param"]})
+    return JsonResponse(
+        {'rows': result["result"], "ok": True, "intervalReloadSeconds": dash.interval_reload_seconds, "showDatesParam": result["show_dates_param"], "datesParam": result["dates_param"]}
+    )
 
 
 def define_period(period_type, period_duration):

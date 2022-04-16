@@ -161,7 +161,7 @@ h6 {
 }
 
 .fullpage-charts.fullscreen {
-  top: 50px;
+  top: 74px;
 }
 
 .fullpage-charts.without-login:not(.fullscreen) {
