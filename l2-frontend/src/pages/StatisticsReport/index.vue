@@ -11,18 +11,37 @@
             class="col-xs-6"
             style="padding-right: 5px"
           >
-            <Treeselect
-              v-if="!fullscreen"
-              v-model="dashboardPk"
-              :multiple="false"
-              :disable-branch-nodes="true"
-              :options="dashboards"
-              placeholder="Дэшборд не выбран"
-              :append-to-body="true"
-              class="treeselect-wide treeselect-32px"
-              :clearable="false"
-            />
-
+            <div class="input-group treeselect-input-group input-multiple">
+              <Treeselect
+                v-if="!fullscreen"
+                v-model="dashboardPk"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="dashboards"
+                placeholder="Дэшборд не выбран"
+                :append-to-body="true"
+                class="treeselect-wide"
+                :clearable="false"
+              />
+              <template v-if="showDatePicker">
+                <input
+                  v-model="dateStart"
+                  type="text"
+                  class="form-control"
+                  placeholder="начальная дата"
+                  @focus="paused = true"
+                  @blur="paused = false"
+                >
+                <input
+                  v-model="dateEnd"
+                  type="text"
+                  class="form-control"
+                  placeholder="конечная дата"
+                  @focus="paused = true"
+                  @blur="paused = false"
+                >
+              </template>
+            </div>
             <h4 v-if="dashboard.title && fullscreen">
               {{ dashboard.title }} — {{ loadedDashboardDateString }}
             </h4>
@@ -101,6 +120,10 @@ export default {
       restMsToReload: 0,
       checkReloadInterval: null,
       isNarrow: false,
+      dateStart: null,
+      dateEnd: null,
+      showDatePicker: false,
+      paused: false,
     };
   },
   computed: {
@@ -127,13 +150,15 @@ export default {
     },
   },
   watch: {
-    dashboardPk() {
+    async dashboardPk() {
       if (this.dashboardPk !== this.dashboardUrlPk) {
         this.$router.push({ name: 'statistics_report', params: this.dashboardPk ? { id: this.dashboardPk } : {} });
 
         if (this.hasMount) {
           this.loading = false;
-          this.loadDashboard();
+          this.paused = true;
+          await this.loadDashboard();
+          this.paused = false;
         }
       }
     },
@@ -156,6 +181,12 @@ export default {
         this.restMsToReload = this.intervalReloadSeconds * 1000;
       }
     },
+    dateStart() {
+      this.updateQuery();
+    },
+    dateEnd() {
+      this.updateQuery();
+    },
   },
   created() {
     window.addEventListener('resize', this.onWindowResize);
@@ -165,9 +196,14 @@ export default {
     window.removeEventListener('resize', this.onWindowResize);
   },
   async mounted() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('dateStart') && params.has('dateEnd')) {
+      this.dateStart = params.get('dateStart');
+      this.dateEnd = params.get('dateEnd');
+    }
     await this.entryToDashboard();
     this.checkReloadInterval = setInterval(() => {
-      if (this.restMsToReload > 0) {
+      if (this.restMsToReload > 0 && !this.paused) {
         this.restMsToReload = Math.max(this.restMsToReload - 200, 0);
       }
     }, 200);
@@ -176,6 +212,16 @@ export default {
     clearInterval(this.checkReloadInterval);
   },
   methods: {
+    updateQuery() {
+      if (!this.dateStart || !this.dateEnd) {
+        window.history.replaceState(null, null, window.location.pathname);
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        params.set('dateStart', this.dateStart);
+        params.set('dateEnd', this.dateEnd);
+        window.history.replaceState(null, null, `${window.location.pathname}?${params.toString()}`);
+      }
+    },
     onWindowResize() {
       const { innerWidth: width } = window;
       this.isNarrow = width <= 550;
@@ -226,11 +272,21 @@ export default {
       this.dashboard = {
         title: (this.dashboards.find((d) => d.id === this.dashboardPk) || {}).label,
       };
-      const { rows, ok, intervalReloadSeconds } = await this.$api('/dashboards/dashboard-charts', {
+      const {
+        rows, ok, intervalReloadSeconds, datesParam, showDatesParam,
+      } = await this.$api('/dashboards/dashboard-charts', this, ['dateStart', 'dateEnd'], {
         dashboard: this.dashboardPk,
       });
       this.charts = rows || [];
       this.intervalReloadSeconds = intervalReloadSeconds || 0;
+      this.dateStart = null;
+      this.dateEnd = null;
+      this.showDatePicker = false;
+      if (showDatesParam && datesParam) {
+        this.showDatePicker = !!showDatesParam;
+        this.dateStart = datesParam.date_start;
+        this.dateEnd = datesParam.date_end;
+      }
       if (!hidden) {
         await this.$store.dispatch(actions.DEC_LOADING);
       }
