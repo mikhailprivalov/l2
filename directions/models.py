@@ -905,6 +905,7 @@ class Napravleniya(models.Model):
         direction_purpose="NONE",
         external_organization="NONE",
         price_category=-1,
+        hospital=-1,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -963,6 +964,8 @@ class Napravleniya(models.Model):
             dir.external_organization_id = int(external_organization)
         if price_category is not None and price_category > -1:
             dir.price_category_id = price_category
+        if hospital > 0:
+            dir.hospital_id = hospital
         if save:
             dir.save()
         dir.set_polis()
@@ -1120,6 +1123,7 @@ class Napravleniya(models.Model):
         direction_form_params=None,
         current_global_direction_params=None,
         hospital_department_override=-1,
+        hospital_override=-1,
         price_category=-1,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
@@ -1350,6 +1354,7 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                             price_category=price_category,
+                            hospital=hospital_override,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1377,6 +1382,7 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                             price_category=price_category,
+                            hospital=hospital_override,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)

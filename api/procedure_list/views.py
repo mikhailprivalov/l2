@@ -13,7 +13,7 @@ from laboratory.decorators import group_required
 from pharmacotherapy.sql_func import get_pharmacotherapy_exec_by_directions
 from utils.dates import date_iter_range
 from datetime import datetime, time as dtime
-from utils.xh import get_hospitals_podrazdeleniya
+from utils.xh import get_hospitals_podrazdeleniya, get_all_hospitals
 from directory.models import Researches
 from laboratory.settings import TIME_ZONE
 
@@ -254,7 +254,8 @@ def procedure_aggregate(request):
 def get_suitable_departments(request):
     hospital_pk = request.user.doctorprofile.get_hospital_id()
     pdr = get_hospitals_podrazdeleniya(hospital_pk)
-    data = {"data": pdr}
+    hospitals = get_all_hospitals()
+    data = {"data": pdr, "hospitals": hospitals}
     if hasattr(request, 'plain_response') and request.plain_response:
         return data
     return JsonResponse(data)
