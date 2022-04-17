@@ -1803,12 +1803,7 @@ def directions_by_category_result_year(request):
 
     for d in confirmed_directions:
         if d.direction not in directions:
-            directions[d.direction] = {
-                'pk': d.direction,
-                'confirmedAt': d.ch_time_confirmation,
-                'services': [],
-                'study': d.study_instance_uid_tag
-            }
+            directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag}
         directions[d.direction]['services'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})
 
@@ -2159,12 +2154,7 @@ def document_lk_save(request):
         for g in groups[:50]:
             for f in g['fields'][:50]:
                 fields_count += 1
-                f_result = directions.ParaclinicResult(
-                    issledovaniye=iss,
-                    field_id=f['pk'],
-                    field_type=f['field_type'],
-                    value=html.escape(f['new_value'][:400])
-                )
+                f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=f['pk'], field_type=f['field_type'], value=html.escape(f['new_value'][:400]))
 
                 f_result.save()
 

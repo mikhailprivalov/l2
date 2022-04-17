@@ -47,7 +47,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import DEATH_RESEARCH_PK, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
+from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -1076,7 +1076,7 @@ def result_print(request):
                             fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     if not iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
-                elif iss.research.can_created_patient:
+                elif iss.research.can_created_patient and iss.doc_confirmation.user_id == LK_USER:
                     fwb.append(Paragraph("Дата заполнения пациентом: {}".format(t2), styleBold))
 
                 if not iss.research.has_own_form_result and not iss.research.is_form:
