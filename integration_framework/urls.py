@@ -41,6 +41,8 @@ urlpatterns = [
     path('schedule/available-hospitalization-plan', views.available_hospitalization_plan),
     path('schedule/check-hosp-slot-before-save', views.check_hosp_slot_before_save),
     path('documents-lk', views.documents_lk),
+    path('details-document-lk', views.details_document_lk),
+    path('document-lk-save', views.document_lk_save),
     path('forms-lk', views.forms_lk),
     path('pdf-forms-lk', views.pdf_form_lk),
     path('files-params', views.get_limit_download_files),

@@ -265,7 +265,7 @@ def get_confirm_direction_pathology(d_s, d_e):
     return row
 
 
-def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=False, is_paraclinic=False, is_doc_refferal=False):
+def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=False, is_paraclinic=False, is_doc_refferal=False, is_user_forms=False):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -283,6 +283,7 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
              WHEN %(is_lab)s = TRUE THEN directory_researches.podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
              WHEN %(is_doc_refferal)s = TRUE THEN is_doc_refferal = TRUE
              WHEN %(is_paraclinic)s = TRUE THEN is_paraclinic = TRUE
+             WHEN %(is_user_forms)s = TRUE THEN can_created_patient = TRUE
              END
             )
             LEFT JOIN directory_researches ON
@@ -301,6 +302,7 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
                 'is_lab': is_lab,
                 'is_paraclinic': is_paraclinic,
                 'is_doc_refferal': is_doc_refferal,
+                'is_user_forms': is_user_forms,
                 'lab_podr': lab_podr,
                 'card_pk': card_pk1,
             },

@@ -1,5 +1,6 @@
 import base64
 import os
+import html
 
 from django.test import Client as TC
 import datetime
@@ -54,7 +55,7 @@ from laboratory.settings import (
     LK_FILE_COUNT,
     LK_DAY_MONTH_START_SHOW_RESULT,
 )
-from laboratory.utils import current_time, strfdatetime
+from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
 from results.sql_func import get_laboratory_results_by_directions, get_not_confirm_direction
@@ -67,7 +68,7 @@ from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date, try_strptime
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
-from directions.models import DirectionDocument, DocumentSign, Napravleniya
+from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
@@ -1765,6 +1766,7 @@ def directions_by_category_result_year(request):
     is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
     is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
     is_extract = request_data.get('isExtract', mode == 'extract')
+    is_user_forms = request_data.get('isUserForms', mode == 'forms')
     year = request_data['year']
 
     card: Card = find_patient(request_data.get('snils'), request_data.get('enp'))
@@ -1776,7 +1778,7 @@ def directions_by_category_result_year(request):
     d2 = datetime.datetime.strptime(f'31.12.{year}', '%d.%m.%Y')
     end_date = datetime.datetime.combine(d2, datetime.time.max)
 
-    if not is_lab and not is_doc_refferal and not is_paraclinic and not is_extract:
+    if not is_lab and not is_doc_refferal and not is_paraclinic and not is_extract and not is_user_forms:
         return JsonResponse({"results": []})
 
     if is_lab:
@@ -1792,7 +1794,7 @@ def directions_by_category_result_year(request):
             confirmed_directions = get_confirm_direction_patient_year_is_extract(start_date, end_date, card.pk, extract_research_pks)
 
     if not is_extract and not confirmed_directions:
-        confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card.pk, is_lab, is_paraclinic, is_doc_refferal)
+        confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card.pk, is_lab, is_paraclinic, is_doc_refferal, is_user_forms)
 
     if not confirmed_directions:
         return JsonResponse({"results": []})
@@ -1818,6 +1820,7 @@ def results_by_direction(request):
     is_lab = request_data.get('isLab', mode == 'laboratory')
     is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
     is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
+    is_user_forms = request_data.get('isUserFroms', mode == 'forms')
     direction = request_data.get('pk')
 
     directions = request_data.get('directions', [])
@@ -1836,7 +1839,7 @@ def results_by_direction(request):
 
             objs_result[r.direction]['services'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
 
-    if is_paraclinic or is_doc_refferal:
+    if is_paraclinic or is_doc_refferal or is_user_forms:
         results = desc_to_data(directions, force_all_fields=True)
         for i in results:
             direction_data = i['result'][0]["date"].split(' ')
@@ -2030,3 +2033,142 @@ def add_file_hospital_plan(request):
 @can_use_schedule_only
 def get_limit_download_files(request):
     return Response({"lk_file_count": LK_FILE_COUNT, "lk_file_size_bytes": LK_FILE_SIZE_BYTES})
+
+
+@api_view(['POST'])
+@can_use_schedule_only
+def document_lk_save(request):
+    form = request.body
+
+    data = data_parse(
+        form,
+        {
+            'snils': 'str_strip',
+            'enp': 'str_strip',
+            'family': 'str_strip',
+            'name': 'str_strip',
+            'patronymic': 'str_strip',
+            'sex': 'str_strip',
+            'birthdate': 'str_strip',
+            'service': int,
+            'groups': list,
+        },
+    )
+
+    snils: str = data[0]
+    enp: str = data[1]
+    family: str = data[2]
+    name: str = data[3]
+    patronymic: str = data[4]
+    sex: str = data[5].lower()
+    birthdate: str = data[6]
+    service: int = data[7]
+    groups: dict = data[8]
+
+    if sex == 'm':
+        sex = 'м'
+
+    if sex == 'f':
+        sex = 'ж'
+
+    snils = ''.join(ch for ch in snils if ch.isdigit())
+
+    individual = None
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        individual = individuals.first()
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual and family and name:
+        individual = Individual.import_from_tfoms(
+            {
+                "family": family,
+                "given": name,
+                "patronymic": patronymic,
+                "gender": sex,
+                "birthdate": birthdate,
+                "enp": enp,
+                "snils": snils,
+            },
+            need_return_individual=True,
+        )
+    if not individual:
+        return Response({"ok": False, 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    if not card:
+        card = Card.add_l2_card(individual)
+
+    if not card:
+        return Response({"ok": False, 'message': 'Карта не найдена'})
+
+    if SCHEDULE_AGE_LIMIT_LTE:
+        age = card.individual.age()
+        if age > SCHEDULE_AGE_LIMIT_LTE:
+            return Response({"ok": False, 'message': f'Пациент должен быть не старше {SCHEDULE_AGE_LIMIT_LTE} лет'})
+
+    service: Researches = Researches.objects.filter(pk=service, can_created_patient=True).first()
+
+    if not service:
+        return Response({"ok": False, 'message': 'Услуга не найдена'})
+
+    date = timezone.now()
+    date_start = date_at_bound(date)
+
+    user = User.objects.get(pk=LK_USER).doctorprofile
+
+    if Napravleniya.objects.filter(client=card, issledovaniya__research=service, data_sozdaniya__gte=date_start).count() > 1:
+        return Response({"ok": False, 'message': 'Вы сегодня уже заполняли эту форму два раза!\nПопробуйте позднее.'})
+
+    with transaction.atomic():
+        result = Napravleniya.gen_napravleniya_by_issledovaniya(
+            card.pk,
+            "",
+            "ОМС",
+            "",
+            None,
+            user,
+            {-1: [service.pk]},
+            {},
+            False,
+            {},
+            vich_code="",
+            count=1,
+            discount=0,
+            parent_iss=None,
+        )
+
+        direction = result["list_id"][0]
+
+        iss = Issledovaniya.objects.filter(napravleniye_id=direction)[0]
+
+        iss.doc_save = user
+        iss.time_save = date
+        iss.doc_confirmation = user
+        iss.time_confirmation = date
+        iss.save()
+        iss.napravleniye.visit_who_mark = user
+        iss.napravleniye.visit_date = date
+        iss.napravleniye.save()
+
+        fields_count = 0
+
+        for g in groups[:50]:
+            for f in g['fields'][:50]:
+                fields_count += 1
+                f_result = directions.ParaclinicResult(
+                    issledovaniye=iss,
+                    field_id=f['pk'],
+                    field_type=f['field_type'],
+                    value=html.escape(f['new_value'][:400])
+                )
+
+                f_result.save()
+
+        if fields_count == 0:
+            transaction.set_rollback(True)
+
+    return Response({"ok": True, "message": f"Форма \"{service.get_title()}\" ({direction}) сохранена"})

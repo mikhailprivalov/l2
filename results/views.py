@@ -1076,6 +1076,8 @@ def result_print(request):
                             fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     if not iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
+                elif iss.research.can_created_patient:
+                    fwb.append(Paragraph("Дата заполнения пациентом: {}".format(t2), styleBold))
 
                 if not iss.research.has_own_form_result and not iss.research.is_form:
                     if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:

@@ -106,11 +106,13 @@ def query_debugger(func):
     return inner_func
 
 
-def str_date(param, indicator="max"):
+def date_at_bound(date, indicator="max"):
     user_timezone = pytz.timezone(TIME_ZONE)
-    d = datetime.strptime(param, '%d.%m.%Y')
     if indicator == "max":
-        d = datetime.combine(d, time.max).astimezone(user_timezone)
-    else:
-        d = datetime.combine(d, time.min).astimezone(user_timezone)
-    return d
+        return datetime.combine(date, time.max).astimezone(user_timezone)
+    return datetime.combine(date, time.min).astimezone(user_timezone)
+
+
+def str_date(param, indicator="max"):
+    d = datetime.strptime(param, '%d.%m.%Y')
+    return date_at_bound(d, indicator=indicator)
