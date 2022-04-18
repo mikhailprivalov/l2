@@ -503,6 +503,18 @@ const STATS_CATEGORIES = {
       },
     },
   },
+  dispensary: {
+    title: 'Д-учет',
+    groups: ['Врач консультаций', 'Просмотр статистики'],
+    reports: {
+      disp: {
+        groups: ['Врач консультаций', 'Просмотр статистики'],
+        title: 'План помесячно',
+        params: [PARAMS_TYPES.MONTH_YEAR],
+        url: '/statistic/xls?type=disp-plan&month=<month>&year=<year>',
+      },
+    },
+  },
 };
 
 const getVaues = () => ({
