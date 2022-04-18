@@ -1243,6 +1243,30 @@ def dispansery_card_diagnos(cards):
     return rows
 
 
+def dispansery_registered_by_year_age(age_param, date_param, junior=1):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT distinct on (card_id) 
+                card_id
+                from clients_dispensaryreg
+                LEFT JOIN clients_card cc on clients_dispensaryreg.card_id=cc.id
+                LEFT JOIN clients_individual ci on cc.individual_id=ci.id
+                WHERE 
+                CASE 
+                WHEN %(junior)s=1 then
+                    date_end is NULL and date_part('year', age(timestamp %(date_param)s, ci.birthday))::int < %(age_param)s
+                WHEN %(junior)s=0 then
+                    date_end is NULL and date_part('year', age(timestamp %(date_param)s, ci.birthday))::int >= %(age_param)s
+                END
+            """,
+            params={'age_param': age_param, 'date_param': date_param, 'junior': junior},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def doctors_pass_count_patient_by_date(doctors_tuple, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(

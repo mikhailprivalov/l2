@@ -1183,7 +1183,25 @@ def statistic_xls(request):
             query_diagnoses_pk = sql_func.dispansery_card_diagnos(tuple(cards_pk))
             result = dispensary_data.handle_query(query, query_diagnoses_pk)
             ws = dispensary_data.dispansery_plan_fill_data(ws, result)
+    elif tp == "disp-registered":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Дисп-учет зарегистрирвоано")
+        data_date = request_data.get("date_values")
+        data_date = json.loads(data_date)
 
+        if request_data.get("date_type") == 'd':
+            d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+        else:
+            month_obj = int(data_date['month']) + 1
+            _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
+            d1 = datetime.date(int(data_date['year']), month_obj, num_days)
+        child = sql_func.dispansery_registered_by_year_age(18, d1, 1)
+        adult = sql_func.dispansery_registered_by_year_age(18, d1, 0)
+        result = [{"adult": len(adult), "child": len(child)}]
+        ws = dispensary_data.dispansery_reg_count_base(ws, d1)
+        ws = dispensary_data.dispansery_reg_count_fill_data(ws, result)
     elif tp == "covid_sum":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()

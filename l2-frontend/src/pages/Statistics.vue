@@ -513,6 +513,12 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.MONTH_YEAR],
         url: '/statistic/xls?type=disp-plan&month=<month>&year=<year>',
       },
+      registered: {
+        groups: ['Врач консультаций', 'Просмотр статистики'],
+        title: 'Стоит на учете',
+        params: [PARAMS_TYPES.PERIOD_DATE],
+        url: '/statistic/xls?type=disp-registered&date_type=<date-type>&date_values=<date-values>',
+      },
     },
   },
 };
