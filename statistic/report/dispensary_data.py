@@ -13,7 +13,7 @@ def handle_query(query, query_diagnoses_pk):
 
 
 def dispansery_plan_base(ws1, d1, d2):
-    style_border = NamedStyle(name=f"style_border_ca")
+    style_border = NamedStyle(name="style_border_ca")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border.font = Font(bold=True, size=14)
@@ -35,6 +35,7 @@ def dispansery_plan_base(ws1, d1, d2):
         ws1.cell(row=4, column=idx).style = style_border
 
     return ws1
+
 
 def dispansery_plan_fill_data(ws1, result_query, row=4):
     style_border1 = NamedStyle(name="style_border1")
