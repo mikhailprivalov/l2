@@ -89,7 +89,6 @@ def dispansery_reg_count_fill_data(ws1, result_query, row=4):
     style_border1.alignment = Alignment(wrap_text=True, horizontal='left', vertical='center')
 
     r = row
-    print(result_query)
     for i in result_query:
         r += 1
         ws1.cell(row=r, column=1).value = str(i["adult"])
