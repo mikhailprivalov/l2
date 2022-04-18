@@ -71,5 +71,5 @@ def get_researches_details(pk):
 
 def get_can_created_patient():
     researches = DResearches.objects.filter(can_created_patient=True, hide=False)
-    result = {i.pk: i.title for i in researches}
+    result = [{"pk": i.pk, "title": i.get_title(), "isRequest": i.convert_to_doc_call} for i in researches]
     return result

@@ -22,9 +22,19 @@
     </td>
     <td v-tippy="{ html: '#template-' + r.pk + '-5', ...commonTippy }">
       {{ r.purpose }}
+      <div v-if="r.purpose_id === 24">
+        {{ r.research }}
+      </div>
     </td>
     <td v-tippy="{ html: '#template-' + r.pk + '-6', ...commonTippy }">
       {{ r.comment }}
+      <div v-if="r.directionPk">
+        <a
+          href="#"
+          class="a-under"
+          @click.prevent="printProtocol(r.directionPk)"
+        >просмотр</a>
+      </div>
     </td>
     <td v-tippy="{ html: '#template-' + r.pk + '-7', ...commonTippy }">
       <div v-if="r.isMainExternal">
@@ -137,6 +147,9 @@ export default {
     });
   },
   methods: {
+    printProtocol(pk) {
+      this.$root.$emit('print:results', [pk]);
+    },
     async onChangeStatus() {
       await this.$store.dispatch(actions.INC_LOADING);
       const {

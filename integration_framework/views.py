@@ -2047,7 +2047,11 @@ def document_lk_save(request):
             'birthdate': 'str_strip',
             'service': int,
             'groups': list,
+            'phone': 'str_strip',
         },
+        {
+            'phone': '',
+        }
     )
 
     snils: str = data[0]
@@ -2059,6 +2063,7 @@ def document_lk_save(request):
     birthdate: str = data[6]
     service: int = data[7]
     groups: dict = data[8]
+    phone: str = data[9]
 
     if sex == 'm':
         sex = 'м'
@@ -2151,14 +2156,49 @@ def document_lk_save(request):
 
         fields_count = 0
 
+        comment_lines = []
+
         for g in groups[:50]:
+            if g['title'] and g['show_title']:
+                comment_lines.append(f"{g['title']}:")
+
             for f in g['fields'][:50]:
+                if not f['new_value']:
+                    continue
                 fields_count += 1
                 f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=f['pk'], field_type=f['field_type'], value=html.escape(f['new_value'][:400]))
 
                 f_result.save()
 
+                line = ""
+                if f_result.field.title:
+                    line = f"{f_result.field.title}: "
+                line += f_result.value
+                comment_lines.append(line)
+
         if fields_count == 0:
             transaction.set_rollback(True)
+            return Response({"ok": False})
+        elif service.convert_to_doc_call:
+            if not phone:
+                return Response({"ok": False, "message": "Телефон должен быть заполнен"})
+            hospital = Hospitals.get_default_hospital()
+            DoctorCall.doctor_call_save({
+                'card': card,
+                'research': service.pk,
+                'address': card.main_address,
+                'district': -1,
+                'date': current_time(),
+                'comment': '\n'.join(comment_lines),
+                'phone': phone,
+                'doc': -1,
+                'purpose': 24,
+                'hospital': hospital.pk,
+                'external': True,
+                'external_num': str(direction),
+                'is_main_external': False,
+                'direction': direction,
+            })
+            return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
 
     return Response({"ok": True, "message": f"Форма \"{service.get_title()}\" ({direction}) сохранена"})

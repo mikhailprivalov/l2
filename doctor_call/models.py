@@ -40,6 +40,7 @@ class DoctorCall(models.Model):
         (21, 'Кадровые вопросы'),
         (22, 'Льготы инвалидности, социальные'),
         (23, 'Справочные вопросы'),
+        (24, 'Внешняя заявка'),
     )
 
     STATUS = (
@@ -70,6 +71,9 @@ class DoctorCall(models.Model):
     email = models.CharField(max_length=64, blank=True, default=None, null=True, help_text='Email заявки на результат covid')
     executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="executor", help_text='Исполнитель заявки', on_delete=models.CASCADE)
     status = models.PositiveSmallIntegerField(choices=STATUS, db_index=True, default=STATUS[0][0], blank=True)
+    direction = models.ForeignKey(
+        'directions.Napravleniya', db_index=True, blank=True, null=True, related_name="doc_call_direction", help_text='Связанное направление', on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Вызов'
@@ -114,6 +118,7 @@ class DoctorCall(models.Model):
                 not self.need_send_to_external and (not doc or doc.all_hospitals_users_control or not self.hospital or self.hospital == doc.get_hospital()) and not self.is_main_external
             ),
             "inLog": DoctorCallLog.objects.filter(call=self).count(),
+            "directionPk": self.direction_id,
         }
 
     @property
@@ -172,6 +177,7 @@ class DoctorCall(models.Model):
             external_num=data.get('external_num') or '',
             email=None if not email else email[:64],
             need_send_to_external=has_external_org and SettingManager.l2('send_doc_calls') and not is_main_external,
+            direction_id=data.get('direction'),
         )
         if data.get('as_executed'):
             doc_call.status = 3

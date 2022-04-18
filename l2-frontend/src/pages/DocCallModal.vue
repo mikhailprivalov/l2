@@ -38,7 +38,7 @@
             </div>
           </div>
           <div class="an-sidebar-content-row">
-            <div>{{ r.address }}</div>
+            <div>{{ r.address || 'нет адреса' }}</div>
           </div>
           <div
             v-if="r.email"
@@ -85,6 +85,21 @@
               Примечания:
             </div>
             <div>{{ r.comment }}</div>
+          </div>
+          <div
+            v-if="r.directionPk"
+            class="an-sidebar-content-row"
+          >
+            <div class="an-sidebar-content-row-header">
+              Связанный протокол:
+            </div>
+            <div>
+              <a
+                href="#"
+                class="a-under"
+                @click.prevent="printProtocol(r.directionPk)"
+              >просмотр</a>
+            </div>
           </div>
           <div class="an-sidebar-content-row">
             <div class="an-sidebar-content-row-header">
@@ -171,6 +186,9 @@ export default {
     },
   },
   methods: {
+    printProtocol(pk) {
+      this.$root.$emit('print:results', [pk]);
+    },
     async setMeAsExecutor() {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
