@@ -1202,6 +1202,71 @@ def statistics_dispanserization(researches_tuple, d_s, d_e):
     return rows
 
 
+def dispansery_plan(d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT  
+                distinct on (month, cc.id)
+                to_char(date, 'MM-YYYY') as month,
+                cc.number,
+                ci.family, ci.name, ci.patronymic, 
+                to_char(ci.birthday, 'DD.MM.YYYY') as born,
+                cc.id as card_id
+                FROM public.clients_dispensaryregplans
+                LEFT JOIN clients_card cc on clients_dispensaryregplans.card_id=cc.id
+                LEFT JOIN clients_individual ci on cc.individual_id=ci.id
+                WHERE date AT TIME ZONE %(tz)s BETWEEN %(d_start)s and %(d_end)s
+                order by month desc, card_id
+
+            """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def dispansery_card_diagnos(cards):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT distinct on (diagnos, card_id) diagnos, card_id
+            FROM clients_dispensaryreg
+            WHERE card_id in %(cards)s and date_end is NULL
+            ORDER BY card_id
+            """,
+            params={'cards': cards},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def dispansery_registered_by_year_age(age_param, date_param, junior=1):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT distinct on (card_id) 
+                card_id
+                from clients_dispensaryreg
+                LEFT JOIN clients_card cc on clients_dispensaryreg.card_id=cc.id
+                LEFT JOIN clients_individual ci on cc.individual_id=ci.id
+                WHERE 
+                CASE 
+                WHEN %(junior)s=1 then
+                    date_end is NULL and date_part('year', age(timestamp %(date_param)s, ci.birthday))::int < %(age_param)s
+                WHEN %(junior)s=0 then
+                    date_end is NULL and date_part('year', age(timestamp %(date_param)s, ci.birthday))::int >= %(age_param)s
+                END
+            """,
+            params={'age_param': age_param, 'date_param': date_param, 'junior': junior},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def doctors_pass_count_patient_by_date(doctors_tuple, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
