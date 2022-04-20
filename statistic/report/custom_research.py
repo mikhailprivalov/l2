@@ -9,7 +9,6 @@ def custom_research_data(query_sql):
     tmp_result = {}
     custom_fields = []
     for i in query_sql:
-        print(i)
         if prev_direction != i.direction_number and step != 0:
             result.append(tmp_result.copy())
         elif prev_direction != i.direction_number:
