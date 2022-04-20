@@ -30,7 +30,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -693,6 +693,7 @@ def statistic_xls(request):
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
         purposes = request_data.get("purposes", "")
+        special_fields = request_data.get("special-fields", "false")
         is_purpose = 0
         if purposes != "-1":
             purposes = tuple(purposes.split(","))
@@ -783,6 +784,12 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
+        elif special_fields == "true":
+            # ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
+            researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id)
+            result = custom_research.custom_research_data(researches_sql)
+            ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
+            ws = custom_research.custom_research_fill_data(ws, result)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
