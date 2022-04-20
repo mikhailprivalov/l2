@@ -32,7 +32,7 @@ def custom_research_data(query_sql):
     return {"result": result, "custom_fields": custom_fields, "fields": fields}
 
 
-def custom_research_base(ws1, d1, d2, result_query, research_titile):
+def custom_research_base(ws1, d1, d2, result_query, research_title):
     style_border = NamedStyle(name="style_border_ca")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -40,7 +40,7 @@ def custom_research_base(ws1, d1, d2, result_query, research_titile):
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
     ws1.cell(row=1, column=1).value = 'Услуга:'
-    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=1, column=2).value = research_title
     ws1.cell(row=2, column=1).value = 'Период:'
     ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
 
