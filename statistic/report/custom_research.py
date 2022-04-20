@@ -32,8 +32,8 @@ def custom_research_data(query_sql):
     return {"result": result, "custom_fields": custom_fields, "fields": fields}
 
 
-def custom_research_base(ws1, d1, d2, result_query, research_titile, row=5):
-    style_border = NamedStyle(name=f"style_border_ca{row}")
+def custom_research_base(ws1, d1, d2, result_query, research_titile):
+    style_border = NamedStyle(name="style_border_ca")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border.font = Font(bold=True, size=11)
@@ -56,7 +56,7 @@ def custom_research_base(ws1, d1, d2, result_query, research_titile, row=5):
 
     columns2 = [(i, 25) for i in result_query["custom_fields"]]
     columns.extend(columns2)
-
+    row = 5
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=row, column=idx).value = column[0]
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
