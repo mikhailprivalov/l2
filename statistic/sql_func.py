@@ -321,10 +321,12 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                   and (directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
                   and directory_paraclinicinputfield.for_talon = true
                   and directions_napravleniya.hospital_id = %(filter_hospital_id)s
+                  and directions_issledovaniya.medical_examination IS NOT NULL
                 WHEN %(filter_hospital_id)s = -1 THEN
                   directions_issledovaniya.research_id=%(research_id)s
                   and (directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
-                  and directory_paraclinicinputfield.for_talon = true
+                  and directory_paraclinicinputfield.for_talon = true 
+                  and directions_issledovaniya.medical_examination IS NOT NULL
                 END
                 order by directions_issledovaniya.napravleniye_id
             """,
