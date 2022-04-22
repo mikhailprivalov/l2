@@ -790,7 +790,7 @@ def directions_services(request):
                 "fin_source": "" if not n.istochnik_f else "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title),
                 "priceCategory": "" if not n.price_category else n.price_category.title,
                 "coExecutor": n.co_executor_id,
-                "additionalNumber": n.additional_number,
+                "additionalNumber": n.register_number,
             }
             response["researches"] = researches
             response["loaded_pk"] = pk
@@ -817,17 +817,17 @@ def directions_mark_visit(request):
     pk = request_data.get("pk", -1)
     cancel = request_data.get("cancel", False)
     co_executor = request_data.get("coExecutor", None)
-    additional_number = request_data.get("additionalNumber", '')
+    register_number = request_data.get("additionalNumber", '')
     dn = Napravleniya.objects.filter(pk=pk)
     f = False
     if dn.exists():
         n = dn[0]
-        if additional_number and n.additional_number != additional_number:
-            if Napravleniya.objects.filter(additional_number=additional_number).exclude(pk=pk).exists():
-                response["message"] = f'Номер "{additional_number}" уже занят'
+        if register_number and n.register_number != register_number:
+            if Napravleniya.objects.filter(register_number=register_number).exclude(pk=pk).exists():
+                response["message"] = f'Номер "{register_number}" уже занят'
                 return JsonResponse(response)
-            n.additional_number = additional_number
-            n.save(update_fields=['additional_number'])
+            n.register_number = register_number
+            n.save(update_fields=['register_number'])
         if co_executor and n.co_executor_id != co_executor:
             n.co_executor_id = co_executor
             n.save(update_fields=['co_executor_id'])
@@ -876,7 +876,7 @@ def directions_mark_visit(request):
             log_data = {
                 "Посещение": "отмена" if cancel else "да",
                 "Дата и время": response["visit_date"],
-                "Дополнительный номер": additional_number,
+                "Дополнительный номер": register_number,
                 "Со-исполнитель": co_executor,
             }
             Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
@@ -930,7 +930,7 @@ def directions_visit_journal(request):
         visit_who_mark=request.user.doctorprofile,
     ).order_by("-visit_date"):
         response["data"].append(
-            {"pk": v.pk, "additionalNumber": v.additional_number, "client": v.client.individual.fio(full=True), "card": v.client.number_with_type(), "datetime": strdatetime(v.visit_date)}
+            {"pk": v.pk, "additionalNumber": v.register_number, "client": v.client.individual.fio(full=True), "card": v.client.number_with_type(), "datetime": strdatetime(v.visit_date)}
         )
     return JsonResponse(response)
 
@@ -1166,8 +1166,8 @@ def directions_paraclinic_form(request):
         else:
             pk = -1
     elif search_mode == 'additional':
-        if Napravleniya.objects.filter(additional_number=pk).exists():
-            pk = Napravleniya.objects.filter(additional_number=pk)[0].pk
+        if Napravleniya.objects.filter(register_number=pk).exists():
+            pk = Napravleniya.objects.filter(register_number=pk)[0].pk
         else:
             pk = -1
 
@@ -1254,7 +1254,7 @@ def directions_paraclinic_form(request):
                 "fin_source": d.fin_title,
                 "fin_source_id": d.istochnik_f_id,
                 "priceCategory": "" if not d.price_category else d.price_category.title,
-                "additionalNumber": d.additional_number,
+                "additionalNumber": d.register_number,
                 "coExecutor": "" if not d.co_executor else d.co_executor.get_fio(dots=True),
                 "tube": None,
                 "amd": d.amd_status,
