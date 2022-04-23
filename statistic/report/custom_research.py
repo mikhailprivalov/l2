@@ -11,7 +11,7 @@ def custom_research_data(query_sql):
     for i in query_sql:
         if prev_direction != i.direction_number and step != 0:
             result.append(tmp_result.copy())
-        elif prev_direction != i.direction_number:
+        if prev_direction != i.direction_number:
             tmp_result = {
                 "Направление": i.direction_number,
                 "Пациент": i.patient_fio,
