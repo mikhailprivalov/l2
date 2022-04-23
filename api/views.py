@@ -2147,3 +2147,23 @@ def current_time(request):
             "time": now.strftime('%X'),
         }
     )
+
+
+def search_param(request):
+    data = json.loads(request.body)
+    case_number = data.get('case_number', None)
+    date_get_start = data.get('dateGetStart', None)
+    date_get_end = data.get('dateGetEnd', None)
+    hosp = data.get('hosp', None)
+    date_examination_start = data.get('dateExaminationStart', None)
+    date_examination_end = data.get('dateExaminationEnd', None)
+    doc_comfirm = data.get('docComfirm', None)
+
+    # из проткола
+    date_recieve_start = data.get('dateRecieveStart', None)
+    date_recieve_end = data.get('dateRecieveEnd', None)
+    date_registred_start = data.get('dateRegistredStart', None)
+    date_registred_end = data.get('dateRegistredEnd', None)
+    final_text = data.get('finalText', None)
+
+    pass
