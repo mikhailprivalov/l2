@@ -286,7 +286,6 @@ def serch_data_by_param(
                 'date_examination_start': date_examination_start, 'date_examination_end': date_examination_end,
                 'date_registred_start': date_registred_start, 'date_registred_end': date_registred_end,
                 'doc_confirm': doc_confirm,
-
                 'date_recieve': date_recieve,
                 'date_get': date_get,
                 'final_text': final_text,
