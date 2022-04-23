@@ -263,17 +263,31 @@ def serch_data_by_param(
                 LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
                 WHERE 
                     directions_issledovaniya.research_id=%(research_id)s and directions_issledovaniya.time_confirmation IS NOT NULL 
-                    and directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s
-                AND CASE WHEN %(case_number)s > -1 THEN directions_napravleniya.additional_number = %(case_number)s END
-                AND CASE WHEN %(hosp)s > -1 THEN directions_napravleniya.hospital_id = %(hosp)s END
+                    and directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN (%(date_create_start)s AND %(date_create_end)s)
+                AND CASE WHEN %(case_number)s > -1 THEN directions_napravleniya.additional_number = %(case_number)s 
+                         WHEN %(case_number)s = -1 THEN directions_napravleniya.cancel is not Null 
+                END
+                AND CASE WHEN %(hosp)s > -1 THEN directions_napravleniya.hospital_id = %(hosp)s
+                         WHEN %(hosp)s = -1 THEN directions_napravleniya.cancel is not Null 
+                END
                 AND CASE WHEN %(date_examination_start)s > -1 THEN 
-                     directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(date_examination_start)s AND %(date_examination_end)s END
-                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s END
-                AND CASE WHEN %(date_registred_start)s > -1 THEN directions_napravleniya.visit_date AT TIME ZONE %(tz)s BETWEEN %(date_registred_start)s AND %(date_registred_end)s END
-                
-                AND CASE WHEN %(date_recieve)s > -1 THEN directory_paraclinicinputfield.title = 'Дата получения' and directions_paraclinicresult.value ~* %(date_recieve)s END
-                AND CASE WHEN %(date_get)s > -1 THEN directory_paraclinicinputfield.title = 'Дата забора' and directions_paraclinicresult.value ~* %(date_recieve)s END
-                AND CASE WHEN %(final_text)s != -1 THEN directions_paraclinicresult.value ~* %(final_text)s 
+                     directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(date_examination_start)s AND %(date_examination_end)s
+                     WHEN %(date_examination_start)s = -1 THEN directions_napravleniya.cancel is not Null
+                END
+                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s
+                         WHEN %(doc_confirm)s = -1 THEN directions_napravleniya.cancel is not Null 
+                END
+                AND CASE WHEN %(date_registred_start)s > -1 THEN directions_napravleniya.visit_date AT TIME ZONE %(tz)s BETWEEN %(date_registred_start)s AND %(date_registred_end)s
+                         WHEN %(date_registred_start)s = -1 THEN directions_napravleniya.cancel is not Null 
+                END
+                AND CASE WHEN %(date_recieve)s > -1 THEN directory_paraclinicinputfield.title = 'Дата получения' and directions_paraclinicresult.value ~* %(date_recieve)s
+                          WHEN %(date_recieve)s = -1 THEN directions_napravleniya.cancel is not Null
+                END
+                AND CASE WHEN %(date_get)s > -1 THEN directory_paraclinicinputfield.title = 'Дата забора' and directions_paraclinicresult.value ~* %(date_recieve)s
+                         WHEN %(date_get)s = -1 THEN directions_napravleniya.cancel is not Null
+                END
+                AND CASE WHEN %(final_text)s != -1 THEN directions_paraclinicresult.value ~* %(final_text)s
+                         WHEN %(final_text)s = -1 THEN directions_napravleniya.cancel is not Null 
                 END
                 order by directions_issledovaniya.napravleniye_id
             """,
