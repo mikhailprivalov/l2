@@ -290,8 +290,8 @@ def serch_data_by_param(
                 'date_recieve': date_recieve,
                 'date_get': date_get,
                 'final_text': final_text,
-                'tz': TIME_ZONE
-            }
+                'tz': TIME_ZONE,
+            },
         )
 
         rows = namedtuplefetchall(cursor)
