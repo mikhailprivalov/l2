@@ -2169,25 +2169,33 @@ def search_param(request):
     date_get = data.get('dateGet', -1)
     final_text = data.get('finalText', '')
 
-    result = serch_data_by_param(date_create_start, date_create_end,
-                        research_id,
-                        case_number,
-                        hosp,
-                        date_registred_start, date_registred_end,
-                        date_examination_start, date_examination_end,
-                        doc_confirm,
-                        date_recieve,
-                        date_get,
-                        final_text)
-    rows = [{
-                "patient_fio": i.patient_fio,
-                "patient_birthday": i.patient_birthday,
-                "patient_age": i.patient_age,
-                "hosp_title": i.hosp_title,
-                "doc_fio": i.doc_fio,
-                "direction_number": i.direction_number,
-                "field_title": i.field_value,
-                "patient_sex": i.patient_sex,
-             } for i in result]
+    result = serch_data_by_param(
+        date_create_start,
+        date_create_end,
+        research_id,
+        case_number,
+        hosp,
+        date_registred_start,
+        date_registred_end,
+        date_examination_start,
+        date_examination_end,
+        doc_confirm,
+        date_recieve,
+        date_get,
+        final_text,
+    )
+    rows = [
+        {
+            "patient_fio": i.patient_fio,
+            "patient_birthday": i.patient_birthday,
+            "patient_age": i.patient_age,
+            "hosp_title": i.hosp_title,
+            "doc_fio": i.doc_fio,
+            "direction_number": i.direction_number,
+            "field_title": i.field_value,
+            "patient_sex": i.patient_sex,
+        }
+        for i in result
+    ]
 
     return JsonResponse({"rows": rows})
