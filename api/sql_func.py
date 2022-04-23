@@ -213,16 +213,20 @@ def get_resource_researches(resource_pks):
 
 
 def serch_data_by_param(
-                        date_create_start, date_create_end,
-                        research_id,
-                        case_number,
-                        hosp,
-                        date_registred_start, date_registred_end,
-                        date_examination_start, date_examination_end,
-                        doc_confirm,
-                        date_recieve,
-                        date_get,
-                        final_text):
+    date_create_start,
+    date_create_end,
+    research_id,
+    case_number,
+    hosp,
+    date_registred_start,
+    date_registred_end,
+    date_examination_start,
+    date_examination_end,
+    doc_confirm,
+    date_recieve,
+    date_get,
+    final_text,
+):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
