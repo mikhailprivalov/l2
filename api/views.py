@@ -50,7 +50,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches
+from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, serch_data_by_param
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -2151,19 +2151,43 @@ def current_time(request):
 
 def search_param(request):
     data = json.loads(request.body)
-    case_number = data.get('case_number', None)
-    date_get_start = data.get('dateGetStart', None)
-    date_get_end = data.get('dateGetEnd', None)
-    hosp = data.get('hosp', None)
-    date_examination_start = data.get('dateExaminationStart', None)
-    date_examination_end = data.get('dateExaminationEnd', None)
-    doc_comfirm = data.get('docComfirm', None)
+
+    year_period = data.get('year_period', -1)
+    research_id = data.get('research_id', -1)
+    date_create_start = f"{year_period}-01-01 00:00:00"
+    date_create_end = f"{year_period}-12-31 23:59:59"
+    case_number = data.get('case_number', -1)
+    hosp = data.get('hosp', -1)
+    date_examination_start = data.get('dateExaminationStart', -1)
+    date_examination_end = data.get('dateExaminationEnd', -1)
+    doc_confirm = data.get('docConfirm', -1)
+    date_registred_start = data.get('dateRegistredStart', -1)
+    date_registred_end = data.get('dateRegistredEnd', -1)
 
     # из проткола
-    date_recieve_start = data.get('dateRecieveStart', None)
-    date_recieve_end = data.get('dateRecieveEnd', None)
-    date_registred_start = data.get('dateRegistredStart', None)
-    date_registred_end = data.get('dateRegistredEnd', None)
-    final_text = data.get('finalText', None)
+    date_recieve = data.get('dateRecieve', -1)
+    date_get = data.get('dateGet', -1)
+    final_text = data.get('finalText', '')
 
-    pass
+    result = serch_data_by_param(date_create_start, date_create_end,
+                        research_id,
+                        case_number,
+                        hosp,
+                        date_registred_start, date_registred_end,
+                        date_examination_start, date_examination_end,
+                        doc_confirm,
+                        date_recieve,
+                        date_get,
+                        final_text)
+    rows = [{
+                "patient_fio": i.patient_fio,
+                "patient_birthday": i.patient_birthday,
+                "patient_age": i.patient_age,
+                "hosp_title": i.hosp_title,
+                "doc_fio": i.doc_fio,
+                "direction_number": i.direction_number,
+                "field_title": i.field_value,
+                "patient_sex": i.patient_sex,
+             } for i in result]
+
+    return JsonResponse({"rows": rows})

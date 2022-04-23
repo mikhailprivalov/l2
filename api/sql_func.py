@@ -187,7 +187,8 @@ def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1", limit=100):
                 WHEN %(diag_title)s = '-1' AND %(diag_mkb)s != '-1' THEN 
                   code ~* %(diag_mkb)s
               END
-            AND nsi_id IS NOT NULL
+            AND 
+            nsi_id IS NOT NULL
             AND nsi_id != ''
         LIMIT %(limit)s
         """,
@@ -207,5 +208,87 @@ def get_resource_researches(resource_pks):
         """,
             params={"resource_pks": resource_pks},
         )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def serch_data_by_param(
+                        date_create_start, date_create_end,
+                        research_id,
+                        case_number,
+                        hosp,
+                        date_registred_start, date_registred_end,
+                        date_examination_start, date_examination_end,
+                        doc_confirm,
+                        date_recieve,
+                        date_get,
+                        final_text):
+    """
+    на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_paraclinicresult.value as field_value,
+                directory_paraclinicinputfield.title as field_title,
+
+                directions_issledovaniya.napravleniye_id as direction_number,
+                directions_issledovaniya.medical_examination as date_service,
+                users_doctorprofile.fio as doc_fio,
+
+                directions_napravleniya.client_id,
+                concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as patient_fio,
+
+                hospitals_hospitals.title as hosp_title,
+                hospitals_hospitals.okpo as hosp_okpo,
+                hospitals_hospitals.okato as hosp_okato,
+
+                to_char(clients_individual.birthday, 'DD.MM.YYYY') as patient_birthday,
+                date_part('year', age(directions_issledovaniya.medical_examination, clients_individual.birthday))::int as patient_age,
+                clients_individual.sex as patient_sex
+                
+                FROM public.directions_paraclinicresult
+                LEFT JOIN directions_issledovaniya ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
+                LEFT JOIN directory_paraclinicinputfield ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
+                LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
+                LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
+                LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
+                LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
+                WHERE 
+                    directions_issledovaniya.research_id=%(research_id)s and directions_issledovaniya.time_confirmation IS NOT NULL 
+                    and directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s
+                AND CASE WHEN %(case_number)s > -1 THEN directions_napravleniya.additional_number = %(case_number)s END
+                AND CASE WHEN %(hosp)s > -1 THEN directions_napravleniya.hospital_id = %(hosp)s END
+                AND CASE WHEN %(date_examination_start)s > -1 THEN 
+                     directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(date_examination_start)s AND %(date_examination_end)s END
+                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s END
+                AND CASE WHEN %(date_registred_start)s > -1 THEN directions_napravleniya.visit_date AT TIME ZONE %(tz)s BETWEEN %(date_registred_start)s AND %(date_registred_end)s END
+                
+                AND CASE WHEN %(date_recieve)s > -1 THEN directory_paraclinicinputfield.title = 'Дата получения' and directions_paraclinicresult.value ~* %(date_recieve)s END
+                AND CASE WHEN %(date_get)s > -1 THEN directory_paraclinicinputfield.title = 'Дата забора' and directions_paraclinicresult.value ~* %(date_recieve)s END
+                AND CASE WHEN %(final_text)s != -1 THEN directions_paraclinicresult.value ~* %(final_text)s 
+                END
+                order by directions_issledovaniya.napravleniye_id
+            """,
+            params={
+                'date_create_start': date_create_start,
+                'date_create_end': date_create_end,
+                'research_id': research_id,
+                'case_number': case_number,
+                'hosp': hosp,
+                'date_examination_start': date_examination_start, 'date_examination_end': date_examination_end,
+                'date_registred_start': date_registred_start, 'date_registred_end': date_registred_end,
+                'doc_confirm': doc_confirm,
+
+                'date_recieve': date_recieve,
+                'date_get': date_get,
+                'final_text': final_text,
+                'tz': TIME_ZONE
+            }
+        )
+
         rows = namedtuplefetchall(cursor)
     return rows
