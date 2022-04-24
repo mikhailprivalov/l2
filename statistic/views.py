@@ -30,7 +30,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -693,6 +693,7 @@ def statistic_xls(request):
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
         purposes = request_data.get("purposes", "")
+        special_fields = request_data.get("special-fields", "false")
         is_purpose = 0
         if purposes != "-1":
             purposes = tuple(purposes.split(","))
@@ -783,6 +784,11 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
+        elif special_fields == "true":
+            researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id)
+            result = custom_research.custom_research_data(researches_sql)
+            ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
+            ws = custom_research.custom_research_fill_data(ws, result)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
@@ -1149,7 +1155,59 @@ def statistic_xls(request):
 
         ws = dispanserization.dispanserization_base(ws, d1, d2, result_dates)
         ws = dispanserization.dispanserization_fill_data(ws, result_dates)
+    elif tp == "disp-plan":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Дисп-учет")
+        month = request_data.get("month", "")
+        year = request_data.get("year", "")
+        month_obj = int(month)
+        monthes = {
+            "1": "Январь",
+            "2": "Февраль",
+            "3": "Март",
+            "4": "Апрель",
+            "5": "Май",
+            "6": "Июнь",
+            "7": "Июль",
+            "8": "Август",
+            "9": "Сентябрь",
+            "10": "Октябрь",
+            "11": "Ноябрь",
+            "12": "Декабрь",
+        }
+        _, num_days = calendar.monthrange(int(year), month_obj)
+        d1 = datetime.date(int(year), month_obj, 1)
+        d2 = datetime.date(int(year), month_obj, num_days)
+        start_date = f"{d1.strftime('%Y-%m-%d')} 00:00:00"
+        end_date = f"{d2.strftime('%Y-%m-%d')} 23:59:59"
+        query = sql_func.dispansery_plan(start_date, end_date)
+        cards_pk = [i.card_id for i in query]
+        ws = dispensary_data.dispansery_plan_base(ws, monthes[month], year)
+        if len(cards_pk) > 0:
+            query_diagnoses_pk = sql_func.dispansery_card_diagnos(tuple(cards_pk))
+            result = dispensary_data.handle_query(query, query_diagnoses_pk)
+            ws = dispensary_data.dispansery_plan_fill_data(ws, result)
+    elif tp == "disp-registered":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Дисп-учет зарегистрирвоано")
+        data_date = request_data.get("date_values")
+        data_date = json.loads(data_date)
 
+        if request_data.get("date_type") == 'd':
+            d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+        else:
+            month_obj = int(data_date['month']) + 1
+            _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
+            d1 = datetime.date(int(data_date['year']), month_obj, num_days)
+        child = sql_func.dispansery_registered_by_year_age(18, d1, 1)
+        adult = sql_func.dispansery_registered_by_year_age(18, d1, 0)
+        result = [{"adult": len(adult), "child": len(child)}]
+        ws = dispensary_data.dispansery_reg_count_base(ws, d1)
+        ws = dispensary_data.dispansery_reg_count_fill_data(ws, result)
     elif tp == "covid_sum":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()

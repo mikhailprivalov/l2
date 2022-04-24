@@ -317,6 +317,17 @@
               placeholder="Результат обращения"
             />
           </div>
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.SPECIAL_FIELDS)"
+            class="checkbox"
+          >
+            <label>
+              <input
+                v-model="values.specialFields"
+                type="checkbox"
+              > Настройки из протокола
+            </label>
+          </div>
 
           <a
             v-if="reportUrl"
@@ -362,6 +373,7 @@ const PARAMS_TYPES = {
   RESEARCH: 'RESEARCH',
   COMPANY: 'COMPANY',
   MONTH_YEAR: 'MONTH_YEAR',
+  SPECIAL_FIELDS: 'SPECIAL_FIELDS',
 };
 
 const STATS_CATEGORIES = {
@@ -424,9 +436,9 @@ const STATS_CATEGORIES = {
       research: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
         title: 'По услуге',
-        params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH],
+        params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
-          + 'purposes=<purposes>',
+          + 'purposes=<purposes>&special-fields=<special-fields>',
       },
       dispanserization: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
@@ -503,6 +515,24 @@ const STATS_CATEGORIES = {
       },
     },
   },
+  dispensary: {
+    title: 'Д-учет',
+    groups: ['Врач консультаций', 'Просмотр статистики'],
+    reports: {
+      disp: {
+        groups: ['Врач консультаций', 'Просмотр статистики'],
+        title: 'План помесячно',
+        params: [PARAMS_TYPES.MONTH_YEAR],
+        url: '/statistic/xls?type=disp-plan&month=<month>&year=<year>',
+      },
+      registered: {
+        groups: ['Врач консультаций', 'Просмотр статистики'],
+        title: 'Стоит на учете',
+        params: [PARAMS_TYPES.PERIOD_DATE],
+        url: '/statistic/xls?type=disp-registered&date_type=<date-type>&date_values=<date-values>',
+      },
+    },
+  },
 };
 
 const getVaues = () => ({
@@ -523,6 +553,7 @@ const getVaues = () => ({
   year: moment().year(),
   purposes: [],
   resultTreatment: [],
+  specialFields: false,
 });
 
 const formatDate = (date: Date) => moment(date).format('DD.MM.YYYY');
@@ -553,6 +584,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       disabled_categories: [],
       disabled_reports: [],
       purposes: [],
+      specialFields: false,
       resultTreatment: [],
       titleReportStattalonFields: [],
     };
@@ -598,6 +630,8 @@ export default class Statistics extends Vue {
   companies: any[];
 
   purposes: any[];
+
+  specialFields: boolean;
 
   resultTreatment: any[];
 
@@ -757,6 +791,7 @@ export default class Statistics extends Vue {
         }
 
         url = url.replace('<research>', this.values.research);
+        url = url.replace('<special-fields>', this.values.specialFields);
         if (this.values.purposes.length > 0) {
           url = url.replace('<purposes>', this.values.purposes);
         } else {
