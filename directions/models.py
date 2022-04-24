@@ -457,7 +457,7 @@ class Napravleniya(models.Model):
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
     co_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_co_executor", db_index=True, help_text='Со-исполнитель', on_delete=models.SET_NULL)
-    additional_number = models.CharField(max_length=24, blank=True, default='', help_text="Дополнительный номер", db_index=True)
+    register_number = models.CharField(db_column='additional_number', max_length=24, blank=True, default='', help_text="Дополнительный номер при регистрации направления", db_index=True)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
