@@ -50,7 +50,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, serch_data_by_param
+from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -2169,7 +2169,7 @@ def search_param(request):
     date_get = data.get('dateGet', -1)
     final_text = data.get('finalText', '')
 
-    result = serch_data_by_param(
+    result = search_data_by_param(
         date_create_start,
         date_create_end,
         research_id,
