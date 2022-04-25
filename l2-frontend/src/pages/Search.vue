@@ -78,7 +78,7 @@
                   Исполнитель
                 </div>
               </th>
-              <td class="x-cell">
+              <td class="cl-td">
                 <Treeselect
                   v-model="docConfirm"
                   class="treeselect-noborder"
@@ -117,7 +117,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Paginate from 'vuejs-paginate';
 
-// import * as actions from '@/store/action-types';
+import * as actions from '@/store/action-types';
 import usersPoint from '@/api/user-point';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
@@ -145,10 +145,18 @@ import DateRange from '@/ui-cards/DateRange.vue';
       usersConfirm: [],
     };
   },
-  mounted() {
-    this.$api('researches/descriptive-research').then(rows => {
+  async mounted() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    await this.$api('researches/descriptive-research').then(rows => {
       this.researches = rows;
     });
+    const { users } = await usersPoint.loadUsersByGroup({
+      group: [
+        'Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ',
+      ],
+    });
+    this.usersConfirm = users;
+    await this.$store.dispatch(actions.DEC_LOADING);
   },
   watch: {
   },

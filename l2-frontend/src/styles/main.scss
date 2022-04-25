@@ -1424,7 +1424,7 @@ body > .container-fluid {
     min-height: 100%;
   }
 
-  label {
+  label:not(.vue-treeselect__label) {
     display: flex;
     margin-bottom: 0;
     height: 100%;
