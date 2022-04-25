@@ -249,21 +249,19 @@ def search_data_by_param(
                 to_char(clients_individual.birthday, 'DD.MM.YYYY') as patient_birthday,
                 date_part('year', age(directions_issledovaniya.medical_examination, clients_individual.birthday))::int as patient_age,
                 clients_individual.sex as patient_sex,
-				directions_issledovaniya.napravleniye_id,
-				directions_issledovaniya.research_id,
-				directions_paraclinicresult.value,
-				directions_paraclinicresult.field_id,
-				directory_paraclinicinputfield.title
-                
+                directions_issledovaniya.napravleniye_id,
+                directions_issledovaniya.research_id,
+                directions_paraclinicresult.value,
+                directions_paraclinicresult.field_id,
+                directory_paraclinicinputfield.title
                 FROM directions_issledovaniya
-				LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
                 LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
-				LEFT JOIN directions_paraclinicresult on directions_paraclinicresult.issledovaniye_id=directions_issledovaniya.id
-				LEFT JOIN directory_paraclinicinputfield on directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
-				
+                LEFT JOIN directions_paraclinicresult on directions_paraclinicresult.issledovaniye_id=directions_issledovaniya.id
+                LEFT JOIN directory_paraclinicinputfield on directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
                 WHERE 
                     directions_issledovaniya.research_id=%(research_id)s and directions_issledovaniya.time_confirmation IS NOT NULL 
                     and (directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s)
