@@ -251,7 +251,7 @@ def search_data_by_param(
                 clients_individual.sex as patient_sex,
                 directions_issledovaniya.napravleniye_id,
                 directions_issledovaniya.research_id,
-                directions_paraclinicresult.value,
+                directions_paraclinicresult.value as field_value,
                 directions_paraclinicresult.field_id,
                 directory_paraclinicinputfield.title
                 FROM directions_issledovaniya
@@ -265,11 +265,11 @@ def search_data_by_param(
                 WHERE 
                     directions_issledovaniya.research_id=%(research_id)s and directions_issledovaniya.time_confirmation IS NOT NULL 
                     and (directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s)
-                AND CASE WHEN %(case_number)s::varchar != '-1' THEN directions_napravleniya.additional_number = %(case_number)s 
-                         WHEN %(case_number)s::varchar = '-1' THEN directions_napravleniya.cancel is not Null 
+                AND CASE WHEN %(case_number)s != '-1' THEN directions_napravleniya.additional_number = %(case_number)s 
+                         WHEN %(case_number)s = '-1' THEN directions_napravleniya.cancel is not Null 
                 END
-                AND CASE WHEN %(hospital_id)s::int > -1 THEN directions_napravleniya.hospital_id = %(hosp)s
-                         WHEN %(hospital_id)s::int = -1 THEN directions_napravleniya.cancel is not Null 
+                AND CASE WHEN (%(hospital_id)s)::int > -1 THEN directions_napravleniya.hospital_id = %(hospital_id)s
+                         WHEN (%(hospital_id)s)::int = -1 THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN %(date_examination_start)s != '1900-01-01' THEN 
                      directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(date_examination_start)s AND %(date_examination_end)s
@@ -281,14 +281,14 @@ def search_data_by_param(
                 AND CASE WHEN %(date_registred_start)s != '1900-01-01' THEN directions_napravleniya.visit_date AT TIME ZONE %(tz)s BETWEEN %(date_registred_start)s AND %(date_registred_end)s
                          WHEN %(date_registred_start)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null 
                 END
-                AND CASE WHEN %(date_recieve)s != '-1' THEN directory_paraclinicinputfield.title = 'Дата получения' and directions_paraclinicresult.value ~* %(date_recieve)s
-                          WHEN %(date_recieve)s = '-1' THEN directions_napravleniya.cancel is not Null
+                AND CASE WHEN %(date_recieve)s != '1900-01-01' THEN directory_paraclinicinputfield.title = 'Дата получения' and directions_paraclinicresult.value ~* %(date_recieve)s
+                          WHEN %(date_recieve)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null
                 END
-                AND CASE WHEN %(date_get)s != '-1' THEN directory_paraclinicinputfield.title = 'Дата забора' and directions_paraclinicresult.value ~* %(date_recieve)s
-                         WHEN %(date_get)s = '-1' THEN directions_napravleniya.cancel is not Null
+                AND CASE WHEN %(date_get)s != '1900-01-01' THEN directory_paraclinicinputfield.title = 'Дата забора' and directions_paraclinicresult.value ~* %(date_recieve)s
+                         WHEN %(date_get)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null
                 END
-                AND CASE WHEN %(final_text)s != '-1' THEN directions_paraclinicresult.value ~* %(final_text)s
-                         WHEN %(final_text)s = '-1' THEN directions_napravleniya.cancel is not Null 
+                AND CASE WHEN %(final_text)s != '' THEN directions_paraclinicresult.value ~* %(final_text)s
+                         WHEN %(final_text)s = '' THEN directions_napravleniya.cancel is not Null 
                 END
                 order by directions_issledovaniya.napravleniye_id
             """,

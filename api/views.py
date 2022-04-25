@@ -2152,22 +2152,22 @@ def current_time(request):
 def search_param(request):
     data = json.loads(request.body)
 
-    year_period = data.get('year_period', -1)
-    research_id = data.get('research_id', -1)
+    year_period = data.get('year_period') or -1
+    research_id = data.get('research_id') or -1
     date_create_start = f"{year_period}-01-01 00:00:00"
     date_create_end = f"{year_period}-12-31 23:59:59"
-    case_number = data.get('case_number', -1)
-    hospital_id = data.get('hospital_id', -1)
-    date_examination_start = data.get('dateExaminationStart', -1)
-    date_examination_end = data.get('dateExaminationEnd', -1)
-    doc_confirm = data.get('docConfirm', -1)
-    date_registred_start = data.get('dateRegistredStart', -1)
-    date_registred_end = data.get('dateRegistredEnd', -1)
+    case_number = data.get('case_number') or '-1'
+    hospital_id = int(data.get('hospital_id') or -1)
+    date_examination_start = data.get('dateExaminationStart') or '1900-01-01'
+    date_examination_end = data.get('dateExaminationEnd') or '1900-01-01'
+    doc_confirm = data.get('docConfirm') or -1
+    date_registred_start = data.get('dateRegistredStart') or '1900-01-01'
+    date_registred_end = data.get('dateRegistredEnd') or '1900-01-01'
 
     # из проткола
-    date_recieve = data.get('dateRecieve', -1)
-    date_get = data.get('dateGet', -1)
-    final_text = data.get('finalText', '')
+    date_recieve = data.get('dateRecieve') or '1900-01-01'
+    date_get = data.get('dateGet') or '1900-01-01'
+    final_text = data.get('finalText') or ''
 
     result = search_data_by_param(
         date_create_start,
@@ -2192,7 +2192,7 @@ def search_param(request):
             "hosp_title": i.hosp_title,
             "doc_fio": i.doc_fio,
             "direction_number": i.direction_number,
-            "field_title": i.field_value,
+            "field_value": i.field_value,
             "patient_sex": i.patient_sex,
         }
         for i in result
