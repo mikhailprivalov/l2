@@ -2157,7 +2157,7 @@ def search_param(request):
     date_create_start = f"{year_period}-01-01 00:00:00"
     date_create_end = f"{year_period}-12-31 23:59:59"
     case_number = data.get('case_number', -1)
-    hosp = data.get('hosp', -1)
+    hospital_id = data.get('hospital_id', -1)
     date_examination_start = data.get('dateExaminationStart', -1)
     date_examination_end = data.get('dateExaminationEnd', -1)
     doc_confirm = data.get('docConfirm', -1)
@@ -2174,7 +2174,7 @@ def search_param(request):
         date_create_end,
         research_id,
         case_number,
-        hosp,
+        hospital_id,
         date_registred_start,
         date_registred_end,
         date_examination_start,
