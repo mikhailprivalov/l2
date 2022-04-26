@@ -264,6 +264,7 @@ def endpoint(request):
                         pk -= 4600000000000
                         pk //= 10
                         dw = True
+                    by_tube = False
                     if pk == -1:
                         iss = directions.Issledovaniya.objects.filter(pk=iss_pk)
                         if iss.exists():
@@ -272,6 +273,7 @@ def endpoint(request):
                         direction = directions.Napravleniya.objects.filter(pk=pk).first()
                     else:
                         direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk).first()
+                        by_tube = True
 
                     pks = []
                     oks = []
@@ -299,9 +301,12 @@ def endpoint(request):
                                     for fraction_rel in q:
                                         save_state = []
                                         issleds = []
-                                        for issled in directions.Issledovaniya.objects.filter(
+                                        iss_q = directions.Issledovaniya.objects.filter(
                                             napravleniye=direction, research=fraction_rel.fraction.research, time_confirmation__isnull=True
-                                        ):
+                                        )
+                                        for issled in iss_q:
+                                            if by_tube and not issled.tubes.filter(pk=pk).exists() and issled.tubes.all().count() > 0:
+                                                continue
                                             if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
                                             else:
