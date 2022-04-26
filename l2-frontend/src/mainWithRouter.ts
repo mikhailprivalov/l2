@@ -167,6 +167,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/search',
+      name: 'search',
+      component: () => import('@/pages/Search.vue'),
+      meta: {
+        title: 'Поиск описательнх результатов',
+        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Врач консультаций', 'Врач стационара'],
+        module: 'paraclinic_module',
+      },
+    },
+    {
       path: '/ui/schedule',
       name: 'schedule',
       component: () => import('@/pages/Schedule/index.vue'),

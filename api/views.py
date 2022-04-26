@@ -50,7 +50,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches
+from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -2152,3 +2152,55 @@ def current_time(request):
             "time": now.strftime('%X'),
         }
     )
+
+
+def search_param(request):
+    data = json.loads(request.body)
+
+    year_period = data.get('year_period') or -1
+    research_id = data.get('research_id') or -1
+    date_create_start = f"{year_period}-01-01 00:00:00"
+    date_create_end = f"{year_period}-12-31 23:59:59"
+    case_number = data.get('case_number') or '-1'
+    hospital_id = int(data.get('hospital_id') or -1)
+    date_examination_start = data.get('dateExaminationStart') or '1900-01-01'
+    date_examination_end = data.get('dateExaminationEnd') or '1900-01-01'
+    doc_confirm = data.get('docConfirm') or -1
+    date_registred_start = data.get('dateRegistredStart') or '1900-01-01'
+    date_registred_end = data.get('dateRegistredEnd') or '1900-01-01'
+
+    # из проткола
+    date_recieve = data.get('dateRecieve') or '1900-01-01'
+    date_get = data.get('dateGet') or '1900-01-01'
+    final_text = data.get('finalText') or ''
+
+    result = search_data_by_param(
+        date_create_start,
+        date_create_end,
+        research_id,
+        case_number,
+        hospital_id,
+        date_registred_start,
+        date_registred_end,
+        date_examination_start,
+        date_examination_end,
+        doc_confirm,
+        date_recieve,
+        date_get,
+        final_text,
+    )
+    rows = [
+        {
+            "patient_fio": i.patient_fio,
+            "patient_birthday": i.patient_birthday,
+            "patient_age": i.patient_age,
+            "hosp_title": i.hosp_title,
+            "doc_fio": i.doc_fio,
+            "direction_number": i.direction_number,
+            "field_value": i.field_value,
+            "patient_sex": i.patient_sex,
+        }
+        for i in result
+    ]
+
+    return JsonResponse({"rows": rows})

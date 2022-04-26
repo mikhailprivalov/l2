@@ -4,7 +4,7 @@ declare module '*.vue' {
   declare module 'vue/types/vue' {
     interface Vue {
       $dialog: any;
-      $api: any;
+      $api: (...any) => Promise<any>;
       $fullscreen: any;
       $systemTitle: () => string;
       $asVI: () => boolean;

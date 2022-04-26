@@ -1409,6 +1409,10 @@ body > .container-fluid {
   font-size: 14px !important;
 }
 
+.npd {
+  padding: 0 !important;
+}
+
 .cl-td,
 .x-cell {
   padding: 0 !important;
@@ -1424,7 +1428,7 @@ body > .container-fluid {
     min-height: 100%;
   }
 
-  label {
+  label:not(.vue-treeselect__label) {
     display: flex;
     margin-bottom: 0;
     height: 100%;
@@ -1920,6 +1924,11 @@ input[type="date"].form-control {
 
 .nbr {
   border-radius: 0 !important;
+}
+
+.nba {
+  border-radius: 0 !important;
+  border: none !important;
 }
 
 .height34 {
