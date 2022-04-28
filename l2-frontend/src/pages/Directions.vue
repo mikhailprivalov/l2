@@ -97,13 +97,14 @@
           >
             <span>Отчёт по результатам</span>
           </a>
-          <a
+
+          <router-link
             v-if="can_create_tickets"
+            :to="ticket_url"
             class="a-under"
-            :href="ticket_url"
           >
             <span>Создать статталон</span>
-          </a>
+          </router-link>
         </div>
       </PatientPicker>
     </div>
@@ -275,8 +276,15 @@ export default {
       return this.selected_card.pk !== -1;
     },
     ticket_url() {
-      // eslint-disable-next-line max-len
-      return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}&ofname_dep=${this.selected_card.ofname_dep}`;
+      return {
+        name: 'statistics-tickets',
+        query: {
+          base_pk: this.selected_card.base.pk,
+          card_pk: this.selected_card.pk,
+          ofname: this.selected_card.ofname,
+          ofname_dep: this.selected_card.ofname_dep,
+        },
+      };
     },
     report_url() {
       // eslint-disable-next-line max-len

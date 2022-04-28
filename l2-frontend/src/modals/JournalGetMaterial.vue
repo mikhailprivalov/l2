@@ -63,8 +63,8 @@
 
 <script lang="ts">
 import Modal from '@/ui-cards/Modal.vue';
-import DateSelector from '../fields/DateSelector.vue';
-import SelectPicker from '../fields/SelectPicker.vue';
+import DateSelector from '@/fields/DateSelector.vue';
+import SelectPicker from '@/fields/SelectPicker.vue';
 
 export default {
   name: 'JournalGetMaterial',

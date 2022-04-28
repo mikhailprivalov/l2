@@ -179,9 +179,9 @@
 </template>
 
 <script lang="ts">
+import * as actions from '@/store/action-types';
+import patientsPoint from '@/api/patients-point';
 import Modal from './Modal.vue';
-import * as actions from '../store/action-types';
-import patientsPoint from '../api/patients-point';
 
 export default {
   name: 'PatientSmallPicker',

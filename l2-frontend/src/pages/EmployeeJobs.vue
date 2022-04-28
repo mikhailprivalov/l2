@@ -123,9 +123,9 @@
 
 <script lang="ts">
 import moment from 'moment';
-import usersPoint from '../api/user-point';
-import * as actions from '../store/action-types';
-import DateFieldNav from '../fields/DateFieldNav.vue';
+import usersPoint from '@/api/user-point';
+import * as actions from '@/store/action-types';
+import DateFieldNav from '@/fields/DateFieldNav.vue';
 
 export default {
   name: 'EmployeeJobs',
@@ -188,9 +188,12 @@ export default {
 
 <style lang="scss" scoped>
   .root {
-    height: calc(100% - 36px);
+    position: absolute;
+    top: 36px;
+    right: 0;
+    bottom: 0;
+    left: 0;
     display: flex;
-    margin-right: -11px;
 
     .btn:focus {
       background-color: #aab2bd;
@@ -205,7 +208,6 @@ export default {
     border-right: 1px solid #646d78;
     padding: 0;
     width: 320px;
-    margin-left: -5px;
 
     .sidebar-bottom-top {
       height: 34px;
@@ -231,7 +233,6 @@ export default {
     width: calc(100% - 321px);
     overflow: hidden;
     position: relative;
-    margin-right: -5px;
 
     .input-group-addon, input, select {
       border-radius: 0;

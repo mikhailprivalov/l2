@@ -135,12 +135,12 @@
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import Modal from '../ui-cards/Modal.vue';
-import * as actions from '../store/action-types';
-import usersPoint from '../api/user-point';
-import PatientSmallPicker from '../ui-cards/PatientSmallPicker.vue';
-import patientsPoint from '../api/patients-point';
-import plansPoint from '../api/plans-point';
+import Modal from '@/ui-cards/Modal.vue';
+import * as actions from '@/store/action-types';
+import usersPoint from '@/api/user-point';
+import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
+import patientsPoint from '@/api/patients-point';
+import plansPoint from '@/api/plans-point';
 
 export default {
   name: 'PlanOperationsData',

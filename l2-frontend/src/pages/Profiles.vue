@@ -720,10 +720,10 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { debounce } from 'lodash';
 import { mapGetters } from 'vuex';
 import { validateSnils, validateEmail } from '@/utils';
-import usersPoint from '../api/user-point';
-import * as actions from '../store/action-types';
-import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
-import SelectedResearches from '../ui-cards/SelectedResearches.vue';
+import usersPoint from '@/api/user-point';
+import * as actions from '@/store/action-types';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 
 const toTranslit = function (text) {
   return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi, (all, ch, space, words) => {
@@ -1079,7 +1079,11 @@ export default {
 
 <style lang="scss" scoped>
 .root {
-  height: calc(100% - 36px);
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
 }
 

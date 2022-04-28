@@ -75,11 +75,11 @@
 import moment from 'moment';
 import flatten from 'lodash/flatten';
 import { valuesToString } from '@/utils';
-import plansPoint from '../../api/plans-point';
+import plansPoint from '@/api/plans-point';
+import * as actions from '@/store/action-types';
+import usersPoint from '@/api/user-point';
 import Filters from './components/Filters.vue';
 import Row from './components/Row.vue';
-import * as actions from '../../store/action-types';
-import usersPoint from '../../api/user-point';
 import { planOperations } from '../../forms';
 
 export default {

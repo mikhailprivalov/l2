@@ -83,9 +83,9 @@
 </template>
 
 <script lang="ts">
-import Modal from '../ui-cards/Modal.vue';
-import * as actions from '../store/action-types';
-import bacteriaPoint from '../api/bacteria-point';
+import Modal from '@/ui-cards/Modal.vue';
+import * as actions from '@/store/action-types';
+import bacteriaPoint from '@/api/bacteria-point';
 
 const getNewElement = () => ({
   title: '',

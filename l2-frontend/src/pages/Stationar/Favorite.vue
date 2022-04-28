@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts">
-import directionsPoint from '../../api/directions-point';
+import directionsPoint from '@/api/directions-point';
 
 export default {
   name: 'Favorite',

@@ -171,10 +171,8 @@ export default {
       immediate: true,
     },
   },
-  created() {
-    this.$parent.$on('research-editor:cancel', this.cancel_edit);
-  },
   mounted() {
+    this.$root.$on('research-editor:cancel', this.cancel_edit);
     this.$store.watch(
       (state) => state.user.data,
       () => {
@@ -301,6 +299,12 @@ export default {
 
 <style scoped lang="scss">
 .construct-root {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
   display: flex;
   align-items: stretch;
   flex-direction: row;

@@ -177,10 +177,10 @@
 </template>
 
 <script lang="ts">
-import Modal from '../ui-cards/Modal.vue';
-import MKBField from '../fields/MKBField.vue';
-import researchesPoint from '../api/researches-point';
-import * as actions from '../store/action-types';
+import Modal from '@/ui-cards/Modal.vue';
+import MKBField from '@/fields/MKBField.vue';
+import researchesPoint from '@/api/researches-point';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'FastTemplatesEditor',

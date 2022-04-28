@@ -1,7 +1,7 @@
 <template>
   <div
     ref="root"
-    class="split content"
+    class="split content root-content"
   >
     <div
       ref="ct"
@@ -23,12 +23,12 @@
             slot="for_card_bottom"
             class="bottom-inner"
           >
-            <a
+            <router-link
               v-if="can_create_directions && selected_card.pk !== -1"
-              :href="directions_url"
+              :to="directions_url"
             >
               <span>Создать направления</span>
-            </a>
+            </router-link>
           </div>
         </PatientPicker>
       </div>
@@ -56,9 +56,9 @@
 
 <script lang="ts">
 import Split from 'split.js';
-import PatientPicker from '../ui-cards/PatientPicker.vue';
-import StatisticsTicketCreator from '../ui-cards/StatisticsTicketCreator.vue';
-import StatisticsTicketsViewer from '../ui-cards/StatisticsTicketsViewer.vue';
+import PatientPicker from '@/ui-cards/PatientPicker.vue';
+import StatisticsTicketCreator from '@/ui-cards/StatisticsTicketCreator.vue';
+import StatisticsTicketsViewer from '@/ui-cards/StatisticsTicketsViewer.vue';
 
 export default {
   name: 'StatisticsTickets',
@@ -76,11 +76,15 @@ export default {
   },
   computed: {
     directions_url() {
-      const base = this.selected_card.base.pk;
-      const card = this.selected_card.pk;
-      const { ofname } = this.selected_card;
-      const dep = this.selected_card.ofname_dep;
-      return `/ui/directions?base_pk=${base}&card_pk=${card}&ofname=${ofname}&ofname_dep=${dep}`;
+      return {
+        name: 'directions',
+        query: {
+          base_pk: this.selected_card.base.pk,
+          card_pk: this.selected_card.pk,
+          ofname: this.selected_card.ofname,
+          ofname_dep: this.selected_card.ofname_dep,
+        },
+      };
     },
     can_create_directions() {
       if ('groups' in this.$store.getters.user_data) {
@@ -136,6 +140,12 @@ export default {
 };
 </script>
 
-<style scoped>
-
+<style scoped lang="scss">
+.root-content {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
 </style>

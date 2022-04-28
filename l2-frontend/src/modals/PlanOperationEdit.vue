@@ -46,7 +46,7 @@
 </template>
 
 <script lang="ts">
-import Modal from '../ui-cards/Modal.vue';
+import Modal from '@/ui-cards/Modal.vue';
 import PlanOperationsData from '../components/PlanOperationsData.vue';
 
 export default {

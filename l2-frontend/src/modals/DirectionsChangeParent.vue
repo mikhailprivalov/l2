@@ -45,7 +45,7 @@
                 {{ dir.researches }}
                 <a
                   v-if="dir.parent.parent_is_hosp"
-                  :href="/*eslint-disable-line max-len*/ `/mainmenu/stationar#{%22pk%22:${dir.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+                  :href="/*eslint-disable-line max-len*/ `/ui/stationar#{%22pk%22:${dir.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
                   class="invalid"
                   target="_blank"
                 >
@@ -110,11 +110,11 @@
 
 <script lang="ts">
 import vSelect from 'vue-select';
-import Modal from '../ui-cards/Modal.vue';
-import * as actions from '../store/action-types';
+import Modal from '@/ui-cards/Modal.vue';
+import * as actions from '@/store/action-types';
 import 'vue-select/dist/vue-select.css';
-import patientsPoint from '../api/patients-point';
-import directionsPoint from '../api/directions-point';
+import patientsPoint from '@/api/patients-point';
+import directionsPoint from '@/api/directions-point';
 
 export default {
   name: 'DirectionsChangeParent',

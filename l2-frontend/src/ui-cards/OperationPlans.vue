@@ -1,101 +1,103 @@
 <template>
-  <div v-frag>
-    <a
-      v-tippy="{
-        html: '#operations-view',
-        reactive: true,
-        interactive: true,
-        arrow: true,
-        animation: 'fade',
-        duration: 0,
-        theme: 'light',
-        placement: 'bottom',
-        trigger: 'click mouseenter',
-        zIndex: 4999,
-        popperOptions: {
-          modifiers: {
-            preventOverflow: {
-              boundariesElement: 'window'
-            },
-            hide: {
-              enabled: false
-            }
-          }
-        },
-      }"
-      href="#"
-      class="dropdown-toggle"
-      @click.prevent
-    >
-      План операций пациента <span class="badge badge-light">{{ data.length }}</span>
-    </a>
-
-    <div
-      id="operations-view"
-      class="tp"
-    >
-      <table class="table table-condensed table-bordered">
-        <thead>
-          <tr>
-            <th>История</th>
-            <th>Дата</th>
-            <th>Врач-хирург</th>
-            <th>Операция</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="row in data"
-            :key="row.pk_plan"
-            :class="{'cancel-row': row.cancel}"
-          >
-            <td>
-              <LinkPlanOperations :direction="row.direction" />
-            </td>
-            <td>
-              {{ row.date }}
-            </td>
-            <td>
-              {{ row.hirurg }}
-            </td>
-            <td>
-              {{ row.type_operation }}
-            </td>
-            <td>
-              <a
-                v-if="can_edit_operations"
-                href="#"
-                @click.prevent="edit_data(row)"
-              ><i class="fa fa-pencil" /></a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <br>
+  <ul class="nav navbar-nav">
+    <li class="dropdown">
       <a
-        v-if="can_edit_operations"
+        v-tippy="{
+          html: '#operations-view',
+          reactive: true,
+          interactive: true,
+          arrow: true,
+          animation: 'fade',
+          duration: 0,
+          theme: 'light',
+          placement: 'bottom',
+          trigger: 'click mouseenter',
+          zIndex: 4999,
+          popperOptions: {
+            modifiers: {
+              preventOverflow: {
+                boundariesElement: 'window'
+              },
+              hide: {
+                enabled: false
+              }
+            }
+          },
+        }"
         href="#"
-        style="float: right"
-        @click.prevent="add_data"
-      >Добавить</a>
-    </div>
-    <PlanOperationEdit
-      v-if="edit_plan_operations_old || edit_plan_operations"
-      :card_pk="card_pk"
-      :patient_fio="patient_fio"
-      :direction="current_direction"
-      :pk_plan="pk_plan"
-      :pk_hirurg="pk_hirurg"
-      :date="date"
-      :operation="operation"
-      :cancel_operation="cancel"
-    />
-  </div>
+        class="dropdown-toggle"
+        @click.prevent
+      >
+        План операций пациента <span class="badge badge-light">{{ data.length }}</span>
+      </a>
+
+      <div
+        id="operations-view"
+        class="tp"
+      >
+        <table class="table table-condensed table-bordered">
+          <thead>
+            <tr>
+              <th>История</th>
+              <th>Дата</th>
+              <th>Врач-хирург</th>
+              <th>Операция</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in data"
+              :key="row.pk_plan"
+              :class="{'cancel-row': row.cancel}"
+            >
+              <td>
+                <LinkPlanOperations :direction="row.direction" />
+              </td>
+              <td>
+                {{ row.date }}
+              </td>
+              <td>
+                {{ row.hirurg }}
+              </td>
+              <td>
+                {{ row.type_operation }}
+              </td>
+              <td>
+                <a
+                  v-if="can_edit_operations"
+                  href="#"
+                  @click.prevent="edit_data(row)"
+                ><i class="fa fa-pencil" /></a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <br>
+        <a
+          v-if="can_edit_operations"
+          href="#"
+          style="float: right"
+          @click.prevent="add_data"
+        >Добавить</a>
+      </div>
+      <PlanOperationEdit
+        v-if="edit_plan_operations_old || edit_plan_operations"
+        :card_pk="card_pk"
+        :patient_fio="patient_fio"
+        :direction="current_direction"
+        :pk_plan="pk_plan"
+        :pk_hirurg="pk_hirurg"
+        :date="date"
+        :operation="operation"
+        :cancel_operation="cancel"
+      />
+    </li>
+  </ul>
 </template>
 
 <script lang="ts">
-import plansPoint from '../api/plans-point';
+import plansPoint from '@/api/plans-point';
 import LinkPlanOperations from '../pages/Stationar/LinkPlanOperations.vue';
 
 export default {

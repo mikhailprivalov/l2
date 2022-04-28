@@ -256,6 +256,233 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/direction-visit',
+      name: 'direction_visit',
+      component: () => import('@/pages/DirectionVisit.vue'),
+      meta: {
+        title: 'Регистрация направлений',
+        narrowLayout: true,
+        groups: [
+          'Посещения по направлениям',
+          'Врач параклиники',
+          'Врач консультаций',
+          'Заборщик биоматериала микробиологии',
+          'Получатель биоматериала микробиологии',
+        ],
+        module: 'paraclinic_module',
+      },
+    },
+    {
+      path: '/ui/departments',
+      name: 'departments',
+      component: () => import('@/pages/DepartmentsForm.vue'),
+      meta: {
+        title: 'Управление подразделениями',
+        narrowLayout: true,
+        groups: [
+          'Создание и редактирование пользователей',
+        ],
+      },
+    },
+    {
+      path: '/ui/cases',
+      name: 'cases',
+      component: () => import('@/pages/Cases.vue'),
+      meta: {
+        title: 'Случаи обслуживания',
+        fullPageLayout: true,
+        groups: [
+          'Случаи обслуживания',
+        ],
+      },
+    },
+    {
+      path: '/ui/construct/descriptive',
+      name: 'construct-descriptive',
+      component: () => import('@/construct/ConstructParaclinic.vue'),
+      meta: {
+        title: 'Описательные протоколы и консультации',
+        fullPageLayout: true,
+        groups: [
+          'Конструктор: Параклинические (описательные) исследования',
+        ],
+        module: 'paraclinic_module',
+      },
+    },
+    {
+      path: '/ui/construct/templates',
+      name: 'construct-templates',
+      component: () => import('@/construct/ConstructTemplates.vue'),
+      meta: {
+        title: 'Настройка шаблонов назначений',
+        fullPageLayout: true,
+        groups: [
+          'Конструктор: Настройка шаблонов',
+        ],
+      },
+    },
+    {
+      path: '/ui/construct/bacteria',
+      name: 'construct-bacteria',
+      component: () => import('@/construct/ConstructBacteria.vue'),
+      meta: {
+        title: 'Настройка бактерий и антибиотиков',
+        groups: [
+          'Конструктор: Бактерии и антибиотики',
+        ],
+      },
+    },
+    {
+      path: '/ui/construct/dispensary-plan',
+      name: 'construct-dispensary-plan',
+      component: () => import('@/construct/ConstructDispensaryPlan.vue'),
+      meta: {
+        title: 'Д-учет настройка обследований',
+        groups: [
+          'Конструктор: Д-учет',
+        ],
+      },
+    },
+    {
+      path: '/ui/statistics-tickets',
+      name: 'statistics-tickets',
+      component: () => import('@/pages/StatisticsTickets.vue'),
+      meta: {
+        title: 'Статталоны',
+        groups: [
+          'Оформление статталонов',
+          'Лечащий врач',
+          'Оператор лечащего врача',
+        ],
+      },
+    },
+    {
+      path: '/ui/plan-operations',
+      name: 'plan-operations',
+      component: () => import('@/pages/PlanOperations/index.vue'),
+      meta: {
+        title: 'План операций',
+        narrowLayout: true,
+        groups: [
+          'Врач стационара',
+          'Лечащий врач',
+          'Оператор лечащего врача',
+          'Врач консультаций',
+          'План операций',
+        ],
+        module: 'l2_hosp',
+      },
+    },
+    {
+      path: '/ui/results-report',
+      name: 'results-report',
+      component: () => import('@/pages/ResultsReport.vue'),
+      meta: {
+        title: 'Отчёт по результатам',
+        groups: [
+          'Лечащий врач',
+          'Оператор лечащего врача',
+          'Врач-лаборант',
+          'Лаборант',
+          'Врач параклиники',
+          'Врач консультаций',
+        ],
+      },
+    },
+    {
+      path: '/ui/profiles',
+      name: 'profiles',
+      component: () => import('@/pages/Profiles.vue'),
+      meta: {
+        title: 'Профили пользователей',
+        groups: [
+          'Создание и редактирование пользователей',
+        ],
+      },
+    },
+    {
+      path: '/ui/stationar',
+      name: 'stationar',
+      component: () => import('@/pages/Stationar/index.vue'),
+      meta: {
+        title: 'Профили пользователей',
+        groups: [
+          'Врач стационара',
+          't, ad, p',
+        ],
+        module: 'l2_hosp',
+        showHospFavorites: true,
+        showOperationPlans: true,
+      },
+    },
+    {
+      path: '/ui/doc-call',
+      name: 'doc-call',
+      component: () => import('@/pages/DocCall.vue'),
+      meta: {
+        title: 'Вызовы врача и заявки',
+        groups: [
+          'Лечащий врач',
+          'Оператор лечащего врача',
+          'Вызов врача',
+        ],
+        module: 'l2_doc_call',
+      },
+    },
+    {
+      path: '/ui/employee-jobs',
+      name: 'employee-jobs',
+      component: () => import('@/pages/EmployeeJobs.vue'),
+      meta: {
+        title: 'Учёт косвенных услуг по лаборатории',
+        groups: [
+          'Врач-лаборант',
+          'Лаборант',
+          'Зав. лабораторией',
+        ],
+        module: 'l2_employee_job',
+      },
+    },
+    {
+      path: '/ui/list-wait',
+      name: 'list-wait',
+      component: () => import('@/pages/ListWait.vue'),
+      meta: {
+        title: 'Листы ожидания',
+        groups: [
+          'Лечащий врач',
+          'Оператор лечащего врача',
+        ],
+        module: 'l2_list_wait',
+      },
+    },
+    {
+      path: '/ui/plan-pharmacotherapy',
+      name: 'plan-pharmacotherapy',
+      component: () => import('@/pages/PlanPharmacotherapy/index.vue'),
+      meta: {
+        title: 'Процедурный лист',
+        groups: [
+          'Лечащий врач',
+          'Оператор лечащего врача',
+        ],
+      },
+    },
+    {
+      path: '/ui/laboratory/results',
+      name: 'laboratory-results',
+      component: () => import('@/pages/LaboratoryResults/index.vue'),
+      meta: {
+        title: 'Лабораторные результаты',
+        groups: [
+          'Врач-лаборант',
+          'Лаборант',
+          'Сброс подтверждений результатов',
+        ],
+        showLaboratoryHeader: true,
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

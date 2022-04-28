@@ -152,10 +152,10 @@
 </template>
 
 <script lang="ts">
-import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
-import SelectedResearches from '../ui-cards/SelectedResearches.vue';
-import constructPoint from '../api/construct-point';
-import * as actions from '../store/action-types';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
+import constructPoint from '@/api/construct-point';
+import * as actions from '@/store/action-types';
 
 const TYPES = [
   {

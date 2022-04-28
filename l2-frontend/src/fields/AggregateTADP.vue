@@ -38,7 +38,7 @@
 <script lang="ts">
 import VueApexCharts from 'vue-apexcharts';
 
-import stationarPoint from '../api/stationar-point';
+import stationarPoint from '@/api/stationar-point';
 
 const charts = ['Температура (°C)', 'Пульс (уд/с)', 'Давление'];
 

@@ -64,6 +64,9 @@
         </ul>
         <ExtendedPatientSearch v-if="meta.showExtendedPatientSearch" />
         <CardReader v-if="meta.showCardReader" />
+        <Favorites v-if="meta.showHospFavorites" />
+        <OperationPlans v-if="meta.showOperationPlans" />
+        <LaboratoryHeader v-if="meta.showLaboratoryHeader" />
         <ul
           v-if="meta.showCreateDirection"
           class="nav navbar-nav"
@@ -168,6 +171,9 @@ import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
     CreateDescriptiveDirection: () => import('@/ui-cards/CreateDescriptiveDirection.vue'),
     ExpertiseStatus: () => import('@/ui-cards/ExpertiseStatus.vue'),
     RmisLink: () => import('@/ui-cards/RmisLink.vue'),
+    Favorites: () => import('@/ui-cards/Favorites.vue'),
+    OperationPlans: () => import('@/ui-cards/OperationPlans.vue'),
+    LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),
   },
 })
 export default class Navbar extends Vue {

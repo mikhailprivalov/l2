@@ -1,5 +1,8 @@
 <template>
-  <div ref="root">
+  <div
+    ref="root"
+    class="content-root"
+  >
     <div
       id="cont_left"
       class="split split-horizontal"
@@ -54,12 +57,12 @@
 
 <script lang="ts">
 import Split from 'split.js';
-import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
-import IndividualPicker from '../ui-cards/IndividualPicker.vue';
-import ResultsReportViewer from '../ui-cards/ResultsReportViewer.vue';
-import ReportSelectedResearches from '../ui-cards/ReportSelectedResearches.vue';
-import researchesPoint from '../api/researches-point';
-import * as actions from '../store/action-types';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import IndividualPicker from '@/ui-cards/IndividualPicker.vue';
+import ResultsReportViewer from '@/ui-cards/ResultsReportViewer.vue';
+import ReportSelectedResearches from '@/ui-cards/ReportSelectedResearches.vue';
+import researchesPoint from '@/api/researches-point';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'ResultsReport',
@@ -146,5 +149,13 @@ export default {
 <style scoped>
   #right_top {
     overflow: visible !important;
+  }
+
+  .content-root {
+    position: absolute;
+    top: 41px;
+    right: 5px;
+    bottom: 5px;
+    left: 5px;
   }
 </style>

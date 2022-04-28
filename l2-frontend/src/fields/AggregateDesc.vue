@@ -82,7 +82,7 @@
 </template>
 
 <script lang="ts">
-import stationarPoint from '../api/stationar-point';
+import stationarPoint from '@/api/stationar-point';
 
 const delimiter = '#@#';
 

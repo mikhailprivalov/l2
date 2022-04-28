@@ -71,7 +71,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { mapGetters } from 'vuex';
 import departmentsDirectory from '@/api/departments-directory';
 import DepartmentEditRow from '@/forms/DepartmentEditRow.vue';
-import * as actions from '../store/action-types';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'DepartmentsForm',
@@ -123,7 +123,9 @@ export default {
         if (this.user_hospital === -1) {
           return;
         }
-        this.selected_hospital = this.user_hospital;
+        setTimeout(() => {
+          this.selected_hospital = this.user_hospital;
+        }, 10);
       },
       immediate: true,
     },

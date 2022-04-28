@@ -147,7 +147,7 @@ def refs(request):
 @ensure_csrf_cookie
 def researches_paraclinic(request):
     if SettingManager.get("paraclinic_module", default='false', default_type='b'):
-        return render(request, 'construct_paraclinic.html')
+        return redirect('/ui/construct/descriptive')
     else:
         return redirect('/')
 
@@ -166,18 +166,18 @@ def construct_consults(request):
 @group_required("Оператор", "Конструктор: Настройка шаблонов")
 @ensure_csrf_cookie
 def construct_templates(request):
-    return render(request, 'construct_templates.html')
+    return redirect('/ui/construct/templates')
 
 
 @login_required
 @group_required("Оператор", "Конструктор: Настройка микробиологии")
 @ensure_csrf_cookie
 def construct_bacteria(request):
-    return render(request, 'construct_bacteria.html')
+    return redirect('/ui/construct/bacteria')
 
 
 @login_required
 @group_required("Конструктор: Д-учет")
 @ensure_csrf_cookie
 def construct_dispensary_plan(request):
-    return render(request, 'construct_dplan.html')
+    return redirect('/ui/construct/dispensary-plan')

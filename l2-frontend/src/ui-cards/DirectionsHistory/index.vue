@@ -324,10 +324,10 @@
 import moment from 'moment';
 import { mapGetters } from 'vuex';
 import { Research } from '@/types/research';
+import directionsPoint from '@/api/directions-point';
+import * as actions from '@/store/action-types';
 import SelectPickerM from '../../fields/SelectPickerM.vue';
 import DateRange from '../DateRange.vue';
-import directionsPoint from '../../api/directions-point';
-import * as actions from '../../store/action-types';
 import Bottom from './Bottom/index.vue';
 
 function truncate(s, n, useWordBoundary) {
@@ -494,7 +494,7 @@ export default {
       }, 0);
     },
     stationar_link(dir) {
-      const path = `/mainmenu/stationar#{%22pk%22:${dir},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`;
+      const path = `/ui/stationar#{%22pk%22:${dir},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`;
       return path;
     },
     show_stationar(dir) {

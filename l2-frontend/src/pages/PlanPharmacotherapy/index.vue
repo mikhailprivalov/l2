@@ -1,5 +1,5 @@
 <template>
-  <div style="min-height: 500px;margin-top: 25px">
+  <div style="min-height: 500px;margin: 25px">
     <Filters
       :filters="filters"
       :departments="departments"

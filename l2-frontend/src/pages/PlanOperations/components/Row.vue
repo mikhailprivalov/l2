@@ -63,8 +63,8 @@
 <script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import * as actions from '../../../store/action-types';
-import plansPoint from '../../../api/plans-point';
+import * as actions from '@/store/action-types';
+import plansPoint from '@/api/plans-point';
 import PlanOperationEdit from '../../../modals/PlanOperationEdit.vue';
 
 export default {
@@ -101,7 +101,7 @@ export default {
     },
     directionHref() {
       // eslint-disable-next-line max-len
-      return `/mainmenu/stationar#{%22pk%22:${this.data.direction},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`;
+      return `/ui/stationar#{%22pk%22:${this.data.direction},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`;
     },
   },
   watch: {

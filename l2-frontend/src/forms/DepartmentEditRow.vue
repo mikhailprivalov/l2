@@ -43,7 +43,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import _ from 'lodash';
 import departmentsDirectory from '@/api/departments-directory';
-import * as actions from '../store/action-types';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'DepartmentEditRow',

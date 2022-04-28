@@ -128,10 +128,10 @@
 
 <script lang="ts">
 import moment from 'moment';
-import * as actions from '../store/action-types';
-import statisticsTicketsPoint from '../api/statistics-tickets-point';
-import SelectPickerB from '../fields/SelectPickerB.vue';
-import DateField2 from '../fields/DateField2.vue';
+import * as actions from '@/store/action-types';
+import statisticsTicketsPoint from '@/api/statistics-tickets-point';
+import SelectPickerB from '@/fields/SelectPickerB.vue';
+import DateField2 from '@/fields/DateField2.vue';
 
 export default {
   name: 'StatisticsTicketCreator',

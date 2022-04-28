@@ -49,7 +49,7 @@
 </template>
 
 <script lang="ts">
-import * as actions from '../store/action-types';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'RmqManagement',

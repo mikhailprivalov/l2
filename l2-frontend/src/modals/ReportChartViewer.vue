@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-import Modal from '../ui-cards/Modal.vue';
+import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ReportChartViewer',

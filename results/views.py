@@ -2174,3 +2174,8 @@ def results_search_directions(request):
         ).save()
 
     return JsonResponse({"rows": rows, "grouping": grouping, "len": n - offset, "next_offset": n, "all_rows": cnt, "error_message": ""})
+
+
+@login_required
+def results(request):
+    return redirect('/ui/laboratory/results')

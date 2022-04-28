@@ -13,7 +13,7 @@
 
 <script lang="ts">
 import { mapGetters } from 'vuex';
-import usersPoint from '../api/user-point';
+import usersPoint from '@/api/user-point';
 
 export default {
   name: 'RmisLocation',

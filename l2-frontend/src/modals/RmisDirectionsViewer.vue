@@ -239,10 +239,10 @@
 </template>
 
 <script lang="ts">
-import Modal from '../ui-cards/Modal.vue';
-import directionsPoint from '../api/directions-point';
-import * as actions from '../store/action-types';
-import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
+import Modal from '@/ui-cards/Modal.vue';
+import directionsPoint from '@/api/directions-point';
+import * as actions from '@/store/action-types';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 
 export default {
   name: 'RmisDirectionsViewer',

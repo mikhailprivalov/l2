@@ -1,5 +1,5 @@
-import api from '../../api';
-import departmentsDirectory from '../../api/departments-directory';
+import api from '@/api';
+import departmentsDirectory from '@/api/departments-directory';
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 
@@ -12,7 +12,10 @@ const stateInitial = {
 
 const getters = {
   hospitals: (state) => state.hospitals || [],
-  all_hospitals_with_none: (state, g) => [{ id: -1, label: 'Общие' }, ...g.hospitals],
+  all_hospitals_with_none: (state, g) => [
+    ...(g.hospitals.find(x => x.id === -1) ? [] : [{ id: -1, label: 'Общие' }]),
+    ...g.hospitals,
+  ],
   hospitalsById: (state, g) => g.hospitals.reduce((a, b) => ({ ...a, [b.id]: b }), {}),
   allDepartments: (state) => state.all || [],
   canEditDepartments: (state) => state.can_edit,

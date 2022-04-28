@@ -312,9 +312,9 @@
 </template>
 
 <script lang="ts">
-import Modal from '../ui-cards/Modal.vue';
-import directionsPoint from '../api/directions-point';
-import * as actions from '../store/action-types';
+import Modal from '@/ui-cards/Modal.vue';
+import directionsPoint from '@/api/directions-point';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'ResultsViewer',

@@ -1,71 +1,73 @@
 <template>
-  <div v-frag>
-    <a
-      v-tippy="{
-        html: '#favorites-view',
-        reactive: true,
-        interactive: true,
-        arrow: true,
-        animation: 'fade',
-        duration: 0,
-        theme: 'light',
-        placement: 'bottom',
-        trigger: 'click mouseenter',
-        popperOptions: {
-          modifiers: {
-            preventOverflow: {
-              boundariesElement: 'window',
-            },
-            hide: {
-              enabled: false,
+  <ul class="nav navbar-nav">
+    <li class="dropdown">
+      <a
+        v-tippy="{
+          html: '#favorites-view',
+          reactive: true,
+          interactive: true,
+          arrow: true,
+          animation: 'fade',
+          duration: 0,
+          theme: 'light',
+          placement: 'bottom',
+          trigger: 'click mouseenter',
+          popperOptions: {
+            modifiers: {
+              preventOverflow: {
+                boundariesElement: 'window',
+              },
+              hide: {
+                enabled: false,
+              },
             },
           },
-        },
-      }"
-      href="#"
-      class="dropdown-toggle"
-      @click.prevent
-    >
-      Избранные истории <span class="badge badge-light">{{ data.length }}</span>
-    </a>
+        }"
+        href="#"
+        class="dropdown-toggle"
+        @click.prevent
+      >
+        Избранные истории <span class="badge badge-light">{{ data.length }}</span>
+      </a>
 
-    <div
-      id="favorites-view"
-      class="tp"
-    >
-      <table class="table table-condensed table-bordered">
-        <tbody>
-          <tr
-            v-for="row in data"
-            :key="row.pk"
-          >
-            <td>
-              <LinkToHistory :direction="row.direction" />
-            </td>
-            <td>
-              {{ row.client }}
-            </td>
-            <td>
-              {{ row.card }}
-            </td>
-            <td>
-              <Favorite
-                :direction="row.direction"
-                in-list
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-if="data.length === 0">
-        Нет избранных историй
+      <div
+        id="favorites-view"
+        class="tp"
+      >
+        <table class="table table-condensed table-bordered">
+          <tbody>
+            <tr
+              v-for="row in data"
+              :key="row.pk"
+            >
+              <td>
+                <LinkToHistory :direction="row.direction" />
+              </td>
+              <td>
+                {{ row.client }}
+              </td>
+              <td>
+                {{ row.card }}
+              </td>
+              <td>
+                <Favorite
+                  :direction="row.direction"
+                  in-list
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="data.length === 0">
+          Нет избранных историй
+        </div>
       </div>
-    </div>
-  </div>
+    </li>
+  </ul>
 </template>
 
 <script lang="ts">
-import directionsPoint from '../api/directions-point';
+import directionsPoint from '@/api/directions-point';
 import LinkToHistory from '../pages/Stationar/LinkToHistory.vue';
 import Favorite from '../pages/Stationar/Favorite.vue';
 

@@ -39,6 +39,10 @@ export default {
       this.currentLaboratory = pk;
     });
     this.$root.$emit('emit-laboratory');
+
+    setTimeout(() => {
+      window.$('.context-st').show();
+    }, 300);
   },
   methods: {},
 };

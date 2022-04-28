@@ -2,7 +2,7 @@
   <div id="app">
     <Navbar v-if="!embedded && !hideHeaderWithoutLogin" />
 
-    <div :class="isNarrowLayout && 'container'">
+    <div :class="[isNarrowLayout && 'container', isFullPageLayout && 'full-page-layout']">
       <router-view />
     </div>
 
@@ -74,6 +74,10 @@ export default class App extends Vue {
 
   get isNarrowLayout() {
     return Boolean(this?.$route?.meta?.narrowLayout);
+  }
+
+  get isFullPageLayout() {
+    return Boolean(this?.$route?.meta?.fullPageLayout);
   }
 
   get hideHeaderWithoutLogin() {
@@ -191,6 +195,14 @@ export default class App extends Vue {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.full-page-layout {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 </style>
 

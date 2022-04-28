@@ -60,9 +60,9 @@
 </template>
 
 <script lang="ts">
-import SelectPickerM from '../fields/SelectPickerM.vue';
+import SelectPickerM from '@/fields/SelectPickerM.vue';
+import * as actions from '@/store/action-types';
 import TemplateEditor from './TemplateEditor.vue';
-import * as actions from '../store/action-types';
 
 export default {
   name: 'ConstructTemplates',
@@ -97,8 +97,8 @@ export default {
       this.load_templates();
     },
   },
-  created() {
-    this.$parent.$on('research-editor:cancel', this.cancel_edit);
+  mounted() {
+    this.$root.$on('research-editor:cancel', this.cancel_edit);
 
     this.$store.dispatch(actions.INC_LOADING);
     this.$store.dispatch(actions.GET_RESEARCHES).finally(() => {
@@ -134,6 +134,12 @@ export default {
 
 <style scoped lang="scss">
 .construct-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
   display: flex;
   align-items: stretch;
   flex-direction: row;

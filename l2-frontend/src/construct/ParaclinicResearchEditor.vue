@@ -932,11 +932,9 @@ import constructPoint from '@/api/construct-point';
 import * as actions from '@/store/action-types';
 import NumberRangeField from '@/fields/NumberRangeField.vue';
 import ConfigureAnesthesiaField from '@/fields/ConfigureAnesthesiaField.vue';
-import RichTextEditor from '@/fields/RichTextEditor.vue';
 import NumberField from '@/fields/NumberField.vue';
 import FieldHelper from '@/ui-cards/FieldHelper.vue';
 
-import TableConstructor from '@/construct/TableConstructor.vue';
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
@@ -946,12 +944,12 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
-    TableConstructor,
     PermanentDirectories,
     FieldHelper,
     NumberRangeField,
     NumberField,
-    RichTextEditor,
+    RichTextEditor: () => import('@/fields/RichTextEditor.vue'),
+    TableConstructor: () => import('@/construct/TableConstructor.vue'),
     FastTemplatesEditor,
     ConfigureAnesthesiaField,
     Treeselect,

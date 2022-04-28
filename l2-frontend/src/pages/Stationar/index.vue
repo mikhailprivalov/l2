@@ -1,7 +1,7 @@
 <template>
   <div
     ref="root"
-    class="root"
+    class="root root-content"
   >
     <div class="sidebar">
       <div class="sidebar-top">
@@ -1764,6 +1764,14 @@ export default {
 .colorBad {
   background-color: lightblue !important;
   color: #d35400;
+}
+
+.root-content {
+  position: absolute;
+  top: 37px;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 .root {

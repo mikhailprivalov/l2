@@ -208,9 +208,9 @@
 
 <script lang="ts">
 import moment from 'moment';
-import Modal from '../ui-cards/Modal.vue';
-import patientsPoint from '../api/patients-point';
-import * as actions from '../store/action-types';
+import Modal from '@/ui-cards/Modal.vue';
+import patientsPoint from '@/api/patients-point';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'Benefit',

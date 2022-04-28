@@ -78,9 +78,7 @@ export default {
 
 <style lang="scss" scoped>
   .root {
-    margin-left: -5px;
-    margin-right: -5px;
-    height: calc(100% - 36px);
+    height: 100%;
   }
 
   .flex-columns {

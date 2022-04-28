@@ -1,7 +1,6 @@
 <template>
   <div
-    class="form-group mkb10"
-    style="width: 100%; margin-top: 40px"
+    class="form-group mkb10 root"
   >
     <label>Диагноз в полной форме (код по МКБ и название):</label>
     <MKBFieldForm
@@ -18,7 +17,7 @@
 <script lang="ts">
 
 import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
-import MKBFieldForm from '../fields/MKBFieldForm.vue';
+import MKBFieldForm from '@/fields/MKBFieldForm.vue';
 
 export default {
   name: 'ConstructDispensaryPlan',
@@ -32,6 +31,11 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
+.root {
+  width: 100%;
+  padding: 20px 40px;
+}
 
 .mkb10 {
   z-index: 0;

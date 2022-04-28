@@ -101,9 +101,9 @@
 </template>
 
 <script lang="ts">
-import Modal from '../ui-cards/Modal.vue';
-import * as actions from '../store/action-types';
-import patientsPoint from '../api/patients-point';
+import Modal from '@/ui-cards/Modal.vue';
+import * as actions from '@/store/action-types';
+import patientsPoint from '@/api/patients-point';
 
 export default {
   name: 'CardSearch',

@@ -32,7 +32,7 @@ def menu(request):
     if request.user.is_authenticated and not request.is_ajax():
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:4'
         data = cache.get(k)
         if not data:
             pages = [
@@ -55,12 +55,12 @@ def menu(request):
                 {"url": "/ui/results-by-department-or-doctor", "title": "Печать по отделению или врачу", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/ui/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
                 {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
-                {"url": "/mainmenu/statistics-tickets", "title": "Статталоны", "nt": False, "access": ["Оформление статталонов", "Лечащий врач", "Оператор лечащего врача"]},
+                {"url": "/ui/statistics-tickets", "title": "Статталоны", "nt": False, "access": ["Оформление статталонов", "Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
-                {"url": "/laboratory/results", "title": "Лабораторные результаты", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
+                {"url": "/ui/laboratory/results", "title": "Лабораторные результаты", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
                 {
-                    "url": "/mainmenu/employee-job",
+                    "url": "/ui/employee-jobs",
                     "title": "Учёт косвенных услуг по лаборатории",
                     "nt": False,
                     "access": ["Врач-лаборант", "Лаборант", "Зав. лабораторией"],
@@ -89,18 +89,18 @@ def menu(request):
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций"],
                 },
                 {
-                    "url": "/mainmenu/results_report",
+                    "url": "/ui/results-report",
                     "title": "Отчёт по результатам",
                     "nt": False,
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций"],
                 },
                 {"url": "/mainmenu/discharge", "title": "Выписки", "nt": False, "access": ["Загрузка выписок", "Поиск выписок"], "module": "discharge_module"},
-                {"url": "/mainmenu/create_podr", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
-                {"url": "/mainmenu/profiles", "title": "Профили пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
+                {"url": "/ui/departments", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
+                {"url": "/ui/profiles", "title": "Профили пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
                 {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
                 {
-                    "url": "/mainmenu/direction_visit",
+                    "url": "/ui/direction-visit",
                     "title": "Регистрация направлений",
                     "nt": False,
                     "access": ["Посещения по направлениям", "Врач параклиники", "Врач консультаций", "Заборщик биоматериала микробиологии", "Получатель биоматериала микробиологии"],
@@ -114,9 +114,9 @@ def menu(request):
                     "module": "paraclinic_module",
                 },
                 {"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"], "module": "hosp_module"},
-                {"url": '/mainmenu/stationar', "title": "Стационар", "nt": False, "access": ["Врач стационара", "t, ad, p"], "module": "l2_hosp"},
+                {"url": '/ui/stationar', "title": "Стационар", "nt": False, "access": ["Врач стационара", "t, ad, p"], "module": "l2_hosp"},
                 {
-                    "url": '/mainmenu/plan_operations',
+                    "url": '/ui/plan-operations',
                     "title": "План операций",
                     "nt": False,
                     "access": ["Врач стационара", "Лечащий врач", "Оператор лечащего врача", "Врач консультаций", "План операций"],
@@ -128,9 +128,8 @@ def menu(request):
                     "nt": False,
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Врач консультаций", "Врач стационара"],
                 },
-                {"url": '/mainmenu/rmis_confirm', "title": "Подтверждение отправки результатов в РМИС", "nt": False, "access": ["Подтверждение отправки результатов в РМИС"]},
-                {"url": '/mainmenu/list_wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
-                {"url": '/mainmenu/doc_call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
+                {"url": '/ui/list-wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
+                {"url": '/ui/doc-call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
                 {
                     "url": '/ui/extra-notification',
                     "title": "Экстренные извещения",
@@ -138,7 +137,7 @@ def menu(request):
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"],
                     "module": "l2_extra_notifications",
                 },
-                {"url": '/mainmenu/procedure_list', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+                {"url": '/ui/plan-pharmacotherapy', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": '/ui/monitorings/enter', "title": "Заполнение мониторингов", "nt": False, "access": ["Заполнение мониторингов"], "module": "l2_monitorings"},
                 {"url": '/ui/monitorings/report', "title": "Просмотр мониторингов", "nt": False, "access": ["Просмотр мониторингов"], "module": "l2_monitorings"},
                 {"url": '/ui/statistics/report', "title": "Просмотр графиков статистики", "nt": False, "access": ["Просмотр графиков статистики"], "module": "l2_statistics"},
@@ -181,7 +180,7 @@ def menu(request):
                     "access": ["*"],
                     "module": "l2_some_links",
                 },
-                # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
+                # {"url": '/ui/cases', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 
             if settings.LDAP and settings.LDAP["enable"]:

@@ -52,7 +52,7 @@ def view_log(request):
 @group_required("Создание и редактирование пользователей")
 @ensure_csrf_cookie
 def profiles(request):
-    return render(request, 'dashboard/profiles.html')
+    return redirect('/ui/profiles')
 
 
 @csrf_exempt
@@ -167,38 +167,7 @@ def confirm_reset(request):
 @login_required
 @group_required("Создание и редактирование пользователей")
 def create_pod(request):
-    """Создание подразделения"""
-    p = False
-    e = True
-    mess = ''
-    podr = Podrazdeleniya.objects.all().order_by("pk")  # Выбор подразделения
-    if request.method == 'POST':  # Проверка типа запроса
-        if request.POST.get("update_podr", "0") == "1":
-            pd = Podrazdeleniya.objects.get(pk=request.POST.get("pk"))
-            if "title" in request.POST:
-                pd.title = request.POST["title"]
-            if "hide" in request.POST:
-                pd.hide = request.POST["hide"] == "true"
-            if "is_lab" in request.POST:
-                pd.isLab = request.POST["is_lab"] == "true"
-            pd.save()
-            return JsonResponse({})
-        title = request.POST['title']  # Получение названия
-        if title:  # Если название есть
-            if not Podrazdeleniya.objects.filter(title=title).exists():  # Если название не существует
-                pd = Podrazdeleniya.objects.create()  # Создание подразделения
-                pd.title = title
-                pd.save()  # Сохранение подразделения
-                p = True
-                e = False
-                slog.Log(key=str(pd.pk), user=request.user.doctorprofile, type=17, body=json.dumps({"title": title})).save()
-            else:
-                mess = "Такое подразделение уже есть"
-        else:
-            mess = "Название заполнено некорректно"
-    else:
-        e = False
-    return render(request, 'dashboard/create_podr.html', {'error': e, 'mess': mess, 'title': '', 'status': p, 'podr': podr, 'types': Podrazdeleniya.TYPES})
+    return redirect('/ui/departments')
 
 
 @login_required
@@ -625,14 +594,14 @@ def results_paraclinic(request):
 @group_required("Врач параклиники", "Посещения по направлениям", "Врач консультаций")
 @ensure_csrf_cookie
 def direction_visit(request):
-    return render(request, 'dashboard/direction_visit.html')
+    return redirect('/ui/direction-visit')
 
 
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники")
 @ensure_csrf_cookie
 def results_report(request):
-    return render(request, 'dashboard/results_report.html')
+    return redirect('/ui/results-report')
 
 
 @login_required
@@ -670,13 +639,6 @@ def rmq_send(request):
     return JsonResponse({"ok": True})
 
 
-@login_required
-@group_required("Подтверждение отправки результатов в РМИС")
-@ensure_csrf_cookie
-def rmis_confirm(request):
-    return render(request, 'dashboard/rmis_confirm.html')
-
-
 @ensure_csrf_cookie
 def l2queue(request):
     return render(request, 'dashboard/l2queue.html')
@@ -697,3 +659,13 @@ def ui(request, path):
 @login_required
 def results_department(request):
     return redirect('/ui/results-by-department-or-doctor')
+
+
+@login_required
+def doc_call(request):
+    return redirect('/ui/doc-call')
+
+
+@login_required
+def list_wait(request):
+    return redirect('/ui/list-wait')

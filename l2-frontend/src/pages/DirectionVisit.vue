@@ -421,12 +421,12 @@
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import DateFieldNav from '../fields/DateFieldNav.vue';
-import DateRange from '../ui-cards/DateRange.vue';
-import directionsPoint from '../api/directions-point';
-import usersPoint from '../api/user-point';
-import * as actions from '../store/action-types';
-import Modal from '../ui-cards/Modal.vue';
+import DateFieldNav from '@/fields/DateFieldNav.vue';
+import DateRange from '@/ui-cards/DateRange.vue';
+import directionsPoint from '@/api/directions-point';
+import usersPoint from '@/api/user-point';
+import * as actions from '@/store/action-types';
+import Modal from '@/ui-cards/Modal.vue';
 
 /**
      * @return {number}
