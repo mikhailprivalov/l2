@@ -320,9 +320,9 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
             """
             SELECT
                 distinct on (history_num ) dp.napravleniye_id as history_num,
-                  directions_issledovaniya.napravleniye_id as direction_number,
-                directions_issledovaniya.medical_examination as date_service,
+                directions_issledovaniya.napravleniye_id as direction_number,
                 users_doctorprofile.fio as doc_fio,
+                directions_issledovaniya.medical_examination as date_service,
                 directions_napravleniya.client_id,
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as patient_fio,
                 to_char(clients_individual.birthday, 'DD.MM.YYYY') as patient_birthday,
@@ -336,7 +336,8 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
                 directory_researches.title as research_title
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
-                LEFT JOIN directory_researches ON directions_issledovaniya.research_id = directory_researches.id  
+                LEFT JOIN directory_researches ON directions_issledovaniya.research_id = directory_researches.id
+                LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id                
                 LEFT JOIN directions_paraclinicresult on directions_paraclinicresult.issledovaniye_id=directions_issledovaniya.id

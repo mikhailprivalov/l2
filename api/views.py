@@ -2168,14 +2168,14 @@ def search_param(request):
     doc_confirm = data.get('docConfirm') or -1
     date_registred_start = data.get('dateRegistredStart') or '1900-01-01'
     date_registred_end = data.get('dateRegistredEnd') or '1900-01-01'
-    is_stationar = data.get('is_stationar') or False
+    search_stationar = data.get('searchStationar') or False
 
     # из проткола
     date_recieve = data.get('dateRecieve') or '1900-01-01'
     date_get = data.get('dateGet') or '1900-01-01'
     final_text = data.get('finalText') or ''
     rows = []
-    if not is_stationar:
+    if not search_stationar:
         result = search_data_by_param(
             date_create_start,
             date_create_end,
@@ -2204,14 +2204,14 @@ def search_param(request):
             }
             for i in result
         ]
-    elif is_stationar and final_text:
+    elif search_stationar and final_text:
         result = search_text_stationar(date_create_start, date_create_end, final_text)
         rows = [
             {
                 "patient_fio": i.patient_fio,
                 "patient_birthday": i.patient_birthday,
                 "patient_age": i.patient_age,
-                "hosp_title": i.hosp_title,
+                "hosp_title": i.history_num,
                 "doc_fio": i.doc_fio,
                 "direction_number": i.direction_number,
                 "field_value": i.field_value,
@@ -2221,6 +2221,5 @@ def search_param(request):
             }
             for i in result
         ]
-    result1 = search_text_stationar(date_create_start, date_create_end, final_text)
 
     return JsonResponse({"rows": rows})
