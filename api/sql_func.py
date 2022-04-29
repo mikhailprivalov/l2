@@ -338,13 +338,10 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN directory_researches ON directions_issledovaniya.research_id = directory_researches.id  
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
-                LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
-                LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
-                LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
+                LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id                
                 LEFT JOIN directions_paraclinicresult on directions_paraclinicresult.issledovaniye_id=directions_issledovaniya.id
                 LEFT JOIN directory_paraclinicinputfield on directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
                 LEFT JOIN directions_issledovaniya dp on directions_napravleniya.parent_id=dp.id
-                
                 WHERE 
                     directory_researches.is_slave_hospital = true
                     and directions_issledovaniya.time_confirmation IS NOT NULL 
