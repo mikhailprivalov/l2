@@ -2211,7 +2211,7 @@ def search_param(request):
                 "patient_fio": i.patient_fio,
                 "patient_birthday": i.patient_birthday,
                 "patient_age": i.patient_age,
-                "hosp_title": i.history_num,
+                "hosp_title": "",
                 "doc_fio": i.doc_fio,
                 "direction_number": i.direction_number,
                 "field_value": i.field_value,
