@@ -885,7 +885,7 @@
             </div>
             <div class="fields">
               <div
-                v-if="row.research.is_doc_refferal"
+                v-if="row.research.is_doc_refferal || row.research.is_gistology"
                 class="field"
               >
                 <div
