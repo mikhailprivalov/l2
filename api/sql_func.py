@@ -323,10 +323,8 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
                   directions_issledovaniya.napravleniye_id as direction_number,
                 directions_issledovaniya.medical_examination as date_service,
                 users_doctorprofile.fio as doc_fio,
-
                 directions_napravleniya.client_id,
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as patient_fio,
-
                 to_char(clients_individual.birthday, 'DD.MM.YYYY') as patient_birthday,
                 date_part('year', age(directions_issledovaniya.medical_examination, clients_individual.birthday))::int as patient_age,
                 clients_individual.sex as patient_sex,

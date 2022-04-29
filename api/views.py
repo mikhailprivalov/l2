@@ -2222,7 +2222,5 @@ def search_param(request):
             for i in result
         ]
     result1 = search_text_stationar(date_create_start, date_create_end, final_text)
-    for i in result1:
-        print(i)
 
     return JsonResponse({"rows": rows})
