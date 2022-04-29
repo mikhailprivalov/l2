@@ -319,7 +319,8 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
         cursor.execute(
             """
             SELECT
-                distinct on (directions_issledovaniya.napravleniye_id) directions_issledovaniya.napravleniye_id as direction_number,
+                distinct on (history_num ) dp.napravleniye_id as history_num,
+                  directions_issledovaniya.napravleniye_id as direction_number,
                 directions_issledovaniya.medical_examination as date_service,
                 users_doctorprofile.fio as doc_fio,
 
@@ -334,8 +335,7 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
                 directions_paraclinicresult.value as field_value,
                 directions_paraclinicresult.field_id,
                 directory_paraclinicinputfield.title,
-                directory_researches.title as research_title,
-                dp.napravleniye_id as histoty_num
+                directory_researches.title as research_title
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN directory_researches ON directions_issledovaniya.research_id = directory_researches.id  
@@ -352,7 +352,7 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
                     and directions_issledovaniya.time_confirmation IS NOT NULL 
                     and (directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s) 
                     and directions_paraclinicresult.value ~* %(final_text)s
-                order by directions_issledovaniya.napravleniye_id
+                order by dp.napravleniye_id
             """,
             params={
                 'date_create_start': date_create_start,

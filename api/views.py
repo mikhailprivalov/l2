@@ -2217,9 +2217,12 @@ def search_param(request):
                 "field_value": i.field_value,
                 "patient_sex": i.patient_sex,
                 "research_title": i.research_title,
-                "histoty_num": i.histoty_num,
+                "history_num": i.history_num,
             }
             for i in result
         ]
+    result1 = search_text_stationar(date_create_start, date_create_end, final_text)
+    for i in result1:
+        print(i)
 
     return JsonResponse({"rows": rows})
