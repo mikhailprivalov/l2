@@ -4,8 +4,8 @@ from .models import DoctorProfile, AssignmentTemplates, AssignmentResearches, Sp
 
 
 class DocAdmin(admin.ModelAdmin):
-    list_filter = ('isLDAP_user', 'podrazdeleniye', 'specialities', 'user__is_staff')
-    list_display = ('fio', 'podrazdeleniye', 'isLDAP_user')
+    list_filter = ('podrazdeleniye', 'specialities', 'user__is_staff',)
+    list_display = ('fio', 'podrazdeleniye',)
     list_display_links = ('fio',)
     search_fields = ('fio',)
     filter_horizontal = ('white_list_monitoring', 'black_list_monitoring', 'disabled_fin_source')

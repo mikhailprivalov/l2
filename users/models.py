@@ -71,7 +71,6 @@ class DoctorProfile(models.Model):
     patronymic = models.CharField(max_length=255, help_text='Отчество', blank=True, default=None, null=True)
     email = models.EmailField(max_length=255, blank=True, default=None, null=True, help_text='Email пользователя')
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
-    isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
     labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
     login_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Код авторизации')
     restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True, help_text='Запрет на выдачу направлений с исследованиями')

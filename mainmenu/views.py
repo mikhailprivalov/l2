@@ -170,14 +170,6 @@ def create_pod(request):
     return redirect('/ui/departments')
 
 
-@login_required
-@staff_member_required
-@ensure_csrf_cookie
-def ldap_sync(request):
-    """Страница синхронизации с LDAP"""
-    return render(request, 'dashboard/ldap_sync.html')
-
-
 def get_fin():
     fin = []
     for b in CardBase.objects.filter(hide=False):
@@ -387,7 +379,7 @@ def discharge_search(request):
 @group_required("Создание и редактирование пользователей")
 def users_count(request):
     """Получение количества пользователей"""
-    result = {"all": User.objects.all().count(), "ldap": DoctorProfile.objects.filter(isLDAP_user=True).count()}
+    result = {"all": User.objects.all().count()}
 
     return JsonResponse(result)
 

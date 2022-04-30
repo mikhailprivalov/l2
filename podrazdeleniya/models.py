@@ -45,7 +45,6 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
 
     title = models.CharField(max_length=255)  # Название подразделения
     short_title = models.CharField(max_length=50, default='', blank=True)
-    gid_n = models.IntegerField(default=None, null=True, blank=True)  # gidNumber в LDAP
     hide = models.BooleanField(default=False, blank=True, db_index=True)  # DEPRECATED. True=Скрывать подразделение
     vaccine = models.BooleanField(default=False, blank=True)
     p_type = models.PositiveSmallIntegerField(choices=TYPES, default=HIDDEN, blank=True)

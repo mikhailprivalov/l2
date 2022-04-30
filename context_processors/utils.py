@@ -109,7 +109,6 @@ def menu(request):
                     "access": ["Врач параклиники", "Врач консультаций", "Свидетельство о смерти-доступ"],
                     "module": "paraclinic_module",
                 },
-                {"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"], "module": "hosp_module"},
                 {"url": '/ui/stationar', "title": "Стационар", "nt": False, "access": ["Врач стационара", "t, ad, p"], "module": "l2_hosp"},
                 {
                     "url": '/ui/plan-operations',
@@ -179,8 +178,6 @@ def menu(request):
                 # {"url": '/ui/cases', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 
-            if settings.LDAP and settings.LDAP["enable"]:
-                pages.append({"url": "/mainmenu/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
             if settings.PROFILING:
                 pages.append({"url": "/silk/", "title": "Профилирование", "nt": False, "access": []})
             pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
