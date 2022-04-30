@@ -35,6 +35,7 @@
                   :append-to-body="true"
                   class="treeselect-noborder"
                   :clearable="false"
+                  :disabled="isSearchStationar"
                 />
               </td>
             </tr>
@@ -46,6 +47,7 @@
                   type="text"
                   class="form-control"
                   placeholder="номер"
+                  :disabled="isSearchStationar"
                 >
               </td>
             </tr>
@@ -59,6 +61,7 @@
                   type="text"
                   class="form-control"
                   placeholder="номер"
+                  :disabled="isSearchStationar"
                 >
               </td>
             </tr>
@@ -70,6 +73,7 @@
                     v-model="hospCheck"
                     type="checkbox"
                     class="ml-5"
+                    :disabled="isSearchStationar"
                   >
                 </label>
               </th>
@@ -77,6 +81,7 @@
                 <DateRange
                   v-if="hospCheck"
                   v-model="dateExaminationRange"
+                  :disabled="isSearchStationar"
                 />
               </td>
             </tr>
@@ -86,6 +91,7 @@
                   Регистрация
                   <input
                     v-model="registerCheck"
+                    :disabled="isSearchStationar"
                     type="checkbox"
                     class="ml-5"
                   >
@@ -95,6 +101,7 @@
                 <DateRange
                   v-if="registerCheck"
                   v-model="dateRegisteredRange"
+                  :disabled="isSearchStationar"
                 />
               </td>
             </tr>
@@ -113,6 +120,7 @@
                   :options="usersConfirm"
                   placeholder="Пользователь не выбран"
                   :clearable="true"
+                  :disabled="isSearchStationar"
                 />
               </td>
             </tr>
@@ -126,6 +134,7 @@
                 >
                   <input
                     v-model="dateGet"
+                    :disabled="isSearchStationar"
                     type="date"
                     class="form-control nba"
                   >
@@ -151,6 +160,7 @@
                     v-model="dateReceive"
                     type="date"
                     class="form-control nba"
+                    :disabled="isSearchStationar"
                   >
                   <span class="input-group-btn">
                     <button
@@ -164,7 +174,14 @@
             </tr>
             <tr>
               <th>
-                Текст
+                <label class="mh-34">
+                  Текст (и/б)
+                  <input
+                    v-model="searchStationar"
+                    type="checkbox"
+                    class="ml-5"
+                  >
+                </label>
               </th>
               <td class="x-cell">
                 <input
@@ -186,6 +203,15 @@
         >
           Поиск
         </button>
+
+        <div
+          v-if="count > 0"
+          class="top-padding"
+        >
+          <span class="badge badge-primary fons-style">
+            Получено строк &mdash; {{ count }}
+          </span>
+        </div>
       </div>
     </div>
     <div class="right-content">
@@ -195,8 +221,8 @@
           style="table-layout: fixed"
         >
           <colgroup>
-            <col style="width: 80px">
-            <col style="width: 200px">
+            <col style="width: 120px">
+            <col style="width: 160px">
             <col style="width: 300px">
             <col>
             <col style="width: 200px">
@@ -204,7 +230,12 @@
           <thead>
             <tr>
               <th>Номер</th>
-              <th>Организция</th>
+              <th v-if="!isSearchStationar">
+                Организция
+              </th>
+              <th v-else>
+                История болезни
+              </th>
               <th>Пациент</th>
               <th>Текст</th>
               <th>Исполнитель</th>
@@ -214,14 +245,27 @@
             <tr
               v-for="r in results"
               :key="r.direction_number"
-              class="cursor-pointer"
-              @click="print(r.direction_number)"
             >
               <td>
-                {{ r.direction_number }}
+                <a
+                  href="#"
+                  class="a-under"
+                  @click="print(r.direction_number)"
+                >
+                  {{ r.direction_number }}
+                </a>
               </td>
-              <td>
+              <td v-if="!isSearchStationar">
                 {{ r.hosp_title }}
+              </td>
+              <td v-else>
+                <a
+                  href="#"
+                  class="a-under"
+                  @click="load(r.history_num)"
+                >
+                  И/б {{ r.history_num }}
+                </a>
               </td>
               <td>
                 {{ r.patient_fio }}, {{ r.patient_sex }}, {{ r.patient_birthday }}, {{ r.patient_age }}
@@ -276,6 +320,7 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       hospCheck: false,
       dateExaminationRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       registerCheck: false,
+      searchStationar: false,
       dateRegisteredRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       docConfirm: null,
       usersConfirm: [],
@@ -283,6 +328,7 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       results: [],
       dateReceive: '',
       dateGet: '',
+      count: 0,
     };
   },
   async mounted() {
@@ -298,11 +344,27 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
     this.usersConfirm = users;
     await this.$store.dispatch(actions.DEC_LOADING);
   },
+  watch: {
+    searchStationar() {
+      if (this.searchStationar) {
+        this.research = -1;
+        this.caseNumber = '';
+        this.hospNumber = '';
+        this.hospCheck = false;
+        this.registerCheck = false;
+        this.docConfirm = null;
+        this.dateReceive = '';
+        this.dateGet = '';
+      }
+    },
+  },
 })
 export default class SearchPage extends Vue {
   year: number;
 
   research: number;
+
+  count: number;
 
   researches: any[];
 
@@ -315,6 +377,8 @@ export default class SearchPage extends Vue {
   dateExaminationRange: string[];
 
   registerCheck: boolean;
+
+  searchStationar: boolean;
 
   dateRegisteredRange: string[];
 
@@ -329,7 +393,11 @@ export default class SearchPage extends Vue {
   dateReceive: string | null;
 
   get isValid() {
-    return !!this.year && !!this.research && this.research !== -1;
+    return this.searchStationar || (!!this.year && !!this.research && this.research !== -1);
+  }
+
+  get isSearchStationar() {
+    return this.searchStationar;
   }
 
   async search() {
@@ -347,9 +415,11 @@ export default class SearchPage extends Vue {
       dateGet: this.dateGet,
       dateReceive: this.dateReceive,
       finalText: this.text,
+      searchStationar: this.searchStationar,
     };
-    const { rows } = await this.$api('/search-param', data);
-    this.results = rows || [];
+    const dataRows = await this.$api('/search-param', data);
+    this.results = dataRows.rows || [];
+    this.count = dataRows.count || 0;
 
     await this.$store.dispatch(actions.DEC_LOADING);
   }
@@ -357,7 +427,13 @@ export default class SearchPage extends Vue {
   print(pk) {
     this.$root.$emit('print:results', [pk]);
   }
+
+  // eslint-disable-next-line class-methods-use-this
+  load(historyNum) {
+    window.open(`/ui/stationar#{%22pk%22:${historyNum},%22every%22:false}`, '_blank');
+  }
 }
+
 </script>
 
 <style lang="scss" scoped>
@@ -431,6 +507,15 @@ $sidebar-width: 400px;
     justify-content: start;
     padding: 5px;
   }
+}
+
+.top-padding {
+  padding-top: 15px;
+}
+
+.fons-style {
+  font-size: 16px;
+  font-weight: normal;
 }
 </style>
 

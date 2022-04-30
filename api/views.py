@@ -50,7 +50,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param
+from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -2168,39 +2168,58 @@ def search_param(request):
     doc_confirm = data.get('docConfirm') or -1
     date_registred_start = data.get('dateRegistredStart') or '1900-01-01'
     date_registred_end = data.get('dateRegistredEnd') or '1900-01-01'
+    search_stationar = data.get('searchStationar') or False
 
     # из проткола
     date_recieve = data.get('dateRecieve') or '1900-01-01'
     date_get = data.get('dateGet') or '1900-01-01'
     final_text = data.get('finalText') or ''
+    rows = []
+    if not search_stationar:
+        result = search_data_by_param(
+            date_create_start,
+            date_create_end,
+            research_id,
+            case_number,
+            hospital_id,
+            date_registred_start,
+            date_registred_end,
+            date_examination_start,
+            date_examination_end,
+            doc_confirm,
+            date_recieve,
+            date_get,
+            final_text,
+        )
+        rows = [
+            {
+                "patient_fio": i.patient_fio,
+                "patient_birthday": i.patient_birthday,
+                "patient_age": i.patient_age,
+                "hosp_title": i.hosp_title,
+                "doc_fio": i.doc_fio,
+                "direction_number": i.direction_number,
+                "field_value": i.field_value,
+                "patient_sex": i.patient_sex,
+            }
+            for i in result
+        ]
+    elif search_stationar and final_text:
+        result = search_text_stationar(date_create_start, date_create_end, final_text)
+        rows = [
+            {
+                "patient_fio": i.patient_fio,
+                "patient_birthday": i.patient_birthday,
+                "patient_age": i.patient_age,
+                "hosp_title": "",
+                "doc_fio": i.doc_fio,
+                "direction_number": i.direction_number,
+                "field_value": i.field_value,
+                "patient_sex": i.patient_sex,
+                "research_title": i.research_title,
+                "history_num": i.history_num,
+            }
+            for i in result
+        ]
 
-    result = search_data_by_param(
-        date_create_start,
-        date_create_end,
-        research_id,
-        case_number,
-        hospital_id,
-        date_registred_start,
-        date_registred_end,
-        date_examination_start,
-        date_examination_end,
-        doc_confirm,
-        date_recieve,
-        date_get,
-        final_text,
-    )
-    rows = [
-        {
-            "patient_fio": i.patient_fio,
-            "patient_birthday": i.patient_birthday,
-            "patient_age": i.patient_age,
-            "hosp_title": i.hosp_title,
-            "doc_fio": i.doc_fio,
-            "direction_number": i.direction_number,
-            "field_value": i.field_value,
-            "patient_sex": i.patient_sex,
-        }
-        for i in result
-    ]
-
-    return JsonResponse({"rows": rows})
+    return JsonResponse({"rows": rows, "count": len(rows)})
