@@ -1216,12 +1216,23 @@
                 </div>
               </div>
               <div
-                v-if="data.direction.coExecutor"
+                v-if="data.direction.coExecutor || l2_decriptive_coexecutor"
                 class="field"
               >
                 <label class="field-title">Со-исполнитель</label>
                 <div class="field-value simple-value">
-                  {{ data.direction.coExecutor }}
+                  <Treeselect
+                    v-model="data.direction.coExecutor"
+                    :multiple="false"
+                    :disable-branch-nodes="true"
+                    class="treeselect-wide"
+                    :options="workFromUsers"
+                    :append-to-body="true"
+                    :clearable="true"
+                    :z-index="5001"
+                    placeholder="Не выбрано"
+                    :disabled="!l2_decriptive_coexecutor || row.whoConfirmed"
+                  />
                 </div>
               </div>
               <div
@@ -1853,6 +1864,9 @@ export default {
     };
   },
   computed: {
+    l2_decriptive_coexecutor() {
+      return this.$store.getters.modules.l2_decriptive_coexecutor;
+    },
     selectedModeTitle() {
       return this.SEARCH_MODES.find(m => m.id === this.searchMode)?.title;
     },
@@ -2450,6 +2464,7 @@ export default {
           data: {
             ...iss,
             direction: this.data.direction,
+            coExecutor: this.data.direction.coExecutor,
           },
           with_confirm: false,
           visibility_state: this.visibility_state(iss),
@@ -2490,6 +2505,7 @@ export default {
           data: {
             ...iss,
             direction: this.data.direction,
+            coExecutor: this.data.direction.coExecutor,
           },
           with_confirm: true,
           visibility_state: this.visibility_state(iss),
