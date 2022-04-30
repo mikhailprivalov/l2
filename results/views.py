@@ -52,7 +52,7 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.common import RANGE_NOT_IN, RANGE_IN
-from utils.dates import try_parse_range, try_strptime
+from utils.dates import try_strptime
 from utils.flowable import InteractiveTextField, QrCodeSite
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
@@ -1867,74 +1867,6 @@ def get_day_results(request):
                 directions[dir.get_doc_podrazdeleniye_title()].append(dir.pk)
 
     return HttpResponse(json.dumps({"directions": directions}), content_type="application/json")
-
-
-@csrf_exempt
-@login_required
-def result_filter(request):
-    """Фильтрация списка исследований"""
-    result = {"ok": False}
-    if request.method == "POST":
-        research_pk = request.POST["research"]  # ID исследования
-        status = int(request.POST["status"])  # Статус
-        dir_pk = request.POST["dir_id"]  # Номер направления
-        date_start = request.POST["date[start]"]  # Начальная дата
-        date_end = request.POST["date[end]"]  # Конечная дата
-        if research_pk.isnumeric() or research_pk == "-1":
-
-            iss_list = Issledovaniya.objects.filter(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-            if dir_pk == "" and status != 3:
-                date_start, date_end = try_parse_range(date_start, date_end)
-                if status == 0:
-                    iss_list = iss_list.filter(tubes__time_recive__range=(date_start, date_end))
-                elif status == 1:
-                    iss_list = iss_list.filter(time_save__range=(date_start, date_end), time_save__isnull=False)
-                elif status == 2:
-                    iss_list = iss_list.filter(napravleniye__time_print__range=(date_start, date_end))
-                if int(research_pk) >= 0:
-                    iss_list = iss_list.filter(research__pk=int(research_pk))
-            elif dir_pk == "" and status == 3:
-                iss_list = iss_list.filter(napravleniye__doc_print__isnull=True, doc_confirmation__isnull=False)
-                is_tmp = iss_list
-                for v in is_tmp:
-                    if Issledovaniya.objects.filter(napravleniye=v.napravleniye, time_confirmation__isnull=True).exists():
-                        iss_list = iss_list.exclude(napravleniye=v.napravleniye)
-            elif dir_pk.isnumeric():
-                iss_list = iss_list.filter(napravleniye__pk=int(dir_pk))
-
-            result["list"] = {}
-            for v in iss_list:
-                status_v = 0
-                if v.doc_save and not v.time_confirmation:
-                    status_v = 1
-                elif v.doc_save and v.time_confirmation and v.napravleniye.doc_print:
-                    status_v = 2
-                elif v.doc_save and v.time_confirmation and not v.napravleniye.doc_print:
-                    status_v = 3
-                if v.pk in result["list"].keys() or (status != status_v and not dir_pk.isnumeric()):
-                    continue
-                if dir_pk.isnumeric():
-                    status = status_v
-                res = {
-                    "status": status_v,
-                    "pk": v.pk,
-                    "title": v.research.title,
-                    "date": "",
-                    "direction": v.napravleniye_id,
-                    "tubes": " | ".join(map(str, v.tubes.values_list('pk', flat=True))),
-                }
-                if status == 0 and v.tubes.filter(time_recive__isnull=False).exists():  # Не обработаные
-                    res["date"] = str(dateformat.format(v.tubes.filter(time_recive__isnull=False).order_by("-time_recive").first().time_recive.date(), settings.DATE_FORMAT))
-                elif status == 1:  # Не подтвержденые
-                    res["date"] = str(dateformat.format(v.time_save.date(), settings.DATE_FORMAT))
-                elif status == 2:  # Распечатаные
-                    if v.napravleniye.time_print:
-                        res["date"] = str(dateformat.format(v.napravleniye.time_print.date(), settings.DATE_FORMAT))
-                elif status == 3:  # Не распечатаные
-                    res["date"] = str(dateformat.format(v.time_confirmation.date(), settings.DATE_FORMAT))
-                result["list"][v.pk] = res
-            result["ok"] = True
-    return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 @csrf_exempt

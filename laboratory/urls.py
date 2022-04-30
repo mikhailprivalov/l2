@@ -10,7 +10,6 @@ import clients.views
 import directions.views
 import mainmenu.views
 import receivematerial.views
-import researches.views
 import statistic.views
 from users.views import home
 
@@ -32,7 +31,6 @@ urlpatterns = [
     path('directions/', include('directions.urls')),
     path('direction/researches/update/history/print', directions.views.print_history),
     path('directory/', include('directory.urls')),
-    path('researches/get/one', researches.views.researches_get_one),
     path('dashboard/', include('mainmenu.urls')),
     path('mainmenu/', include('mainmenu.urls')),
     path('forms/', include('forms.urls')),

@@ -7,19 +7,14 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 import directory.models as directory
-import slog.models as slog
-from appconf.manager import SettingManager
-from clients.models import CardBase
-from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
+from directions.models import TubesRegistration, Issledovaniya, Napravleniya
 from laboratory import VERSION
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
-from rmis_integration.client import Client
 from users.models import DoctorProfile
 from utils.dates import try_parse_range
 
@@ -119,92 +114,6 @@ def receive_journal_form(request):
     groups = directory.ResearchGroup.objects.filter(lab=lab)
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("title")
     return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
-
-
-@csrf_exempt
-@login_required
-@group_required("Сброс подтверждений результатов", "Врач-лаборант", "Лаборант")
-def confirm_reset(request):
-    result = {"ok": False, "msg": "Ошибка"}
-
-    if "pk" in request.POST.keys() or "pk" in request.GET.keys():
-        if request.method == "POST":
-            pk = int(request.POST["pk"])
-        else:
-            pk = int(request.GET["pk"])
-
-        if Issledovaniya.objects.filter(pk=pk).exists():
-            iss = Issledovaniya.objects.get(pk=pk)
-
-            import time
-
-            ctp = int(0 if not iss.time_confirmation else int(time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
-            ctime = int(time.time())
-            cdid = iss.doc_confirmation_id or -1
-            if (
-                (ctime - ctp < SettingManager.get("lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk)
-                or request.user.is_superuser
-                or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
-            ):
-                predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": cdid, "direction": iss.napravleniye_id}
-                iss.doc_confirmation = iss.time_confirmation = None
-                iss.save()
-                if iss.napravleniye.result_rmis_send:
-                    c = Client()
-                    c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
-                result = {"ok": True}
-                slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
-            else:
-                result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
-    return JsonResponse(result)
-
-
-@csrf_exempt
-@login_required
-@group_required("Создание и редактирование пользователей")
-def create_pod(request):
-    return redirect('/ui/departments')
-
-
-def get_fin():
-    fin = []
-    for b in CardBase.objects.filter(hide=False):
-        o = {"pk": b.pk, "sources": []}
-        for f in IstochnikiFinansirovaniya.objects.filter(base=b, hide=False):
-            o["sources"].append({"pk": f.pk, "title": f.title})
-        fin.append(o)
-    return fin
-
-
-@login_required
-@group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций")
-@ensure_csrf_cookie
-def results_history(request):
-    podr = Podrazdeleniya.objects.filter(p_type__in=[Podrazdeleniya.LABORATORY, Podrazdeleniya.PARACLINIC]).order_by("title")
-
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-    users = []
-    for p in podrazdeleniya:
-        pd = {"pk": p.pk, "title": p.title, "docs": []}
-        for d in DoctorProfile.objects.filter(podrazdeleniye=p, user__groups__name="Лечащий врач"):
-            pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
-        users.append(pd)
-    return render(
-        request,
-        'dashboard/results_history.html',
-        {
-            'fin': get_fin(),
-            "notlabs": podrazdeleniya,
-            "users": json.dumps(users),
-            "labs": [
-                {
-                    "title": x.get_title(),
-                    "researches": [{"pk": y.pk, "title": y.get_full_short_title()} for y in directory.Researches.objects.filter(hide=False, podrazdeleniye=x).order_by("title")],
-                }
-                for x in podr
-            ],
-        },
-    )
 
 
 @login_required
@@ -308,10 +217,6 @@ def get_userdata(doc: DoctorProfile):
     if doc is None:
         return ""
     return "%s (%s) - %s" % (doc.fio, doc.user.username, doc.podrazdeleniye.title)
-
-
-def ratelimited(request, e):
-    return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
 
 
 def v404(request, exception=None):

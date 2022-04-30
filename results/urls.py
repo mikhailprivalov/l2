@@ -12,6 +12,5 @@ urlpatterns = [
     path('results', views.results),
     path('journal', views.result_journal_print),
     path('journal_table', views.result_journal_table_print),
-    path('filter', views.result_filter),
     path('day', views.get_day_results),
 ]
