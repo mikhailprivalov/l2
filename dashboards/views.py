@@ -1,6 +1,7 @@
 import json
 from dateutil.relativedelta import relativedelta
 
+from api.dicom import check_server_port
 from appconf.manager import SettingManager
 from dashboards.models import Dashboard
 from dashboards.sql_func import get_charts_dataset, execute_select
@@ -20,6 +21,8 @@ def exec_query(dashboard_pk, dates_param):
     metadata_charts = get_charts_dataset(dashboard_pk)
     # обход по графикам датасетов
     for md in metadata_charts:
+        if not check_server_port(md.ip_address, md.port):
+            continue
         if not data_chart.get(md.chart_id):
             data_chart[md.chart_id] = [
                 {
