@@ -1861,6 +1861,7 @@ export default {
       workFromUsers: [],
       workFromHistory: [],
       moreServices: [],
+      usersLoading: false,
     };
   },
   computed: {
@@ -2054,8 +2055,20 @@ export default {
       immediate: true,
     },
     can_confirm_by_other_user: {
+      handler() {
+        this.usersLoading = true;
+      },
+      immediate: true,
+    },
+    l2_decriptive_coexecutor: {
+      handler() {
+        this.usersLoading = true;
+      },
+      immediate: true,
+    },
+    usersLoading: {
       async handler() {
-        if (this.can_confirm_by_other_user && this.workFromUsers.length === 0) {
+        if (this.usersLoading && this.can_confirm_by_other_user && this.workFromUsers.length === 0) {
           const { users } = await usersPoint.loadUsersByGroup({
             group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
           });
