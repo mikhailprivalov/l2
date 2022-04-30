@@ -334,6 +334,20 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
     this.usersConfirm = users;
     await this.$store.dispatch(actions.DEC_LOADING);
   },
+  watch: {
+    searchStationar() {
+      if (this.searchStationar) {
+        this.research = -1;
+        this.caseNumber = '';
+        this.hospNumber = '';
+        this.hospCheck = false;
+        this.registerCheck = false;
+        this.docConfirm = null;
+        this.dateReceive = '';
+        this.dateGet = '';
+      }
+    },
+  },
 })
 export default class SearchPage extends Vue {
   year: number;
@@ -371,16 +385,6 @@ export default class SearchPage extends Vue {
   }
 
   get isSearchStationar() {
-    if (this.searchStationar) {
-      this.research = -1;
-      this.caseNumber = '';
-      this.hospNumber = '';
-      this.hospCheck = false;
-      this.registerCheck = false;
-      this.docConfirm = null;
-      this.dateReceive = '';
-      this.dateGet = '';
-    }
     return this.searchStationar;
   }
 
@@ -413,9 +417,10 @@ export default class SearchPage extends Vue {
 
   // eslint-disable-next-line class-methods-use-this
   load(historyNum) {
-    window.open(`/ui/stationar#{%22pk%22:${historyNum},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`);
+    window.open(`/ui/stationar#{%22pk%22:${historyNum},%22every%22:false}`, '_blank');
   }
 }
+
 </script>
 
 <style lang="scss" scoped>
