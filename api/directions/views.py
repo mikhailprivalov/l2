@@ -3630,3 +3630,11 @@ def direction_history(request):
             data.append(d)
         Log(key=str(pk), type=5000, body="", user=request.user.doctorprofile).save()
     return JsonResponse(data, safe=False)
+
+
+@login_required
+def check_direction(request):
+    request_data = json.loads(request.body)
+    pk = request_data.get("q", "-1") or -1
+
+    return JsonResponse({"ok": Napravleniya.objects.filter(pk=pk).exists()})

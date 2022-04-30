@@ -8,7 +8,6 @@ from . import views
 
 urlpatterns = [
     path('', views.dashboard),
-    path('directions/multiprint', views.dir_multiprint),
     path('biomaterial/get', views.researches_control),
     path('from', views.dashboard_from),
     path('create_podr', views.create_pod),

@@ -472,12 +472,6 @@ def get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazl
 
 
 @login_required
-def dir_multiprint(request):
-    """Страница пакетной печати направлений"""
-    return render(request, 'dashboard/dir_multiprint.html')
-
-
-@login_required
 def researches_from_directions(request):
     pk = json.loads(request.GET.get("pk", "[]"))
     data = defaultdict(list)

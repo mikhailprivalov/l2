@@ -501,6 +501,20 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/directions/print',
+      name: 'directions-print',
+      component: () => import('@/pages/DirectionsPrint.vue'),
+      meta: {
+        title: 'Печать направлений',
+        narrowLayout: true,
+        groups: [
+          'Лечащий врач',
+          'Врач-лаборант',
+          'Оператор лечащего врача',
+        ],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
