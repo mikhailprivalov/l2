@@ -49,7 +49,6 @@ INSTALLED_APPS = (
     'django_logtail',
     'statistics_tickets',
     'reports',
-    'mq.apps.MqConfig',
     'cases.apps.CasesConfig',
     'forms',
     'contracts',
@@ -258,13 +257,6 @@ LOGOUT_REDIRECT_URL = '/'
 
 LOGTAIL_FILES = {'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')}
 
-RMQ_URL = "amqp://t:t@localhost:5672/"
-DEPRECATED_RMQ_ENABLED = False
-
-WS_BASE = "localhost"
-WS_PORT = 8822
-WS_ENABLED = False
-
 
 def SILKY_INTERCEPT_FUNC(request):
     return request.path not in ['/mainmenu/']
@@ -397,8 +389,6 @@ MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
 if not FORCE_CACHALOT:
     INSTALLED_APPS = [x for x in OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS) if x not in ['cachalot']]
-
-WS_URL = "ws://{}:{}/".format(WS_BASE, WS_PORT)
 
 if LOG_SQL:
     LOGGING['loggers']['django.db.backends'] = {

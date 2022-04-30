@@ -49,7 +49,6 @@ urlpatterns = [
     path('barcodes/', include('barcodes.urls')),
     path('health/', include('health.urls')),
     path('reports/', include('reports.urls')),
-    path('mq/', include('mq.urls')),
     path('logout/', LogoutView.as_view(), {'next_page': '/'}),
     path('if/', include('integration_framework.urls')),
     path('medical_certificates/', include('medical_certificates.urls')),

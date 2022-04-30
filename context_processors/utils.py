@@ -21,10 +21,6 @@ def local_settings(request):
     return {"SYSTEM_AS_VI": settings.SYSTEM_AS_VI, "PROTOCOL_PLAIN_TEXT": PROTOCOL_PLAIN_TEXT, "SPLIT_PRINT_RESULT": SPLIT_PRINT_RESULT}
 
 
-def ws(request):
-    return {"ws_url": json.dumps(settings.WS_URL), "ws_enabled": json.dumps(settings.WS_ENABLED)}
-
-
 def menu(request):
     from laboratory import VERSION
 
@@ -185,8 +181,6 @@ def menu(request):
 
             if settings.LDAP and settings.LDAP["enable"]:
                 pages.append({"url": "/mainmenu/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
-            if settings.DEPRECATED_RMQ_ENABLED:
-                pages.append({"url": "/mainmenu/rmq", "title": "Rabbit MQ", "nt": False, "access": []})
             if settings.PROFILING:
                 pages.append({"url": "/silk/", "title": "Профилирование", "nt": False, "access": []})
             pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})

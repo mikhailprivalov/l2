@@ -29,7 +29,6 @@ openpyxl==3.0.9
 pdfrw==0.4
 pdfminer==20191125
 petrovna==1.0.2
-pika==1.2.0
 Pillow==8.3.2
 pymorphy2==0.9.1
 pymorphy2-dicts==2.4.393442.3710985
@@ -50,7 +49,6 @@ requests-toolbelt==0.9.1
 selenium==3.141.0
 simplejson==3.17.6
 six==1.16.0
-# socketIO-client-nexus==0.7.6
 sqlparse==0.4.2
 urllib3==1.26.8
 xlwt==1.3.0
