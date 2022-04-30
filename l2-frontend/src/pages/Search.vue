@@ -203,11 +203,14 @@
         >
           Поиск
         </button>
+
         <div
           v-if="count > 0"
-          class="badge badge-primary"
+          class="top-padding"
         >
-          Получено строк: {{ count }}
+          <span class="badge badge-primary fons-style">
+            Получено строк &mdash; {{ count }}
+          </span>
         </div>
       </div>
     </div>
@@ -504,6 +507,15 @@ $sidebar-width: 400px;
     justify-content: start;
     padding: 5px;
   }
+}
+
+.top-padding {
+  padding-top: 15px;
+}
+
+.fons-style {
+  font-size: 16px;
+  font-weight: normal;
 }
 </style>
 
