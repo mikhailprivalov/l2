@@ -483,6 +483,24 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/direction/history',
+      name: 'direction-history',
+      component: () => import('@/pages/DirectionHistory.vue'),
+      meta: {
+        title: 'История направления',
+        narrowLayout: true,
+        groups: [
+          'Лечащий врач',
+          'Врач-лаборант',
+          'Оператор лечащего врача',
+          'Лаборант',
+          'Врач-лаборант',
+          'Просмотр журнала',
+          'Свидетельство о смерти-доступ',
+        ],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

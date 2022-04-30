@@ -54,4 +54,5 @@ urlpatterns = [
     path('send-to-l2vi', views.send_to_l2vi),
     path('add-file', views.add_file),
     path('file-log', views.file_log),
+    path('direction-history', views.direction_history),
 ]

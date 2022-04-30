@@ -3548,3 +3548,85 @@ def file_log(request):
             "rows": rows,
         }
     )
+
+
+def get_userdata(doc: DoctorProfile):
+    if doc is None:
+        return ""
+    return "%s (%s) - %s" % (doc.fio, doc.user.username, doc.podrazdeleniye.title)
+
+
+@login_required
+def direction_history(request):
+    yesno = {True: "да", False: "нет"}
+    data = []
+    request_data = json.loads(request.body)
+    pk = request_data.get("q", "-1") or -1
+
+    try:
+        pk = int(pk)
+    except ValueError:
+        pk = -1
+
+    if pk != -1 and Napravleniya.objects.filter(pk=pk).exists():
+        dr = Napravleniya.objects.get(pk=pk)
+        data.append(
+            {
+                'type': "Направление №%s" % pk,
+                'events': [
+                    [
+                        ["title", strdatetime(dr.data_sozdaniya) + " Направление создано"],
+                        ["Создатель", get_userdata(dr.doc_who_create)],
+                        ["От имени", "" if not dr.doc else get_userdata(dr.doc)],
+                        ["Пациент", "%s, %s, Пол: %s" % (dr.client.individual.fio(), dr.client.individual.bd(), dr.client.individual.sex)],
+                        ["Карта", "%s %s" % (dr.client.number, dr.client.base.title)],
+                        ["Архив", yesno[dr.client.is_archive]],
+                        ["Источник финансирования", dr.fin_title],
+                        ["Диагноз", dr.diagnos],
+                        ["Направление создано на основе направления из РМИС", yesno[dr.imported_from_rmis]],
+                        ["Направивляющая организация из РМИС", "" if not dr.imported_org else dr.imported_org.title],
+                        ["Направление отправлено в РМИС", yesno[dr.imported_directions_rmis_send if dr.imported_from_rmis else dr.rmis_number not in ["", None, "NONERMIS"]]],
+                        ["Номер РМИС направления", dr.rmis_number if dr.rmis_number not in [None, "NONERMIS"] else ""],
+                        ["Направление привязано к случаю РМИС", yesno[dr.rmis_case_id not in ["", None, "NONERMIS"]]],
+                        ["Направление привязано к записи отделения госпитализации РМИС", yesno[dr.rmis_hosp_id not in ["", None, "NONERMIS"]]],
+                        ["Результат отправлен в РМИС", yesno[dr.result_rmis_send]],
+                        ["Результат отправлен в ИЭМК", yesno[dr.n3_iemk_ok]],
+                    ]
+                ],
+            }
+        )
+        if dr.visit_date and dr.visit_who_mark:
+            d = {
+                "type": "Посещение по направлению",
+                "events": [
+                    [
+                        ["title", strdatetime(dr.visit_date) + " Регистрация посещения"],
+                        ["Регистратор", dr.visit_who_mark.fio + ", " + dr.visit_who_mark.podrazdeleniye.title],
+                    ]
+                ],
+            }
+            data.append(d)
+        for lg in Log.objects.filter(key=str(pk), type__in=(5002,)):
+            data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
+        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011)):
+            data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
+        for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dr).distinct():
+            d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
+            if tube.time_get is not None:
+                d["events"].append([["title", strdatetime(tube.time_get) + " Забор"], ["Заборщик", get_userdata(tube.doc_get)]])
+            for lg in Log.objects.filter(key=str(tube.pk), type__in=(4000, 12, 11)).distinct():
+                tdata = [["Приёмщик", get_userdata(lg.user)], ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
+                if lg.body and lg.body != "":
+                    tdata.append(["json_data", lg.body])
+                d["events"].append(tdata)
+            data.append(d)
+        for iss in Issledovaniya.objects.filter(napravleniye=dr):
+            d = {'type': "Исследование: %s (#%s)" % (iss.research.title, iss.pk), 'events': []}
+            for lg in Log.objects.filter(key=str(iss.pk), type__in=(13, 14, 24)).distinct():
+                tdata = [["Исполнитель", get_userdata(lg.user)], ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
+                if lg.body and lg.body != "" and lg.type != 24:
+                    tdata.append(["json_data", lg.body])
+                d["events"].append(tdata)
+            data.append(d)
+        Log(key=str(pk), type=5000, body="", user=request.user.doctorprofile).save()
+    return JsonResponse(data, safe=False)
