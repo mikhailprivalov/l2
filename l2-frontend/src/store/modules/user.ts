@@ -3,7 +3,10 @@ import userPoint from '@/api/user-point';
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 
+const SEMI_LAZY_INITIAL = 5;
+
 const stateInitial = {
+  semiLazyState: SEMI_LAZY_INITIAL,
   data: {
     auth: false,
     loading: true,
@@ -52,16 +55,25 @@ const getters = {
   menu: (state): Menu => state.menu as Menu,
   version: (state, g) => (g.menu || {}).version || null,
   hasNewVersion: state => state.hasNewVersion,
+  semiLazyState: state => state.semiLazyState,
 };
 
 const actions = {
-  async [actionsTypes.GET_USER_DATA]({ commit }, { loadMenu = false } = {}) {
+  async [actionsTypes.GET_USER_DATA]({ commit, getters: g }, { loadMenu = false, semiLazy = false } = {}) {
+    if (g.semiLazyState > 0 && semiLazy && g.authenticated) {
+      commit(mutationTypes.SET_SEMI_LAZY_STATE, { semiLazy: g.semiLazyState - 1 });
+      return;
+    }
     commit(mutationTypes.SET_USER_DATA, { loading: true });
 
     const [userData, menuData] = await Promise.all([
       userPoint.getCurrentUserInfo(),
       loadMenu ? userPoint.getMenu() : Promise.resolve(null),
     ]);
+
+    if (semiLazy && g.authenticated) {
+      commit(mutationTypes.SET_SEMI_LAZY_STATE, { semiLazy: SEMI_LAZY_INITIAL });
+    }
 
     commit(mutationTypes.SET_USER_DATA, { data: userData });
     if (loadMenu) {
@@ -96,6 +108,9 @@ const mutations = {
   },
   [mutationTypes.SET_DIRECTIVE_FROM](state, { directive_from: directiveFrom }) {
     state.directive_from = directiveFrom;
+  },
+  [mutationTypes.SET_SEMI_LAZY_STATE](state, { semiLazy }) {
+    state.semiLazyState = semiLazy;
   },
 };
 

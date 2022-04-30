@@ -580,7 +580,7 @@ router.beforeEach(async (to, from, next) => {
     await router.app.$store.dispatch(actions.INC_G_LOADING);
 
     await router.app.$store.dispatch(actions.INC_G_LOADING);
-    await router.app.$store.dispatch(actions.GET_USER_DATA, { loadMenu: true });
+    await router.app.$store.dispatch(actions.GET_USER_DATA, { loadMenu: true, semiLazy: true });
     const { getters } = router.app.$store;
 
     if (getters.authenticated) {
