@@ -301,9 +301,7 @@ def endpoint(request):
                                     for fraction_rel in q:
                                         save_state = []
                                         issleds = []
-                                        iss_q = directions.Issledovaniya.objects.filter(
-                                            napravleniye=direction, research=fraction_rel.fraction.research, time_confirmation__isnull=True
-                                        )
+                                        iss_q = directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, time_confirmation__isnull=True)
                                         for issled in iss_q:
                                             if by_tube and not issled.tubes.filter(pk=pk).exists() and issled.tubes.all().count() > 0:
                                                 continue

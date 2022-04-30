@@ -1,6 +1,6 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
-from statistics_tickets.models import VisitPurpose, ResultOfTreatment
+from statistics_tickets.models import VisitPurpose
 from utils.db import namedtuplefetchall
 
 

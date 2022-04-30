@@ -2051,7 +2051,7 @@ def document_lk_save(request):
         },
         {
             'phone': '',
-        }
+        },
     )
 
     snils: str = data[0]
@@ -2183,22 +2183,24 @@ def document_lk_save(request):
             if not phone:
                 return Response({"ok": False, "message": "Телефон должен быть заполнен"})
             hospital = Hospitals.get_default_hospital()
-            DoctorCall.doctor_call_save({
-                'card': card,
-                'research': service.pk,
-                'address': card.main_address,
-                'district': -1,
-                'date': current_time(),
-                'comment': '\n'.join(comment_lines),
-                'phone': phone,
-                'doc': -1,
-                'purpose': 24,
-                'hospital': hospital.pk,
-                'external': True,
-                'external_num': str(direction),
-                'is_main_external': False,
-                'direction': direction,
-            })
+            DoctorCall.doctor_call_save(
+                {
+                    'card': card,
+                    'research': service.pk,
+                    'address': card.main_address,
+                    'district': -1,
+                    'date': current_time(),
+                    'comment': '\n'.join(comment_lines),
+                    'phone': phone,
+                    'doc': -1,
+                    'purpose': 24,
+                    'hospital': hospital.pk,
+                    'external': True,
+                    'external_num': str(direction),
+                    'is_main_external': False,
+                    'direction': direction,
+                }
+            )
             return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
 
     return Response({"ok": True, "message": f"Форма \"{service.get_title()}\" ({direction}) сохранена"})
