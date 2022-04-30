@@ -216,7 +216,8 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
     t_hosp AS 
         (SELECT id, title FROM hospitals_hospitals),
     t_iss AS
-        (SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id as napr, directions_napravleniya.hospital_id as hospital_id, 
+        (SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id as napr, directions_napravleniya.hospital_id as hospital_id,
+        directions_napravleniya.vich_code as vich_code, 
         to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
         to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS time_confirm,
         to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS create_date_napr,
@@ -262,7 +263,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
         SELECT napr, date_confirm, time_confirm, create_date_napr, create_time_napr, doc_fio, coast, discount, 
         how_many, ((coast + (coast/100 * discount)) * how_many)::NUMERIC(10,2) AS sum_money, ist_f, time_confirmation, num_card, 
         ind_family, ind_name, patronymic, birthday, date_born,
-        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title, t_iss.purpose_title FROM t_iss
+        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title, t_iss.purpose_title, t_iss.vich_code FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
         LEFT JOIN t_hosp ON t_iss.hospital_id = t_hosp.id
 
