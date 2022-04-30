@@ -1,5 +1,4 @@
 import datetime
-import re
 from collections import defaultdict
 
 import simplejson as json
@@ -8,17 +7,15 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-from django.utils import dateformat
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 import directory.models as directory
-import podrazdeleniya.models as pod
 import slog.models as slog
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
-from laboratory import VERSION, settings
+from laboratory import VERSION
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
@@ -208,170 +205,6 @@ def results_history(request):
             ],
         },
     )
-
-
-@login_required
-@group_required("Лечащий врач", "Загрузка выписок", "Поиск выписок")
-@ensure_csrf_cookie
-def discharge(request):
-    podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")
-
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-    users = []
-    for p in podrazdeleniya:
-        pd = {"pk": p.pk, "title": p.title, "docs": []}
-        for d in DoctorProfile.objects.filter(podrazdeleniye=p, user__groups__name="Лечащий врач"):
-            pd["docs"].append({"pk": d.pk, "fio": d.fio})
-        users.append(pd)
-    return render(
-        request,
-        'dashboard/discharge.html',
-        {
-            'labs': podr,
-            'fin_poli': [],
-            # IstochnikiFinansirovaniya.objects.filter(istype="poli"),
-            'fin_stat': [],
-            # IstochnikiFinansirovaniya.objects.filter(istype="stat"),
-            "notlabs": podrazdeleniya,
-            "users": json.dumps(users),
-        },
-    )
-
-
-@csrf_exempt
-@login_required
-@group_required("Лечащий врач", "Загрузка выписок")
-def discharge_add(request):
-    r = {"ok": True}
-    if request.method == "POST":
-        import discharge.models as discharge
-
-        client_surname = request.POST.get("client_surname", "").strip()
-        client_name = request.POST.get("client_name", "").strip()
-        client_patronymic = request.POST.get("client_patronymic", "").strip()
-        client_birthday = request.POST.get("client_birthday", "").strip()
-        client_sex = request.POST.get("client_sex", "").strip()
-        client_cardnum = request.POST.get("client_cardnum", "").strip()
-        client_historynum = request.POST.get("client_historynum", "").strip()
-
-        otd = pod.Podrazdeleniya.objects.get(pk=int(request.POST.get("otd", "-1")))
-        doc_fio = request.POST.get("doc_fio", "").strip()
-
-        if "" not in [client_surname, client_name, client_patronymic] and request.FILES.get('file', "") != "":
-            obj = discharge.Discharge(
-                client_surname=client_surname,
-                client_name=client_name,
-                client_patronymic=client_patronymic,
-                client_birthday=client_birthday,
-                client_sex=client_sex,
-                client_cardnum=client_cardnum,
-                client_historynum=client_historynum,
-                otd=otd,
-                doc_fio=doc_fio,
-                creator=request.user.doctorprofile,
-                file=request.FILES["file"],
-            )
-            obj.save()
-            slog.Log(
-                key=obj.pk,
-                type=1000,
-                body=json.dumps(
-                    {
-                        "client_surname": client_surname,
-                        "client_name": client_name,
-                        "client_patronymic": client_patronymic,
-                        "client_birthday": client_birthday,
-                        "client_sex": client_sex,
-                        "client_cardnum": client_cardnum,
-                        "client_historynum": client_historynum,
-                        "otd": otd.title + ", " + str(otd.pk),
-                        "doc_fio": doc_fio,
-                        "file": obj.file.name,
-                    }
-                ),
-                user=request.user.doctorprofile,
-            ).save()
-    return JsonResponse(r)
-
-
-@csrf_exempt
-@login_required
-@group_required("Лечащий врач", "Поиск выписок")
-def discharge_search(request):
-    r = {"rows": []}
-    if request.method == "GET":
-        import discharge.models as discharge
-
-        date_start = request.GET["date_start"]
-        date_end = request.GET["date_end"]
-        date_start, date_end = try_parse_range(date_start, date_end)
-        query = request.GET.get("q", "")
-        otd_pk = int(request.GET.get("otd", "-1"))
-        doc_fio = request.GET.get("doc_fio", "")
-
-        slog.Log(
-            key=query,
-            type=1001,
-            body=json.dumps({"date_start": request.GET["date_start"], "date_end": request.GET["date_end"], "otd_pk": otd_pk, "doc_fio": doc_fio}),
-            user=request.user.doctorprofile,
-        ).save()
-
-        filter_type = "any"
-        family = ""
-        name = ""
-        twoname = ""
-        bdate = ""
-
-        if query.isdigit():
-            filter_type = "card_number"
-        elif bool(re.compile(r'^([a-zA-Zа-яА-Я]+)( [a-zA-Zа-яА-Я]+)?( [a-zA-Zа-яА-Я]+)?( \d{2}\.\d{2}\.\d{4})?$').match(query)):
-            filter_type = "fio"
-            split = query.split()
-            if len(split) > 0:
-                family = split[0]
-            if len(split) > 1:
-                name = split[1]
-            if len(split) > 2:
-                twoname = split[2]
-            if len(split) > 2:
-                twoname = split[2]
-            if len(split) > 3:
-                spq = split[3]
-                bdate = "%s-%s-%s" % (spq[4:8], spq[2:4], spq[0:2])
-
-        rows = discharge.Discharge.objects.filter(
-            created_at__range=(
-                date_start,
-                date_end,
-            ),
-            doc_fio__icontains=doc_fio,
-        )
-
-        if otd_pk > -1:
-            rows = rows.filter(otd__pk=otd_pk)
-
-        if filter_type == "fio":
-            rows = rows.filter(client_surname__contains=family, client_name__contains=name, client_patronymic__contains=twoname)
-            if bdate != "":
-                rows = rows.filter(client_birthday=bdate)
-
-        if filter_type == "card_number":
-            rows = rows.filter(client_cardnum=int(query))
-        import os
-
-        for row in rows.order_by("-created_at"):
-            r["rows"].append(
-                {
-                    "date": str(dateformat.format(row.created_at.date(), settings.DATE_FORMAT)),
-                    "client": {"surname": row.client_surname, "name": row.client_name, "patronymic": row.client_patronymic, "sex": row.client_sex, "birthday": row.client_birthday},
-                    "otd": row.otd.title,
-                    "doc_fio": row.doc_fio,
-                    "filename": os.path.basename(row.file.name),
-                    "fileurl": row.file.url,
-                }
-            )
-
-    return JsonResponse(r)
 
 
 @login_required

@@ -90,7 +90,6 @@ def menu(request):
                     "nt": False,
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций"],
                 },
-                {"url": "/mainmenu/discharge", "title": "Выписки", "nt": False, "access": ["Загрузка выписок", "Поиск выписок"], "module": "discharge_module"},
                 {"url": "/ui/departments", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/ui/profiles", "title": "Профили пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},

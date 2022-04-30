@@ -42,7 +42,6 @@ INSTALLED_APPS = (
     'directory',
     'statistic',
     'api.apps.ApiConfig',
-    'discharge',
     'rmis_integration',
     'rest_framework',
     'integration_framework',
