@@ -1255,7 +1255,7 @@ def directions_paraclinic_form(request):
                 "fin_source_id": d.istochnik_f_id,
                 "priceCategory": "" if not d.price_category else d.price_category.title,
                 "additionalNumber": d.register_number,
-                "coExecutor": "" if not d.co_executor else d.co_executor.get_fio(dots=True),
+                "coExecutor": d.co_executor_id,
                 "tube": None,
                 "amd": d.amd_status,
                 "amd_number": d.amd_number,
@@ -1644,6 +1644,7 @@ def directions_paraclinic_result(request):
     procedure_list = request_data.get("procedure_list", [])
 
     tube = request_data.get("direction", {}).get("tube", {})
+    co_executor = request_data.get("coExecutor", None)
     force = rb.get("force", False)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if (
@@ -1879,6 +1880,11 @@ def directions_paraclinic_result(request):
             iss.napravleniye.visit_who_mark = request.user.doctorprofile
             iss.napravleniye.visit_date = timezone.now()
             iss.napravleniye.save()
+
+        if iss.napravleniye.co_executor_id != co_executor:
+            iss.napravleniye.co_executor_id = co_executor
+            iss.napravleniye.save()
+
         if iss.research.is_microbiology:
             mb = request_data.get("microbiology", {})
             if mb:
