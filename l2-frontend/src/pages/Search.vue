@@ -203,6 +203,12 @@
         >
           Поиск
         </button>
+        <div
+          v-if="count > 0"
+          class="badge badge-primary"
+        >
+          Получено строк: {{ count }}
+        </div>
       </div>
     </div>
     <div class="right-content">
@@ -319,6 +325,7 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       results: [],
       dateReceive: '',
       dateGet: '',
+      count: 0,
     };
   },
   async mounted() {
@@ -353,6 +360,8 @@ export default class SearchPage extends Vue {
   year: number;
 
   research: number;
+
+  count: number;
 
   researches: any[];
 
@@ -405,8 +414,9 @@ export default class SearchPage extends Vue {
       finalText: this.text,
       searchStationar: this.searchStationar,
     };
-    const { rows } = await this.$api('/search-param', data);
-    this.results = rows || [];
+    const dataRows = await this.$api('/search-param', data);
+    this.results = dataRows.rows || [];
+    this.count = dataRows.count || 0;
 
     await this.$store.dispatch(actions.DEC_LOADING);
   }
@@ -495,6 +505,7 @@ $sidebar-width: 400px;
     padding: 5px;
   }
 }
+
 </style>
 
 <style>

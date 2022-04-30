@@ -2222,4 +2222,4 @@ def search_param(request):
             for i in result
         ]
 
-    return JsonResponse({"rows": rows})
+    return JsonResponse({"rows": rows, "count": len(rows)})
