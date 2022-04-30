@@ -129,7 +129,6 @@ def get_researches(request):
                 "rmis_id",
                 "podrazdeleniye__title",
                 "podrazdeleniye__short_title",
-                "podrazdeleniye__gid_n",
                 "podrazdeleniye__hide",
                 "podrazdeleniye__vaccine",
                 "podrazdeleniye__rmis_id",
