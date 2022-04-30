@@ -505,7 +505,6 @@ $sidebar-width: 400px;
     padding: 5px;
   }
 }
-
 </style>
 
 <style>
