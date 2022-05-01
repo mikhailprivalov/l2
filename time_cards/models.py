@@ -79,6 +79,7 @@ class FactTimeWork(models.Model):
     )
 
     employee = models.ForeignKey(Employees, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     date = models.DateField(help_text='Дата учета', db_index=True, default=None, blank=True, null=True)
     night_hours = models.DecimalField(max_digits=10, decimal_places=2)
     common_hours = models.DecimalField(max_digits=10, decimal_places=2)
