@@ -1,5 +1,7 @@
 from django.db import models
 
+from users.models import DoctorProfile
+
 
 class Departments(models.Model):
     title = models.CharField(max_length=255, help_text='структурное подразделение')
@@ -47,6 +49,18 @@ class Employees(models.Model):
     class Meta:
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
+
+
+class TabelDocuments(models.Model):
+    doc_confirmation = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль автора', on_delete=models.SET_NULL
+    )
+    doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+
+    class Meta:
+        verbose_name = 'Табель'
+        verbose_name_plural = 'Табели'
 
 
 class FactTimeWork(models.Model):
