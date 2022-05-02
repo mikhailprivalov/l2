@@ -58,7 +58,7 @@ class TabelDocuments(models.Model):
     month_tabel = models.DateField(help_text='Дата учета', db_index=True, default=None, blank=True, null=True)
     is_active = models.BooleanField(help_text="Активный", default=True)
     correct_number = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
-    parent_document = models.ForeignKey('self', related_name='main_tabel_document', help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    parent_document = models.ForeignKey('self', related_name='parent_tabel_document', help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Табель'
