@@ -55,6 +55,10 @@ class TabelDocuments(models.Model):
     doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль автора', on_delete=models.SET_NULL)
     doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+    month_tabel = models.DateField(help_text='Дата учета', db_index=True, default=None, blank=True, null=True)
+    is_active = models.BooleanField(help_text="Активный", default=True)
+    correct_number = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    parent_document = models.ForeignKey('self', related_name='main_tabel_document', help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Табель'
