@@ -52,9 +52,7 @@ class Employees(models.Model):
 
 
 class TabelDocuments(models.Model):
-    doc_confirmation = models.ForeignKey(
-        DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль автора', on_delete=models.SET_NULL
-    )
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль автора', on_delete=models.SET_NULL)
     doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
 
