@@ -6,8 +6,9 @@ import directory.models as directory
 
 
 class PriceCategory(models.Model):
-    title = models.CharField(max_length=50, unique=True, help_text='Наименование категории Прайса', db_index=True)
+    title = models.CharField(max_length=255, unique=True, help_text='Наименование категории Прайса', db_index=True)
     hide = models.BooleanField(default=False, help_text='Скрыть', db_index=True)
+    order_weight = models.SmallIntegerField(default=0, verbose_name="Сортировка")
 
     def __str__(self):
         return f"{self.title}"
