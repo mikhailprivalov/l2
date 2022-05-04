@@ -1,5 +1,4 @@
 from django.db import models
-
 from users.models import DoctorProfile
 
 
@@ -52,13 +51,29 @@ class Employees(models.Model):
 
 
 class TabelDocuments(models.Model):
+    STATUS_APPROVED = 'STATUS_APPROVED'
+    STATUS_CHECK = 'STATUS_CHECK'
+    STATUS_TO_CORRECT = 'STATUS_TO_CORRECT'
+
+    STATUS_TYPES = (
+        (STATUS_APPROVED, 'Утвержден'),
+        (STATUS_CHECK, 'На проверке'),
+        (STATUS_TO_CORRECT, 'Исправить'),
+    )
+
     doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль автора', on_delete=models.SET_NULL)
     doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
-    month_tabel = models.DateField(help_text='Дата учета', db_index=True, default=None, blank=True, null=True)
-    is_active = models.BooleanField(help_text="Активный", default=True)
-    correct_number = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    month_tabel = models.DateField(help_text='Месяц учета', db_index=True, default=None, blank=True, null=True)
+    department = models.ForeignKey(Departments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    is_actual = models.BooleanField(help_text="Акутальный", default=True)
+    version = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     parent_document = models.ForeignKey('self', related_name='parent_tabel_document', help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    comment_checking = models.TextField(blank=True, null=True, help_text="Комментарий от проверяющего")
+    status = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=STATUS_TYPES, help_text="Статус")
+    doc_change_status = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль проверяющего', on_delete=models.SET_NULL)
+    doc_change_status_string = models.CharField(max_length=64, null=True, blank=True, default=None)
+    time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время изменения статуса')
 
     class Meta:
         verbose_name = 'Табель'
@@ -90,6 +105,15 @@ class FactTimeWork(models.Model):
     class Meta:
         verbose_name = 'Табель времени'
         verbose_name_plural = 'Табели времени'
+
+
+class DocumentFactTimeWork(models.Model):
+    tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    data_document = models.TextField(blank=True, null=True, help_text="Данные документа")
+
+    class Meta:
+        verbose_name = 'Табель документ'
+        verbose_name_plural = 'Табель документы'
 
 
 class Holidays(models.Model):
