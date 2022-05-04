@@ -71,7 +71,7 @@ class TabelDocuments(models.Model):
     parent_document = models.ForeignKey('self', related_name='parent_tabel_document', help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     comment_checking = models.TextField(blank=True, null=True, help_text="Комментарий от проверяющего")
     status = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=STATUS_TYPES, help_text="Статус")
-    doc_change_status = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль проверяющего', on_delete=models.SET_NULL)
+    doc_change_status = models.ForeignKey(DoctorProfile, related_name='doc_change_status', null=True, blank=True, db_index=True, help_text='Профиль проверяющего', on_delete=models.SET_NULL)
     doc_change_status_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время изменения статуса')
 
@@ -95,8 +95,8 @@ class FactTimeWork(models.Model):
         (STATUS_DISMISS, 'Уволен'),
     )
 
-    employee = models.ForeignKey(Employees, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    employee = models.ForeignKey(Employees, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     date = models.DateField(help_text='Дата учета', db_index=True, default=None, blank=True, null=True)
     night_hours = models.DecimalField(max_digits=10, decimal_places=2)
     common_hours = models.DecimalField(max_digits=10, decimal_places=2)
