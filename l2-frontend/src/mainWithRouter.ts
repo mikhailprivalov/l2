@@ -405,7 +405,7 @@ const router = new Router({
       name: 'stationar',
       component: () => import('@/pages/Stationar/index.vue'),
       meta: {
-        title: 'Профили пользователей',
+        title: 'Стационар',
         groups: [
           'Врач стационара',
           't, ad, p',
