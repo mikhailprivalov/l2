@@ -231,6 +231,8 @@ def search_data_by_param(
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
     """
+    print("date_get", date_get)
+    print("date_recieve", date_recieve)
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -281,10 +283,10 @@ def search_data_by_param(
                 AND CASE WHEN %(date_registred_start)s != '1900-01-01' THEN directions_napravleniya.visit_date AT TIME ZONE %(tz)s BETWEEN %(date_registred_start)s AND %(date_registred_end)s
                          WHEN %(date_registred_start)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null 
                 END
-                AND CASE WHEN %(date_recieve)s != '1900-01-01' THEN directory_paraclinicinputfield.title = 'Дата получения' and directions_paraclinicresult.value ~* %(date_recieve)s
+                AND CASE WHEN %(date_recieve)s != '1900-01-01' THEN directory_paraclinicinputfield.title = 'Дата получения' and directions_paraclinicresult.value = %(date_recieve)s
                           WHEN %(date_recieve)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null
                 END
-                AND CASE WHEN %(date_get)s != '1900-01-01' THEN directory_paraclinicinputfield.title = 'Дата забора' and directions_paraclinicresult.value ~* %(date_recieve)s
+                AND CASE WHEN %(date_get)s != '1900-01-01' THEN directory_paraclinicinputfield.title = 'Дата регистрации' and directions_paraclinicresult.value = %(date_get)s
                          WHEN %(date_get)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null
                 END
                 AND CASE WHEN %(final_text)s != '' THEN directions_paraclinicresult.value ~* %(final_text)s

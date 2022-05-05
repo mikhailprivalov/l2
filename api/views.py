@@ -2169,10 +2169,11 @@ def search_param(request):
     search_stationar = data.get('searchStationar') or False
 
     # из проткола
-    date_recieve = data.get('dateRecieve') or '1900-01-01'
+    date_recieve = data.get('dateReceive', '1900-01-01')
     date_get = data.get('dateGet') or '1900-01-01'
     final_text = data.get('finalText') or ''
     rows = []
+    print(date_recieve)
     if not search_stationar:
         result = search_data_by_param(
             date_create_start,
