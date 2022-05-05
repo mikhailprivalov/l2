@@ -7,7 +7,7 @@ class Departments(models.Model):
 
     class Meta:
         verbose_name = 'Структурное подразделение'
-        verbose_name_plural = 'структурные подразделения'
+        verbose_name_plural = 'Структурные подразделения'
 
 
 class Persons(models.Model):
@@ -76,8 +76,8 @@ class TabelDocuments(models.Model):
     time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время изменения статуса')
 
     class Meta:
-        verbose_name = 'Табель'
-        verbose_name_plural = 'Табели'
+        verbose_name = 'Табель-документ'
+        verbose_name_plural = 'Табель-документы'
 
 
 class FactTimeWork(models.Model):
