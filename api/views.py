@@ -2169,7 +2169,7 @@ def search_param(request):
     search_stationar = data.get('searchStationar') or False
 
     # из проткола
-    date_recieve = data.get('dateRecieve') or '1900-01-01'
+    date_recieve = data.get('dateReceive') or '1900-01-01'
     date_get = data.get('dateGet') or '1900-01-01'
     final_text = data.get('finalText') or ''
     rows = []

@@ -79,7 +79,7 @@ def custom_research_fill_data(ws1, result_query, row=6):
         for k in range(len_fields):
             column += 1
             title = result_query["fields"][k]
-            ws1.cell(row=r, column=column).value = i[title]
+            ws1.cell(row=r, column=column).value = i.get(title, '')
             ws1.cell(row=r, column=column).style = style_border1
         r += 1
 
