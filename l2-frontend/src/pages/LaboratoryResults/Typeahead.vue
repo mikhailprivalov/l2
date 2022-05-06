@@ -7,8 +7,8 @@
     :placeholder="placeholder"
     @input="updateValue($event.target.value)"
     @change="updateValue($event.target.value)"
-    @focus="updateValue($event.target.value)"
-    @blur="formatValue"
+    @focus="updateValue($event.target.value); focus();"
+    @blur="formatValue(); blur();"
     @keyup.enter="keyupEnter"
   >
 </template>
@@ -65,12 +65,18 @@ export default {
       type: Function,
       required: false,
     },
+    hide: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
       id: this.$attrs.id || `typeahead-suggestion${Math.floor(Math.random() * 100000)}`,
       defaultSuggestions: [],
       query: '',
+      forceOpenAfterHide: false,
     };
   },
   watch: {
@@ -82,6 +88,19 @@ export default {
     },
     value(val) {
       window.$(`#${this.id}`).typeahead('val', val);
+    },
+    hide() {
+      if (this.hide) {
+        window.$(`#${this.id}`).typeahead('close');
+      } else if (this.forceOpenAfterHide) {
+        window.$(`#${this.id}`).typeahead('open');
+      }
+    },
+    id: {
+      handler() {
+        this.$emit('set-id', this.id);
+      },
+      immediate: true,
     },
   },
   mounted() {
@@ -96,6 +115,12 @@ export default {
     },
     formatValue() {
       this.$refs.input.value = this.value;
+    },
+    focus() {
+      this.forceOpenAfterHide = true;
+    },
+    blur() {
+      this.forceOpenAfterHide = false;
     },
     transformer(responseOrig) {
       let response = responseOrig;
