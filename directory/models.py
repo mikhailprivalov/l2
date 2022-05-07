@@ -156,9 +156,9 @@ class Researches(models.Model):
         (10801, '108.01 - 83-МПР'),
     )
 
-    TITLE_FORMS = (
+    RESULT_TITLE_FORMS = (
         (0, 'По умолчанию'),
-        (10001, '100.01 - Выписка'),
+        (10001, '100.01 - Выписка из амб карты'),
     )
 
     CO_EXECUTOR_MODES = (
@@ -230,7 +230,7 @@ class Researches(models.Model):
     not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
     result_form = models.IntegerField(default=0, blank=True, choices=RESULT_FORMS, help_text="Форма результат")
-    title_form = models.IntegerField(default=0, blank=True, choices=TITLE_FORMS, help_text="Форма заголовка в бланке результат")
+    result_title_form = models.IntegerField(default=0, blank=True, choices=RESULT_TITLE_FORMS, help_text="Форма заголовка в бланке результат")
     size_form = models.IntegerField(default=0, blank=True, choices=TYPE_SIZE_FORM, help_text="Размеры формы результат")
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")

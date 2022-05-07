@@ -113,6 +113,7 @@ def result_print(request):
     pk = [x for x in json.loads(request.GET["pk"]) if x is not None]
 
     show_norm = True  # request.GET.get("show_norm", "0") == "1"
+    interactive_text_field = SettingManager.get("interactive_text_field", default='False', default_type='b')
 
     buffer = BytesIO()
 
@@ -491,9 +492,16 @@ def result_print(request):
 
         number_poliklinika = f' ({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
+        result_title_form = None
         if not hosp and not is_gistology and not has_own_form_result or is_extract:
-            t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
-
+            type_title_form = temp_iss.research.result_title_form
+            if type_title_form != 0:
+                current_type_title_form = str(type_title_form)
+                result_title_form = import_string('results.title.forms' + current_type_title_form[0:3] + '.form_' + current_type_title_form[3:5])
+            if result_title_form:
+                t = result_title_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
+            else:
+                t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
             lk_address = SettingManager.get("lk_address", default='', default_type='s')
@@ -505,7 +513,8 @@ def result_print(request):
                 fwb.append(QrCodeSite(lk_address, qr_code_param))
         if not has_paraclinic:
             fwb.append(Spacer(1, 4 * mm))
-            fwb.append(InteractiveTextField())
+            if interactive_text_field:
+                fwb.append(InteractiveTextField())
             tw = pw
             no_units_and_ref = any([x.research.no_units_and_ref for x in direction.issledovaniya_set.all()])
             data = []
@@ -973,7 +982,8 @@ def result_print(request):
                 fwb.append(Spacer(1, 5 * mm))
                 if not hosp and not is_gistology and not has_own_form_result:
                     if not plain_response:
-                        fwb.append(InteractiveTextField())
+                        if interactive_text_field:
+                            fwb.append(InteractiveTextField())
                         fwb.append(Spacer(1, 2 * mm))
                     if (
                         iss.research.is_doc_refferal
@@ -989,7 +999,8 @@ def result_print(request):
                         iss_title = "Вакцина: " + iss.research.title
                     else:
                         iss_title = "Услуга: " + iss.research.title
-                    fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
+                    if not result_title_form:
+                        fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
                     if not is_gistology and not has_own_form_result:
                         fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
