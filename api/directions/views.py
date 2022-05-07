@@ -2426,7 +2426,6 @@ def last_field_result(request):
         data = request_data["fieldPk"].split('#')
         field_pks = [data[1]]
         logical_or = True
-        Log(key=request_data["iss_pk"], type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
         result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or)
     elif request_data["fieldPk"].find("|") > -1:
         field_is_link = True
