@@ -493,6 +493,7 @@ def result_print(request):
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
         if not hosp and not is_gistology and not has_own_form_result or is_extract:
             t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
+
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
             lk_address = SettingManager.get("lk_address", default='', default_type='s')
