@@ -784,6 +784,7 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id)
+            print(researches_sql)
             result = custom_research.custom_research_data(researches_sql)
             ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
             ws = custom_research.custom_research_fill_data(ws, result)

@@ -1,4 +1,6 @@
 from django.db import connection
+
+from directory.models import Researches
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
 from statistics_tickets.models import VisitPurpose
 from utils.db import namedtuplefetchall
@@ -243,6 +245,8 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
         AND 
             CASE WHEN %(hospital_id_filter)s > 0 THEN
                 directions_napravleniya.hospital_id = %(hospital_id_filter)s
+                WHEN %(hospital_id_filter)s = -1 THEN
+                directions_issledovaniya.napravleniye_id IS NOT NULL
             END
         AND
             CASE WHEN %(is_purpose)s = 0 THEN
@@ -275,7 +279,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
     return row
 
 
-def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
+def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id ):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
@@ -315,19 +319,18 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
                 LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
-                WHERE
-                CASE
-                WHEN %(filter_hospital_id)s > 0 THEN
+                WHERE 
+                CASE WHEN %(filter_hospital_id)s > 0 THEN
                   directions_issledovaniya.research_id=%(research_id)s
-                  and (directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
+                  and directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
                   and directory_paraclinicinputfield.for_talon = true
                   and directions_napravleniya.hospital_id = %(filter_hospital_id)s
                   and directions_issledovaniya.time_confirmation IS NOT NULL
                   and directions_napravleniya.parent_id IS NULL
                 WHEN %(filter_hospital_id)s = -1 THEN
                   directions_issledovaniya.research_id=%(research_id)s
-                  and (directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
-                  and directory_paraclinicinputfield.for_talon = true 
+                  and directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                  and directory_paraclinicinputfield.for_talon = true
                   and directions_issledovaniya.time_confirmation IS NOT NULL
                   and directions_napravleniya.parent_id IS NULL
                 END
