@@ -1,44 +1,38 @@
-from utils.dates import normalize_date
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import os.path
+from laboratory.settings import FONTS_FOLDER
+
+from directions.models import Issledovaniya
+from reportlab.platypus import Paragraph, Table, TableStyle, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
-from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER
 
 
-def form_01(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col_func, is_extract):
+def form_01(iss: Issledovaniya):
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     styleSheet = getSampleStyleSheet()
+
     style = styleSheet["Normal"]
-    style.fontName = "FreeSans"
-    style.fontSize = 9
-    style.alignment = TA_JUSTIFY
-    style_ml = deepcopy(style)
-    style_ml.leftIndent = 5 * mm
-    styleBold = deepcopy(style)
-    styleBold.fontName = "FreeSansBold"
-    styleTable = deepcopy(style)
-    styleTableMono = deepcopy(styleTable)
-    styleTableMono.fontName = "Consolas"
-    styleTableMono.fontSize = 10
-    styleAb = deepcopy(styleTable)
-    styleAb.fontSize = 7
-    styleAb.leading = 7
-    styleAb.spaceBefore = 0
-    styleAb.spaceAfter = 0
-    styleAb.leftIndent = 0
-    styleAb.rightIndent = 0
-    styleAb.alignment = TA_CENTER
-    styleTableMonoBold = deepcopy(styleTable)
-    styleTableMonoBold.fontName = "Consolas-Bold"
-    styleTableSm = deepcopy(styleTable)
-    styleTableSm.fontSize = 4
+    style.fontName = "PTAstraSerifBold"
+    style.fontSize = 12
+    style.leading = 8
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_CENTER
+
+    hospital = iss.doc_confirmation.hospital
+    hospital_short_title = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_ogrn = hospital.safe_ogrn
 
     data = [
-        [Paragraph("Министерство здравоохранения Российской Федерации", styleTableMono)],
-        [Paragraph("ОГАУЗ «Иркутская Медико-санитарная часть №2»", styleTableMono)],
-        [Paragraph("г.Иркутск, ул.Байкальская, д.201", styleTableMono)],
-        [Paragraph("Код ОГРН 1033801542576", styleTableMono)],
-        [Paragraph("ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ", styleTableMono)]
+        [Paragraph("Министерство здравоохранения Российской Федерации", style)],
+        [Paragraph(hospital_short_title, style)],
+        [Paragraph(hospital_address, style)],
+        [Paragraph(f"Код ОГРН {hospital_ogrn}", style)],
+        [Spacer(1, 1 * mm)],
+        [Paragraph("<u>ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ</u>", style)]
     ]
     t = Table(data, colWidths= 180 * mm)
     t.setStyle(

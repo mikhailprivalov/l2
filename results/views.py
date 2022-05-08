@@ -499,7 +499,7 @@ def result_print(request):
                 current_type_title_form = str(type_title_form)
                 result_title_form = import_string('results.title.forms' + current_type_title_form[0:3] + '.form_' + current_type_title_form[3:5])
             if result_title_form:
-                t = result_title_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
+                t = result_title_form(temp_iss)
             else:
                 t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
             fwb.append(t)
