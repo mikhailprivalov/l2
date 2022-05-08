@@ -32,7 +32,7 @@ def form_01(iss: Issledovaniya):
         [Paragraph(hospital_address, style)],
         [Paragraph(f"Код ОГРН {hospital_ogrn}", style)],
         [Spacer(1, 1 * mm)],
-        [Paragraph("<u>ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ</u>", style)]
+        [Paragraph("<u>ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ</u>", style)],
     ]
     t = Table(data, colWidths= 180 * mm)
     t.setStyle(
