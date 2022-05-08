@@ -34,7 +34,7 @@ def form_01(iss: Issledovaniya):
         [Spacer(1, 1 * mm)],
         [Paragraph("<u>ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ</u>", style)],
     ]
-    t = Table(data, colWidths= 180 * mm)
+    t = Table(data, colWidths=180 * mm)
     t.setStyle(
         TableStyle(
             [
