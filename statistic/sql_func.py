@@ -279,7 +279,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
     return row
 
 
-def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id ):
+def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
