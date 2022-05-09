@@ -310,7 +310,8 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id ):
                 to_char(clients_individual.birthday, 'DD.MM.YYYY') as patient_birthday,
                 date_part('year', age(directions_issledovaniya.medical_examination, clients_individual.birthday))::int as patient_age,
                 clients_individual.sex as patient_sex,
-                clients_card.main_address as patient_main_address
+                clients_card.main_address as patient_main_address,
+                directions_napravleniya.parent_id as parent
                 FROM public.directions_paraclinicresult
                 LEFT JOIN directions_issledovaniya ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
                 LEFT JOIN directory_paraclinicinputfield ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
@@ -326,13 +327,11 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id ):
                   and directory_paraclinicinputfield.for_talon = true
                   and directions_napravleniya.hospital_id = %(filter_hospital_id)s
                   and directions_issledovaniya.time_confirmation IS NOT NULL
-                  and directions_napravleniya.parent_id IS NULL
                 WHEN %(filter_hospital_id)s = -1 THEN
                   directions_issledovaniya.research_id=%(research_id)s
                   and directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
                   and directory_paraclinicinputfield.for_talon = true
                   and directions_issledovaniya.time_confirmation IS NOT NULL
-                  and directions_napravleniya.parent_id IS NULL
                 END
                 order by directions_issledovaniya.napravleniye_id
             """,

@@ -12,8 +12,9 @@ def custom_research_data(query_sql):
         if prev_direction != i.direction_number and step != 0:
             result.append(tmp_result.copy())
         if prev_direction != i.direction_number:
+            parent = f"#{i.parent}" if i.parent else ""
             tmp_result = {
-                "Направление": i.direction_number,
+                "Направление": f"{i.direction_number}{parent}",
                 "Пациент": i.patient_fio,
                 "Пол": i.patient_sex,
                 "Дата рождения": i.patient_birthday,
