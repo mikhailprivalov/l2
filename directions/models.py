@@ -429,6 +429,10 @@ class Napravleniya(models.Model):
     doc_microbiology_receive = models.ForeignKey(
         DoctorProfile, default=None, blank=True, null=True, related_name="doc_microbiology_receive", help_text='Кто принял материал микробиологии', on_delete=models.SET_NULL
     )
+    time_gistology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время приёма материала гистологией')
+    doc_gistology_receive = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, related_name="doc_gistology_receive", db_index=True, help_text='Профиль, принявший гистологический материал', on_delete=models.SET_NULL
+    )
     need_resend_amd = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в АМД?')
     need_resend_n3 = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в N3?')
     need_resend_l2 = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в L2.Core?')

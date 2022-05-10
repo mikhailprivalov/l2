@@ -752,6 +752,7 @@ def directions_services(request):
             response["ok"] = True
             researches = []
             has_microbiology = False
+            has_gistology = False
             receive_datetime = None
             for i in (
                 Issledovaniya.objects.filter(napravleniye=n)
@@ -772,9 +773,15 @@ def directions_services(request):
                 )
                 if i.research.is_microbiology:
                     has_microbiology = True
+                if i.research.is_gistology:
+                    has_gistology = True
 
             if has_microbiology:
                 receive_datetime = None if not n.time_microbiology_receive else strdatetime(n.time_microbiology_receive)
+
+            gistology_receive_time = None
+            if has_gistology and n.time_gistology_receive:
+                gistology_receive_time = strfdatetime(n.time_gistology_receive, '%Y-%m-%dT%X')
 
             response["direction_data"] = {
                 "date": strdate(n.data_sozdaniya),
@@ -782,7 +789,9 @@ def directions_services(request):
                 "card": n.client.number_with_type(),
                 "diagnos": n.diagnos,
                 "has_microbiology": has_microbiology,
+                "has_gistology": has_gistology,
                 "receive_datetime": receive_datetime,
+                "gistology_receive_time": gistology_receive_time,
                 "doc": "" if not n.doc else "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
                 "imported_from_rmis": n.imported_from_rmis,
                 "imported_org": "" if not n.imported_org else n.imported_org.title,
@@ -818,6 +827,7 @@ def directions_mark_visit(request):
     cancel = request_data.get("cancel", False)
     co_executor = request_data.get("coExecutor", None)
     register_number = request_data.get("additionalNumber", '')
+    gistology_receive_time = request_data.get("gistologyReceiveTime") or None
     dn = Napravleniya.objects.filter(pk=pk)
     f = False
     if dn.exists():
@@ -831,56 +841,70 @@ def directions_mark_visit(request):
         if co_executor and n.co_executor_id != co_executor:
             n.co_executor_id = co_executor
             n.save(update_fields=['co_executor_id'])
-        if Issledovaniya.objects.filter(Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
-            if not cancel:
-                n.visit_date = timezone.now()
-                n.visit_who_mark = request.user.doctorprofile
-                n.save()
-                cdid, ctime, ctp, rt = get_reset_time_vars(n)
-                allow_reset_confirm = bool(
-                    (
-                        (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
-                        or request.user.is_superuser
-                        or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+        has_gistology = Issledovaniya.objects.filter(napravleniye_id=pk, research__is_gistology=True).exists()
+
+        if not cancel:
+            if has_gistology:
+                current_gistology_time = None if not n.time_gistology_receive else strfdatetime(n.time_gistology_receive, '%Y-%m-%dT%X')
+                if current_gistology_time != gistology_receive_time:
+                    n.doc_gistology_receive = request.user.doctorprofile
+                    n.time_gistology_receive = try_strptime(gistology_receive_time, ('%Y-%m-%dT%X',))
+                    Log.log(
+                        n.pk,
+                        122000,
+                        request.user.doctorprofile,
+                        {
+                            'gistology_receive_time': gistology_receive_time,
+                        },
                     )
-                    and n.visit_date
+            n.visit_date = timezone.now()
+            n.visit_who_mark = request.user.doctorprofile
+            n.save()
+            cdid, ctime, ctp, rt = get_reset_time_vars(n)
+            allow_reset_confirm = bool(
+                (
+                    (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
+                    or request.user.is_superuser
+                    or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
                 )
-                response["visit_status"] = n.visit_date is not None
-                response["visit_date"] = strdatetime(n.visit_date)
-                response["allow_reset_confirm"] = allow_reset_confirm
+                and n.visit_date
+            )
+            response["visit_status"] = n.visit_date is not None
+            response["visit_date"] = strdatetime(n.visit_date)
+            response["allow_reset_confirm"] = allow_reset_confirm
+            response["ok"] = True
+        else:
+            ctp = int(0 if not n.visit_date else int(time.mktime(timezone.localtime(n.visit_date).timetuple())))
+            ctime = int(time.time())
+            cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
+            rtm = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f')
+            rt = rtm * 60
+            allow_reset_confirm = bool(
+                (
+                    (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
+                    or request.user.is_superuser
+                    or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+                )
+                and n.visit_date
+            )
+            if allow_reset_confirm:
                 response["ok"] = True
+                response["visit_status"] = None
+                response["visit_date"] = ''
+                response["allow_reset_confirm"] = False
+                n.visit_date = None
+                n.visit_who_mark = None
+                n.save()
             else:
-                ctp = int(0 if not n.visit_date else int(time.mktime(timezone.localtime(n.visit_date).timetuple())))
-                ctime = int(time.time())
-                cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
-                rtm = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f')
-                rt = rtm * 60
-                allow_reset_confirm = bool(
-                    (
-                        (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
-                        or request.user.is_superuser
-                        or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
-                    )
-                    and n.visit_date
-                )
-                if allow_reset_confirm:
-                    response["ok"] = True
-                    response["visit_status"] = None
-                    response["visit_date"] = ''
-                    response["allow_reset_confirm"] = False
-                    n.visit_date = None
-                    n.visit_who_mark = None
-                    n.save()
-                else:
-                    response["message"] = "Отмена посещения возможна только в течении {} мин.".format(rtm)
-            log_data = {
-                "Посещение": "отмена" if cancel else "да",
-                "Дата и время": response["visit_date"],
-                "Дополнительный номер": register_number,
-                "Со-исполнитель": co_executor,
-            }
-            Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
-            f = True
+                response["message"] = "Отмена посещения возможна только в течении {} мин.".format(rtm)
+        log_data = {
+            "Посещение": "отмена" if cancel else "да",
+            "Дата и время": response["visit_date"],
+            "Дополнительный номер": register_number,
+            "Со-исполнитель": co_executor,
+        }
+        Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
+        f = True
     if not f:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
@@ -1255,6 +1279,7 @@ def directions_paraclinic_form(request):
                 "fin_source_id": d.istochnik_f_id,
                 "priceCategory": "" if not d.price_category else d.price_category.title,
                 "additionalNumber": d.register_number,
+                "timeGistologyReceive": None if not d.time_gistology_receive else strfdatetime(d.time_gistology_receive, '%d.%m.%Y %X'),
                 "coExecutor": d.co_executor_id,
                 "tube": None,
                 "amd": d.amd_status,

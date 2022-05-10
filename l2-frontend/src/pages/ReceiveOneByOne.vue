@@ -123,6 +123,7 @@
           <td>{{ r.researches.join('; ') }}</td>
           <td>
             <a
+              v-if="!r.isDirection"
               class="btn btn-sm btn-blue-nb btn-bc"
               :href="`/barcodes/tubes?tubes_id=[${r.pk}]`"
               target="_blank"
