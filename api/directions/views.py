@@ -2422,6 +2422,11 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%proto_description') != -1 and 'iss_pk' in request_data:
         aggregate_data = hosp_get_text_iss(request_data['iss_pk'], True, 'desc')
         field_is_aggregate_proto_description = True
+    elif request_data["fieldPk"].find('%field_link#') != -1:
+        data = request_data["fieldPk"].split('#')
+        field_pks = [data[1]]
+        logical_or = True
+        result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or)
     elif request_data["fieldPk"].find("|") > -1:
         field_is_link = True
         logical_or = True
