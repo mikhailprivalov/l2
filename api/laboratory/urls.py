@@ -15,4 +15,7 @@ urlpatterns = [
     path('confirm', views.confirm),
     path('confirm-list', views.confirm_list),
     path('reset-confirm', views.reset_confirm),
+    path('last-received-daynum', views.last_received_daynum),
+    path('receive-one-by-one', views.receive_one_by_one),
+    path('receive-history', views.receive_history),
 ]

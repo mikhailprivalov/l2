@@ -68,6 +68,14 @@
         <OperationPlans v-if="meta.showOperationPlans" />
         <LaboratoryHeader v-if="meta.showLaboratoryHeader" />
         <ul
+          v-if="meta.showLaboratorySelector"
+          class="nav navbar-nav"
+        >
+          <li class="dropdown">
+            <LaboratorySelector with-all-labs />
+          </li>
+        </ul>
+        <ul
           v-if="meta.showCreateDirection"
           class="nav navbar-nav"
         >
@@ -174,6 +182,7 @@ import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
     Favorites: () => import('@/ui-cards/Favorites.vue'),
     OperationPlans: () => import('@/ui-cards/OperationPlans.vue'),
     LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),
+    LaboratorySelector: () => import('@/ui-cards/LaboratorySelector.vue'),
   },
 })
 export default class Navbar extends Vue {
