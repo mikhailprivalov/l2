@@ -731,6 +731,29 @@ def receive_one_by_one(request):
                 invalid_objects.append(f"Пробирка {p} для другой лаборатории: {', '.join(podrs)}")
         else:
             invalid_objects.append(f"Пробирка {p} не найдена")
+    if direction and Napravleniya.objects.filter(pk=pk).exists():
+        d = Napravleniya.objects.get(pk=pk)
+        if Issledovaniya.objects.filter(napravleniye_id=pk, research__is_gistology=True).exists():
+            is_new = False
+            if not d.time_gistology_receive:
+                d.time_gistology_receive = timezone.now()
+                d.doc_gistology_receive = request.user.doctorprofile
+                d.save()
+                Log.log(d.pk, 122000, request.user.doctorprofile, {
+                    'gistology_receive_time': strdate(d.time_gistology_receive),
+                })
+                is_new = True
+            ok_objects.append(
+                {
+                    "pk": pk,
+                    "new": is_new,
+                    "labs": ['Гистология'],
+                    "receivedate": strdate(d.time_gistology_receive),
+                }
+            )
+            ok_researches.extend([x.research.get_title() for x in Issledovaniya.objects.filter(napravleniye_id=pk, research__is_gistology=True)])
+    if not ok_objects and not invalid_objects:
+        invalid_objects.append(f"Ёмкости по запросу {pk} не найдены")
     return JsonResponse(
         {
             "ok": ok_objects,
@@ -760,6 +783,20 @@ def receive_history(request):
 
     if lpk >= 0:
         t = t.filter(issledovaniya__research__podrazdeleniye=lab)
+    else:
+        ns = Napravleniya.objects.filter(time_gistology_receive__range=(date1, date2), issledovaniya__research__is_gistology=True, doc_gistology_receive=request.user.doctorprofile)
+        for n in ns.order_by('-time_gistology_receive'):
+            result["rows"].append(
+                {
+                    "pk": n.pk,
+                    "n": 0,
+                    "type": 'Гистология',
+                    "color": 'FFFFFF',
+                    "labs": ['Гистология'],
+                    "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye_id=n.pk)],
+                    'isDirection': True,
+                }
+            )
 
     for row in t.order_by("-daynum").distinct():
         podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in row.issledovaniya_set.all()])))

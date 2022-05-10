@@ -1253,6 +1253,15 @@
                   {{ data.direction.additionalNumber }}
                 </div>
               </div>
+              <div
+                v-if="data.direction.timeGistologyReceive"
+                class="field"
+              >
+                <label class="field-title">Материал гистологии принят</label>
+                <div class="field-value simple-value">
+                  {{ data.direction.timeGistologyReceive }}
+                </div>
+              </div>
             </div>
           </div>
           <div class="control-row">
@@ -2174,6 +2183,7 @@ export default {
       || row.whoConfirmed
       || row.whoExecuted
       || this.data.direction.additionalNumber
+      || this.data.direction.timeGistologyReceive
       || this.data.direction.coExecutor
       || this.data.direction.paymentCategory;
     },

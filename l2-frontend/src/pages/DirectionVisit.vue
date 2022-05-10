@@ -121,6 +121,18 @@
                       >
                     </td>
                   </tr>
+                  <tr v-if="direction_data.has_gistology">
+                    <td>Материал принят</td>
+                    <td class="cl-td">
+                      <input
+                        v-model="direction_data.gistology_receive_time"
+                        type="datetime-local"
+                        :readonly="visit_status"
+                        step="1"
+                        class="form-control"
+                      >
+                    </td>
+                  </tr>
                 </table>
               </li>
               <li
@@ -628,6 +640,7 @@ export default {
         cancel,
         coExecutor: this.direction_data.coExecutor,
         additionalNumber: this.direction_data.additionalNumber,
+        gistologyReceiveTime: this.direction_data.gistology_receive_time,
       }).then((data) => {
         if (data.ok) {
           this.visit_status = data.visit_status;
