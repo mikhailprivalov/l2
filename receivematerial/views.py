@@ -15,12 +15,11 @@ import directory.models as directory
 import slog.models as slog
 import users.models as users
 from appconf.manager import SettingManager
-from barcodes.views import tubes
 from directions.models import Issledovaniya, TubesRegistration, Result
 from laboratory import settings
 from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER
-from laboratory.utils import strdate, strtime
+from laboratory.utils import strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 
@@ -58,134 +57,6 @@ def receive(request):
 
         result = {"r": True}
         return JsonResponse(result)
-
-
-@csrf_exempt
-@login_required
-@group_required("Получатель биоматериала")
-@ensure_csrf_cookie
-def receive_obo(request):
-    lpk = int(request.GET.get("lab_pk", -2) if request.method == "GET" else request.POST.get("lab_pk", -2))
-    if lpk >= 0:
-        lab = Podrazdeleniya.objects.get(pk=lpk)
-    else:
-        lab = {"title": "Все лаборатории", "pk": lpk}
-    if request.method == "GET":
-        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
-        if lpk >= 0 and lab.p_type != Podrazdeleniya.LABORATORY:
-            lab = labs[0]
-        return render(request, 'dashboard/receive_one-by-one.html', {"labs": labs, "lab": lab})
-    ret = []
-    if request.POST["pk"].isdigit():
-        pk = int(request.POST["pk"])
-        direction = request.POST.get("direction", "0") == "1"
-        if not direction:
-            pks = [pk]
-            ret = []
-        else:
-            tubes(request, direction_implict_id=pk)
-            pks = [
-                x.pk
-                for x in (
-                    TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
-                    .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
-                    .distinct()
-                )
-            ]
-        for p in pks:
-            if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
-                tube = TubesRegistration.objects.get(pk=p)
-                if tube.getstatus(one_by_one=True):
-                    podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in tube.issledovaniya_set.all()])))
-                    if lpk < 0 or tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
-                        tube.clear_notice(request.user.doctorprofile)
-                        status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
-                        result = {
-                            "pk": p,
-                            "r": 1,
-                            "n": status["n"],
-                            "new": status["new"],
-                            "labs": podrs,
-                            "receivedate": strdate(tube.time_recive),
-                            "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=p)],
-                        }
-                    else:
-                        result = {"pk": p, "r": 2, "labs": podrs}
-                else:
-                    n = tube.issledovaniya_set.first().napravleniye
-                    dw = n.doc or n.doc_who_create
-                    if dw:
-                        otd = dw.podrazdeleniye
-                        if n.doc_who_create:
-                            otd = n.doc_who_create.podrazdeleniye
-                    else:
-                        otd = ''
-                    result = {"pk": p, "r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye_id}
-            else:
-                result = {"pk": p, "r": 3}
-            ret.append(result)
-        if not direction:
-            ret = {"r": 3} if len(ret) == 0 else ret[0]
-    return JsonResponse(ret, safe=False)
-
-
-@csrf_exempt
-@login_required
-@group_required("Получатель биоматериала")
-def receive_history(request):
-    from django.utils import datetime_safe
-
-    result = {"rows": []}
-    date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-    date2 = datetime_safe.datetime.now()
-    lpk = int(request.GET.get("lab_pk", -2))
-
-    if lpk >= 0:
-        lab = Podrazdeleniya.objects.get(pk=lpk)
-    else:
-        lab = {"title": "Все лаборатории", "pk": lpk}
-
-    t = TubesRegistration.objects.filter(time_recive__range=(date1, date2), doc_recive=request.user.doctorprofile)
-
-    if lpk >= 0:
-        t = t.filter(issledovaniya__research__podrazdeleniye=lab)
-
-    for row in t.order_by("-daynum").distinct():
-        podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in row.issledovaniya_set.all()])))
-        result["rows"].append(
-            {
-                "pk": row.pk,
-                "n": row.daynum or 0,
-                "type": str(row.type.tube),
-                "color": row.type.tube.color,
-                "labs": podrs,
-                "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)],
-            }
-        )
-    return JsonResponse(result)
-
-
-@csrf_exempt
-@login_required
-@group_required("Получатель биоматериала")
-def last_received(request):
-    from django.utils import datetime_safe
-
-    date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-    date2 = datetime_safe.datetime.now()
-    last_num = 0
-
-    lpk = int(request.GET.get("lab_pk", -2))
-    f = {}
-    if lpk >= 0:
-        lab = Podrazdeleniya.objects.get(pk=lpk)
-        f = {"issledovaniya__research__podrazdeleniye": lab}
-    else:
-        lab = {"title": "Все лаборатории", "pk": lpk}
-
-    if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, doc_recive=request.user.doctorprofile, **f).exists():
-        last_num = max([x.daynum for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, doc_recive=request.user.doctorprofile, **f)])
-    return JsonResponse({"last_n": last_num})
 
 
 @csrf_exempt

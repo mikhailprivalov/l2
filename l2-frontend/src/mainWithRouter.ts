@@ -515,6 +515,19 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/receive/one-by-one',
+      name: 'receive-one-by-one',
+      component: () => import('@/pages/ReceiveOneByOne.vue'),
+      meta: {
+        title: 'Приём биоматериала по одному',
+        narrowLayout: true,
+        groups: [
+          'Получатель биоматериала',
+        ],
+        showLaboratorySelector: true,
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

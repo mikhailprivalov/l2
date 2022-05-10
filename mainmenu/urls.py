@@ -1,4 +1,3 @@
-from django.contrib.auth.decorators import login_required
 from django.urls import path
 from django.views.generic import TemplateView
 
@@ -26,12 +25,8 @@ urlpatterns = [
     path('results/paraclinic', views.results_paraclinic),
     path('results/paraclinic/blanks', views.results_paraclinic_blanks),
     path('receive', receivematerial.views.receive),
-    path('receive/one_by_one', receivematerial.views.receive_obo),
     path('receive/execlist', receivematerial.views.receive_execlist),
-    path('receive/last_received', receivematerial.views.last_received),
-    path('receive/history', receivematerial.views.receive_history),
     path('receive/journal', receivematerial.views.receive_journal),
-    path('stationar', login_required(TemplateView.as_view(template_name="dashboard/stationar.html"))),
     path('list_wait', views.list_wait),
     path('doc_call', views.doc_call),
     path('procedure_list', TemplateView.as_view(template_name="dashboard/procedure_list.html")),

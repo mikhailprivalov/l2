@@ -55,6 +55,13 @@ export default {
     LaboratoryJournal,
     LaboratoryPrintResults,
   },
+  props: {
+    withAllLabs: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
 };
 </script>
 

@@ -9,12 +9,14 @@ from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 import simplejson as json
 from django.utils import dateformat, timezone
+from django.utils import datetime_safe
 
 from appconf.manager import SettingManager
+from barcodes.views import tubes
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
 from directory.models import Fractions, Researches, Unit
 from laboratory.decorators import group_required
-from laboratory.utils import strfdatetime
+from laboratory.utils import strdate, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.client import Client
 from slog.models import Log
@@ -651,4 +653,124 @@ def reset_confirm(request):
             Log.log(str(pk), 24, body=predoc, user=request.user.doctorprofile)
         else:
             result["message"] = f"Сброс подтверждения разрешен в течении {str(SettingManager.get('lab_reset_confirm_time_min'))} минут"
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def last_received_daynum(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+
+    last_daynum = 0
+
+    date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+    date2 = datetime_safe.datetime.now()
+
+    f = {}
+
+    if pk > -2:
+        f = {"issledovaniya__research__podrazdeleniye": pk}
+
+    if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, doc_recive=request.user.doctorprofile, **f).exists():
+        last_daynum = max([x.daynum for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, doc_recive=request.user.doctorprofile, **f)])
+
+    return JsonResponse({"lastDaynum": last_daynum})
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def receive_one_by_one(request):
+    request_data = json.loads(request.body)
+    lab_pk = request_data["currentLaboratory"]
+
+    if lab_pk >= 0:
+        lab = Podrazdeleniya.objects.get(pk=lab_pk)
+    else:
+        lab = {"title": "Все лаборатории", "pk": lab_pk}
+
+    pk = request_data['q']
+    direction = request_data["workMode"] == "direction"
+    if not direction:
+        pks = [pk]
+    else:
+        tubes(request, direction_implict_id=pk)
+        pks = [
+            x.pk
+            for x in (
+                TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
+                .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+                .distinct()
+            )
+        ]
+    ok_objects = []
+    ok_researches = []
+    invalid_objects = []
+    last_n = None
+    for p in pks:
+        if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
+            tube = TubesRegistration.objects.get(pk=p)
+            podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in tube.issledovaniya_set.all()])))
+            if lab_pk < 0 or tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
+                tube.clear_notice(request.user.doctorprofile)
+                status = tube.day_num(request.user.doctorprofile, request_data["nextN"])
+                if status["new"]:
+                    last_n = status["n"]
+
+                ok_objects.append(
+                    {
+                        "pk": p,
+                        "new": status["new"],
+                        "labs": podrs,
+                        "receivedate": strdate(tube.time_recive),
+                    }
+                )
+
+                ok_researches.extend([x.research.title for x in Issledovaniya.objects.filter(tubes__id=p)])
+            else:
+                invalid_objects.append(f"Пробирка {p} для другой лаборатории: {', '.join(podrs)}")
+        else:
+            invalid_objects.append(f"Пробирка {p} не найдена")
+    return JsonResponse(
+        {
+            "ok": ok_objects,
+            "researches": sorted(list(set(ok_researches))),
+            "invalid": invalid_objects,
+            "lastN": last_n,
+        }
+    )
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def receive_history(request):
+    request_data = json.loads(request.body)
+
+    result = {"rows": []}
+    date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+    date2 = datetime_safe.datetime.now()
+    lpk = request_data["currentLaboratory"]
+
+    if lpk >= 0:
+        lab = Podrazdeleniya.objects.get(pk=lpk)
+    else:
+        lab = {"title": "Все лаборатории", "pk": lpk}
+
+    t = TubesRegistration.objects.filter(time_recive__range=(date1, date2), doc_recive=request.user.doctorprofile)
+
+    if lpk >= 0:
+        t = t.filter(issledovaniya__research__podrazdeleniye=lab)
+
+    for row in t.order_by("-daynum").distinct():
+        podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in row.issledovaniya_set.all()])))
+        result["rows"].append(
+            {
+                "pk": row.pk,
+                "n": row.daynum or 0,
+                "type": str(row.type.tube),
+                "color": row.type.tube.color,
+                "labs": podrs,
+                "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)],
+            }
+        )
     return JsonResponse(result)

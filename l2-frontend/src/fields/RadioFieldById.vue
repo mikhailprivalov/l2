@@ -4,7 +4,7 @@
       v-for="v in variants"
       :key="v.id"
       href="#"
-      :class="{ active: v.id === val, disabled }"
+      :class="{ active: v.id === val, disabled, rounded }"
       @click.prevent="changeValue(v.id)"
     >
       <span>
@@ -27,6 +27,11 @@ export default {
       required: true,
     },
     disabled: {
+      required: false,
+      default: false,
+      type: Boolean,
+    },
+    rounded: {
       required: false,
       default: false,
       type: Boolean,
@@ -98,10 +103,31 @@ export default {
     margin: 0;
     font-size: 12px;
     min-width: 0;
+    background-color: #aab2bd;
+    color: #fff;
+
+    &.rounded {
+      &:first-child {
+        border-radius: 4px 0 0 4px;
+      }
+
+      &:last-child {
+        border-radius: 0 4px 4px 0;
+      }
+    }
 
     &.disabled {
       cursor: not-allowed;
       opacity: 0.8;
+    }
+
+    &:hover:not(.disabled) {
+      background-color: #434a54;
+    }
+
+    &.active {
+      background: #049372 !important;
+      color: #fff;
     }
 
     > span {
@@ -112,20 +138,6 @@ export default {
       max-height: 2.2em;
       line-height: 1.1em;
       margin: 0 auto;
-    }
-  }
-
-  a {
-    background-color: #aab2bd;
-    color: #fff;
-
-    &:hover:not(.disabled) {
-      background-color: #434a54;
-    }
-
-    &.active {
-      background: #049372 !important;
-      color: #fff;
     }
   }
 }
