@@ -739,9 +739,14 @@ def receive_one_by_one(request):
                 d.time_gistology_receive = timezone.now()
                 d.doc_gistology_receive = request.user.doctorprofile
                 d.save()
-                Log.log(d.pk, 122000, request.user.doctorprofile, {
-                    'gistology_receive_time': strdate(d.time_gistology_receive),
-                })
+                Log.log(
+                    d.pk,
+                    122000,
+                    request.user.doctorprofile,
+                    {
+                        'gistology_receive_time': strdate(d.time_gistology_receive),
+                    },
+                )
                 is_new = True
             ok_objects.append(
                 {
