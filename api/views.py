@@ -2167,9 +2167,11 @@ def search_param(request):
     date_registred_start = data.get('dateRegistredStart') or '1900-01-01'
     date_registred_end = data.get('dateRegistredEnd') or '1900-01-01'
     search_stationar = data.get('searchStationar') or False
+    date_recieve = data.get('dateReceive') or '1900-01-01'
+    date_recieve_start = f"{date_recieve} 00:00:00"
+    date_recieve_end = f"{date_recieve} 23:59:59"
 
     # из проткола
-    date_recieve = data.get('dateReceive') or '1900-01-01'
     date_get = data.get('dateGet') or '1900-01-01'
     final_text = data.get('finalText') or ''
     rows = []
@@ -2185,7 +2187,8 @@ def search_param(request):
             date_examination_start,
             date_examination_end,
             doc_confirm,
-            date_recieve,
+            date_recieve_start,
+            date_recieve_end,
             date_get,
             final_text,
         )
