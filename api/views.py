@@ -2192,7 +2192,6 @@ def search_param(request):
             date_get,
             final_text,
         )
-        print(result)
         rows = [
             {
                 "patient_fio": i.patient_fio,
