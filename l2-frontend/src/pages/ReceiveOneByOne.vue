@@ -343,7 +343,7 @@ export default class ReceiveOneByOne extends Vue {
   overflow-x: hidden;
 }
 
-.btn-bc{
+.btn-bc {
   padding: 2px;
   width: 100%;
 }
