@@ -53,6 +53,7 @@ def menu(request):
                 {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/ui/statistics-tickets", "title": "Статталоны", "nt": False, "access": ["Оформление статталонов", "Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/ui/receive/one-by-one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
+                {"url": "/ui/receive/by-direction", "title": "Поступление материала", "nt": False, "access": ["Поступление материала"]},
                 {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/ui/laboratory/results", "title": "Лабораторные результаты", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
                 {

@@ -1677,6 +1677,7 @@ def directions_paraclinic_result(request):
         or diss.filter(
             Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
             | Q(research__is_doc_refferal=True)
+            | Q(research__is_paraclinic=True)
             | Q(research__is_treatment=True)
             | Q(research__is_gistology=True)
             | Q(research__is_stom=True)

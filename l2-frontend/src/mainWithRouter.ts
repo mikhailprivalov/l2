@@ -528,6 +528,19 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/receive/by-direction',
+      name: 'receive-by-direction',
+      component: () => import('@/pages/ReceiveByDirection.vue'),
+      meta: {
+        title: 'Поступление',
+        narrowLayout: true,
+        groups: [
+          'Поступление материала',
+        ],
+        showLaboratorySelector: true,
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

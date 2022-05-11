@@ -1,13 +1,8 @@
 <template>
   <div>
     <div class="row top-panel">
-      <div class="col-xs-4">
+      <div class="col-xs-6">
         <div class="card-no-hover card card-1 work-cards">
-          <RadioFieldById
-            v-model="workMode"
-            :variants="WORK_MODES"
-            rounded
-          />
           <div class="input-group">
             <input
               ref="q"
@@ -15,7 +10,7 @@
               type="text"
               class="form-control"
               spellcheck="false"
-              :placeholder="workMode === 'direction' ? 'Номер направления' : 'Номер штрих-кода'"
+              placeholder="Номер направления"
               maxlength="20"
               @keypress.enter="receive"
             >
@@ -34,34 +29,12 @@
               v-for="s in receiveStatuses"
               :key="s.pk"
             >
-              <div>Емк. <strong>{{ s.pk }} {{ s.new ? 'принята' : `была принята ранее — ${s.receivedate}` }}</strong></div>
-              <div>
-                Лаборатории: <strong v-html="/* eslint-disable-line vue/no-v-html */ s.labs.join('<br/>')" />
-              </div>
+              <div><strong>Направление {{ s.pk }} {{ s.new ? 'принято' : `было принято ранее — ${s.receivedate}` }}</strong></div>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-xs-4">
-        <div class="big-number">
-          <span class="big-number-prefix">№</span> {{ lastN || '--' }}
-        </div>
-        <br>
-        <br>
-        <label>
-          Следующий номер: <input
-            v-model.number="nextN"
-            class="form-control next-n-input"
-            type="number"
-          >
-        </label>
-        <small><a
-          href="#"
-          class="a-under"
-          @click="loadNextN"
-        >сброс</a></small>
-      </div>
-      <div class="col-xs-4">
+      <div class="col-xs-6">
         <h5>Исследования:</h5>
         <div class="last-researches">
           <div
@@ -74,34 +47,22 @@
       </div>
     </div>
     <h5>
-      <small
-        class="fastlinks"
-        style="display: inline-block;float: right"
-      ><a
-        :href="`/mainmenu/receive/journal_form?lab_pk=${ currentLaboratory }`"
-        target="_blank"
-      >Журнал приёма</a>&nbsp;<ExecutionList /></small> Принятые за сегодня <i
+      Принятые за сегодня <i
         v-if="historyLoading"
         class="fa fa-spinner"
       />
     </h5>
     <table class="table table-bordered table-responsive table-condensed">
       <colgroup>
-        <col width="110">
         <col width="200">
-        <col width="150">
-        <col width="180">
+        <col width="200">
         <col>
-        <col width="50">
       </colgroup>
       <thead>
         <tr>
-          <th>№ принятия</th>
-          <th>Тип емкости</th>
-          <th>№ емкости</th>
-          <th>Лаборатория</th>
+          <th>Тип</th>
+          <th>№ направления</th>
           <th>Исследования</th>
-          <th>Ш/к</th>
         </tr>
       </thead>
       <tbody>
@@ -109,28 +70,13 @@
           v-for="r in receiveHistory"
           :key="r.pk"
         >
-          <td>{{ r.n }}</td>
           <td>
-            <ColorTitled
-              :color="r.color"
-              :title="r.type"
-            />
+            {{ r.type }}
           </td>
           <td>
             {{ r.pk }}
           </td>
-          <td>{{ r.labs.join('; ') }}</td>
           <td>{{ r.researches.join('; ') }}</td>
-          <td>
-            <a
-              v-if="!r.isDirection"
-              class="btn btn-sm btn-blue-nb btn-bc"
-              :href="`/barcodes/tubes?tubes_id=[${r.pk}]`"
-              target="_blank"
-            ><i
-              class="fa fa-barcode"
-            /></a>
-          </td>
         </tr>
         <tr v-if="receiveHistory.length === 0">
           <td colspan="6">
@@ -148,14 +94,6 @@ import Component from 'vue-class-component';
 import { debounce } from 'lodash/function';
 
 import * as actions from '@/store/action-types';
-import RadioFieldById from '@/fields/RadioFieldById.vue';
-import ExecutionList from '@/ui-cards/ExecutionList.vue';
-import ColorTitled from '@/ui-cards/ColorTitled.vue';
-
-const WORK_MODES = [
-  { id: 'tube', label: 'Штрих-код' },
-  { id: 'direction', label: 'Номер направления' },
-];
 
 interface ReceiveStatus {
   pk: number,
@@ -174,18 +112,10 @@ interface ReceiveHistory {
 }
 
 @Component({
-  components: {
-    RadioFieldById,
-    ExecutionList,
-    ColorTitled,
-  },
   data() {
     return {
-      workMode: WORK_MODES[0].id,
-      WORK_MODES,
+      workMode: 'direction',
       lastResearches: [],
-      lastN: '--',
-      nextN: 1,
       q: '',
       currentLaboratory: -1,
       receiveStatuses: [],
@@ -197,7 +127,6 @@ interface ReceiveHistory {
     this.focus();
     this.$root.$on('change-laboratory', (pk) => {
       this.currentLaboratory = pk;
-      this.loadNextN();
       this.receiveHistory = [];
       this.debouncedLoadHistory();
     });
@@ -211,24 +140,13 @@ interface ReceiveHistory {
       return this.lastResearches;
     },
   },
-  watch: {
-    workMode() {
-      this.focus();
-    },
-  },
 })
-export default class ReceiveOneByOne extends Vue {
+export default class ReceiveByDirection extends Vue {
   workMode: string;
-
-  WORK_MODES: typeof WORK_MODES;
 
   lastResearches: string[];
 
-  lastN: string | number;
-
   q: string;
-
-  nextN: number;
 
   currentLaboratory: number;
 
@@ -242,24 +160,14 @@ export default class ReceiveOneByOne extends Vue {
     window.$(this.$refs.q).focus();
   }
 
-  async loadNextN() {
-    const { lastDaynum } = await this.$api('/laboratory/last-received-daynum', { pk: this.currentLaboratory });
-
-    this.nextN = lastDaynum + 1;
-  }
-
   async receive() {
     if (!this.q) {
       return;
     }
     await this.$store.dispatch(actions.INC_LOADING);
-    let { q } = this;
-    if (q.substr(0, 3) === '460' && q.length === 13) {
-      q = String(Number(q.substr(0, 12)) - 460000000000);
-      this.workMode = 'direction';
-    }
+    const { q } = this;
     const {
-      ok, researches, invalid, lastN,
+      ok, researches, invalid,
     } = await this.$api(
       '/laboratory/receive-one-by-one',
       this,
@@ -269,10 +177,8 @@ export default class ReceiveOneByOne extends Vue {
     for (const msg of invalid) {
       this.$root.$emit('msg', 'error', msg);
     }
-    this.lastN = lastN;
     this.lastResearches = researches;
     this.receiveStatuses = ok;
-    await this.loadNextN();
     await this.$store.dispatch(actions.DEC_LOADING);
     await this.loadHistory();
     this.q = '';
@@ -280,7 +186,7 @@ export default class ReceiveOneByOne extends Vue {
 
   async loadHistory() {
     this.historyLoading = true;
-    const { rows } = await this.$api('/laboratory/receive-history', this, 'currentLaboratory');
+    const { rows } = await this.$api('/laboratory/receive-history', this, 'currentLaboratory', { onlyDirections: true });
     this.receiveHistory = rows;
     this.historyLoading = false;
   }
@@ -293,18 +199,13 @@ export default class ReceiveOneByOne extends Vue {
 
 <style lang="scss" scoped>
 .top-panel {
-  .col-xs-4:nth-child(2) {
-    text-align: center;
-    padding-top: 5px;
-    border-right: 1px solid lightgray;
+  .col-xs-6:last-child {
     border-left: 1px solid lightgray;
-    min-height: 160px;
-  }
-
-  .col-xs-4:last-child h5 {
-    padding: 0;
-    margin: 0;
-    font-weight: normal
+    h5 {
+      padding: 0;
+      margin: 0;
+      font-weight: normal
+    }
   }
 }
 
@@ -314,31 +215,13 @@ export default class ReceiveOneByOne extends Vue {
   overflow-y: auto;
 }
 
-.big-number {
-  font-size: 60px;
-  display: inline-block;
-  vertical-align: middle
-}
-
-.big-number-prefix {
-  color: lightgray;
-}
-
-.next-n-input {
-  width: 60px;
-  display: inline-block;
-}
-
 .work-cards {
+  margin-top: 0;
   padding: 5px;
-
-  .input-group {
-    margin-top: 10px;
-  }
 }
 
 .receive-messages {
-  height: 60px;
+  height: 90px;
   overflow-y: auto;
   overflow-x: hidden;
 }
