@@ -1884,7 +1884,7 @@ def directions_paraclinic_result(request):
 
         iss.doc_save = request.user.doctorprofile
         iss.time_save = timezone.now()
-        if iss.research.is_doc_refferal:
+        if iss.research.is_doc_refferal or iss.research.is_gistology:
             iss.medical_examination = request_data.get("examination_date") or timezone.now().date()
         if with_confirm:
             work_by = request_data.get("work_by")
@@ -2289,6 +2289,7 @@ def last_field_result(request):
     data = c.get_data_individual()
     mother_obj = None
     mother_data = None
+    num_dir = get_current_direction(request_data["iss_pk"])
     if c.mother:
         mother_obj = c.mother
         mother_data = mother_obj.get_data_individual()
@@ -2301,11 +2302,9 @@ def last_field_result(request):
             work_place = ""
         result = {"value": work_place}
     elif request_data["fieldPk"].find('%hospital') != -1:
-        num_dir = get_current_direction(request_data["iss_pk"])
         hosp_title = Napravleniya.objects.get(pk=num_dir).hospital_title
         result = {"value": hosp_title}
     elif request_data["fieldPk"].find('%parent_dir_data') != -1:
-        num_dir = get_current_direction(request_data["iss_pk"])
         iss_parent = Napravleniya.objects.get(pk=num_dir).parent
         research = iss_parent.research.title
         direction_num = iss_parent.napravleniye_id
@@ -2401,8 +2400,6 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%phone') != -1:
         result = {"value": c.phone}
     elif request_data["fieldPk"].find('%current_manager') != -1:
-        current_iss = request_data["iss_pk"]
-        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
         hospital_manager = Napravleniya.objects.get(pk=num_dir).hospital.current_manager
         result = {"value": hospital_manager}
     elif request_data["fieldPk"].find('%work_position') != -1:
@@ -2420,16 +2417,12 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%harmful_factor') != -1:
         result = {"value": c.harmful_factor}
     elif request_data["fieldPk"].find('%proto_operation') != -1:
-        current_iss = request_data["iss_pk"]
-        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
         # получить все направления в истории по типу hosp
         main_hosp_dir = hosp_get_hosp_direction(num_dir)[0]
         operations_data = hosp_get_operation_data(main_hosp_dir['direction'])
         field_is_aggregate_operation = True
     elif request_data["fieldPk"].find('%directionparam') != -1:
         id_field = request_data["fieldPk"].split(":")
-        current_iss = request_data["iss_pk"]
-        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
         val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()
         result = {"value": val}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
@@ -2453,6 +2446,18 @@ def last_field_result(request):
         field_pks = [data[1]]
         logical_or = True
         result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or)
+    elif request_data["fieldPk"].find('%receive_gistology_date') != -1:
+        date_time = Napravleniya.objects.get(pk=num_dir).time_gistology_receive
+        val = ""
+        if date_time:
+            val = date_time.strftime("%d.%m.%Y")
+        result = {"value": val}
+    elif request_data["fieldPk"].find('%receive_gistology_time') != -1:
+        date_time = Napravleniya.objects.get(pk=num_dir).time_gistology_receive
+        val = ""
+        if date_time:
+            val = date_time.strftime("%H:%M")
+        result = {"value": val}
     elif request_data["fieldPk"].find("|") > -1:
         field_is_link = True
         logical_or = True

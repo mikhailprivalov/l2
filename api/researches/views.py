@@ -765,7 +765,7 @@ def fields_and_groups_titles(request):
 
 @login_required
 def descriptive_research(request):
-    rows = DResearches.objects.filter(hide=False).filter(Q(is_paraclinic=True) | Q(is_doc_refferal=True)).order_by('title').values('pk', 'title')
+    rows = DResearches.objects.filter(hide=False).filter(Q(is_paraclinic=True) | Q(is_doc_refferal=True) | Q(is_gistology=True)).order_by('title').values('pk', 'title')
     rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
     return JsonResponse(rows, safe=False)
 
