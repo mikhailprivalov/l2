@@ -2170,9 +2170,8 @@ def search_param(request):
     date_recieve = data.get('dateReceive') or '1900-01-01'
     date_recieve_start = f"{date_recieve} 00:00:00"
     date_recieve_end = f"{date_recieve} 23:59:59"
-    print(date_recieve_start, date_recieve_end)
-    # из проткола
 
+    # из проткола
     date_get = data.get('dateGet') or '1900-01-01'
     final_text = data.get('finalText') or ''
     rows = []

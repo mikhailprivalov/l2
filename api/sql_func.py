@@ -232,8 +232,6 @@ def search_data_by_param(
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
     """
-    print(date_examination_start)
-    print(date_examination_end)
     with connection.cursor() as cursor:
         cursor.execute(
             """
