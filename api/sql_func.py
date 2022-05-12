@@ -280,9 +280,9 @@ def search_data_by_param(
                 AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s
                          WHEN %(doc_confirm)s = -1 THEN directions_napravleniya.cancel is not Null 
                 END
-                AND CASE WHEN %(date_registred_start)s != '1900-01-01' THEN
+                AND CASE WHEN %(date_registred_start)s != '1900-01-01 00:00:00' THEN
                          directions_napravleniya.visit_date AT TIME ZONE %(tz)s BETWEEN %(date_registred_start)s AND %(date_registred_end)s
-                         WHEN %(date_registred_start)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null 
+                         WHEN %(date_registred_start)s = '1900-01-01 00:00:00' THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN %(date_recieve_start)s != '1900-01-01 00:00:00' THEN
                          directions_napravleniya.time_gistology_receive AT TIME ZONE %(tz)s BETWEEN %(date_recieve_start)s AND %(date_recieve_end)s
