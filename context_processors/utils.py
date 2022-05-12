@@ -7,6 +7,7 @@ from appconf.manager import SettingManager
 from laboratory import settings
 from laboratory.settings import PROTOCOL_PLAIN_TEXT, SPLIT_PRINT_RESULT
 from rmis_integration.client import get_md5
+from users.models import GroupHideMainMenuButtons
 from utils.common import get_system_name
 
 
@@ -210,10 +211,20 @@ def menu(request):
 def make_menu(pages, groups, superuser, current_path=None):
     menu = []
     groups_set = set(groups)
+    to_hide_buttons = GroupHideMainMenuButtons.objects.filter(group__name__in=groups)
+    hide_buttons = []
+    for i in to_hide_buttons:
+        hide_buttons.extend(i.title_buttons.split("@"))
+
     for page in pages:
+        hide_page = False
+        if page.get("title", "") in hide_buttons:
+            hide_page = True
         if (not superuser and "*" not in page["access"] and len(groups_set & set(page["access"])) == 0) or (
             page.get("module") and not SettingManager.get(page["module"], default='false', default_type='b')
         ):
+            continue
+        if hide_page:
             continue
         page["active"] = current_path == page.get("url")
         menu.append(page)

@@ -439,3 +439,15 @@ class DistrictResearchLimitAssign(models.Model):
                 type_period = 0 if t_b['type'] == 'День' else 1
                 d = DistrictResearchLimitAssign(district_group_id=district_pk, research_id=t_b['current_researches'], limit_count=t_b['count'], type_period_limit=type_period)
                 d.save()
+
+
+class GroupHideMainMenuButtons(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    title_buttons = models.CharField(max_length=255, help_text='Исключить кнопки из главного меню (указать ч/з @)', blank=True, default=None, null=True)
+
+    def __str__(self):
+        return str(self.group) + "  | " + str(self.title_buttons)
+
+    class Meta:
+        verbose_name = 'Скрытая кнопка в главном меню'
+        verbose_name_plural = 'Скрытые кнопки в главном меню'
