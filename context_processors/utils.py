@@ -214,7 +214,6 @@ def make_menu(pages, groups, superuser, current_path=None):
     for k, v in HIDE_TITLE_BUTTONS_MAIN_MENU.items():
         if k in groups:
             hide_buttons.extend(v)
-    print(hide_buttons)
     for page in pages:
         is_hide_button = False
         if page.get("title", "Нет такой кнопки") in hide_buttons:
