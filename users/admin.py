@@ -23,17 +23,6 @@ class ResDistrictResearchLimitAssign(admin.ModelAdmin):
     list_display_links = ('district_group', 'research', 'type_period_limit', 'limit_count')
 
 
-class ResGroupHideMainMenuButtons(admin.ModelAdmin):
-    list_display = (
-        'title_buttons',
-        'group',
-    )
-    list_display_links = (
-        'title_buttons',
-        'group',
-    )
-
-
 admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке
 admin.site.register(AssignmentTemplates)
 admin.site.register(AssignmentResearches)
