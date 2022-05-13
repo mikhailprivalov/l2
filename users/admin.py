@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DoctorProfile, AssignmentTemplates, AssignmentResearches, Speciality, Position, AvailableResearchByGroup, DistrictResearchLimitAssign, GroupHideMainMenuButtons
+from .models import DoctorProfile, AssignmentTemplates, AssignmentResearches, Speciality, Position, AvailableResearchByGroup, DistrictResearchLimitAssign
 
 
 class DocAdmin(admin.ModelAdmin):
@@ -36,4 +36,3 @@ admin.site.register(Position)
 admin.site.register(AvailableResearchByGroup)
 
 admin.site.register(DistrictResearchLimitAssign, ResDistrictResearchLimitAssign)
-admin.site.register(GroupHideMainMenuButtons, ResGroupHideMainMenuButtons)
