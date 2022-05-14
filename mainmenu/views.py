@@ -8,9 +8,10 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from clients.models import CardBase
 
 import directory.models as directory
-from directions.models import TubesRegistration, Issledovaniya, Napravleniya
+from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
 from laboratory import VERSION
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
@@ -123,6 +124,47 @@ def users_count(request):
     result = {"all": User.objects.all().count()}
 
     return JsonResponse(result)
+
+
+def get_fin():
+    fin = []
+    for b in CardBase.objects.filter(hide=False):
+        o = {"pk": b.pk, "sources": []}
+        for f in IstochnikiFinansirovaniya.objects.filter(base=b, hide=False):
+            o["sources"].append({"pk": f.pk, "title": f.title})
+        fin.append(o)
+    return fin
+
+
+@login_required
+@group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций")
+@ensure_csrf_cookie
+def results_history(request):
+    podr = Podrazdeleniya.objects.filter(p_type__in=[Podrazdeleniya.LABORATORY, Podrazdeleniya.PARACLINIC]).order_by("title")
+
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+    users = []
+    for p in podrazdeleniya:
+        pd = {"pk": p.pk, "title": p.title, "docs": []}
+        for d in DoctorProfile.objects.filter(podrazdeleniye=p, user__groups__name="Лечащий врач"):
+            pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
+        users.append(pd)
+    return render(
+        request,
+        'dashboard/results_history.html',
+        {
+            'fin': get_fin(),
+            "notlabs": podrazdeleniya,
+            "users": json.dumps(users),
+            "labs": [
+                {
+                    "title": x.get_title(),
+                    "researches": [{"pk": y.pk, "title": y.get_full_short_title()} for y in directory.Researches.objects.filter(hide=False, podrazdeleniye=x).order_by("title")],
+                }
+                for x in podr
+            ],
+        },
+    )
 
 
 @login_required

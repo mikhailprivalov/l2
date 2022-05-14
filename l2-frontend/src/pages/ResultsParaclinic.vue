@@ -991,7 +991,7 @@
                 </div>
               </div>
               <div
-                v-if="row.research.is_doc_refferal"
+                v-if="row.research.is_doc_refferal || row.research.is_gistology"
                 class="field"
               >
                 <div class="field-title">
@@ -1251,6 +1251,15 @@
                 <label class="field-title">Дополнительный номер</label>
                 <div class="field-value simple-value">
                   {{ data.direction.additionalNumber }}
+                </div>
+              </div>
+              <div
+                v-if="data.direction.timeGistologyReceive"
+                class="field"
+              >
+                <label class="field-title">Материал гистологии принят</label>
+                <div class="field-value simple-value">
+                  {{ data.direction.timeGistologyReceive }}
                 </div>
               </div>
             </div>
@@ -2174,6 +2183,7 @@ export default {
       || row.whoConfirmed
       || row.whoExecuted
       || this.data.direction.additionalNumber
+      || this.data.direction.timeGistologyReceive
       || this.data.direction.coExecutor
       || this.data.direction.paymentCategory;
     },

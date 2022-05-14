@@ -12,8 +12,9 @@ def custom_research_data(query_sql):
         if prev_direction != i.direction_number and step != 0:
             result.append(tmp_result.copy())
         if prev_direction != i.direction_number:
+            parent = f"#{i.parent}" if i.parent else ""
             tmp_result = {
-                "Направление": i.direction_number,
+                "Направление": f"{i.direction_number}{parent}",
                 "Пациент": i.patient_fio,
                 "Пол": i.patient_sex,
                 "Дата рождения": i.patient_birthday,
@@ -79,7 +80,7 @@ def custom_research_fill_data(ws1, result_query, row=6):
         for k in range(len_fields):
             column += 1
             title = result_query["fields"][k]
-            ws1.cell(row=r, column=column).value = i[title]
+            ws1.cell(row=r, column=column).value = i.get(title, '')
             ws1.cell(row=r, column=column).style = style_border1
         r += 1
 

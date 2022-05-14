@@ -32,6 +32,13 @@ import * as actions from '@/store/action-types';
 
 export default {
   name: 'LaboratorySelector',
+  props: {
+    withAllLabs: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
   data() {
     return {
       laboratories: [],
@@ -60,8 +67,19 @@ export default {
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
     const { rows, active } = await this.$api('laboratory/laboratories');
-    this.laboratory = active;
-    this.laboratories = rows;
+    if (this.withAllLabs) {
+      this.laboratory = -2;
+      this.laboratories = [
+        {
+          pk: -2,
+          title: 'Все лаборатории',
+        },
+        ...rows,
+      ];
+    } else {
+      this.laboratory = active;
+      this.laboratories = rows;
+    }
     await this.$store.dispatch(actions.DEC_LOADING);
     this.$root.$on('emit-laboratory', () => {
       this.emit();

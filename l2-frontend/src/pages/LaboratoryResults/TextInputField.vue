@@ -31,15 +31,94 @@
         :data-x="Math.min(r.fraction.units.length, 9)"
         :local="options"
         default-suggestion
+        :hide="showContext"
+        @contextmenu.native.prevent="handlerContext"
+        @set-id="setId"
       />
     </div>
     <div class="unit">
       {{ r.fraction.units }}
     </div>
+    <div
+      v-if="showContext"
+      v-click-outside="vcoConfig"
+      class="context-menu"
+    >
+      <div class="input-group">
+        <span class="input-group-addon">Число</span>
+        <input
+          v-model.number="ctxPowerNumber"
+          type="number"
+          class="form-control"
+          placeholder="Число"
+        >
+        <span class="input-group-addon">Степень</span>
+        <input
+          v-model.number="ctxPowerPower"
+          type="number"
+          class="form-control"
+          placeholder="Степень"
+        >
+        <div class="input-group-btn">
+          <button
+            class="btn btn-blue-nb"
+            type="button"
+            @click="applyCtxPower"
+          >
+            Дописать
+          </button>
+        </div>
+      </div>
+      <hr>
+      <div class="input-group">
+        <span class="input-group-addon">Пересчёт</span>
+        <input
+          v-model="ctxRecalc"
+          type="text"
+          class="form-control"
+          placeholder="Пересчёт"
+        >
+        <div class="input-group-btn">
+          <button
+            class="btn btn-blue-nb"
+            type="button"
+            @click="applyCtxRecalc"
+          >
+            Дописать
+          </button>
+        </div>
+      </div>
+      <hr>
+      <div class="input-group leic-group">
+        <template v-for="(v, k) in LEIC_FIELDS">
+          <span
+            :key="`s-${k}`"
+            class="input-group-addon"
+          >{{ v }}</span>
+          <input
+            :key="`v-${k}`"
+            v-model="ctxLeic[k]"
+            type="text"
+            class="form-control"
+            :placeholder="v"
+          >
+        </template>
+        <div class="input-group-btn">
+          <button
+            class="btn btn-blue-nb"
+            type="button"
+            @click="applyCtxLeic"
+          >
+            Ок
+          </button>
+        </div>
+      </div>
+    </div>
   </td>
 </template>
 
 <script lang="ts">
+import vClickOutside from 'v-click-outside';
 import * as actions from '@/store/action-types';
 import Typeahead from './Typeahead.vue';
 
@@ -181,15 +260,42 @@ function execFormula(dirData, allDirPks, formulaString, resolve) {
   }
 }
 
+const LEIC_FIELDS = {
+  p: 'п',
+  s: 'с',
+  e: 'э',
+  m: 'м',
+  l: 'л',
+  y: 'ю',
+  b: 'б',
+  pk: 'п.кл',
+};
+
+const makeLeic = () => Object.keys(LEIC_FIELDS).reduce((a, f) => ({ ...a, [f]: '' }), {});
+
 export default {
   name: 'TextInputField',
   components: { Typeahead },
+  directives: {
+    clickOutside: vClickOutside.directive,
+  },
   props: {
     readonly: {},
     moveFocusNext: {},
     r: {},
     allDirPks: {},
     dirData: {},
+  },
+  data() {
+    return {
+      showContext: false,
+      id: '',
+      ctxPowerNumber: 10,
+      ctxPowerPower: 1,
+      ctxRecalc: '',
+      LEIC_FIELDS,
+      ctxLeic: makeLeic(),
+    };
   },
   computed: {
     options() {
@@ -199,6 +305,13 @@ export default {
       }
 
       return type;
+    },
+    vcoConfig() {
+      return {
+        handler: this.onClickOutside,
+        middleware: this.middleware,
+        events: ['dblclick', 'click', 'auxclick'],
+      };
     },
   },
   methods: {
@@ -220,6 +333,45 @@ export default {
         this.$root.$emit('msg', 'error', 'Произошла ошибка рассчёта');
       }
       await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    handlerContext() {
+      this.showContext = true;
+    },
+    onClickOutside() {
+      this.showContext = false;
+    },
+    setId(id) {
+      this.id = id;
+    },
+    middleware(e) {
+      return e.target.id !== this.id || e.type !== 'auxclick';
+    },
+    applyCtxPower() {
+      // eslint-disable-next-line vue/no-mutating-props
+      this.r.value = `${this.r.value} ${this.ctxPowerNumber}<sup>${this.ctxPowerPower}</sup>`.trim();
+      this.hideContext();
+    },
+    applyCtxRecalc() {
+      // eslint-disable-next-line vue/no-mutating-props
+      this.r.value = `${this.r.value} (пересчитано${this.ctxRecalc ? ' ' : ''}${this.ctxRecalc})`.trim();
+      this.hideContext();
+      this.ctxRecalc = '';
+    },
+    applyCtxLeic() {
+      const v = Object.keys(LEIC_FIELDS).map(k => `${LEIC_FIELDS[k]}${this.ctxLeic[k]}`).join('\\');
+      // eslint-disable-next-line vue/no-mutating-props
+      this.r.value = `${this.r.value} ${v}`.trim();
+      this.hideContext();
+      this.ctxLeic = makeLeic();
+    },
+    hideContext() {
+      this.showContext = false;
+      if (this.id && window.$(`#${this.id}`).length) {
+        setTimeout(() => {
+          window.$(`#${this.id}`).focus();
+          window.$(`#${this.id}`)[0].selectionStart = window.$(`#${this.id}`)[0].value.length;
+        }, 50);
+      }
     },
   },
 };
@@ -307,5 +459,28 @@ export default {
 
 ::v-deep .twitter-typeahead {
   position: relative;
+}
+
+.context-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  min-width: 480px;
+  z-index: 999;
+  background: #c7ccd3;
+  padding: 10px;
+  border-radius: 0 0 5px 5px;
+  border: 1px solid #717e90;
+
+  hr {
+    margin: 10px 0;
+  }
+}
+
+.leic-group {
+  .input-group-addon, .form-control, .btn {
+    padding: 6px;
+  }
 }
 </style>

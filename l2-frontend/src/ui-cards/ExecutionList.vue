@@ -23,8 +23,8 @@
         <span slot="header">Создание листа исполения</span>
         <div slot="body">
           <div class="filters">
-            <div class="input-group">
-              <span class="input-group-addon">Дата приёма материала</span>
+            <div class="date-filter">
+              <div><strong>Дата приёма материала</strong></div>
               <DateRange v-model="date_range" />
             </div>
             <div style="margin-top: 10px">
@@ -129,3 +129,9 @@ export default {
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.date-filter {
+  width: 182px;
+}
+</style>

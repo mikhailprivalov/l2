@@ -405,7 +405,7 @@ const router = new Router({
       name: 'stationar',
       component: () => import('@/pages/Stationar/index.vue'),
       meta: {
-        title: 'Профили пользователей',
+        title: 'Стационар',
         groups: [
           'Врач стационара',
           't, ad, p',
@@ -512,6 +512,32 @@ const router = new Router({
           'Врач-лаборант',
           'Оператор лечащего врача',
         ],
+      },
+    },
+    {
+      path: '/ui/receive/one-by-one',
+      name: 'receive-one-by-one',
+      component: () => import('@/pages/ReceiveOneByOne.vue'),
+      meta: {
+        title: 'Приём биоматериала по одному',
+        narrowLayout: true,
+        groups: [
+          'Получатель биоматериала',
+        ],
+        showLaboratorySelector: true,
+      },
+    },
+    {
+      path: '/ui/receive/by-direction',
+      name: 'receive-by-direction',
+      component: () => import('@/pages/ReceiveByDirection.vue'),
+      meta: {
+        title: 'Поступление',
+        narrowLayout: true,
+        groups: [
+          'Поступление материала',
+        ],
+        showLaboratorySelector: true,
       },
     },
     {
