@@ -44,7 +44,6 @@ class NapravleniyaAdmin(admin.ModelAdmin):
     )
     search_fields = (
         'pk',
-        'client',
     )
 
 
