@@ -48,7 +48,7 @@
               v-model="query"
               type="text"
               class="form-control bob"
-              placeholder="Введите запрос"
+              placeholder="Введите запрос - пример: Иванов Иван 01011970"
               maxlength="255"
               @keyup.enter="search"
               @keypress="keypress"
