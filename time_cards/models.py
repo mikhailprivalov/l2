@@ -1,5 +1,8 @@
 from django.db import models
 from users.models import DoctorProfile
+from django.utils import timezone
+
+from utils.dates import try_strptime
 
 
 class Departments(models.Model):
@@ -62,6 +65,29 @@ class Posts(models.Model):
         verbose_name = 'Должность'
         verbose_name_plural = 'Должности'
 
+    @staticmethod
+    def get_posts():
+        posts = Posts.objects.all()
+        result = [{
+            "postPk": post.pk,
+            "postTitle": post.title
+        } for post in posts]
+
+        return result
+
+    @staticmethod
+    def update_post(data):
+        post = Posts.objects.get(pk=data.get("postPk", -1))
+        post.title = data.get("title", "")
+        post.save()
+        return {"postPk": post.pk, "postTitle": post.title}
+
+
+    @staticmethod
+    def get_post(post_pk):
+        post = Posts.objects.get(pk=post_pk)
+        return {"postPk": post.pk, "postTitle": post.title}
+
 
 class Employees(models.Model):
     person = models.ForeignKey(Persons, null=True, blank=True, default=None, on_delete=models.SET_NULL)
@@ -78,6 +104,64 @@ class Employees(models.Model):
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
 
+    @staticmethod
+    def get_all_employees_by_department(depart_pk):
+        employees = None
+        result = []
+        if depart_pk:
+            employees = Employees.objects.filter(department_id=depart_pk)
+        if employees:
+            result = [{
+                "personLastName": emp.person.last_name,
+                "personFirstName": emp.person.first_name,
+                "personPatronymic": emp.person.patronymic,
+                "personPk": emp.person.pk,
+                "personSnils": emp.person.snils,
+                "tabelNumber": emp.tabel_number,
+                "numberUnitTime": emp.number_unit_time,
+                "typePost": emp.type_post.title,
+                "typePostPk": emp.type_post.pk,
+                "postPk": emp.post.pk,
+                "postTitle": emp.post.title,
+                "departmentPk": depart_pk,
+            } for emp in employees]
+
+        return result
+
+
+    @staticmethod
+    def update_employee(data):
+        employee = Employees.objects.get(pk=data.get("employeePk"))
+        if data.get("postId", None):
+            employee.post_id = data.get("postId", None)
+        if data.get("type_post", None):
+            employee.type_post = data.get("type_post", None)
+        if data.get("number_unit_time", None):
+            employee.number_unit_time = data.get("number_unit_time", None)
+        if data.get("tabel_number", None):
+            employee.tabel_number = data.get("tabel_number", None)
+        employee.save()
+
+    @staticmethod
+    def get_employee(employee_pk):
+        emp = Employees.objects.get(pk=employee_pk)
+        result = {
+            "personLastName": emp.person.last_name,
+            "personFirstName": emp.person.first_name,
+            "personPatronymic": emp.person.patronymic,
+            "personPk": emp.person.pk,
+            "personSnils": emp.person.snils,
+            "tabelNumber": emp.tabel_number,
+            "numberUnitTime": emp.number_unit_time,
+            "typePost": emp.type_post.title,
+            "typePostPk": emp.type_post.pk,
+            "postPk": emp.post.pk,
+            "postTitle": emp.post.title,
+            "departmentPk": emp.department.pk,
+        }
+
+        return result
+
 
 class TabelDocuments(models.Model):
     STATUS_APPROVED = 'STATUS_APPROVED'
@@ -92,7 +176,8 @@ class TabelDocuments(models.Model):
 
     doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль автора', on_delete=models.SET_NULL)
     doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
-    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения табеля')
+    time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения табеля')
     month_tabel = models.DateField(help_text='Месяц учета', db_index=True, default=None, blank=True, null=True)
     department = models.ForeignKey(Departments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     is_actual = models.BooleanField(help_text="Акутальный", default=True)
@@ -107,6 +192,46 @@ class TabelDocuments(models.Model):
     class Meta:
         verbose_name = 'Табель-документ'
         verbose_name_plural = 'Табель-документы'
+
+    @staticmethod
+    def create_tabel_document(data, docprofile):
+        month_tabel = try_strptime(data["dateTabel"]).date()
+        department_pk = data["departmentPk"]
+        version = 1
+        parent_document = None
+        if data.get("parentDocumentPk", None):
+            parent_document = TabelDocuments.objects.get(pk=data["parentDocumentPk"])
+            version = parent_document.version + 1
+
+        td = TabelDocuments(
+            doc_confirmation=docprofile,
+            doc_confirmation_string=docprofile.get_full_fio(),
+            time_save=timezone.now(),
+            month_tabel=month_tabel,
+            department_id=department_pk,
+            is_actual=True,
+            parent_document_id=data.get("parentDocumentPk", None),
+            version=version
+        )
+        td.save()
+        if data.get("withConfirm", None):
+            td.time_confirmation = timezone.now()
+            td.status = "STATUS_CHECK"
+            if parent_document:
+                parent_document.is_actual = False
+                parent_document.save()
+            td.save()
+
+
+    @staticmethod
+    def change_status_tabel_document(tabel_pk, data, docprofile):
+        td = TabelDocuments.objects.get(pk=tabel_pk)
+        td.doc_change_status = docprofile
+        td.doc_change_status_string = docprofile.get_full_fio()
+        td.time_change_status = timezone.now()
+        td.comment_checking = data.get("commentChecking", "")
+        td.status = data.get("status", "")
+        td.save()
 
 
 class FactTimeWork(models.Model):
@@ -143,6 +268,20 @@ class DocumentFactTimeWork(models.Model):
     class Meta:
         verbose_name = 'Табель документ'
         verbose_name_plural = 'Табель документы'
+
+    @staticmethod
+    def save_fact_time_work_document(tabel_pk, data_document):
+        if tabel_pk > -1:
+            document_fact_time = DocumentFactTimeWork.objects.get(pk=tabel_pk)
+            document_fact_time.data_document = data_document
+            document_fact_time.save()
+
+    @staticmethod
+    def get_fact_time_work_document(tabel_pk):
+        if tabel_pk > -1:
+            document_fact_time = DocumentFactTimeWork.objects.get(pk=tabel_pk)
+
+
 
 
 class Holidays(models.Model):
