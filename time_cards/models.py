@@ -1,8 +1,8 @@
 from django.db import models
 from users.models import DoctorProfile
 from django.utils import timezone
-
 from utils.dates import try_strptime
+import simplejson as json
 
 
 class Departments(models.Model):
@@ -212,16 +212,15 @@ class TabelDocuments(models.Model):
             is_actual=True,
             parent_document_id=data.get("parentDocumentPk", None),
             version=version
-        )
-        td.save()
+        ).save()
         if data.get("withConfirm", None):
             td.time_confirmation = timezone.now()
             td.status = "STATUS_CHECK"
             if parent_document:
                 parent_document.is_actual = False
                 parent_document.save()
-            td.save()
 
+        td.save()
 
     @staticmethod
     def change_status_tabel_document(tabel_pk, data, docprofile):
@@ -262,6 +261,28 @@ class FactTimeWork(models.Model):
 
 
 class DocumentFactTimeWork(models.Model):
+    """
+    data_document = {"tabelDocumentPk": "", "personData": [
+                            {
+                                "snils": "121212121",
+                                "personLastname": "sds",
+                                "personFirstName": "sds",
+                                "personPatronymic": "sds",
+                                "employeeData": [
+                                    {
+                                        "postTitle": "postTitle",
+                                        "typePost": "typePost",
+                                        "departmentTitle": "departmentTitle",
+                                        "tabelNumber": "tabelNumber",
+                                        "dates": ["все даты месяца ч/з запятую"],
+                                        "nightHours": {"дата": "значение", "дата1": "значение", "дат2": "значение"},
+                                        "commonHours": {}
+                                    },
+                                ]
+                            },
+                        ]
+                    }
+    """
     tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     data_document = models.TextField(blank=True, null=True, help_text="Данные документа")
 
@@ -278,10 +299,20 @@ class DocumentFactTimeWork(models.Model):
 
     @staticmethod
     def get_fact_time_work_document(tabel_pk):
+        data = ""
         if tabel_pk > -1:
             document_fact_time = DocumentFactTimeWork.objects.get(pk=tabel_pk)
+            data = json.loads(document_fact_time)
+            for person in data.get("personData") or []:
+                for employeee in person.get("employeeData") or []:
+                    tmp_dates = sorted(employeee.get("dates", []).copy())
+                    tmp_night_hours_dates = ['' for i in range(len(tmp_dates))]
+                    tmp_night_hours = employeee.get("nightHours", {})
+                    tmp_common_hours = employeee.get("commonHours", {})
 
 
+
+        return data
 
 
 class Holidays(models.Model):

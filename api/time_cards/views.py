@@ -80,8 +80,6 @@ def staff_result_tabel(request):
     staff_models.TabelDocuments.create_tabel_document()
 
 
-
-
 @group_required("Табель проверка")
 def staff_change_status_tabel():
     pass
