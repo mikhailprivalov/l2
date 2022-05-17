@@ -1051,6 +1051,28 @@
                   </select>
                 </div>
               </div>
+              <div
+                v-if="row.research.is_gistology && paidFinSource(row.fin_source, row.fin_source_list)"
+                class="field"
+              >
+                <div class="field-title">
+                  Платная категоря
+                </div>
+                <div class="field-value">
+                  <select
+                    v-model="row.price_category"
+                    :disabled="row.confirmed"
+                  >
+                    <option
+                      v-for="o in row.price_category_list"
+                      :key="o.pk"
+                      :value="o.pk"
+                    >
+                      {{ o.title }}
+                    </option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
           <div
@@ -1233,15 +1255,6 @@
                     placeholder="Не выбрано"
                     :disabled="!l2_decriptive_coexecutor || row.whoConfirmed"
                   />
-                </div>
-              </div>
-              <div
-                v-if="data.direction.priceCategory"
-                class="field"
-              >
-                <label class="field-title">Платная категоря</label>
-                <div class="field-value simple-value">
-                  {{ data.direction.priceCategory }}
                 </div>
               </div>
               <div
@@ -1868,6 +1881,7 @@ export default {
       embeddedFull: false,
       tableFieldsErrors: {},
       workFromUsers: [],
+      priceCategory: [],
       workFromHistory: [],
       moreServices: [],
       usersLoading: false,
@@ -2178,6 +2192,14 @@ export default {
     window.$(window).off('beforeunload', this.unload);
   },
   methods: {
+    paidFinSource(currentRow, currentFinSourceList) {
+      for (const s of currentFinSourceList) {
+        if (s.pk === currentRow && s.title === 'Платно') {
+          return true;
+        }
+      }
+      return false;
+    },
     needShowAdditionalParams(row) {
       return row.whoSaved
       || row.whoConfirmed
@@ -2894,6 +2916,7 @@ export default {
       return !row.work_by;
     },
   },
+
 };
 </script>
 
