@@ -22,6 +22,7 @@ import locale
 from forms.forms_func import hosp_get_operation_data
 from results.prepare_data import table_part_result, previous_laboratory_result, previous_doc_refferal_result
 from utils.dates import normalize_dash_date
+import simplejson as json
 
 
 def form_01(c: Canvas, dir: Napravleniya):
@@ -64,6 +65,11 @@ def form_01(c: Canvas, dir: Napravleniya):
         renderPDF.draw(dir_code, c, 157 * mm, 259 * mm)
 
         objs = []
+        if dir.hospital:
+            source_hospital = dir.hospital
+            hospital_name = source_hospital.safe_short_title
+            hospital_address = source_hospital.safe_address
+            hospital_kod_ogrn = source_hospital.safe_ogrn
         opinion = [
             [
                 Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
@@ -97,41 +103,10 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'{short_title.upper()}', styleCenterBold))
         objs.append(Spacer(1, 10 * mm))
         space_symbol = '&nbsp;'
-        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.get_doc_podrazdeleniye_title()}', style))
-        objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии) пациента: {dir.client.individual.fio()}', style))
-        sex = dir.client.individual.sex
-        if sex == "м":
-            sex = f'{sex}-1'
-        else:
-            sex = f'{sex}-2'
-        objs.append(Paragraph(f'3. Пол: {sex}, {space_symbol * 5}   4. Дата рождения: число: {dir.client.individual.bd()}', style))
-        polis_num = ''
-        polis_issue = ''
-        snils = ''
-        ind_data = dir.client.get_data_individual()
-        if ind_data['oms']['polis_num']:
-            polis_num = ind_data['oms']['polis_num']
-        if ind_data['oms']['polis_issued']:
-            polis_issue = ind_data['oms']['polis_issued']
-        objs.append(Paragraph(f'5. Полис ОМС: {polis_num} с/к: {polis_issue}', style))
-        if ind_data['snils']:
-            snils = ind_data['snils']
-        objs.append(Paragraph(f'6. СНИЛС: {snils}', style))
-        address = ind_data['main_address']
-        objs.append(Paragraph(f'7. Место регистрации: {address}', style))
-        objs.append(Paragraph('8. Местность: городская — 1, сельская — 2.', style))
-
-        hosp_operation = None
-        if dir.parent and len(hosp_get_operation_data(dir.parent.napravleniye_id)) > 0:
-            hosp_operation = hosp_get_operation_data(dir.parent.napravleniye_id)[-1]
-        diagnos_after_operation = ''
-        mkb10 = ''
-        if hosp_operation:
-            diagnos_after_operation = hosp_operation['diagnos_after_operation']
-            mkb10 = hosp_operation['mkb10']
 
         direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
         descriptive_values = []
+        patient_locality = ""
         laboratory_value, purpose, table_value, main_diagnos, mkb10_code, clinical_data, method_get_material, doc_get_material = None, None, None, None, None, None, None, None
         date_get_material = '_________________________'
         time_get_material = '______________'
@@ -163,6 +138,45 @@ def form_01(c: Canvas, dir: Napravleniya):
                 time_get_material = param.value
             elif param.title == 'ФИО врача':
                 doc_get_material = param.value
+            elif param.title == 'Вид места жительства':
+                try:
+                    value = json.loads(param.value)
+                    patient_locality = f'{value.get("title", "")} -{value.get("code", "")}'
+                except:
+                    patient_locality = "Городская -1, Сельская -2"
+
+        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.get_doc_podrazdeleniye_title()}', style))
+        objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии) пациента: {dir.client.individual.fio()}', style))
+        sex = dir.client.individual.sex
+        if sex == "м":
+            sex = f'{sex}-1'
+        else:
+            sex = f'{sex}-2'
+        objs.append(Paragraph(f'3. Пол: {sex}, {space_symbol * 5}   4. Дата рождения: число: {dir.client.individual.bd()}', style))
+        polis_num = ''
+        polis_issue = ''
+        snils = ''
+        ind_data = dir.client.get_data_individual()
+        if ind_data['oms']['polis_num']:
+            polis_num = ind_data['oms']['polis_num']
+        if ind_data['oms']['polis_issued']:
+            polis_issue = ind_data['oms']['polis_issued']
+        objs.append(Paragraph(f'5. Полис ОМС: {polis_num} с/к: {polis_issue}', style))
+        if ind_data['snils']:
+            snils = ind_data['snils']
+        objs.append(Paragraph(f'6. СНИЛС: {snils}', style))
+        address = ind_data['main_address']
+        objs.append(Paragraph(f'7. Место регистрации: {address}', style))
+        objs.append(Paragraph(f'8. Местность: {patient_locality}', style))
+
+        hosp_operation = None
+        if dir.parent and len(hosp_get_operation_data(dir.parent.napravleniye_id)) > 0:
+            hosp_operation = hosp_get_operation_data(dir.parent.napravleniye_id)[-1]
+        diagnos_after_operation = ''
+        mkb10 = ''
+        if hosp_operation:
+            diagnos_after_operation = hosp_operation['diagnos_after_operation']
+            mkb10 = hosp_operation['mkb10']
 
         if main_diagnos:
             diagnos_after_operation = main_diagnos
