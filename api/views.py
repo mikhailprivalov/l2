@@ -905,7 +905,6 @@ def mkb10_dict(request, raw_response=False):
     if diag_title != "-1":
         diag_title = f"{diag_title}."
     if d != "mkb10.combined":
-        print(d)
         diag_query = get_diagnoses(d_type=d, diag_title=f"{diag_title}", diag_mkb=code)
     else:
         diag_query = get_diagnoses(d_type="mkb10.5", diag_title=f"{diag_title}", diag_mkb=code, limit=50)
