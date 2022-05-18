@@ -866,7 +866,6 @@ def directions_mark_visit(request):
                 n.visit_date = try_strptime(visit_date, ('%Y-%m-%dT%H:%M:%S.%f %z',))
             else:
                 n.visit_date = timezone.now()
-            n.save()
             n.visit_who_mark = request.user.doctorprofile
             n.save()
             cdid, ctime, ctp, rt = get_reset_time_vars(n)
