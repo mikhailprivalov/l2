@@ -135,7 +135,7 @@
                   </tr>
                   <tr v-if="direction_data.has_gistology && !visit_status && can_visit">
                     <td>
-                      Задать дату регистрации
+                      Дата регистрации
                       <input
                         v-model="manualDateVisit"
                         type="checkbox"
