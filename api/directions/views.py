@@ -1546,6 +1546,7 @@ def directions_paraclinic_form(request):
                                 "required": field.required,
                                 "helper": field.helper,
                                 "controlParam": field.control_param,
+                                "not_edit": field.not_edit,
                             }
                         )
                     iss["research"]["groups"].append(g)

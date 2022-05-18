@@ -185,11 +185,11 @@ def get_diagnoses(d_type="mkb10.4", diag_title="-1", diag_mkb="-1", limit=100):
                 WHEN %(diag_title)s != '-1' AND %(diag_mkb)s = '-1' THEN 
                   title ~* %(diag_title)s
                 WHEN %(diag_title)s = '-1' AND %(diag_mkb)s != '-1' THEN 
-                  code ~* %(diag_mkb)s
+                  code ~* %(diag_mkb)s 
               END
             AND 
             nsi_id IS NOT NULL
-            AND nsi_id != ''
+            AND nsi_id != '' and hide=false
         LIMIT %(limit)s
         """,
             params={"d_type": d_type, "diag_title": diag_title, "diag_mkb": diag_mkb, "limit": limit},
