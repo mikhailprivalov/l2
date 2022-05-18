@@ -232,16 +232,14 @@ export default {
     },
     async loadLast() {
       const { result } = await directionsPoint.lastFieldResult(this, ['iss_pk', 'clientPk'], { fieldPk: this.fpk });
-      if (result?.isJson) {
-        try {
-          const jval = JSON.parse(result.value);
-          if (jval.code && jval.title) {
-            this.content = `${jval.code} ${jval.title}`;
-            this.detailsData = jval;
-          }
-        } catch (e) {
-          console.log(e);
+      try {
+        const jval = JSON.parse(result.value);
+        if (jval.code && jval.title) {
+          this.content = `${jval.code} ${jval.title}`;
+          this.detailsData = jval;
         }
+      } catch (e) {
+        console.log(e);
       }
     },
   },

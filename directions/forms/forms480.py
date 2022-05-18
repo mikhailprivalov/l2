@@ -112,6 +112,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         time_get_material = '______________'
         is_aqua_material = '(да/нет)___________'
         purpose = 'Уточнение диагноза'
+        department = ""
 
         for param in direction_params:
             if param.field_type == 24:
@@ -144,8 +145,12 @@ def form_01(c: Canvas, dir: Napravleniya):
                     patient_locality = f'{value.get("title", "")} -{value.get("code", "")}'
                 except:
                     patient_locality = "Городская -1, Сельская -2"
+            elif param.title == 'Отделение':
+                department = param.value
+        if not dir.is_external:
+            department = dir.get_doc_podrazdeleniye_title()
 
-        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.get_doc_podrazdeleniye_title()}', style))
+        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {department}', style))
         objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии) пациента: {dir.client.individual.fio()}', style))
         sex = dir.client.individual.sex
         if sex == "м":
