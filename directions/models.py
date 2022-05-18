@@ -970,6 +970,7 @@ class Napravleniya(models.Model):
             dir.price_category_id = price_category
         if hospital > 0:
             dir.hospital_id = hospital
+            dir.is_external = True
         if save:
             dir.save()
         dir.set_polis()
