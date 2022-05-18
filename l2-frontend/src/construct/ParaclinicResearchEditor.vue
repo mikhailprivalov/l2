@@ -537,7 +537,7 @@
                       class="form-control"
                     >
                   </div>
-                  <div v-else-if="[2, 32, 33, 36].includes(row.field_type)">
+                  <div v-else-if="[2, 28, 32, 33, 34, 36].includes(row.field_type)">
                     <strong>Ссылка на поле (%):</strong>
                     <input
                       v-model="row.default"
@@ -783,6 +783,10 @@
                     v-model="row.for_med_certificate"
                     type="checkbox"
                   > в справку </label>
+                  <label v-show="[2, 14, 28, 34].includes(row.field_type)"><input
+                    v-model="row.not_edit"
+                    type="checkbox"
+                  > только чтение </label>
                   <label v-show="row.field_type === 35">
                     <input
                       v-model="row.sign_organization"
@@ -812,6 +816,7 @@
                       <option value="2">Диагноз по МКБ (1.2.643.5.1.13.13.11.1005)</option>
                       <option value="32">МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)</option>
                       <option value="33">МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)</option>
+                      <option value="34">МКБ-обычный (1.2.643.5.1.13.13.11.1005)</option>
                       <option value="36">МКБ-Комбинация (1489, 692)</option>
                       <option value="3">Расчётное</option>
                       <option value="10">Справочник</option>
@@ -1394,6 +1399,7 @@ export default {
         'direction_current_expertise',
         'show_more_services',
         'type_period',
+        'not_edit',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
