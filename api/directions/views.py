@@ -61,7 +61,7 @@ from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
-from laboratory.utils import current_year, strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time
+from laboratory.utils import current_year, strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal, result_print
@@ -831,7 +831,7 @@ def directions_mark_visit(request):
     gistology_receive_time = request_data.get("gistologyReceiveTime") or None
     visit_date = request_data.get("visitDate") or None
     if visit_date:
-        visit_date = f"{visit_date}.000113 +0800"
+        visit_date = f"{visit_date}.000113"
 
     dn = Napravleniya.objects.filter(pk=pk)
     f = False
@@ -863,7 +863,7 @@ def directions_mark_visit(request):
                         },
                     )
             if visit_date and has_gistology:
-                n.visit_date = try_strptime(visit_date, ('%Y-%m-%dT%H:%M:%S.%f %z',))
+                n.visit_date = replace_tz(try_strptime(visit_date, ('%Y-%m-%dT%H:%M:%S.%f',)))
             else:
                 n.visit_date = timezone.now()
             n.visit_who_mark = request.user.doctorprofile
