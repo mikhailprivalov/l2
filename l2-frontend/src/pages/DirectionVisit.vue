@@ -133,6 +133,28 @@
                       >
                     </td>
                   </tr>
+                  <tr v-if="direction_data.has_gistology && !visit_status && can_visit">
+                    <td>
+                      Дата регистрации
+                      <input
+                        v-model="manualDateVisit"
+                        type="checkbox"
+                        class="ml-5"
+                      >
+                    </td>
+                    <td
+                      v-if="manualDateVisit"
+                      class="cl-td"
+                    >
+                      <input
+                        v-model="visit_date"
+                        type="datetime-local"
+                        :readonly="visit_status"
+                        step="1"
+                        class="form-control"
+                      >
+                    </td>
+                  </tr>
                 </table>
               </li>
               <li
@@ -482,6 +504,7 @@ export default {
       journal_recv_data: [],
       date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       users: [],
+      manualDateVisit: false,
     };
   },
   computed: {
@@ -528,6 +551,11 @@ export default {
   watch: {
     journal_date() {
       this.load_journal();
+    },
+    manualDateVisit() {
+      if (!this.manualDateVisit) {
+        this.visit_date = '';
+      }
     },
     journal_recv_date() {
       this.load_recv_journal();
@@ -641,6 +669,7 @@ export default {
         coExecutor: this.direction_data.coExecutor,
         additionalNumber: this.direction_data.additionalNumber,
         gistologyReceiveTime: this.direction_data.gistology_receive_time,
+        visitDate: this.visit_date,
       }).then((data) => {
         if (data.ok) {
           this.visit_status = data.visit_status;
