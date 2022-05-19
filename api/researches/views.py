@@ -548,6 +548,7 @@ def researches_update(request):
                                     field_type=field.get("field_type", 0),
                                     helper=field.get("helper", ''),
                                     required=field.get("required", False),
+                                    not_edit=field.get("not_edit", False),
                                     attached=field.get("attached", ''),
                                     control_param=field.get("controlParam", ""),
                                 )
@@ -565,6 +566,7 @@ def researches_update(request):
                                 f.input_templates = json.dumps(field["values_to_input"])
                                 f.field_type = field.get("field_type", 0)
                                 f.required = field.get("required", False)
+                                f.not_edit = field.get("not_edit", False)
                                 f.for_talon = field.get("for_talon", False)
                                 f.for_med_certificate = field.get("for_med_certificate", False)
                                 f.helper = field.get("helper", '')

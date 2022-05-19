@@ -970,6 +970,7 @@ class Napravleniya(models.Model):
             dir.price_category_id = price_category
         if hospital > 0:
             dir.hospital_id = hospital
+            dir.is_external = True
         if save:
             dir.save()
         dir.set_polis()
@@ -1794,6 +1795,7 @@ class Issledovaniya(models.Model):
     )
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     fin_source = models.ForeignKey(IstochnikiFinansirovaniya, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Перезаписать источник финансирования из направления")
+    price_category = models.ForeignKey('contracts.PriceCategory', default=None, blank=True, null=True, help_text='Перезаписать категорию прайса из направления', on_delete=models.SET_NULL)
     first_time = models.BooleanField(default=False, help_text="Впервые")
     result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Результат обращения")
     outcome_illness = models.ForeignKey(Outcomes, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Исход")

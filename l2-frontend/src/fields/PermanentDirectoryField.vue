@@ -28,6 +28,7 @@ import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import Component from 'vue-class-component';
 import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
+import directionsPoint from '@/api/directions-point';
 
 @Component({
   props: {
@@ -48,6 +49,19 @@ import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
       default: false,
       type: Boolean,
     },
+    fieldPk: {
+      type: String,
+      required: false,
+    },
+    iss_pk: {
+      type: [String, Number],
+      required: false,
+    },
+    clientPk: {
+      type: Number,
+      required: false,
+      default: -1,
+    },
   },
   components: {
     SelectFieldTitled: () => import('@/fields/SelectFieldTitled.vue'),
@@ -62,6 +76,7 @@ import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
   computed: mapGetters(['permanentDirectories']),
   mounted() {
     this.validateData();
+    this.loadLast();
   },
   watch: {
     disabled() {
@@ -139,6 +154,19 @@ export default class PermanentDirectoryField extends Vue {
       this.localCode = Object.keys(this.variants)[0];
     } else {
       this.localTitle = this.variants[this.localCode] || '';
+    }
+  }
+
+  async loadLast() {
+    const { result } = await directionsPoint.lastFieldResult(this, ['iss_pk', 'clientPk', 'fieldPk']);
+    try {
+      const jval = JSON.parse(result.value);
+      if (jval.code && jval.title) {
+        this.localCode = String(jval.code);
+        this.localTitle = String(jval.title);
+      }
+    } catch (e) {
+      console.log(e);
     }
   }
 

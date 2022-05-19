@@ -124,6 +124,7 @@ class ResKeyValue(admin.ModelAdmin):
 
 class ResDiagnoses(admin.ModelAdmin):
     search_fields = ('code',)
+    list_filter = ('d_type',)
 
 
 class ResPersonContract(admin.ModelAdmin):

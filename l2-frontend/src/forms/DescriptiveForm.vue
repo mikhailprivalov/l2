@@ -109,7 +109,7 @@
               >
                 <input
                   v-model="field.value"
-                  :readonly="confirmed"
+                  :readonly="confirmed || field.not_edit"
                   class="form-control"
                   style="width: 160px"
                   type="date"
@@ -165,7 +165,7 @@
               >
                 <SearchFractionValueField
                   v-model="field.value"
-                  :readonly="confirmed"
+                  :readonly="confirmed || field.not_edit"
                   :fraction-pk="field.default_value"
                   :client-pk="patient.card_pk"
                 />
@@ -186,7 +186,7 @@
               >
                 <SearchFieldValueField
                   v-model="field.value"
-                  :readonly="confirmed"
+                  :readonly="confirmed || field.not_edit"
                   :field-pk="field.default_value"
                   :client-pk="patient.card_pk"
                   :lines="field.lines"
@@ -201,7 +201,7 @@
               >
                 <RichTextEditor
                   v-model="field.value"
-                  :readonly="confirmed"
+                  :readonly="confirmed || field.not_edit"
                   :disabled="confirmed"
                 />
               </div>
@@ -252,7 +252,7 @@
               >
                 <input
                   v-model="field.value"
-                  :readonly="confirmed"
+                  :readonly="confirmed || field.not_edit"
                   class="form-control"
                   style="width: 110px"
                   type="time"
@@ -327,7 +327,10 @@
                   v-model="field.value"
                   :oid="field.values_to_input"
                   :field-title="field.title"
-                  :disabled="confirmed"
+                  :disabled="confirmed || field.not_edit"
+                  :field-pk="field.default_value"
+                  :iss_pk="pk"
+                  :client-pk="patient.card_pk"
                 />
               </div>
               <div

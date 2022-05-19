@@ -3,6 +3,7 @@ import os
 
 from django.core.paginator import Paginator
 from cda.integration import render_cda
+from contracts.models import PriceCategory
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
 
@@ -1278,6 +1279,7 @@ def directions_paraclinic_form(request):
                 "fin_source": d.fin_title,
                 "fin_source_id": d.istochnik_f_id,
                 "priceCategory": "" if not d.price_category else d.price_category.title,
+                "priceCategoryId": "" if not d.price_category else d.price_category.pk,
                 "additionalNumber": d.register_number,
                 "timeGistologyReceive": None if not d.time_gistology_receive else strfdatetime(d.time_gistology_receive, '%d.%m.%Y %X'),
                 "coExecutor": d.co_executor_id,
@@ -1469,12 +1471,14 @@ def directions_paraclinic_form(request):
                         "purpose": i.purpose_id or -1,
                         "place": i.place_id or -1,
                         "fin_source": i.fin_source_id or ((i.napravleniye.istochnik_f_id or -1) if i.napravleniye else -1),
+                        "price_category": i.price_category_id or ((i.napravleniye.price_category_id or -1) if i.napravleniye else -1),
                         "first_time": i.first_time,
                         "result": i.result_reception_id or -1,
                         "outcome": i.outcome_illness_id or -1,
                         "diagnos": i.diagnos,
                         "purpose_list": non_selected_visible_type(VisitPurpose),
                         "fin_source_list": non_selected_visible_type(IstochnikiFinansirovaniya, {"base": i.napravleniye.client.base}) if i.napravleniye else [],
+                        "price_category_list": non_selected_visible_type(PriceCategory),
                         "place_list": non_selected_visible_type(Place),
                         "result_list": non_selected_visible_type(ResultOfTreatment),
                         "outcome_list": non_selected_visible_type(Outcomes),
@@ -1542,6 +1546,7 @@ def directions_paraclinic_form(request):
                                 "required": field.required,
                                 "helper": field.helper,
                                 "controlParam": field.control_param,
+                                "not_edit": field.not_edit,
                             }
                         )
                     iss["research"]["groups"].append(g)
@@ -1956,6 +1961,10 @@ def directions_paraclinic_result(request):
         iss.result_reception_id = none_if_minus_1(request_data.get("result"))
         iss.outcome_illness_id = none_if_minus_1(request_data.get("outcome"))
         iss.fin_source_id = none_if_minus_1(request_data.get("fin_source"))
+        if IstochnikiFinansirovaniya.objects.get(pk=int(request_data.get("fin_source"))).title == "Платно":
+            iss.price_category_id = none_if_minus_1(request_data.get("price_category"))
+        else:
+            iss.price_category_id = None
         iss.maybe_onco = request_data.get("maybe_onco", False)
         iss.diagnos = request_data.get("diagnos", "")
         iss.lab_comment = request_data.get("lab_comment", "")
