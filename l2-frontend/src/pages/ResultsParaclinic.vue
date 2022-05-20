@@ -877,7 +877,7 @@
             </div>
           </div>
           <div
-            v-if="(row.research.is_doc_refferal || row.research.is_gistology) && stat_btn"
+            v-if="(row.research.is_doc_refferal || row.research.is_gistology) && stat_btn && !is_operator_protocol"
             class="group"
           >
             <div class="group-title">
@@ -1076,7 +1076,7 @@
             </div>
           </div>
           <div
-            v-if="!data.has_microbiology && !row.is_form && !data.has_monitoring && !data.has_expertise"
+            v-if="!data.has_microbiology && !row.is_form && !data.has_monitoring && !data.has_expertise && !is_operator_protocol"
             class="group"
           >
             <div class="fields">
@@ -1238,7 +1238,7 @@
                 </div>
               </div>
               <div
-                v-if="data.direction.coExecutor || l2_decriptive_coexecutor"
+                v-if="(data.direction.coExecutor || l2_decriptive_coexecutor) && !is_operator_protocol"
                 class="field"
               >
                 <label class="field-title">Со-исполнитель</label>
@@ -1290,7 +1290,7 @@
               Сохранить
             </button>
             <button
-              v-if="!row.confirmed && can_confirm"
+              v-if="!row.confirmed && can_confirm && !is_operator_protocol"
               class="btn btn-blue-nb"
               :disabled="!r(row) || needFillWorkBy(row)"
               @click="save_and_confirm(row)"
@@ -1298,7 +1298,7 @@
               Сохранить и подтвердить
             </button>
             <button
-              v-if="row.confirmed && row.allow_reset_confirm && can_confirm"
+              v-if="row.confirmed && row.allow_reset_confirm && can_confirm && !is_operator_protocol"
               class="btn btn-blue-nb"
               @click="reset_confirm(row)"
             >
@@ -2015,6 +2015,14 @@ export default {
         }
       }
       return r;
+    },
+    is_operator_protocol() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Протокол для оператора') {
+          return true;
+        }
+      }
+      return false;
     },
     can_confirm() {
       for (const g of this.$store.getters.user_data.groups || []) {
