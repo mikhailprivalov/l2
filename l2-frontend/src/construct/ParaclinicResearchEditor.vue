@@ -1404,7 +1404,7 @@ export default {
         'show_more_services',
         'type_period',
         'not_edit',
-        'operator_enter_para,',
+        'operator_enter_param',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),

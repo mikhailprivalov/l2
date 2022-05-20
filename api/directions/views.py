@@ -1526,6 +1526,8 @@ def directions_paraclinic_form(request):
                         "visibility": group.visibility,
                     }
                     for field in group.paraclinicinputfield_set.all():
+                        if "Протокол для оператора" in g and not field.operator_enter_param:
+                            continue
                         result_field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=i, field=field).first()
                         field_type = field.field_type if not result_field else result_field.get_field_type()
                         values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + json.loads(field.input_templates)
