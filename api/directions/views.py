@@ -54,7 +54,7 @@ from directions.models import (
     MonitoringResult,
     TubesRegistration,
     DirectionParamsResult,
-    IssledovaniyaFiles,
+    IssledovaniyaFiles, IssledovaniyaResultLaborant,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -1845,6 +1845,8 @@ def directions_paraclinic_result(request):
                         val = {}
                     f_result.value_json = val
                 f_result.save()
+                if "Протокол для оператора" in g:
+                    IssledovaniyaResultLaborant.save_result_operator(iss, f, f.field_type, field["value"], request.user.doctorprofile)
                 if iss.research.is_monitoring:
                     if not MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye, field_id=field["pk"]).exists():
                         monitoring_result = MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye)[0]

@@ -1989,13 +1989,31 @@ class IssledovaniyaFiles(models.Model):
 
 class IssledovaniyaResultLaborant(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
-    research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Усоуга', db_index=True, on_delete=models.CASCADE)
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Исследование, для которого сохранен результат', on_delete=models.CASCADE)
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()
     operator_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="operator_save", db_index=True, help_text='оператор(лаборант) результата', on_delete=models.SET_NULL)
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+
+    @staticmethod
+    def save_result_operator(iss, field, field_type, value, operator):
+        if not IssledovaniyaResultLaborant.objects.filter(issledovaniye=iss, field=field).exists():
+            f_result = IssledovaniyaResultLaborant(issledovaniye=iss, field=field, value="")
+        else:
+            f_result = IssledovaniyaResultLaborant.objects.filter(issledovaniye=iss, field=field)[0]
+        f_result.value = value
+        f_result.field_type = field_type
+        if field_type in [27, 28, 29, 32, 33, 34, 35]:
+            try:
+                val = json.loads(value)
+            except:
+                val = {}
+            f_result.value_json = val
+        f_result.operator_save = operator
+        f_result.napravleniye = iss.napravleniye
+        f_result.time_save = timezone.now()
+        f_result.save()
 
     class Meta:
         verbose_name = 'Лаборант-Оператор заполнил результат'
