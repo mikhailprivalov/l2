@@ -2309,7 +2309,7 @@ def last_field_result(request):
     mother_obj = None
     mother_data = None
     if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
-        return JsonResponse({"result": {}})
+        return JsonResponse({"result": ""})
     num_dir = get_current_direction(request_data["iss_pk"])
     if c.mother:
         mother_obj = c.mother
