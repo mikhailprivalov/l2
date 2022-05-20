@@ -226,7 +226,6 @@ class ResIssledovaniyaResultLaborant(admin.ModelAdmin):
     list_display = (
         'issledovaniye',
         'napravleniye',
-        'issledovaniye',
         'field',
     )
     search_fields = ('napravleniye__pk',)
