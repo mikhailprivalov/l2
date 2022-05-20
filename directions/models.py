@@ -1994,9 +1994,7 @@ class IssledovaniyaResultLaborant(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()
-    operator_save = models.ForeignKey(
-        DoctorProfile, null=True, blank=True, related_name="operator_save", db_index=True, help_text='оператор(лаборант) результата', on_delete=models.SET_NULL
-    )
+    operator_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="operator_save", db_index=True, help_text='оператор(лаборант) результата', on_delete=models.SET_NULL)
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
 
     class Meta:
