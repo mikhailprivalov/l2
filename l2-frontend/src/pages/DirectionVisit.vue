@@ -204,6 +204,13 @@
                     >
                       Отмена
                     </button>
+                    <button
+                      v-if="direction_data.has_gistology"
+                      class="btn btn-blue-nb"
+                      @click="cancel"
+                    >
+                      Протокол
+                    </button>
                   </div>
                   <div class="col-xs-7 col-sm-7 col-md-7 col-lg-6 text-right">
                     <div>
