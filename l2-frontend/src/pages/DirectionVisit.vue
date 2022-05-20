@@ -469,7 +469,7 @@
       <span slot="header">Заполнить данные</span>
       <div
         slot="body"
-        class="monitoring-body"
+        class="protocol-body"
       >
         <iframe
           :src="toEnterUrl"
@@ -821,7 +821,7 @@ export default {
     margin-bottom: 15px;
   }
 
-.monitoring-body {
+.protocol-body {
   height: calc(100vh - 179px);
   position: relative;
 
