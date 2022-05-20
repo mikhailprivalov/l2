@@ -1187,9 +1187,8 @@ def directions_paraclinic_form(request):
         pk //= 10
     add_fr = {}
     f = False
-    g = [str(x) for x in request.user.groups.all()]
-    user_groups = g.copy()
-    is_without_limit_paraclinic = "Параклиника без ограничений" in g
+    user_groups = [str(x) for x in request.user.groups.all()]
+    is_without_limit_paraclinic = "Параклиника без ограничений" in user_groups
     if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
@@ -1327,7 +1326,7 @@ def directions_paraclinic_form(request):
                     }
                 transfer_d = Napravleniya.objects.filter(parent_auto_gen=i, cancel=False).first()
                 forbidden_edit = forbidden_edit_dir(d.pk)
-                more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
+                more_forbidden = "Врач параклиники" not in user_groups and "Врач консультаций" not in user_groups and "Врач стационара" not in user_groups and "t, ad, p" in user_groups
                 cert_researches = ResearchesCertificate.objects.filter(research=i.research)
                 general_certificate = MedicalCertificates.objects.filter(general=True)
                 for cert in cert_researches:
