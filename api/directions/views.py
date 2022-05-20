@@ -54,7 +54,8 @@ from directions.models import (
     MonitoringResult,
     TubesRegistration,
     DirectionParamsResult,
-    IssledovaniyaFiles, IssledovaniyaResultLaborant,
+    IssledovaniyaFiles,
+    IssledovaniyaResultLaborant,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
