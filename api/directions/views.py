@@ -1554,6 +1554,7 @@ def directions_paraclinic_form(request):
                                 "helper": field.helper,
                                 "controlParam": field.control_param,
                                 "not_edit": field.not_edit,
+                                "operator_enter_param": field.operator_enter_param,
                             }
                         )
                     iss["research"]["groups"].append(g)
@@ -2305,6 +2306,8 @@ def last_field_result(request):
     data = c.get_data_individual()
     mother_obj = None
     mother_data = None
+    if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
+        return JsonResponse({"result": {}})
     num_dir = get_current_direction(request_data["iss_pk"])
     if c.mother:
         mother_obj = c.mother
