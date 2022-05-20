@@ -1188,6 +1188,7 @@ def directions_paraclinic_form(request):
     add_fr = {}
     f = False
     g = [str(x) for x in request.user.groups.all()]
+    user_groups = g.copy()
     is_without_limit_paraclinic = "Параклиника без ограничений" in g
     if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
@@ -1526,7 +1527,7 @@ def directions_paraclinic_form(request):
                         "visibility": group.visibility,
                     }
                     for field in group.paraclinicinputfield_set.all():
-                        if "Протокол для оператора" in g and not field.operator_enter_param:
+                        if "Протокол для оператора" in user_groups and not field.operator_enter_param:
                             continue
                         result_field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=i, field=field).first()
                         field_type = field.field_type if not result_field else result_field.get_field_type()
