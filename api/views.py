@@ -50,6 +50,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
+from utils.xh import get_all_hospitals
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
@@ -1747,6 +1748,13 @@ def hospitals(request):
     return JsonResponse(result)
 
 
+@login_required
+def get_hospitals(request):
+    hospitals = get_all_hospitals()
+    print(hospitals)
+    return JsonResponse({"hospitals": hospitals})
+
+
 def rmis_link(request):
     d = request.user.doctorprofile
     d_pass = urllib.parse.quote(d.rmis_password or '')
@@ -2160,7 +2168,7 @@ def search_param(request):
     date_create_start = f"{year_period}-01-01 00:00:00"
     date_create_end = f"{year_period}-12-31 23:59:59"
     case_number = data.get('case_number') or '-1'
-    hospital_id = int(data.get('hospital_id') or -1)
+    hospital_id = int(data.get('hospitalId') or -1)
     date_examination_start = data.get('dateExaminationStart') or '1900-01-01'
     date_examination_end = data.get('dateExaminationEnd') or '1900-01-01'
     doc_confirm = data.get('docConfirm') or -1
@@ -2177,6 +2185,10 @@ def search_param(request):
     date_get = data.get('dateGet') or '1900-01-01'
     final_text = data.get('finalText') or ''
     rows = []
+    created_document_only_user_hosp = SettingManager.get("created_document_only_user_hosp", default='false', default_type='b')
+    user_groups = [str(x) for x in request.user.groups.all()]
+    if created_document_only_user_hosp and "Направления-все МО" not in user_groups:
+        hospital_id = request.user.doctorprofile.hospital_id
     if not search_stationar:
         result = search_data_by_param(
             date_create_start,
