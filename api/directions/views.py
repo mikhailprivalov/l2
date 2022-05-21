@@ -802,6 +802,7 @@ def directions_services(request):
                 "priceCategory": "" if not n.price_category else n.price_category.title,
                 "coExecutor": n.co_executor_id,
                 "additionalNumber": n.register_number,
+                "planedDoctorExecutor": n.planed_doctor_executor_id,
             }
             response["researches"] = researches
             response["loaded_pk"] = pk
@@ -828,6 +829,7 @@ def directions_mark_visit(request):
     pk = request_data.get("pk", -1)
     cancel = request_data.get("cancel", False)
     co_executor = request_data.get("coExecutor", None)
+    planed_doctor_executor = request_data.get("planedDoctorExecutor", None)
     register_number = request_data.get("additionalNumber", '')
     gistology_receive_time = request_data.get("gistologyReceiveTime") or None
     visit_date = request_data.get("visitDate") or None
@@ -847,6 +849,9 @@ def directions_mark_visit(request):
         if co_executor and n.co_executor_id != co_executor:
             n.co_executor_id = co_executor
             n.save(update_fields=['co_executor_id'])
+        if planed_doctor_executor and n.planed_doctor_executor_id != planed_doctor_executor:
+            n.planed_doctor_executor_id = planed_doctor_executor
+            n.save(update_fields=['planed_doctor_executor_id'])
         has_gistology = Issledovaniya.objects.filter(napravleniye_id=pk, research__is_gistology=True).exists()
 
         if not cancel:

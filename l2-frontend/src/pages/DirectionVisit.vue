@@ -155,6 +155,21 @@
                       >
                     </td>
                   </tr>
+                  <tr v-if="direction_data.has_gistology">
+                    <td>Назначенный исполнитель</td>
+                    <td class="cl-td">
+                      <Treeselect
+                        v-model="direction_data.planedDoctorExecutor"
+                        class="reeselect-noborder-left treeselect-wide treeselect-34px"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="users"
+                        placeholder="Исполнитель не выбран"
+                        :disabled="visit_status"
+                        :align="left"
+                      />
+                    </td>
+                  </tr>
                 </table>
               </li>
               <li
@@ -728,6 +743,7 @@ export default {
         pk: this.loaded_pk,
         cancel,
         coExecutor: this.direction_data.coExecutor,
+        planedDoctorExecutor: this.direction_data.planedDoctorExecutor,
         additionalNumber: this.direction_data.additionalNumber,
         gistologyReceiveTime: this.direction_data.gistology_receive_time,
         visitDate: this.visit_date,
