@@ -306,9 +306,12 @@ def directions_history(request):
     lab = set()
     lab_title = None
     person_contract_dirs = ""
-
+    created_document_only_user_hosp = SettingManager.get("created_document_only_user_hosp", default='false', default_type='b')
+    user_groups = [str(x) for x in request.user.groups.all()]
     type_service = request_data.get("type_service", None)
     for i in result_sql:
+        if created_document_only_user_hosp and i[28] != request.user.doctorprofile.hospital_id and "Направления-все МО" not in user_groups:
+            continue
         if i[14]:
             continue
         elif type_service == 'is_paraclinic' and not i[18]:
