@@ -1165,7 +1165,6 @@ def statistic_research_by_covid_base(ws1, d1, d2, research_titile):
         ("Дата заказа", 23),
         ("Код услуги", 33),
         ("Название услуги", 33),
-        ("Тест-система", 13),
         ("Дата взятия биоматериала", 13),
         ("Дата готовности результата", 13),
         ("Результат", 13),
@@ -1199,6 +1198,10 @@ def statistic_research_by_covid_base(ws1, d1, d2, research_titile):
         ("Адрес факт квартира", 23),
         ("Название лаборатории", 23),
         ("ОГРН лаборатории", 23),
+        ("ID тест системы (согласно справочнику)", 23),
+        ("Серия (партия) тест-системы", 23),
+        ("Дата производства тест-системы", 23),
+        ("Тест-система", 13),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=1, column=idx).value = column[0]
@@ -1229,26 +1232,25 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
         ws1.cell(row=r, column=4).value = i.date_create
         ws1.cell(row=r, column=5).value = i.research_code
         ws1.cell(row=r, column=6).value = i.research_title
-        ws1.cell(row=r, column=7).value = ""
-        ws1.cell(row=r, column=8).value = i.date_reciev
-        ws1.cell(row=r, column=9).value = i.date_confirm
+        ws1.cell(row=r, column=7).value = i.date_reciev
+        ws1.cell(row=r, column=8).value = i.date_confirm
         if i.value and i.method_title != "ИФА":
             val_param = 0 if 'отриц' in i.value.lower() else 1
             result_val = ""
         else:
             result_val = i.value
             val_param = ""
-        ws1.cell(row=r, column=10).value = val_param
+        ws1.cell(row=r, column=9).value = val_param
         method_val = 2 if i.method_title == "ИФА" else 1
-        ws1.cell(row=r, column=11).value = method_val
-        ws1.cell(row=r, column=12).value = result_val
-        ws1.cell(row=r, column=13).value = i.family
-        ws1.cell(row=r, column=14).value = i.name
-        ws1.cell(row=r, column=15).value = i.patronymic
-        ws1.cell(row=r, column=16).value = 1 if i.sex.lower() == "м" else 2
-        ws1.cell(row=r, column=17).value = i.born
+        ws1.cell(row=r, column=10).value = method_val
+        ws1.cell(row=r, column=10).value = result_val
+        ws1.cell(row=r, column=12).value = i.family
+        ws1.cell(row=r, column=13).value = i.name
+        ws1.cell(row=r, column=14).value = i.patronymic
+        ws1.cell(row=r, column=15).value = 1 if i.sex.lower() == "м" else 2
+        ws1.cell(row=r, column=16).value = i.born
+        ws1.cell(row=r, column=17).value = ""
         ws1.cell(row=r, column=18).value = ""
-        ws1.cell(row=r, column=19).value = ""
 
         patient_doc = patient_docs.get(i.client_id, None)
         type, serial, number, snils, polis = "", "", "", "", ""
@@ -1265,16 +1267,23 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
                         data = v.split("@")
                         serial = data[0]
                         number = data[1]
-        ws1.cell(row=r, column=20).value = type
-        ws1.cell(row=r, column=21).value = number
-        ws1.cell(row=r, column=22).value = serial
+        ws1.cell(row=r, column=19).value = type
+        ws1.cell(row=r, column=20).value = number
+        ws1.cell(row=r, column=21).value = serial
 
-        ws1.cell(row=r, column=23).value = snils
-        ws1.cell(row=r, column=24).value = polis
-        ws1.cell(row=r, column=25).value = "Иркутская область"
+        ws1.cell(row=r, column=22).value = snils
+        ws1.cell(row=r, column=23).value = polis
+        ws1.cell(row=r, column=24).value = "Иркутская область"
 
-        ws1.cell(row=r, column=39).value = i.hosp_title
-        ws1.cell(row=r, column=40).value = i.hosp_ogrn
+        ws1.cell(row=r, column=38).value = i.hosp_title
+        ws1.cell(row=r, column=39).value = i.hosp_ogrn
+        ws1.cell(row=r, column=40).value = "553407"
+        ws1.cell(row=r, column=41).value = i.hosp_ogrn
+        ws1.cell(row=r, column=42).value = i.hosp_ogrn
+        ws1.cell(row=r, column=43).value = (
+            "Набор реагентов для выявления РНК коронавируса SARS-CoV-2 тяжелого острого респираторного синдрома (COVID-19) методом полимеразной цепной "
+            "реакции «АмплиПрайм® SARS-CoV-2 DUO» по ТУ 21.20.23-083-09286667-2020"
+        )
 
         rows = ws1[f'A{r}:C{r}']
         for row in rows:
