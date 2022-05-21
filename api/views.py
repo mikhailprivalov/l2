@@ -1751,7 +1751,6 @@ def hospitals(request):
 @login_required
 def get_hospitals(request):
     hospitals = get_all_hospitals()
-    print(hospitals)
     return JsonResponse({"hospitals": hospitals})
 
 
