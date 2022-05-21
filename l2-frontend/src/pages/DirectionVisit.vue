@@ -155,6 +155,21 @@
                       >
                     </td>
                   </tr>
+                  <tr v-if="direction_data.has_gistology">
+                    <td>Назначенный исполнитель</td>
+                    <td class="cl-td">
+                      <Treeselect
+                        v-model="direction_data.planedDoctorExecutor"
+                        class="reeselect-noborder-left treeselect-wide treeselect-34px"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="users"
+                        placeholder="Исполнитель не выбран"
+                        :disabled="visit_status"
+                        :align="left"
+                      />
+                    </td>
+                  </tr>
                 </table>
               </li>
               <li
@@ -203,6 +218,13 @@
                       @click="cancel"
                     >
                       Отмена
+                    </button>
+                    <button
+                      v-if="direction_data.has_gistology"
+                      class="btn btn-blue-nb"
+                      @click="show_modal_protocol(loaded_pk)"
+                    >
+                      Протокол
                     </button>
                   </div>
                   <div class="col-xs-7 col-sm-7 col-md-7 col-lg-6 text-right">
@@ -448,6 +470,41 @@
         </div>
       </div>
     </Modal>
+    <Modal
+      v-if="toEnter"
+      v-show="showModalProtocol"
+      ref="modalProtocol"
+      white-bg="true"
+      width="100%"
+      margin-left-right="34px"
+      margin-top="30px"
+      show-footer="true"
+      @close="hide_modal_protocol"
+    >
+      <span slot="header">Заполнить данные</span>
+      <div
+        slot="body"
+        class="protocol-body"
+      >
+        <iframe
+          :src="toEnterUrl"
+          name="toEnter"
+        />
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-12">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hide_modal_protocol"
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -491,6 +548,7 @@ export default {
       direction: '',
       in_load: false,
       showModal: false,
+      showModalProtocol: false,
       researches: [],
       visit_status: false,
       receive_status: false,
@@ -505,9 +563,13 @@ export default {
       date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       users: [],
       manualDateVisit: false,
+      toEnter: null,
     };
   },
   computed: {
+    toEnterUrl() {
+      return `/ui/results/descriptive?embedded=1#{"pk":${this.toEnter}}`;
+    },
     query_int() {
       return TryParseInt(this.direction, -1);
     },
@@ -591,6 +653,20 @@ export default {
       }
       this.showModal = true;
     },
+    show_modal_protocol(pk) {
+      this.toEnter = pk;
+      if (this.$refs.modalProtocol) {
+        this.$refs.modalProtocol.$el.style.display = 'flex';
+      }
+      this.showModalProtocol = true;
+    },
+    hide_modal_protocol() {
+      this.showModalProtocol = false;
+      this.toEnter = null;
+      if (this.$refs.modalProtocol) {
+        this.$refs.modalProtocol.$el.style.display = 'none';
+      }
+    },
     cancel() {
       this.loaded_pk = -1;
       this.researches = [];
@@ -667,6 +743,7 @@ export default {
         pk: this.loaded_pk,
         cancel,
         coExecutor: this.direction_data.coExecutor,
+        planedDoctorExecutor: this.direction_data.planedDoctorExecutor,
         additionalNumber: this.direction_data.additionalNumber,
         gistologyReceiveTime: this.direction_data.gistology_receive_time,
         visitDate: this.visit_date,
@@ -759,4 +836,16 @@ export default {
     padding: 5px;
     margin-bottom: 15px;
   }
+
+.protocol-body {
+  height: calc(100vh - 179px);
+  position: relative;
+
+  iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+}
 </style>

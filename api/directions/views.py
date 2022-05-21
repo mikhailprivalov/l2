@@ -55,6 +55,7 @@ from directions.models import (
     TubesRegistration,
     DirectionParamsResult,
     IssledovaniyaFiles,
+    IssledovaniyaResultLaborant,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -305,9 +306,12 @@ def directions_history(request):
     lab = set()
     lab_title = None
     person_contract_dirs = ""
-
+    created_document_only_user_hosp = SettingManager.get("created_document_only_user_hosp", default='false', default_type='b')
+    user_groups = [str(x) for x in request.user.groups.all()]
     type_service = request_data.get("type_service", None)
     for i in result_sql:
+        if created_document_only_user_hosp and i[28] != request.user.doctorprofile.hospital_id and "Направления-все МО" not in user_groups:
+            continue
         if i[14]:
             continue
         elif type_service == 'is_paraclinic' and not i[18]:
@@ -801,6 +805,7 @@ def directions_services(request):
                 "priceCategory": "" if not n.price_category else n.price_category.title,
                 "coExecutor": n.co_executor_id,
                 "additionalNumber": n.register_number,
+                "planedDoctorExecutor": n.planed_doctor_executor_id,
             }
             response["researches"] = researches
             response["loaded_pk"] = pk
@@ -827,6 +832,7 @@ def directions_mark_visit(request):
     pk = request_data.get("pk", -1)
     cancel = request_data.get("cancel", False)
     co_executor = request_data.get("coExecutor", None)
+    planed_doctor_executor = request_data.get("planedDoctorExecutor", None)
     register_number = request_data.get("additionalNumber", '')
     gistology_receive_time = request_data.get("gistologyReceiveTime") or None
     visit_date = request_data.get("visitDate") or None
@@ -846,6 +852,9 @@ def directions_mark_visit(request):
         if co_executor and n.co_executor_id != co_executor:
             n.co_executor_id = co_executor
             n.save(update_fields=['co_executor_id'])
+        if planed_doctor_executor and n.planed_doctor_executor_id != planed_doctor_executor:
+            n.planed_doctor_executor_id = planed_doctor_executor
+            n.save(update_fields=['planed_doctor_executor_id'])
         has_gistology = Issledovaniya.objects.filter(napravleniye_id=pk, research__is_gistology=True).exists()
 
         if not cancel:
@@ -1187,8 +1196,8 @@ def directions_paraclinic_form(request):
         pk //= 10
     add_fr = {}
     f = False
-    g = [str(x) for x in request.user.groups.all()]
-    is_without_limit_paraclinic = "Параклиника без ограничений" in g
+    user_groups = [str(x) for x in request.user.groups.all()]
+    is_without_limit_paraclinic = "Параклиника без ограничений" in user_groups
     if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
@@ -1326,7 +1335,7 @@ def directions_paraclinic_form(request):
                     }
                 transfer_d = Napravleniya.objects.filter(parent_auto_gen=i, cancel=False).first()
                 forbidden_edit = forbidden_edit_dir(d.pk)
-                more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
+                more_forbidden = "Врач параклиники" not in user_groups and "Врач консультаций" not in user_groups and "Врач стационара" not in user_groups and "t, ad, p" in user_groups
                 cert_researches = ResearchesCertificate.objects.filter(research=i.research)
                 general_certificate = MedicalCertificates.objects.filter(general=True)
                 for cert in cert_researches:
@@ -1526,6 +1535,8 @@ def directions_paraclinic_form(request):
                         "visibility": group.visibility,
                     }
                     for field in group.paraclinicinputfield_set.all():
+                        if "Протокол для оператора" in user_groups and not field.operator_enter_param:
+                            continue
                         result_field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=i, field=field).first()
                         field_type = field.field_type if not result_field else result_field.get_field_type()
                         values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + json.loads(field.input_templates)
@@ -1554,6 +1565,7 @@ def directions_paraclinic_form(request):
                                 "helper": field.helper,
                                 "controlParam": field.control_param,
                                 "not_edit": field.not_edit,
+                                "operator_enter_param": field.operator_enter_param,
                             }
                         )
                     iss["research"]["groups"].append(g)
@@ -1842,6 +1854,8 @@ def directions_paraclinic_result(request):
                         val = {}
                     f_result.value_json = val
                 f_result.save()
+                if "Протокол для оператора" in g:
+                    IssledovaniyaResultLaborant.save_result_operator(iss, f, f.field_type, field["value"], request.user.doctorprofile)
                 if iss.research.is_monitoring:
                     if not MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye, field_id=field["pk"]).exists():
                         monitoring_result = MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye)[0]
@@ -2309,7 +2323,9 @@ def last_field_result(request):
     if c.mother:
         mother_obj = c.mother
         mother_data = mother_obj.get_data_individual()
-    if request_data["fieldPk"].find('%work_place') != -1:
+    if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
+        result = ""
+    elif request_data["fieldPk"].find('%work_place') != -1:
         if c.work_place:
             work_place = c.work_place
         elif c.work_place_db:

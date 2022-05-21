@@ -462,6 +462,7 @@ class Napravleniya(models.Model):
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
     co_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_co_executor", db_index=True, help_text='Со-исполнитель', on_delete=models.SET_NULL)
     register_number = models.CharField(db_column='additional_number', max_length=24, blank=True, default='', help_text="Дополнительный номер при регистрации направления", db_index=True)
+    planed_doctor_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="planed_doctor", db_index=True, help_text='Планируемый врач', on_delete=models.SET_NULL)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -1984,6 +1985,39 @@ class IssledovaniyaFiles(models.Model):
     class Meta:
         verbose_name = 'Файлы на исследование'
         verbose_name_plural = 'Файлы на исследования'
+
+
+class IssledovaniyaResultLaborant(models.Model):
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Исследование, для которого сохранен результат', on_delete=models.CASCADE)
+    field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
+    field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
+    value = models.TextField()
+    operator_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="operator_save", db_index=True, help_text='оператор(лаборант) результата', on_delete=models.SET_NULL)
+    time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+
+    @staticmethod
+    def save_result_operator(iss, field, field_type, value, operator):
+        if not IssledovaniyaResultLaborant.objects.filter(issledovaniye=iss, field=field).exists():
+            f_result = IssledovaniyaResultLaborant(issledovaniye=iss, field=field, value="")
+        else:
+            f_result = IssledovaniyaResultLaborant.objects.filter(issledovaniye=iss, field=field)[0]
+        f_result.value = value
+        f_result.field_type = field_type
+        if field_type in [27, 28, 29, 32, 33, 34, 35]:
+            try:
+                val = json.loads(value)
+            except:
+                val = {}
+            f_result.value_json = val
+        f_result.operator_save = operator
+        f_result.napravleniye = iss.napravleniye
+        f_result.time_save = timezone.now()
+        f_result.save()
+
+    class Meta:
+        verbose_name = 'Лаборант-Оператор заполнил результат'
+        verbose_name_plural = 'Лаборант-Оператор заполнил результаты'
 
 
 class MonitoringResult(models.Model):

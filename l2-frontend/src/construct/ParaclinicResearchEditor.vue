@@ -783,6 +783,10 @@
                     v-model="row.for_med_certificate"
                     type="checkbox"
                   > в справку </label>
+                  <label> <input
+                    v-model="row.operator_enter_param"
+                    type="checkbox"
+                  > оператор </label>
                   <label v-show="[2, 14, 28, 34].includes(row.field_type)"><input
                     v-model="row.not_edit"
                     type="checkbox"
@@ -1400,6 +1404,7 @@ export default {
         'show_more_services',
         'type_period',
         'not_edit',
+        'operator_enter_param',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),

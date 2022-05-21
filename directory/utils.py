@@ -58,6 +58,7 @@ def get_researches_details(pk):
                         "field_type": field.field_type,
                         "required": field.required,
                         "not_edit": field.not_edit,
+                        "operator_enter_param": field.operator_enter_param,
                         "for_talon": field.for_talon,
                         "for_med_certificate": field.for_med_certificate,
                         "helper": field.helper,
