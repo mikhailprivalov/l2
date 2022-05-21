@@ -1280,8 +1280,10 @@ def statistic_research_by_covid_data(ws1, result_patient, patient_docs):
         ws1.cell(row=r, column=40).value = "553407"
         ws1.cell(row=r, column=41).value = i.hosp_ogrn
         ws1.cell(row=r, column=42).value = i.hosp_ogrn
-        ws1.cell(row=r, column=43).value = "Набор реагентов для выявления РНК коронавируса SARS-CoV-2 тяжелого острого респираторного синдрома (COVID-19) методом полимеразной цепной " \
-                                           "реакции «АмплиПрайм® SARS-CoV-2 DUO» по ТУ 21.20.23-083-09286667-2020"
+        ws1.cell(row=r, column=43).value = (
+            "Набор реагентов для выявления РНК коронавируса SARS-CoV-2 тяжелого острого респираторного синдрома (COVID-19) методом полимеразной цепной "
+            "реакции «АмплиПрайм® SARS-CoV-2 DUO» по ТУ 21.20.23-083-09286667-2020"
+        )
 
         rows = ws1[f'A{r}:C{r}']
         for row in rows:
