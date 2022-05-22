@@ -2753,7 +2753,6 @@ def directions_created_date(request):
     return JsonResponse({"results": result})
 
 
-
 @login_required
 @group_required("Управление иерархией истории")
 def change_owner_direction(request):
