@@ -53,7 +53,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_napravleniya.parent_slave_hosp_id = %(iss_pk)s
         when %(card_id)s > -1 THEN 
         directions_napravleniya.client_id = %(card_id)s
-        when %(who_create)s > -1 THEN
+        when %(who_create)s != -1 THEN
         directions_napravleniya.doc_who_create_id = %(who_create)s
         END),
         
@@ -130,6 +130,26 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
 
         row = cursor.fetchall()
     return row
+
+
+def get_directions_by_user(d_s, d_e, who_create_dir):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """SELECT 
+            directions_napravleniya.id as direction_id
+        FROM directions_napravleniya
+        WHERE directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+        and directions_napravleniya.doc_who_create_id in %(who_create)s
+        ORDER BY directions_napravleniya.id DESC""",
+            params={
+                'd_start': d_s,
+                'd_end': d_e,
+                'who_create': who_create_dir,
+                'tz': TIME_ZONE,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
 
 
 def get_patient_contract(
