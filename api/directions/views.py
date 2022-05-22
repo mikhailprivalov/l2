@@ -74,7 +74,16 @@ from utils.common import non_selected_visible_type, none_if_minus_1, values_from
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid, short_fio_dots
-from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year, get_patient_contract
+from .sql_func import (
+    get_history_dir,
+    get_confirm_direction,
+    filter_direction_department,
+    get_lab_podr,
+    filter_direction_doctor,
+    get_confirm_direction_patient_year,
+    get_patient_contract,
+    get_directions_by_user,
+)
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
@@ -2731,6 +2740,25 @@ def directions_type_date(request):
     result_direction = list(set(confirm_direction) - set(not_confirm_direction))
 
     return JsonResponse({"results": result_direction})
+
+
+@login_required
+def directions_created_date(request):
+    request_data = json.loads(request.body)
+    user = request_data.get('user') or -1
+    dep = request_data.get('dep') or -1
+    date = request_data['date']
+    date = normalize_date(date)
+    d1 = datetime.strptime(date, '%d.%m.%Y')
+    date_start = datetime.combine(d1, dtime.min)
+    date_end = datetime.combine(d1, dtime.max)
+    user_creater = (user,)
+    if int(dep) > 0:
+        user_creater = tuple(DoctorProfile.objects.values_list('pk', flat=True).filter(podrazdeleniye_id=dep))
+    result_sql = get_directions_by_user(date_start, date_end, user_creater)
+    result = [i.direction_id for i in result_sql]
+
+    return JsonResponse({"results": result})
 
 
 @login_required
