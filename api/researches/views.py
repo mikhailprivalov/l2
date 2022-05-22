@@ -549,6 +549,7 @@ def researches_update(request):
                                     helper=field.get("helper", ''),
                                     required=field.get("required", False),
                                     not_edit=field.get("not_edit", False),
+                                    operator_enter_param=field.get("operator_enter_param", False),
                                     attached=field.get("attached", ''),
                                     control_param=field.get("controlParam", ""),
                                 )
@@ -567,6 +568,7 @@ def researches_update(request):
                                 f.field_type = field.get("field_type", 0)
                                 f.required = field.get("required", False)
                                 f.not_edit = field.get("not_edit", False)
+                                f.operator_enter_param = field.get("operator_enter_param", False)
                                 f.for_talon = field.get("for_talon", False)
                                 f.for_med_certificate = field.get("for_med_certificate", False)
                                 f.helper = field.get("helper", '')

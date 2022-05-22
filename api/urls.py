@@ -45,6 +45,7 @@ urlpatterns = [
     path('reader-status-update', views.reader_status_update),
     path('actual-districts', views.actual_districts),
     path('hospitals', views.hospitals),
+    path('get-all-hospitals', views.get_hospitals),
     path('rmis-link', views.rmis_link),
     path('permanent-directory', views.get_permanent_directory),
     path('screening/get-directory', views.screening_get_directory),

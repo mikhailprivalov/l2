@@ -16,7 +16,7 @@ import directory.models as directory
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
 from laboratory.decorators import group_required
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, BARCODE_SIZE
 from users.models import DoctorProfile
 from laboratory.utils import strdate
 from reportlab.graphics.shapes import Drawing
@@ -51,7 +51,7 @@ def tubes(request, direction_implict_id=None):
     else:
         direction_id = [direction_implict_id]
 
-    barcode_size = [int(x) for x in request.GET.get("barcode_size", "43x25").strip().split("x")]
+    barcode_size = [int(x) for x in request.GET.get("barcode_size", BARCODE_SIZE).strip().split("x")]
     barcode_type = request.GET.get("barcode_type", "std").strip()
 
     pw, ph = barcode_size[0], barcode_size[1]  # длина, ширина листа

@@ -28,6 +28,7 @@ from .models import (
     DocumentSign,
     AdditionNapravleniya,
     IssledovaniyaFiles,
+    IssledovaniyaResultLaborant,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -220,6 +221,15 @@ class ResIssledovaniyaFiles(admin.ModelAdmin):
     search_fields = ('issledovaniye__pk',)
 
 
+class ResIssledovaniyaResultLaborant(admin.ModelAdmin):
+    list_display = (
+        'issledovaniye',
+        'napravleniye',
+        'field',
+    )
+    search_fields = ('napravleniye__pk',)
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -241,3 +251,4 @@ admin.site.register(MonitoringSumFieldByDay)
 admin.site.register(MonitoringSumFieldTotal)
 admin.site.register(AdditionNapravleniya, ResAdditionNapravleniya)
 admin.site.register(IssledovaniyaFiles, ResIssledovaniyaFiles)
+admin.site.register(IssledovaniyaResultLaborant, ResIssledovaniyaResultLaborant)

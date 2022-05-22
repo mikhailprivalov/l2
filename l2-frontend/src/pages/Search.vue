@@ -192,6 +192,21 @@
                 >
               </td>
             </tr>
+            <tr v-if="canSelectHospitals">
+              <th>Организация:</th>
+              <td class="cl-td">
+                <Treeselect
+                  v-model="hospitalId"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  class="treeselect-noborder treeselect-wide"
+                  :options="hospital_ids"
+                  :append-to-body="true"
+                  placeholder="По умолчанию"
+                  :clearable="false"
+                />
+              </td>
+            </tr>
           </tbody>
         </table>
 
@@ -329,6 +344,8 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       dateReceive: '',
       dateGet: '',
       count: 0,
+      hospital_ids: [{ id: -1, label: 'По умолчанию' }],
+      hospitalId: -1,
     };
   },
   async mounted() {
@@ -342,6 +359,9 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       ],
     });
     this.usersConfirm = users;
+
+    const { hospitals } = await this.$api('get-all-hospitals');
+    this.hospital_ids = [{ id: -1, label: 'По умолчанию' }, ...hospitals];
     await this.$store.dispatch(actions.DEC_LOADING);
   },
   watch: {
@@ -363,6 +383,8 @@ export default class SearchPage extends Vue {
   year: number;
 
   research: number;
+
+  hospitalId: number;
 
   count: number;
 
@@ -400,13 +422,19 @@ export default class SearchPage extends Vue {
     return this.searchStationar;
   }
 
+  get canSelectHospitals() {
+    const groups = this.$store.getters.user_data.groups || [];
+    return groups.includes('Направления-все МО');
+  }
+
   async search() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = {
       year_period: this.year,
       research_id: this.research,
       case_number: this.caseNumber,
-      hospital_id: this.hospNumber,
+      hospitalNumber: this.hospNumber,
+      hospitalId: this.hospitalId,
       dateExaminationStart: this.hospCheck ? formatDate(this.dateExaminationRange[0]) : null,
       dateExaminationEnd: this.hospCheck ? formatDate(this.dateExaminationRange[1]) : null,
       docConfirm: this.docConfirm,
