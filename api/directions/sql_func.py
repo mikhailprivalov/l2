@@ -53,7 +53,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_napravleniya.parent_slave_hosp_id = %(iss_pk)s
         when %(card_id)s > -1 THEN 
         directions_napravleniya.client_id = %(card_id)s
-        when %(who_create)s != -1 THEN
+        when %(who_create)s > -1 THEN
         directions_napravleniya.doc_who_create_id = %(who_create)s
         END),
         
