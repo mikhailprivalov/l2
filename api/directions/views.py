@@ -2466,6 +2466,21 @@ def last_field_result(request):
         id_field = request_data["fieldPk"].split(":")
         val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()
         result = {"value": val}
+    elif request_data["fieldPk"].find('%direction#date_gistology_receive') != -1:
+        val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%Y-%m-%d")}
+    elif request_data["fieldPk"].find('%direction#time_gistology_receive') != -1:
+        val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%H:%M")}
+    elif request_data["fieldPk"].find('%direction#date_visit_date') != -1:
+        val = Napravleniya.objects.values_list('visit_date', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%Y-%m-%d")}
+    elif request_data["fieldPk"].find('%direction#time_visit_date') != -1:
+        val = Napravleniya.objects.values_list('visit_date', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%H:%M")}
+    elif request_data["fieldPk"].find('%direction#register_number') != -1:
+        val = Napravleniya.objects.values_list('register_number', flat=True).filter(pk=num_dir).first()
+        result = {"value": val}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
         current_iss = request_data["iss_pk"]
