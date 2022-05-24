@@ -2328,13 +2328,15 @@ def last_field_result(request):
     data = c.get_data_individual()
     mother_obj = None
     mother_data = None
-    num_dir = get_current_direction(request_data["iss_pk"])
+    num_dir = -1
+    if request_data.get("iss_pk", None):
+        if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
+            return JsonResponse({"result": ""})
+        num_dir = get_current_direction(request_data["iss_pk"])
     if c.mother:
         mother_obj = c.mother
         mother_data = mother_obj.get_data_individual()
-    if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
-        result = ""
-    elif request_data["fieldPk"].find('%work_place') != -1:
+    if request_data["fieldPk"].find('%work_place') != -1:
         if c.work_place:
             work_place = c.work_place
         elif c.work_place_db:
