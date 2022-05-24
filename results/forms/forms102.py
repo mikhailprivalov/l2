@@ -348,10 +348,10 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'{data["Комментарии к заключению и рекомендации"]}', style_ml))
     fwb.append(Paragraph(f'{open_bold_tag}27. Прижизненное патолого-анатомическое исследование выполнили:{close_tag_bold}', style_ml))
     fwb.append(Spacer(1, 3 * mm))
-    tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio,  styleT)
+    tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio, styleT)
     fwb.append(tbl)
     fwb.append(Spacer(1, 2 * mm))
-    tbl = gen_table("Врач-специалист, <br/>осуществляющий консультирование", data["Врач-консультант"],  styleT)
+    tbl = gen_table("Врач-специалист, <br/>осуществляющий консультирование", data["Врач-консультант"], styleT)
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
     date_str = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=iss.medical_examination)
@@ -379,7 +379,7 @@ def gen_table(title, param, styleT):
             Paragraph('м.п.', styleT),
             Paragraph('', styleT),
             Paragraph('<font size=8>(подпись)</font>', styleT),
-        ]
+        ],
     ]
 
     gentbl = Table(opinion, colWidths=(62 * mm, 5 * mm, 58 * mm, 5 * mm, 15 * mm, 5 * mm, 30 * mm))
@@ -394,4 +394,3 @@ def gen_table(title, param, styleT):
         )
     )
     return gentbl
-
