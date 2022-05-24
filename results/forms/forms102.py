@@ -351,7 +351,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio, styleT)
     fwb.append(tbl)
     fwb.append(Spacer(1, 5 * mm))
-    tbl = gen_table("Врач-специалист,<br/>осуществляющий консультирование", data["Врач-консультант"],  styleT)
+    tbl = gen_table("Врач-специалист,<br/>осуществляющий консультирование", data["Врач-консультант"], styleT)
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
     date_str = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=iss.medical_examination)
