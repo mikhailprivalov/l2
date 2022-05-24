@@ -394,4 +394,3 @@ def gen_table(title, param, styleT):
         )
     )
     return gentbl
-
