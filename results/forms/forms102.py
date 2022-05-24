@@ -350,7 +350,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Spacer(1, 3 * mm))
     tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio,  styleT)
     fwb.append(tbl)
-    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(Spacer(1, 2 * mm))
     tbl = gen_table("Врач-специалист, <br/>осуществляющий консультирование", data["Врач-консультант"],  styleT)
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
