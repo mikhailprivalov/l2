@@ -240,7 +240,7 @@ def form_02(direction, iss, fwb, doc, leftnone, user=None):
         "Врач-консультант",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
-    data= {}
+    data = {}
     for i in result:
         data[i["title"]] = i["value"]
 
