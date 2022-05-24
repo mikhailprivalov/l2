@@ -2328,13 +2328,15 @@ def last_field_result(request):
     data = c.get_data_individual()
     mother_obj = None
     mother_data = None
-    num_dir = get_current_direction(request_data["iss_pk"])
+    num_dir = -1
+    if request_data.get("iss_pk", None):
+        if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
+            return JsonResponse({"result": ""})
+        num_dir = get_current_direction(request_data["iss_pk"])
     if c.mother:
         mother_obj = c.mother
         mother_data = mother_obj.get_data_individual()
-    if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
-        result = ""
-    elif request_data["fieldPk"].find('%work_place') != -1:
+    if request_data["fieldPk"].find('%work_place') != -1:
         if c.work_place:
             work_place = c.work_place
         elif c.work_place_db:
@@ -2465,6 +2467,21 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%directionparam') != -1:
         id_field = request_data["fieldPk"].split(":")
         val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()
+        result = {"value": val}
+    elif request_data["fieldPk"].find('%direction#date_gistology_receive') != -1:
+        val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%Y-%m-%d")}
+    elif request_data["fieldPk"].find('%direction#time_gistology_receive') != -1:
+        val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%H:%M")}
+    elif request_data["fieldPk"].find('%direction#date_visit_date') != -1:
+        val = Napravleniya.objects.values_list('visit_date', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%Y-%m-%d")}
+    elif request_data["fieldPk"].find('%direction#time_visit_date') != -1:
+        val = Napravleniya.objects.values_list('visit_date', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%H:%M")}
+    elif request_data["fieldPk"].find('%direction#register_number') != -1:
+        val = Napravleniya.objects.values_list('register_number', flat=True).filter(pk=num_dir).first()
         result = {"value": val}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
