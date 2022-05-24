@@ -348,7 +348,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'{data["Комментарии к заключению и рекомендации"]}', style_ml))
     fwb.append(Paragraph(f'{open_bold_tag}27. Прижизненное патолого-анатомическое исследование выполнили:{close_tag_bold}', style_ml))
     fwb.append(Spacer(1, 3 * mm))
-    tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio,  styleT)
+    tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio, styleT)
     fwb.append(tbl)
     fwb.append(Spacer(1, 5 * mm))
     tbl = gen_table("Врач-специалист,<br/>осуществляющий консультирование", data["Врач-консультант"],  styleT)
