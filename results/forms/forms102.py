@@ -379,7 +379,7 @@ def gen_table(title, param, styleT):
             Paragraph('м.п.', styleT),
             Paragraph('', styleT),
             Paragraph('<font size=8>(подпись)</font>', styleT),
-        ]
+        ],
     ]
 
     gentbl = Table(opinion, colWidths=(62 * mm, 5 * mm, 58 * mm, 5 * mm, 15 * mm, 5 * mm, 30 * mm))
