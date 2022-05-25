@@ -95,7 +95,7 @@
                     <td>{{ direction_data.imported_org }}</td>
                   </tr>
                   <tr v-if="l2_decriptive_coexecutor">
-                    <td>Со-исполнитель</td>
+                    <td>Лаборант</td>
                     <td class="cl-td">
                       <Treeselect
                         v-model="direction_data.coExecutor"
@@ -110,7 +110,7 @@
                     </td>
                   </tr>
                   <tr v-if="l2_decriptive_additional_number">
-                    <td>Доп. номер</td>
+                    <td>Рег. номер</td>
                     <td class="cl-td">
                       <input
                         v-model.trim="direction_data.additionalNumber"
@@ -156,7 +156,7 @@
                     </td>
                   </tr>
                   <tr v-if="direction_data.has_gistology">
-                    <td>Назначенный исполнитель</td>
+                    <td>Врач</td>
                     <td class="cl-td">
                       <Treeselect
                         v-model="direction_data.planedDoctorExecutor"
