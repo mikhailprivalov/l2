@@ -101,7 +101,6 @@ class DoctorProfile(models.Model):
     not_control_anketa = models.BooleanField(default=False, blank=True, help_text='Не контролировать заполнение Анкет')
     signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
 
-
     def get_signature_stamp_pdf(self):
         # return os.path.join('doctorprofile_stamp_pdf', self.signature_stamp_pdf)
         return os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf', "kanya_oleg.jpeg")
