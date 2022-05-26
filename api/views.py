@@ -1248,7 +1248,7 @@ def load_docprofile_by_group(request):
     users_grouped = {}
     for row in users:
         if row[2] not in users_grouped:
-            users_grouped[row[2]] = {'id': f"pord-{row[2]}", 'label': row[4] or row[3], 'children': []}
+            users_grouped[row[2]] = {'id': f"{row[2]}", 'label': row[4] or row[3], 'children': []}
         users_grouped[row[2]]['children'].append({'id': str(row[0]), 'label': row[1], 'podr': row[4] or row[3]})
 
     return JsonResponse({"users": list(users_grouped.values())})
@@ -2210,7 +2210,7 @@ def search_param(request):
                 "patient_fio": i.patient_fio,
                 "patient_birthday": i.patient_birthday,
                 "patient_age": i.patient_age,
-                "hosp_title": i.hosp_title,
+                "hosp_title": i.hosp_short_title,
                 "doc_fio": i.doc_fio,
                 "direction_number": i.direction_number,
                 "field_value": i.field_value,

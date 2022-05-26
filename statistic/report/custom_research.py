@@ -14,13 +14,14 @@ def custom_research_data(query_sql):
         if prev_direction != i.direction_number:
             parent = f"#{i.parent}" if i.parent else ""
             tmp_result = {
-                "Направление": f"{i.direction_number}{parent}",
+                "Направление": f"{i.direction_number} - {parent}",
                 "Пациент": i.patient_fio,
                 "Пол": i.patient_sex,
                 "Дата рождения": i.patient_birthday,
                 "Возраст": i.patient_age,
                 "Адрес": i.patient_main_address,
                 "Исполнитель": i.doc_fio,
+                "Код врача": i.personal_code,
             }
         tmp_result[i.field_title] = i.field_value
         if i.field_title not in custom_fields:
@@ -28,7 +29,7 @@ def custom_research_data(query_sql):
         step += 1
         prev_direction = i.direction_number
     result.append(tmp_result.copy())
-    fields = ["Направление", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Исполнитель"]
+    fields = ["Направление", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Исполнитель", "Код врача"]
     fields.extend(custom_fields)
     return {"result": result, "custom_fields": custom_fields, "fields": fields}
 
@@ -53,6 +54,7 @@ def custom_research_base(ws1, d1, d2, result_query, research_title):
         ('Возраст', 10),
         ('Адрес', 40),
         ('Исполнитель', 35),
+        ('Код врача', 15),
     ]
 
     columns2 = [(i, 25) for i in result_query["custom_fields"]]

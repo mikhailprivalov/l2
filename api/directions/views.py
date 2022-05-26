@@ -74,7 +74,16 @@ from utils.common import non_selected_visible_type, none_if_minus_1, values_from
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid, short_fio_dots
-from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year, get_patient_contract
+from .sql_func import (
+    get_history_dir,
+    get_confirm_direction,
+    filter_direction_department,
+    get_lab_podr,
+    filter_direction_doctor,
+    get_confirm_direction_patient_year,
+    get_patient_contract,
+    get_directions_by_user,
+)
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
@@ -2319,13 +2328,15 @@ def last_field_result(request):
     data = c.get_data_individual()
     mother_obj = None
     mother_data = None
-    num_dir = get_current_direction(request_data["iss_pk"])
+    num_dir = -1
+    if request_data.get("iss_pk", None):
+        if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
+            return JsonResponse({"result": ""})
+        num_dir = get_current_direction(request_data["iss_pk"])
     if c.mother:
         mother_obj = c.mother
         mother_data = mother_obj.get_data_individual()
-    if Issledovaniya.objects.get(pk=request_data["iss_pk"]).time_confirmation:
-        result = ""
-    elif request_data["fieldPk"].find('%work_place') != -1:
+    if request_data["fieldPk"].find('%work_place') != -1:
         if c.work_place:
             work_place = c.work_place
         elif c.work_place_db:
@@ -2456,6 +2467,21 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%directionparam') != -1:
         id_field = request_data["fieldPk"].split(":")
         val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()
+        result = {"value": val}
+    elif request_data["fieldPk"].find('%direction#date_gistology_receive') != -1:
+        val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%Y-%m-%d")}
+    elif request_data["fieldPk"].find('%direction#time_gistology_receive') != -1:
+        val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%H:%M")}
+    elif request_data["fieldPk"].find('%direction#date_visit_date') != -1:
+        val = Napravleniya.objects.values_list('visit_date', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%Y-%m-%d")}
+    elif request_data["fieldPk"].find('%direction#time_visit_date') != -1:
+        val = Napravleniya.objects.values_list('visit_date', flat=True).filter(pk=num_dir).first()
+        result = {"value": val.strftime("%H:%M")}
+    elif request_data["fieldPk"].find('%direction#register_number') != -1:
+        val = Napravleniya.objects.values_list('register_number', flat=True).filter(pk=num_dir).first()
         result = {"value": val}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
@@ -2731,6 +2757,25 @@ def directions_type_date(request):
     result_direction = list(set(confirm_direction) - set(not_confirm_direction))
 
     return JsonResponse({"results": result_direction})
+
+
+@login_required
+def directions_created_date(request):
+    request_data = json.loads(request.body)
+    user = request_data.get('user') or -1
+    dep = request_data.get('dep') or -1
+    date = request_data['date']
+    date = normalize_date(date)
+    d1 = datetime.strptime(date, '%d.%m.%Y')
+    date_start = datetime.combine(d1, dtime.min)
+    date_end = datetime.combine(d1, dtime.max)
+    user_creater = (user,)
+    if int(dep) > 0:
+        user_creater = tuple(DoctorProfile.objects.values_list('pk', flat=True).filter(podrazdeleniye_id=dep))
+    result_sql = get_directions_by_user(date_start, date_end, user_creater)
+    result = [i.direction_id for i in result_sql]
+
+    return JsonResponse({"results": result})
 
 
 @login_required
