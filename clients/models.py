@@ -20,7 +20,7 @@ from jsonfield import JSONField
 import slog.models as slog
 from appconf.manager import SettingManager
 from clients.sql_func import last_result_researches_years
-from directory.models import Researches, ScreeningPlan
+from directory.models import Researches, ScreeningPlan, PatientControlParam
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 from django.contrib.postgres.fields import ArrayField
@@ -1696,3 +1696,17 @@ class AmbulatoryDataHistory(models.Model):
         a.text = data
         a.who_save = doc
         a.save()
+
+
+class CardControlParam(models.Model):
+    patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
+    purpose_value = models.CharField(max_length=50, help_text='Целевое значение', db_index=True)
+    date_start = models.DateField(help_text='Дата начала контроля', db_index=True, default=None, blank=True, null=True)
+    date_end = models.DateField(help_text='Дата окончания контроля', db_index=True, default=None, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.patient_control_param} - {self.purpose_value}"
+
+    class Meta:
+        verbose_name = 'Контролируемый параметр у пациента'
+        verbose_name_plural = 'Контролируемые параметры у пациента'
