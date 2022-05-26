@@ -361,7 +361,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     return fwb
 
 
-def gen_table(title, param, styleT, doctor: DoctorProfile=None):
+def gen_table(title, param, styleT, doctor: DoctorProfile = None):
     img = ""
     if doctor:
         file_jpg = doctor.get_signature_stamp_pdf()
