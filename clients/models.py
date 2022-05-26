@@ -1701,12 +1701,11 @@ class AmbulatoryDataHistory(models.Model):
 class CardControlParam(models.Model):
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
     purpose_value = models.CharField(max_length=50, help_text='Целевое значение', db_index=True)
-    actual = models.BooleanField(default=False, blank=True, db_index=True)
     date_start = models.DateField(help_text='Дата начала контроля', db_index=True, default=None, blank=True, null=True)
     date_end = models.DateField(help_text='Дата окончания контроля', db_index=True, default=None, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.patient_control_param} - {self.purpose_value} - {self.actual}"
+        return f"{self.patient_control_param} - {self.purpose_value}"
 
     class Meta:
         verbose_name = 'Контролируемый параметр у пациента'
