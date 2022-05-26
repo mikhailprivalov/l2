@@ -244,6 +244,7 @@ def search_data_by_param(
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as patient_fio,
 
                 hospitals_hospitals.title as hosp_title,
+                hospitals_hospitals.short_title as hosp_short_title,
                 hospitals_hospitals.okpo as hosp_okpo,
                 hospitals_hospitals.okato as hosp_okato,
 
