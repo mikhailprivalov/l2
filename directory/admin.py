@@ -223,7 +223,7 @@ class UnitAdmin(admin.ModelAdmin):
 
 class ResPatientControlParam(admin.ModelAdmin):
     list_display = ('title', 'code')
-    search_fields = ('title', )
+    search_fields = ('title',)
 
 
 admin.site.register(models.ResearchSite, RefSiteType)
