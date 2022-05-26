@@ -1,7 +1,8 @@
 import pytils
 
+from users.models import DoctorProfile
 from utils.dates import normalize_date
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, Indenter
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, Indenter, Image
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
@@ -348,9 +349,9 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'{data["Комментарии к заключению и рекомендации"]}', style_ml))
     fwb.append(Paragraph(f'{open_bold_tag}27. Прижизненное патолого-анатомическое исследование выполнили:{close_tag_bold}', style_ml))
     fwb.append(Spacer(1, 3 * mm))
-    tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio, styleT)
+    tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio, styleT, iss.doc_confirmation)
     fwb.append(tbl)
-    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Spacer(1, 7 * mm))
     tbl = gen_table("Врач-специалист, <br/>осуществляющий консультирование", data["Врач-консультант"], styleT)
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
@@ -360,7 +361,12 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     return fwb
 
 
-def gen_table(title, param, styleT):
+def gen_table(title, param, styleT, doctor: DoctorProfile=None):
+    img = ""
+    if doctor:
+        file_jpg = doctor.get_signature_stamp_pdf()
+        img = Image(file_jpg, 34 * mm, 34 * mm, )
+
     opinion = [
         [
             Paragraph(f'{title}', styleT),
@@ -369,7 +375,7 @@ def gen_table(title, param, styleT):
             Paragraph('', styleT),
             Paragraph('', styleT),
             Paragraph('', styleT),
-            Paragraph('', styleT),
+            img,
         ],
         [
             Paragraph('', styleT),
@@ -381,15 +387,14 @@ def gen_table(title, param, styleT):
             Paragraph('<font size=8>(подпись)</font>', styleT),
         ],
     ]
-
-    gentbl = Table(opinion, colWidths=(62 * mm, 5 * mm, 58 * mm, 5 * mm, 15 * mm, 5 * mm, 30 * mm))
+    gentbl = Table(opinion, colWidths=(62 * mm, 5 * mm, 58 * mm, 5 * mm, 15 * mm, 5 * mm, 37 * mm))
     gentbl.setStyle(
         TableStyle(
             [
-                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
                 ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
                 ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
                 ('LINEBELOW', (6, 0), (6, 0), 0.75, colors.black),
+                ('BOTTOMPADDING', (-1, 0), (-1, 0), -12 * mm),
             ]
         )
     )

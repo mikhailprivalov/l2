@@ -1,10 +1,11 @@
+import os
 import uuid
 
 from django.contrib.auth.models import User, Group
 from django.db import models, transaction
 
 from appconf.manager import SettingManager
-from laboratory.settings import EMAIL_HOST
+from laboratory.settings import EMAIL_HOST, MEDIA_ROOT
 from podrazdeleniya.models import Podrazdeleniya
 from users.tasks import send_login, send_new_email_code, send_new_password, send_old_email_code
 
@@ -98,6 +99,12 @@ class DoctorProfile(models.Model):
     date_stop_external_access = models.DateField(help_text='Окончание внешнего доступа', db_index=True, default=None, blank=True, null=True)
     district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
     not_control_anketa = models.BooleanField(default=False, blank=True, help_text='Не контролировать заполнение Анкет')
+    signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
+
+
+    def get_signature_stamp_pdf(self):
+        # return os.path.join('doctorprofile_stamp_pdf', self.signature_stamp_pdf)
+        return os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf', "kanya_oleg.jpeg")
 
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:
