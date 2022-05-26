@@ -365,7 +365,11 @@ def gen_table(title, param, styleT, doctor: DoctorProfile = None):
     img = ""
     if doctor:
         file_jpg = doctor.get_signature_stamp_pdf()
-        img = Image(file_jpg, 34 * mm, 34 * mm, )
+        img = Image(
+            file_jpg,
+            34 * mm,
+            34 * mm,
+        )
 
     opinion = [
         [
