@@ -298,6 +298,7 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                 directions_issledovaniya.napravleniye_id as direction_number,
                 directions_issledovaniya.medical_examination as date_service,
                 users_doctorprofile.fio as doc_fio,
+                users_doctorprofile.personal_code as personal_code,
                 
                 directions_napravleniya.client_id,
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as patient_fio,
