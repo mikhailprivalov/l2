@@ -395,6 +395,7 @@ def gen_table(title, param, styleT, doctor: DoctorProfile=None):
                 ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
                 ('LINEBELOW', (6, 0), (6, 0), 0.75, colors.black),
                 ('BOTTOMPADDING', (-1, 0), (-1, 0), -12 * mm),
+                ('LEFTPADDING', (-1, 0), (-1, 0), -4 * mm),
             ]
         )
     )
