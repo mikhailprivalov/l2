@@ -254,4 +254,3 @@ admin.site.register(models.ScreeningPlan, ScreeningPlanAdmin)
 admin.site.register(models.Unit, UnitAdmin)
 admin.site.register(models.MethodLaboratoryAnalisis)
 admin.site.register(models.PatientControlParam, ResPatientControlParam)
-
