@@ -221,6 +221,11 @@ class UnitAdmin(admin.ModelAdmin):
     search_fields = ('title', 'short_title', 'code')
 
 
+class ResPatientControlParam(admin.ModelAdmin):
+    list_display = ('title', 'code')
+    search_fields = ('title', )
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -248,3 +253,5 @@ admin.site.register(models.HospitalService, ResHospitalService)
 admin.site.register(models.ScreeningPlan, ScreeningPlanAdmin)
 admin.site.register(models.Unit, UnitAdmin)
 admin.site.register(models.MethodLaboratoryAnalisis)
+admin.site.register(models.PatientControlParam, ResPatientControlParam)
+

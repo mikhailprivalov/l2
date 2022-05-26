@@ -492,6 +492,18 @@ class ParaclinicInputGroups(models.Model):
         verbose_name_plural = 'Группы описательного протокола'
 
 
+class PatientControlParam(models.Model):
+    title = models.CharField(max_length=400, help_text='Название название контролируемого параметра')
+    code = models.CharField(max_length=400, help_text='Код параметра')
+
+    def __str__(self):
+        return f"{self.title} - {self.code}"
+
+    class Meta:
+        verbose_name = 'Контролируемый параметр справочник'
+        verbose_name_plural = 'Контролируемые параметры справочник'
+
+
 class ParaclinicInputField(models.Model):
     TYPES = (
         (0, 'Text'),
@@ -537,6 +549,7 @@ class ParaclinicInputField(models.Model):
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
+    patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
     order = models.IntegerField()
     default_value = models.TextField(blank=True, default='')
     input_templates = models.TextField()
@@ -554,6 +567,7 @@ class ParaclinicInputField(models.Model):
     not_edit = models.BooleanField(default=False, help_text='Не редактируемое', blank=True)
     control_param = models.TextField(default='', blank=True)
     operator_enter_param = models.BooleanField(default=False, help_text='Поле ввода для оператора(лаборанта)', blank=True)
+
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
@@ -737,6 +751,7 @@ class Fractions(models.Model):
     print_title = models.BooleanField(default=False, blank=True, verbose_name='Печатать название(Группировка)', db_index=True)
     readonly_title = models.BooleanField(default=False, blank=True, verbose_name='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
 
     def get_unit(self):
         if self.unit:
