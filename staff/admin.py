@@ -103,7 +103,12 @@ class ResHolidays(admin.ModelAdmin):
         'year',
         'day',
         'day',
-
+    list_display_links = (
+        'year',
+        'day',
+    )
+    search_fields = ('year',)
+    )
     search_fields = ('year',)
     list_display_links = (
         'year',
