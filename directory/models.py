@@ -162,6 +162,11 @@ class Researches(models.Model):
         (10001, '100.01 - Выписка из амб карты'),
     )
 
+    HTML_FORMS = (
+        (0, 'По умолчанию'),
+        (10001, '10001 - Табель'),
+    )
+
     CO_EXECUTOR_MODES = (
         (0, 'Нет'),
         (1, '1 со-исполнитель'),
@@ -224,6 +229,7 @@ class Researches(models.Model):
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
+    is_office_documentation = models.BooleanField(default=False, blank=True, help_text="Другие типы документов", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -232,6 +238,7 @@ class Researches(models.Model):
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
     result_form = models.IntegerField(default=0, blank=True, choices=RESULT_FORMS, help_text="Форма результат")
     result_title_form = models.IntegerField(default=0, blank=True, choices=RESULT_TITLE_FORMS, help_text="Форма заголовка в бланке результат")
+    html_form = models.IntegerField(default=0, blank=True, choices=HTML_FORMS, help_text="Форма html")
     size_form = models.IntegerField(default=0, blank=True, choices=TYPE_SIZE_FORM, help_text="Размеры формы результат")
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
