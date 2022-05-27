@@ -53,6 +53,13 @@ class ResEmployees(admin.ModelAdmin):
         'tabel_number',
     )
     search_fields = ('tabel_number',)
+        'last_name',
+        'tabel_number',
+        'person',
+        'department',
+        'tabel_number',
+    )
+    search_fields = ('tabel_number',)
     list_display_links = (
         'tabel_number',
         'person',
