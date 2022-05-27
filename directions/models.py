@@ -1763,6 +1763,7 @@ class Issledovaniya(models.Model):
     """
     Направления на исследования
     """
+
     STATUS_APPROVED = 'STATUS_APPROVED'
     STATUS_CHECK = 'STATUS_CHECK'
     STATUS_TO_CORRECT = 'STATUS_TO_CORRECT'
