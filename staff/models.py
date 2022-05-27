@@ -88,6 +88,7 @@ class Employees(models.Model):
     department = models.ForeignKey(Departments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     number_unit_time = models.DecimalField(max_digits=10, decimal_places=2, default=1, help_text='Кол-во единиц ставок')
     tabel_number = models.CharField(max_length=255, help_text='Табельный номер', db_index=True)
+    fired_at = models.DateTimeField(auto_now_add=True, help_text='Дата увольнения', db_index=True)
 
     def __str__(self):
         return f"{self.tabel_number} {self.person} {self.type_post} {self.department}"
