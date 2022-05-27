@@ -125,8 +125,12 @@ def form_01(c: Canvas, dir: Napravleniya):
                 purpose = param.value
             elif param.title == 'Диагноз основной':
                 main_diagnos = param.value
-            elif param.title == ' Код по МКБ':
-                mkb10_code = param.value
+            elif param.title == 'Код по МКБ':
+                try:
+                    value = json.loads(param.value)
+                    mkb10_code = value["code"]
+                except:
+                    mkb10_code = param.value
             elif param.title == 'Дополнительные клинические сведения':
                 clinical_data = param.value
             elif param.title == 'Способ получения биопсийного (операционного) материала':

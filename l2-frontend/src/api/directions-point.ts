@@ -125,5 +125,8 @@ export default generator({
   getDirectionsTypeDate: {
     url: 'directions/directions-type-date',
   },
+  getCreatedDirectionsbyDate: {
+    url: 'directions/directions-created-date',
+  },
 
 });
