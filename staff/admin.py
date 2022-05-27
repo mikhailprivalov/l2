@@ -15,7 +15,14 @@ class ResPersons(admin.ModelAdmin):
         'snils',
     )
     search_fields = ('snils',)
-
+    list_display_links = (
+        'last_name',
+        'first_name',
+        'patronymic',
+        'snils',
+    )
+    search_fields = ('snils',)
+    list_display_links = (
 
 class ResEmployees(admin.ModelAdmin):
     list_display = ('tabel_number', 'person', 'department', 'tabel_number',)
