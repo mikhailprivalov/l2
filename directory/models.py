@@ -570,8 +570,6 @@ class ParaclinicInputField(models.Model):
     not_edit = models.BooleanField(default=False, help_text='Не редактируемое', blank=True)
     control_param = models.TextField(default='', blank=True)
     operator_enter_param = models.BooleanField(default=False, help_text='Поле ввода для оператора(лаборанта)', blank=True)
-    enable_add_rows = models.BooleanField(default=False, help_text='Можно добавлять строки', blank=True)
-    set_fields = models.CharField(max_length=500, help_text='Типы полей в наборе - таблицы {"тип поля: ширина"}', blank=True, default=None, null=True)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
