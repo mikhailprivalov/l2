@@ -552,6 +552,13 @@ class ParaclinicInputField(models.Model):
         (36, 'МКБ-10(комбинация 1489, 692)'),
         (37, 'Генератор номера перинатального МСС'),
         (38, 'Procedure list result'),
+
+        (39, 'Подразделение'),
+        (40, 'Календарь-месяц'),
+        (41, 'Сотрудник-ф/л'),
+        (42, 'Сотрудник-должность'),
+
+        (1000, 'Набор из полей - таблица'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
@@ -574,6 +581,8 @@ class ParaclinicInputField(models.Model):
     not_edit = models.BooleanField(default=False, help_text='Не редактируемое', blank=True)
     control_param = models.TextField(default='', blank=True)
     operator_enter_param = models.BooleanField(default=False, help_text='Поле ввода для оператора(лаборанта)', blank=True)
+    enable_rows = models.BooleanField(default=False, help_text='Можно добавлять строки', blank=True)
+    set_fields = models.CharField(max_length=500, help_text='Типы полей в наборе - таблицы', blank=True, default=None, null=True)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type

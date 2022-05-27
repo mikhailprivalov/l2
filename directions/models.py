@@ -1763,6 +1763,15 @@ class Issledovaniya(models.Model):
     """
     Направления на исследования
     """
+    STATUS_APPROVED = 'STATUS_APPROVED'
+    STATUS_CHECK = 'STATUS_CHECK'
+    STATUS_TO_CORRECT = 'STATUS_TO_CORRECT'
+
+    STATUS_TYPES = (
+        (STATUS_APPROVED, 'Утвержден'),
+        (STATUS_CHECK, 'На проверке'),
+        (STATUS_TO_CORRECT, 'Исправить'),
+    )
 
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
@@ -1835,6 +1844,7 @@ class Issledovaniya(models.Model):
     doc_add_additional = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
+    status = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=STATUS_TYPES, help_text="Статус")
 
     @property
     def time_save_local(self):
