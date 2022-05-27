@@ -3,9 +3,10 @@ from staff import models
 
 
 class ResPersons(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name', 'patronymic', 'snils',)
-    list_display_links = ('last_name', 'first_name', 'patronymic', 'snils',)
-    search_fields = (
+    list_display = (
+        'last_name',
+        'first_name',
+        'patronymic',
         'snils',
     )
     list_display_links = (
