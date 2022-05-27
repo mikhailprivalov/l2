@@ -23,6 +23,13 @@ class ResEmployees(admin.ModelAdmin):
     search_fields = (
         'tabel_number',
     )
+    list_display_links = (
+        'tabel_number',
+        'person',
+        'department',
+        'tabel_number',
+    )
+    search_fields = ('tabel_number',)
 
     list_filter = ('department',)
 
