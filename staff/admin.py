@@ -16,28 +16,7 @@ class ResPersons(admin.ModelAdmin):
         'snils',
     )
     search_fields = ('snils',)
-    )
-        'last_name',
-        'first_name',
-        'patronymic',
-        'snils',
-    )
-    search_fields = ('snils',)
-    list_display_links = (
-        'last_name',
-        'first_name',
-        'patronymic',
-        'snils',
-    )
-    search_fields = ('snils',)
-    list_display_links = (
-        'last_name',
-        'first_name',
-        'patronymic',
-        'snils',
-    )
-    search_fields = ('snils',)
-    list_display_links = (
+
 
 class ResEmployees(admin.ModelAdmin):
     list_display = (
@@ -53,42 +32,6 @@ class ResEmployees(admin.ModelAdmin):
         'tabel_number',
     )
     search_fields = ('tabel_number',)
-        'last_name',
-        'tabel_number',
-        'person',
-        'department',
-        'tabel_number',
-    )
-    search_fields = ('tabel_number',)
-    list_display_links = (
-        'tabel_number',
-        'person',
-        'department',
-        'tabel_number',
-    )
-    search_fields = ('tabel_number',)
-    list_display_links = (
-        'tabel_number',
-        'person',
-        'department',
-        'tabel_number',
-    )
-    search_fields = ('tabel_number',)
-    list_display_links = (
-        'tabel_number',
-        'person',
-        'department',
-        'tabel_number',
-    )
-    search_fields = ('tabel_number',)
-    list_display_links = (
-        'tabel_number',
-        'person',
-        'department',
-        'tabel_number',
-    )
-    search_fields = ('tabel_number',)
-    list_display_links = (
     list_filter = ('department',)
 
 
@@ -101,34 +44,7 @@ class ResHolidays(admin.ModelAdmin):
         'year',
         'day',
     )
-    search_fields = (
-        'year',
-        'day',
-        'day',
-        'day',
-    list_display_links = (
-        'year',
-        'day',
-        'day',
-    list_display_links = (
-        'year',
-        'day',
-        'day',
-        'person',
     search_fields = ('year',)
-    )
-    search_fields = ('year',)
-    list_display_links = (
-        'year',
-        'day',
-    )
-    search_fields = ('year',)
-    list_display_links = (
-        'year',
-        'day',
-    )
-    search_fields = ('year',)
-        'department',
     list_filter = ('year',)
 
 
