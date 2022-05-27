@@ -71,8 +71,14 @@ class ResEmployees(admin.ModelAdmin):
 
 
 class ResHolidays(admin.ModelAdmin):
-    list_display = ('year', 'day',)
-    list_display_links = ('year', 'day',)
+    list_display = (
+        'year',
+        'day',
+    )
+    list_display_links = (
+        'year',
+        'day',
+    )
     search_fields = (
         'year',
         'day',
