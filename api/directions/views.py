@@ -1991,10 +1991,11 @@ def directions_paraclinic_result(request):
         iss.result_reception_id = none_if_minus_1(request_data.get("result"))
         iss.outcome_illness_id = none_if_minus_1(request_data.get("outcome"))
         iss.fin_source_id = none_if_minus_1(request_data.get("fin_source"))
-        if IstochnikiFinansirovaniya.objects.get(pk=int(request_data.get("fin_source"))).title == "Платно":
-            iss.price_category_id = none_if_minus_1(request_data.get("price_category"))
-        else:
-            iss.price_category_id = None
+        if request_data.get("fin_source", None):
+            if IstochnikiFinansirovaniya.objects.get(pk=int(request_data.get("fin_source"))).title == "Платно":
+                iss.price_category_id = none_if_minus_1(request_data.get("price_category") or -1)
+            else:
+                iss.price_category_id = None
         iss.maybe_onco = request_data.get("maybe_onco", False)
         iss.diagnos = request_data.get("diagnos", "")
         iss.lab_comment = request_data.get("lab_comment", "")

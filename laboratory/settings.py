@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'doctor_schedule',
     'django_celery_results',
     'dashboards',
+    'staff',
 )
 
 MIDDLEWARE = [
