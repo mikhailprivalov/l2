@@ -33,9 +33,10 @@ class ResPersons(admin.ModelAdmin):
     list_display_links = (
 
 class ResEmployees(admin.ModelAdmin):
-    list_display = ('tabel_number', 'person', 'department', 'tabel_number',)
-    list_display_links = ('tabel_number', 'person', 'department', 'tabel_number',)
-    search_fields = (
+    list_display = (
+        'tabel_number',
+        'person',
+        'department',
         'tabel_number',
     )
     list_display_links = (
