@@ -64,10 +64,7 @@ class Posts(models.Model):
     @staticmethod
     def get_posts():
         posts = Posts.objects.all()
-        result = [{
-            "postPk": post.pk,
-            "postTitle": post.title
-        } for post in posts]
+        result = [{"postPk": post.pk, "postTitle": post.title} for post in posts]
 
         return result
 
