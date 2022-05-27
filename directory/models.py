@@ -162,11 +162,6 @@ class Researches(models.Model):
         (10001, '100.01 - Выписка из амб карты'),
     )
 
-    HTML_FORMS = (
-        (0, 'По умолчанию'),
-        (10001, '10001 - Табель'),
-    )
-
     CO_EXECUTOR_MODES = (
         (0, 'Нет'),
         (1, '1 со-исполнитель'),
@@ -238,7 +233,6 @@ class Researches(models.Model):
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
     result_form = models.IntegerField(default=0, blank=True, choices=RESULT_FORMS, help_text="Форма результат")
     result_title_form = models.IntegerField(default=0, blank=True, choices=RESULT_TITLE_FORMS, help_text="Форма заголовка в бланке результат")
-    html_form = models.IntegerField(default=0, blank=True, choices=HTML_FORMS, help_text="Форма html")
     size_form = models.IntegerField(default=0, blank=True, choices=TYPE_SIZE_FORM, help_text="Размеры формы результат")
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
@@ -552,13 +546,8 @@ class ParaclinicInputField(models.Model):
         (36, 'МКБ-10(комбинация 1489, 692)'),
         (37, 'Генератор номера перинатального МСС'),
         (38, 'Procedure list result'),
-
         (39, 'Подразделение'),
-        (40, 'Календарь-месяц'),
-        (41, 'Сотрудник-ф/л'),
-        (42, 'Сотрудник-должность'),
-
-        (1000, 'Набор из полей - расширение'),
+        (40, 'Табель'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
