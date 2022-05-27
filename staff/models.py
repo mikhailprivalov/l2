@@ -103,20 +103,23 @@ class Employees(models.Model):
         if depart_pk:
             employees = Employees.objects.filter(department_id=depart_pk)
         if employees:
-            result = [{
-                "personLastName": emp.person.last_name,
-                "personFirstName": emp.person.first_name,
-                "personPatronymic": emp.person.patronymic,
-                "personPk": emp.person.pk,
-                "personSnils": emp.person.snils,
-                "tabelNumber": emp.tabel_number,
-                "numberUnitTime": emp.number_unit_time,
-                "typePost": emp.type_post.title,
-                "typePostPk": emp.type_post.pk,
-                "postPk": emp.post.pk,
-                "postTitle": emp.post.title,
-                "departmentPk": depart_pk,
-            } for emp in employees]
+            result = [
+                {
+                    "personLastName": emp.person.last_name,
+                    "personFirstName": emp.person.first_name,
+                    "personPatronymic": emp.person.patronymic,
+                    "personPk": emp.person.pk,
+                    "personSnils": emp.person.snils,
+                    "tabelNumber": emp.tabel_number,
+                    "numberUnitTime": emp.number_unit_time,
+                    "typePost": emp.type_post.title,
+                    "typePostPk": emp.type_post.pk,
+                    "postPk": emp.post.pk,
+                    "postTitle": emp.post.title,
+                    "departmentPk": depart_pk,
+                }
+                for emp in employees
+            ]
 
         return result
 
