@@ -14,7 +14,10 @@
         >
           {{ group.title }}
         </div>
-        <div class="fields">
+        <div
+          class="fields"
+          :class="{ 'fields-inline': group.fieldsInline }"
+        >
           <VisibilityFieldWrapper
             v-for="field in group.fields"
             :key="field.pk"
@@ -24,10 +27,10 @@
             :patient="patient"
           >
             <div
-              v-if="field.title !== '' && research.wide_headers"
+              v-if="field.title !== '' && (research.wide_headers || group.fieldsInline)"
               class="wide-field-title"
             >
-              <template v-if="field.title.endsWith('?')">
+              <template v-if="field.title.endsWith('?') || field.title.endsWith(':')">
                 {{ field.title }}
               </template>
               <template v-else>
@@ -50,7 +53,7 @@
               }"
             >
               <div
-                v-if="field.title !== '' && !research.wide_headers"
+                v-if="field.title !== '' && !research.wide_headers && !group.fieldsInline"
                 class="field-title"
               >
                 {{ field.title }}
@@ -640,5 +643,26 @@ export default {
   flex: 1 0 70px;
   padding-left: 5px;
   padding-top: 5px;
+}
+
+.fields-inline {
+  display: flex;
+  flex-direction: row;
+  justify-content: stretch;
+
+  > div {
+    align-self: stretch;
+    flex: 1 1 0;
+  }
+
+  &:not(:first-child) {
+    > div {
+      padding-left: 5px;
+    }
+  }
+
+  .wide-field-title {
+    padding-left: 0;
+  }
 }
 </style>
