@@ -16,7 +16,7 @@
         </div>
         <div
           class="fields"
-          :class="{ inLineFlex: group.fieldsInline }"
+          :class="{ 'fields-inline': group.fieldsInline }"
         >
           <VisibilityFieldWrapper
             v-for="field in group.fields"
@@ -27,10 +27,10 @@
             :patient="patient"
           >
             <div
-              v-if="field.title !== '' && research.wide_headers"
+              v-if="field.title !== '' && (research.wide_headers || group.fieldsInline)"
               class="wide-field-title"
             >
-              <template v-if="field.title.endsWith('?')">
+              <template v-if="field.title.endsWith('?') || field.title.endsWith(':')">
                 {{ field.title }}
               </template>
               <template v-else>
@@ -53,8 +53,8 @@
               }"
             >
               <div
-                v-if="field.title !== '' && !research.wide_headers"
-                :class="[group.fieldsInline ? fieldTitleInline : 'field-title']"
+                v-if="field.title !== '' && !research.wide_headers && !group.fieldsInline"
+                class="field-title"
               >
                 {{ field.title }}
               </div>
@@ -109,7 +109,6 @@
               <div
                 v-else-if="field.field_type === 1"
                 class="field-value"
-                :class="{ inLineShow: group.fieldsInline }"
               >
                 <input
                   v-model="field.value"
@@ -161,7 +160,6 @@
                   v-model="field.value"
                   :disabled="confirmed"
                   :variants="field.values_to_input"
-                  class="treeselect-wide treeselect-26px"
                 />
               </div>
               <div
@@ -178,7 +176,6 @@
               <div
                 v-else-if="field.field_type === 12"
                 class="field-value"
-                :class="[{ inLineShow: group.fieldsInline}]"
               >
                 <RadioField
                   v-model="field.value"
@@ -647,17 +644,25 @@ export default {
   padding-left: 5px;
   padding-top: 5px;
 }
-.inLineShow {
-  display: inline-block;
-  width: 150px;
-}
-.inLineFlex {
-  display: inline-flex;
-  padding-left: 5px;
-}
-.fieldTitleInline {
-  flex: 1 0 100px;
-  padding-left: 5px;
-  padding-top: 5px;
+
+.fields-inline {
+  display: flex;
+  flex-direction: row;
+  justify-content: stretch;
+
+  > div {
+    align-self: stretch;
+    flex: 1 1 0;
+  }
+
+  &:not(:first-child) {
+    > div {
+      padding-left: 5px;
+    }
+  }
+
+  .wide-field-title {
+    padding-left: 0;
+  }
 }
 </style>
