@@ -51,6 +51,7 @@ def get_researches_details(pk):
                         "for_extract_card": field.for_extract_card,
                         "sign_organization": field.sign_organization,
                         "title": field.title,
+                        "short_title": field.short_title,
                         "default": field.default_value,
                         "visibility": field.visibility,
                         "hide": field.hide,

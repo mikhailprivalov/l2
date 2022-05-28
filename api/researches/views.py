@@ -535,6 +535,7 @@ def researches_update(request):
                             if pk == -1:
                                 f = ParaclinicInputField(
                                     title=field["title"],
+                                    short_title=field.get("short_title", ""),
                                     group=g,
                                     order=field["order"],
                                     lines=field["lines"],
@@ -556,6 +557,7 @@ def researches_update(request):
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
                                 f.title = field["title"]
+                                f.short_title = field["short_title"]
                                 f.group = g
                                 f.order = field["order"]
                                 f.lines = field["lines"]
