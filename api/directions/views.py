@@ -1542,6 +1542,7 @@ def directions_paraclinic_form(request):
                         "display_hidden": False,
                         "fields": [],
                         "visibility": group.visibility,
+                        "fieldsInline": group.fields_inline,
                     }
                     for field in group.paraclinicinputfield_set.all():
                         if "Протокол для оператора" in user_groups and not field.operator_enter_param:

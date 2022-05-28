@@ -14,7 +14,10 @@
         >
           {{ group.title }}
         </div>
-        <div class="fields">
+        <div
+          class="fields"
+          :class="{ inLineFlex: group.fieldsInline }"
+        >
           <VisibilityFieldWrapper
             v-for="field in group.fields"
             :key="field.pk"
@@ -51,7 +54,7 @@
             >
               <div
                 v-if="field.title !== '' && !research.wide_headers"
-                class="field-title"
+                :class="[group.fieldsInline ? fieldTitleInline : 'field-title']"
               >
                 {{ field.title }}
               </div>
@@ -106,6 +109,7 @@
               <div
                 v-else-if="field.field_type === 1"
                 class="field-value"
+                :class="{ inLineShow: group.fieldsInline }"
               >
                 <input
                   v-model="field.value"
@@ -157,6 +161,7 @@
                   v-model="field.value"
                   :disabled="confirmed"
                   :variants="field.values_to_input"
+                  class="treeselect-wide treeselect-26px"
                 />
               </div>
               <div
@@ -173,6 +178,7 @@
               <div
                 v-else-if="field.field_type === 12"
                 class="field-value"
+                :class="[{ inLineShow: group.fieldsInline}]"
               >
                 <RadioField
                   v-model="field.value"
@@ -638,6 +644,19 @@ export default {
 <style scoped lang="scss">
 .title_anesthesia {
   flex: 1 0 70px;
+  padding-left: 5px;
+  padding-top: 5px;
+}
+.inLineShow {
+  display: inline-block;
+  width: 150px;
+}
+.inLineFlex {
+  display: inline-flex;
+  padding-left: 5px;
+}
+.fieldTitleInline {
+  flex: 1 0 100px;
   padding-left: 5px;
   padding-top: 5px;
 }

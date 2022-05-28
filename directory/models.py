@@ -483,6 +483,7 @@ class ParaclinicInputGroups(models.Model):
     order = models.IntegerField()
     hide = models.BooleanField()
     visibility = models.TextField(default='', blank=True)
+    fields_inline = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return f"{self.research.title} – {self.title}"
