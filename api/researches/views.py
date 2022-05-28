@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
+from directions.models import FrequencyOfUseResearches
 
 import users.models as users
 from api.directions.views import get_research_for_direction_params
@@ -59,7 +60,7 @@ def get_researches_templates(request):
     return JsonResponse(result)
 
 
-def get_researches(request):
+def get_researches(request, last_used=False):
     deps = defaultdict(list)
     doctorprofile = request.user.doctorprofile
     k = f'get_researches:restricted_to_direct:{doctorprofile.pk}'
@@ -103,11 +104,17 @@ def get_researches(request):
     else:
         restricted_to_direct = json.loads(restricted_to_direct)
     mk = f'get_researches:result:{get_md5(";".join([str(x) for x in restricted_to_direct]))}'
-    result = cache.get(mk)
+    result = cache.get(mk) if not last_used else None
 
     if not result:
+        q = {}
+        cnts = {}
+        if last_used:
+            res = FrequencyOfUseResearches.objects.filter(user=doctorprofile, research__hide=False, cnt__gt=0).order_by('-cnt')[:20]
+            q['pk__in'] = [x.research_id for x in res]
+            cnts = {x.research_id: x.cnt for x in res}
         res = (
-            DResearches.objects.filter(hide=False)
+            DResearches.objects.filter(hide=False, **q)
             .exclude(pk__in=restricted_to_direct)
             .select_related('podrazdeleniye', 'comment_variants')
             .prefetch_related(
@@ -182,60 +189,72 @@ def get_researches(request):
             else:
                 research_data = json.loads(research_data)
 
-            tpls = []
-            if r.is_microbiology and 'is_microbiology' not in has_morfology:
-                has_morfology['is_microbiology'] = True
-                for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True):
-                    tpls.append(at.as_research())
+            if not last_used:
+                tpls = []
+                if r.is_microbiology and 'is_microbiology' not in has_morfology:
+                    has_morfology['is_microbiology'] = True
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True):
+                        tpls.append(at.as_research())
 
-            if r.is_citology and 'is_citology' not in has_morfology:
-                has_morfology['is_citology'] = True
-                for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True):
-                    tpls.append(at.as_research())
+                if r.is_citology and 'is_citology' not in has_morfology:
+                    has_morfology['is_citology'] = True
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True):
+                        tpls.append(at.as_research())
 
-            if r.is_gistology and 'is_gistology' not in has_morfology:
-                has_morfology['is_gistology'] = True
-                for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True):
-                    tpls.append(at.as_research())
+                if r.is_gistology and 'is_gistology' not in has_morfology:
+                    has_morfology['is_gistology'] = True
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True):
+                        tpls.append(at.as_research())
 
-            if r.reversed_type not in deps:
-                if r.reversed_type > 0:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type):
-                        tpls.append(at.as_research())
-                if r.is_doc_refferal:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True):
-                        tpls.append(at.as_research())
-                if r.is_treatment:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True):
-                        tpls.append(at.as_research())
-                if r.is_stom:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True):
-                        tpls.append(at.as_research())
-                if r.is_hospital:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
-                        tpls.append(at.as_research())
-            if tpls:
-                deps[r.reversed_type].extend(tpls)
-            deps[r.reversed_type].append(research_data)
+                if r.reversed_type not in deps:
+                    if r.reversed_type > 0:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type):
+                            tpls.append(at.as_research())
+                    if r.is_doc_refferal:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True):
+                            tpls.append(at.as_research())
+                    if r.is_treatment:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True):
+                            tpls.append(at.as_research())
+                    if r.is_stom:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True):
+                            tpls.append(at.as_research())
+                    if r.is_hospital:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
+                            tpls.append(at.as_research())
+                if tpls:
+                    deps[r.reversed_type].extend(tpls)
+            deps['-109999' if last_used else r.reversed_type].append(research_data)
 
         for dk in deps:
-            deps[dk] = list(sorted(deps[dk], key=lambda d: d['title']))
-        k = 'get_researches:tubes'
-        tubes = cache.get(k)
-        if not tubes:
-            tubes = list(Tubes.objects.values('pk', 'title', 'color'))
-            cache.set(k, json.dumps(tubes), 60)
-        else:
-            tubes = json.loads(tubes)
+            if last_used:
+                deps[dk] = list(sorted(deps[dk], key=lambda d: cnts.get(d['pk'], 0), reverse=True))
+            else:
+                deps[dk] = list(sorted(deps[dk], key=lambda d: d['title']))
 
-        result = {"researches": deps, "tubes": tubes}
-        cache.set(mk, json.dumps(result), 30)
+        if not last_used:
+            k = 'get_researches:tubes'
+            tubes = cache.get(k)
+            if not tubes:
+                tubes = list(Tubes.objects.values('pk', 'title', 'color'))
+                cache.set(k, json.dumps(tubes), 60)
+            else:
+                tubes = json.loads(tubes)
+
+            result = {"researches": deps, "tubes": tubes}
+            cache.set(mk, json.dumps(result), 30)
+        else:
+            result = {"researches": deps, "cnts": cnts}
     else:
         result = json.loads(result)
 
     if hasattr(request, 'plain_response') and request.plain_response:
         return result
     return JsonResponse(result)
+
+
+def last_used_researches(request):
+    return get_researches(request, last_used=True)
 
 
 def by_direction_params(request):

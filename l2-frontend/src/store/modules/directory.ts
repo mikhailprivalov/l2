@@ -54,6 +54,11 @@ const actions = {
     commit(mutationTypes.UPDATE_RESEARCHES, { researches });
     commit(mutationTypes.UPDATE_TUBES, { tubes });
   },
+  async [actionsTypes.GET_LAST_USED_RESEARCHES]({ commit }) {
+    const answer = await researchesPoint.getLastUsedResearches();
+    const { researches } = answer;
+    commit(mutationTypes.ADD_RESEARCHES, { researches });
+  },
   async [actionsTypes.LOAD_PERMANENT_DIRECTORY]({ commit, state }, { oid }) {
     if (state.permanentDirectories[oid]) {
       return;
@@ -86,6 +91,13 @@ const mutations = {
   },
   [mutationTypes.UPDATE_RESEARCHES](state, { researches }) {
     state.researches = researches;
+    state.researches_loaded = true;
+  },
+  [mutationTypes.ADD_RESEARCHES](state, { researches }) {
+    state.researches = {
+      ...state.researches,
+      ...researches,
+    };
     state.researches_loaded = true;
   },
   [mutationTypes.UPDATE_TUBES](state, { tubes }) {
