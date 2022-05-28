@@ -1552,7 +1552,7 @@ def directions_paraclinic_form(request):
                         value = (
                             ((field.default_value if field_type not in [3, 11, 13, 14, 30] else '') if not result_field else result_field.value)
                             if field_type not in [1, 20]
-                            else (get_default_for_field(field_type) if not result_field else result_field.value)
+                            else (get_default_for_field(field_type, field.default_value) if not result_field else result_field.value)
                         )
                         if field_type in [2, 32, 33, 34, 36] and isinstance(value, str) and value.startswith('%'):
                             value = ''
@@ -1563,7 +1563,7 @@ def directions_paraclinic_form(request):
                                 "pk": field.pk,
                                 "order": field.order,
                                 "lines": field.lines,
-                                "title": field.title,
+                                "title": field.short_title if field.short_title else field.title,
                                 "hide": field.hide,
                                 "values_to_input": values_to_input,
                                 "value": value,
@@ -1612,8 +1612,8 @@ def directions_paraclinic_form(request):
     return JsonResponse(response)
 
 
-def get_default_for_field(field_type):
-    if field_type == 1:
+def get_default_for_field(field_type, default_value=None):
+    if field_type == 1 and default_value.lower() != "пусто":
         return strfdatetime(current_time(), '%Y-%m-%d')
     if field_type == 20:
         return strfdatetime(current_time(), '%H:%M')
@@ -2919,7 +2919,7 @@ def get_research_for_direction_params(pk):
                     "title": field.title,
                     "hide": field.hide,
                     "values_to_input": ([] if not field.required or field_type not in [10, 12] else ['- Не выбрано']) + json.loads(field.input_templates),
-                    "value": (field.default_value if field_type not in [3, 11, 13, 14] else '') if field_type not in [1, 20] else (get_default_for_field(field_type)),
+                    "value": (field.default_value if field_type not in [3, 11, 13, 14] else '') if field_type not in [1, 20] else (get_default_for_field(field_type, field.default_value)),
                     "field_type": field_type,
                     "default_value": field.default_value,
                     "visibility": field.visibility,

@@ -509,6 +509,12 @@
                       type="text"
                       class="form-control"
                     >
+                    <span class="input-group-addon">Синоним</span>
+                    <input
+                      v-model="row.short_title"
+                      type="text"
+                      class="form-control"
+                    >
                     <span class="input-group-addon">ID-скрепки</span>
                     <input
                       v-model="row.attached"
@@ -526,6 +532,13 @@
                     />
                     <input
                       v-else
+                      v-model="row.default"
+                      class="form-control"
+                    >
+                  </div>
+                  <div v-if="row.field_type === 1 ">
+                    <strong>Значение по умолчанию:</strong>
+                    <input
                       v-model="row.default"
                       class="form-control"
                     >

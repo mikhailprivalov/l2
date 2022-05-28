@@ -548,6 +548,7 @@ class ParaclinicInputField(models.Model):
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
+    short_title = models.CharField(max_length=400, default='', blank=True, help_text='Синоним-короткое название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
     order = models.IntegerField()
