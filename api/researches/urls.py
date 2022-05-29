@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('templates', views.get_researches_templates),
     path('all', views.get_researches),
+    path('last-used', views.last_used_researches),
     path('by-department', views.researches_by_department),
     path('params', views.researches_params),
     path('update', views.researches_update),
