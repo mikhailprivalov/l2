@@ -517,7 +517,8 @@ def researches_update(request):
                     pk = group["pk"]
                     if pk == -1:
                         g = ParaclinicInputGroups(
-                            title=group["title"], show_title=group["show_title"], research=res, order=group["order"], hide=group["hide"], visibility=group.get("visibility", "")
+                            title=group["title"], show_title=group["show_title"], research=res, order=group["order"], hide=group["hide"], visibility=group.get("visibility", ""),
+                            fields_inline=group.get("fieldsInline", False)
                         )
                     elif ParaclinicInputGroups.objects.filter(pk=pk).exists():
                         g = ParaclinicInputGroups.objects.get(pk=pk)
@@ -527,6 +528,7 @@ def researches_update(request):
                         g.order = group["order"]
                         g.hide = group["hide"]
                         g.visibility = group.get("visibility", "")
+                        g.fields_inline = group.get("fieldsInline", False)
                     if g:
                         g.save()
                         for field in group["fields"]:
@@ -612,6 +614,7 @@ def paraclinic_details(request):
             "show_title": group.show_title,
             "hide": group.hide,
             "fields": [],
+            "fieldsInline": group.fields_inline,
         }
         for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
             g["fields"].append(
