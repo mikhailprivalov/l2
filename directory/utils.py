@@ -41,8 +41,16 @@ def get_researches_details(pk):
             response["assigned_to_params"] = [f'{x.pk} – {x.get_full_short_title()}' for x in DResearches.objects.filter(direction_params=res)]
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
-            g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": [], "visibility": group.visibility,
-                 "fieldsInline": group.fields_inline}
+            g = {
+                "pk": group.pk,
+                "order": group.order,
+                "title": group.title,
+                "show_title": group.show_title,
+                "hide": group.hide,
+                "fields": [],
+                "visibility": group.visibility,
+                "fieldsInline": group.fields_inline,
+            }
             for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
                 g["fields"].append(
                     {
