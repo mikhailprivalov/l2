@@ -536,8 +536,13 @@ def researches_update(request):
                     pk = group["pk"]
                     if pk == -1:
                         g = ParaclinicInputGroups(
-                            title=group["title"], show_title=group["show_title"], research=res, order=group["order"], hide=group["hide"], visibility=group.get("visibility", ""),
-                            fields_inline=group.get("fieldsInline", False)
+                            title=group["title"],
+                            show_title=group["show_title"],
+                            research=res,
+                            order=group["order"],
+                            hide=group["hide"],
+                            visibility=group.get("visibility", ""),
+                            fields_inline=group.get("fieldsInline", False),
                         )
                     elif ParaclinicInputGroups.objects.filter(pk=pk).exists():
                         g = ParaclinicInputGroups.objects.get(pk=pk)
