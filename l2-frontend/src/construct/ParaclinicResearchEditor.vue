@@ -460,6 +460,10 @@
                 v-model="group.show_title"
                 type="checkbox"
               ></label>
+              <label v-if="!group.hide"> Поля в одну строку<input
+                v-model="group.fieldsInline"
+                type="checkbox"
+              ></label>
               <div v-else>
                 <strong>Группа скрыта.</strong>
                 <label><input
@@ -1325,6 +1329,7 @@ export default {
         fields: [],
         show_title: true,
         hide: false,
+        fieldsInline: false,
       };
       this.add_field(g);
       this.groups.push(g);
