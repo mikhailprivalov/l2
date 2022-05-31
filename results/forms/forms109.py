@@ -101,7 +101,7 @@ def tabel_52n(request_data):
     ]
     first_half_month = [Paragraph(f'{x}', style_center_data_title) for x in range(1, 16)]
     summ_day_15 = [Paragraph('Итого дней (часов) явок (неявок) с 1-15', style_center_data_title)]
-    second_half_month = [Paragraph(f'{x}', style_center_data_title) for x in range(16, last_day_month+1)]
+    second_half_month = [Paragraph(f'{x}', style_center_data_title) for x in range(16, last_day_month + 1)]
     summ_all = [
         Paragraph('Всего дней (часов) явок (неявок) за месяц', style_center_data_title),
         Paragraph('Всего отработано часов', style_center_data_title),
@@ -158,18 +158,18 @@ def tabel_52n(request_data):
         start_row += row
 
     table_style = [
-                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('SPAN', (0, 0), (0, 1)),
-                ('SPAN', (1, 0), (1, 1)),
-                ('SPAN', (2, 0), (2, 1)),
-                ('SPAN', (3, 0), (-1, 0)),
-                ('LEFTPADDING', (0, 0), (-1, -1), 1),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
-                ('TOPPADDING', (0, 0), (-1, -1), -1),
-                ('TOPPADDING', (0, 2), (-1, 2), 4),
-            ]
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('SPAN', (0, 0), (0, 1)),
+        ('SPAN', (1, 0), (1, 1)),
+        ('SPAN', (2, 0), (2, 1)),
+        ('SPAN', (3, 0), (-1, 0)),
+        ('LEFTPADDING', (0, 0), (-1, -1), 1),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
+        ('TOPPADDING', (0, 0), (-1, -1), -1),
+        ('TOPPADDING', (0, 2), (-1, 2), 4)
+    ]
     table_style.extend(col_span)
 
     col_widths = []
