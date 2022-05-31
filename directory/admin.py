@@ -175,8 +175,12 @@ class ResParaclinicInputGroups(admin.ModelAdmin):
         'title',
         'pk',
         'research',
+        'order',
     )
-    list_display_links = ('title',)
+    list_display_links = (
+        'title',
+        'order',
+    )
     list_filter = ('research',)
     search_fields = ('research__title',)
 
