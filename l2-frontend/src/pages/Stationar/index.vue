@@ -390,6 +390,20 @@
               </dropdown>
             </div>
             <div class="research-right">
+              <span class="result-by-year">
+                <ResultsByYear
+                  :card_pk="patient.cardId"
+                  is-doc-referral
+                />
+                <ResultsByYear
+                  :card_pk="patient.cardId"
+                  is-paraclinic
+                />
+                <ResultsByYear
+                  :card_pk="patient.cardId"
+                  is-lab
+                />
+              </span>
               <FileAdd
                 v-if="row.research.enabled_add_files"
                 :iss_pk="row.pk"
@@ -923,6 +937,7 @@ import patientsPoint from '@/api/patients-point';
 import UrlData from '@/UrlData';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import RadioField from '@/fields/RadioField.vue';
+import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
 import PatientCard from './PatientCard.vue';
@@ -939,6 +954,7 @@ export default {
     IssStatus,
     PatientCard,
     AmbulatoryData,
+    ResultsByYear,
     FileAdd: () => import('@/ui-cards/FileAdd.vue'),
     DirectionsHistory: () => import('@/ui-cards/DirectionsHistory/index.vue'),
     AggregateTADP: () => import('@/fields/AggregateTADP.vue'),
@@ -2187,5 +2203,8 @@ export default {
   hr {
     margin: 3px;
   }
+}
+.result-by-year {
+  padding-right: 10px;
 }
 </style>
