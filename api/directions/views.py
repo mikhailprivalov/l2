@@ -2469,6 +2469,8 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%directionparam') != -1:
         id_field = request_data["fieldPk"].split(":")
         val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()
+        if not val:
+            val = ""
         result = {"value": val}
     elif request_data["fieldPk"].find('%direction#date_gistology_receive') != -1:
         val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
