@@ -19,7 +19,6 @@ from hospitals.models import Hospitals
 from time_cards.models import DocumentFactTimeWork
 from laboratory.settings import FONTS_FOLDER
 
-
 pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
@@ -80,17 +79,17 @@ def tabel_52n(request_data):
 
     objs = []
     department_table_number = 27
-    month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now())
+    current_month_title = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now())
     current_year = datetime.date.today().year
     current_month = datetime.date.today().month
     first_day_month = 1
     last_day_month = calendar.monthrange(current_year, current_month)[1]
     tabel_type = 'первичный'
-    department_name = 'Кабинет неотложной травматологии и ортопедии (травмпункт)'
+    department_title = 'Кабинет неотложной травматологии и ортопедии (травмпункт)'
     date_now = datetime.datetime.now().strftime('%d.%m.%Y')
     main_doctor = 'Новожилов В.А.'
     head_department = 'Преториус Т.Л.'
-    old_sestra = 'Тотьямина Д.С.'
+    senior_nurse = 'Тотьямина Д.С.'
     hr_specialist = 'Краснова С.А.'
     hospital: Hospitals = request_data["hospital"]
     hospital_name = hospital.safe_short_title
@@ -100,9 +99,9 @@ def tabel_52n(request_data):
         Paragraph('', style_center_data_title),
         Paragraph('', style_center_data_title),
     ]
-    date_month_start = [Paragraph(f'{x}', style_center_data_title) for x in range(1, 16)]
+    first_half_month = [Paragraph(f'{x}', style_center_data_title) for x in range(1, 16)]
     summ_day_15 = [Paragraph('Итого дней (часов) явок (неявок) с 1-15', style_center_data_title)]
-    date_month_end = [Paragraph(f'{x}', style_center_data_title) for x in range(16, last_day_month+1)]
+    second_half_month = [Paragraph(f'{x}', style_center_data_title) for x in range(16, last_day_month+1)]
     summ_all = [
         Paragraph('Всего дней (часов) явок (неявок) за месяц', style_center_data_title),
         Paragraph('Всего отработано часов', style_center_data_title),
@@ -111,9 +110,9 @@ def tabel_52n(request_data):
         Paragraph('Праздничные', style_center_data_title),
     ]
 
-    title.extend(date_month_start)
+    title.extend(first_half_month)
     title.extend(summ_day_15)
-    title.extend(date_month_end)
+    title.extend(second_half_month)
     title.extend(summ_all)
 
     num = [Paragraph(f'{x}', style_center_data_title) for x in range(1, last_day_month + 10)]
@@ -173,26 +172,26 @@ def tabel_52n(request_data):
             ]
     table_style.extend(col_span)
 
-    col_Widths = []
+    col_widths = []
     counter = 1
     for i in range(1, last_day_month + 10):
         if counter == 1:
-            col_Widths.append(23 * mm)
+            col_widths.append(23 * mm)
         elif counter == 2:
-            col_Widths.append(10 * mm)
+            col_widths.append(10 * mm)
         elif counter == 3:
-            col_Widths.append(19 * mm)
+            col_widths.append(19 * mm)
         elif counter == 19:
-            col_Widths.append(10 * mm)
+            col_widths.append(10 * mm)
         elif counter <= last_day_month + 4:
-            col_Widths.append(5.8 * mm)
+            col_widths.append(5.8 * mm)
         elif counter == last_day_month + 5:
-            col_Widths.append(10 * mm)
+            col_widths.append(10 * mm)
         elif counter <= last_day_month + 9:
-            col_Widths.append(7.5 * mm)
+            col_widths.append(7.5 * mm)
         counter += 1
 
-    tbl = Table(opinion, colWidths=col_Widths, hAlign='LEFT', splitByRow=1, repeatRows=3)
+    tbl = Table(opinion, colWidths=col_widths, hAlign='LEFT', splitByRow=1, repeatRows=3)
     tbl.setStyle(TableStyle(table_style))
 
     objs.append(tbl)
@@ -223,7 +222,7 @@ def tabel_52n(request_data):
             ],
             [
                 Paragraph('', style_left),
-                Paragraph(f'За период с {first_day_month} по {last_day_month} {month_name} {current_year} года',
+                Paragraph(f'За период с {first_day_month} по {last_day_month} {current_month_title} {current_year} года',
                           style_center),
                 Paragraph('Дата', style_right),
                 Paragraph(f'{date_now}', style_center_title)
@@ -236,7 +235,7 @@ def tabel_52n(request_data):
             ],
             [
                 Paragraph('Структурное подразделение', style_left),
-                Paragraph(f'{department_name}', style_center_bold),
+                Paragraph(f'{department_title}', style_center_bold),
                 Paragraph('', style_right),
                 Paragraph('', style_center_title)
             ],
@@ -290,7 +289,7 @@ def tabel_52n(request_data):
         canvas.drawString(50 * mm, 27 * mm, '(подпись)')
 
         canvas.drawString(8 * mm, 21 * mm, 'Старшая медсестра')
-        canvas.drawString(75 * mm, 21 * mm, f'{old_sestra}')
+        canvas.drawString(75 * mm, 21 * mm, f'{senior_nurse}')
 
         canvas.line(7 * mm, 20 * mm, 33 * mm, 20 * mm)
         canvas.line(45 * mm, 20 * mm, 101 * mm, 20 * mm)
@@ -347,7 +346,7 @@ def tabel_52n(request_data):
             ],
             [
                 Paragraph('', style_left),
-                Paragraph(f'За период с {first_day_month} по {last_day_month} {month_name} {current_year} года',
+                Paragraph(f'За период с {first_day_month} по {last_day_month} {current_month_title} {current_year} года',
                           style_center),
                 Paragraph('Дата', style_right),
                 Paragraph(f'{date_now}', style_center_title)
@@ -360,7 +359,7 @@ def tabel_52n(request_data):
             ],
             [
                 Paragraph('Структурное подразделение', style_left),
-                Paragraph(f'{department_name}', style_center_bold),
+                Paragraph(f'{department_title}', style_center_bold),
                 Paragraph('', style_right),
                 Paragraph('', style_center_title)
             ],
@@ -414,7 +413,7 @@ def tabel_52n(request_data):
         canvas.drawString(50 * mm, 27 * mm, '(подпись)')
 
         canvas.drawString(8 * mm, 21 * mm, 'Старшая медсестра')
-        canvas.drawString(75 * mm, 21 * mm, f'{old_sestra}')
+        canvas.drawString(75 * mm, 21 * mm, f'{senior_nurse}')
 
         canvas.line(7 * mm, 20 * mm, 33 * mm, 20 * mm)
         canvas.line(45 * mm, 20 * mm, 101 * mm, 20 * mm)
