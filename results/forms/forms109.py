@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import pytils
 
@@ -94,6 +95,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     styleSmallFont = deepcopy(style)
     styleSmallFont.fontSize = 7
 
+    data = title_fields(iss)
     objs = []
     opinion = [
         [
@@ -111,8 +113,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             ]
         )
     )
-
-    objs.append(tbl)
 
     opinion = [
         [
@@ -148,7 +148,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     )
     objs.append(
         Paragraph(
-            '1. Дата начала профилактического медицинского осмотра (диспансеризации) "___"___________ 20__ г. ',
+            f'1. Дата начала профилактического медицинского осмотра (диспансеризации) {data["Дата начала "]}',
             style,
         )
     )
@@ -157,52 +157,44 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
 
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('2. Фамилия, имя, отчество (при наличии): {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), style))
+    objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии): {data["ФИО пациента"]}&nbsp; {data["Дата рождения"]} г. рождения', style))
     objs.append(
         Paragraph(
-            '3. Пол: <u>{}</u> '.format(patient_data['sex']),
+            f'3. Пол: <u>{data["Пол"]}</u> ',
+            style,
+        )
+    )
+    objs.append(Paragraph(f'4. Дата рождения  <u>{data["Дата рождения"]}</u>', style))
+
+    place_data = json.loads(data["Местность"])
+    objs.append(
+        Paragraph(
+            f'5. Местность: {place_data["title"]}-{place_data["code"]}',
+            style,
+        )
+    )
+
+    address_data = json.loads(data["Адрес регистрации"])
+    print(address_data)
+    objs.append(Paragraph(f'6. Адрес регистрации по месту жительства {address_data["address"]}', style))
+    objs.append(
+        Paragraph(
+            f'7. Код категории льготы: {data["Код категории льготы"]}',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(f'8. Принадлежность к коренным малочисленным народам Севера, Сибири и Дальнего Востока Российской Федерации: {data["Принадлежность малочисленным народам "]}', style)
+    )
+    objs.append(
+        Paragraph(
+            f'9. Занятость: {data["Занятость"]}',
             style,
         )
     )
     objs.append(
         Paragraph(
-            '4. Дата рождения  <u>{}</u> '.format(date_individual_born),
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '5. Местность: городская - 1, сельская - 2 ',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '6. Адрес регистрации по месту жительства {}'.format(person_data['fact_address']),
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '7. Код категории льготы: _____________',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '8. Принадлежность к коренным малочисленным народам Севера, Сибири и Дальнего Востока Российской Федерации:да - 1; нет - 2',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '9. Занятость: 1 - работает; 2 - не работает; 3 - обучающийся в образовательной организации по очной форме',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '10. Профилактический медицинский осмотр (первый этап диспансеризации) проводится мобильной медицинской бригадой: да - 1; нет – 2',
+            f'10. Профилактический медицинский осмотр (первый этап диспансеризации) проводится мобильной медицинской бригадой: {data["Медосмотр (1 этап) мобильно"]}',
             style,
         )
     )
@@ -214,27 +206,32 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     styleTCenter = deepcopy(styleT)
     styleTCenter.alignment = TA_CENTER
     styleTCenter.leading = 3.5 * mm
-
+    glucose = data["Глюкоза, Глюкоза"]
+    glucose = glucose.split(" ")[0]
+    holesterin = data["Холестерин (ммоль/л), Холестерин общий"]
+    holesterin = holesterin.split(" ")[0]
     opinion = [
         [
-            Paragraph('Рост ___см ', styleTCenter),
-            Paragraph('Масса тела ____ кг', styleTCenter),
-            Paragraph('индекс массы тела _______ кг/м<sup><small>2</small></sup>', styleTCenter),
+            Paragraph(f'Рост {data["рост (см)"]} см ', styleTCenter),
+            Paragraph(f'Масса тела {data["масса тела (кг)"]} кг', styleTCenter),
+            Paragraph(f'индекс массы тела {data["ИМТ"]} кг/м<sup><small>2</small></sup>', styleTCenter),
         ],
         [
-            Paragraph('артериальное давление на периферических артериях __________ мм рт.ст. ', styleSign),
-            Paragraph('прием гипотензивных лекарственных препаратов:да      нет', styleSign),
-            Paragraph('внутриглазное давление _____ мм рт.с', styleSign),
+            Paragraph(f'артериальное давление на периферических артериях {data["АД (мм рт.ст)"]} мм рт.ст. ', styleSign),
+            Paragraph(f'прием гипотензивных лекарственных препаратов: {data["прием гипотензивных ЛП"]}', styleSign),
+            Paragraph(f'внутриглазное давление {data["внутриглазное давление (мм рт.ст.)"]} мм рт.с', styleSign),
         ],
         [
-            Paragraph('уровень общего холестери на в крови _____ ммоль/л ', styleSign),
-            Paragraph('прием гипогликемических лекарственных препаратов: да      нет', styleSign),
-            Paragraph('уровень глюкозы в крови натощак _____ ммоль/л', styleSign),
+            Paragraph(f'уровень общего холестерина в крови {holesterin} ммоль/л', styleSign),
+            Paragraph(f'прием гипогликемических лекарственных препаратов: {data["Прием гипогликемических ЛП"]}', styleSign),
+            Paragraph(f'уровень глюкозы в крови натощак {glucose} ммоль/л', styleSign),
         ],
         [
-            Paragraph('прием гиполипидемических лекарственных препаратов: да      нет', styleSign),
+            Paragraph(f'прием гиполипидемических лекарственных препаратов: {data["Прием гиполипидемических ЛП"]}', styleSign),
             Paragraph(
-                'относительный сердечно-сосудистый риск (от 18 лет до 39 лет) _____ %<br/>' 'абсолютный сердечно-сосудистый риск (от 40 лет до 64 лет включительно) _____ %', styleSign
+                f'относительный сердечно-сосудистый риск (от 18 лет до 39 лет) {data["относительный С-С риск (%)"]} абсолютный сердечно-сосудистый риск (от 40 лет до 64 лет включительно) '
+                f'{data["абсолютный С-С риск (%)"]} %',
+                styleSign,
             ),
         ],
     ]
@@ -699,18 +696,21 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('', styleSign),
             Paragraph('01', styleTCenter),
             Paragraph('Е78', styleTCenter),
+            Paragraph(f'{data["01 Гиперхолестеринемия (Е78)"]}', styleTCenter),
         ],
         [
             Paragraph('Гипергликемия ', styleSign),
             Paragraph('', styleSign),
             Paragraph('02', styleTCenter),
             Paragraph('R73.9', styleTCenter),
+            Paragraph(f'{data["02 Гипергликемия (R73.9)"]}', styleTCenter),
         ],
         [
             Paragraph('Курение табака', styleSign),
             Paragraph('', styleSign),
             Paragraph('03', styleTCenter),
             Paragraph('Z72.0', styleTCenter),
+            Paragraph(f'{data["03 Курение табака (Z72.0)"]}', styleTCenter),
         ],
         [
             Paragraph('Нерациональное питание ', styleSign),
@@ -1640,6 +1640,8 @@ def title_fields(iss):
         "нарколыги ранее",
         "нарколыги патология",
         "Факторы риска",
+        "Холестерин (ммоль/л), Холестерин общий"
+        "Глюкоза, Глюкоза"
     ]
 
     result = fields_result_only_title_fields(iss, title_fields, False)

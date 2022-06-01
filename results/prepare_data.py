@@ -1016,6 +1016,7 @@ def fields_result_only_title_fields(iss, title_fields, is_bold=True):
                 if r.field.get_title(force_type=field_type) != "":
                     title = r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')
                 result.append({"title": title, "value": v})
+                print(result)
     return result
 
 
