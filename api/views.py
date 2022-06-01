@@ -1257,7 +1257,7 @@ def load_docprofile_by_group(request):
                 if k not in positions_data:
                     positions_data.append(k)
     for row in users_data:
-        if control_position and (row[5] not in positions_data):
+        if control_position and row[5] not in positions_data:
             continue
         if row[2] not in users_grouped:
             users_grouped[row[2]] = {'id': f"{row[2]}", 'label': row[4] or row[3], 'children': []}
