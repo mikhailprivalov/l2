@@ -102,7 +102,7 @@
                         class="reeselect-noborder-left treeselect-wide treeselect-34px"
                         :multiple="false"
                         :disable-branch-nodes="true"
-                        :options="users"
+                        :options="laborantUsers"
                         placeholder="Исполнитель не выбран"
                         :disabled="visit_status"
                         :align="left"
@@ -562,6 +562,7 @@ export default {
       journal_recv_data: [],
       date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       users: [],
+      laborantUsers: [],
       manualDateVisit: false,
       toEnter: null,
     };
@@ -627,8 +628,14 @@ export default {
       async handler() {
         const { users } = await usersPoint.loadUsersByGroup({
           group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
+          position: ['лаборант'],
         });
-        this.users = users;
+        this.laborantUsers = users;
+        const rows = await usersPoint.loadUsersByGroup({
+          group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
+          position: ['врач'],
+        });
+        this.users = rows.users;
       },
     },
   },
