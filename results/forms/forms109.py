@@ -509,8 +509,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ('SPAN', (3, 0), (3, 1)),
         ('SPAN', (0, 0), (1, 1)),
         ('SPAN', (0, 18), (0, 19)),
-        ('SPAN', (0, 27), (0, 28)),
-        ('SPAN', (0, 29), (1, 29)),
+        ('SPAN', (0, 26), (0, 27)),
+        ('SPAN', (0, 27), (1, 2)),
     ]
 
     table_style += [('SPAN', (0, i + 1), (1, i + 1)) for i in range(17)]
