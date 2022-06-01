@@ -130,13 +130,13 @@ def users_by_group(title_groups, hosp_id):
           SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
             
         t_users AS (
-          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id, position_id
           FROM users_doctorprofile
           LEFT JOIN
           t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
           WHERE user_id in (SELECT user_id FROM t_users_id) and hospital_id = %(hosp_id)s) 
     
-        SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title FROM t_users
+        SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title, position_id FROM t_users
         ORDER BY podrazdeleniye_id                    
         """,
             params={'title_groups': title_groups, "hosp_id": hosp_id},
@@ -158,7 +158,7 @@ def users_all(hosp_id):
           SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
             
         t_users AS (
-          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id, position_id
           FROM users_doctorprofile
           LEFT JOIN
           t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id

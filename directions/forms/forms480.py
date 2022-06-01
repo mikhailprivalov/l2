@@ -107,7 +107,17 @@ def form_01(c: Canvas, dir: Napravleniya):
         direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
         descriptive_values = []
         patient_locality = ""
-        laboratory_value, purpose, table_value, main_diagnos, mkb10_code, clinical_data, method_get_material, doc_get_material = None, None, None, None, None, None, None, None
+        laboratory_value, purpose, table_value, main_diagnos, mkb10_code, clinical_data, method_get_material, doc_get_material, previous_result = (
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
         date_get_material = '_________________________'
         time_get_material = '______________'
         is_aqua_material = '(да/нет)___________'
@@ -125,7 +135,9 @@ def form_01(c: Canvas, dir: Napravleniya):
                 purpose = param.value
             elif param.title == 'Диагноз основной':
                 main_diagnos = param.value
-            elif param.title == 'Код по МКБ':
+            elif param.title == 'результаты предыдущие':
+                previous_result = param.value
+            elif param.title.strip() == 'Код по МКБ':
                 try:
                     value = json.loads(param.value)
                     mkb10_code = value["code"]
@@ -218,6 +230,12 @@ def form_01(c: Canvas, dir: Napravleniya):
             for v in descriptive_values:
                 objs = previous_doc_refferal_result(v, objs)
 
+        objs.append(
+            Paragraph('13. Результаты предыдущих прижизненных патолого-анатомических исследований (наименование медицинской организа-ции, дата, регистрационный номер, заключение)', style)
+        )
+        if not previous_result:
+            previous_result = '_______________________________________________________________________________________________________'
+        objs.append(Paragraph(f'{previous_result}', style))
         objs.append(Paragraph('14. Проведенное предоперационное лечение (вид лечения, его сроки, дозировка лекарственного препарата, доза облучения)', style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
