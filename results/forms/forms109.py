@@ -766,7 +766,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('мозговой инсульт', styleSign),
             Paragraph('11', styleTCenter),
             Paragraph('Z82.3', styleTCenter),
-            Paragraph(f'{data["11 мозговой инсульт(Z82.3)"]}', styleTCenter),
+            Paragraph(f'{data["11 мозговой инсульт (Z82.3)"]}', styleTCenter),
         ],
         [
             Paragraph('Отягощенная наследственность по злокачественным новообразованиям', styleSign),
@@ -780,14 +780,14 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('других локализации', styleSign),
             Paragraph('13', styleTCenter),
             Paragraph('Z80.9', styleTCenter),
-            Paragraph(f'{data["13 других локализации(Z80.9)"]}', styleTCenter),
+            Paragraph(f'{data["13 других локализации (Z80.9)"]}', styleTCenter),
         ],
         [
             Paragraph('Отягощенная наследственность по хроническим болезням нижних дыхательных путей', styleSign),
             Paragraph('', styleSign),
             Paragraph('14', styleTCenter),
             Paragraph('Z82.5', styleTCenter),
-            Paragraph(f'{data["нижних дыхательных путей(Z82.5)"]}', styleTCenter),
+            Paragraph(f'{data["нижних дыхательных путей (Z82.5)"]}', styleTCenter),
         ],
         [
             Paragraph('Отягощенная наследственность по сахарному диабету', styleSign),
@@ -815,6 +815,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('', styleSign),
             Paragraph('18', styleTCenter),
             Paragraph('R54', styleTCenter),
+            Paragraph(f'{data["R54"]}', styleTCenter),
         ],
     ]
 
@@ -840,7 +841,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     objs.append(
         Paragraph(
-            '17.1. Все факторы риска, указанные в строках 03, 04, 07, 08, 09 настоящей таблицы: отсутствуют - 1,присутствуют - 2',
+            f'17.1. Все факторы риска, указанные в строках 03, 04, 07, 08, 09 настоящей таблицы: {data["Факторы риска"]}',
             style,
         )
     )
@@ -1164,7 +1165,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     )
     objs.append(
         Paragraph(
-            '20. Группа  здоровья:  I группа - 1,   II группа - 2,   IIIа  группа - 3,   IIIб группа - 4',
+            f'20. Группа  здоровья: {data["20. Группа здоровья:"]}',
             style,
         )
     )
