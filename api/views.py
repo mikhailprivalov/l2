@@ -1242,11 +1242,23 @@ def laborants(request):
 def load_docprofile_by_group(request):
     request_data = json.loads(request.body)
     if request_data['group'] == '*':
-        users = users_all(request.user.doctorprofile.get_hospital_id())
+        users_data = users_all(request.user.doctorprofile.get_hospital_id())
     else:
-        users = users_by_group(request_data['group'], request.user.doctorprofile.get_hospital_id())
+        users_data = users_by_group(request_data['group'], request.user.doctorprofile.get_hospital_id())
     users_grouped = {}
-    for row in users:
+    position = request_data.get('position') or None
+    positions_data = []
+    control_position = False
+    if position and len(position) > 0:
+        control_position = True
+        for p_title in position:
+            positions = users.Position.objects.values_list("id", flat=True).filter(title__icontains=p_title)
+            for k in positions:
+                if k not in positions_data:
+                    positions_data.append(k)
+    for row in users_data:
+        if control_position and row[5] not in positions_data:
+            continue
         if row[2] not in users_grouped:
             users_grouped[row[2]] = {'id': f"{row[2]}", 'label': row[4] or row[3], 'children': []}
         users_grouped[row[2]]['children'].append({'id': str(row[0]), 'label': row[1], 'podr': row[4] or row[3]})
