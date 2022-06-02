@@ -4,14 +4,13 @@ import json
 import pytils
 
 from hospitals.models import Hospitals
-from laboratory.utils import strdate
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY, TA_RIGHT
-from results.prepare_data import fields_result_only_title_fields, previous_doc_refferal_result, previous_laboratory_result, table_part_result, get_doctor_data
+from results.prepare_data import fields_result_only_title_fields
 from directions.models import Issledovaniya, Napravleniya
 from laboratory.settings import FONTS_FOLDER
 import os.path
@@ -24,20 +23,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     Карта учета профилактического медицинского осмотра (диспансеризации)
     """
     ind_card = direction.client
-    patient_data = ind_card.get_data_individual()
 
     hospital: Hospitals = direction.hospital
     hospital_name = hospital.safe_short_title
     hospital_address = hospital.safe_address
-    agent_status = False
-    if ind_card.who_is_agent:
-        p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = bool(p_agent)
-
-    if agent_status:
-        person_data = p_agent.get_data_individual()
-    else:
-        person_data = patient_data
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -152,9 +141,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             style,
         )
     )
-
-    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
-    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
 
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии): {data["ФИО пациента"]}&nbsp; {data["Дата рождения"]} г. рождения', style))
