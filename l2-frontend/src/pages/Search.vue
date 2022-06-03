@@ -40,7 +40,7 @@
               </td>
             </tr>
             <tr>
-              <th>Рег.номер случая</th>
+              <th>№ случая</th>
               <td class="x-cell">
                 <input
                   v-model.trim="caseNumber"
@@ -53,7 +53,7 @@
             </tr>
             <tr>
               <th>
-                Номер направления
+                № направления
               </th>
               <td class="x-cell">
                 <input
@@ -68,7 +68,7 @@
             <tr>
               <th class="cl-td text-left">
                 <label class="mh-34">
-                  Дата результат
+                  Дата результата
                   <input
                     v-model="hospCheck"
                     type="checkbox"
@@ -85,7 +85,7 @@
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th class="cl-td text-left">
                 <label class="mh-34">
                   Регистрация
@@ -105,7 +105,7 @@
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 <div class="mh-34">
                   Исполнитель
@@ -124,7 +124,7 @@
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 Дата забора
               </th>
@@ -148,7 +148,7 @@
                 </div>
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 Дата получения
               </th>
