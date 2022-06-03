@@ -821,7 +821,7 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Осложнения':
                     operation_data['complications'] = field[2]
                     continue
-                if field[3] == 'Код операции' or field[3] == 'Код манипуляции':
+                if field[3] == 'Код операции':
                     operation_data['code_operation'] = field[2]
                     continue
                 if field[3] == 'Код манипуляции':
