@@ -68,7 +68,7 @@
             <tr>
               <th class="cl-td text-left">
                 <label class="mh-34">
-                  Дата подтверждения
+                  Дата результат
                   <input
                     v-model="hospCheck"
                     type="checkbox"

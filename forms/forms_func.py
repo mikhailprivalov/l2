@@ -830,7 +830,7 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Код анестезиолога':
                     operation_data['code_doc_anesthesia'] = field[2]
                     continue
-                if field[3] == 'Оперативное вмешательство':
+                if field[3] == 'Оперативное вмешательство' or field[3] == 'Заключение':
                     operation_data['plan_operation'] = field[2]
                     continue
                 if field[3] == 'Категория сложности':
