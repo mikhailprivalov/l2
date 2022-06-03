@@ -793,6 +793,7 @@ def hosp_get_operation_data(num_dir):
                 'mkb10': '',
                 'category_difficult': '',
                 'doc_code': '',
+                'final': '',
             }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.time_confirmation:
@@ -830,7 +831,7 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Код анестезиолога':
                     operation_data['code_doc_anesthesia'] = field[2]
                     continue
-                if field[3] == 'Оперативное вмешательство' or field[3] == 'Заключение':
+                if field[3] == 'Оперативное вмешательство':
                     operation_data['plan_operation'] = field[2]
                     continue
                 if field[3] == 'Категория сложности':
@@ -849,6 +850,10 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Код хирурга' or field[3] == 'Код врача':
                     if field[2]:
                         operation_data['doc_code'] = field[2]
+                    continue
+                if field[3] == 'Заключение':
+                    if field[2]:
+                        operation_data['final'] = field[2]
                     continue
 
             operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"
