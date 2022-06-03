@@ -40,7 +40,7 @@
               </td>
             </tr>
             <tr>
-              <th>Номер случая</th>
+              <th>Рег.номер случая</th>
               <td class="x-cell">
                 <input
                   v-model.trim="caseNumber"
@@ -53,11 +53,11 @@
             </tr>
             <tr>
               <th>
-                Номер истории
+                Номер направления
               </th>
               <td class="x-cell">
                 <input
-                  v-model.trim="hospNumber"
+                  v-model.trim="directionNumber"
                   type="text"
                   class="form-control"
                   placeholder="номер"
@@ -68,7 +68,7 @@
             <tr>
               <th class="cl-td text-left">
                 <label class="mh-34">
-                  Дата выписки
+                  Дата подтверждения
                   <input
                     v-model="hospCheck"
                     type="checkbox"
@@ -331,7 +331,7 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       research: -1,
       researches: [],
       caseNumber: '',
-      hospNumber: '',
+      directionNumber: '',
       hospCheck: false,
       dateExaminationRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       registerCheck: false,
@@ -369,7 +369,7 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       if (this.searchStationar) {
         this.research = -1;
         this.caseNumber = '';
-        this.hospNumber = '';
+        this.directionNumber = '';
         this.hospCheck = false;
         this.registerCheck = false;
         this.docConfirm = null;
@@ -392,7 +392,7 @@ export default class SearchPage extends Vue {
 
   caseNumber: string;
 
-  hospNumber: string;
+  directionNumber: string;
 
   hospCheck: boolean;
 
@@ -433,7 +433,7 @@ export default class SearchPage extends Vue {
       year_period: this.year,
       research_id: this.research,
       case_number: this.caseNumber,
-      hospitalNumber: this.hospNumber,
+      hospitalNumber: this.directionNumber,
       hospitalId: this.hospitalId,
       dateExaminationStart: this.hospCheck ? formatDate(this.dateExaminationRange[0]) : null,
       dateExaminationEnd: this.hospCheck ? formatDate(this.dateExaminationRange[1]) : null,

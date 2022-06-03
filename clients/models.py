@@ -1699,8 +1699,9 @@ class AmbulatoryDataHistory(models.Model):
 
 
 class CardControlParam(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
-    purpose_value = models.CharField(max_length=50, help_text='Целевое значение', db_index=True)
+    purpose_value = models.CharField(max_length=50, help_text='Целевое значение-нормальност', db_index=True)
     date_start = models.DateField(help_text='Дата начала контроля', db_index=True, default=None, blank=True, null=True)
     date_end = models.DateField(help_text='Дата окончания контроля', db_index=True, default=None, blank=True, null=True)
 

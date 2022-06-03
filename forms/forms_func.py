@@ -765,7 +765,7 @@ def hosp_get_operation_data(num_dir):
         'МКБ 10',
         'Оперировал',
         'Код хирурга',
-        'Врач врача',
+        'Код врача',
         'Заключение',
     ]
     list_values = []
@@ -803,7 +803,7 @@ def hosp_get_operation_data(num_dir):
                 operation_data['doc_code'] = ''
             category_difficult = ''
             for field in fields_operation:
-                if field[3] == 'Название операции':
+                if field[3] == 'Название операции' or field[3] == 'Название манипуляции':
                     operation_data['name_operation'] = field[2]
                     continue
                 if field[3] == 'Дата проведения':
@@ -821,7 +821,7 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Осложнения':
                     operation_data['complications'] = field[2]
                     continue
-                if field[3] == 'Код операции':
+                if field[3] == 'Код операции' or field[3] == 'Код манипуляции':
                     operation_data['code_operation'] = field[2]
                     continue
                 if field[3] == 'Код манипуляции':
@@ -846,7 +846,7 @@ def hosp_get_operation_data(num_dir):
                     if field[2]:
                         operation_data['doc_fio'] = field[2]
                     continue
-                if field[3] == 'Код хирурга':
+                if field[3] == 'Код хирурга' or field[3] == 'Код врача':
                     if field[2]:
                         operation_data['doc_code'] = field[2]
                     continue
