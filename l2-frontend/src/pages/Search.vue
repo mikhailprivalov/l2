@@ -40,18 +40,6 @@
               </td>
             </tr>
             <tr>
-              <th>№ случая</th>
-              <td class="x-cell">
-                <input
-                  v-model.trim="caseNumber"
-                  type="text"
-                  class="form-control"
-                  placeholder="номер"
-                  :disabled="isSearchStationar"
-                >
-              </td>
-            </tr>
-            <tr>
               <th>
                 № направления
               </th>
@@ -68,12 +56,32 @@
             <tr>
               <th class="cl-td text-left">
                 <label class="mh-34">
+                  Дата направления
+                  <input
+                    v-model="directionCreatedDate"
+                    type="checkbox"
+                    class="ml-5"
+                    :disabled="isSearchStationar || hospCheck"
+                  >
+                </label>
+              </th>
+              <td class="cl-td">
+                <DateRange
+                  v-if="directionCreatedDate"
+                  v-model="dateCreateRange"
+                  :disabled="isSearchStationar || hospCheck"
+                />
+              </td>
+            </tr>
+            <tr>
+              <th class="cl-td text-left">
+                <label class="mh-34">
                   Дата результата
                   <input
                     v-model="hospCheck"
                     type="checkbox"
                     class="ml-5"
-                    :disabled="isSearchStationar"
+                    :disabled="isSearchStationar || directionCreatedDate"
                   >
                 </label>
               </th>
@@ -81,7 +89,7 @@
                 <DateRange
                   v-if="hospCheck"
                   v-model="dateExaminationRange"
-                  :disabled="isSearchStationar"
+                  :disabled="isSearchStationar || directionCreatedDate"
                 />
               </td>
             </tr>
@@ -170,6 +178,18 @@
                     ><i class="fa fa-times" /></button>
                   </span>
                 </div>
+              </td>
+            </tr>
+            <tr>
+              <th>№ случая</th>
+              <td class="x-cell">
+                <input
+                  v-model.trim="caseNumber"
+                  type="text"
+                  class="form-control"
+                  placeholder="номер"
+                  :disabled="isSearchStationar"
+                >
               </td>
             </tr>
             <tr>
@@ -333,7 +353,9 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       caseNumber: '',
       directionNumber: '',
       hospCheck: false,
+      directionCreatedDate: false,
       dateExaminationRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+      dateCreateRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       registerCheck: false,
       searchStationar: false,
       dateRegisteredRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
@@ -371,6 +393,7 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
         this.caseNumber = '';
         this.directionNumber = '';
         this.hospCheck = false;
+        this.directionCreatedDate = false;
         this.registerCheck = false;
         this.docConfirm = null;
         this.dateReceive = '';
@@ -396,7 +419,11 @@ export default class SearchPage extends Vue {
 
   hospCheck: boolean;
 
+  directionCreatedDate: boolean;
+
   dateExaminationRange: string[];
+
+  dateCreateRange: string[];
 
   registerCheck: boolean;
 
@@ -433,10 +460,12 @@ export default class SearchPage extends Vue {
       year_period: this.year,
       research_id: this.research,
       case_number: this.caseNumber,
-      hospitalNumber: this.directionNumber,
+      directionNumber: this.directionNumber,
       hospitalId: this.hospitalId,
       dateExaminationStart: this.hospCheck ? formatDate(this.dateExaminationRange[0]) : null,
       dateExaminationEnd: this.hospCheck ? formatDate(this.dateExaminationRange[1]) : null,
+      dateCreateStart: this.directionCreatedDate ? formatDate(this.dateCreateRange[0]) : null,
+      dateCreateEnd: this.directionCreatedDate ? formatDate(this.dateCreateRange[1]) : null,
       docConfirm: this.docConfirm,
       dateRegistredStart: this.registerCheck ? formatDate(this.dateRegisteredRange[0]) : null,
       dateRegistredEnd: this.registerCheck ? formatDate(this.dateRegisteredRange[1]) : null,

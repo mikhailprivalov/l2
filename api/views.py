@@ -2180,17 +2180,33 @@ def search_param(request):
     date_create_end = f"{year_period}-12-31 23:59:59"
     case_number = data.get('case_number') or '-1'
     hospital_id = int(data.get('hospitalId') or -1)
+    direction_number = int(data.get('directionNumber') or -1)
+
     date_examination_start = data.get('dateExaminationStart') or '1900-01-01'
     date_examination_end = data.get('dateExaminationEnd') or '1900-01-01'
+
     doc_confirm = data.get('docConfirm') or -1
+
     date_registred_start = data.get('dateRegistredStart') or '1900-01-01'
     date_registred_start = f"{date_registred_start} 00:00:00"
     date_registred_end = data.get('dateRegistredEnd') or '1900-01-01'
     date_registred_end = f"{date_registred_end} 23:59:59"
+
     search_stationar = data.get('searchStationar') or False
+
     date_recieve = data.get('dateReceive') or '1900-01-01'
     date_recieve_start = f"{date_recieve} 00:00:00"
     date_recieve_end = f"{date_recieve} 23:59:59"
+
+    if data.get('dateCreateStart', None):
+        print(data.get('dateCreateStart'))
+        date_create_start = data.get('dateCreateStart')
+        date_create_start = f"{date_create_start} 00:00:00"
+
+    if data.get('dateCreateEnd', None):
+        print(data.get('dateCreateEnd'))
+        date_create_end = data.get('dateCreateEnd') or '1900-01-01'
+        date_create_end = f"{date_create_end} 23:59:59"
 
     # из проткола
     date_get = data.get('dateGet') or '1900-01-01'
@@ -2216,6 +2232,7 @@ def search_param(request):
             date_recieve_end,
             date_get,
             final_text,
+            direction_number
         )
         rows = [
             {

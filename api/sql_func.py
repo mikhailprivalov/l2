@@ -227,6 +227,7 @@ def search_data_by_param(
     date_recieve_end,
     date_get,
     final_text,
+    direction_number
 ):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
@@ -269,6 +270,9 @@ def search_data_by_param(
                     and (directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s)
                 AND CASE WHEN %(case_number)s != '-1' THEN directions_napravleniya.additional_number = %(case_number)s 
                          WHEN %(case_number)s = '-1' THEN directions_napravleniya.cancel is not Null 
+                END
+                AND CASE WHEN %(direction_number)s != '-1' THEN directions_napravleniya.id = %(direction_number)s 
+                         WHEN %(direction_number)s = '-1' THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN (%(hospital_id)s)::int > -1 THEN directions_napravleniya.hospital_id = %(hospital_id)s
                          WHEN (%(hospital_id)s)::int = -1 THEN directions_napravleniya.cancel is not Null 
@@ -313,6 +317,7 @@ def search_data_by_param(
                 'date_get': date_get,
                 'final_text': final_text,
                 'tz': TIME_ZONE,
+                'direction_number': direction_number,
             },
         )
 
