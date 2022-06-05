@@ -2248,7 +2248,7 @@ def search_param(request):
                 "time_gistology_receive": i.time_gistology_receive,
                 "date_confirm": i.date_confirm,
                 "medical_examination": i.medical_examination,
-                "doc_plan_fio": i.doc_plan_fio
+                "doc_plan_fio": i.doc_plan_fio,
             }
             for i in result
         ]
