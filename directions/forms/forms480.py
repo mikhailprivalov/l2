@@ -263,7 +263,12 @@ def form_01(c: Canvas, dir: Napravleniya):
                 [Paragraph('5', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
             ]
 
-            cols_width = [20 * mm, 50 * mm, 70 * mm, 25 * mm, ]
+            cols_width = [
+                20 * mm,
+                50 * mm,
+                70 * mm,
+                25 * mm,
+            ]
             tbl = Table(opinion, colWidths=cols_width)
             tbl.setStyle(
                 TableStyle(
