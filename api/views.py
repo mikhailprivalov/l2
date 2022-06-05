@@ -2199,12 +2199,10 @@ def search_param(request):
     date_recieve_end = f"{date_recieve} 23:59:59"
 
     if data.get('dateCreateStart', None):
-        print(data.get('dateCreateStart'))
         date_create_start = data.get('dateCreateStart')
         date_create_start = f"{date_create_start} 00:00:00"
 
     if data.get('dateCreateEnd', None):
-        print(data.get('dateCreateEnd'))
         date_create_end = data.get('dateCreateEnd') or '1900-01-01'
         date_create_end = f"{date_create_end} 23:59:59"
 
