@@ -227,7 +227,7 @@ def search_data_by_param(
     date_recieve_end,
     date_get,
     final_text,
-    direction_number
+    direction_number,
 ):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
