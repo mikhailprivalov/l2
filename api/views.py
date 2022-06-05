@@ -2232,7 +2232,7 @@ def search_param(request):
             date_recieve_end,
             date_get,
             final_text,
-            direction_number
+            direction_number,
         )
         rows = [
             {
