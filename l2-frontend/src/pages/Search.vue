@@ -273,7 +273,7 @@
               </th>
               <th>Пациент</th>
               <th>Текст</th>
-              <th>Исполнитель</th>
+              <th>Статус</th>
             </tr>
           </thead>
           <tbody>
@@ -283,12 +283,16 @@
             >
               <td>
                 <a
+                  v-if="r.date_confirm"
                   href="#"
                   class="a-under"
                   @click="print(r.direction_number)"
                 >
                   {{ r.direction_number }}
                 </a>
+                <div v-else>
+                  {{ r.direction_number }}
+                </div>
               </td>
               <td v-if="!isSearchStationar">
                 {{ r.hosp_title }}
@@ -309,7 +313,19 @@
                 {{ r.field_value }}
               </td>
               <td>
-                {{ r.doc_fio }}
+                <div v-if="r.date_confirm">
+                  <strong class="approved">Утвержден</strong>
+                  <br>
+                  {{ r.doc_fio }}
+                </div>
+                <div v-else-if="r.registered_date">
+                  <strong class="registered">В работе</strong>
+                  <br>
+                  {{ r.doc_plan_fio }}
+                </div>
+                <div v-else-if="r.time_gistology_receive">
+                  <span class="received">Материал поступил</span>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -574,6 +590,19 @@ $sidebar-width: 400px;
   font-size: 16px;
   font-weight: normal;
 }
+
+.approved {
+  color: #049372;
+}
+
+.registered {
+  color: #3BAFDA;
+}
+
+.received {
+  color: #932a04
+}
+
 </style>
 
 <style>

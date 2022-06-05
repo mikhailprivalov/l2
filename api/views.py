@@ -2244,6 +2244,11 @@ def search_param(request):
                 "direction_number": i.direction_number,
                 "field_value": i.field_value,
                 "patient_sex": i.patient_sex,
+                "registered_date": i.registered_date,
+                "time_gistology_receive": i.time_gistology_receive,
+                "date_confirm": i.date_confirm,
+                "medical_examination": i.medical_examination,
+                "doc_plan_fio": i.doc_plan_fio
             }
             for i in result
         ]
@@ -2261,8 +2266,8 @@ def search_param(request):
                 "patient_sex": i.patient_sex,
                 "research_title": i.research_title,
                 "history_num": i.history_num,
+                "date_confirm": i.date_confirm,
             }
             for i in result
         ]
-
     return JsonResponse({"rows": rows, "count": len(rows)})
