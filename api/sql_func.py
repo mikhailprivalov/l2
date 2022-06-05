@@ -227,6 +227,7 @@ def search_data_by_param(
     date_recieve_end,
     date_get,
     final_text,
+    direction_number,
 ):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
@@ -255,20 +256,30 @@ def search_data_by_param(
                 directions_issledovaniya.research_id,
                 directions_paraclinicresult.value as field_value,
                 directions_paraclinicresult.field_id,
-                directory_paraclinicinputfield.title
+                directory_paraclinicinputfield.title,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
+                to_char(directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as medical_examination,
+                to_char(directions_napravleniya.visit_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as registered_date,
+                to_char(directions_napravleniya.time_gistology_receive AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as time_gistology_receive,
+                doc_plan.fio as doc_plan_fio
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
                 LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
+                LEFT JOIN users_doctorprofile doc_plan ON directions_napravleniya.planed_doctor_executor_id=doc_plan.id
                 LEFT JOIN directions_paraclinicresult on directions_paraclinicresult.issledovaniye_id=directions_issledovaniya.id
                 LEFT JOIN directory_paraclinicinputfield on directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
+                
                 WHERE 
                     directions_issledovaniya.research_id=%(research_id)s 
                     and (directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s)
                 AND CASE WHEN %(case_number)s != '-1' THEN directions_napravleniya.additional_number = %(case_number)s 
                          WHEN %(case_number)s = '-1' THEN directions_napravleniya.cancel is not Null 
+                END
+                AND CASE WHEN %(direction_number)s != '-1' THEN directions_napravleniya.id = %(direction_number)s 
+                         WHEN %(direction_number)s = '-1' THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN (%(hospital_id)s)::int > -1 THEN directions_napravleniya.hospital_id = %(hospital_id)s
                          WHEN (%(hospital_id)s)::int = -1 THEN directions_napravleniya.cancel is not Null 
@@ -313,6 +324,7 @@ def search_data_by_param(
                 'date_get': date_get,
                 'final_text': final_text,
                 'tz': TIME_ZONE,
+                'direction_number': direction_number,
             },
         )
 
@@ -339,7 +351,8 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
                 directions_paraclinicresult.value as field_value,
                 directions_paraclinicresult.field_id,
                 directory_paraclinicinputfield.title,
-                directory_researches.title as research_title
+                directory_researches.title as research_title,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN directory_researches ON directions_issledovaniya.research_id = directory_researches.id
