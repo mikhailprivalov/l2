@@ -35,8 +35,16 @@ class Command(BaseCommand):
                     'hide': f.hide,
                 }
                 fields_in_group.append(field_data)
-            groups_to_save.append({'title': group.title, 'show_title': group.show_title, 'order': group.order, 'hide': group.hide, 'paraclinic_input_field': fields_in_group,
-                                   'fieldsInline': group.fields_inline})
+            groups_to_save.append(
+                {
+                    'title': group.title,
+                    'show_title': group.show_title,
+                    'order': group.order,
+                    'hide': group.hide,
+                    'paraclinic_input_field': fields_in_group,
+                    'fieldsInline': group.fields_inline,
+                }
+            )
         research_data['paraclinic_input_groups'] = groups_to_save
         dir_tmp = SettingManager.get("dir_param")
         with open(f'{dir_tmp}/{research_pk}.json', 'w') as fp:
