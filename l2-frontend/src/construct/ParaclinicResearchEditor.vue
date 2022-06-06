@@ -526,6 +526,19 @@
                       class="form-control"
                     >
                   </div>
+                  <div>
+                    <strong>Контролируемый параметр:</strong>
+                    <Treeselect
+                      v-model="direction_current_params"
+                      class="treeselect treeselect-wide"
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="direction_params_all"
+                      placeholder="Параметры не выбраны"
+                      :append-to-body="true"
+                      :clearable="false"
+                    />
+                  </div>
                   <div v-if="row.field_type === 0 || row.field_type === 29">
                     <strong>Значение по умолчанию:</strong>
                     <textarea
