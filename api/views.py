@@ -2266,7 +2266,7 @@ def search_param(request):
                 "research_title": i.research_title,
                 "history_num": i.history_num,
                 "date_confirm": i.date_confirm,
-                "additional_number": ""
+                "additional_number": "",
             }
             for i in result
         ]
