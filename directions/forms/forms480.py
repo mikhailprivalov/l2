@@ -263,7 +263,12 @@ def form_01(c: Canvas, dir: Napravleniya):
                 [Paragraph('5', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
             ]
 
-            cols_width = [20 * mm, 50 * mm, 100 * mm, 30 * mm]
+            cols_width = [
+                20 * mm,
+                50 * mm,
+                70 * mm,
+                25 * mm,
+            ]
             tbl = Table(opinion, colWidths=cols_width)
             tbl.setStyle(
                 TableStyle(
@@ -276,7 +281,7 @@ def form_01(c: Canvas, dir: Napravleniya):
             objs.append(Spacer(1, 5 * mm))
             objs.append(tbl)
         else:
-            table_value_result = table_part_result(table_value)
+            table_value_result = table_part_result(table_value, width_max_table=180)
             if table_value_result:
                 objs.append(table_value_result)
 

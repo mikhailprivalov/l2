@@ -2597,6 +2597,9 @@ def field_get_aggregate_operation_data(operations_data):
                 f"{count}) Название операции: {i['name_operation']}, Проведена: {i['date']} {i['time_start']}-{i['time_end']}, Метод обезболивания: {i['anesthesia method']}, "
                 f"Осложнения: {i['complications']}, Оперировал: {i['doc_fio']}"
             )
+            if i.get("Заключение", None):
+                value = f"{value}, Заключение: {i['final']}"
+
             if result is None:
                 result = {"direction": '', "date": '', "value": value}
             else:

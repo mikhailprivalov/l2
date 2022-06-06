@@ -907,7 +907,7 @@ def previous_doc_refferal_result(value, fwb):
     return fwb
 
 
-def table_part_result(value):
+def table_part_result(value, width_max_table=None):
     try:
         value = json.loads(value)
     except:
@@ -954,7 +954,8 @@ def table_part_result(value):
         else:
             table_width.append(t['width'])
 
-    width_max_table = 170
+    if not width_max_table:
+        width_max_table = 170
     width_min_column = width_max_table / 100
     empty_count = 0
     not_empty_sum = 0

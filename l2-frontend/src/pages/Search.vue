@@ -40,24 +40,12 @@
               </td>
             </tr>
             <tr>
-              <th>Номер случая</th>
-              <td class="x-cell">
-                <input
-                  v-model.trim="caseNumber"
-                  type="text"
-                  class="form-control"
-                  placeholder="номер"
-                  :disabled="isSearchStationar"
-                >
-              </td>
-            </tr>
-            <tr>
               <th>
-                Номер истории
+                № направления
               </th>
               <td class="x-cell">
                 <input
-                  v-model.trim="hospNumber"
+                  v-model.trim="directionNumber"
                   type="text"
                   class="form-control"
                   placeholder="номер"
@@ -68,12 +56,32 @@
             <tr>
               <th class="cl-td text-left">
                 <label class="mh-34">
-                  Дата выписки
+                  Дата направления
+                  <input
+                    v-model="directionCreatedDate"
+                    type="checkbox"
+                    class="ml-5"
+                    :disabled="isSearchStationar || hospCheck"
+                  >
+                </label>
+              </th>
+              <td class="cl-td">
+                <DateRange
+                  v-if="directionCreatedDate"
+                  v-model="dateCreateRange"
+                  :disabled="isSearchStationar || hospCheck"
+                />
+              </td>
+            </tr>
+            <tr>
+              <th class="cl-td text-left">
+                <label class="mh-34">
+                  Дата результата
                   <input
                     v-model="hospCheck"
                     type="checkbox"
                     class="ml-5"
-                    :disabled="isSearchStationar"
+                    :disabled="isSearchStationar || directionCreatedDate"
                   >
                 </label>
               </th>
@@ -81,11 +89,11 @@
                 <DateRange
                   v-if="hospCheck"
                   v-model="dateExaminationRange"
-                  :disabled="isSearchStationar"
+                  :disabled="isSearchStationar || directionCreatedDate"
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th class="cl-td text-left">
                 <label class="mh-34">
                   Регистрация
@@ -105,7 +113,7 @@
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 <div class="mh-34">
                   Исполнитель
@@ -124,7 +132,7 @@
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 Дата забора
               </th>
@@ -148,7 +156,7 @@
                 </div>
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 Дата получения
               </th>
@@ -170,6 +178,18 @@
                     ><i class="fa fa-times" /></button>
                   </span>
                 </div>
+              </td>
+            </tr>
+            <tr>
+              <th>№ случая</th>
+              <td class="x-cell">
+                <input
+                  v-model.trim="caseNumber"
+                  type="text"
+                  class="form-control"
+                  placeholder="номер"
+                  :disabled="isSearchStationar"
+                >
               </td>
             </tr>
             <tr>
@@ -253,7 +273,7 @@
               </th>
               <th>Пациент</th>
               <th>Текст</th>
-              <th>Исполнитель</th>
+              <th>Статус</th>
             </tr>
           </thead>
           <tbody>
@@ -263,12 +283,22 @@
             >
               <td>
                 <a
+                  v-if="r.date_confirm"
                   href="#"
                   class="a-under"
                   @click="print(r.direction_number)"
                 >
                   {{ r.direction_number }}
                 </a>
+                <div v-else>
+                  {{ r.direction_number }}
+                </div>
+                <div
+                  v-if="r.additional_number"
+                  class="additional-number"
+                >
+                  <i class="fas fa-registered" />{{ r.additional_number }}
+                </div>
               </td>
               <td v-if="!isSearchStationar">
                 {{ r.hosp_title }}
@@ -289,7 +319,19 @@
                 {{ r.field_value }}
               </td>
               <td>
-                {{ r.doc_fio }}
+                <div v-if="r.date_confirm">
+                  <strong class="approved">Утвержден</strong>
+                  <br>
+                  {{ r.doc_fio }}
+                </div>
+                <div v-else-if="r.registered_date">
+                  <strong class="registered">В работе</strong>
+                  <br>
+                  {{ r.doc_plan_fio }}
+                </div>
+                <div v-else-if="r.time_gistology_receive">
+                  <span class="received">Материал поступил</span>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -331,9 +373,11 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       research: -1,
       researches: [],
       caseNumber: '',
-      hospNumber: '',
+      directionNumber: '',
       hospCheck: false,
+      directionCreatedDate: false,
       dateExaminationRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+      dateCreateRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       registerCheck: false,
       searchStationar: false,
       dateRegisteredRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
@@ -369,8 +413,9 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       if (this.searchStationar) {
         this.research = -1;
         this.caseNumber = '';
-        this.hospNumber = '';
+        this.directionNumber = '';
         this.hospCheck = false;
+        this.directionCreatedDate = false;
         this.registerCheck = false;
         this.docConfirm = null;
         this.dateReceive = '';
@@ -392,11 +437,15 @@ export default class SearchPage extends Vue {
 
   caseNumber: string;
 
-  hospNumber: string;
+  directionNumber: string;
 
   hospCheck: boolean;
 
+  directionCreatedDate: boolean;
+
   dateExaminationRange: string[];
+
+  dateCreateRange: string[];
 
   registerCheck: boolean;
 
@@ -433,10 +482,12 @@ export default class SearchPage extends Vue {
       year_period: this.year,
       research_id: this.research,
       case_number: this.caseNumber,
-      hospitalNumber: this.hospNumber,
+      directionNumber: this.directionNumber,
       hospitalId: this.hospitalId,
       dateExaminationStart: this.hospCheck ? formatDate(this.dateExaminationRange[0]) : null,
       dateExaminationEnd: this.hospCheck ? formatDate(this.dateExaminationRange[1]) : null,
+      dateCreateStart: this.directionCreatedDate ? formatDate(this.dateCreateRange[0]) : null,
+      dateCreateEnd: this.directionCreatedDate ? formatDate(this.dateCreateRange[1]) : null,
       docConfirm: this.docConfirm,
       dateRegistredStart: this.registerCheck ? formatDate(this.dateRegisteredRange[0]) : null,
       dateRegistredEnd: this.registerCheck ? formatDate(this.dateRegisteredRange[1]) : null,
@@ -545,6 +596,24 @@ $sidebar-width: 400px;
   font-size: 16px;
   font-weight: normal;
 }
+
+.approved {
+  color: #049372;
+}
+
+.registered {
+  color: #3BAFDA;
+}
+
+.received {
+  color: #932a04
+}
+
+.additional-number {
+  color: #046d93;
+  font-size: 15px;
+}
+
 </style>
 
 <style>
