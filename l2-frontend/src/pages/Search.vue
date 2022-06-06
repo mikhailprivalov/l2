@@ -297,7 +297,7 @@
                   v-if="r.additional_number"
                   class="additional-number"
                 >
-                  <i class="fas fa-registered">{{ r.additional_number }}</i>
+                  <i class="fas fa-registered" />{{ r.additional_number }}
                 </div>
               </td>
               <td v-if="!isSearchStationar">
@@ -611,7 +611,7 @@ $sidebar-width: 400px;
 
 .additional-number {
   color: #046d93;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 </style>
