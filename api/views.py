@@ -2247,7 +2247,7 @@ def search_param(request):
                 "date_confirm": i.date_confirm,
                 "medical_examination": i.medical_examination,
                 "doc_plan_fio": i.doc_plan_fio,
-                "additional_number": f"{i.additional_number}" if i.additional_number else ""
+                "additional_number": f"{i.additional_number}" if i.additional_number else "",
             }
             for i in result
         ]
