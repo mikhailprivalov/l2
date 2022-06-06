@@ -242,6 +242,7 @@ def search_data_by_param(
                 users_doctorprofile.fio as doc_fio,
 
                 directions_napravleniya.client_id,
+                directions_napravleniya.additional_number,
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as patient_fio,
 
                 hospitals_hospitals.title as hosp_title,

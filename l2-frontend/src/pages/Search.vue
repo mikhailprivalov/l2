@@ -293,6 +293,12 @@
                 <div v-else>
                   {{ r.direction_number }}
                 </div>
+                <div
+                  v-if="r.additional_number"
+                  class="additional-number"
+                >
+                  <i class="fas fa-registered">{{ r.additional_number }}</i>
+                </div>
               </td>
               <td v-if="!isSearchStationar">
                 {{ r.hosp_title }}
@@ -601,6 +607,11 @@ $sidebar-width: 400px;
 
 .received {
   color: #932a04
+}
+
+.additional-number {
+  color: #046d93;
+  font-size: 16px;
 }
 
 </style>

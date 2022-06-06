@@ -2239,7 +2239,7 @@ def search_param(request):
                 "patient_age": i.patient_age,
                 "hosp_title": i.hosp_short_title,
                 "doc_fio": i.doc_fio,
-                "direction_number": i.direction_number,
+                "direction_number": f"{i.direction_number}",
                 "field_value": i.field_value,
                 "patient_sex": i.patient_sex,
                 "registered_date": i.registered_date,
@@ -2247,6 +2247,7 @@ def search_param(request):
                 "date_confirm": i.date_confirm,
                 "medical_examination": i.medical_examination,
                 "doc_plan_fio": i.doc_plan_fio,
+                "additional_number": f"{i.additional_number}" if i.additional_number else ""
             }
             for i in result
         ]
@@ -2265,6 +2266,7 @@ def search_param(request):
                 "research_title": i.research_title,
                 "history_num": i.history_num,
                 "date_confirm": i.date_confirm,
+                "additional_number": ""
             }
             for i in result
         ]
