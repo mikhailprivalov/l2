@@ -411,26 +411,26 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('Исследование кала на скрытую кровь иммунохимическим методом', styleSign),
             Paragraph('а) в возрасте от 40 до 64 лет включительно, 1 раз в 2 года', styleSign),
             Paragraph('14.1', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 40 до 64 лет проведено"]}', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 40 до 64 лет отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 40 до 64 лет патология"]}', styleTCenter),
         ],
         [
             Paragraph('', styleSign),
             Paragraph('б) в возрасте от 65 до 75 лет включительно, 1 раз в год', styleSign),
             Paragraph('14.2', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 65 до 75 лет проведено"]}', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 65 до 75 лет отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 65 до 75 лет патология"]}', styleTCenter),
         ],
         [
             Paragraph('Определение простат-специфического антигена в крови у мужчин в возрасте 45, 50, 55, 60 и 64 лет', styleSign),
             Paragraph('', styleSign),
             Paragraph('15', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["простат проведено"]}', styleTCenter),
+            Paragraph(f'{data["простат отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
             Paragraph(f'{data["маммография патология"]}', styleTCenter),
         ],
@@ -438,28 +438,28 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('Эзофагогастродуоденоскопия в возрасте 45 лет однократно', styleSign),
             Paragraph('', styleSign),
             Paragraph('16', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["ФГДС проведено"]}', styleTCenter),
+            Paragraph(f'{data["ФГДС отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["ФГДС патология"]}', styleTCenter),
         ],
         [
             Paragraph('Общий анализ крови в возрасте 40 лет и старше, 1 раз в год', styleSign),
             Paragraph('', styleSign),
             Paragraph('17', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["оак проведено"]}', styleTCenter),
+            Paragraph(f'{data["оак отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["оак патология"]}', styleTCenter),
         ],
         [
             Paragraph('Краткое индивидуальное профилактическое консультирование в возрасте 18 лет и старше', styleSign),
             Paragraph('', styleSign),
             Paragraph('18', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["краткое проведено"]}', styleTCenter),
+            Paragraph(f'{data["краткое отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["краткое патология"]}', styleTCenter),
         ],
         [
             Paragraph(
@@ -470,28 +470,28 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             ),
             Paragraph('', styleSign),
             Paragraph('19', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["центр здоровья проведено"]}', styleTCenter),
+            Paragraph(f'{data["центр здоровья отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["центр здоровья патология"]}', styleTCenter),
         ],
         [
             Paragraph('Прием (осмотр) врачом-терапевтом по результатам первого этапа диспансеризации', styleSign),
             Paragraph('а) граждан в возрасте от 18 лет до 39 лет 1 раз в 3 года', styleSign),
             Paragraph('20.1', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["терапевт от 18 лет до 39 лет проведено"]}', styleTCenter),
+            Paragraph(f'{data["терапевт от 18 лет до 39 лет отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["терапевт от 18 лет до 39 лет патология"]}', styleTCenter),
         ],
         [
             Paragraph('', styleSign),
             Paragraph('б) граждан в возрасте 40 лет и старше 1 раз в год', styleSign),
             Paragraph('20.2', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["терапевт от 40 лет и старше проведено"]}', styleTCenter),
+            Paragraph(f'{data["терапевт от 40 лет и старше отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["терапевт от 40 лет и старше патология"]}', styleTCenter),
         ],
         [
             Paragraph(
@@ -501,10 +501,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             ),
             Paragraph('', styleSign),
             Paragraph('21', styleTCenter),
-            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
-            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph(f'{data["онко проведено"]}', styleTCenter),
+            Paragraph(f'{data["онко отказ"]}', styleTCenter),
             Paragraph('', styleTCenter),
-            Paragraph(f'{data["маммография патология"]}', styleTCenter),
+            Paragraph(f'{data["онко патология"]}', styleTCenter),
         ],
     ]
 
@@ -527,7 +527,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     table_style += [('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)]
 
-    table_style += [('SPAN', (0, i + 19), (1, i + 19)) for i in range(4)]
+    table_style += [('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)]
     table_style += [('SPAN', (0, 25), (1, 25))]
 
     tbl.setStyle(TableStyle(table_style))
@@ -699,30 +699,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     objs.append(tbl)
 
-    objs.append(
-        Paragraph(
-            '15. Дата окончания профилактического медицинского осмотра __________________',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            'Дата окончания первого этапа диспансеризации _________________',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            'Дата окончания второго этапа диспансеризации _________________',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '16. Профилактический медицинский осмотр (диспансеризация) проведен(а): в полном объеме - 1, в неполном объеме - 2',
-            style,
-        )
-    )
+    objs.append(Paragraph('15. Дата окончания профилактического медицинского осмотра __________________', style, ))
+    objs.append(Paragraph(f'Дата окончания первого этапа диспансеризации {data["Дата окончания первого этапа диспансеризации"]}', style,))
+    objs.append(Paragraph(f'Дата окончания второго этапа диспансеризации {data["Дата окончания второго этапа диспансеризации"]}', style, ))
+    objs.append(Paragraph(f'16. Профилактический медицинский осмотр (диспансеризация) проведен(а): {data["Медицинский осмотр проведен"]}', style,))
     objs.append(
         Paragraph(
             '17. Выявленные при проведении профилактического медицинского осмотра (диспансеризации) факторы риска и другие патологические '
