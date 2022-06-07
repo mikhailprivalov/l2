@@ -239,7 +239,7 @@
                         </button>
                       </template>
                       <button
-                        v-else-if="!visit_status && can_visit"
+                        v-else-if="!visit_status && can_visit && fillRequiredField"
                         class="btn btn-blue-nb"
                         @click="make_visit()"
                       >
@@ -603,6 +603,13 @@ export default {
         }
       }
       return false;
+    },
+    fillRequiredField() {
+      if (this.direction_data.has_gistology) {
+        return this.direction_data.coExecutor && this.direction_data.additionalNumber
+          && this.direction_data.gistology_receive_time && this.direction_data.planedDoctorExecutor;
+      }
+      return true;
     },
     l2_decriptive_coexecutor() {
       return this.$store.getters.modules.l2_decriptive_coexecutor;
