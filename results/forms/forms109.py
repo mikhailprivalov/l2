@@ -677,9 +677,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
     ]
 
-    row_height = []
-    for i in opinion:
-        row_height.append(None)
+    row_height = [None for i in opinion]
 
     tbl = Table(opinion, colWidths=(70 * mm, 15 * mm, 25 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm), rowHeights=row_height)
 
