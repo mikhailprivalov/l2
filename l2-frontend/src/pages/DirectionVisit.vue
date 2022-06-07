@@ -95,7 +95,9 @@
                     <td>{{ direction_data.imported_org }}</td>
                   </tr>
                   <tr v-if="l2_decriptive_coexecutor">
-                    <td>Лаборант</td>
+                    <td :class="{ 'status-none': !direction_data.coExecutor }">
+                      Лаборант
+                    </td>
                     <td class="cl-td">
                       <Treeselect
                         v-model="direction_data.coExecutor"
@@ -110,7 +112,9 @@
                     </td>
                   </tr>
                   <tr v-if="l2_decriptive_additional_number">
-                    <td>Рег. номер</td>
+                    <td :class="{ 'status-none': !direction_data.additionalNumber }">
+                      Рег. номер
+                    </td>
                     <td class="cl-td">
                       <input
                         v-model.trim="direction_data.additionalNumber"
@@ -122,7 +126,9 @@
                     </td>
                   </tr>
                   <tr v-if="direction_data.has_gistology">
-                    <td>Материал принят</td>
+                    <td :class="{ 'status-none': !direction_data.gistology_receive_time }">
+                      Материал принят
+                    </td>
                     <td class="cl-td">
                       <input
                         v-model="direction_data.gistology_receive_time"
@@ -156,7 +162,9 @@
                     </td>
                   </tr>
                   <tr v-if="direction_data.has_gistology">
-                    <td>Врач</td>
+                    <td :class="{ 'status-none': !direction_data.planedDoctorExecutor }">
+                      Врач
+                    </td>
                     <td class="cl-td">
                       <Treeselect
                         v-model="direction_data.planedDoctorExecutor"
@@ -268,6 +276,12 @@
                           @click.prevent="cancel_visit"
                         >отменить регистрацию</a>
                       </div>
+                    </div>
+                    <div
+                      v-if="!fillRequiredField && direction_data.has_gistology "
+                      class="status-none"
+                    >
+                      Введите полные данные
                     </div>
                     <div
                       v-if="direction_data.has_microbiology && can_receive"
@@ -861,5 +875,9 @@ export default {
     height: 100%;
     border: none;
   }
+}
+
+.status-none {
+  color: #cf3a24;
 }
 </style>
