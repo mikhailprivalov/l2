@@ -1,16 +1,16 @@
 import datetime
+import json
 
 import pytils
 
 from hospitals.models import Hospitals
-from laboratory.utils import strdate
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY, TA_RIGHT
-from results.prepare_data import fields_result_only_title_fields, previous_doc_refferal_result, previous_laboratory_result, table_part_result, get_doctor_data
+from results.prepare_data import fields_result_only_title_fields
 from directions.models import Issledovaniya, Napravleniya
 from laboratory.settings import FONTS_FOLDER
 import os.path
@@ -23,20 +23,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     Карта учета профилактического медицинского осмотра (диспансеризации)
     """
     ind_card = direction.client
-    patient_data = ind_card.get_data_individual()
 
     hospital: Hospitals = direction.hospital
     hospital_name = hospital.safe_short_title
     hospital_address = hospital.safe_address
-    agent_status = False
-    if ind_card.who_is_agent:
-        p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = bool(p_agent)
-
-    if agent_status:
-        person_data = p_agent.get_data_individual()
-    else:
-        person_data = patient_data
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -94,6 +84,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     styleSmallFont = deepcopy(style)
     styleSmallFont.fontSize = 7
 
+    data = title_fields(iss)
     objs = []
     opinion = [
         [
@@ -111,8 +102,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             ]
         )
     )
-
-    objs.append(tbl)
 
     opinion = [
         [
@@ -148,61 +137,49 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     )
     objs.append(
         Paragraph(
-            '1. Дата начала профилактического медицинского осмотра (диспансеризации) "___"___________ 20__ г. ',
+            f'1. Дата начала профилактического медицинского осмотра (диспансеризации) {data["Дата начала "]}',
             style,
         )
     )
-
-    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
-    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
 
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('2. Фамилия, имя, отчество (при наличии): {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), style))
+    objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии): {data["ФИО пациента"]}&nbsp; {data["Дата рождения"]} г. рождения', style))
     objs.append(
         Paragraph(
-            '3. Пол: <u>{}</u> '.format(patient_data['sex']),
+            f'3. Пол: <u>{data["Пол"]}</u> ',
+            style,
+        )
+    )
+    objs.append(Paragraph(f'4. Дата рождения  <u>{data["Дата рождения"]}</u>', style))
+
+    place_data = json.loads(data["Местность"])
+    objs.append(
+        Paragraph(
+            f'5. Местность: {place_data["title"]}-{place_data["code"]}',
+            style,
+        )
+    )
+
+    address_data = json.loads(data["Адрес регистрации"])
+    objs.append(Paragraph(f'6. Адрес регистрации по месту жительства {address_data["address"]}', style))
+    objs.append(
+        Paragraph(
+            f'7. Код категории льготы: {data["Код категории льготы"]}',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(f'8. Принадлежность к коренным малочисленным народам Севера, Сибири и Дальнего Востока Российской Федерации: {data["Принадлежность малочисленным народам "]}', style)
+    )
+    objs.append(
+        Paragraph(
+            f'9. Занятость: {data["Занятость"]}',
             style,
         )
     )
     objs.append(
         Paragraph(
-            '4. Дата рождения  <u>{}</u> '.format(date_individual_born),
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '5. Местность: городская - 1, сельская - 2 ',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '6. Адрес регистрации по месту жительства {}'.format(person_data['fact_address']),
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '7. Код категории льготы: _____________',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '8. Принадлежность к коренным малочисленным народам Севера, Сибири и Дальнего Востока Российской Федерации:да - 1; нет - 2',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '9. Занятость: 1 - работает; 2 - не работает; 3 - обучающийся в образовательной организации по очной форме',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '10. Профилактический медицинский осмотр (первый этап диспансеризации) проводится мобильной медицинской бригадой: да - 1; нет – 2',
+            f'10. Профилактический медицинский осмотр (первый этап диспансеризации) проводится мобильной медицинской бригадой: {data["Медосмотр (1 этап) мобильно"]}',
             style,
         )
     )
@@ -214,27 +191,32 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     styleTCenter = deepcopy(styleT)
     styleTCenter.alignment = TA_CENTER
     styleTCenter.leading = 3.5 * mm
-
+    glucose = data["Глюкоза, Глюкоза"]
+    glucose = glucose.split(" ")[0]
+    holesterin = data["Холестерин (ммоль/л), Холестерин общий"]
+    holesterin = holesterin.split(" ")[0]
     opinion = [
         [
-            Paragraph('Рост ___см ', styleTCenter),
-            Paragraph('Масса тела ____ кг', styleTCenter),
-            Paragraph('индекс массы тела _______ кг/м<sup><small>2</small></sup>', styleTCenter),
+            Paragraph(f'Рост {data["рост (см)"]} см ', styleTCenter),
+            Paragraph(f'Масса тела {data["масса тела (кг)"]} кг', styleTCenter),
+            Paragraph(f'индекс массы тела {data["ИМТ"]} кг/м<sup><small>2</small></sup>', styleTCenter),
         ],
         [
-            Paragraph('артериальное давление на периферических артериях __________ мм рт.ст. ', styleSign),
-            Paragraph('прием гипотензивных лекарственных препаратов:да      нет', styleSign),
-            Paragraph('внутриглазное давление _____ мм рт.с', styleSign),
+            Paragraph(f'артериальное давление на периферических артериях {data["АД (мм рт.ст)"]} мм рт.ст. ', styleSign),
+            Paragraph(f'прием гипотензивных лекарственных препаратов: {data["прием гипотензивных ЛП"]}', styleSign),
+            Paragraph(f'внутриглазное давление {data["внутриглазное давление (мм рт.ст.)"]} мм рт.с', styleSign),
         ],
         [
-            Paragraph('уровень общего холестери на в крови _____ ммоль/л ', styleSign),
-            Paragraph('прием гипогликемических лекарственных препаратов: да      нет', styleSign),
-            Paragraph('уровень глюкозы в крови натощак _____ ммоль/л', styleSign),
+            Paragraph(f'уровень общего холестерина в крови {holesterin} ммоль/л', styleSign),
+            Paragraph(f'прием гипогликемических лекарственных препаратов: {data["Прием гипогликемических ЛП"]}', styleSign),
+            Paragraph(f'уровень глюкозы в крови натощак {glucose} ммоль/л', styleSign),
         ],
         [
-            Paragraph('прием гиполипидемических лекарственных препаратов: да      нет', styleSign),
+            Paragraph(f'прием гиполипидемических лекарственных препаратов: {data["Прием гиполипидемических ЛП"]}', styleSign),
             Paragraph(
-                'относительный сердечно-сосудистый риск (от 18 лет до 39 лет) _____ %<br/>' 'абсолютный сердечно-сосудистый риск (от 40 лет до 64 лет включительно) _____ %', styleSign
+                f'относительный сердечно-сосудистый риск (от 18 лет до 39 лет) {data["относительный С-С риск (%)"]} абсолютный сердечно-сосудистый риск (от 40 лет до 64 лет включительно) '
+                f'{data["абсолютный С-С риск (%)"]} %',
+                styleSign,
             ),
         ],
     ]
@@ -308,66 +290,100 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('Опрос (анкетирование), 1 раз в год', styleSign),
             Paragraph('', styleSign),
             Paragraph('01', styleTCenter),
+            Paragraph(f'{data["Анкета проведено"]}', styleTCenter),
+            Paragraph(f'{data["Анкета отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["Анкета патология"]}', styleTCenter),
         ],
         [
             Paragraph('Расчет на основании антропометрии (измерение роста, массы тела, окружности талии) индекса массы тела, 1 раз в год', styleSign),
             Paragraph('', styleSign),
             Paragraph('02', styleTCenter),
+            Paragraph(f'{data["антропометрия проведено"]}', styleTCenter),
+            Paragraph(f'{data["антропометрия отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["антропометрия патология"]}', styleTCenter),
         ],
         [
             Paragraph('Измерение артериального давления на периферических артериях, 1 раз в год', styleSign),
             Paragraph('', styleSign),
             Paragraph('03', styleTCenter),
+            Paragraph(f'{data["давление проведено"]}', styleTCenter),
+            Paragraph(f'{data["давление отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["давление патология"]}', styleTCenter),
         ],
         [
             Paragraph('Определение уровня общего холестерина в крови, 1 раз в год', styleSign),
             Paragraph('', styleSign),
             Paragraph('04', styleTCenter),
+            Paragraph(f'{data["холестерин проведено"]}', styleTCenter),
+            Paragraph(f'{data["холестерин отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["холестерин патология"]}', styleTCenter),
         ],
         [
             Paragraph('Определение уровня глюкозы в крови натощак, 1 раз в год', styleSign),
             Paragraph('', styleSign),
             Paragraph('05', styleTCenter),
+            Paragraph(f'{data["глюкоза проведено"]}', styleTCenter),
+            Paragraph(f'{data["глюкоза отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["глюкоза патология"]}', styleTCenter),
         ],
         [
             Paragraph('Определение относительного сердечно-сосудистого риска у граждан в возрасте от 18 до 39 лет включительно, 1 раз год', styleSign),
             Paragraph('', styleSign),
             Paragraph('06', styleTCenter),
+            Paragraph(f'{data["относительный проведено"]}', styleTCenter),
+            Paragraph(f'{data["относительный отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["относительный патология"]}', styleTCenter),
         ],
         [
             Paragraph('Определение абсолютного сердечно-сосудистого риска у граждан в возрасте от 40 до 64 лет включительно, 1 раз в год', styleSign),
             Paragraph('', styleSign),
             Paragraph('07', styleTCenter),
+            Paragraph(f'{data["абсолютное проведено"]}', styleTCenter),
+            Paragraph(f'{data["абсолютное отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["абсолютное патология"]}', styleTCenter),
         ],
         [
             Paragraph('Флюорография легких или рентгенография легких, 1 раз в 2 года', styleSign),
             Paragraph('', styleSign),
             Paragraph('08', styleTCenter),
-        ],
-        [
-            Paragraph('Спирография, 1 раз в 2 года', styleSign),
-            Paragraph('', styleSign),
-            Paragraph('09', styleTCenter),
-        ],
-        [
-            Paragraph('6 минутная ходьба', styleSign),
-            Paragraph('', styleSign),
-            Paragraph('10', styleTCenter),
+            Paragraph(f'{data["флюра проведено"]}', styleTCenter),
+            Paragraph(f'{data["флюра отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["флюра патология"]}', styleTCenter),
         ],
         [
             Paragraph('Электрокардиография в покое (при первом прохождении профилактического медицинского осмотра, далее в возрасте 35 лет и старше),' ' 1 раз в год', styleSign),
             Paragraph('', styleSign),
-            Paragraph('11', styleTCenter),
+            Paragraph('09', styleTCenter),
+            Paragraph(f'{data["экг проведено"]}', styleTCenter),
+            Paragraph(f'{data["экг отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["экг патология"]}', styleTCenter),
         ],
         [
             Paragraph('Измерение внутриглазного давления (при первом прохождении профилактического медицинского осмотра, далее в возрасте' ' 40 лет и старше), 1 раз в год', styleSign),
             Paragraph('', styleSign),
-            Paragraph('12', styleTCenter),
+            Paragraph('10', styleTCenter),
+            Paragraph(f'{data["тонометрия проведено"]}', styleTCenter),
+            Paragraph(f'{data["тонометрия отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["тонометрия патология"]}', styleTCenter),
         ],
         [
             Paragraph('Осмотр фельдшером (акушеркой) или врачом акушером-гинекологом женщин в возрасте от 18 лет и старше, 1 раз в год', styleSign),
             Paragraph('', styleSign),
-            Paragraph('13', styleTCenter),
+            Paragraph('11', styleTCenter),
+            Paragraph(f'{data["тонометрия проведено"]}', styleTCenter),
+            Paragraph(f'{data["тонометрия отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["тонометрия патология"]}', styleTCenter),
         ],
         [
             Paragraph(
@@ -376,52 +392,74 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
                 styleSign,
             ),
             Paragraph('', styleSign),
-            Paragraph('14', styleTCenter),
+            Paragraph('12', styleTCenter),
+            Paragraph(f'{data["мазок проведено"]}', styleTCenter),
+            Paragraph(f'{data["мазок отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["мазок патология"]}', styleTCenter),
         ],
         [
             Paragraph('Маммография обеих молочных желез в двух проекциях у женщин в возрасте от 40 до 75 лет включительно, 1 раз в 2 года', styleSign),
             Paragraph('', styleSign),
-            Paragraph('15', styleTCenter),
+            Paragraph('13', styleTCenter),
+            Paragraph(f'{data["маммография проведено"]}', styleTCenter),
+            Paragraph(f'{data["маммография отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["маммография патология"]}', styleTCenter),
         ],
         [
             Paragraph('Исследование кала на скрытую кровь иммунохимическим методом', styleSign),
             Paragraph('а) в возрасте от 40 до 64 лет включительно, 1 раз в 2 года', styleSign),
-            Paragraph('16.1', styleTCenter),
+            Paragraph('14.1', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 40 до 64 лет проведено"]}', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 40 до 64 лет отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 40 до 64 лет патология"]}', styleTCenter),
         ],
         [
             Paragraph('', styleSign),
             Paragraph('б) в возрасте от 65 до 75 лет включительно, 1 раз в год', styleSign),
-            Paragraph('16.2', styleTCenter),
+            Paragraph('14.2', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 65 до 75 лет проведено"]}', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 65 до 75 лет отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["Исследование кала от 65 до 75 лет патология"]}', styleTCenter),
         ],
         [
             Paragraph('Определение простат-специфического антигена в крови у мужчин в возрасте 45, 50, 55, 60 и 64 лет', styleSign),
             Paragraph('', styleSign),
             Paragraph('15', styleTCenter),
+            Paragraph(f'{data["простат проведено"]}', styleTCenter),
+            Paragraph(f'{data["простат отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["маммография патология"]}', styleTCenter),
         ],
         [
             Paragraph('Эзофагогастродуоденоскопия в возрасте 45 лет однократно', styleSign),
             Paragraph('', styleSign),
             Paragraph('16', styleTCenter),
+            Paragraph(f'{data["ФГДС проведено"]}', styleTCenter),
+            Paragraph(f'{data["ФГДС отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["ФГДС патология"]}', styleTCenter),
         ],
         [
             Paragraph('Общий анализ крови в возрасте 40 лет и старше, 1 раз в год', styleSign),
             Paragraph('', styleSign),
             Paragraph('17', styleTCenter),
-        ],
-        [
-            Paragraph('Биохимический анализ крови, 1 раз в год', styleSign),
-            Paragraph('', styleSign),
-            Paragraph('18', styleTCenter),
-        ],
-        [
-            Paragraph('Д-Димер, 1 раз в год', styleSign),
-            Paragraph('', styleSign),
-            Paragraph('19', styleTCenter),
+            Paragraph(f'{data["оак проведено"]}', styleTCenter),
+            Paragraph(f'{data["оак отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["оак патология"]}', styleTCenter),
         ],
         [
             Paragraph('Краткое индивидуальное профилактическое консультирование в возрасте 18 лет и старше', styleSign),
             Paragraph('', styleSign),
-            Paragraph('20', styleTCenter),
+            Paragraph('18', styleTCenter),
+            Paragraph(f'{data["краткое проведено"]}', styleTCenter),
+            Paragraph(f'{data["краткое отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["краткое патология"]}', styleTCenter),
         ],
         [
             Paragraph(
@@ -431,17 +469,29 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
                 styleSign,
             ),
             Paragraph('', styleSign),
-            Paragraph('21', styleTCenter),
+            Paragraph('19', styleTCenter),
+            Paragraph(f'{data["центр здоровья проведено"]}', styleTCenter),
+            Paragraph(f'{data["центр здоровья отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["центр здоровья патология"]}', styleTCenter),
         ],
         [
             Paragraph('Прием (осмотр) врачом-терапевтом по результатам первого этапа диспансеризации', styleSign),
             Paragraph('а) граждан в возрасте от 18 лет до 39 лет 1 раз в 3 года', styleSign),
-            Paragraph('22.1', styleTCenter),
+            Paragraph('20.1', styleTCenter),
+            Paragraph(f'{data["терапевт от 18 лет до 39 лет проведено"]}', styleTCenter),
+            Paragraph(f'{data["терапевт от 18 лет до 39 лет отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["терапевт от 18 лет до 39 лет патология"]}', styleTCenter),
         ],
         [
             Paragraph('', styleSign),
             Paragraph('б) граждан в возрасте 40 лет и старше 1 раз в год', styleSign),
-            Paragraph('22.2', styleTCenter),
+            Paragraph('20.2', styleTCenter),
+            Paragraph(f'{data["терапевт от 40 лет и старше проведено"]}', styleTCenter),
+            Paragraph(f'{data["терапевт от 40 лет и старше отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["терапевт от 40 лет и старше патология"]}', styleTCenter),
         ],
         [
             Paragraph(
@@ -450,7 +500,11 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
                 styleSign,
             ),
             Paragraph('', styleSign),
-            Paragraph('23', styleTCenter),
+            Paragraph('21', styleTCenter),
+            Paragraph(f'{data["онко проведено"]}', styleTCenter),
+            Paragraph(f'{data["онко отказ"]}', styleTCenter),
+            Paragraph('', styleTCenter),
+            Paragraph(f'{data["онко патология"]}', styleTCenter),
         ],
     ]
 
@@ -458,7 +512,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     for i in opinion:
         row_height.append(None)
 
-    tbl = Table(opinion, colWidths=(45 * mm, 45 * mm, 15 * mm, 20 * mm, 20 * mm, 20 * mm, 25 * mm), rowHeights=row_height)
+    tbl = Table(opinion, colWidths=(43 * mm, 45 * mm, 15 * mm, 22 * mm, 20 * mm, 20 * mm, 25 * mm), rowHeights=row_height)
 
     table_style = [
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
@@ -469,21 +523,19 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ('SPAN', (2, 0), (2, 1)),
         ('SPAN', (3, 0), (3, 1)),
         ('SPAN', (0, 0), (1, 1)),
-        ('SPAN', (0, 18), (0, 19)),
-        ('SPAN', (0, 27), (0, 28)),
-        ('SPAN', (0, 29), (1, 29)),
     ]
 
-    table_style += [('SPAN', (0, i + 1), (1, i + 1)) for i in range(17)]
+    table_style += [('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)]
 
-    table_style += [('SPAN', (0, i + 20), (1, i + 20)) for i in range(7)]
+    table_style += [('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)]
+    table_style += [('SPAN', (0, 25), (1, 25))]
 
     tbl.setStyle(TableStyle(table_style))
 
     objs.append(tbl)
     objs.append(
         Paragraph(
-            '13. Направлен на второй этап диспансеризации: да - 1, нет - 2',
+            f'13. Направлен на второй этап диспансеризации: {data["Направлен на второй этап"]}',
             style,
         )
     )
@@ -630,9 +682,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
     ]
 
-    row_height = []
-    for i in opinion:
-        row_height.append(None)
+    row_height = [None for i in opinion]
 
     tbl = Table(opinion, colWidths=(70 * mm, 15 * mm, 25 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm), rowHeights=row_height)
 
@@ -647,30 +697,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     objs.append(tbl)
 
-    objs.append(
-        Paragraph(
-            '15. Дата окончания профилактического медицинского осмотра __________________',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            'Дата окончания первого этапа диспансеризации _________________',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            'Дата окончания второго этапа диспансеризации _________________',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '16. Профилактический медицинский осмотр (диспансеризация) проведен(а): в полном объеме - 1, в неполном объеме - 2',
-            style,
-        )
-    )
+    objs.append(Paragraph('15. Дата окончания профилактического медицинского осмотра __________________', style, ))
+    objs.append(Paragraph(f'Дата окончания первого этапа диспансеризации {data["Дата окончания первого этапа диспансеризации"]}', style,))
+    objs.append(Paragraph(f'Дата окончания второго этапа диспансеризации {data["Дата окончания второго этапа диспансеризации"]}', style, ))
+    objs.append(Paragraph(f'16. Профилактический медицинский осмотр (диспансеризация) проведен(а): {data["Медицинский осмотр проведен"]}', style,))
     objs.append(
         Paragraph(
             '17. Выявленные при проведении профилактического медицинского осмотра (диспансеризации) факторы риска и другие патологические '
@@ -699,108 +729,126 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('', styleSign),
             Paragraph('01', styleTCenter),
             Paragraph('Е78', styleTCenter),
+            Paragraph(f'{data["01 Гиперхолестеринемия (Е78)"]}', styleTCenter),
         ],
         [
             Paragraph('Гипергликемия ', styleSign),
             Paragraph('', styleSign),
             Paragraph('02', styleTCenter),
             Paragraph('R73.9', styleTCenter),
+            Paragraph(f'{data["02 Гипергликемия (R73.9)"]}', styleTCenter),
         ],
         [
             Paragraph('Курение табака', styleSign),
             Paragraph('', styleSign),
             Paragraph('03', styleTCenter),
             Paragraph('Z72.0', styleTCenter),
+            Paragraph(f'{data["03 Курение табака (Z72.0)"]}', styleTCenter),
         ],
         [
             Paragraph('Нерациональное питание ', styleSign),
             Paragraph('', styleSign),
             Paragraph('04', styleTCenter),
             Paragraph('Z72.4', styleTCenter),
+            Paragraph(f'{data["04 Нерациональное питание (Z72.4)"]}', styleTCenter),
         ],
         [
             Paragraph('Избыточная масса тела', styleSign),
             Paragraph('', styleSign),
             Paragraph('05', styleTCenter),
             Paragraph('R63.5', styleTCenter),
+            Paragraph(f'{data["05 Избыточная масса тела (R63.5)"]}', styleTCenter),
         ],
         [
             Paragraph('Ожирение', styleSign),
             Paragraph('', styleSign),
             Paragraph('06', styleTCenter),
             Paragraph('Е66', styleTCenter),
+            Paragraph(f'{data["06 Ожирение (Е66)"]}', styleTCenter),
         ],
         [
             Paragraph('Низкая физическая активность', styleSign),
             Paragraph('', styleSign),
             Paragraph('07', styleTCenter),
             Paragraph('Z72.3', styleTCenter),
+            Paragraph(f'{data["07 Низкая физическая активность (Z72.3)"]}', styleTCenter),
         ],
         [
             Paragraph('Риск пагубного потребления алкоголя', styleSign),
             Paragraph('', styleSign),
             Paragraph('08', styleTCenter),
             Paragraph('Z72.1', styleTCenter),
+            Paragraph(f'{data["08 Риск пагубного потребления алкоголя (Z72.1)"]}', styleTCenter),
         ],
         [
             Paragraph('Риск потребления наркотических средств и психотропных веществ без назначения врача', styleSign),
             Paragraph('', styleSign),
             Paragraph('09', styleTCenter),
             Paragraph('Z72.2', styleTCenter),
+            Paragraph(f'{data["09 Риск потребления наркотических средств и психотропных веществ без назначения врача (Z72.2)"]}', styleTCenter),
         ],
         [
             Paragraph('Отягощенная наследственность по сердечно-сосудистым заболеваниям', styleSign),
             Paragraph('инфаркт миокарда', styleSign),
             Paragraph('10', styleTCenter),
             Paragraph('Z82.4', styleTCenter),
+            Paragraph(f'{data["10 инфаркт миокарда (Z82.4)"]}', styleTCenter),
         ],
         [
             Paragraph('', styleSign),
             Paragraph('мозговой инсульт', styleSign),
             Paragraph('11', styleTCenter),
             Paragraph('Z82.3', styleTCenter),
+            Paragraph(f'{data["11 мозговой инсульт (Z82.3)"]}', styleTCenter),
         ],
         [
             Paragraph('Отягощенная наследственность по злокачественным новообразованиям', styleSign),
             Paragraph('колоректальной области', styleSign),
             Paragraph('12', styleTCenter),
             Paragraph('Z80.0', styleTCenter),
+            Paragraph(f'{data["12 колоректальной области (Z80.0)"]}', styleTCenter),
         ],
         [
             Paragraph('', styleSign),
             Paragraph('других локализации', styleSign),
             Paragraph('13', styleTCenter),
             Paragraph('Z80.9', styleTCenter),
+            Paragraph(f'{data["13 других локализации (Z80.9)"]}', styleTCenter),
         ],
         [
             Paragraph('Отягощенная наследственность по хроническим болезням нижних дыхательных путей', styleSign),
             Paragraph('', styleSign),
             Paragraph('14', styleTCenter),
             Paragraph('Z82.5', styleTCenter),
+            Paragraph(f'{data["нижних дыхательных путей (Z82.5)"]}', styleTCenter),
         ],
         [
             Paragraph('Отягощенная наследственность по сахарному диабету', styleSign),
             Paragraph('', styleSign),
             Paragraph('15', styleTCenter),
             Paragraph('Z83.3', styleTCenter),
+            Paragraph(f'{data["Z83.3"]}', styleTCenter),
         ],
         [
             Paragraph('Высокий (5% -10%) или очень высокий (10% и более) абсолютный сердечно-сосудистый риск', styleSign),
             Paragraph('', styleSign),
             Paragraph('16', styleTCenter),
             Paragraph('-', styleTCenter),
+            Paragraph(f'{data["Абсолютный С-С риск"]}', styleTCenter),
         ],
         [
             Paragraph('Высокий (более 1 ед.) относительный сердечно-сосудистый риск', styleSign),
             Paragraph('', styleSign),
             Paragraph('17', styleTCenter),
             Paragraph('-', styleTCenter),
+            Paragraph(f'{data["Относительный С-С риск"]}', styleTCenter),
         ],
         [
             Paragraph('Старческая астения', styleSign),
             Paragraph('', styleSign),
             Paragraph('18', styleTCenter),
             Paragraph('R54', styleTCenter),
+            Paragraph(f'{data["R54"]}', styleTCenter),
         ],
     ]
 
@@ -826,7 +874,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     objs.append(
         Paragraph(
-            '17.1. Все факторы риска, указанные в строках 03, 04, 07, 08, 09 настоящей таблицы: отсутствуют - 1,присутствуют - 2',
+            f'17.1. Все факторы риска, указанные в строках 03, 04, 07, 08, 09 настоящей таблицы: {data["Факторы риска"]}',
             style,
         )
     )
@@ -1150,7 +1198,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     )
     objs.append(
         Paragraph(
-            '20. Группа  здоровья:  I группа - 1,   II группа - 2,   IIIа  группа - 3,   IIIб группа - 4',
+            f'20. Группа  здоровья: {data["20. Группа здоровья:"]}',
             style,
         )
     )
@@ -1640,6 +1688,7 @@ def title_fields(iss):
         "нарколыги ранее",
         "нарколыги патология",
         "Факторы риска",
+        "Холестерин (ммоль/л), Холестерин общий" "Глюкоза, Глюкоза",
     ]
 
     result = fields_result_only_title_fields(iss, title_fields, False)
