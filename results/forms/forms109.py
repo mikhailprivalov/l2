@@ -533,7 +533,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     tbl.setStyle(TableStyle(table_style))
 
     objs.append(tbl)
-    objs.append(Paragraph(f'13. Направлен на второй этап диспансеризации: {data["Направлен на второй этап"]}', style, ))
+    objs.append(
+        Paragraph(
+            f'13. Направлен на второй этап диспансеризации: {data["Направлен на второй этап"]}',
+            style,
+        )
+    )
 
     objs.append(
         Paragraph(
