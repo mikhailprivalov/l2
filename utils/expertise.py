@@ -5,7 +5,6 @@ from utils.tree_directions import expertise_tree_direction
 
 
 def get_expertise(pk, with_check_available=False):
-    print("asasasasa")
     expertise_data = {
         'canCreateExpertise': False,
         'serviceId': None,
