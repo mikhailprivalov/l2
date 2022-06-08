@@ -413,6 +413,7 @@ const router = new Router({
         module: 'l2_hosp',
         showHospFavorites: true,
         showOperationPlans: true,
+        showExpertiseStatus: true,
       },
     },
     {
