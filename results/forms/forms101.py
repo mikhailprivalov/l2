@@ -7,7 +7,7 @@ from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 from appconf.manager import SettingManager
 from directions.models import ParaclinicResult
-from results.prepare_data import html_to_pdf, text_iss_to_pdf, text_to_bold, lab_iss_to_pdf
+from results.prepare_data import html_to_pdf, text_iss_to_pdf, text_to_bold, lab_iss_to_pdf, previous_laboratory_result, previous_doc_refferal_result
 from utils.dates import normalize_date
 from api.stationar.stationar_func import hosp_get_curent_hosp_dir
 import datetime
@@ -132,6 +132,20 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                             if not v['directions']:
                                 continue
                             v = text_iss_to_pdf(v, True)
+                    if field_type == 24:
+                        previous_laboratory = previous_laboratory_result(v)
+                        if not previous_laboratory:
+                            continue
+                        fwb.append(Spacer(1, 2 * mm))
+                        fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                        fwb.extend(previous_laboratory)
+                        continue
+                    if field_type in [26, 25]:
+                        if v:
+                            fwb.append(Spacer(1, 2 * mm))
+                            fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                            fwb = previous_doc_refferal_result(v, fwb)
+                            continue
                     v = text_to_bold(v)
                     if r.field.get_title(force_type=field_type) != "":
                         vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
