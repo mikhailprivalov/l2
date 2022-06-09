@@ -43,7 +43,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     date_protocol = ""
     for i in data_fields_result:
         if i["title"] == "Дата":
-            date_protocol = normalize_date(i["value"])
+            date_protocol = i["value"]
 
 
     history_num = ''
