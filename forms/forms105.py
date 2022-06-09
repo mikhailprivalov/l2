@@ -639,6 +639,7 @@ def form_03(request_data):
             time_value = hosp_extract_data['time_value']
         days_count = hosp_extract_data['days_count']
         doc_fio = hosp_extract_data['doc_fio']
+        manager_depart = hosp_extract_data['manager_depart']
 
     title_page = [
         Indenter(left=0 * mm),
@@ -900,7 +901,7 @@ def form_03(request_data):
     )
     objs.append(Spacer(1, 7 * mm))
     objs.append(
-        Paragraph('Подпись заведующего отделением', style),
+        Paragraph(f'Подпись заведующего отделением({manager_depart})', style),
     )
 
     def first_pages(canvas, document):
