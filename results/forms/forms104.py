@@ -38,6 +38,14 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     styleCenterBold.leading = 15
     styleCenterBold.fontName = 'PTAstraSerifBold'
 
+    title_field_result = ["Дата"]
+    data_fields_result = fields_result_only_title_fields(iss, title_field_result)
+    date_protocol = ""
+    for i in data_fields_result:
+        if i["title"] == "Дата":
+            date_protocol = i["value"]
+
+
     history_num = ''
     if direction.parent and direction.parent.research.is_hospital:
         history_num = f"(cтационар-{str(direction.parent.napravleniye_id)})"
@@ -52,7 +60,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     open_bold_tag = "<font face =\"PTAstraSerifBold\">"
     close_tag_bold = "</font>"
     fwb.append(Spacer(1, 4 * mm))
-    fwb.append(Paragraph(f'{open_bold_tag}Дата:{close_tag_bold} {(strdate(iss.medical_examination))}', style_ml))
+    fwb.append(Paragraph(f'{open_bold_tag}Дата:{close_tag_bold} {date_protocol}', style_ml))
     fwb.append(Paragraph(f'{open_bold_tag}ФИО пациента:{close_tag_bold} {direction.client.individual.fio()}', style_ml))
     sex = direction.client.individual.sex
     space_symbol = '&nbsp;'
@@ -71,7 +79,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     address = ind_data['main_address']
     fwb.append(Paragraph(f'{open_bold_tag}Место регистрации:{close_tag_bold} {address}', style_ml))
 
-    fwb = fields_result(iss, fwb)
+    fwb = fields_result(iss, fwb, title_field_result)
 
     fwb.append(Spacer(1, 15 * mm))
     fwb.append(Paragraph(f"Медицинский специалист ___________________ {doc_fio}", style))
