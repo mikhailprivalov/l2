@@ -45,7 +45,6 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
         if i["title"] == "Дата":
             date_protocol = i["value"]
 
-
     history_num = ''
     if direction.parent and direction.parent.research.is_hospital:
         history_num = f"(cтационар-{str(direction.parent.napravleniye_id)})"
