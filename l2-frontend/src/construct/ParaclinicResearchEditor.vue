@@ -862,7 +862,7 @@
                       <option value="26">Результаты консультаций</option>
                       <option value="38">Результаты процедурного листа</option>
                       <option value="27">Таблица</option>
-                      <option value="39">РеляционнаяТаблица</option>
+                      <option value="40">РеляционнаяТаблица</option>
                       <option value="28">НСИ-справочник</option>
                       <option value="29">Адрес по ФИАС</option>
                       <option
