@@ -936,6 +936,26 @@ def directions_mark_visit(request):
     return JsonResponse(response)
 
 
+@group_required("Врач параклиники", "Посещения по направлениям", "Врач консультаций")
+def clear_register_number(request):
+    response = {"ok": False, "message": ""}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -1)
+    register_number = request_data.get("additionalNumber", '')
+    dn = Napravleniya.objects.filter(pk=pk)
+    if dn.exists():
+        n = dn[0]
+        if n.register_number == register_number:
+            n.register_number = ""
+            n.save()
+            response["message"] = f'Номер "{register_number}" освобожден'
+            response["ok"] = True
+        else:
+            response["message"] = f'Номер "{register_number}" принадлежит другому направлению'
+
+    return JsonResponse(response)
+
+
 @group_required("Получатель биоматериала микробиологии")
 def directions_receive_material(request):
     response = {"ok": False, "message": ""}
