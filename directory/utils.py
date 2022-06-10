@@ -1,7 +1,8 @@
 from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
-    ParaclinicInputField, PatientControlParam,
+    ParaclinicInputField,
+    PatientControlParam,
 )
 import simplejson as json
 
