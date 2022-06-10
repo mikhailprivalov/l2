@@ -77,7 +77,7 @@ def get_researches_details(pk):
                         "new_value": "",
                         "attached": field.attached,
                         "controlParam": field.control_param,
-                        "patientControlParam": field.patient_control_param_id if field.patient_control_param else -1
+                        "patientControlParam": field.patient_control_param_id if field.patient_control_param else -1,
                     }
                 )
             response["groups"].append(g)
