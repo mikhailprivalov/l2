@@ -580,7 +580,7 @@ def researches_update(request):
                                     operator_enter_param=field.get("operator_enter_param", False),
                                     attached=field.get("attached", ''),
                                     control_param=field.get("controlParam", ""),
-                                    patient_control_param_id=field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None
+                                    patient_control_param_id=field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None,
                                 )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
