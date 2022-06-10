@@ -1883,6 +1883,7 @@ def directions_paraclinic_result(request):
                     except:
                         val = {}
                     f_result.value_json = val
+                f_result.client = iss.napravleniye.client
                 f_result.save()
                 if "Протокол для оператора" in g:
                     IssledovaniyaResultLaborant.save_result_operator(iss, f, f.field_type, field["value"], request.user.doctorprofile)
