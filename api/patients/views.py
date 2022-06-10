@@ -35,7 +35,7 @@ from clients.models import (
     AmbulatoryDataHistory,
     DispensaryRegPlans,
     ScreeningRegPlan,
-    AdditionalPatientDispensaryPlan,
+    AdditionalPatientDispensaryPlan, CardControlParam,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
@@ -985,6 +985,30 @@ def load_screening(request):
     screening = ScreeningRegPlan.get_screening_data(card_pk)
 
     return JsonResponse({"data": screening})
+
+
+def load_control_param(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data.get("card_pk") or None
+    year = request_data.get("year") or None
+    if not (card_pk and year):
+        JsonResponse({"data": ""})
+
+    data_params = CardControlParam.get_patient_control_param(card_pk)
+    start_date = f"{year}-01-01 00:00:00"
+    end_date = f"{year}-12-31 23:59:59"
+    control_params = tuple(data_params.keys())
+    get_patient_control_params_by_year(start_date, end_date, control_params, card_pk)
+
+
+
+def load_result_patient_control_param_by_year(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data.get("card_pk") or None
+    year = request_data.get("year") or None
+    data_params = request_data.get("data_params") or None
+    if card_pk and year and data_params:
+        pass
 
 
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):

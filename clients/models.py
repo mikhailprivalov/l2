@@ -20,7 +20,7 @@ from jsonfield import JSONField
 import slog.models as slog
 from appconf.manager import SettingManager
 from clients.sql_func import last_result_researches_years
-from directory.models import Researches, ScreeningPlan, PatientControlParam
+from directory.models import Researches, ScreeningPlan, PatientControlParam, ParaclinicInputField, Fractions
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 from django.contrib.postgres.fields import ArrayField
@@ -1701,9 +1701,9 @@ class AmbulatoryDataHistory(models.Model):
 class CardControlParam(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
-    purpose_value = models.CharField(max_length=50, help_text='Целевое значение-нормальност', db_index=True)
-    date_start = models.DateField(help_text='Дата начала контроля', db_index=True, default=None, blank=True, null=True)
-    date_end = models.DateField(help_text='Дата окончания контроля', db_index=True, default=None, blank=True, null=True)
+    purpose_value = models.CharField(max_length=50, help_text='Целевое значение-нормальност', default="")
+    date_start = models.DateField(help_text='Дата начала контроля', default=None, blank=True, null=True)
+    date_end = models.DateField(help_text='Дата окончания контроля', default=None, blank=True, null=True)
 
     def __str__(self):
         return f"{self.patient_control_param} - {self.purpose_value}"
@@ -1711,3 +1711,25 @@ class CardControlParam(models.Model):
     class Meta:
         verbose_name = 'Контролируемый параметр у пациента'
         verbose_name_plural = 'Контролируемые параметры у пациента'
+
+    @staticmethod
+    def get_patient_control_param(card_pk):
+        card_controls = CardControlParam.objects.filter(card_id=card_pk).order_by("pk")
+        control_params = {cc.patient_control_param_id: {} for cc in card_controls}
+        for cc in card_controls:
+            tmp_data: dict = control_params[cc.patient_control_param_id]
+            date_start = cc.date_start.strftime("%d.%m.%Y") if cc.date_start else "-"
+            date_end = cc.date_end.strftime("%d.%m.%Y") if cc.date_end else "-"
+            tmp_data[f"{date_start}-{date_end}"] = cc.purpose_value
+            control_params[cc.patient_control_param_id] = tmp_data.copy()
+
+        for param in control_params.keys():
+            paraclinic_result = ParaclinicInputField.objects.values_list("pk", flat=True).filter(patient_control_param_id=param)
+            laboratory_result = Fractions.objects.values_list("pk", flat=True).filter(patient_control_param_id=param)
+
+            tmp_data: dict = control_params[param]
+            tmp_data["paraclinic_fields"] = paraclinic_result
+            tmp_data["laboratory_fraction"] = laboratory_result
+            control_params[param] = tmp_data.copy()
+
+        return control_params
