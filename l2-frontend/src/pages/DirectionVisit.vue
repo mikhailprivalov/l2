@@ -95,7 +95,9 @@
                     <td>{{ direction_data.imported_org }}</td>
                   </tr>
                   <tr v-if="l2_decriptive_coexecutor">
-                    <td>Лаборант</td>
+                    <td :class="{ 'status-none': !direction_data.coExecutor }">
+                      Лаборант
+                    </td>
                     <td class="cl-td">
                       <Treeselect
                         v-model="direction_data.coExecutor"
@@ -110,19 +112,35 @@
                     </td>
                   </tr>
                   <tr v-if="l2_decriptive_additional_number">
-                    <td>Рег. номер</td>
+                    <td :class="{ 'status-none': !direction_data.additionalNumber }">
+                      Рег. номер
+                    </td>
                     <td class="cl-td">
-                      <input
-                        v-model.trim="direction_data.additionalNumber"
-                        type="text"
-                        class="form-control"
-                        maxlength="24"
-                        :readonly="visit_status"
-                      >
+                      <div class="input-group">
+                        <input
+                          id="create-title"
+                          v-model.trim="direction_data.additionalNumber"
+                          class="form-control"
+                          :disabled="visit_status"
+                        >
+                        <span class="input-group-btn">
+                          <button
+                            v-tippy="{ placement : 'bottom'}"
+                            class="btn btn-default btn-primary-nb"
+                            title="Освободить номер"
+                            :disabled="visit_status"
+                            @click="clearAdditionalNumber"
+                          >
+                            <i class="fa fa-times" />
+                          </button>
+                        </span>
+                      </div>
                     </td>
                   </tr>
                   <tr v-if="direction_data.has_gistology">
-                    <td>Материал принят</td>
+                    <td :class="{ 'status-none': !direction_data.gistology_receive_time }">
+                      Материал принят
+                    </td>
                     <td class="cl-td">
                       <input
                         v-model="direction_data.gistology_receive_time"
@@ -156,7 +174,9 @@
                     </td>
                   </tr>
                   <tr v-if="direction_data.has_gistology">
-                    <td>Врач</td>
+                    <td :class="{ 'status-none': !direction_data.planedDoctorExecutor }">
+                      Врач
+                    </td>
                     <td class="cl-td">
                       <Treeselect
                         v-model="direction_data.planedDoctorExecutor"
@@ -239,7 +259,7 @@
                         </button>
                       </template>
                       <button
-                        v-else-if="!visit_status && can_visit"
+                        v-else-if="!visit_status && can_visit && fillRequiredField"
                         class="btn btn-blue-nb"
                         @click="make_visit()"
                       >
@@ -268,6 +288,12 @@
                           @click.prevent="cancel_visit"
                         >отменить регистрацию</a>
                       </div>
+                    </div>
+                    <div
+                      v-if="!fillRequiredField && direction_data.has_gistology "
+                      class="status-none"
+                    >
+                      Введите полные данные
                     </div>
                     <div
                       v-if="direction_data.has_microbiology && can_receive"
@@ -604,6 +630,13 @@ export default {
       }
       return false;
     },
+    fillRequiredField() {
+      if (this.direction_data.has_gistology) {
+        return this.direction_data.coExecutor && this.direction_data.additionalNumber
+          && this.direction_data.gistology_receive_time && this.direction_data.planedDoctorExecutor;
+      }
+      return true;
+    },
     l2_decriptive_coexecutor() {
       return this.$store.getters.modules.l2_decriptive_coexecutor;
     },
@@ -736,6 +769,18 @@ export default {
     blur() {
       window.$(this.$refs.field).blur();
     },
+    async clearAdditionalNumber() {
+      const data = await this.$api('directions/clear-register-number', {
+        additionalNumber: this.direction_data.additionalNumber,
+        pk: this.loaded_pk,
+      });
+      this.direction_data.additionalNumber = '';
+      if (data.ok) {
+        this.$root.$emit('msg', 'ok', data.message);
+      } else {
+        this.$root.$emit('msg', 'error', data.message);
+      }
+    },
     cancel_visit() {
       // eslint-disable-next-line no-restricted-globals,no-alert
       if (confirm('Вы уверены, что хотите отменить регистрацию?')) {
@@ -854,5 +899,9 @@ export default {
     height: 100%;
     border: none;
   }
+}
+
+.status-none {
+  color: #cf3a24;
 }
 </style>
