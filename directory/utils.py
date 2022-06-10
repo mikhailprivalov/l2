@@ -2,6 +2,7 @@ from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
     ParaclinicInputField,
+    PatientControlParam,
 )
 import simplejson as json
 
@@ -10,6 +11,7 @@ def get_researches_details(pk):
     response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False, "groups": []}
     direction_params_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_direction_params=True).order_by("title")]]
     response["direction_params_all"] = direction_params_all
+    response["patient_control_param_all"] = PatientControlParam.get_patient_control_params()
     direction_expertise_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_expertise=True).order_by("title")]]
     response["direction_expertise_all"] = direction_expertise_all
     if DResearches.objects.filter(pk=pk).exists():
@@ -75,6 +77,7 @@ def get_researches_details(pk):
                         "new_value": "",
                         "attached": field.attached,
                         "controlParam": field.control_param,
+                        "patientControlParam": field.patient_control_param_id if field.patient_control_param else -1,
                     }
                 )
             response["groups"].append(g)
