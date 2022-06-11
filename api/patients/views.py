@@ -8,7 +8,7 @@ import pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 
-from api.patients.sql_func import get_patient_control_params_by_years
+from api.patients.sql_func import get_patient_control_params
 from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connections
@@ -1001,7 +1001,7 @@ def load_control_param(request):
     start_date = f"{start_date} 00:00:00"
     end_date = f"{end_date} 23:59:59"
     control_params = tuple(data_params.keys())
-    paralinic_result = get_patient_control_params_by_years(start_date, end_date, control_params, card_pk)
+    paralinic_result = get_patient_control_params(start_date, end_date, control_params, card_pk)
     prev_patient_control_param_id = None
     tmp_result = {"controlParamId": "", "title": "", "purposeValue": {}, "dates": {}}
     step = 0

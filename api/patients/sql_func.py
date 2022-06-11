@@ -3,7 +3,7 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
-def get_patient_control_params_by_years(start_date, end_date, control_params, card_pk):
+def get_patient_control_params(start_date, end_date, control_params, card_pk):
     with connection.cursor() as cursor:
         cursor.execute(
             """
