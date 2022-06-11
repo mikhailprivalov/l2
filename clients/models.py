@@ -20,7 +20,7 @@ from jsonfield import JSONField
 import slog.models as slog
 from appconf.manager import SettingManager
 from clients.sql_func import last_result_researches_years
-from directory.models import Researches, ScreeningPlan, PatientControlParam, ParaclinicInputField, Fractions
+from directory.models import Researches, ScreeningPlan, PatientControlParam
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 from django.contrib.postgres.fields import ArrayField
