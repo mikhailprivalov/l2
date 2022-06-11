@@ -1006,9 +1006,11 @@ def load_control_param(request):
     tmp_result = {"controlParamId": "", "title": "", "purposeValue": {}, "dates": {}}
     step = 0
     result = []
+    unique_month = []
     for i in paralinic_result:
         if not i.value:
             continue
+        unique_month.append(i.yearmonth_confirm)
         if i.patient_control_param_id != prev_patient_control_param_id:
             if step != 0:
                 result.append(tmp_result.copy())
@@ -1026,9 +1028,10 @@ def load_control_param(request):
         tmp_result["dates"][i.yearmonth_confirm] = tmp_month_date.copy()
         prev_patient_control_param_id = i.patient_control_param_id
         step += 1
+    unique_month = sorted(list(set(unique_month)))
 
     result.append(tmp_result.copy())
-    return JsonResponse({"data": result})
+    return JsonResponse({"data": result, "uniqueMonth": unique_month})
 
 
 def load_result_patient_control_param_by_year(request):
