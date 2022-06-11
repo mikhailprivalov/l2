@@ -1715,21 +1715,14 @@ class CardControlParam(models.Model):
     @staticmethod
     def get_patient_control_param(card_pk):
         card_controls = CardControlParam.objects.filter(card_id=card_pk).order_by("pk")
-        control_params = {cc.patient_control_param_id: {} for cc in card_controls}
+        control_params = {cc.patient_control_param_id: {"title": cc.patient_control_param.title, "purpose": {}} for cc in card_controls}
         for cc in card_controls:
             tmp_data: dict = control_params[cc.patient_control_param_id]
+            tmp_purpose = tmp_data["purpose"]
             date_start = cc.date_start.strftime("%d.%m.%Y") if cc.date_start else "-"
             date_end = cc.date_end.strftime("%d.%m.%Y") if cc.date_end else "-"
-            tmp_data[f"{date_start}-{date_end}"] = cc.purpose_value
+            tmp_purpose[f"{date_start}-{date_end}"] = cc.purpose_value
+            tmp_data["purpose"] = tmp_purpose.copy()
             control_params[cc.patient_control_param_id] = tmp_data.copy()
-
-        for param in control_params.keys():
-            paraclinic_result = ParaclinicInputField.objects.values_list("pk", flat=True).filter(patient_control_param_id=param)
-            laboratory_result = Fractions.objects.values_list("pk", flat=True).filter(patient_control_param_id=param)
-
-            tmp_data: dict = control_params[param]
-            tmp_data["paraclinic_fields"] = paraclinic_result
-            tmp_data["laboratory_fraction"] = laboratory_result
-            control_params[param] = tmp_data.copy()
 
         return control_params

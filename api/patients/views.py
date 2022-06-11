@@ -8,6 +8,7 @@ import pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 
+from api.patients.sql_func import get_patient_control_params_by_years
 from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connections
@@ -990,16 +991,45 @@ def load_screening(request):
 def load_control_param(request):
     request_data = json.loads(request.body)
     card_pk = request_data.get("card_pk") or None
-    year = request_data.get("year") or None
-    if not (card_pk and year):
+    start_date = request_data["start_date"]
+    end_date = request_data["end_date"]
+    if not (card_pk and start_date and end_date):
         JsonResponse({"data": ""})
 
     data_params = CardControlParam.get_patient_control_param(card_pk)
-    start_date = f"{year}-01-01 00:00:00"
-    end_date = f"{year}-12-31 23:59:59"
+    start_date = f"{start_date} 00:00:00"
+    end_date = f"{end_date} 23:59:59"
     control_params = tuple(data_params.keys())
-    get_patient_control_params_by_year(start_date, end_date, control_params, card_pk)
+    paralinic_result = get_patient_control_params_by_years(start_date, end_date, control_params, card_pk)
+    prev_patient_control_param_id = None
+    tmp_result = {"controlParamId": "", "title": "", "purposeValue": {}, "dates": {}}
+    step = 0
+    result = []
+    for rr in paralinic_result:
+        print(rr)
+    for i in paralinic_result:
+        if not i.value:
+            continue
+        if i.patient_control_param_id != prev_patient_control_param_id:
+            if step != 0:
+                result.append(tmp_result.copy())
+            tmp_result["controlParamId"] = i.patient_control_param_id
+            tmp_result["title"] = data_params[i.patient_control_param_id]["title"]
+            tmp_result["dates"] = {}
+            tmp_result["purposeValue"] = data_params[i.patient_control_param_id]["purpose"]
+        if not tmp_result["dates"].get(i.yearmonth_confirm, None):
+            tmp_result["dates"][i.yearmonth_confirm] = {}
+        tmp_month_date = tmp_result["dates"].get(i.yearmonth_confirm)
+        if not tmp_month_date.get(i.confirm, None):
+            tmp_month_date[i.confirm] = [{"dir": i.direction, "value": i.value.split()[0]}]
+        else:
+            tmp_month_date[i.confirm].append({"dir": i.direction, "value": i.value.split()[0]})
+        tmp_result["dates"][i.yearmonth_confirm] = tmp_month_date.copy()
+        prev_patient_control_param_id = i.patient_control_param_id
+        step += 1
 
+    result.append(tmp_result.copy())
+    return JsonResponse({"data": result})
 
 
 def load_result_patient_control_param_by_year(request):
