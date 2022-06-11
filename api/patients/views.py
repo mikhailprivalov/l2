@@ -1034,15 +1034,6 @@ def load_control_param(request):
     return JsonResponse({"data": result, "uniqueMonth": unique_month})
 
 
-def load_result_patient_control_param_by_year(request):
-    request_data = json.loads(request.body)
-    card_pk = request_data.get("card_pk") or None
-    year = request_data.get("year") or None
-    data_params = request_data.get("data_params") or None
-    if card_pk and year and data_params:
-        pass
-
-
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
     results = []
     filter = {
