@@ -125,6 +125,4 @@ class ResCardControlParam(admin.ModelAdmin):
     )
     raw_id_fields = ('card',)
 
-    search_fields = (
-        'card__pk',
-    )
+    search_fields = ('card__pk',)

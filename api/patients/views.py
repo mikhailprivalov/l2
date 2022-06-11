@@ -36,7 +36,8 @@ from clients.models import (
     AmbulatoryDataHistory,
     DispensaryRegPlans,
     ScreeningRegPlan,
-    AdditionalPatientDispensaryPlan, CardControlParam,
+    AdditionalPatientDispensaryPlan,
+    CardControlParam,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
@@ -1005,8 +1006,6 @@ def load_control_param(request):
     tmp_result = {"controlParamId": "", "title": "", "purposeValue": {}, "dates": {}}
     step = 0
     result = []
-    for rr in paralinic_result:
-        print(rr)
     for i in paralinic_result:
         if not i.value:
             continue
