@@ -2246,7 +2246,6 @@ class ParaclinicResult(models.Model):
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()
     value_json = JSONField(default=dict, blank=True)
-    client = models.ForeignKey(Clients.Card, db_index=True, default=None, null=True, blank=True, help_text='Пациент', on_delete=models.CASCADE)
 
     def get_field_type(self):
         return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type

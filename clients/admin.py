@@ -104,3 +104,25 @@ class ResDispensaryRegPlans(admin.ModelAdmin):
         'research__title',
         'speciality__title',
     )
+
+
+@admin.register(models.CardControlParam)
+class ResCardControlParam(admin.ModelAdmin):
+    list_display = (
+        'card',
+        'patient_control_param',
+        'purpose_value',
+        'date_start',
+        'date_end',
+    )
+
+    list_display_links = (
+        'card',
+        'patient_control_param',
+        'purpose_value',
+        'date_start',
+        'date_end',
+    )
+    raw_id_fields = ('card',)
+
+    search_fields = ('card__pk',)
