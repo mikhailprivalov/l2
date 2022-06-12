@@ -535,6 +535,10 @@
                 :card_pk="data.patient.card_pk"
                 is-lab
               />
+              <ResultControlParams
+                :card_pk="data.patient.card_pk"
+                is-paraclinic
+              />
             </div>
             <div
               v-if="!data.patient.imported_from_rmis && !data.has_monitoring"
@@ -1739,6 +1743,7 @@ import { vField, vGroup } from '@/components/visibility-triggers';
 import { cleanCaches } from '@/utils';
 import { enterField, leaveField } from '@/forms/utils';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
+import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
 import patientsPoint from '@/api/patients-point';
@@ -1806,6 +1811,7 @@ export default {
     IssStatus,
     MedicalCertificates,
     ResultsByYear,
+    ResultControlParams,
     RmisLink,
     ScreeningButton,
     Treeselect,
