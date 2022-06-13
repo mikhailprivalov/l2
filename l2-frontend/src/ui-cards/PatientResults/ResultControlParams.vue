@@ -58,59 +58,49 @@
                   v-tippy="{ placement: 'bottom' }"
                   class="btn btn-blue-nb btn-xs nbr"
                   title="Год назад"
-                  @click="minus_year"
+                  @click="minus_year('startYear')"
                 >
                   <i
                     class="glyphicon glyphicon-arrow-left"
                     style="padding-bottom: 5px"
                   />
                 </button>
-                {{ current_year }}
+                {{ start_year }}
                 <button
                   v-tippy="{ placement: 'bottom' }"
                   class="btn btn-blue-nb btn-xs nbr"
                   title="Год вперед"
-                  @click="plus_year"
+                  @click="plus_year('startYear')"
                 >
                   <i
                     class="glyphicon glyphicon-arrow-right nbr"
                     style="padding-bottom: 5px"
                   />
                 </button>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="4">
-                <DatePicker
-                  :key="DATE_RANGE"
-                  v-model="dateRange"
-                  mode="date"
-                  :masks="masks"
-                  is-range
-                  :max-date="new Date()"
-                  :rows="2"
-                  :step="1"
+                &ensp;&mdash;&ensp;
+                <button
+                  v-tippy="{ placement: 'bottom' }"
+                  class="btn btn-blue-nb btn-xs nbr"
+                  title="Год назад"
+                  @click="minus_year('endYear')"
                 >
-                  <template #default="{ inputValue, inputEvents }">
-                    <div class="input-group">
-                      <span class="input-group-addon">Дата:</span>
-                      <input
-                        class="form-control"
-                        :value="inputValue.start"
-                        v-on="inputEvents.start"
-                      >
-                      <span
-                        class="input-group-addon"
-                        style="background-color: #fff;color: #000; height: 34px"
-                      >&mdash;</span>
-                      <input
-                        class="form-control"
-                        :value="inputValue.end"
-                        v-on="inputEvents.end"
-                      >
-                    </div>
-                  </template>
-                </DatePicker>
+                  <i
+                    class="glyphicon glyphicon-arrow-left"
+                    style="padding-bottom: 5px"
+                  />
+                </button>
+                {{ end_year }}
+                <button
+                  v-tippy="{ placement: 'bottom' }"
+                  class="btn btn-blue-nb btn-xs nbr"
+                  title="Год вперед"
+                  @click="plus_year('endYear')"
+                >
+                  <i
+                    class="glyphicon glyphicon-arrow-right nbr"
+                    style="padding-bottom: 5px"
+                  />
+                </button>
               </td>
             </tr>
           </tbody>
@@ -122,14 +112,9 @@
 
 <script lang="ts">
 import moment from 'moment';
-// @ts-ignore
-import DatePicker from 'v-calendar/lib/components/date-picker.umd';
 
 export default {
   name: 'ResultControlParams',
-  components: {
-    DatePicker,
-  },
   props: {
     card_pk: {
       type: Number,
@@ -146,18 +131,8 @@ export default {
   },
   data() {
     return {
-      data: '',
-      DATE_RANGE: 'DATE_RANGE',
-      current_year: moment().format('YYYY'),
-      dateRange: {
-        start: new Date(),
-        end: new Date(),
-      },
-      masks: {
-        iso: 'DD.MM.YYYY',
-        data: ['DD.MM.YYYY'],
-        input: ['DD.MM.YYYY'],
-      },
+      start_year: moment().format('YYYY'),
+      end_year: moment().format('YYYY'),
     };
   },
   computed: {
@@ -174,7 +149,10 @@ export default {
     },
   },
   watch: {
-    current_year() {
+    start_year() {
+      this.load();
+    },
+    end_year() {
       this.load();
     },
   },
@@ -183,40 +161,39 @@ export default {
   },
   methods: {
     async load() {
-      const result = await this.$api('directions/result-patient-year', this, [
+      const result = await this.$api('patients/individuals/load-control-param', this, [
         'card_pk',
-        'current_year',
-        'isLab',
-        'isDocReferral',
-        'isParaclinic',
+        'start_year',
+        'end_year',
       ]);
       this.data = result.results;
     },
-    print_med_certificate(typeForm, direction) {
-      window.open(`/medical_certificates/pdf?type=${typeForm}&dir=${direction}`, '_blank');
+    plus_year(typeYear) {
+      if (typeYear === 'startYear') {
+        this.start_year = moment(this.start_year)
+          .add(1, 'year')
+          .format('YYYY');
+      } else {
+        this.end_year = moment(this.end_year)
+          .add(1, 'year')
+          .format('YYYY');
+      }
     },
-    plus_year() {
-      this.current_year = moment(this.current_year)
-        .add(1, 'year')
-        .format('YYYY');
-    },
-    minus_year() {
-      this.current_year = moment(this.current_year)
-        .subtract(1, 'year')
-        .format('YYYY');
+    minus_year(typeYear) {
+      if (typeYear === 'startYear') {
+        this.start_year = moment(this.start_year)
+          .subtract(1, 'year')
+          .format('YYYY');
+      } else {
+        this.end_year = moment(this.end_year)
+          .subtract(1, 'year')
+          .format('YYYY');
+      }
     },
     set_current_year() {
-      this.current_year = moment().format('YYYY');
+      this.start_year = moment().format('YYYY');
+      this.end_year = moment().format('YYYY');
       this.load();
-    },
-    sendToProtocol(direction) {
-      if (this.isLab) {
-        this.$root.$emit('protocol:laboratoryResult', direction);
-      } else if (this.isParaclinic) {
-        this.$root.$emit('protocol:paraclinicResult', direction);
-      } else if (this.isDocReferral) {
-        this.$root.$emit('protocol:docReferralResults', direction);
-      }
     },
     print_result(pk) {
       this.$root.$emit('print:results', [pk]);
