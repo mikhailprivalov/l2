@@ -1042,7 +1042,7 @@ def load_control_param(request):
         i['dates'] = final_data.copy()
         unique_month_result.append(i)
 
-    return JsonResponse({"data": result, "uniqueMonth": unique_month})
+    return JsonResponse({"data": unique_month_result})
 
 
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
