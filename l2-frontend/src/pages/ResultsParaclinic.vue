@@ -537,7 +537,6 @@
               />
               <ResultControlParams
                 :card_pk="data.patient.card_pk"
-                is-paraclinic
               />
             </div>
             <div

@@ -40,8 +40,8 @@
       <div class="tp-inner">
         <table class="table">
           <colgroup>
-            <col width="50">
-            <col width="80">
+            <col width="60">
+            <col width="60">
             <col width="300">
             <col width="80">
           </colgroup>
@@ -105,6 +105,43 @@
             </tr>
           </tbody>
         </table>
+        <br>
+        <table class="table table-bordered table-condensed table-striped table-screening">
+          <tbody>
+            <tr
+              v-for="row in data"
+              :key="row.id"
+            >
+              <td>
+                {{ row.title }}
+              </td>
+              <td>
+                {{ row.purposeValue }}
+              </td>
+              <td
+                v-for="(value, key, index) in row.dates"
+                :key="index"
+              >
+                <div v-if="row.title==='Параметр'">
+                  {{ key }}
+                </div>
+                <div v-else>
+                  <div
+                    v-for="(jval, jkey, jindex) in value"
+                    :key="jindex"
+                  >
+                    <div
+                      v-for="k in jval"
+                      :key="k.id"
+                    >
+                      {{ k.value }};
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -120,14 +157,6 @@ export default {
       type: Number,
       required: true,
     },
-    isDocReferral: {
-      type: Boolean,
-      default: false,
-    },
-    isParaclinic: {
-      type: Boolean,
-      default: false,
-    },
   },
   data() {
     return {
@@ -141,9 +170,6 @@ export default {
       const parts = [
         'results',
         'preview',
-        this.isLab && 'lab',
-        this.isDocReferral && 'docReferral',
-        this.isParaclinic && 'paraclinic',
       ];
 
       return parts.filter(Boolean).join('-');
