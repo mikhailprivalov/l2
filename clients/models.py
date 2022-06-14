@@ -1724,5 +1724,4 @@ class CardControlParam(models.Model):
             tmp_purpose[f"{date_start}-{date_end}"] = cc.purpose_value
             tmp_data["purpose"] = tmp_purpose.copy()
             control_params[cc.patient_control_param_id] = tmp_data.copy()
-
         return control_params

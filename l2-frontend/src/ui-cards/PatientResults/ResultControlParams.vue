@@ -133,6 +133,7 @@ export default {
     return {
       start_year: moment().format('YYYY'),
       end_year: moment().format('YYYY'),
+      data: '',
     };
   },
   computed: {
