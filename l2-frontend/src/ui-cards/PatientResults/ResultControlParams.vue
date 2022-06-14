@@ -101,6 +101,9 @@
                     style="padding-bottom: 5px"
                   />
                 </button>
+                <div style="float: right">
+                  Ключевые показатели здоровья
+                </div>
               </td>
             </tr>
           </tbody>
@@ -245,8 +248,8 @@ i {
     margin: 0;
   }
 
-  max-height: 700px;
-  width: 700px;
+  max-height: 800px;
+  width: 900px;
   overflow-y: auto;
 
   &-inner {
