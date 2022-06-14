@@ -526,6 +526,19 @@
                       class="form-control"
                     >
                   </div>
+                  <div>
+                    <strong>Контролируемый параметр:</strong>
+                    <Treeselect
+                      v-model="row.patientControlParam"
+                      class="treeselect treeselect-wide"
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="patient_control_param_all"
+                      placeholder="Контролируемый параметр"
+                      :append-to-body="true"
+                      :clearable="false"
+                    />
+                  </div>
                   <div v-if="row.field_type === 0 || row.field_type === 29">
                     <strong>Значение по умолчанию:</strong>
                     <textarea
@@ -1071,6 +1084,7 @@ export default {
       departments: [],
       hospital_research_department_pk: -1,
       direction_params_all: [],
+      patient_control_param_all: [],
       direction_current_params: -1,
       direction_expertise_all: [],
       direction_current_expertise: -1,
@@ -1370,6 +1384,7 @@ export default {
             this.loaded_pk = this.pk;
             this.groups = data.groups;
             this.direction_params_all = data.direction_params_all;
+            this.patient_control_param_all = data.patient_control_param_all;
             this.direction_current_params = data.direction_current_params;
             this.direction_expertise_all = data.direction_expertise_all;
             this.direction_current_expertise = data.direction_current_expertise;
