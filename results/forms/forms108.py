@@ -84,7 +84,10 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f"Страховой полис серия: _______ №{polis_num}", style))
     fwb.append(Paragraph(f"Страховая компания (наименование): {polis_issue}", style))
     fwb.append(Paragraph(f"Направляется в: {data['Куда направляется']}", style))
-    fwb.append(Paragraph("Дата приема _______________________ Время приема _________________", style))
+    date_reception = '_______________________'
+    if data['Дата приема'] != '':
+        date_reception = data['Дата приема']
+    fwb.append(Paragraph(f"Дата приема {date_reception} Время приема _________________", style))
     fwb.append(Paragraph(f"Наименование медицинской организации по месту прикрепления: {direction.hospital_address} {direction.hospital_title}", style))
     fwb.append(Paragraph(f"Наименование направившей медицинской организации: {direction.hospital_address} {direction.hospital_title}", style))
     fwb.append(Paragraph("Направлен(а) на:", style))
@@ -155,7 +158,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
         doctor_data = data["Врач"]["fio"]
     fwb.append(Paragraph(f"Врач: {doctor_data}", style))
     fwb.append(Paragraph('телефон ____________________________ "_____" _____________ 20__ г.', style))
-    fwb.append(Paragraph(f"Руководитель: направившей медицинской организации {data['Руководитель МО']}", style))
+    fwb.append(Paragraph(f"Руководитель направившей медицинской организации: {data['Руководитель МО']}", style))
     fwb.append(Paragraph("Согласие пациента на передачу сведений электронной почтой для осуществления предварительной записи и передачи заключения:", style))
 
     return fwb
