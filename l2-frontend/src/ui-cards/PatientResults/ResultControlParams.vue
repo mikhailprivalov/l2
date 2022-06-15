@@ -295,8 +295,9 @@ i {
     word-wrap: break-word;
   }
   tr:hover {
-    background: #16a085;
+    background: #37bc9b;
     color: black;
+    opacity: 0.8;
    }
 }
 
