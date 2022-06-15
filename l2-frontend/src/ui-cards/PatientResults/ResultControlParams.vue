@@ -255,7 +255,7 @@ i {
   }
 
   max-height: 700px;
-  width: 800px;
+  width: 1000px;
   overflow-y: auto;
 
   &-inner {
@@ -280,10 +280,10 @@ i {
     position: sticky;
     background-color: white;
     left: 0;
-    z-index: 1;
+    z-index: 5;
     table-layout: fixed;
     overflow: scroll;
-    width: 200px;
+    width: 230px;
     word-wrap: break-word;
     border-right: 1px solid #eeeeee;
   }
@@ -296,9 +296,12 @@ i {
   :not(td:nth-child(1)) {
     table-layout: fixed;
     width: 110px;
-    overflow: scroll;
     word-wrap: break-word;
   }
+  tr:hover {
+    background: #16a085;
+    color: black;
+   }
 }
 
 a {
@@ -308,7 +311,7 @@ a {
 
 a:hover {
   text-decoration: underline;
-  color: #2e8dcd;
+  color: white;
 }
 
 </style>
