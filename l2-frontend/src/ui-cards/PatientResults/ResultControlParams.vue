@@ -271,10 +271,6 @@ i {
   }
 }
 
-.right-buttons {
-  text-align: right;
-}
-
 .sticky-table {
   td:first-child {
     position: sticky;
