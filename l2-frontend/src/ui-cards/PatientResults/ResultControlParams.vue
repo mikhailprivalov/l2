@@ -278,6 +278,8 @@ i {
     z-index: 1;
     table-layout: fixed;
     width: 270px;
+    overflow: scroll;
+    word-wrap: break-word;
   }
   tr:first-child {
     position: sticky;
@@ -288,6 +290,8 @@ i {
   :not(td:first-child){
     table-layout: fixed;
     width: 70px;
+    overflow: scroll;
+    word-wrap: break-word;
   }
 }
 
