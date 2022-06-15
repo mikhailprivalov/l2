@@ -101,7 +101,7 @@
                     style="padding-bottom: 5px"
                   />
                 </button>
-                <div style="float: right">
+                <div class="title-control-param">
                   Ключевые показатели здоровья
                 </div>
               </td>
@@ -309,6 +309,12 @@ a {
 a:hover {
   text-decoration: underline;
   color: white;
+}
+
+.title-control-param {
+  color: #16a085;
+  float: right;
+  font-size: 18px;
 }
 
 </style>
