@@ -109,7 +109,7 @@
           </tbody>
         </table>
         <br>
-        <table class="table table-bordered sticky-table">
+        <table class="table table-bordered table-condensed table-striped table-fixed sticky-table">
           <tbody>
             <tr
               v-for="row in data"
@@ -139,10 +139,11 @@
                       :key="k.id"
                     >
                       <a
-                        style="color: black"
                         href="#"
+                        :title="`№${k.dir} от ${jkey}`"
                         @click.prevent="print_result(k.dir)"
-                      >{{ k.value }}; &nbsp;</a>
+                      >{{ k.value }};</a>
+                       &nbsp;
                     </span>
                   </div>
                 </div>
@@ -298,6 +299,16 @@ i {
     overflow: scroll;
     word-wrap: break-word;
   }
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #2e8dcd;
 }
 
 </style>
