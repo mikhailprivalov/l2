@@ -255,7 +255,7 @@ i {
   }
 
   max-height: 700px;
-  width: 1000px;
+  width: 900px;
   overflow-y: auto;
 
   &-inner {
