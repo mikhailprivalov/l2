@@ -109,7 +109,7 @@
           </tbody>
         </table>
         <br>
-        <table class="table table-bordered table-condensed table-striped table-screening sticky-table">
+        <table class="table table-bordered sticky-table">
           <tbody>
             <tr
               v-for="row in data"
@@ -134,12 +134,12 @@
                     v-for="(jval, jkey, jindex) in value"
                     :key="jindex"
                   >
-                    <div
+                    <span
                       v-for="k in jval"
                       :key="k.id"
                     >
                       {{ k.value }};
-                    </div>
+                    </span>
                   </div>
                 </div>
               </td>
@@ -277,9 +277,10 @@ i {
     left: 0;
     z-index: 1;
     table-layout: fixed;
-    width: 270px;
     overflow: scroll;
+    width: 200px;
     word-wrap: break-word;
+    border-right: 1px solid #eeeeee;
   }
   tr:first-child {
     position: sticky;
@@ -287,9 +288,9 @@ i {
     top: 0;
     z-index: 2;
   }
-  :not(td:first-child){
+  :not(td:nth-child(1)) {
     table-layout: fixed;
-    width: 70px;
+    width: 110px;
     overflow: scroll;
     word-wrap: break-word;
   }

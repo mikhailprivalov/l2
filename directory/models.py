@@ -497,6 +497,8 @@ class ParaclinicInputGroups(models.Model):
 class PatientControlParam(models.Model):
     title = models.CharField(max_length=400, unique=True, help_text='Название название контролируемого параметра')
     code = models.CharField(max_length=400, help_text='Код параметра')
+    all_patient_contol = models.BooleanField(default=False, blank=True, help_text='Контролировать у всех по умолчанию', db_index=True)
+    order = models.IntegerField(default=-1)
 
     def __str__(self):
         return f"{self.title} - {self.code}"
@@ -508,6 +510,11 @@ class PatientControlParam(models.Model):
     @staticmethod
     def get_patient_control_params():
         return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in PatientControlParam.objects.all().order_by("title")]]
+
+    @staticmethod
+    def get_all_patient_contol_param():
+        all_patient_contol = PatientControlParam.objects.filter(all_patient_contol=True).order_by("order")
+        return {cc.pk: {"title": cc.title, "purpose": ""} for cc in all_patient_contol}
 
 
 class ParaclinicInputField(models.Model):

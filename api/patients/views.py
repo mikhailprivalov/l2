@@ -1033,7 +1033,7 @@ def load_control_param(request):
     result.append(tmp_result.copy())
 
     tmp_dates = {i: {} for i in unique_month}
-    unique_month_result = [{"title": "Параметр", "purposeValue": "Целевое знаечение", "dates": tmp_dates}]
+    unique_month_result = [{"title": "Параметр", "purposeValue": "Целевое значение", "dates": tmp_dates}]
 
     for i in result:
         final_data = tmp_dates.copy()

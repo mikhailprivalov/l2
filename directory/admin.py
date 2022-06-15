@@ -226,7 +226,7 @@ class UnitAdmin(admin.ModelAdmin):
 
 
 class ResPatientControlParam(admin.ModelAdmin):
-    list_display = ('title', 'code')
+    list_display = ('title', 'code', 'all_patient_contol', 'order',)
     search_fields = ('title',)
 
 
