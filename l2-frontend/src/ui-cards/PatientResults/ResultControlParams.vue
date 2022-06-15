@@ -138,7 +138,11 @@
                       v-for="k in jval"
                       :key="k.id"
                     >
-                      {{ k.value }};
+                      <a
+                        style="color: black"
+                        href="#"
+                        @click.prevent="print_result(k.dir)"
+                      >{{ k.value }}; &nbsp;</a>
                     </span>
                   </div>
                 </div>
