@@ -288,8 +288,6 @@ i {
   :not(td:first-child){
     table-layout: fixed;
     width: 70px;
-    overflow: scroll;
-    word-wrap: break-word;
   }
 }
 
