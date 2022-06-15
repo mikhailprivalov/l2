@@ -109,7 +109,7 @@
           </tbody>
         </table>
         <br>
-        <table class="table table-bordered table-condensed table-striped table-screening">
+        <table class="table table-bordered table-condensed table-striped table-screening sticky-table">
           <tbody>
             <tr
               v-for="row in data"
@@ -124,6 +124,7 @@
               <td
                 v-for="(value, key, index) in row.dates"
                 :key="index"
+                class="fixed-td"
               >
                 <div v-if="row.title==='Параметр'">
                   {{ key }}
@@ -248,8 +249,8 @@ i {
     margin: 0;
   }
 
-  max-height: 800px;
-  width: 900px;
+  max-height: 700px;
+  width: 800px;
   overflow-y: auto;
 
   &-inner {
@@ -268,4 +269,28 @@ i {
 .right-buttons {
   text-align: right;
 }
+
+.sticky-table {
+  td:first-child {
+    position: sticky;
+    background-color: white;
+    left: 0;
+    z-index: 1;
+    table-layout: fixed;
+    width: 270px;
+  }
+  tr:first-child {
+    position: sticky;
+    background-color: white;
+    top: 0;
+    z-index: 2;
+  }
+  :not(td:first-child){
+    table-layout: fixed;
+    width: 70px;
+    overflow: scroll;
+    word-wrap: break-word;
+  }
+}
+
 </style>
