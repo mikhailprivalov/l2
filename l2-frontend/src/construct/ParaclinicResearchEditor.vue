@@ -649,6 +649,21 @@
                   <div v-else-if="row.field_type === 27">
                     <strong>Таблица:</strong>
                   </div>
+                  <div v-else-if="row.field_type === 39">
+                    <strong>Справочник:</strong>
+                    <br>
+                    <Treeselect
+                      :value="row.values_to_input[0] || null"
+                      class="treeselect-wide"
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="dynamicDirectories"
+                      placeholder="Справочник не выбран"
+                      :append-to-body="true"
+                      :clearable="true"
+                      @input="e => e ? row.values_to_input = [e] : row.values_to_input = []"
+                    />
+                  </div>
                   <PermanentDirectories
                     v-if="row.field_type === 28"
                     :row="row"
@@ -892,6 +907,7 @@
                         Сведения о прикреплении застрахованного лица (ТФОМС)
                       </option>
                       <option value="35">Врач</option>
+                      <option value="39">Динамический справочник</option>
                     </select>
                   </label>
                 </div>
@@ -1090,6 +1106,7 @@ export default {
       direction_current_expertise: -1,
       assigned_to_params: [],
       type_period: null,
+      dynamicDirectories: [],
     };
   },
   computed: {
@@ -1172,6 +1189,7 @@ export default {
   created() {
     this.load();
     this.load_deparments();
+    this.loadDynamicDirectories();
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -1460,6 +1478,10 @@ export default {
     async load_deparments() {
       const { data } = await this.$api('procedural-list/suitable-departments');
       this.departments = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
+    },
+    async loadDynamicDirectories() {
+      const { rows } = await this.$api('dynamic-directory/list-treeselect');
+      this.dynamicDirectories = rows;
     },
   },
 };
