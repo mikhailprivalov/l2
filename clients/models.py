@@ -1715,14 +1715,16 @@ class CardControlParam(models.Model):
     @staticmethod
     def get_patient_control_param(card_pk):
         card_controls = CardControlParam.objects.filter(card_id=card_pk).order_by("pk")
-        control_params = {cc.patient_control_param_id: {"title": cc.patient_control_param.title, "purpose": {}} for cc in card_controls}
+        control_params = {cc.patient_control_param_id: {"title": cc.patient_control_param.title, "purpose": ""} for cc in card_controls}
         for cc in card_controls:
             tmp_data: dict = control_params[cc.patient_control_param_id]
-            tmp_purpose = tmp_data["purpose"]
-            date_start = cc.date_start.strftime("%d.%m.%Y") if cc.date_start else "-"
-            date_end = cc.date_end.strftime("%d.%m.%Y") if cc.date_end else "-"
-            tmp_purpose[f"{date_start}-{date_end}"] = cc.purpose_value
-            tmp_data["purpose"] = tmp_purpose.copy()
+            date_start = cc.date_start.strftime("%m.%y") if cc.date_start else "-"
+            date_end = cc.date_end.strftime("%m.%y") if cc.date_end else "-"
+            tmp_purpose = f"{tmp_data['purpose']} {date_start}:{date_end}={cc.purpose_value};"
+            tmp_data["purpose"] = tmp_purpose
             control_params[cc.patient_control_param_id] = tmp_data.copy()
-
+        all_patient_contol_param = PatientControlParam.get_all_patient_contol_param()
+        for k, v in all_patient_contol_param.items():
+            if not control_params.get(k, None):
+                control_params[k] = v
         return control_params
