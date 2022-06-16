@@ -181,14 +181,11 @@ def save_record(request):
 
         record_version: DirectoryRecordVersion = DirectoryRecordVersion.objects.filter(record=record, version=v - 1).first()
         if not record_version:
-            record_version = DirectoryRecordVersion.objects.create(
-                record=record,
-                version=v
-            )
+            record_version = DirectoryRecordVersion.objects.create(record=record, version=v)
         else:
             record_version.version = v
             record_version.save()
-        
+
         for f in fields:
             rv: DirectoryRecordValue = DirectoryRecordValue.objects.filter(record_version=record_version, field_id=f).first()
             if not rv:
@@ -196,7 +193,7 @@ def save_record(request):
                     record_version=record_version,
                     field_id=f,
                 )
-            
+
             val = request_fields.get(str(f), {}).get('value', '')
 
             if fields[f]['type'] == 4:
