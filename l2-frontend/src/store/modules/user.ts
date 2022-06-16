@@ -56,6 +56,8 @@ const getters = {
   version: (state, g) => (g.menu || {}).version || null,
   hasNewVersion: state => state.hasNewVersion,
   semiLazyState: state => state.semiLazyState,
+  hasGroup: (state, g) => (group) => g.user_groups.includes(group),
+  hasAnyGroup: (state, g) => (groups) => groups.some(gr => g.hasGroup(gr)),
 };
 
 const actions = {

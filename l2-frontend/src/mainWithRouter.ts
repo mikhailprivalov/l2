@@ -541,6 +541,14 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/directories',
+      name: 'directories',
+      component: () => import('@/pages/Directories/index.vue'),
+      meta: {
+        title: 'Справочники',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
