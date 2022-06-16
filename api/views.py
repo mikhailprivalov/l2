@@ -1242,11 +1242,23 @@ def laborants(request):
 def load_docprofile_by_group(request):
     request_data = json.loads(request.body)
     if request_data['group'] == '*':
-        users = users_all(request.user.doctorprofile.get_hospital_id())
+        users_data = users_all(request.user.doctorprofile.get_hospital_id())
     else:
-        users = users_by_group(request_data['group'], request.user.doctorprofile.get_hospital_id())
+        users_data = users_by_group(request_data['group'], request.user.doctorprofile.get_hospital_id())
     users_grouped = {}
-    for row in users:
+    position = request_data.get('position') or None
+    positions_data = []
+    control_position = False
+    if position and len(position) > 0:
+        control_position = True
+        for p_title in position:
+            positions = users.Position.objects.values_list("id", flat=True).filter(title__icontains=p_title)
+            for k in positions:
+                if k not in positions_data:
+                    positions_data.append(k)
+    for row in users_data:
+        if control_position and row[5] not in positions_data:
+            continue
         if row[2] not in users_grouped:
             users_grouped[row[2]] = {'id': f"{row[2]}", 'label': row[4] or row[3], 'children': []}
         users_grouped[row[2]]['children'].append({'id': str(row[0]), 'label': row[1], 'podr': row[4] or row[3]})
@@ -2168,17 +2180,31 @@ def search_param(request):
     date_create_end = f"{year_period}-12-31 23:59:59"
     case_number = data.get('case_number') or '-1'
     hospital_id = int(data.get('hospitalId') or -1)
+    direction_number = int(data.get('directionNumber') or -1)
+
     date_examination_start = data.get('dateExaminationStart') or '1900-01-01'
     date_examination_end = data.get('dateExaminationEnd') or '1900-01-01'
+
     doc_confirm = data.get('docConfirm') or -1
+
     date_registred_start = data.get('dateRegistredStart') or '1900-01-01'
     date_registred_start = f"{date_registred_start} 00:00:00"
     date_registred_end = data.get('dateRegistredEnd') or '1900-01-01'
     date_registred_end = f"{date_registred_end} 23:59:59"
+
     search_stationar = data.get('searchStationar') or False
+
     date_recieve = data.get('dateReceive') or '1900-01-01'
     date_recieve_start = f"{date_recieve} 00:00:00"
     date_recieve_end = f"{date_recieve} 23:59:59"
+
+    if data.get('dateCreateStart', None):
+        date_create_start = data.get('dateCreateStart')
+        date_create_start = f"{date_create_start} 00:00:00"
+
+    if data.get('dateCreateEnd', None):
+        date_create_end = data.get('dateCreateEnd') or '1900-01-01'
+        date_create_end = f"{date_create_end} 23:59:59"
 
     # из проткола
     date_get = data.get('dateGet') or '1900-01-01'
@@ -2204,6 +2230,7 @@ def search_param(request):
             date_recieve_end,
             date_get,
             final_text,
+            direction_number,
         )
         rows = [
             {
@@ -2212,9 +2239,15 @@ def search_param(request):
                 "patient_age": i.patient_age,
                 "hosp_title": i.hosp_short_title,
                 "doc_fio": i.doc_fio,
-                "direction_number": i.direction_number,
+                "direction_number": f"{i.direction_number}",
                 "field_value": i.field_value,
                 "patient_sex": i.patient_sex,
+                "registered_date": i.registered_date,
+                "time_gistology_receive": i.time_gistology_receive,
+                "date_confirm": i.date_confirm,
+                "medical_examination": i.medical_examination,
+                "doc_plan_fio": i.doc_plan_fio,
+                "additional_number": f"{i.additional_number}" if i.additional_number else "",
             }
             for i in result
         ]
@@ -2232,6 +2265,8 @@ def search_param(request):
                 "patient_sex": i.patient_sex,
                 "research_title": i.research_title,
                 "history_num": i.history_num,
+                "date_confirm": i.date_confirm,
+                "additional_number": "",
             }
             for i in result
         ]

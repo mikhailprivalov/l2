@@ -102,8 +102,9 @@ class DoctorProfile(models.Model):
     signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
 
     def get_signature_stamp_pdf(self):
-        # return os.path.join('doctorprofile_stamp_pdf', self.signature_stamp_pdf)
-        return os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf', "kanya_oleg.jpeg")
+        if self.signature_stamp_pdf:
+            return os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf', self.signature_stamp_pdf)
+        return None
 
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:

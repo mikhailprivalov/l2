@@ -155,6 +155,7 @@ class Researches(models.Model):
         (10601, '106.01 - Свидетельство о о перинатальной смерти'),
         (10701, '107.01 - МСЭ'),
         (10801, '108.01 - 83-МПР'),
+        (10901, '109.01 - 131/у'),
     )
 
     RESULT_TITLE_FORMS = (
@@ -494,8 +495,10 @@ class ParaclinicInputGroups(models.Model):
 
 
 class PatientControlParam(models.Model):
-    title = models.CharField(max_length=400, help_text='Название название контролируемого параметра')
+    title = models.CharField(max_length=400, unique=True, help_text='Название название контролируемого параметра')
     code = models.CharField(max_length=400, help_text='Код параметра')
+    all_patient_contol = models.BooleanField(default=False, blank=True, help_text='Контролировать у всех по умолчанию', db_index=True)
+    order = models.IntegerField(default=-1)
 
     def __str__(self):
         return f"{self.title} - {self.code}"
@@ -503,6 +506,15 @@ class PatientControlParam(models.Model):
     class Meta:
         verbose_name = 'Контролируемый параметр справочник'
         verbose_name_plural = 'Контролируемые параметры справочник'
+
+    @staticmethod
+    def get_patient_control_params():
+        return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in PatientControlParam.objects.all().order_by("title")]]
+
+    @staticmethod
+    def get_all_patient_contol_param():
+        all_patient_contol = PatientControlParam.objects.filter(all_patient_contol=True).order_by("order")
+        return {cc.pk: {"title": cc.title, "purpose": ""} for cc in all_patient_contol}
 
 
 class ParaclinicInputField(models.Model):
