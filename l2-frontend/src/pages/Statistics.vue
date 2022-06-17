@@ -436,9 +436,9 @@ const STATS_CATEGORIES = {
       research: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
         title: 'По услуге',
-        params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS],
+        params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
-          + 'purposes=<purposes>&special-fields=<special-fields>',
+          + 'purposes=<purposes>&special-fields=<special-fields>&date-start=<date-start>&date-end=<date-end>',
       },
       dispanserization: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
