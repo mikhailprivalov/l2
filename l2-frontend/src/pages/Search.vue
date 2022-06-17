@@ -248,6 +248,29 @@
           </span>
         </div>
       </div>
+      <div
+        v-if="hasParam && count > 0"
+        class="inner"
+      >
+        <h5>Параметры статистики</h5>
+        <Treeselect
+          v-model="statisticParam"
+          :multiple="false"
+          :disable-branch-nodes="true"
+          class="treeselect-noborder treeselect-wide"
+          :options="statisticParams"
+          :append-to-body="true"
+          placeholder="Не выбрано"
+          :clearable="false"
+        />
+        <button
+          class="btn btn-blue-nb btn-block"
+          type="button"
+          @click="print"
+        >
+          Сформировать отчёт
+        </button>
+      </div>
     </div>
     <div class="right-content">
       <div class="inner">
@@ -390,6 +413,9 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       count: 0,
       hospital_ids: [{ id: -1, label: 'По умолчанию' }],
       hospitalId: -1,
+      statisticParams: [{ id: -1, label: 'Не выбрано' }],
+      statisticParam: -1,
+      hasParam: false,
     };
   },
   async mounted() {
@@ -451,6 +477,8 @@ export default class SearchPage extends Vue {
 
   searchStationar: boolean;
 
+  hasParam: boolean;
+
   dateRegisteredRange: string[];
 
   docConfirm: null | number;
@@ -463,6 +491,8 @@ export default class SearchPage extends Vue {
 
   dateReceive: string | null;
 
+  statisticParams: any[];
+
   get isValid() {
     return this.searchStationar || (!!this.year && !!this.research && this.research !== -1);
   }
@@ -471,8 +501,12 @@ export default class SearchPage extends Vue {
     return this.searchStationar;
   }
 
+  get userGroups() {
+    return this.$store.getters.user_data.groups || [];
+  }
+
   get canSelectHospitals() {
-    const groups = this.$store.getters.user_data.groups || [];
+    const groups = this.userGroups;
     return groups.includes('Направления-все МО');
   }
 
@@ -499,7 +533,15 @@ export default class SearchPage extends Vue {
     const dataRows = await this.$api('/search-param', data);
     this.results = dataRows.rows || [];
     this.count = dataRows.count || 0;
+    this.statisticParamsSerch();
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
 
+  async statisticParamsSerch() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const dataRows = await this.$api('/statistic-params-search');
+    this.statisticParams = [{ id: -1, label: 'Не выбрано' }, ...dataRows.rows];
+    this.hasParam = dataRows.hasParam;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 

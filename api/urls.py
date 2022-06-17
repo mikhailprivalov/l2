@@ -69,6 +69,7 @@ urlpatterns = [
     path('disabled-reports', views.get_disabled_reports),
     path('current-time', views.current_time),
     path('search-param', views.search_param),
+    path('statistic-params-search', views.statistic_params_search),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),
