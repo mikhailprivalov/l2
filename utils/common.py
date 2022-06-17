@@ -32,7 +32,7 @@ def non_selected_visible_type(orig, more_filters=None, for_treeselect=None):
 def list_non_selected_visible_type(orig, for_treeselect=None):
     if for_treeselect:
         return [{"id": i['pk'], "label": i['title']} for i in list(orig)]
-    return [{"pk": -1, "title": "Не выбрано"}, *list(orig)]
+    return [{"pk": -1, "label": "Не выбрано"}, *list(orig)]
 
 
 def none_if_minus_1(v):

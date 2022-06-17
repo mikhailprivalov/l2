@@ -48,6 +48,15 @@ class SettingManager:
         return value
 
     @staticmethod
+    def set_value(key, value, default_type='s'):
+        row = appconf.Setting.objects.filter(name=key).first()
+        if not row:
+            SettingManager.get(key, value, default_type=default_type)
+        else:
+            row.value = value or ''
+            row.save()
+
+    @staticmethod
     def l2(key):
         return SettingManager.get('l2_{}'.format(key), default='false', default_type='b')
 
@@ -78,6 +87,15 @@ class SettingManager:
     @staticmethod
     def instance_id():
         return SettingManager.get("instance_id", default='', default_type='s')
+
+    @staticmethod
+    def get_dynamic_directory_version():
+        return SettingManager.get("dynamic_directory_version", default='0', default_type='i')
+
+    @staticmethod
+    def inc_dynamic_directory_version():
+        current_version = SettingManager.get_dynamic_directory_version()
+        SettingManager.set_value("dynamic_directory_version", str(current_version + 1), default_type='i')
 
     @staticmethod
     def l2_modules() -> dict:

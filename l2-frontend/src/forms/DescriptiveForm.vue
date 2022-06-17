@@ -77,6 +77,7 @@
                       27: 1,
                       28: 1,
                       30: 1,
+                      39: 1,
                     }[field.field_type]
                 "
                 :pk="field.pk"
@@ -456,6 +457,17 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 39"
+                class="field-value field-value-address mkb"
+              >
+                <DynamicDirectoryField
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :edit-title="`${group.title} ${field.title}`.trim()"
+                  :directory="field.values_to_input[0]"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -517,6 +529,7 @@ export default {
     TfomsAttachmentField: () => import('@/fields/TfomsAttachmentField.vue'),
     DoctorProfileTreeselectField: () => import('@/fields/DoctorProfileTreeselectField.vue'),
     ProcedureListResult: () => import('@/fields/ProcedureListResult.vue'),
+    DynamicDirectoryField: () => import('@/fields/DynamicDirectoryField.vue'),
   },
   props: {
     research: {

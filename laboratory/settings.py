@@ -29,6 +29,7 @@ INSTALLED_APPS = (
     'health',
     'appconf.apps.AppconfConfig',
     'manifest_loader',
+    'dynamic_directory.apps.DynamicDirectoryConfig',
     'clients',
     'users',
     'mainmenu',
