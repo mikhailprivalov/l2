@@ -175,6 +175,13 @@ def menu(request):
                     "access": ["*"],
                     "module": "l2_some_links",
                 },
+                {
+                    "url": '/ui/directories',
+                    "title": "Справочники",
+                    "nt": False,
+                    "access": ["*"],
+                    "module": "l2_dynamic_directories",
+                },
                 # {"url": '/ui/cases', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 

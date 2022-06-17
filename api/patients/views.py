@@ -992,14 +992,14 @@ def load_screening(request):
 def load_control_param(request):
     request_data = json.loads(request.body)
     card_pk = request_data.get("card_pk") or None
-    start_date = request_data["start_date"]
-    end_date = request_data["end_date"]
+    start_date = request_data["start_year"]
+    end_date = request_data["end_year"]
     if not (card_pk and start_date and end_date):
         JsonResponse({"data": ""})
 
     data_params = CardControlParam.get_patient_control_param(card_pk)
-    start_date = f"{start_date} 00:00:00"
-    end_date = f"{end_date} 23:59:59"
+    start_date = f"{start_date}-01-01 00:00:00"
+    end_date = f"{end_date}-12-31 23:59:59"
     control_params = tuple(data_params.keys())
     paralinic_result = get_patient_control_params(start_date, end_date, control_params, card_pk)
     prev_patient_control_param_id = None
@@ -1031,7 +1031,18 @@ def load_control_param(request):
     unique_month = sorted(list(set(unique_month)))
 
     result.append(tmp_result.copy())
-    return JsonResponse({"data": result, "uniqueMonth": unique_month})
+
+    tmp_dates = {i: {} for i in unique_month}
+    unique_month_result = [{"title": "Параметр", "purposeValue": "Целевое значение", "dates": tmp_dates}]
+
+    for i in result:
+        final_data = tmp_dates.copy()
+        for k, v in i['dates'].items():
+            final_data[k] = v
+        i['dates'] = final_data.copy()
+        unique_month_result.append(i)
+
+    return JsonResponse({"results": unique_month_result})
 
 
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
