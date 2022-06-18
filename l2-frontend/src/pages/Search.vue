@@ -264,9 +264,10 @@
           :clearable="false"
         />
         <button
+          v-if="statisticParam !== -1"
           class="btn btn-blue-nb btn-block"
           type="button"
-          @click="print"
+          @click="genReport"
         >
           Сформировать отчёт
         </button>
@@ -378,6 +379,8 @@ import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import DoctorProfileTreeselectField from '@/fields/DoctorProfileTreeselectField.vue';
 import DateRange from '@/ui-cards/DateRange.vue';
+import axios from 'axios';
+import * as Cookies from 'es-cookie';
 
 const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
 
@@ -416,6 +419,7 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       statisticParams: [{ id: -1, label: 'Не выбрано' }],
       statisticParam: -1,
       hasParam: false,
+      directionsReport: [],
     };
   },
   async mounted() {
@@ -457,9 +461,13 @@ export default class SearchPage extends Vue {
 
   hospitalId: number;
 
+  statisticParam: number;
+
   count: number;
 
   researches: any[];
+
+  directionsReport: any[];
 
   caseNumber: string;
 
@@ -533,7 +541,12 @@ export default class SearchPage extends Vue {
     const dataRows = await this.$api('/search-param', data);
     this.results = dataRows.rows || [];
     this.count = dataRows.count || 0;
-    this.statisticParamsSerch();
+    if (this.count > 0) {
+      this.statisticParamsSerch();
+      for (const element of this.results) {
+        this.directionsReport.push(element.direction_number);
+      }
+    }
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -543,6 +556,46 @@ export default class SearchPage extends Vue {
     this.statisticParams = [{ id: -1, label: 'Не выбрано' }, ...dataRows.rows];
     this.hasParam = dataRows.hasParam;
     await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  genReport() {
+    axios({
+      method: 'post',
+      url: '/api/reports/statistic-params-search',
+      data: {
+        directions: this.directionsReport,
+        param: this.statisticParam,
+        researchId: this.research,
+      },
+      responseType: 'blob',
+      headers: {
+        'X-CSRFToken': Cookies.get('csrftoken'),
+      },
+    })
+      .then((response) => {
+        const blob = new Blob([response.data], { type: 'application/ms-excel' });
+        const downloadUrl = window.URL.createObjectURL(blob);
+        let filename = '';
+        const disposition = response.headers['content-disposition'];
+        if (disposition && disposition.indexOf('attachment') !== -1) {
+          const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+          const matches = filenameRegex.exec(disposition);
+          filename = matches?.[1].replace(/['"]/g, '') || '';
+        }
+        const a = document.createElement('a');
+        if (typeof a.download === 'undefined') {
+          window.location.href = downloadUrl;
+        } else {
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        this.$root.$emit('msg', 'error', 'Сохранить данные в виде XLSX не удалось');
+      });
   }
 
   print(pk) {

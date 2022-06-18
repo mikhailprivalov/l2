@@ -1845,24 +1845,3 @@ def sreening_xls(request):
     wb.save(response)
 
     return response
-
-
-def statistic_params_search(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        table_data = data.get("data")
-        date = data.get("date")
-
-        research_pk = data.get("research")
-        monitoring = Researches.objects.get(pk=research_pk)
-        symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
-        tr = {ord(a): ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
-
-        response = HttpResponse(content_type='application/ms-excel')
-        wb = openpyxl.Workbook()
-        wb.remove(wb.get_sheet_by_name('Sheet'))
-        ws = wb.create_sheet(f'{monitoring.title}')
-
-        response['Content-Disposition'] = str.translate(f"attachment; filename=\"{monitoring.title}, {date}.xlsx\"", tr)
-        wb.save(response)
-        return response
