@@ -1,5 +1,5 @@
 import json
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponse
 import openpyxl
 
 from api.reports import structure_sheet
