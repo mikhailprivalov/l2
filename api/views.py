@@ -8,8 +8,16 @@ from typing import Optional, Union
 import pytz
 
 from doctor_schedule.models import ScheduleResource
-from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS, TIME_ZONE, TITLE_REPORT_FILTER_STATTALON_FIELDS, \
-    SEARCH_PAGE_STATISTIC_PARAMS
+from laboratory.settings import (
+    SYSTEM_AS_VI,
+    SOME_LINKS,
+    DISABLED_FORMS,
+    DISABLED_STATISTIC_CATEGORIES,
+    DISABLED_STATISTIC_REPORTS,
+    TIME_ZONE,
+    TITLE_REPORT_FILTER_STATTALON_FIELDS,
+    SEARCH_PAGE_STATISTIC_PARAMS,
+)
 from utils.response import status_response
 
 from django.core.validators import validate_email
