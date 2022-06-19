@@ -16,8 +16,15 @@ def patologistology_buh(data):
         "purpose": "",
         "service_code": ""
     }
-    match_keys = {"Полис ОМС": "polis", "СНИЛС": "snils", "ФИО пациента": "fio_patient", "Дата рождения": "born_patient", "Дата регистрации": "visit_date",
-                  "Медицинские услуги": "service_code", "Код по МКБ": "mcb10_code"}
+    match_keys = {
+        "Полис ОМС": "polis",
+        "СНИЛС": "snils",
+        "ФИО пациента": "fio_patient",
+        "Дата рождения": "born_patient",
+        "Дата регистрации": "visit_date",
+        "Медицинские услуги": "service_code",
+        "Код по МКБ": "mcb10_code",
+    }
 
     for i in data:
         if i.direction_id != prev_direction and step != 0:
