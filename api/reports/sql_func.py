@@ -4,10 +4,6 @@ from utils.db import namedtuplefetchall
 
 
 def report_buh_gistology(directions):
-    """
-
-    :return:
-    """
     with connection.cursor() as cursor:
         cursor.execute(
             """ 
