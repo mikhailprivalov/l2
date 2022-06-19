@@ -24,7 +24,6 @@ def statistic_params_search(request):
         if not (param and research_id and directions):
             return response
         some_report = []
-        # some_repot = [v for k, v in SEARCH_PAGE_STATISTIC_PARAMS.items() if k in groups_user]
         for k, v in SEARCH_PAGE_STATISTIC_PARAMS.items():
             if k in groups_user:
                 some_report.extend(v)
