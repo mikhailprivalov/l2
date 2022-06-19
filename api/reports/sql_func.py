@@ -12,7 +12,7 @@ def report_buh_gistology(directions):
         cursor.execute(
             """ 
         SELECT
-        dn.id,
+        dn.id as direction_id,
         dn.hospital_id,
         dn.istochnik_f_id,
         to_char(dn.visit_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS char_visit_date,
@@ -36,7 +36,7 @@ def report_buh_gistology(directions):
         LEFT JOIN directory_paraclinicinputfield dpif on dp.field_id = dpif.id
         
         WHERE directions_issledovaniya.napravleniye_id in %(directions)s
-        ORDER BY hh.title, dn.visit_date
+        ORDER BY hh.title, dn.visit_date, dn.id
 
         """,
             params={'directions': directions, 'tz': TIME_ZONE},

@@ -4,6 +4,7 @@ import openpyxl
 
 from api.reports import structure_sheet
 from api.reports import sql_func
+from api.reports import handle_func
 
 from laboratory.settings import SEARCH_PAGE_STATISTIC_PARAMS
 
@@ -59,10 +60,11 @@ def statistic_params_search(request):
         directions_data = tuple(list(set(directions)))
         if param == '1':
             result = sql_func.report_buh_gistology(directions_data)
-        ws = structure_sheet.monitoring_xlsx(ws)
+            final_structure = handle_func.patologistology_buh(result)
+            ws = structure_sheet.patologistology_buh_base(ws)
+            ws = structure_sheet.patologistology_buh_data(ws, final_structure)
 
         title = "отчет"
-        date = "2022-01-01"
-        response['Content-Disposition'] = str.translate(f"attachment; filename=\"{title}, {date}.xlsx\"", tr)
+        response['Content-Disposition'] = str.translate(f"attachment; filename=\"{title}.xlsx\"", tr)
         wb.save(response)
         return response

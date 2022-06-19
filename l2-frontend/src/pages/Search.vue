@@ -543,6 +543,7 @@ export default class SearchPage extends Vue {
     this.count = dataRows.count || 0;
     if (this.count > 0) {
       this.statisticParamsSerch();
+      this.directionsReport = [];
       for (const element of this.results) {
         this.directionsReport.push(element.direction_number);
       }
