@@ -700,11 +700,16 @@ def statistic_xls(request):
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             month_obj = ''
-        else:
+        elif request_data.get("date_type") == 'm':
             month_obj = int(data_date['month']) + 1
             _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
             d1 = datetime.date(int(data_date['year']), month_obj, 1)
             d2 = datetime.date(int(data_date['year']), month_obj, num_days)
+        else:
+            d_s = request_data.get("date-start")
+            d_e = request_data.get("date-end")
+            d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
+            d2 = datetime.datetime.strptime(d_e, '%d.%m.%Y')
 
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
