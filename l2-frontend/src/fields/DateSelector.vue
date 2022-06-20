@@ -77,8 +77,9 @@ export default {
   },
   data() {
     return {
-      date_type: 'd',
+      date_type: 'null',
       date_types: [
+        { value: 'null', label: 'Период не указан' },
         { value: 'd', label: 'За день' },
         { value: 'm', label: 'За месяц' },
       ],

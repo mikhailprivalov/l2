@@ -8,7 +8,16 @@ from typing import Optional, Union
 import pytz
 
 from doctor_schedule.models import ScheduleResource
-from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS, TIME_ZONE, TITLE_REPORT_FILTER_STATTALON_FIELDS
+from laboratory.settings import (
+    SYSTEM_AS_VI,
+    SOME_LINKS,
+    DISABLED_FORMS,
+    DISABLED_STATISTIC_CATEGORIES,
+    DISABLED_STATISTIC_REPORTS,
+    TIME_ZONE,
+    TITLE_REPORT_FILTER_STATTALON_FIELDS,
+    SEARCH_PAGE_STATISTIC_PARAMS,
+)
 from utils.response import status_response
 
 from django.core.validators import validate_email
@@ -2272,3 +2281,15 @@ def search_param(request):
         ]
 
     return JsonResponse({"rows": rows, "count": len(rows)})
+
+
+def statistic_params_search(request):
+    user_groups = [str(x) for x in request.user.groups.all()]
+    result = []
+    has_param = False
+    for k, v in SEARCH_PAGE_STATISTIC_PARAMS.items():
+        if k in user_groups:
+            result.extend(v)
+    if len(result) > 0:
+        has_param = True
+    return JsonResponse({"rows": result, "hasParam": has_param})
