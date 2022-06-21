@@ -995,12 +995,14 @@ def load_control_param(request):
     start_date = request_data["start_year"]
     end_date = request_data["end_year"]
     if not (card_pk and start_date and end_date):
-        JsonResponse({"data": ""})
+        return JsonResponse({"results": ""})
 
     data_params = CardControlParam.get_patient_control_param(card_pk)
     start_date = f"{start_date}-01-01 00:00:00"
     end_date = f"{end_date}-12-31 23:59:59"
     control_params = tuple(data_params.keys())
+    if not control_params:
+        return JsonResponse({"results": ""})
     paralinic_result = get_patient_control_params(start_date, end_date, control_params, card_pk)
     prev_patient_control_param_id = None
     tmp_result = {"controlParamId": "", "title": "", "purposeValue": {}, "dates": {}}
