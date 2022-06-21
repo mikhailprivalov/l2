@@ -3762,3 +3762,249 @@ def form_15(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
+
+def form_16(request_data):
+    """
+    Отказ от видов медицинских вмешательств, приказ от 12 ноября 2021г N1051н
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title='Форма отказ от медицинского вмешательства N1057н'
+    )
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.leading = 12
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    styleSign.alignment = TA_LEFT
+    styleSign.leading = 13
+
+    styleSignCenter = deepcopy(styleSign)
+    styleSignCenter.alignment = TA_CENTER
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.firstLineIndent = 0
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 9
+    styleCenter.leading = 10
+    styleCenter.spaceAfter = 0 * mm
+
+    styleRight = deepcopy(style)
+    styleRight.aligment = TA_RIGHT
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.firstLineIndent = 0
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 13
+    styleCenterBold.face = 'PTAstraSerifBold'
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    styleT = deepcopy(style)
+    styleT.firstLineIndent = 0
+
+    objs = []
+
+    opinion = [
+        [
+            Paragraph('', style),
+            Paragraph('Приложение №3 к приказу Министерства здравоохранения <br/> Российской Федерации от 12 ноября 2021г. №1051н', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [90 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 80),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    objs.append(tbl)
+
+    objs.append(Paragraph('Отказ от видов медицинских вмешательств', styleCenterBold))
+
+    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"Я, {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleSign))
+
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleSign))
+    objs.append(Spacer(1, 2 * mm))
+
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleBold),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. рождения", styleSign),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleSign),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleSign),
+        ]
+
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleSign)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleSign))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleSign)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleSign))
+
+        objs.extend(opinion)
+
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+
+    objs.append(Paragraph(f" При оказании мне первичной медико-санитарной помощи в <u>{hospital_name}</u>", styleSign))
+
+    objs.append(
+        Paragraph(
+            'Отказываюсь от следующих видов медицинских вмешательств, включенных в '
+            'Перечень определенных видов медицинских вмешательств, на которые граждане дают '
+            'информированное добровольное согласие при выборе врача и медицинской организации '
+            'для получения первичной медико-санитарной помощи, утвержденный приказом '
+            'Министерства здравоохранения и социального развития Российской Федерации'
+            'от 23 апреля 2012 г. № 390н:',
+            style,
+        )
+    )
+
+    objs.append(Paragraph('<br/>_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('(наименование вида медицинского вмешательства)', styleCenter))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(
+        Paragraph(
+            'Медицинским работником _______________________________________________________________________',
+            style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            'в доступной для меня форме мне разъяснены возможные последствия отказа от '
+            'вышеуказанных видов медицинских вмешательств, в том числе вероятность '
+            'развития осложнений заболевания (состояния).',
+            style,
+        )
+    )
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(
+        Paragraph(
+            '(указываются возможные последствия отказа от вышеуказанного(ых) вида(ов) медицинского '
+            'вмешательства, в том числе вероятность развития осложнений заболевания (состояния))', styleCenter
+        )
+    )
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(
+            'Мне разъяснено, что при возникновении необходимости в осуществлении одного или нескольких видов '
+            'медицинских вмешательств, в отношении которых оформлен настоящий отказ, я '
+            'имею право оформить информированное добровольное согласие на такой вид '
+            '(такие виды) медицинского вмешательства.',
+            style,
+        )
+    )
+
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleSignCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){22 * space_bottom}(Ф.И.О. гражданина или законного представителя гражданина){30 * space_bottom}', styleCenter))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_bottom}', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){33 * space_bottom}(Ф.И.О. медицинского работника){43 * space_bottom}', styleCenter))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{3 * space_bottom}(дата оформления)', styleSign))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
