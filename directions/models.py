@@ -2247,8 +2247,12 @@ class ParaclinicResult(models.Model):
     value = models.TextField()
     value_json = JSONField(default=dict, blank=True)
 
-    def get_field_type(self):
-        return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
+    def get_field_type(self, default_field_type=None, is_confirmed_strict=None):
+        return (
+            self.field_type
+            if (is_confirmed_strict is None and self.issledovaniye.time_confirmation and self.field_type) or (is_confirmed_strict and self.field_type) is not None
+            else default_field_type or self.field.field_type
+        )
 
     class JsonParser:
         PARSERS = {

@@ -1,4 +1,3 @@
-from laboratory.utils import strdate
 from utils.dates import normalize_date
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet

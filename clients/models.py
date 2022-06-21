@@ -1009,23 +1009,33 @@ class Card(models.Model):
             for p in Phones.objects.filter(card=self, number=t):
                 p.normalize_number()
 
-    def get_card_documents(self, as_model=False):
-        types = [t.pk for t in DocumentType.objects.all()]
+    def get_card_documents(self, as_model=False, check_has_type=None):
+        if not check_has_type:
+            types = [t.pk for t in DocumentType.objects.all()]
+        else:
+            types = [t.pk for t in DocumentType.objects.filter(title__in=check_has_type)]
         docs = {}
         for t in types:
-            CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=False).delete()
+            if not check_has_type:
+                CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=False).delete()
             if CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=True).exists():
+                if check_has_type:
+                    return True
                 docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document
             elif Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).exists():
                 d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by('-id')[0]
                 c = CardDocUsage(card=self, document=d)
                 c.save()
                 docs[t] = d
-            else:
+                if check_has_type:
+                    return True
+            elif not check_has_type:
                 docs[t] = None
 
-            if docs[t] and not as_model:
+            if not check_has_type and docs[t] and not as_model:
                 docs[t] = docs[t].pk
+        if check_has_type:
+            return False
         return docs
 
     def get_n3_documents(self):
