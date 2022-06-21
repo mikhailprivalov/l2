@@ -34,7 +34,7 @@ from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
-from clients.models import Card, DocumentType, Individual, DispensaryReg, BenefitReg
+from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import (
     DirectionDocument,
     DocumentSign,
@@ -62,7 +62,7 @@ from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
-from laboratory.utils import current_year, strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
+from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal, result_print
@@ -1240,10 +1240,9 @@ def directions_paraclinic_form(request):
             pk = Napravleniya.objects.filter(register_number=pk)[0].pk
         else:
             pk = -1
-
     dn = (
         Napravleniya.objects.filter(pk=pk)
-        .select_related('client', 'client__base', 'client__individual', 'doc', 'doc__podrazdeleniye')
+        .select_related('client', 'client__base', 'client__individual', 'doc', 'doc__podrazdeleniye', 'doc__hospital', 'hospital')
         .prefetch_related(
             Prefetch(
                 'issledovaniya_set',
@@ -1293,10 +1292,9 @@ def directions_paraclinic_form(request):
             response["has_monitoring"] = False
             response["card_internal"] = d.client.base.internal_type
             response["hospital_title"] = d.hospital_title
-            card_documents = d.client.get_card_documents()
-            snils_types = [x.pk for x in DocumentType.objects.filter(title='СНИЛС')]
+            card_documents = d.client.get_card_documents(check_has_type=['СНИЛС'])
 
-            snils_numbers = {x: card_documents[x] for x in snils_types if card_documents.get(x)}
+            has_snils = bool(card_documents)
 
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
@@ -1314,24 +1312,27 @@ def directions_paraclinic_form(request):
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
                 "base": d.client.base_id,
                 "main_diagnosis": d.client.main_diagnosis,
-                "has_snils": bool(snils_numbers),
+                "has_snils": has_snils,
             }
+            all_confirmed = d.is_all_confirm()
+            hospital_tfoms_code = d.get_hospital_tfoms_id()
+            date = strdateru(d.data_sozdaniya)
             response["direction"] = {
                 "pk": d.pk,
-                "date": strdate(d.data_sozdaniya),
-                "all_confirmed": d.is_all_confirm(),
+                "date": date,
+                "all_confirmed": all_confirmed,
                 "diagnos": d.diagnos,
                 "fin_source": d.fin_title,
                 "fin_source_id": d.istochnik_f_id,
                 "priceCategory": "" if not d.price_category else d.price_category.title,
                 "priceCategoryId": "" if not d.price_category else d.price_category.pk,
                 "additionalNumber": d.register_number,
-                "timeGistologyReceive": None if not d.time_gistology_receive else strfdatetime(d.time_gistology_receive, '%d.%m.%Y %X'),
+                "timeGistologyReceive": strdatetimeru(d.time_gistology_receive),
                 "coExecutor": d.co_executor_id,
                 "tube": None,
                 "amd": d.amd_status,
                 "amd_number": d.amd_number,
-                "hospitalTFOMSCode": d.get_hospital_tfoms_id(),
+                "hospitalTFOMSCode": hospital_tfoms_code,
             }
 
             response["researches"] = []
@@ -1425,8 +1426,8 @@ def directions_paraclinic_form(request):
                         "service": i.napravleniye.parent.research.get_title(),
                         "is_hospital": i.napravleniye.parent.research.is_hospital,
                     },
-                    "whoSaved": None if not i.doc_save or not i.time_save else f"{i.doc_save}, {strdatetime(i.time_save)}",
-                    "whoConfirmed": (None if not i.doc_confirmation or not i.time_confirmation else f"{i.doc_confirmation}, {strdatetime(i.time_confirmation)}"),
+                    "whoSaved": None if not i.doc_save or not i.time_save else f"{i.doc_save}, {strdatetimeru(i.time_save)}",
+                    "whoConfirmed": (None if not i.doc_confirmation or not i.time_confirmation else f"{i.doc_confirmation}, {strdatetimeru(i.time_confirmation)}"),
                     "whoExecuted": None if not i.time_confirmation or not i.executor_confirmation else str(i.executor_confirmation),
                     "countFiles": IssledovaniyaFiles.objects.filter(issledovaniye_id=i.pk).count(),
                 }
@@ -1541,7 +1542,6 @@ def directions_paraclinic_form(request):
                             )
 
                 ParaclinicTemplateName.make_default(i.research)
-
                 rts = ParaclinicTemplateName.objects.filter(research=i.research, hide=False)
 
                 for rt in rts.order_by('title'):
@@ -1552,6 +1552,7 @@ def directions_paraclinic_form(request):
                         }
                     )
 
+                result_fields = {x.field_id: x for x in ParaclinicResult.objects.filter(issledovaniye=i)}
                 for group in i.research.paraclinicinputgroups_set.all():
                     g = {
                         "pk": group.pk,
@@ -1567,9 +1568,11 @@ def directions_paraclinic_form(request):
                     for field in group.paraclinicinputfield_set.all():
                         if "Протокол для оператора" in user_groups and not field.operator_enter_param:
                             continue
-                        result_field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=i, field=field).first()
-                        field_type = field.field_type if not result_field else result_field.get_field_type()
-                        values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + json.loads(field.input_templates)
+                        result_field: ParaclinicResult = result_fields.get(field.pk)
+                        field_type = field.field_type if not result_field else result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=bool(i.time_confirmation))
+                        values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + (
+                            [] if field.input_templates == '[]' or not field.input_templates else json.loads(field.input_templates)
+                        )
                         value = (
                             ((field.default_value if field_type not in [3, 11, 13, 14, 30] else '') if not result_field else result_field.value)
                             if field_type not in [1, 20]

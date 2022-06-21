@@ -1,9 +1,8 @@
-from reportlab.lib.colors import black
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 from directions.models import ParaclinicResult
 from results.prepare_data import text_to_bold
