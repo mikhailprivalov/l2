@@ -32,7 +32,7 @@ def report_buh_gistology(directions):
         LEFT JOIN directory_paraclinicinputfield dpif on dp.field_id = dpif.id
         
         WHERE directions_issledovaniya.napravleniye_id in %(directions)s
-        ORDER BY hh.title, dn.visit_date, dn.id
+        ORDER BY dn.id, dn.visit_date 
 
         """,
             params={'directions': directions, 'tz': TIME_ZONE},
