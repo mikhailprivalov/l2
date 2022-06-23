@@ -2750,7 +2750,7 @@ def form_10(request_data):
     return pdf
 
 
-def form_11(request_data):
+def form_101(request_data):
     """
     Отказ от видов медицинских вмешательств, включенных
     в Перечень определенных видов медицинских вмешательств,
@@ -3764,7 +3764,7 @@ def form_15(request_data):
     return pdf
 
 
-def form_16(request_data):
+def form_11(request_data):
     """
     Отказ от видов медицинских вмешательств, приказ от 12 ноября 2021г N1051н
     """
