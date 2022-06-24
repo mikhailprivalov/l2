@@ -3798,7 +3798,7 @@ def form_11(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title='Форма отказ от медицинского вмешательства N1057н'
+        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title='Форма отказ от медицинского вмешательства N1051н'
     )
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
