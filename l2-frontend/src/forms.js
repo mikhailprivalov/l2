@@ -7,7 +7,7 @@ export default [
     forms: [
       { url: '/forms/pdf?type=101.13&card_pk={card}', title: 'Согласие на диспансеризацию', type: '101.13' },
       { url: '/forms/pdf?type=101.12&card_pk={card}', title: 'Согласие на прививку COVID-19', type: '101.12' },
-      { url: '/forms/pdf?type=101.16&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.11' },
+      { url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.11' },
       { url: '/forms/pdf?type=101.09&card_pk={card}', title: 'Согласие на прерывание беремености', type: '101.09' },
       { url: '/forms/pdf?type=101.06&card_pk={card}', title: 'Согласие COVID-19', type: '101.06' },
       { url: '/forms/pdf?type=101.02&card_pk={card}', title: 'Согласие на обработку персональных данных', type: '101.02' },
