@@ -40,7 +40,7 @@ import directions.models as directions
 from appconf.manager import SettingManager
 from clients.models import Individual, Card
 from clients.sql_func import last_results_researches_by_time_ago
-from directory.models import Researches, Fractions, ReleationsFT, HospitalService
+from directory.models import Researches, Fractions, ReleationsFT, HospitalService, ParaclinicInputGroups, ParaclinicInputField
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
 from laboratory.settings import (
@@ -1416,14 +1416,19 @@ def external_direction_create(request):
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
             if time_get and not valid_date(time_get):
-                raise InvalidData('содержит некорректное поле dateTimeGet. Оно должно быть пустым или соответствовать шаблону YYYY-MM-DD HH:MM')
+                raise InvalidData('Содержит некорректное поле dateTimeGet. Оно должно быть пустым или соответствовать шаблону YYYY-MM-DD HH:MM')
 
             iss = directions.Issledovaniya.objects.create(
                 napravleniye=direction,
-                research=GISTOLOGY_RESEARCH_PK,
+                research_id=GISTOLOGY_RESEARCH_PK,
             )
-            direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, title=title, field=field_obj, field_type=field_type, value=value, order=order)
-            direction_params_obj.save()
+            research = Researches.objects.filter(pk=GISTOLOGY_RESEARCH_PK).first()
+            direction_form_research = research.direction_form
+            for group in ParaclinicInputGroups.objects.filter(research=direction_form_research):
+                for f in ParaclinicInputField.objects.filter(group=group):
+                    if f.title == "диагноз":
+                        direction_params_obj = directions.DirectionParamsResult(napravleniye=direction, title=f.title, field=f, field_type=f.field_type, value=value, order=f.order)
+                        direction_params_obj.save()
 
             try:
                 Log.log(
