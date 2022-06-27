@@ -53,7 +53,7 @@ from laboratory.settings import (
     LK_USER,
     LK_FILE_SIZE_BYTES,
     LK_FILE_COUNT,
-    LK_DAY_MONTH_START_SHOW_RESULT,
+    LK_DAY_MONTH_START_SHOW_RESULT, GISTOLOGY_RESEARCH_PK,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -1239,6 +1239,235 @@ def external_research_create(request):
         message = 'Серверная ошибка'
 
     return Response({"ok": False, 'message': message})
+
+
+@api_view(['POST'])
+def external_direction_create(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+
+    org = body.get("org", {})
+    code_tfoms = org.get("codeTFOMS")
+    oid_org = org.get("oid")
+
+    if not code_tfoms and not oid_org:
+        return Response({"ok": False, 'message': 'Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid'})
+
+    if code_tfoms:
+        hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
+    else:
+        hospital = Hospitals.objects.filter(oid=oid_org).first()
+
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
+
+    patient = body.get("patient", {})
+
+    enp = (patient.get("enp") or '').replace(' ', '')
+
+    if enp and (len(enp) != 16 or not enp.isdigit()):
+        return Response({"ok": False, 'message': 'Неверные данные полиса, должно быть 16 чисел'})
+
+    snils = (patient.get("snils") or '').replace(' ', '').replace('-', '')
+
+    if not enp and not snils:
+        return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber'})
+
+    if snils and not petrovna.validate_snils(snils):
+        return Response({"ok": False, 'message': 'patient.snils: не прошёл валидацию'})
+
+    individual_data = patient.get("individual") or {}
+
+    if not enp and not individual_data:
+        return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано поле patient.individual'})
+
+    lastname = str(individual_data.get("lastname") or '')
+    firstname = str(individual_data.get('firstname') or '')
+    patronymic = str(individual_data.get('patronymic') or '')
+    birthdate = str(individual_data.get('birthdate') or '')
+    sex = str(individual_data.get('sex') or '').lower()
+
+    individual = None
+
+    if lastname and not firstname:
+        return Response({"ok": False, 'message': 'При передаче lastname должен быть передан и firstname'})
+
+    if firstname and not lastname:
+        return Response({"ok": False, 'message': 'При передаче firstname должен быть передан и lastname'})
+
+    if firstname and lastname and not birthdate:
+        return Response({"ok": False, 'message': 'При передаче firstname и lastname должно быть передано поле birthdate'})
+
+    if birthdate and (not re.fullmatch(r'\d{4}-\d\d-\d\d', birthdate) or birthdate[0] not in ['1', '2']):
+        return Response({"ok": False, 'message': 'birthdate должно соответствовать формату YYYY-MM-DD'})
+
+    if birthdate and sex not in ['м', 'ж']:
+        return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
+
+    individual_status = "unknown"
+
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        if not individuals.exists():
+            individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
+            individual = individuals.first()
+            individual_status = "local_enp"
+        if not individual:
+            tfoms_data = match_enp(enp)
+            if tfoms_data:
+                individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+                individual_status = "tfoms_match_enp"
+
+            individual = individuals.first()
+
+    if not individual and lastname:
+        tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
+        if tfoms_data:
+            individual_status = "tfoms_match_patient"
+            individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+        individual_status = "snils"
+
+    if not individual and lastname:
+        individual = Individual.import_from_tfoms(
+            {
+                "family": lastname,
+                "given": firstname,
+                "patronymic": patronymic,
+                "gender": sex,
+                "birthdate": birthdate,
+                "enp": enp,
+                "snils": snils,
+            },
+            need_return_individual=True,
+        )
+        individual_status = "new_local"
+
+    if not individual:
+        return Response({"ok": False, 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    if not card:
+        card = Card.add_l2_card(individual)
+
+    if not card:
+        return Response({"ok": False, 'message': 'Карта не найдена'})
+
+    financing_source_title = body.get("financingSource", '')
+
+    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
+
+    if not financing_source:
+        return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
+
+    message = None
+
+    id_in_hospital = body.get("internalId", '')
+    if id_in_hospital is not None:
+        id_in_hospital = limit_str(id_in_hospital, 15)
+
+    department = body.get("department", '')
+    additiona_iInfo = body.get("additionalInfo", '')
+
+    diag_text = body.get("diagText", '') # обязательно
+    if not diag_text:
+        return Response({"ok": False, 'message': 'Диагноз описание не заполнено'})
+
+    diag_mkb10 = body.get("diagMKB10", '') # обязательно
+    if not diag_mkb10:
+        return Response({"ok": False, 'message': 'Диагноз по МКБ10 не заполнен (не верно)'})
+
+    method_obtain_material = body.get("methodObtainMaterial", '') # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
+    if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
+        return Response({"ok": False, 'message': 'Способо забора не верно заполнено'})
+
+    solution10 = body.get("solution10", '') # обязательно
+    if not solution10 or solution10 not in ["true", "false"]:
+        return Response({"ok": False, 'message': 'Не указано помещен в 10% раствор'})
+
+    doctor_fio = body.get("doctorFio", '') # обязательно
+    material_mark = body.get("materialMark", '')
+    numbers_vial = []
+    for k in material_mark:
+        result_check = check_valid_material_mark(k, numbers_vial)
+        if not result_check:
+            return Response({"ok": False, 'message': 'Не верная маркировка материала'})
+        numbers_vial = result_check
+
+    try:
+        with transaction.atomic():
+            direction = Napravleniya.objects.create(
+                client=card,
+                is_external=True,
+                istochnik_f=financing_source,
+                polis_who_give=card.polis.who_give if card.polis else None,
+                polis_n=card.polis.number if card.polis else None,
+                hospital=hospital,
+                id_in_hospital=id_in_hospital,
+            )
+
+            time_get = str(body.get("dateTimeGet", "") or "") or None
+            if time_get and not valid_date(time_get):
+                raise InvalidData('содержит некорректное поле dateTimeGet. Оно должно быть пустым или соответствовать шаблону YYYY-MM-DD HH:MM')
+
+            iss = directions.Issledovaniya.objects.create(
+                napravleniye=direction,
+                research=GISTOLOGY_RESEARCH_PK,
+            )
+            direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, title=title, field=field_obj, field_type=field_type, value=value, order=order)
+            direction_params_obj.save()
+
+            try:
+                Log.log(
+                    str(direction.pk),
+                    90000,
+                    body={
+                        "org": body.get("org"),
+                        "patient": body.get("patient"),
+                        "individualStatus": individual_status,
+                        "financingSource": body.get("financingSource"),
+                        "resultsCount": len(body.get("results")),
+                        "results": body.get("results"),
+                    },
+                )
+            except Exception as e:
+                logger.exception(e)
+            return Response({"ok": True, 'id': str(direction.pk)})
+
+    except InvalidData as e:
+        message = str(e)
+    except Exception as e:
+        logger.exception(e)
+        message = 'Серверная ошибка'
+
+    return Response({"ok": False, 'message': message})
+
+
+def check_valid_material_mark(current_material_data, current_numbers_vial):
+    for k, v in current_material_data.items():
+        if k == "numberVial" and not isinstance(v, int): # обязательно число
+            return False
+        if k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]: # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
+            return False
+        if k == "objectValue" and not isinstance(v, int): # обязательно число
+            return False
+        if k == "description" and v and not isinstance(v, str):
+            return False
+        if k == "localization" and v and not isinstance(v, str):
+            return False
+    if current_material_data["numberVial"] in current_numbers_vial:
+        return False
+    else:
+        current_numbers_vial.append(current_material_data["numberVial"])
+    return current_numbers_vial
 
 
 @api_view(['POST'])
