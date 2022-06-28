@@ -44,8 +44,18 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
 from context_processors.utils import menu
-from directory.models import Fractions, ParaclinicInputField, ParaclinicUserInputTemplateField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan, \
-    Phenotype
+from directory.models import (
+    Fractions,
+    ParaclinicInputField,
+    ParaclinicUserInputTemplateField,
+    ResearchSite,
+    Culture,
+    Antibiotic,
+    ResearchGroup,
+    Researches as DResearches,
+    ScreeningPlan,
+    Phenotype,
+)
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
 from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
