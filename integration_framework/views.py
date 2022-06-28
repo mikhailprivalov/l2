@@ -1373,7 +1373,7 @@ def external_direction_create(request):
     additiona_info = body.get("additionalInfo", '')
     last_result_data = body.get("lastResultData", '')
 
-    diag_text = body.get("diagText", '')  #обязательно
+    diag_text = body.get("diagText", '')  # обязательно
     if not diag_text:
         return Response({"ok": False, 'message': 'Диагноз описание не заполнено'})
 
