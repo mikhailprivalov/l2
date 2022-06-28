@@ -1310,31 +1310,26 @@ def external_direction_create(request):
         return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
 
     individual = None
-    individual_status = "unknown"
     if enp:
         individuals = Individual.objects.filter(tfoms_enp=enp)
         if not individuals.exists():
             individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
             individual = individuals.first()
-            individual_status = "local_enp"
         if not individual:
             tfoms_data = match_enp(enp)
             if tfoms_data:
                 individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
-                individual_status = "tfoms_match_enp"
 
             individual = individuals.first()
 
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
-            individual_status = "tfoms_match_patient"
             individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
 
     if not individual and snils:
         individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
         individual = individuals.first()
-        individual_status = "snils"
 
     if not individual and lastname:
         individual = Individual.import_from_tfoms(
@@ -1349,7 +1344,6 @@ def external_direction_create(request):
             },
             need_return_individual=True,
         )
-        individual_status = "new_local"
 
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
@@ -1417,7 +1411,6 @@ def external_direction_create(request):
             return Response({"ok": False, 'message': 'Не верная маркировка материала'})
         numbers_vial = result_check
     if len(numbers_vial) != sorted(numbers_vial)[-1]:
-        print(numbers_vial, sorted(numbers_vial), sorted(numbers_vial)[-1])
         return Response({"ok": False, 'message': 'Не верная маркировка флаконов (порядок 1,2,3,4...)'})
 
     try:
@@ -1436,7 +1429,7 @@ def external_direction_create(request):
             if time_get and not valid_date(time_get):
                 raise InvalidData('Содержит некорректное поле dateTimeGet. Оно должно быть пустым или соответствовать шаблону YYYY-MM-DD HH:MM')
 
-            iss = directions.Issledovaniya.objects.create(
+            directions.Issledovaniya.objects.create(
                 napravleniye=direction,
                 research_id=GISTOLOGY_RESEARCH_PK,
             )
@@ -1458,7 +1451,8 @@ def external_direction_create(request):
                 7: "7-Прочие"
             }
             for m_m in material_mark:
-                result_table_field.append([str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")])
+                result_table_field.append(
+                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")])
             data_marked["rows"] = result_table_field
             match_keys = {
                 "Диагноз основной": diag_text,
@@ -1477,7 +1471,6 @@ def external_direction_create(request):
 
             for group in ParaclinicInputGroups.objects.filter(research=direction_params):
                 for f in ParaclinicInputField.objects.filter(group=group):
-                    print(f.title)
                     if match_keys.get(f.title, None):
                         directions.DirectionParamsResult(napravleniye=direction, title=f.title, field=f, field_type=f.field_type, value=match_keys[f.title], order=f.order).save()
 
