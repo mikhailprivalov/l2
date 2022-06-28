@@ -1460,7 +1460,8 @@ def external_direction_create(request):
             }
             for m_m in material_mark:
                 result_table_field.append(
-                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")])
+                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")]
+                )
             data_marked["rows"] = result_table_field
             match_keys = {
                 "Диагноз основной": diag_text,
