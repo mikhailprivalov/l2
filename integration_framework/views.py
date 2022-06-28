@@ -1372,11 +1372,11 @@ def external_direction_create(request):
     additiona_info = body.get("additionalInfo", '')
     last_result_data = body.get("lastResultData", '')
 
-    diag_text = body.get("diagText", '') # обязательно
+    diag_text = body.get("diagText", '')  #обязательно
     if not diag_text:
         return Response({"ok": False, 'message': 'Диагноз описание не заполнено'})
 
-    diag_mkb10 = body.get("diagMKB10", '') # обязательно
+    diag_mkb10 = body.get("diagMKB10", '')  # обязательно
     if not diag_mkb10:
         return Response({"ok": False, 'message': 'Диагноз по МКБ10 не заполнен (не верно)'})
     open_skob = "{"
@@ -1386,7 +1386,7 @@ def external_direction_create(request):
     diag_mkb10 = f'{open_skob}"code": "{diag_mcb10_data.code}", "title": "{diag_mcb10_data.title}"{close_skob}'
     obtain_material = {1: "эндоскопическая биопсия—1", 2: "пункционная биопсия—2", 3: "аспирационная биопсия—3", 4: "инцизионная биопсия—4", 5: "операционная биопсия—5",
                        6: "операционный материал—6", 7: "самопроизвольно отделившиеся фрагменты тканей—7"}
-    method_obtain_material = body.get("methodObtainMaterial", '') # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
+    method_obtain_material = body.get("methodObtainMaterial", '')  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
     if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
         return Response({"ok": False, 'message': 'Способо забора не верно заполнено'})
 
@@ -1398,11 +1398,11 @@ def external_direction_create(request):
     else:
         resident_data = f'{open_skob}"code": "2", "title": "Село"{close_skob}'
 
-    solution10 = body.get("solution10", '') # обязательно
+    solution10 = body.get("solution10", '')  # обязательно
     if not solution10 or solution10 not in ["true", "false"]:
         return Response({"ok": False, 'message': 'Не указано помещен в 10% раствор'})
 
-    doctor_fio = body.get("doctorFio", '') # обязательно
+    doctor_fio = body.get("doctorFio", '')  # обязательно
     material_mark = body.get("materialMark", '')
     numbers_vial = []
     for k in material_mark:
@@ -1497,11 +1497,11 @@ def external_direction_create(request):
 
 def check_valid_material_mark(current_material_data, current_numbers_vial):
     for k, v in current_material_data.items():
-        if k == "numberVial" and not isinstance(v, int): # обязательно число
+        if k == "numberVial" and not isinstance(v, int):  # обязательно число
             return False
-        if k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]: # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
+        if k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]:  # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
             return False
-        if k == "objectValue" and not isinstance(v, int): # обязательно число
+        if k == "objectValue" and not isinstance(v, int):  # обязательно число
             return False
         if k == "description" and v and not isinstance(v, str):
             return False
