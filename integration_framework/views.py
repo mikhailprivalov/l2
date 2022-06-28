@@ -1486,9 +1486,7 @@ def external_direction_create(request):
                 Log.log(
                     str(direction.pk),
                     122001,
-                    body={
-                        "data": body
-                    },
+                    body={"data": body},
                 )
             except Exception as e:
                 logger.exception(e)
