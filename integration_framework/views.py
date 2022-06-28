@@ -1451,15 +1451,7 @@ def external_direction_create(request):
             }
 
             result_table_field = []
-            pathological_process = {
-                1: "1-Внешне неизмененная ткань",
-                2: "2-Узел",
-                3: "3-Пятно",
-                4: "4-Полип",
-                5: "5-Эрозия",
-                6: "6-Язва",
-                7: "7-Прочие"
-            }
+            pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
             for m_m in material_mark:
                 result_table_field.append(
                     [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")]
