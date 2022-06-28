@@ -1444,9 +1444,11 @@ def external_direction_create(request):
             research = Researches.objects.filter(pk=GISTOLOGY_RESEARCH_PK).first()
             direction_params = research.direction_params
             data_marked = {
-                "columns": {"titles": ["Номер флакона", "Локализация патологического процесса (орган, топография)", "Характер патологического процесса", "Количество объектов", "Описание"],
-                            "settings": [{"type": "rowNumber", "width": "7%"}, {"type": 0, "width": "25%"}, {"type": 10, "width": "20%"}, {"type": 18, "width": "10%"},
-                                         {"type": 0, "width": "38%"}]}}
+                "columns": {
+                    "titles": ["Номер флакона", "Локализация патологического процесса (орган, топография)", "Характер патологического процесса", "Количество объектов", "Описание"],
+                    "settings": [{"type": "rowNumber", "width": "7%"}, {"type": 0, "width": "25%"}, {"type": 10, "width": "20%"}, {"type": 18, "width": "10%"}, {"type": 0, "width": "38%"}],
+                }
+            }
 
             result_table_field = []
             pathological_process = {
