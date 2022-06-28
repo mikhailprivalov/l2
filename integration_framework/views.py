@@ -1384,8 +1384,15 @@ def external_direction_create(request):
 
     diag_mcb10_data = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=diag_mkb10, hide=False).order_by("code").first()
     diag_mkb10 = f'{open_skob}"code": "{diag_mcb10_data.code}", "title": "{diag_mcb10_data.title}"{close_skob}'
-    obtain_material = {1: "эндоскопическая биопсия—1", 2: "пункционная биопсия—2", 3: "аспирационная биопсия—3", 4: "инцизионная биопсия—4", 5: "операционная биопсия—5",
-                       6: "операционный материал—6", 7: "самопроизвольно отделившиеся фрагменты тканей—7"}
+    obtain_material = {
+        1: "эндоскопическая биопсия—1",
+        2: "пункционная биопсия—2",
+        3: "аспирационная биопсия—3",
+        4: "инцизионная биопсия—4",
+        5: "операционная биопсия—5",
+        6: "операционный материал—6",
+        7: "самопроизвольно отделившиеся фрагменты тканей—7",
+    }
     method_obtain_material = body.get("methodObtainMaterial", '')  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
     if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
         return Response({"ok": False, 'message': 'Способо забора не верно заполнено'})
