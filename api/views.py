@@ -44,7 +44,8 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
 from context_processors.utils import menu
-from directory.models import Fractions, ParaclinicInputField, ParaclinicUserInputTemplateField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
+from directory.models import Fractions, ParaclinicInputField, ParaclinicUserInputTemplateField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan, \
+    Phenotype
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
 from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
@@ -364,6 +365,7 @@ def endpoint(request):
                                 code = mo.get('code')
                                 name = mo.get('name')
                                 anti = data.get('anti', {})
+                                phenotype = data.get('phen', [])
                                 comments = data.get('comments', [])
                                 if code:
                                     culture = Culture.objects.filter(lis=code).first()
@@ -399,6 +401,13 @@ def endpoint(request):
                                                     antibiotic_amount=a_name,
                                                 )
                                                 anti_result.save()
+                                        for ph in phenotype:
+                                            phen_obj = Phenotype.objects.filter(lis=ph["code"]).first()
+                                            phen_result = directions.MicrobiologyResultPhenotype(
+                                                result_culture=culture_result,
+                                                phenotype=phen_obj,
+                                            )
+                                            phen_result.save()
                     result["body"] = "{} {} {} {} {}".format(dw, pk, iss_pk, json.dumps(oks), direction is not None)
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)

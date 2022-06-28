@@ -990,6 +990,23 @@ class Culture(models.Model):
             Culture.objects.filter(pk__in=elements).update(group_culture=gr)
 
 
+class Phenotype(models.Model):
+    title = models.CharField(max_length=255, help_text="Название фенотипа")
+    fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    lis = models.CharField(max_length=32, default=None, null=True, blank=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фенотипа', db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    def get_full_title(self):
+        return f'{self.title}'.strip()
+
+    class Meta:
+        verbose_name = 'Фенотип'
+        verbose_name_plural = 'Фенотипы'
+
+
 class GroupAntibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Группа антибиотиков")
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие группы', db_index=True)

@@ -2473,6 +2473,15 @@ class MicrobiologyResultCultureAntibiotic(models.Model):
         verbose_name_plural = 'Результат-культура-антибиотики'
 
 
+class MicrobiologyResultPhenotype(models.Model):
+    result_culture = models.ForeignKey(MicrobiologyResultCulture, help_text="Результат-культура", on_delete=models.CASCADE, related_name='culture_phenotip')
+    phenotype = models.ForeignKey(directory.Phenotype, help_text="Фенотип", on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = 'Результат-культура-фенотип'
+        verbose_name_plural = 'Результат-культура-фенотипы'
+
+
 class RmisServices(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     code = models.TextField(help_text='Код выгруженной услуги', db_index=True)
