@@ -36,6 +36,22 @@ class ResDisableIstochnikiFinansirovaniya(admin.ModelAdmin):
     autocomplete_fields = ('hospital',)
 
 
+class RefHospitalParams(admin.ModelAdmin):
+    list_display = (
+        'hospital',
+        'param_title',
+        'param_value',
+    )
+    list_display_links = (
+        'hospital',
+        'param_title',
+        'param_value',
+    )
+    search_fields = ('hospital__title',)
+    autocomplete_fields = ('hospital',)
+
+
 admin.site.register(models.Hospitals, RefHospitals)
+admin.site.register(models.HospitalParams, RefHospitalParams)
 admin.site.register(models.HospitalsGroup, ResHospitalsGroup)
 admin.site.register(models.DisableIstochnikiFinansirovaniya, ResDisableIstochnikiFinansirovaniya)

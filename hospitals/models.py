@@ -114,3 +114,16 @@ class DisableIstochnikiFinansirovaniya(models.Model):
     class Meta:
         verbose_name = 'Запрещенные источники оплаты для Больницы'
         verbose_name_plural = 'Запрещенные источники оплаты для Больницы'
+
+
+class HospitalParams(models.Model):
+    hospital = models.ForeignKey(Hospitals, blank=False, null=False, help_text="Больница", on_delete=models.CASCADE)
+    param_title = models.CharField(max_length=255, help_text="Наименование параметра")
+    param_value = models.CharField(max_length=255, help_text="Значение параметра")
+
+    def __str__(self):
+        return f"{self.hospital.title}-{self.param_value}"
+
+    class Meta:
+        verbose_name = 'Параметр больницы произвольный'
+        verbose_name_plural = 'Параметры больницы произвоньные'
