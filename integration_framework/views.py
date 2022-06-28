@@ -1281,18 +1281,18 @@ def external_direction_create(request):
     if snils and not petrovna.validate_snils(snils):
         return Response({"ok": False, 'message': 'patient.snils: не прошёл валидацию'})
 
-    individual_data = patient.get("individual") or {}
+    lastname = str(patient.get("lastName") or '')
+    firstname = str(patient.get('firstName') or '')
+    patronymic = str(patient.get('patronymicName') or '')
+    birthdate = str(patient.get('birthDate') or '')
+    sex = patient.get('sex') or ''
+    if sex == 1:
+        sex = "м"
+    else:
+        sex = "ж"
 
-    if not enp and not individual_data:
+    if not enp and not (lastname and firstname and birthdate and birthdate):
         return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано поле patient.individual'})
-
-    lastname = str(individual_data.get("lastname") or '')
-    firstname = str(individual_data.get('firstname') or '')
-    patronymic = str(individual_data.get('patronymic') or '')
-    birthdate = str(individual_data.get('birthdate') or '')
-    sex = str(individual_data.get('sex') or '').lower()
-
-    individual = None
 
     if lastname and not firstname:
         return Response({"ok": False, 'message': 'При передаче lastname должен быть передан и firstname'})
@@ -1309,8 +1309,8 @@ def external_direction_create(request):
     if birthdate and sex not in ['м', 'ж']:
         return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
 
+    individual = None
     individual_status = "unknown"
-
     if enp:
         individuals = Individual.objects.filter(tfoms_enp=enp)
         if not individuals.exists():
@@ -1375,7 +1375,8 @@ def external_direction_create(request):
         id_in_hospital = limit_str(id_in_hospital, 15)
 
     department = body.get("department", '')
-    additiona_iInfo = body.get("additionalInfo", '')
+    additiona_info = body.get("additionalInfo", '')
+    last_result_data = body.get("lastResultData", '')
 
     diag_text = body.get("diagText", '') # обязательно
     if not diag_text:
@@ -1384,10 +1385,24 @@ def external_direction_create(request):
     diag_mkb10 = body.get("diagMKB10", '') # обязательно
     if not diag_mkb10:
         return Response({"ok": False, 'message': 'Диагноз по МКБ10 не заполнен (не верно)'})
+    open_skob = "{"
+    close_skob = "}"
 
+    diag_mcb10_data = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=diag_mkb10, hide=False).order_by("code").first()
+    diag_mkb10 = f'{open_skob}"code": "{diag_mcb10_data.code}", "title": "{diag_mcb10_data.title}"{close_skob}'
+    obtain_material = {1: "эндоскопическая биопсия—1", 2: "пункционная биопсия—2", 3: "аспирационная биопсия—3", 4: "инцизионная биопсия—4", 5: "операционная биопсия—5",
+                       6: "операционный материал—6", 7: "самопроизвольно отделившиеся фрагменты тканей—7"}
     method_obtain_material = body.get("methodObtainMaterial", '') # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
     if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
         return Response({"ok": False, 'message': 'Способо забора не верно заполнено'})
+
+    resident_code = patient.get("residentCode", '')  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
+    if not resident_code or resident_code not in [1, 2]:
+        return Response({"ok": False, 'message': 'Не указан вид жительства'})
+    if resident_code == 1:
+        resident_data = f'{open_skob}"code": "1", "title": "Город"{close_skob}'
+    else:
+        resident_data = f'{open_skob}"code": "2", "title": "Село"{close_skob}'
 
     solution10 = body.get("solution10", '') # обязательно
     if not solution10 or solution10 not in ["true", "false"]:
@@ -1401,6 +1416,9 @@ def external_direction_create(request):
         if not result_check:
             return Response({"ok": False, 'message': 'Не верная маркировка материала'})
         numbers_vial = result_check
+    if len(numbers_vial) != sorted(numbers_vial)[-1]:
+        print(numbers_vial, sorted(numbers_vial), sorted(numbers_vial)[-1])
+        return Response({"ok": False, 'message': 'Не верная маркировка флаконов (порядок 1,2,3,4...)'})
 
     try:
         with transaction.atomic():
@@ -1423,24 +1441,52 @@ def external_direction_create(request):
                 research_id=GISTOLOGY_RESEARCH_PK,
             )
             research = Researches.objects.filter(pk=GISTOLOGY_RESEARCH_PK).first()
-            direction_form_research = research.direction_form
-            for group in ParaclinicInputGroups.objects.filter(research=direction_form_research):
+            direction_params = research.direction_params
+            data_marked = {
+                "columns": {"titles": ["Номер флакона", "Локализация патологического процесса (орган, топография)", "Характер патологического процесса", "Количество объектов", "Описание"],
+                            "settings": [{"type": "rowNumber", "width": "7%"}, {"type": 0, "width": "25%"}, {"type": 10, "width": "20%"}, {"type": 18, "width": "10%"},
+                                         {"type": 0, "width": "38%"}]}}
+
+            result_table_field = []
+            pathological_process = {
+                1: "1-Внешне неизмененная ткань",
+                2: "2-Узел",
+                3: "3-Пятно",
+                4: "4-Полип",
+                5: "5-Эрозия",
+                6: "6-Язва",
+                7: "7-Прочие"
+            }
+            for m_m in material_mark:
+                result_table_field.append([str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")])
+            data_marked["rows"] = result_table_field
+            match_keys = {
+                "Диагноз основной": diag_text,
+                "Код по МКБ": diag_mkb10,
+                "Дополнительные клинические сведения": additiona_info,
+                "Результаты предыдущие": last_result_data,
+                "Способ получения биопсийного (операционного) материала": obtain_material[method_obtain_material],
+                "Материал помещен в 10%-ный раствор нейтрального формалина": "Да" if solution10.lower() == "true" else "Нет",
+                "Дата забора материала": time_get.split(" ")[0],
+                "Время забора материала": time_get.split(" ")[1],
+                "Маркировка материала": json.dumps(data_marked),
+                "отделение": department,
+                "ФИО врача": doctor_fio,
+                "Вид места жительства": resident_data,
+            }
+
+            for group in ParaclinicInputGroups.objects.filter(research=direction_params):
                 for f in ParaclinicInputField.objects.filter(group=group):
-                    if f.title == "диагноз":
-                        direction_params_obj = directions.DirectionParamsResult(napravleniye=direction, title=f.title, field=f, field_type=f.field_type, value=value, order=f.order)
-                        direction_params_obj.save()
+                    print(f.title)
+                    if match_keys.get(f.title, None):
+                        directions.DirectionParamsResult(napravleniye=direction, title=f.title, field=f, field_type=f.field_type, value=match_keys[f.title], order=f.order).save()
 
             try:
                 Log.log(
                     str(direction.pk),
-                    90000,
+                    122001,
                     body={
-                        "org": body.get("org"),
-                        "patient": body.get("patient"),
-                        "individualStatus": individual_status,
-                        "financingSource": body.get("financingSource"),
-                        "resultsCount": len(body.get("results")),
-                        "results": body.get("results"),
+                        "data": body
                     },
                 )
             except Exception as e:
