@@ -1413,6 +1413,8 @@ def external_direction_create(request):
         return Response({"ok": False, 'message': 'Не указано помещен в 10% раствор'})
 
     doctor_fio = body.get("doctorFio", '')  # обязательно
+    if not doctor_fio:
+        return Response({"ok": False, 'message': 'Не указан врач производивший забор материала'})
     material_mark = body.get("materialMark", '')
     numbers_vial = []
     for k in material_mark:
