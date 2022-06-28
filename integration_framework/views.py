@@ -1436,8 +1436,8 @@ def external_direction_create(request):
             )
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
-            if time_get and not valid_date(time_get):
-                raise InvalidData('Содержит некорректное поле dateTimeGet. Оно должно быть пустым или соответствовать шаблону YYYY-MM-DD HH:MM')
+            if time_get and not valid_date(time_get) or not time_get:
+                raise InvalidData('Содержит некорректное поле dateTimeGet. Оно должно соответствовать шаблону YYYY-MM-DD HH:MM')
 
             directions.Issledovaniya.objects.create(
                 napravleniye=direction,
