@@ -1357,6 +1357,8 @@ def external_direction_create(request):
         return Response({"ok": False, 'message': 'Карта не найдена'})
 
     financing_source_title = body.get("financingSource", '')
+    if financing_source_title.lower() not in ["омс", "бюджет"]:
+        return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
 
     financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
 
