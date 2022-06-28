@@ -27,6 +27,7 @@ urlpatterns = [
     path('doc-call-update-status', views.external_doc_call_update_status),
     path('doc-call-send', views.external_doc_call_send),
     path('send-result', views.external_research_create),
+    path('send-direction', views.external_direction_create),
     path('protocol-result', views.get_protocol_result),
     path('eds/get-user-data', views.eds_get_user_data),
     path('eds/get-cda-data', views.eds_get_cda_data),
