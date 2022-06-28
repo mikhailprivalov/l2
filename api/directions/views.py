@@ -9,7 +9,7 @@ import collections
 
 from integration_framework.views import get_cda_data
 from utils.response import status_response
-from hospitals.models import Hospitals
+from hospitals.models import Hospitals, HospitalParams
 import operator
 import re
 import time
@@ -2515,6 +2515,11 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%direction#register_number') != -1:
         val = Napravleniya.objects.values_list('register_number', flat=True).filter(pk=num_dir).first()
         result = {"value": val}
+    elif request_data["fieldPk"].find('%paramhospital#') != -1:
+        hospital_param = request_data["fieldPk"].split("#")
+        hospital_param = hospital_param[1]
+        param_result = HospitalParams.objects.filter(hospital=Napravleniya.objects.get(pk=num_dir).hospital, param_title=hospital_param).first()
+        result = {"value": param_result.param_value}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
         current_iss = request_data["iss_pk"]
