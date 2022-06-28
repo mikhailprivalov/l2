@@ -53,7 +53,8 @@ from laboratory.settings import (
     LK_USER,
     LK_FILE_SIZE_BYTES,
     LK_FILE_COUNT,
-    LK_DAY_MONTH_START_SHOW_RESULT, GISTOLOGY_RESEARCH_PK,
+    LK_DAY_MONTH_START_SHOW_RESULT,
+    GISTOLOGY_RESEARCH_PK,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
