@@ -21,7 +21,6 @@ def patologistology_buh(data):
         "СНИЛС": "snils",
         "ФИО пациента": "fio_patient",
         "Дата рождения": "born_patient",
-        "Дата регистрации": "visit_date",
         "Медицинские услуги": "service_code",
         "Код по МКБ": "mcb10_code",
     }
@@ -35,6 +34,7 @@ def patologistology_buh(data):
         tmp_data["fin_source"] = i.iss_finsource_title
         tmp_data["price_category"] = i.iss_price_category
         tmp_data["hospital"] = i.hosp_title
+        tmp_data["visit_date"] = i.char_visit_date
         prev_direction = i.direction_id
         step += 1
         if not match_keys.get(i.field_title, None):

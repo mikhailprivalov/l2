@@ -11,7 +11,7 @@ def report_buh_gistology(directions):
         dn.id as direction_id,
         dn.hospital_id,
         dn.istochnik_f_id,
-        to_char(dn.visit_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS char_visit_date,
+        to_char(dn.visit_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY HH24:MI') AS char_visit_date,
         dn.visit_date,
         di.title as iss_finsource_title,
         cp.title as iss_price_category,
