@@ -48,6 +48,7 @@ from directions.models import (
     ExternalOrganization,
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
+    MicrobiologyResultPhenotype,
     DirectionToUserWatch,
     IstochnikiFinansirovaniya,
     DirectionsHistory,
@@ -1454,7 +1455,18 @@ def directions_paraclinic_form(request):
                             "selectedGroup": {},
                             "selectedAntibiotic": {},
                             "selectedSet": {},
+                            "phenotype": [],
                         }
+
+                        pt: MicrobiologyResultPhenotype
+                        for pt in MicrobiologyResultPhenotype.objects.filter(result_culture=br):
+                            bactery["phenotype"].append(
+                                {
+                                    "pk": pt.pk,
+                                    "title": pt.phenotype.get_full_title(),
+                                    "phenotypePk": pt.phenotype_id,
+                                }
+                            )
 
                         for ar in MicrobiologyResultCultureAntibiotic.objects.filter(result_culture=br):
                             bactery["antibiotics"].append(
