@@ -2450,6 +2450,9 @@ class MicrobiologyResultCulture(models.Model):
     koe = models.CharField(max_length=16, help_text='КОЕ')
     comments = models.TextField(default='')
 
+    def __str__(self):
+        return f"{self.issledovaniye} — {self.culture}"
+
     class Meta:
         verbose_name = 'Результат-культура'
         verbose_name_plural = 'Результат-культуры'
@@ -2471,6 +2474,15 @@ class MicrobiologyResultCultureAntibiotic(models.Model):
     class Meta:
         verbose_name = 'Результат-культура-антибиотик'
         verbose_name_plural = 'Результат-культура-антибиотики'
+
+
+class MicrobiologyResultPhenotype(models.Model):
+    result_culture = models.ForeignKey(MicrobiologyResultCulture, help_text="Результат-культура", on_delete=models.CASCADE, related_name='culture_phenotip')
+    phenotype = models.ForeignKey(directory.Phenotype, help_text="Фенотип", on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = 'Результат-культура-фенотип'
+        verbose_name_plural = 'Результат-культура-фенотипы'
 
 
 class RmisServices(models.Model):

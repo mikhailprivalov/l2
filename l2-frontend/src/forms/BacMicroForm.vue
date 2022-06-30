@@ -200,6 +200,20 @@
                     </tr>
                   </tbody>
                 </table>
+                <div
+                  v-if="bactery.phenotype.length > 0"
+                  class="phen"
+                >
+                  <ul>
+                    <li><strong>Фенотип:</strong></li>
+                    <li
+                      v-for="p in bactery.phenotype"
+                      :key="p.pk"
+                    >
+                      {{ p.title }}
+                    </li>
+                  </ul>
+                </div>
               </div>
               <div class="right">
                 <div class="right-inner">
