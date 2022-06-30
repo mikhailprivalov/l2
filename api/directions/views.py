@@ -1463,7 +1463,7 @@ def directions_paraclinic_form(request):
                             bactery["phenotype"].append(
                                 {
                                     "pk": pt.pk,
-                                    "title":pt.phenotype.get_full_title(),
+                                    "title": pt.phenotype.get_full_title(),
                                     "phenotypePk": pt.phenotype_id,
                                 }
                             )
