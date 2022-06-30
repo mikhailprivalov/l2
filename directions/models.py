@@ -1092,7 +1092,7 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def monitoring_week_correct(period_param_week_day_start, period_param_week_date_start):
-        week_days = {"Понедельник": 0, "Всторник": 1, "Среда": 2, "Четверг": 3, "Пятница": 4, "Суббота": 5, "Воскресенье": 6}
+        week_days = {"Понедельник": 0, "Вторник": 1, "Среда": 2, "Четверг": 3, "Пятница": 4, "Суббота": 5, "Воскресенье": 6}
         short_week_days = {0: "пн", 1: "вт", 2: "ср", 3: "чт", 4: "пт", 5: "сб", 6: "вc"}
         start_day = datetime.datetime.strptime(period_param_week_date_start, '%Y-%m-%d').date()
         if week_days.get(period_param_week_day_start) != start_day.weekday():
