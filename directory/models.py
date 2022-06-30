@@ -1000,7 +1000,7 @@ class Phenotype(models.Model):
         return self.title
 
     def get_full_title(self):
-        return f'{self.title}'.strip()
+        return f'{self.lis} {self.title}'.strip()
 
     class Meta:
         verbose_name = 'Фенотип'

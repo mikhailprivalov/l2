@@ -2450,6 +2450,9 @@ class MicrobiologyResultCulture(models.Model):
     koe = models.CharField(max_length=16, help_text='КОЕ')
     comments = models.TextField(default='')
 
+    def __str__(self):
+        return f"{self.issledovaniye} — {self.culture}"
+
     class Meta:
         verbose_name = 'Результат-культура'
         verbose_name_plural = 'Результат-культуры'
