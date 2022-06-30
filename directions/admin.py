@@ -234,9 +234,7 @@ class ResIssledovaniyaResultLaborant(admin.ModelAdmin):
 
 
 class MicrobiologyResultCultureAdmin(admin.ModelAdmin):
-    autocomplete_fields = (
-        'issledovaniye',
-    )
+    autocomplete_fields = ('issledovaniye',)
     list_display = (
         'issledovaniye',
         'culture',
