@@ -740,7 +740,7 @@ export default {
       return this.get_fin_obj(this.fin);
     },
     pay_source() {
-      return this.current_fin.title.toLowerCase() === 'платно';
+      return this.current_fin.title.toLowerCase().includes('пл');
     },
     needShowPriceCategory() {
       return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 0 && this.show_additions;
