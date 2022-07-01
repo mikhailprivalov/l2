@@ -378,7 +378,7 @@ def endpoint(request):
                                 phenotype = data.get('phen', [])
                                 comments = data.get('comments', [])
                                 if code:
-                                    culture = Culture.objects.filter(lis=code).first()
+                                    culture = Culture.objects.filter(Q(lis=code) | Q(title=name)).filter(hide=False).first()
                                     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=True, research__is_microbiology=True)
                                     if iss.filter(pk=iss_pk).exists():
                                         iss = iss.filter(pk=iss_pk)
