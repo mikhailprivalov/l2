@@ -1500,6 +1500,34 @@ def external_direction_create(request):
     return Response({"ok": False, 'message': message})
 
 
+@api_view(['POST'])
+def get_directions_data(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+
+    org = body.get("org", {})
+    oid_org = org.get("oid")
+
+    if not oid_org:
+        return Response({"ok": False, 'message': 'Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid'})
+
+    hospital = Hospitals.objects.filter(oid=oid_org).first()
+
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
+
+    create_from = body.get(("createFrom") or '')
+    create_to =  body.get(('createTo') or '')
+
+    directions_data = Napravleniya.objects.values_list('pk', flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
+    directions_data = tuple([i for i in directions_data])
+
+
 def check_valid_material_mark(current_material_data, current_numbers_vial):
     for k, v in current_material_data.items():
         if k == "numberVial" and not isinstance(v, int):  # обязательно число
