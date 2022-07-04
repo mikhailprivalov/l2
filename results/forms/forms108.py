@@ -84,7 +84,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f"Страховой полис серия: _______ №{polis_num}", style))
     fwb.append(Paragraph(f"Страховая компания (наименование): {polis_issue}", style))
     fwb.append(Paragraph(f"Направляется в: {data['Куда направляется']}", style))
-    fwb.append(Paragraph(f"Дата приема _______________________ Время приема _________________", style))
+    fwb.append(Paragraph("Дата приема _______________________ Время приема _________________", style))
     fwb.append(Paragraph(f"Наименование медицинской организации по месту прикрепления: {direction.hospital_address} {direction.hospital_title}", style))
     fwb.append(Paragraph(f"Наименование направившей медицинской организации: {direction.hospital_address} {direction.hospital_title}", style))
     fwb.append(Paragraph("Направлен(а) на:", style))
