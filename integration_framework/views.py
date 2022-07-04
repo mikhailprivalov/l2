@@ -1571,8 +1571,8 @@ def get_direction_data_by_num(request):
             },
             "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else '',
             "priceCategory": direction.price_category.title if direction.price_category else '',
-            "service": services,
-            "params": direction_params
+            "services": services,
+            "directionParams": direction_params
         }
     )
 
