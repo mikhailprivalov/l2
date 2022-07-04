@@ -1501,20 +1501,16 @@ def external_direction_create(request):
 
 
 @api_view(['POST'])
-def get_directions_data(request):
+def get_directions(request):
     if not hasattr(request.user, 'hospitals'):
         return Response({"ok": False, 'message': 'Некорректный auth токен'})
 
     body = json.loads(request.body)
-
-    org = body.get("org", {})
-    oid_org = org.get("oid")
-
+    oid_org = body.get("oid")
     if not oid_org:
         return Response({"ok": False, 'message': 'Должно быть указано org.oid'})
 
     hospital = Hospitals.objects.filter(oid=oid_org).first()
-
     if not hospital:
         return Response({"ok": False, 'message': 'Организация не найдена'})
 
@@ -1533,9 +1529,7 @@ def get_direction_data_by_num(request):
     if not hasattr(request.user, 'hospitals'):
         return Response({"ok": False, 'message': 'Некорректный auth токен'})
     body = json.loads(request.body)
-
     oid_org = body.get(("oid") or '')
-
     if not oid_org:
         return Response({"ok": False, 'message': 'Должно быть указано oid'})
 
@@ -1548,7 +1542,7 @@ def get_direction_data_by_num(request):
         return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
 
 
-    pk = request.GET.get("pk")
+    pk = int(body.get(("directionNum") or ''))
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
     individual = card.individual
@@ -1558,7 +1552,7 @@ def get_direction_data_by_num(request):
     if not iss:
         return Response({"ok": False})
 
-    services = [{"title": i.research.title, "code": i.research.code, "id": i.research.pk} for i in iss]
+    services = [{"title": i.research.title, "code": i.research.code} for i in iss]
 
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {dp.title: dp.value for dp in direction_params_obj}
