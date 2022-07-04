@@ -1521,7 +1521,7 @@ def get_directions(request):
     create_to = body.get(('createTo') or '')
 
     directions_data = Napravleniya.objects.values_list('pk', flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
-    return Response({"ok": False, 'data': directions_data})
+    return Response({"ok": True, 'data': directions_data})
 
 
 @api_view(['POST'])
@@ -1559,6 +1559,7 @@ def get_direction_data_by_num(request):
     return Response(
         {
             "pk": pk,
+            "hosp": direction.hospital.title,
             "createdAt": direction.data_sozdaniya,
             "patient": {
                 **card.get_data_individual(full_empty=True, only_json_serializable=True),
