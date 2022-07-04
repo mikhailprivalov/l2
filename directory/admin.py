@@ -235,6 +235,16 @@ class ResPatientControlParam(admin.ModelAdmin):
     search_fields = ('title',)
 
 
+class PhenotypeAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'fsli',
+        'lis',
+        'hide',
+    )
+    search_fields = ('title', 'fsli', 'lis')
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -263,3 +273,4 @@ admin.site.register(models.ScreeningPlan, ScreeningPlanAdmin)
 admin.site.register(models.Unit, UnitAdmin)
 admin.site.register(models.MethodLaboratoryAnalisis)
 admin.site.register(models.PatientControlParam, ResPatientControlParam)
+admin.site.register(models.Phenotype, PhenotypeAdmin)

@@ -9,7 +9,7 @@ import collections
 
 from integration_framework.views import get_cda_data
 from utils.response import status_response
-from hospitals.models import Hospitals
+from hospitals.models import Hospitals, HospitalParams
 import operator
 import re
 import time
@@ -48,6 +48,7 @@ from directions.models import (
     ExternalOrganization,
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
+    MicrobiologyResultPhenotype,
     DirectionToUserWatch,
     IstochnikiFinansirovaniya,
     DirectionsHistory,
@@ -1454,7 +1455,18 @@ def directions_paraclinic_form(request):
                             "selectedGroup": {},
                             "selectedAntibiotic": {},
                             "selectedSet": {},
+                            "phenotype": [],
                         }
+
+                        pt: MicrobiologyResultPhenotype
+                        for pt in MicrobiologyResultPhenotype.objects.filter(result_culture=br):
+                            bactery["phenotype"].append(
+                                {
+                                    "pk": pt.pk,
+                                    "title": pt.phenotype.get_full_title(),
+                                    "phenotypePk": pt.phenotype_id,
+                                }
+                            )
 
                         for ar in MicrobiologyResultCultureAntibiotic.objects.filter(result_culture=br):
                             bactery["antibiotics"].append(
@@ -2498,19 +2510,28 @@ def last_field_result(request):
         result = {"value": val}
     elif request_data["fieldPk"].find('%direction#date_gistology_receive') != -1:
         val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
+        val = val.astimezone(pytz.timezone(settings.TIME_ZONE))
         result = {"value": val.strftime("%Y-%m-%d")}
     elif request_data["fieldPk"].find('%direction#time_gistology_receive') != -1:
         val = Napravleniya.objects.values_list('time_gistology_receive', flat=True).filter(pk=num_dir).first()
+        val = val.astimezone(pytz.timezone(settings.TIME_ZONE))
         result = {"value": val.strftime("%H:%M")}
     elif request_data["fieldPk"].find('%direction#date_visit_date') != -1:
         val = Napravleniya.objects.values_list('visit_date', flat=True).filter(pk=num_dir).first()
+        val = val.astimezone(pytz.timezone(settings.TIME_ZONE))
         result = {"value": val.strftime("%Y-%m-%d")}
     elif request_data["fieldPk"].find('%direction#time_visit_date') != -1:
         val = Napravleniya.objects.values_list('visit_date', flat=True).filter(pk=num_dir).first()
+        val = val.astimezone(pytz.timezone(settings.TIME_ZONE))
         result = {"value": val.strftime("%H:%M")}
     elif request_data["fieldPk"].find('%direction#register_number') != -1:
         val = Napravleniya.objects.values_list('register_number', flat=True).filter(pk=num_dir).first()
         result = {"value": val}
+    elif request_data["fieldPk"].find('%paramhospital#') != -1:
+        hospital_param = request_data["fieldPk"].split("#")
+        hospital_param = hospital_param[1]
+        param_result = HospitalParams.objects.filter(hospital=Napravleniya.objects.get(pk=num_dir).hospital, param_title=hospital_param).first()
+        result = {"value": param_result.param_value}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
         current_iss = request_data["iss_pk"]

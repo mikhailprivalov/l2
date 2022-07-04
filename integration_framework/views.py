@@ -40,7 +40,7 @@ import directions.models as directions
 from appconf.manager import SettingManager
 from clients.models import Individual, Card
 from clients.sql_func import last_results_researches_by_time_ago
-from directory.models import Researches, Fractions, ReleationsFT, HospitalService
+from directory.models import Researches, Fractions, ReleationsFT, HospitalService, ParaclinicInputGroups, ParaclinicInputField
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
 from laboratory.settings import (
@@ -54,6 +54,7 @@ from laboratory.settings import (
     LK_FILE_SIZE_BYTES,
     LK_FILE_COUNT,
     LK_DAY_MONTH_START_SHOW_RESULT,
+    GISTOLOGY_RESEARCH_PK,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -1239,6 +1240,283 @@ def external_research_create(request):
         message = 'Серверная ошибка'
 
     return Response({"ok": False, 'message': message})
+
+
+@api_view(['POST'])
+def external_direction_create(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+
+    org = body.get("org", {})
+    code_tfoms = org.get("codeTFOMS")
+    oid_org = org.get("oid")
+
+    if not code_tfoms and not oid_org:
+        return Response({"ok": False, 'message': 'Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid'})
+
+    if code_tfoms:
+        hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
+    else:
+        hospital = Hospitals.objects.filter(oid=oid_org).first()
+
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
+
+    patient = body.get("patient", {})
+
+    enp = (patient.get("enp") or '').replace(' ', '')
+
+    if enp and (len(enp) != 16 or not enp.isdigit()):
+        return Response({"ok": False, 'message': 'Неверные данные полиса, должно быть 16 чисел'})
+
+    snils = (patient.get("snils") or '').replace(' ', '').replace('-', '')
+
+    if not enp and not snils:
+        return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber'})
+
+    if snils and not petrovna.validate_snils(snils):
+        return Response({"ok": False, 'message': 'patient.snils: не прошёл валидацию'})
+
+    lastname = str(patient.get("lastName") or '')
+    firstname = str(patient.get('firstName') or '')
+    patronymic = str(patient.get('patronymicName') or '')
+    birthdate = str(patient.get('birthDate') or '')
+    sex = patient.get('sex') or ''
+    if sex == 1:
+        sex = "м"
+    else:
+        sex = "ж"
+
+    if not enp and not (lastname and firstname and birthdate and birthdate):
+        return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано поле patient.individual'})
+
+    if lastname and not firstname:
+        return Response({"ok": False, 'message': 'При передаче lastname должен быть передан и firstname'})
+
+    if firstname and not lastname:
+        return Response({"ok": False, 'message': 'При передаче firstname должен быть передан и lastname'})
+
+    if firstname and lastname and not birthdate:
+        return Response({"ok": False, 'message': 'При передаче firstname и lastname должно быть передано поле birthdate'})
+
+    if birthdate and (not re.fullmatch(r'\d{4}-\d\d-\d\d', birthdate) or birthdate[0] not in ['1', '2']):
+        return Response({"ok": False, 'message': 'birthdate должно соответствовать формату YYYY-MM-DD'})
+
+    if birthdate and sex not in ['м', 'ж']:
+        return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
+
+    individual = None
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        if not individuals.exists():
+            individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
+            individual = individuals.first()
+        if not individual:
+            tfoms_data = match_enp(enp)
+            if tfoms_data:
+                individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+
+            individual = individuals.first()
+
+    if not individual and lastname:
+        tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
+        if tfoms_data:
+            individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual and lastname:
+        individual = Individual.import_from_tfoms(
+            {
+                "family": lastname,
+                "given": firstname,
+                "patronymic": patronymic,
+                "gender": sex,
+                "birthdate": birthdate,
+                "enp": enp,
+                "snils": snils,
+            },
+            need_return_individual=True,
+        )
+
+    if not individual:
+        return Response({"ok": False, 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    if not card:
+        card = Card.add_l2_card(individual)
+
+    if not card:
+        return Response({"ok": False, 'message': 'Карта не найдена'})
+
+    financing_source_title = body.get("financingSource", '')
+    if financing_source_title.lower() not in ["омс", "бюджет"]:
+        return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
+
+    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
+
+    if not financing_source:
+        return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
+
+    message = None
+
+    id_in_hospital = body.get("internalId", '')
+    if id_in_hospital is not None:
+        id_in_hospital = limit_str(id_in_hospital, 15)
+
+    department = body.get("department", '')
+    additiona_info = body.get("additionalInfo", '')
+    last_result_data = body.get("lastResultData", '')
+
+    diag_text = body.get("diagText", '')  # обязательно
+    if not diag_text:
+        return Response({"ok": False, 'message': 'Диагноз описание не заполнено'})
+
+    diag_mkb10 = body.get("diagMKB10", '')  # обязательно
+    if not diag_mkb10:
+        return Response({"ok": False, 'message': 'Диагноз по МКБ10 не заполнен (не верно)'})
+    open_skob = "{"
+    close_skob = "}"
+
+    diag_mcb10_data = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=diag_mkb10, hide=False).order_by("code").first()
+    diag_mkb10 = f'{open_skob}"code": "{diag_mcb10_data.code}", "title": "{diag_mcb10_data.title}", "id":"{diag_mcb10_data.pk}"{close_skob}'
+    obtain_material = {
+        1: "эндоскопическая биопсия—1",
+        2: "пункционная биопсия—2",
+        3: "аспирационная биопсия—3",
+        4: "инцизионная биопсия—4",
+        5: "операционная биопсия—5",
+        6: "операционный материал—6",
+        7: "самопроизвольно отделившиеся фрагменты тканей—7",
+    }
+    method_obtain_material = body.get("methodObtainMaterial", '')  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
+    if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
+        return Response({"ok": False, 'message': 'Способо забора не верно заполнено'})
+
+    resident_code = patient.get("residentCode", '')  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
+    if not resident_code or resident_code not in [1, 2]:
+        return Response({"ok": False, 'message': 'Не указан вид жительства'})
+    if resident_code == 1:
+        resident_data = f'{open_skob}"code": "1", "title": "Город"{close_skob}'
+    else:
+        resident_data = f'{open_skob}"code": "2", "title": "Село"{close_skob}'
+
+    solution10 = body.get("solution10", '')  # обязательно
+    if not solution10 or solution10 not in ["true", "false"]:
+        return Response({"ok": False, 'message': 'Не указано помещен в 10% раствор'})
+
+    doctor_fio = body.get("doctorFio", '')  # обязательно
+    if not doctor_fio:
+        return Response({"ok": False, 'message': 'Не указан врач производивший забор материала'})
+    material_mark = body.get("materialMark", '')
+    numbers_vial = []
+    for k in material_mark:
+        result_check = check_valid_material_mark(k, numbers_vial)
+        if not result_check:
+            return Response({"ok": False, 'message': 'Не верная маркировка материала'})
+        numbers_vial = result_check
+    if len(numbers_vial) != sorted(numbers_vial)[-1]:
+        return Response({"ok": False, 'message': 'Не верная маркировка флаконов (порядок 1,2,3,4...)'})
+
+    try:
+        with transaction.atomic():
+            direction = Napravleniya.objects.create(
+                client=card,
+                is_external=True,
+                istochnik_f=financing_source,
+                polis_who_give=card.polis.who_give if card.polis else None,
+                polis_n=card.polis.number if card.polis else None,
+                hospital=hospital,
+                id_in_hospital=id_in_hospital,
+            )
+
+            time_get = str(body.get("dateTimeGet", "") or "") or None
+            if time_get and not valid_date(time_get) or not time_get:
+                raise InvalidData('Содержит некорректное поле dateTimeGet. Оно должно соответствовать шаблону YYYY-MM-DD HH:MM')
+
+            directions.Issledovaniya.objects.create(
+                napravleniye=direction,
+                research_id=GISTOLOGY_RESEARCH_PK,
+            )
+            research = Researches.objects.filter(pk=GISTOLOGY_RESEARCH_PK).first()
+            direction_params = research.direction_params
+            data_marked = {
+                "columns": {
+                    "titles": ["Номер флакона", "Локализация патологического процесса (орган, топография)", "Характер патологического процесса", "Количество объектов", "Описание"],
+                    "settings": [{"type": "rowNumber", "width": "7%"}, {"type": 0, "width": "25%"}, {"type": 10, "width": "20%"}, {"type": 18, "width": "10%"}, {"type": 0, "width": "38%"}],
+                }
+            }
+
+            result_table_field = []
+            pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
+            for m_m in material_mark:
+                result_table_field.append(
+                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")]
+                )
+            data_marked["rows"] = result_table_field
+            match_keys = {
+                "Диагноз основной": diag_text,
+                "Код по МКБ": diag_mkb10,
+                "Дополнительные клинические сведения": additiona_info,
+                "Результаты предыдущие": last_result_data,
+                "Способ получения биопсийного (операционного) материала": obtain_material[method_obtain_material],
+                "Материал помещен в 10%-ный раствор нейтрального формалина": "Да" if solution10.lower() == "true" else "Нет",
+                "Дата забора материала": time_get.split(" ")[0],
+                "Время забора материала": time_get.split(" ")[1],
+                "Маркировка материала": json.dumps(data_marked),
+                "отделение": department,
+                "ФИО врача": doctor_fio,
+                "Вид места жительства": resident_data,
+            }
+
+            for group in ParaclinicInputGroups.objects.filter(research=direction_params):
+                for f in ParaclinicInputField.objects.filter(group=group):
+                    if match_keys.get(f.title, None):
+                        directions.DirectionParamsResult(napravleniye=direction, title=f.title, field=f, field_type=f.field_type, value=match_keys[f.title], order=f.order).save()
+
+            try:
+                Log.log(
+                    str(direction.pk),
+                    122001,
+                    body={"data": body},
+                )
+            except Exception as e:
+                logger.exception(e)
+            return Response({"ok": True, 'id': str(direction.pk)})
+
+    except InvalidData as e:
+        message = str(e)
+    except Exception as e:
+        logger.exception(e)
+        message = 'Серверная ошибка'
+
+    return Response({"ok": False, 'message': message})
+
+
+def check_valid_material_mark(current_material_data, current_numbers_vial):
+    for k, v in current_material_data.items():
+        if k == "numberVial" and not isinstance(v, int):  # обязательно число
+            return False
+        if k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]:  # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
+            return False
+        if k == "objectValue" and not isinstance(v, int):  # обязательно число
+            return False
+        if k == "description" and v and not isinstance(v, str):
+            return False
+        if k == "localization" and v and not isinstance(v, str):
+            return False
+    if current_material_data["numberVial"] in current_numbers_vial:
+        return False
+    else:
+        current_numbers_vial.append(current_material_data["numberVial"])
+    return current_numbers_vial
 
 
 @api_view(['POST'])
