@@ -1651,7 +1651,7 @@ def directions_paraclinic_form(request):
 def get_default_for_field(field_type, default_value=None):
     if field_type == 1 and default_value.lower() != "пусто":
         return strfdatetime(current_time(), '%Y-%m-%d')
-    if field_type == 20:
+    if field_type == 20 and default_value.lower() != "пусто":
         return strfdatetime(current_time(), '%H:%M')
     return ''
 

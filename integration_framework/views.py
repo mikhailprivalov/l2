@@ -1500,6 +1500,83 @@ def external_direction_create(request):
     return Response({"ok": False, 'message': message})
 
 
+@api_view(['POST'])
+def get_directions(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+    oid_org = body.get("oid")
+    if not oid_org:
+        return Response({"ok": False, 'message': 'Должно быть указано org.oid'})
+
+    hospital = Hospitals.objects.filter(oid=oid_org).first()
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
+
+    create_from = body.get(("createFrom") or '')
+    create_to = body.get(('createTo') or '')
+
+    directions_data = Napravleniya.objects.values_list('pk', flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
+    return Response({"ok": False, 'data': directions_data})
+
+
+@api_view(['POST'])
+def get_direction_data_by_num(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    if not oid_org:
+        return Response({"ok": False, 'message': 'Должно быть указано oid'})
+
+    hospital = Hospitals.objects.filter(oid=oid_org).first()
+
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
+
+    pk = int(body.get(("directionNum") or ''))
+    direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
+    card = direction.client
+    individual = card.individual
+
+    iss = directions.Issledovaniya.objects.filter(napravleniye=direction,).select_related('research')
+
+    if not iss:
+        return Response({"ok": False})
+
+    services = [{"title": i.research.title, "code": i.research.code} for i in iss]
+
+    direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
+    direction_params = {dp.title: dp.value for dp in direction_params_obj}
+
+    return Response(
+        {
+            "pk": pk,
+            "createdAt": direction.data_sozdaniya,
+            "patient": {
+                **card.get_data_individual(full_empty=True, only_json_serializable=True),
+                "family": individual.family,
+                "name": individual.name,
+                "patronymic": individual.patronymic,
+                "birthday": individual.birthday,
+                "docs": card.get_n3_documents(),
+                "sex": individual.sex,
+            },
+            "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else '',
+            "priceCategory": direction.price_category.title if direction.price_category else '',
+            "services": services,
+            "directionParams": direction_params
+        }
+    )
+
+
 def check_valid_material_mark(current_material_data, current_numbers_vial):
     for k, v in current_material_data.items():
         if k == "numberVial" and not isinstance(v, int):  # обязательно число
