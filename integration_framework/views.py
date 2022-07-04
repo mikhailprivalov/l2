@@ -1541,7 +1541,6 @@ def get_direction_data_by_num(request):
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
         return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
 
-
     pk = int(body.get(("directionNum") or ''))
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
