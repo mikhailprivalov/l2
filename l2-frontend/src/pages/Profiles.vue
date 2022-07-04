@@ -304,7 +304,7 @@
                 class="input-group"
                 style="width: 100%"
               >
-                <span class="input-group-addon">РМИС employee</span>
+                <span class="input-group-addon">External_id</span>
                 <input
                   v-model="user.rmis_employee_id"
                   class="form-control"
