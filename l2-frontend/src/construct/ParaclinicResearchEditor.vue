@@ -553,7 +553,7 @@
                       class="form-control"
                     >
                   </div>
-                  <div v-if="row.field_type === 1 ">
+                  <div v-if="[1, 20].includes(row.field_type)">
                     <strong>Значение по умолчанию:</strong>
                     <input
                       v-model="row.default"
