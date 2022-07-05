@@ -39,5 +39,6 @@ class Command(BaseCommand):
                         input_templates=f['input_templates'],
                         required=f['required'],
                         hide=f['hide'],
+                        short_title=f.get('short_title', ''),
                     )
                     field.save()
