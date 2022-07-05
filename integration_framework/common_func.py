@@ -32,20 +32,20 @@ def get_data_direction_with_param(direction_num):
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=direction_num)
     direction_params = {dp.title: dp.value for dp in direction_params_obj}
     return {
-                "pk": direction_num,
-                "hosp": direction.hospital.title,
-                "createdAt": direction.data_sozdaniya,
-                "patient": {
-                    **card.get_data_individual(full_empty=True, only_json_serializable=True),
-                    "family": individual.family,
-                    "name": individual.name,
-                    "patronymic": individual.patronymic,
-                    "birthday": individual.birthday,
-                    "docs": card.get_n3_documents(),
-                    "sex": individual.sex,
-                },
-                "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else '',
-                "priceCategory": direction.price_category.title if direction.price_category else '',
-                "services": services,
-                "directionParams": direction_params
-            }
+        "pk": direction_num,
+        "hosp": direction.hospital.title,
+        "createdAt": direction.data_sozdaniya,
+        "patient": {
+            **card.get_data_individual(full_empty=True, only_json_serializable=True),
+            "family": individual.family,
+            "name": individual.name,
+            "patronymic": individual.patronymic,
+            "birthday": individual.birthday,
+            "docs": card.get_n3_documents(),
+            "sex": individual.sex,
+        },
+        "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else '',
+        "priceCategory": direction.price_category.title if direction.price_category else '',
+        "services": services,
+        "directionParams": direction_params,
+    }
