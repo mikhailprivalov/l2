@@ -1530,42 +1530,10 @@ def get_direction_data_by_num(request):
         return Response({"ok": False, 'message': check_result["message"]})
 
     pk = int(body.get(("directionNum") or ''))
-    direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
-    card = direction.client
-    individual = card.individual
-    if direction.hospital != check_result["hospital"]:
-        return Response({"ok": False, 'message': 'Больница в Напрпавлении и права доступа к Больнице не совпадают'})
-
-    iss = directions.Issledovaniya.objects.filter(napravleniye=direction,).select_related('research')
-
-    if not iss:
+    data_result = get_data_direction_with_param(pk)
+    if not data_result:
         return Response({"ok": False})
-
-    services = [{"title": i.research.title, "code": i.research.code} for i in iss]
-
-    direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
-    direction_params = {dp.title: dp.value for dp in direction_params_obj}
-
-    return Response(
-        {
-            "pk": pk,
-            "hosp": direction.hospital.title,
-            "createdAt": direction.data_sozdaniya,
-            "patient": {
-                **card.get_data_individual(full_empty=True, only_json_serializable=True),
-                "family": individual.family,
-                "name": individual.name,
-                "patronymic": individual.patronymic,
-                "birthday": individual.birthday,
-                "docs": card.get_n3_documents(),
-                "sex": individual.sex,
-            },
-            "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else '',
-            "priceCategory": direction.price_category.title if direction.price_category else '',
-            "services": services,
-            "directionParams": direction_params
-        }
-    )
+    return Response({"ok": True, 'data': data_result})
 
 
 @api_view(['POST'])
