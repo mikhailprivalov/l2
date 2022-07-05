@@ -20,7 +20,9 @@ def get_data_direction_with_param(direction_num):
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=direction_num)
     card = direction.client
     individual = card.individual
-    iss = directions.Issledovaniya.objects.filter(napravleniye=direction, ).select_related('research')
+    iss = directions.Issledovaniya.objects.filter(
+        napravleniye=direction,
+    ).select_related('research')
 
     if not iss:
         return False
