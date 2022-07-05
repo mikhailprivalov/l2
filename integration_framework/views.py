@@ -70,7 +70,7 @@ from utils.dates import normalize_date, valid_date, try_strptime, try_parse_rang
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
-from .common_func import check_correct_hosp, get_data_direction_with_param
+from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
@@ -1567,6 +1567,25 @@ def get_direction_data_by_period(request):
     return Response({"ok": True, 'data': result})
 
 
+@api_view(['POST'])
+def external_get_pdf_result(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    hospital = check_result["hospital"]
+    pk = int(body.get(("directionNum") or ''))
+    direction = directions.Napravleniya.objects.filter(hospital=hospital, pk=pk).first()
+    if not direction:
+        return Response({"ok": False, 'message': 'Номер направления не принадлежит организации'})
+    pdf_data = direction_pdf_result(direction.pk)
+    return JsonResponse({"result": pdf_data})
+
+
 def check_valid_material_mark(current_material_data, current_numbers_vial):
     for k, v in current_material_data.items():
         if k == "numberVial" and not isinstance(v, int):  # обязательно число
@@ -2162,7 +2181,6 @@ def results_by_direction(request):
     is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
     is_user_forms = request_data.get('isUserFroms', mode == 'forms')
     direction = request_data.get('pk')
-
     directions = request_data.get('directions', [])
     if not directions and direction:
         directions = [direction]
