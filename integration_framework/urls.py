@@ -10,6 +10,7 @@ urlpatterns = [
     path('result/resend-crie', views.resend_dir_crie),
     path('result/sendamd', views.result_amd_send),
     path('result/pdf', views.get_pdf_result),
+    path('external-result/pdf', views.external_get_pdf_result),
     path('direction/pdf', views.get_pdf_direction),
     path('direction/data', views.direction_data),
     path('direction/records', views.direction_records),
