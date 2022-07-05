@@ -70,7 +70,7 @@ from utils.dates import normalize_date, valid_date, try_strptime, try_parse_rang
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
-from .common_func import check_correct_hosp
+from .common_func import check_correct_hosp, get_data_direction_with_param
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
@@ -1591,45 +1591,12 @@ def get_direction_data_by_period(request):
 
     directions_data = Napravleniya.objects.values_list('pk', flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
     result = []
-    for direction_num in directions_data:
-        direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=direction_num)
-        card = direction.client
-        individual = card.individual
-        if direction.hospital != check_result["hospital"]:
-            return Response({"ok": False, 'message': 'Больница в Напрпавлении и права доступа к Больнице не совпадают'})
-
-        iss = directions.Issledovaniya.objects.filter(napravleniye=direction, ).select_related('research')
-
-        if not iss:
-            return Response({"ok": False})
-
-        services = [{"title": i.research.title, "code": i.research.code} for i in iss]
-
-        direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=direction_num)
-        direction_params = {dp.title: dp.value for dp in direction_params_obj}
-
-        result.append(
-            {
-                "pk": direction_num,
-                "hosp": direction.hospital.title,
-                "createdAt": direction.data_sozdaniya,
-                "patient": {
-                    **card.get_data_individual(full_empty=True, only_json_serializable=True),
-                    "family": individual.family,
-                    "name": individual.name,
-                    "patronymic": individual.patronymic,
-                    "birthday": individual.birthday,
-                    "docs": card.get_n3_documents(),
-                    "sex": individual.sex,
-                },
-                "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else '',
-                "priceCategory": direction.price_category.title if direction.price_category else '',
-                "services": services,
-                "directionParams": direction_params
-            }
-        )
+    for direction_number in directions_data:
+        data_result = get_data_direction_with_param(direction_number)
+        if not data_result:
+            continue
+        result.append(data_result)
     return Response({"ok": True, 'data': result})
-
 
 
 def check_valid_material_mark(current_material_data, current_numbers_vial):
