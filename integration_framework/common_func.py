@@ -1,4 +1,4 @@
-from directions.models import Issledovaniya, Napravleniya, DirectionParamsResult
+import directions.models as directions
 from hospitals.models import Hospitals
 
 
@@ -17,17 +17,17 @@ def check_correct_hosp(request, oid_org):
 
 
 def get_data_direction_with_param(direction_num):
-    direction: Napravleniya = Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=direction_num)
+    direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=direction_num)
     card = direction.client
     individual = card.individual
-    iss = Issledovaniya.objects.filter(napravleniye=direction, ).select_related('research')
+    iss = directions.Issledovaniya.objects.filter(napravleniye=direction, ).select_related('research')
 
     if not iss:
         return False
 
     services = [{"title": i.research.title, "code": i.research.code} for i in iss]
 
-    direction_params_obj = DirectionParamsResult.objects.filter(napravleniye_id=direction_num)
+    direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=direction_num)
     direction_params = {dp.title: dp.value for dp in direction_params_obj}
     return {
                 "pk": direction_num,
