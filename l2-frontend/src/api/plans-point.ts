@@ -25,4 +25,7 @@ export default generator({
   planOperationsCancel: {
     url: 'plans/plan-operations-cancel',
   },
+  getOffsetHoursForPlanOperations: {
+    url: 'plans/get-offset-hours-plan-operations',
+  },
 });
