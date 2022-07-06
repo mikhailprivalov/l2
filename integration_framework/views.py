@@ -2175,6 +2175,13 @@ def directions_by_category_result_year(request):
 @api_view(['POST'])
 def results_by_direction(request):
     request_data = json.loads(request.body)
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+    oid_org = request_data.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    hospital = check_result["hospital"]
     mode = request_data.get('mode')
     is_lab = request_data.get('isLab', mode == 'laboratory')
     is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
@@ -2182,8 +2189,15 @@ def results_by_direction(request):
     is_user_forms = request_data.get('isUserFroms', mode == 'forms')
     direction = request_data.get('pk')
     directions = request_data.get('directions', [])
-    if not directions and direction:
+    if is_lab and not directions:
         directions = [direction]
+    else:
+        directions = [direction]
+    for d in directions:
+        direction_obj = Napravleniya.objects.filter(hospital=hospital, pk=d).first()
+        if not direction_obj:
+            return Response({"ok": False, 'message': 'Номер направления не принадлежит организации'})
+
     objs_result = {}
     if is_lab:
         direction_result = get_laboratory_results_by_directions(directions)
@@ -2265,11 +2279,7 @@ def check_hosp_slot_before_save(request):
 def get_pdf_result(request):
     data = json.loads(request.body)
     pk = data.get('pk')
-    localclient = TC(enforce_csrf_checks=False)
-    addr = "/results/pdf"
-    params = {"pk": json.dumps([pk]), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
-    result = localclient.get(addr, params).content
-    pdf_content = base64.b64encode(result).decode('utf-8')
+    pdf_content = direction_pdf_result(pk)
     return JsonResponse({"result": pdf_content})
 
 
