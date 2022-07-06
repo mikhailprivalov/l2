@@ -2279,11 +2279,7 @@ def check_hosp_slot_before_save(request):
 def get_pdf_result(request):
     data = json.loads(request.body)
     pk = data.get('pk')
-    localclient = TC(enforce_csrf_checks=False)
-    addr = "/results/pdf"
-    params = {"pk": json.dumps([pk]), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
-    result = localclient.get(addr, params).content
-    pdf_content = base64.b64encode(result).decode('utf-8')
+    pdf_content = direction_pdf_result(pk)
     return JsonResponse({"result": pdf_content})
 
 
