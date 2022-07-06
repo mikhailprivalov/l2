@@ -31,7 +31,7 @@ const getters = {
   },
   permanentDirectories: (state) => state.permanentDirectories,
   requiredStattalonFields: (state) => state.requiredStattalonFields,
-  researchesPkRequiredStattalonFields: (state) => state.researchesPkRequiredStattalonFields
+  researchesPkRequiredStattalonFields: (state) => state.researchesPkRequiredStattalonFields,
 };
 
 const actions = {
