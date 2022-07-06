@@ -258,5 +258,4 @@ def get_limit_download_files(request):
 
 @login_required
 def get_offset_hours_plan_operations(request):
-    print(OFFSET_HOURS_PLAN_OPERATIONS)
     return JsonResponse({"data": OFFSET_HOURS_PLAN_OPERATIONS})
