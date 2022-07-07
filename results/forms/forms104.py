@@ -360,7 +360,6 @@ def form_04(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Зав. отделением": "",
     }
     data_fields_result = fields_result_only_title_fields(iss, title_field_result)
-    main_manager, from_who, departmnet, date_protocol = "", "", "", ""
     for i in data_fields_result:
         if title_field_result.get(i["title"], None) is not None:
             title_field_result[i["title"]] = i["value"]
