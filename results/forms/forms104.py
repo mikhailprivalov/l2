@@ -357,7 +357,7 @@ def form_04(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Причина": "",
         "Дата возврата": "",
         "Руководитель медицинской организаци": "",
-        "Зав. отделением": ""
+        "Зав. отделением": "",
     }
     data_fields_result = fields_result_only_title_fields(iss, title_field_result)
     main_manager, from_who, departmnet, date_protocol = "", "", "", ""
@@ -370,35 +370,94 @@ def form_04(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     hospital_address = hospital.safe_address
     hospital_phone = hospital.phones
 
-
+    open_bold_tag = "<font face =\"PTAstraSerifBold\">"
+    close_tag_bold = "</font>"
 
     opinion = [
         [
-            Paragraph(f'РОССИЙСКАЯ ФЕДЕРАЦИЯ<br/>Министерство здравоохранения<br/>Иркутской области<br/>{hospital_title}<br/>{hospital_address}<br/>{hospital_phone}', styleT),
-            Paragraph(f'Главному врачу {hospital_short_title} <br/> {main_manager}<br/>от<br/>{from_who} <br/>Тел.: {hospital_phone}', styleT),
+            Paragraph(
+                f'{open_bold_tag}РОССИЙСКАЯ ФЕДЕРАЦИЯ<br/>Министерство здравоохранения<br/>Иркутской области<br/><br/>{hospital_title}{close_tag_bold}<br/>{hospital_address}<br/>{hospital_phone}',
+                styleCenter,
+            ),
+            Paragraph(
+                f'Главному врачу <br/>{hospital_short_title} <br/>'
+                f'{title_field_result.get("Руководитель медицинской организаци", "")}<br/><br/>от<br/>'
+                f'{title_field_result.get("ФИО пациента", "")} <br/>'
+                f'Тел.: {title_field_result.get("Телефон", "")}',
+                styleT,
+            ),
         ],
     ]
 
-    tbl = Table(opinion, colWidths=[90 * mm, 90 * mm])
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('LEFTPADDING', (1, 0), (-1, -1), 8 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    tbl = Table(opinion, colWidths=[100 * mm, 80 * mm])
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 20 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
 
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
 
-    open_bold_tag = "<font face =\"PTAstraSerifBold\">"
-    close_tag_bold = "</font>"
-
-    fwb.append(Spacer(1, 4 * mm))
+    fwb.append(Spacer(1, 6 * mm))
     fwb.append(Paragraph(f'{open_bold_tag}Заявление на возврат{close_tag_bold}', styleCenterBold))
     fwb.append(Spacer(1, 4 * mm))
     fwb.append(Spacer(1, 2 * mm))
-    fwb.append(Paragraph(f'Прошу вернуть денежные средства в размере ___________ рублей ________ коп ', style_ml))
-    fwb.append(Paragraph(f'по кассовому чеку №  ___________ от «____» _____________ 202____ за медицинские услуги', style_ml))
-    fwb.append(Paragraph(f'по причине (нужное подчеркнуть ):  Отменено врачом лечебного учреждения;', style_ml))
-    fwb.append(Paragraph(f'Денежные средства за неуказанную медицинскую услугу в размере  _________ руб.  _______ коп. получил', style_ml))
-    fwb.append(Paragraph(f'Дата ____________ ', style_ml))
-    fwb.append(Paragraph(f'Зав. отделением профилактических медицинских осмотров Бурлаков Д.С.', style_ml))
-    space_symbol = '&nbsp;'
+    copeek = title_field_result.get("Копеек", "")
+    if len(copeek) == 1 and copeek == "0":
+        copeek = "00"
+    fwb.append(
+        Paragraph(
+            f'Прошу вернуть денежные средства в размере <u>{title_field_result.get("Рублей", "")}</u> рублей <u>{copeek}</u> коп по кассовому чеку '
+            f'№ <u>{title_field_result.get("Кассовый чек №", "")}</u> от <u>{title_field_result.get("Дата чека", "")}</u>',
+            style_ml,
+        )
+    )
+    fwb.append(Paragraph(f'за медицинские услуги: <u>{title_field_result.get("За медицинские услуги", "")}</u>', style_ml))
+    fwb.append(Paragraph(f'по причине: <u>{title_field_result.get("Причина", "")}</u>', style_ml))
+
+    fwb.append(Spacer(1, 4 * mm))
+    result = stamp_signature(styleCenter)
+    fwb.append(result)
+
+    fwb.append(Spacer(1, 10 * mm))
+    fwb.append(Paragraph(f'Денежные средства за неуказанную медицинскую услугу в размере  <u>{title_field_result.get("Рублей", "")}</u> руб.  <u>{copeek}</u> коп. получил', style_ml))
+    fwb.append(Spacer(1, 4 * mm))
+    result = stamp_signature(styleCenter)
+    fwb.append(result)
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Дата <u>{title_field_result.get("Дата возврата", "")}</u> ', style_ml))
+    fwb.append(Spacer(1, 10 * mm))
+    fwb.append(Paragraph(f'Зав. отделением профилактических медицинских осмотров', style_ml))
+    fwb.append(Spacer(1, 2 * mm))
+    result = stamp_signature(styleCenter, title_field_result.get("Зав. отделением", ""))
+    fwb.append(result)
     fwb = fields_result(iss, fwb, title_field_result)
 
     return fwb
+
+
+def stamp_signature(styleT, zav=""):
+    opinion = [
+        [
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph(f'{zav}', styleT),
+        ],
+        [
+            Paragraph('', styleT),
+            Paragraph('подпись', styleT),
+            Paragraph('', styleT),
+            Paragraph('рашифровка', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=[70 * mm, 50 * mm, 6 * mm, 50 * mm,])
+    tbl.setStyle(TableStyle(
+        [
+            ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+            ('LINEBELOW', (3, 0), (3, 0), 0.75, colors.black),
+        ]
+    )
+    )
+    return tbl
