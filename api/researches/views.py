@@ -26,7 +26,7 @@ from directory.models import (
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
-from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS
+from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, DISABLED_RESULT_FORMS
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from rmis_integration.client import get_md5
@@ -307,7 +307,7 @@ def localization_save(request):
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
-    result_form = DResearches.RESULT_FORMS
+    result_form = [i for i in DResearches.RESULT_FORMS if i[0] not in DISABLED_RESULT_FORMS]
     period_types = [{'id': x[0], 'label': x[1]} for x in DResearches.PERIOD_TYPES]
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
 
