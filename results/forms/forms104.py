@@ -458,5 +458,14 @@ def stamp_signature(styleT, zav=""):
             50 * mm,
         ],
     )
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+                ('LINEBELOW', (3, 0), (3, 0), 0.75, colors.black),
+            ]
+        )
     )
     return tbl
