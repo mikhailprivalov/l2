@@ -424,7 +424,7 @@ def form_04(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'Дата <u>{title_field_result.get("Дата возврата", "")}</u> ', style_ml))
     fwb.append(Spacer(1, 10 * mm))
-    fwb.append(Paragraph(f'Зав. отделением профилактических медицинских осмотров', style_ml))
+    fwb.append(Paragraph('Зав. отделением профилактических медицинских осмотров', style_ml))
     fwb.append(Spacer(1, 2 * mm))
     result = stamp_signature(styleCenter, title_field_result.get("Зав. отделением", ""))
     fwb.append(result)
