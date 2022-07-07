@@ -375,7 +375,8 @@ def form_04(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     opinion = [
         [
             Paragraph(
-                f'{open_bold_tag}РОССИЙСКАЯ ФЕДЕРАЦИЯ<br/>Министерство здравоохранения<br/>Иркутской области<br/><br/>{hospital_title}{close_tag_bold}<br/>{hospital_address}<br/>{hospital_phone}',
+                f'{open_bold_tag}РОССИЙСКАЯ ФЕДЕРАЦИЯ<br/>Министерство здравоохранения<br/>Иркутской области<br/><br/>'
+                f'{hospital_title}{close_tag_bold}<br/>{hospital_address}<br/>{hospital_phone}',
                 styleCenter,
             ),
             Paragraph(
