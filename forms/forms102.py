@@ -1239,7 +1239,6 @@ def form_02(request_data):
         bstr = (qr_napr + protect_val).encode()
         protect_code = str(zlib.crc32(bstr))
 
-        today = utils.current_time()
         date_create = datetime.datetime.strftime(person_contract_data.create_at, '%y%m%d%H%M%S')
         date_now_str = f'{ind_card.pk}-{date_create}/{person_contract_data.pk}'
         book = person_contract_data.pk
