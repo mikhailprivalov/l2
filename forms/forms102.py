@@ -1261,7 +1261,6 @@ def form_02(request_data):
         else:
             executor = None
 
-
         objs.append(Spacer(1, 11 * mm))
         objs.append(Paragraph(f'ДОГОВОР &nbsp;&nbsp; № <u>{date_now_str}</u>', styleCenter))
         objs.append(Spacer(1, 1 * mm))
