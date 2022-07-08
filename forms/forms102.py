@@ -110,40 +110,40 @@ def form_01(request_data):
 
     # Контрольная сумма расчет: послдеовательность направлений+Итоговая сумма (стоимость денежная)
     qr_napr = ','.join([str(elem) for elem in result_data[3]])
-    # protect_val = sum_research.replace(' ', '')
-    # bstr = (qr_napr + protect_val).encode()
-    # protect_code = str(zlib.crc32(bstr))
+    protect_val = sum_research.replace(' ', '')
+    bstr = (qr_napr + protect_val).encode()
+    protect_code = str(zlib.crc32(bstr))
 
-    # today = utils.current_time()
-    # date_now1 = datetime.datetime.strftime(today, '%y%m%d%H%M%S%f')[:-3]
+    today = utils.current_time()
+    date_now1 = datetime.datetime.strftime(today, '%y%m%d%H%M%S%f')[:-3]
     date_now_str = str(ind_card.pk) + str(date_now1)
 
     # Проверить записан ли номер контракта в направлениях, и контрольная сумма
     # ПереЗаписать номер контракта Если в наборе направлений значение None, или в направлениях разные контракты,
     # а также разные контрольные суммы, все перезаписать.
-    # num_contract_set = set()
-    # protect_code_set = set()
-    # napr_end = Napravleniya.objects.filter(id__in=result_data[3])
-    # for n in napr_end:
-    #     num_contract_set.add(n.num_contract)
-    #     protect_code_set.add(n.protect_code)
-    #
-    # if len(num_contract_set) == 1 and None in num_contract_set or None in protect_code_set:
-    #     PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'], ind_card, p_payer, p_agent)
-    #     Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
-    #
-    # # ПереЗаписать номер контракта Если в наборе направлении значение разные значения
-    # if len(num_contract_set) > 1 or len(protect_code_set) > 1:
-    #     PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'], ind_card, p_payer, p_agent)
-    #     Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
-    #
-    # if len(num_contract_set) == 1 and None not in num_contract_set:
-    #     if len(protect_code_set) == 1 and None not in protect_code_set:
-    #         if protect_code_set.pop() == protect_code:
-    #             date_now_str = num_contract_set.pop()
-    #         else:
-    #             PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'], ind_card, p_payer, p_agent)
-    #             Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
+    num_contract_set = set()
+    protect_code_set = set()
+    napr_end = Napravleniya.objects.filter(id__in=result_data[3])
+    for n in napr_end:
+        num_contract_set.add(n.num_contract)
+        protect_code_set.add(n.protect_code)
+
+    if len(num_contract_set) == 1 and None in num_contract_set or None in protect_code_set:
+        PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'], ind_card, p_payer, p_agent)
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
+
+    # ПереЗаписать номер контракта Если в наборе направлении значение разные значения
+    if len(num_contract_set) > 1 or len(protect_code_set) > 1:
+        PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'], ind_card, p_payer, p_agent)
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
+
+    if len(num_contract_set) == 1 and None not in num_contract_set:
+        if len(protect_code_set) == 1 and None not in protect_code_set:
+            if protect_code_set.pop() == protect_code:
+                date_now_str = num_contract_set.pop()
+            else:
+                PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'], ind_card, p_payer, p_agent)
+                Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
