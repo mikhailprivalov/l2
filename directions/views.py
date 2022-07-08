@@ -39,6 +39,7 @@ from utils.dates import try_parse_range
 from django.utils.module_loading import import_string
 
 from utils.matrix import transpose
+from utils.xh import save_tmp_file
 
 w, h = A4
 
@@ -164,7 +165,9 @@ def gen_pdf_execlist(request):
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
-
+    if direction_id == []:
+        request_direction_id = json.loads(request.body)
+        direction_id = request_direction_id.get("napr_id", "[]")
     if SettingManager.get("pdf_auto_print", "true", "b") and not request.GET.get('normis') and not request.GET.get('embedded'):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
@@ -314,10 +317,6 @@ def gen_pdf_dir(request):
     if fin_ist_set and fin_ist_set.pop().title.lower() == 'платно':
         fin_status = True
 
-    def save(form, filename: str):
-        with open(filename, 'wb') as f:
-            f.write(form.read())
-
     if request.GET.get("contract") and internal_type:
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
             if len(card_pk_set) == 1 and fin_status:
@@ -348,8 +347,8 @@ def gen_pdf_dir(request):
                     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
                     file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
                     file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
-                    save(buffer, filename=file_dir)
-                    save(fc_buf, filename=file_contract)
+                    save_tmp_file(buffer, filename=file_dir)
+                    save_tmp_file(fc_buf, filename=file_contract)
                     pdf_all = BytesIO()
                     inputs = [file_contract] if SettingManager.get("only_contract", default='False', default_type='b') else [file_dir, file_contract]
                     writer = PdfWriter()
