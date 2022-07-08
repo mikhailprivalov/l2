@@ -1244,6 +1244,25 @@ def form_02(request_data):
         date_now_str = f'{ind_card.pk}-{date_create}/{person_contract_data.pk}'
         book = person_contract_data.pk
         barcode128 = code128.Code128(book, barHeight=6 * mm, barWidth=1.25)
+        contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
+        if not os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"]):
+            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', "default")
+        else:
+            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"])
+        if contract_from_file:
+            with open(contract_file) as json_file:
+                data = json.load(json_file)
+                contract_header = data['contract_header']
+                body_paragraphs = data['body_paragraphs']
+                org_contacts = data['org_contacts']
+                executor = data['executor']
+                appendix_paragraphs = data.get('appendix_paragraphs', None)
+                appendix_route_list = data.get('appendix_route_list', None)
+                appendix_direction_list = data.get('appendix_direction_list', None)
+        else:
+            executor = None
+
+
         objs.append(Spacer(1, 11 * mm))
         objs.append(Paragraph(f'ДОГОВОР &nbsp;&nbsp; № <u>{date_now_str}</u>', styleCenter))
         objs.append(Spacer(1, 1 * mm))
@@ -1275,28 +1294,6 @@ def form_02(request_data):
 
         hospital_short_name = hospital.safe_short_title
         hospital_address = hospital.safe_address
-
-        contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
-
-        if not os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"]):
-            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', "default")
-        else:
-            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"])
-
-        executor = None
-        if contract_from_file:
-            with open(contract_file) as json_file:
-                data = json.load(json_file)
-                contract_header = data['contract_header']
-                body_paragraphs = data['body_paragraphs']
-                org_contacts = data['org_contacts']
-                executor = data['executor']
-                appendix_paragraphs = data.get('appendix_paragraphs', None)
-                appendix_route_list = data.get('appendix_route_list', None)
-                appendix_direction_list = data.get('appendix_direction_list', None)
-
-        else:
-            executor = None
 
         if contract_from_file:
             objs.append(Paragraph('{}'.format(contract_header), style))
