@@ -10,6 +10,7 @@ from clients.models import Document, DispensaryReg, Card
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult, IstochnikiFinansirovaniya, PersonContract
 from directory.models import Researches
 from laboratory import utils
+from laboratory.settings import MEDEXAM_FIN_SOURCE_TITLE
 from laboratory.utils import strdate
 from api.stationar.stationar_func import hosp_get_data_direction, check_transfer_epicrisis
 from api.stationar.sql_func import get_result_value_iss
@@ -275,7 +276,7 @@ def get_finaldata_talon(doc_result_obj):
     fin_oms = 'омс'
     fin_dms = 'дмс'
     fin_pay = 'платно'
-    fin_medexam = 'медосмотр'
+    fin_medexam = MEDEXAM_FIN_SOURCE_TITLE
     fin_disp = 'диспансеризация'
     fin_budget = 'бюджет'
 
@@ -322,7 +323,7 @@ def get_finaldata_talon(doc_result_obj):
             dms_count += 1
             dict_fsourcce = fin_dms
             order = dms_count
-        elif napr_attr['istochnik_f'] == 'медосмотр':
+        elif napr_attr['istochnik_f'] == MEDEXAM_FIN_SOURCE_TITLE:
             medexam_count += 1
             dict_fsourcce = fin_medexam
             order = medexam_count
