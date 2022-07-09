@@ -26,6 +26,7 @@
         href="#"
         class="dropdown-toggle"
         @click.prevent
+        @mousemove="load"
       >
         Помощь
       </a>
@@ -56,9 +57,6 @@ export default {
     return {
       data: {},
     };
-  },
-  mounted() {
-    this.load();
   },
   methods: {
     async load() {
