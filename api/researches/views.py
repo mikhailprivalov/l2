@@ -7,6 +7,8 @@ from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
+
+from api.researches.help_files.constructor_help import constructor_help_message
 from directions.models import FrequencyOfUseResearches
 
 import users.models as users
@@ -888,3 +890,13 @@ def required_stattalon_fields(request):
 
 def researches_required_stattalon_fields(request):
     return JsonResponse(RESEARCHES_PK_REQUIRED_STATTALON_FIELDS)
+
+
+@login_required
+def help_link_field(request):
+    address_url = request.headers['Referer'].split(request.headers['Origin'])
+    help_message = [{"param": "", "value": ""}]
+    if address_url[1] == "/ui/construct/descriptive":
+        help_message = constructor_help_message
+
+    return JsonResponse({"data": help_message})

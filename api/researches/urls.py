@@ -28,4 +28,5 @@ urlpatterns = [
     path('localization/save', views.localization_save),
     path('required-stattalon-fields', views.required_stattalon_fields),
     path('researches-required-stattalon-fields', views.researches_required_stattalon_fields),
+    path('help-link-field', views.help_link_field),
 ]
