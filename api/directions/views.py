@@ -2575,6 +2575,19 @@ def last_field_result(request):
         field_is_link = True
         logical_and = True
         field_pks = request_data["fieldPk"].split('&')
+    elif request_data["fieldPk"].find('%current_year#') != -1:
+        data = request_data["fieldPk"].split('#')
+        field_pks = [data[1]]
+        logical_or = True
+        result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=True)
+    elif request_data["fieldPk"].find('%months_ago#') != -1:
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 3:
+            result = {"value": ""}
+        else:
+            field_pks = [data[1]]
+            logical_or = True
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=data[2])
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True
@@ -2594,7 +2607,7 @@ def get_current_direction(current_iss):
     return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
 
-def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
+def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago='-1'):
     result, value, temp_value = None, None, None
     for current_field_pk in field_pks:
         group_fields = [current_field_pk]
@@ -2606,7 +2619,12 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
             logical_or_inside = False
         for field_pk in group_fields:
             if field_pk.isdigit():
-                rows = get_field_result(client_pk, int(field_pk))
+                if use_current_year:
+                    c_year = current_year()
+                    c_year = f"{c_year}-01-01 00:00:00"
+                else:
+                    c_year = "-1"
+                rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
                 if rows:
                     row = rows[0]
                     value = row[5]
