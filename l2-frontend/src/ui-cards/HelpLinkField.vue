@@ -26,7 +26,7 @@
         href="#"
         class="dropdown-toggle"
         @click.prevent
-        @mousemove="load"
+        @mouseenter="load"
       >
         Помощь
       </a>
