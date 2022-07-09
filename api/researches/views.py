@@ -895,7 +895,6 @@ def researches_required_stattalon_fields(request):
 @login_required
 def help_link_field(request):
     address_url = request.headers['Referer'].split(request.headers['Origin'])
-    print(address_url[1])
     help_message = [{"param": "", "value": ""}]
     if address_url[1] == "/ui/construct/descriptive":
         help_message = constructor_help_message
