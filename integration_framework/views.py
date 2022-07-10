@@ -66,10 +66,11 @@ from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, matc
 from users.models import DoctorProfile
 from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date, try_strptime
+from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
+from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
@@ -1513,6 +1514,91 @@ def external_direction_create(request):
     return Response({"ok": False, 'message': message})
 
 
+@api_view(['POST'])
+def get_directions(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    else:
+        hospital = check_result["hospital"]
+        create_from = body.get(("createFrom") or '')
+        create_to = body.get(('createTo') or '')
+        directions_data = Napravleniya.objects.values_list('pk', flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
+        return Response({"ok": True, 'data': directions_data})
+
+
+@api_view(['POST'])
+def get_direction_data_by_num(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+
+    pk = int(body.get(("directionNum") or ''))
+    data_result = get_data_direction_with_param(pk)
+    if not data_result:
+        return Response({"ok": False})
+    return Response({"ok": True, 'data': data_result})
+
+
+@api_view(['POST'])
+def get_direction_data_by_period(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    hospital = check_result["hospital"]
+    create_from = body.get(("createFrom") or '')
+    create_to = body.get(('createTo') or '')
+    dot_format_create_from = normalize_date(create_from.split(" ")[0])
+    dot_format_create_to = normalize_date(create_to.split(" ")[0])
+    date_start, date_end = try_parse_range(dot_format_create_from, dot_format_create_to)
+    if date_start and date_end:
+        delta = date_end - date_start
+        if abs(delta.days) > 2:
+            return Response({"ok": False, 'message': 'Период между датами не более 48 часов'})
+
+    directions_data = Napravleniya.objects.values_list('pk', flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
+    result = []
+    for direction_number in directions_data:
+        data_result = get_data_direction_with_param(direction_number)
+        if not data_result:
+            continue
+        result.append(data_result)
+    return Response({"ok": True, 'data': result})
+
+
+@api_view(['POST'])
+def external_get_pdf_result(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    hospital = check_result["hospital"]
+    pk = int(body.get(("directionNum") or ''))
+    direction = directions.Napravleniya.objects.filter(hospital=hospital, pk=pk).first()
+    if not direction:
+        return Response({"ok": False, 'message': 'Номер направления не принадлежит организации'})
+    pdf_data = direction_pdf_result(direction.pk)
+    return JsonResponse({"result": pdf_data})
+
+
 def check_valid_material_mark(current_material_data, current_numbers_vial):
     for k, v in current_material_data.items():
         if k == "numberVial" and not isinstance(v, int):  # обязательно число
@@ -2102,16 +2188,29 @@ def directions_by_category_result_year(request):
 @api_view(['POST'])
 def results_by_direction(request):
     request_data = json.loads(request.body)
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+    oid_org = request_data.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    hospital = check_result["hospital"]
     mode = request_data.get('mode')
     is_lab = request_data.get('isLab', mode == 'laboratory')
     is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
     is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
     is_user_forms = request_data.get('isUserFroms', mode == 'forms')
     direction = request_data.get('pk')
-
     directions = request_data.get('directions', [])
-    if not directions and direction:
+    if is_lab and not directions:
         directions = [direction]
+    else:
+        directions = [direction]
+    for d in directions:
+        direction_obj = Napravleniya.objects.filter(hospital=hospital, pk=d).first()
+        if not direction_obj:
+            return Response({"ok": False, 'message': 'Номер направления не принадлежит организации'})
+
     objs_result = {}
     if is_lab:
         direction_result = get_laboratory_results_by_directions(directions)
@@ -2193,11 +2292,7 @@ def check_hosp_slot_before_save(request):
 def get_pdf_result(request):
     data = json.loads(request.body)
     pk = data.get('pk')
-    localclient = TC(enforce_csrf_checks=False)
-    addr = "/results/pdf"
-    params = {"pk": json.dumps([pk]), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
-    result = localclient.get(addr, params).content
-    pdf_content = base64.b64encode(result).decode('utf-8')
+    pdf_content = direction_pdf_result(pk)
     return JsonResponse({"result": pdf_content})
 
 

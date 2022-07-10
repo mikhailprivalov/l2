@@ -403,6 +403,10 @@
                   :card_pk="patient.cardId"
                   is-lab
                 />
+                <ResultControlParams
+                  :card_pk="patient.cardId"
+                  is-lab
+                />
               </span>
               <FileAdd
                 v-if="row.research.enabled_add_files"
@@ -938,6 +942,7 @@ import UrlData from '@/UrlData';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import RadioField from '@/fields/RadioField.vue';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
+import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
 import PatientCard from './PatientCard.vue';
@@ -955,6 +960,7 @@ export default {
     PatientCard,
     AmbulatoryData,
     ResultsByYear,
+    ResultControlParams,
     FileAdd: () => import('@/ui-cards/FileAdd.vue'),
     DirectionsHistory: () => import('@/ui-cards/DirectionsHistory/index.vue'),
     AggregateTADP: () => import('@/fields/AggregateTADP.vue'),

@@ -67,3 +67,8 @@ def check_type_research(pk):
         if research.podrazdeleniye and research.podrazdeleniye.pk in lab_podr:
             return "is_lab"
     return "error"
+
+
+def save_tmp_file(form, filename: str):
+    with open(filename, 'wb') as f:
+        f.write(form.read())
