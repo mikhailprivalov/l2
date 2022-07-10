@@ -2623,7 +2623,7 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
                     c_year = current_year()
                     c_year = f"{c_year}-01-01 00:00:00"
                 else:
-                    c_year = "-1"
+                    c_year = "1900-01-01 00:00:00"
                 rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
                 if rows:
                     row = rows[0]
