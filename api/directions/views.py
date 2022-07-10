@@ -3756,6 +3756,7 @@ def direction_history(request):
                         ["Направление привязано к записи отделения госпитализации РМИС", yesno[dr.rmis_hosp_id not in ["", None, "NONERMIS"]]],
                         ["Результат отправлен в РМИС", yesno[dr.result_rmis_send]],
                         ["Результат отправлен в ИЭМК", yesno[dr.n3_iemk_ok]],
+                        ["Результат отправлен в ECP", yesno[dr.ecp_ok]],
                     ]
                 ],
             }
@@ -3773,7 +3774,7 @@ def direction_history(request):
             data.append(d)
         for lg in Log.objects.filter(key=str(pk), type__in=(5002,)):
             data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
-        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011)):
+        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023)):
             data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
         for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dr).distinct():
             d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
