@@ -233,6 +233,7 @@ class IstochnikiFinansirovaniya(models.Model):
     contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE, verbose_name="Договоры")
     order_weight = models.SmallIntegerField(default=0, verbose_name="Сортировка")
     n3_code = models.CharField(max_length=2, default="", blank=True, verbose_name="Код источника финансирования для N3")
+    ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Код источника финансирования для ECP")
 
     def get_n3_code(self):
         codes = {

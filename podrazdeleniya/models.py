@@ -55,6 +55,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     odii_type = models.PositiveSmallIntegerField(choices=ODII_TYPES, default=None, null=True, blank=True, help_text="Оказываемые виды инструментальных услуг")
     oid = models.CharField(max_length=55, default="", blank=True, help_text='OID подразделения')
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
+    ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Код для ECP")
 
     def get_title(self):
         return self.short_title or self.title
