@@ -83,8 +83,6 @@ def get_fraction_result(client_id, fraction_id, count=1):
 
 
 def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:00:00', months_ago='-1'):
-    print(current_year)
-    print(type(current_year))
     """
     на входе: id-поля, id-карты,
     выход: последний результат поля
