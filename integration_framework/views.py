@@ -528,7 +528,7 @@ def make_log(request):
             for iss in Issledovaniya.objects.filter(napravleniye_id=k):
                 if str(iss.pk) in body.get(k, {}):
                     if 'ecpServiceId' in body[k][str(iss.pk)]:
-                        iss.ecp_evn_id = body[k][str(iss.pk)]['ecpServiceId']
+                        iss.ecp_evn_id = str(body[k][str(iss.pk)]['ecpServiceId'] or '') or None
                         iss.save(update_fields=['ecp_evn_id'])
 
     return Response({"ok": True})
