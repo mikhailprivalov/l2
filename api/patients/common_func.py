@@ -2,8 +2,8 @@ from api.patients.sql_func import get_patient_control_params
 from clients.models import CardControlParam
 
 
-def get_card_control_param(card_pk, start_date, end_date):
-    data_params = CardControlParam.get_patient_control_param(card_pk)
+def get_card_control_param(card_pk, start_date, end_date, code_param_id=None):
+    data_params = CardControlParam.get_patient_control_param(card_pk, code_param_id=5)
     start_date = f"{start_date}-01-01 00:00:00"
     end_date = f"{end_date}-12-31 23:59:59"
     control_params = tuple(data_params.keys())
