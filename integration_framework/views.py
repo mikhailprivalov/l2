@@ -338,6 +338,7 @@ def issledovaniye_data(request):
             "doctorData": doctor_data,
             "results": results_data,
             "code": i.research.code,
+            "research": i.research.get_title(),
             "comments": i.lab_comment,
         }
     )

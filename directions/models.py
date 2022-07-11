@@ -1837,6 +1837,7 @@ class Issledovaniya(models.Model):
     n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")
     n3_odii_patient = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор пациента заявки")
     n3_odii_uploaded_task_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task результата")
+    ecp_evn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="ECP Evn_id")
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )
