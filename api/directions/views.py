@@ -2588,6 +2588,17 @@ def last_field_result(request):
             field_pks = [data[1]]
             logical_or = True
             result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=data[2])
+    elif request_data["fieldPk"].find('%control_param#') != -1:
+        # %control_param#code#period#find_val
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 4:
+            result = {"value": ""}
+        param_code = data[1]
+        param_period = data[2]
+        param_find_val = data[3]
+            # field_pks = [data[1]]
+            # logical_or = True
+            # result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=data[2])
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True

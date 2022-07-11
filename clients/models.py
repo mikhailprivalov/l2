@@ -1723,9 +1723,12 @@ class CardControlParam(models.Model):
         verbose_name_plural = 'Контролируемые параметры у пациента'
 
     @staticmethod
-    def get_patient_control_param(card_pk):
+    def get_patient_control_param(card_pk, code_param_id=None):
         card_controls = CardControlParam.objects.filter(card_id=card_pk).order_by("pk")
-        control_params = {cc.patient_control_param_id: {"title": cc.patient_control_param.title, "purpose": ""} for cc in card_controls}
+        if code_param_id:
+            control_params = {cc.patient_control_param_id: {"title": cc.patient_control_param.title, "purpose": ""} for cc in card_controls if cc.patient_control_param_id == code_param_id}
+        else:
+            control_params = {cc.patient_control_param_id: {"title": cc.patient_control_param.title, "purpose": ""} for cc in card_controls}
         for cc in card_controls:
             tmp_data: dict = control_params[cc.patient_control_param_id]
             date_start = cc.date_start.strftime("%m.%y") if cc.date_start else "-"
