@@ -254,6 +254,9 @@ class IstochnikiFinansirovaniya(models.Model):
 
         return self.n3_code or codes['другое']
 
+    def get_ecp_code(self):
+        return self.ecp_code or '380101000000023'
+
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
 
@@ -608,6 +611,13 @@ class Napravleniya(models.Model):
         hosp = self.get_hospital()
         if hosp:
             return hosp.n3_id
+        return None
+
+    @property
+    def hospital_ecp_id(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.ecp_id
         return None
 
     def get_ogrn_org_initiator(self):
