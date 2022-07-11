@@ -90,6 +90,7 @@ from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
 from utils.expertise import get_expertise
+from ..patients.common_func import get_card_control_param
 
 
 @login_required
@@ -2531,7 +2532,7 @@ def last_field_result(request):
         hospital_param = request_data["fieldPk"].split("#")
         hospital_param = hospital_param[1]
         param_result = HospitalParams.objects.filter(hospital=Napravleniya.objects.get(pk=num_dir).hospital, param_title=hospital_param).first()
-        result = {"value": param_result.param_value}
+        result = {"value": param_result.param_value if param_result else ""}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
         current_iss = request_data["iss_pk"]
@@ -2588,6 +2589,31 @@ def last_field_result(request):
             field_pks = [data[1]]
             logical_or = True
             result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=data[2])
+    elif request_data["fieldPk"].find('%control_param#') != -1:
+        # %control_param#code#period#find_val
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 4:
+            result = {"value": ""}
+        param_code = int(data[1])
+        param_period = data[2]
+        param_find_val = data[3]
+        end_year = current_year()
+        if param_period == 'current_year':
+            start_year = end_year
+        else:
+            start_year = param_period
+        unique_month_result = get_card_control_param(client_pk, start_year, end_year, code_param_id=param_code)
+        # [{'title': 'Параметр', 'purposeValue': 'Целевое значение', 'dates': {'2022-07': {}}},
+        # {'controlParamId': 5, 'title': 'сопутствующие диагнозы', 'purposeValue': '',
+        # 'dates': {'2022-07': {'11.07.2022': [{'dir': 227779, 'value': 'K22.1'}]}}}]
+        result = {"value": "Нет"}
+        for element in unique_month_result:
+            if element.get('controlParamId') == param_code:
+                for k, v in element.get('dates').items():
+                    for data in v.values():
+                        for d in data:
+                            if d['value'].find(param_find_val) != -1:
+                                return JsonResponse({"result": {"value": "да"}})
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True
