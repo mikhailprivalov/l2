@@ -2532,7 +2532,7 @@ def last_field_result(request):
         hospital_param = request_data["fieldPk"].split("#")
         hospital_param = hospital_param[1]
         param_result = HospitalParams.objects.filter(hospital=Napravleniya.objects.get(pk=num_dir).hospital, param_title=hospital_param).first()
-        result = {"value": param_result.param_value if param_result else "" }
+        result = {"value": param_result.param_value if param_result else ""}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
         current_iss = request_data["iss_pk"]
