@@ -513,8 +513,11 @@ class PatientControlParam(models.Model):
         return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in PatientControlParam.objects.all().order_by("title")]]
 
     @staticmethod
-    def get_all_patient_contol_param():
-        all_patient_contol = PatientControlParam.objects.filter(all_patient_contol=True).order_by("order")
+    def get_all_patient_contol_param(code_param_id=None):
+        if code_param_id:
+            all_patient_contol = PatientControlParam.objects.filter(all_patient_contol=True, pk=code_param_id).order_by("order")
+        else:
+            all_patient_contol = PatientControlParam.objects.filter(all_patient_contol=True).order_by("order")
         return {cc.pk: {"title": cc.title, "purpose": ""} for cc in all_patient_contol}
 
 
