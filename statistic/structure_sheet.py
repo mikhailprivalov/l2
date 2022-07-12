@@ -8,6 +8,7 @@ from openpyxl.utils.cell import get_column_letter
 from directions.models import IstochnikiFinansirovaniya
 from doctor_call.models import DoctorCall
 from hospitals.tfoms_hospital import HOSPITAL_TITLE_BY_CODE_TFOMS
+from statistic.sql_func import get_pair_iss_direction
 from utils.dates import normalize_dash_date, normalize_date
 from dateutil.parser import parse as du_parse
 from dateutil.relativedelta import relativedelta
@@ -443,6 +444,10 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1, d2, style_border, style_o)
         ('Впервые', 13),
         ('Результат \n обращения \n(код)', 13),
         ('Исход(код)', 13),
+        ('', 13),
+        ('Источник по направлению', 13),
+        ('Источник по услуге', 13),
+        ('Главное направление', 13),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=7, column=idx).value = column[0]
@@ -483,6 +488,12 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     total_sum = []
     # one_days = timedelta(1)
     current_date = ''
+    parent_iss_pk = [k[28] for k in issl_obj if k[28]]
+    parent_iss = tuple(set(parent_iss_pk))
+    result = {}
+    for k in get_pair_iss_direction(parent_iss):
+        result[k.iss_pk] = k.direction_pk
+
     for issled in issl_obj:
         # Порядок колонок в issled:
         # title, code, is_first_reception, polis_n, polis_who_give, \
@@ -521,6 +532,12 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         current_firsttime = issled[5]
         current_result = issled[19]
         current_octome = issled[20]
+        direction_fin_source = issled[26]
+        iss_fin_source = issled[27]
+        parent_direction = " -"
+        if issled[28]:
+            parent_direction = result.get(issled[28], "-")
+
         # current_price = ''
 
         if r != 7 and r != 8:
@@ -578,6 +595,9 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         ws1.cell(row=r, column=17).value = current_result
         ws1.cell(row=r, column=18).value = current_octome
         ws1.cell(row=r, column=19).value = ''
+        ws1.cell(row=r, column=20).value = direction_fin_source
+        ws1.cell(row=r, column=21).value = iss_fin_source
+        ws1.cell(row=r, column=22).value = parent_direction
 
         rows = ws1[f'A{r}:V{r}']
         for row in rows:
