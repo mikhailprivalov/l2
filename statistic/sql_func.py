@@ -33,7 +33,10 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_confirm,
             directions_issledovaniya.maybe_onco, statistics_tickets_visitpurpose.title AS purpose,
             directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title AS iss_result,
-            statistics_tickets_outcomes.title AS outcome
+            statistics_tickets_outcomes.title AS outcome,
+            direction_fin.title as direction_finsource_title,
+            iss_fin.title as iss_finsource_title,
+            directions_issledovaniya.parent_id as parent_iss_id
             FROM directions_issledovaniya 
             LEFT JOIN directory_researches
             ON directions_issledovaniya.research_id = directory_researches.id
@@ -45,15 +48,19 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             ON directions_issledovaniya.result_reception_id=statistics_tickets_resultoftreatment.id
             LEFT JOIN statistics_tickets_outcomes
             ON directions_issledovaniya.outcome_illness_id=statistics_tickets_outcomes.id
+            LEFT JOIN directions_istochnikifinansirovaniya direction_fin
+            ON directions_napravleniya.istochnik_f_id = direction_fin.id
+            LEFT JOIN directions_istochnikifinansirovaniya iss_fin
+            ON directions_issledovaniya.fin_source_id = iss_fin.id
             WHERE (%(d_confirms)s in (directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.co_executor_id,
             directions_issledovaniya.co_executor2_id)) 
             AND time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             AND directory_researches.is_slave_hospital=FALSE AND directory_researches.is_hospital=FALSE
             AND 
             CASE when %(can_null)s = 1 THEN 
-            directions_napravleniya.istochnik_f_id = %(ist_fin)s or directions_napravleniya.istochnik_f_id is NULL
+            directions_napravleniya.istochnik_f_id = %(ist_fin)s or directions_issledovaniya.fin_source_id = %(ist_fin)s or directions_napravleniya.istochnik_f_id is NULL
             when %(can_null)s = 0 THEN
-            directions_napravleniya.istochnik_f_id = %(ist_fin)s
+            directions_napravleniya.istochnik_f_id = %(ist_fin)s or directions_issledovaniya.fin_source_id = %(ist_fin)s
             END 
             
             ORDER BY datetime_confirm),
@@ -65,9 +72,37 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
             ORDER BY clients_card.id)
         
-        SELECT title, code, is_first_reception, polis_n, polis_who_give, first_time, napravleniye_id, doc_confirmation_id, 
-        def_uet, co_executor_id, co_executor_uet, co_executor2_id, co_executor2_uet, datetime_confirm, date_confirm, time_confirm,
-        maybe_onco, purpose, diagnos, iss_result, outcome, card_number, client_family, client_name, client_patronymic, birthday FROM t_iss
+        SELECT 
+        title, 
+        code, 
+        is_first_reception, 
+        polis_n, 
+        polis_who_give, 
+        first_time, 
+        t_iss.napravleniye_id, 
+        doc_confirmation_id, 
+        def_uet, 
+        co_executor_id, 
+        co_executor_uet, 
+        co_executor2_id, 
+        co_executor2_uet, 
+        datetime_confirm, 
+        date_confirm, 
+        time_confirm,
+        maybe_onco, 
+        purpose, 
+        diagnos, 
+        iss_result, 
+        outcome, 
+        card_number, 
+        client_family, 
+        client_name, 
+        client_patronymic, 
+        birthday, 
+        direction_finsource_title, 
+        iss_finsource_title,
+        parent_iss_id
+        FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id=t_card.id
         ORDER BY datetime_confirm""",
             params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin, 'can_null': can_null, 'tz': TIME_ZONE},
@@ -1359,5 +1394,22 @@ def doctors_pass_count_patient_by_date(doctors_tuple, d_s, d_e):
             params={'doctors_tuple': doctors_tuple, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
         )
 
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_pair_iss_direction(iss_tuple):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                 SELECT
+                    directions_issledovaniya.id as iss_pk,
+                    directions_issledovaniya.napravleniye_id as direction_pk   
+                FROM directions_issledovaniya
+                WHERE directions_issledovaniya.id in %(iss_tuple)s
+                    
+            """,
+            params={'iss_tuple': iss_tuple},
+        )
         rows = namedtuplefetchall(cursor)
     return rows
