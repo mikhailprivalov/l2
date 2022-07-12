@@ -2061,6 +2061,7 @@ def directions_paraclinic_result(request):
                     if i.napravleniye:
                         i.napravleniye.qr_check_token = None
                         i.napravleniye.save(update_fields=['qr_check_token'])
+                i.fin_source = iss.fin_source
                 i.save()
                 h.append(i.pk)
             else:
@@ -2077,6 +2078,7 @@ def directions_paraclinic_result(request):
                         if i2.napravleniye:
                             i2.napravleniye.qr_check_token = None
                             i2.napravleniye.save(update_fields=['qr_check_token'])
+                    i2.fin_source = iss.fin_source
                     i2.save()
                     h.append(i2.pk)
 
