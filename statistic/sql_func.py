@@ -1413,5 +1413,3 @@ def get_pair_iss_direction(iss_tuple):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
-
