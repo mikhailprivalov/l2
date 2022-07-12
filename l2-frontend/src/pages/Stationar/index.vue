@@ -2073,7 +2073,7 @@ export default {
 
   &.withFiles {
     .research-left {
-      width: calc(100% - 530px);
+      width: calc(100% - 500px);
     }
     .research-right {
       width: 530px;
