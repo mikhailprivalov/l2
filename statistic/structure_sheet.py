@@ -5,7 +5,7 @@ import openpyxl
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils.cell import get_column_letter
 
-from directions.models import IstochnikiFinansirovaniya, Issledovaniya
+from directions.models import IstochnikiFinansirovaniya
 from doctor_call.models import DoctorCall
 from hospitals.tfoms_hospital import HOSPITAL_TITLE_BY_CODE_TFOMS
 from statistic.sql_func import get_pair_iss_direction
