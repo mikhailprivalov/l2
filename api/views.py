@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 import pytz
 
+import directory
 from doctor_schedule.models import ScheduleResource
 from laboratory.settings import (
     SYSTEM_AS_VI,
@@ -38,7 +39,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -1976,6 +1977,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
         {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/price", "title": "Настройка цен", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2313,3 +2315,47 @@ def statistic_params_search(request):
     if len(result) > 0:
         has_param = True
     return JsonResponse({"rows": result, "hasParam": has_param})
+
+
+def get_price_list(request):
+    price_data = PriceName.objects.all()
+    data = [{
+        "id": price.pk,
+        "label": price.title
+    } for price in price_data]
+    return JsonResponse({"data": data})
+
+
+def get_current_coast_researches(request):
+    request_data = json.loads(request.body)
+    coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["id"])
+    coast_research = [{
+        "id": data.pk,
+        "research": data.research.title,
+        "coast": data.coast.__float__()
+    } for data in coast_researches_data]
+    return JsonResponse({"data": coast_research})
+
+
+def update_coast_research_in_price(request):
+    request_data = json.loads(request.body)
+    coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["priceId"])
+    current_coast = coast_researches_data.get(id=request_data["coastResearchId"])
+    current_coast.coast = request_data["coast"]
+    current_coast.save()
+    return JsonResponse({"ok": "ok", "message": "Цены обновлены"})
+
+
+def get_research_list(requets):
+    research_data = directory.models.Researches.objects.all()
+    research = [{
+        "id": data.pk,
+        "label": data.title
+    }for data in research_data ]
+    return JsonResponse({"data": research})
+
+def update_research_list_in_price(request):
+    request_data = json.loads(request.body)
+    coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
+    coast_data.save()
+    return JsonResponse({"ok": "ok"})

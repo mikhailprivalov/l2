@@ -103,6 +103,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/price',
+      name: 'construct_price',
+      component: () => import('@/construct/ConstructPrice.vue'),
+      meta: {
+        title: 'Настройка цен',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
