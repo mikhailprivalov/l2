@@ -2345,12 +2345,12 @@ def update_coast_research_in_price(request):
     return JsonResponse({"ok": "ok"})
 
 
-def get_research_list(requets):
+def get_research_list(request):
     research_data = directory.models.Researches.objects.all()
     research = [{
         "id": data.pk,
         "label": data.title
-    }for data in research_data ]
+    } for data in research_data]
     return JsonResponse({"data": research})
 
 
@@ -2359,6 +2359,3 @@ def update_research_list_in_price(request):
     coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
     coast_data.save()
     return JsonResponse({"ok": "ok"})
-
-
-
