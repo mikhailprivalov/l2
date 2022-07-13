@@ -1723,8 +1723,10 @@ class CardControlParam(models.Model):
         verbose_name_plural = 'Контролируемые параметры у пациента'
 
     @staticmethod
-    def get_patient_control_param(card_pk):
+    def get_patient_control_param(card_pk, code_param_id=None):
         card_controls = CardControlParam.objects.filter(card_id=card_pk).order_by("pk")
+        if code_param_id:
+            card_controls = CardControlParam.objects.filter(card_id=card_pk, patient_control_param_id=code_param_id).order_by("pk")
         control_params = {cc.patient_control_param_id: {"title": cc.patient_control_param.title, "purpose": ""} for cc in card_controls}
         for cc in card_controls:
             tmp_data: dict = control_params[cc.patient_control_param_id]
@@ -1733,7 +1735,7 @@ class CardControlParam(models.Model):
             tmp_purpose = f"{tmp_data['purpose']} {date_start}:{date_end}={cc.purpose_value};"
             tmp_data["purpose"] = tmp_purpose
             control_params[cc.patient_control_param_id] = tmp_data.copy()
-        all_patient_contol_param = PatientControlParam.get_all_patient_contol_param()
+        all_patient_contol_param = PatientControlParam.get_all_patient_contol_param(code_param_id=code_param_id)
         for k, v in all_patient_contol_param.items():
             if not control_params.get(k, None):
                 control_params[k] = v

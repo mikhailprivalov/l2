@@ -233,6 +233,7 @@ class IstochnikiFinansirovaniya(models.Model):
     contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE, verbose_name="Договоры")
     order_weight = models.SmallIntegerField(default=0, verbose_name="Сортировка")
     n3_code = models.CharField(max_length=2, default="", blank=True, verbose_name="Код источника финансирования для N3")
+    ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Код источника финансирования для ECP")
 
     def get_n3_code(self):
         codes = {
@@ -252,6 +253,9 @@ class IstochnikiFinansirovaniya(models.Model):
                 self.save()
 
         return self.n3_code or codes['другое']
+
+    def get_ecp_code(self):
+        return self.ecp_code or '380101000000023'
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
@@ -455,6 +459,7 @@ class Napravleniya(models.Model):
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
     n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
     n3_iemk_ok = models.BooleanField(default=False, blank=True, null=True)
+    ecp_ok = models.BooleanField(default=False, blank=True, null=True)
     vi_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД VI', db_index=True)
     eds_required_documents = ArrayField(models.CharField(max_length=3), verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True)
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
@@ -606,6 +611,13 @@ class Napravleniya(models.Model):
         hosp = self.get_hospital()
         if hosp:
             return hosp.n3_id
+        return None
+
+    @property
+    def hospital_ecp_id(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.ecp_id
         return None
 
     def get_ogrn_org_initiator(self):
@@ -1825,6 +1837,7 @@ class Issledovaniya(models.Model):
     n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")
     n3_odii_patient = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор пациента заявки")
     n3_odii_uploaded_task_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task результата")
+    ecp_evn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="ECP Evn_id")
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )

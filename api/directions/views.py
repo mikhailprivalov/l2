@@ -90,6 +90,7 @@ from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
 from utils.expertise import get_expertise
+from ..patients.common_func import get_card_control_param
 
 
 @login_required
@@ -1651,7 +1652,7 @@ def directions_paraclinic_form(request):
 def get_default_for_field(field_type, default_value=None):
     if field_type == 1 and default_value.lower() != "пусто":
         return strfdatetime(current_time(), '%Y-%m-%d')
-    if field_type == 20:
+    if field_type == 20 and default_value.lower() != "пусто":
         return strfdatetime(current_time(), '%H:%M')
     return ''
 
@@ -2060,6 +2061,7 @@ def directions_paraclinic_result(request):
                     if i.napravleniye:
                         i.napravleniye.qr_check_token = None
                         i.napravleniye.save(update_fields=['qr_check_token'])
+                i.fin_source = iss.fin_source
                 i.save()
                 h.append(i.pk)
             else:
@@ -2076,6 +2078,7 @@ def directions_paraclinic_result(request):
                         if i2.napravleniye:
                             i2.napravleniye.qr_check_token = None
                             i2.napravleniye.save(update_fields=['qr_check_token'])
+                    i2.fin_source = iss.fin_source
                     i2.save()
                     h.append(i2.pk)
 
@@ -2531,7 +2534,7 @@ def last_field_result(request):
         hospital_param = request_data["fieldPk"].split("#")
         hospital_param = hospital_param[1]
         param_result = HospitalParams.objects.filter(hospital=Napravleniya.objects.get(pk=num_dir).hospital, param_title=hospital_param).first()
-        result = {"value": param_result.param_value}
+        result = {"value": param_result.param_value if param_result else ""}
     elif request_data["fieldPk"].find('%prevDirectionFieldValue') != -1:
         _, field_id = request_data["fieldPk"].split(":")
         current_iss = request_data["iss_pk"]
@@ -2575,6 +2578,44 @@ def last_field_result(request):
         field_is_link = True
         logical_and = True
         field_pks = request_data["fieldPk"].split('&')
+    elif request_data["fieldPk"].find('%current_year#') != -1:
+        data = request_data["fieldPk"].split('#')
+        field_pks = [data[1]]
+        logical_or = True
+        result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=True)
+    elif request_data["fieldPk"].find('%months_ago#') != -1:
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 3:
+            result = {"value": ""}
+        else:
+            field_pks = [data[1]]
+            logical_or = True
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=data[2])
+    elif request_data["fieldPk"].find('%control_param#') != -1:
+        # %control_param#code#period#find_val
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 4:
+            result = {"value": ""}
+        param_code = int(data[1])
+        param_period = data[2]
+        param_find_val = data[3]
+        end_year = current_year()
+        if param_period == 'current_year':
+            start_year = end_year
+        else:
+            start_year = param_period
+        unique_month_result = get_card_control_param(client_pk, start_year, end_year, code_param_id=param_code)
+        # [{'title': 'Параметр', 'purposeValue': 'Целевое значение', 'dates': {'2022-07': {}}},
+        # {'controlParamId': 5, 'title': 'сопутствующие диагнозы', 'purposeValue': '',
+        # 'dates': {'2022-07': {'11.07.2022': [{'dir': 227779, 'value': 'K22.1'}]}}}]
+        result = {"value": "Нет"}
+        for element in unique_month_result:
+            if element.get('controlParamId') == param_code:
+                for k, v in element.get('dates').items():
+                    for data in v.values():
+                        for d in data:
+                            if d['value'].find(param_find_val) != -1:
+                                return JsonResponse({"result": {"value": "да"}})
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True
@@ -2594,7 +2635,7 @@ def get_current_direction(current_iss):
     return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
 
-def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
+def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago='-1'):
     result, value, temp_value = None, None, None
     for current_field_pk in field_pks:
         group_fields = [current_field_pk]
@@ -2606,7 +2647,12 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
             logical_or_inside = False
         for field_pk in group_fields:
             if field_pk.isdigit():
-                rows = get_field_result(client_pk, int(field_pk))
+                if use_current_year:
+                    c_year = current_year()
+                    c_year = f"{c_year}-01-01 00:00:00"
+                else:
+                    c_year = "1900-01-01 00:00:00"
+                rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
                 if rows:
                     row = rows[0]
                     value = row[5]
@@ -3756,6 +3802,7 @@ def direction_history(request):
                         ["Направление привязано к записи отделения госпитализации РМИС", yesno[dr.rmis_hosp_id not in ["", None, "NONERMIS"]]],
                         ["Результат отправлен в РМИС", yesno[dr.result_rmis_send]],
                         ["Результат отправлен в ИЭМК", yesno[dr.n3_iemk_ok]],
+                        ["Результат отправлен в ECP", yesno[dr.ecp_ok]],
                     ]
                 ],
             }
@@ -3773,7 +3820,7 @@ def direction_history(request):
             data.append(d)
         for lg in Log.objects.filter(key=str(pk), type__in=(5002,)):
             data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
-        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011)):
+        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023)):
             data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
         for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dr).distinct():
             d = {"type": "Ёмкость №%s" % tube.pk, "events": []}

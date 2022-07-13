@@ -180,8 +180,10 @@ class DoctorProfile(models.Model):
         return {
             "pk": self.pk,
             "n3Id": self.n3_id,
+            "externalId": self.rmis_employee_id,
             "spec": self.specialities.n3_id if self.specialities else None,
             "role": self.position.n3_id if self.position else None,
+            "podrazdeleniyeEcpCode": self.podrazdeleniye.ecp_code if self.podrazdeleniye else None,
             **self.dict_data,
         }
 

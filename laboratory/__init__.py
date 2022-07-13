@@ -1,2 +1,2 @@
-__version__ = (2022, 7, 1, 'a5b8d451')
+__version__ = (2022, 7, 11, 'f8c418ad')
 VERSION = ".".join(map(str, __version__))

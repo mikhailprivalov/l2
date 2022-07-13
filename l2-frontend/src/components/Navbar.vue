@@ -67,6 +67,7 @@
         <Favorites v-if="meta.showHospFavorites" />
         <OperationPlans v-if="meta.showOperationPlans" />
         <LaboratoryHeader v-if="meta.showLaboratoryHeader" />
+        <HelpLinkField v-if="meta.showHelpLinkField" />
         <ul
           v-if="meta.showLaboratorySelector"
           class="nav navbar-nav"
@@ -180,6 +181,7 @@ import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
     ExpertiseStatus: () => import('@/ui-cards/ExpertiseStatus.vue'),
     RmisLink: () => import('@/ui-cards/RmisLink.vue'),
     Favorites: () => import('@/ui-cards/Favorites.vue'),
+    HelpLinkField: () => import('@/ui-cards/HelpLinkField.vue'),
     OperationPlans: () => import('@/ui-cards/OperationPlans.vue'),
     LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),
     LaboratorySelector: () => import('@/ui-cards/LaboratorySelector.vue'),

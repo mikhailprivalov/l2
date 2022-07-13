@@ -307,6 +307,7 @@ const router = new Router({
           'Конструктор: Параклинические (описательные) исследования',
         ],
         module: 'paraclinic_module',
+        showHelpLinkField: true,
       },
     },
     {
