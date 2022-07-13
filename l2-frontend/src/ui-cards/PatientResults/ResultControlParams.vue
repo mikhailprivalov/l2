@@ -102,6 +102,9 @@
                   />
                 </button>
                 <div class="title-control-param">
+                  <i
+                    class="fa fa-cog"
+                  />
                   Ключевые показатели здоровья
                 </div>
               </td>
