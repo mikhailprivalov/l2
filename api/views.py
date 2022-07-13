@@ -2331,7 +2331,7 @@ def get_current_coast_researches(request):
     coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["id"])
     coast_research = [{
         "id": data.pk,
-        "research": data.research.title,
+        "research": {"title": data.research.title, "id": data.research.pk},
         "coast": data.coast.__float__()
     } for data in coast_researches_data]
     return JsonResponse({"data": coast_research})
@@ -2339,11 +2339,10 @@ def get_current_coast_researches(request):
 
 def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
-    coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["priceId"])
-    current_coast = coast_researches_data.get(id=request_data["coastResearchId"])
+    current_coast = PriceCoast.objects.get(id=request_data["coastResearchId"])
     current_coast.coast = request_data["coast"]
     current_coast.save()
-    return JsonResponse({"ok": "ok", "message": "Цены обновлены"})
+    return JsonResponse({"ok": "ok"})
 
 
 def get_research_list(requets):
@@ -2354,8 +2353,12 @@ def get_research_list(requets):
     }for data in research_data ]
     return JsonResponse({"data": research})
 
+
 def update_research_list_in_price(request):
     request_data = json.loads(request.body)
     coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
     coast_data.save()
     return JsonResponse({"ok": "ok"})
+
+
+
