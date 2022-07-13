@@ -1,6 +1,6 @@
 <template>
   <div class="filters">
-    <div class="card-no-hover card card-1 card-bottom">
+    <div class="card-no-hover card card-1 card-bottom opac">
       <Treeselect
         v-model="selectedPrice"
         :options="priceList.data"
@@ -21,7 +21,7 @@
           <td class="border-cell">
             <input
               disabled
-              :value="coastResearch.research"
+              :value="coastResearch.research.title"
               class="form-control"
             >
           </td>
@@ -88,7 +88,7 @@ export default {
       priceList: {},
       selectedPrice: null,
       selectedResearch: null,
-      coast: 0,
+      coast: null,
       researchList: {},
       coastResearches: [],
     };
@@ -108,21 +108,36 @@ export default {
       this.coastResearches = await this.$api('/get-current-coast-researches', { id: this.selectedPrice });
     },
     async updateCoastResearchInPrice(coastResearch) {
-      await this.$api('/update-coast-research-in-price', {
-        priceId: this.selectedPrice,
+      const { ok } = await this.$api('/update-coast-research-in-price', {
         coastResearchId: coastResearch.id,
         coast: coastResearch.coast,
       });
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Цена обновлена');
+      } else {
+        this.$root.$emit('msg', 'error', 'Цена не обновлена');
+      }
     },
     async updateResearchListInPrice() {
-      await this.$api('/update-research-list-in-price', {
-        priceId: this.selectedPrice,
-        researchId: this.selectedResearch,
-        coast: this.coast,
-      });
-      await this.getCurrentCoastResearchesData();
-      this.selectedResearch = null;
-      this.coast = 0;
+      if (!(this.selectedResearch && this.coast && this.selectedPrice)) {
+        this.$root.$emit('msg', 'error', 'Данные не заполнены');
+      } else if (this.coastResearches.data.find((i) => i.research.id === this.selectedResearch)) {
+        this.$root.$emit('msg', 'error', 'Исследование уже есть в прайсе');
+      } else {
+        const { ok } = await this.$api('/update-research-list-in-price', {
+          priceId: this.selectedPrice,
+          researchId: this.selectedResearch,
+          coast: this.coast,
+        });
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Исследование добавлено');
+          await this.getCurrentCoastResearchesData();
+          this.selectedResearch = null;
+          this.coast = null;
+        } else {
+          this.$root.$emit('msg', 'error', 'Исследование не добавлено');
+        }
+      }
     },
   },
 };
@@ -140,6 +155,9 @@ export default {
   background-color: #fff;
   border-radius: 0;
 }
+//::v-deep .form-control:hover {
+//  background: red;
+//}
 ::v-deep .btn {
   margin: auto;
   display: block;
@@ -152,12 +170,4 @@ export default {
 .border-cell {
   border: 1px solid #dddddd;
 }
-//.title-research {
-//  width: 100%;
-//  background-color: #fff;
-//  color: white;
-//}
-//.coast-research {
-//  width: 100%;
-//}
 </style>
