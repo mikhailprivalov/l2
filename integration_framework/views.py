@@ -515,10 +515,10 @@ def make_log(request):
             d.save(update_fields=['n3_iemk_ok'])
 
         for k in pks_to_set_ecp_fail:
-            Log.log(key=k, type=t, body=body.get(k, {}))
+            Log.log(key=k, type=t, body=body.get(str(k), body.get(k, {})))
 
         for k in pks_to_set_ecp:
-            Log.log(key=k, type=t, body=body.get(k, {}))
+            Log.log(key=k, type=t, body=body.get(str(k), body.get(k, {})))
 
             d = directions.Napravleniya.objects.get(pk=k)
             d.ecp_ok = True
