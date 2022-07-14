@@ -2348,6 +2348,7 @@ def get_current_coast_researches(request):
         "research": {"title": data.research.title, "id": data.research.pk},
         "coast": data.coast.__float__()
     } for data in coast_researches_data]
+    coast_research = sorted(coast_research, key=lambda d: d['research']['title'])
     return JsonResponse({"data": coast_research})
 
 
@@ -2360,10 +2361,14 @@ def update_coast_research_in_price(request):
 
 
 def get_research_list(request):
-    research_data = directory.models.Researches.objects.all()
+    research_data = directory.models.Researches.objects.all().filter(podrazdeleniye_id=not None)
     research = [{
-        "id": data.pk,
-        "label": data.title
+        "id": data.podrazdeleniye.pk,
+        "label": data.podrazdeleniye.title,
+        "children": [{
+            "id": data.pk,
+            "label": data.title,
+        }]
     } for data in research_data]
     return JsonResponse({"data": research})
 
