@@ -2076,7 +2076,7 @@ export default {
       width: calc(100% - 500px);
     }
     .research-right {
-      width: 500px;
+      width: 530px;
     }
   }
 }
@@ -2084,7 +2084,7 @@ export default {
 .research-left {
   position: relative;
   text-align: left;
-  width: calc(100% - 390px);
+  width: calc(100% - 490px);
 
   .btn {
     border-radius: 0;
@@ -2097,7 +2097,7 @@ export default {
 
 .research-right {
   text-align: right;
-  width: 390px;
+  width: 490px;
   margin-top: -5px;
   margin-right: -5px;
   margin-bottom: -5px;
