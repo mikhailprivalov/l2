@@ -1,35 +1,41 @@
 <template>
   <div class="filters">
-    <div class="card-no-hover card card-1 card-bottom opac">
-      <Treeselect
-        v-model="selectedPrice"
-        :options="priceList.data"
-        placeholder="Выберите прайс"
-        @input="getCurrentCoastResearchesData"
-      />
-      <br>
+    <h4>Прайс</h4>
+    <Treeselect
+      v-model="selectedPrice"
+      :options="priceList.data"
+      :clearable="false"
+      placeholder="Выберите прайс"
+      @input="getCurrentCoastResearchesData"
+    />
+    <div class="card-no-hover card card-1">
+      <input
+        v-model="search"
+        class="form-control"
+        placeholder="Поиск"
+      >
       <table>
         <colgroup>
-          <col width="60%">
-          <col width="30%">
-          <col width="10%">
+          <col width="85%">
+          <col width="15%">
         </colgroup>
         <tr
-          v-for="(coastResearch, idx) in coastResearches.data"
+          v-for="(coastResearch, idx) in filteredRows"
           :key="idx"
         >
-          <td class="border-cell">
-            <input
-              disabled
-              :value="coastResearch.research.title"
-              class="form-control"
-            >
+          <td
+            class="border-cell"
+            style="padding-left: 1%"
+          >
+            {{ coastResearch.research.title }}
           </td>
           <td class="border-cell">
             <input
               v-model="coastResearch.coast"
               type="number"
-              class="text-center form-control"
+              min="0"
+              step="0.01"
+              class="text-right form-control"
             >
           </td>
           <td class="border-cell">
@@ -43,30 +49,38 @@
             </button>
           </td>
         </tr>
-        <br>
+      </table>
+    </div>
+    <h4>Добавить исследование в прайс</h4>
+    <div>
+      <table>
+        <colgroup>
+          <col width="85%">
+          <col width="15%">
+        </colgroup>
         <tr>
-          <td>
-            <Treeselect
-              v-model="selectedResearch"
-              :options="researchList.data"
-              placeholder="Выберите исследование"
-            />
-          </td>
-          <td>
+          <Treeselect
+            v-model="selectedResearch"
+            :options="researchList.data"
+            placeholder="Выберите исследование"
+          />
+          <td class="border-cell">
             <input
               v-model="coast"
               type="number"
-              class="text-center form-control"
+              class="text-right form-control"
+              min="0"
+              step="0.01"
             >
           </td>
-          <td>
+          <td class="border-cell">
             <button
               v-tippy
-              class="btn btn-blue-nb"
+              class="btn btn-blue-nb border-cell"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
             >
-              <i class="glyphicon glyphicon-plus" />
+              Добавить
             </button>
           </td>
         </tr>
@@ -90,8 +104,20 @@ export default {
       selectedResearch: null,
       coast: null,
       researchList: {},
+      search: '',
       coastResearches: [],
+      originalCoastResearch: [],
     };
+  },
+  computed: {
+    filteredRows() {
+      return this.originalCoastResearch.filter(CoastResearch => {
+        const research = CoastResearch.research.title.toString().toLowerCase();
+        const searchTerm = this.search.toLowerCase();
+
+        return research.includes(searchTerm);
+      });
+    },
   },
   mounted() {
     this.getPriceList();
@@ -106,6 +132,7 @@ export default {
     },
     async getCurrentCoastResearchesData() {
       this.coastResearches = await this.$api('/get-current-coast-researches', { id: this.selectedPrice });
+      this.originalCoastResearch = this.coastResearches.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
       const { ok } = await this.$api('/update-coast-research-in-price', {
@@ -143,31 +170,28 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .filters {
   padding: 10px;
   margin: 10px 8%;
 }
-.card-bottom {
-  margin-bottom: 5%;
-}
 ::v-deep .form-control {
   background-color: #fff;
   border-radius: 0;
+  border: none;
 }
-//::v-deep .form-control:hover {
-//  background: red;
-//}
+::v-deep .card {
+  margin: 1rem 0;
+}
 ::v-deep .btn {
   margin: auto;
   display: block;
   border-radius: 0;
 }
-.no-first-border-top {
-  border-top: none;
-  border-bottom: none;
-}
 .border-cell {
   border: 1px solid #dddddd;
+}
+tr:hover {
+  background: darkgreen;
 }
 </style>
