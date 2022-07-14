@@ -8,17 +8,22 @@
       placeholder="Выберите прайс"
       @input="getCurrentCoastResearchesData"
     />
+    <h4>Исследования</h4>
     <div class="card-no-hover card card-1">
       <input
         v-model="search"
         class="form-control"
-        placeholder="Поиск"
+        placeholder="Поиск исследования"
       >
       <table>
         <colgroup>
           <col width="85%">
           <col width="15%">
         </colgroup>
+        <tr>
+          <td class="text-center"><strong>Название</strong></td>
+          <td class="text-center"><strong>Цена</strong></td>
+        </tr>
         <tr
           v-for="(coastResearch, idx) in filteredRows"
           :key="idx"
