@@ -6,13 +6,15 @@
       :options="priceList.data"
       :clearable="false"
       placeholder="Выберите прайс"
-      @input="getCurrentCoastResearchesData"
+      value-format="object"
+      @input="getCurrentCoastResearchesData(); disabled_status()"
     />
     <h4>Исследования</h4>
     <div class="card-no-hover card card-1">
       <input
         v-model="search"
         class="form-control"
+        style="padding-left: 1%"
         placeholder="Поиск исследования"
       >
       <table>
@@ -21,31 +23,38 @@
           <col width="15%">
         </colgroup>
         <tr>
-          <td class="text-center"><strong>Название</strong></td>
-          <td class="text-center"><strong>Цена</strong></td>
+          <td class="text-center">
+            <strong>Название</strong>
+          </td>
+          <td class="text-center">
+            <strong>Цена</strong>
+          </td>
         </tr>
         <tr
           v-for="(coastResearch, idx) in filteredRows"
           :key="idx"
+          class="tablerow"
         >
           <td
-            class="border-cell"
+            class="tablerow"
             style="padding-left: 1%"
           >
             {{ coastResearch.research.title }}
           </td>
-          <td class="border-cell">
+          <td>
             <input
               v-model="coastResearch.coast"
+              :disabled="disabled"
               type="number"
               min="0"
               step="0.01"
               class="text-right form-control"
             >
           </td>
-          <td class="border-cell">
+          <td>
             <button
               v-tippy
+              :disabled="disabled"
               class="btn btn-blue-nb"
               title="Сохранить цену"
               @click="updateCoastResearchInPrice(coastResearch)"
@@ -69,19 +78,23 @@
             :options="researchList.data"
             placeholder="Выберите исследование"
           />
-          <td class="border-cell">
+          <td
+            style="border: 1px solid #dddddd"
+          >
             <input
               v-model="coast"
+              :disabled="disabled"
               type="number"
               class="text-right form-control"
               min="0"
               step="0.01"
             >
           </td>
-          <td class="border-cell">
+          <td>
             <button
               v-tippy
-              class="btn btn-blue-nb border-cell"
+              :disabled="disabled"
+              class="btn btn-blue-nb"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
             >
@@ -112,6 +125,7 @@ export default {
       search: '',
       coastResearches: [],
       originalCoastResearch: [],
+      disabled: false,
     };
   },
   computed: {
@@ -136,7 +150,7 @@ export default {
       this.researchList = await this.$api('/get-research-list');
     },
     async getCurrentCoastResearchesData() {
-      this.coastResearches = await this.$api('/get-current-coast-researches', { id: this.selectedPrice });
+      this.coastResearches = await this.$api('/get-current-coast-researches', this.selectedPrice);
       this.originalCoastResearch = this.coastResearches.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
@@ -171,6 +185,9 @@ export default {
         }
       }
     },
+    disabled_status() {
+      this.disabled = this.selectedPrice.status === false;
+    },
   },
 };
 </script>
@@ -181,9 +198,13 @@ export default {
   margin: 10px 8%;
 }
 ::v-deep .form-control {
-  background-color: #fff;
   border-radius: 0;
   border: none;
+  background-color: transparent;
+  padding: 6px 0;
+}
+::v-deep .form-control:focus {
+  background-color: greenyellow;
 }
 ::v-deep .card {
   margin: 1rem 0;
@@ -193,10 +214,10 @@ export default {
   display: block;
   border-radius: 0;
 }
-.border-cell {
+.tablerow {
   border: 1px solid #dddddd;
 }
-tr:hover {
-  background: darkgreen;
+.tablerow:hover {
+  background: #4caf50;
 }
 </style>
