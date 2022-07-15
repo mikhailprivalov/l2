@@ -515,10 +515,10 @@ def make_log(request):
             d.save(update_fields=['n3_iemk_ok'])
 
         for k in pks_to_set_ecp_fail:
-            Log.log(key=k, type=t, body=body.get(k, {}))
+            Log.log(key=k, type=t, body=body.get(str(k), body.get(k, {})))
 
         for k in pks_to_set_ecp:
-            Log.log(key=k, type=t, body=body.get(k, {}))
+            Log.log(key=k, type=t, body=body.get(str(k), body.get(k, {})))
 
             d = directions.Napravleniya.objects.get(pk=k)
             d.ecp_ok = True
@@ -528,7 +528,7 @@ def make_log(request):
             for iss in Issledovaniya.objects.filter(napravleniye_id=k):
                 if str(iss.pk) in body.get(k, {}):
                     if 'ecpServiceId' in body[k][str(iss.pk)]:
-                        iss.ecp_evn_id = body[k][str(iss.pk)]['ecpServiceId']
+                        iss.ecp_evn_id = str(body[k][str(iss.pk)]['ecpServiceId'] or '') or None
                         iss.save(update_fields=['ecp_evn_id'])
 
     return Response({"ok": True})
