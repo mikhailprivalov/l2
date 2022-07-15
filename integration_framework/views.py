@@ -100,7 +100,7 @@ def next_result_direction(request):
     if only_signed == '1':
         # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
         # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
-        dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
+        dirs = sql_if.direction_collect_date_signed(d_start, researches, is_research, next_n) or []
     else:
         dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
