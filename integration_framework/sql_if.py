@@ -48,6 +48,37 @@ def direction_collect(d_s, researches, is_research, limit):
     return row
 
 
+def direction_collect_date_signed(d_s, researches, is_research, limit):
+    """
+    парам: d_s - date-start, researches - списко исследований которые требуются по дате подписания
+
+    Вернуть:
+    Направления, в к-рых все исследования подтверждены, и подтверждены после определенной даты
+
+    в SQL:
+    t_iss - это временная таблица запроса для направлений в к-рых есть подтвержденные исследований (Направления уникальны)
+    t_iss_null - это временная таблица запроса направлений, у к-рых есть неподтвержденные исследования
+    t_all - это готовая выборка направлений, где подтверждены ВСЕ исследования в определенном направлении
+    SELECT research_id FROM integration_framework_integrationresearches WHERE
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            id,
+            to_char(eds_total_signed_at AT TIME ZONE %(tz)s, 'YYYY-MM-DD HH24:MI') AS t_signed
+            FROM directions_napravleniya
+            WHERE directions_napravleniya.eds_total_signed = true and 
+            directions_napravleniya.eds_total_signed_at > %(d_start)s::timestamp AT TIME ZONE %(tz)s
+            """,
+            params={'d_start': d_s if str(d_s) != 'None' else '2018-01-01', 'tz': TIME_ZONE, 'researches': researches, 'is_research': is_research, 'limit': limit},
+        )
+
+        row = cursor.fetchall()
+    return row
+
+
 def direction_resend_amd(limit):
     """
     Вернуть:
