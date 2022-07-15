@@ -1991,7 +1991,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
         {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
-        {"url": "/ui/construct/price", "title": "Настройка цен", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2335,7 +2335,8 @@ def get_price_list(request):
     price_data = PriceName.objects.all()
     data = [{
         "id": price.pk,
-        "label": price.title
+        "label": price.title,
+        "status": price.active_status
     } for price in price_data]
     return JsonResponse({"data": data})
 
@@ -2361,7 +2362,7 @@ def update_coast_research_in_price(request):
 
 
 def get_research_list(request):
-    research_data = directory.models.Researches.objects.all().filter(podrazdeleniye_id=not None)
+    research_data = directory.models.Researches.objects.all()
     research = [{
         "id": data.podrazdeleniye.pk,
         "label": data.podrazdeleniye.title,
