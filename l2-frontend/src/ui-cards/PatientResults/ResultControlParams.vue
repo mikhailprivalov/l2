@@ -102,9 +102,13 @@
                   />
                 </button>
                 <div class="title-control-param">
-                  <i
-                    class="fa fa-cog"
-                  />
+                  <a
+                    href="#"
+                    title="Настроить"
+                    @click.prevent="edit_pk=3"
+                  >
+                    <i class="fa fa-cog" />
+                  </a>
                   Ключевые показатели здоровья
                 </div>
               </td>
@@ -146,7 +150,6 @@
                         :title="`№${k.dir} от ${jkey}`"
                         @click.prevent="print_result(k.dir)"
                       >{{ k.value }};</a>
-                       &nbsp;
                     </span>
                   </div>
                 </div>
@@ -156,14 +159,68 @@
         </table>
       </div>
     </div>
+    <div
+      class="dreg-flt"
+      style="z-index: 105999"
+    >
+      <Modal
+        v-if="edit_pk > -2"
+        ref="modalEdit"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        margin-left-right="auto"
+        margin-top
+        @close="hide_edit"
+      >
+        <span
+          v-if="edit_pk > -1"
+          slot="header"
+        >Настройка контролируемых показателей пациента</span>
+        <div
+          slot="body"
+          class="registry-body p10"
+        >
+          <div class="radio-button-object radio-button-groups">
+            <label>Настройка контролируемых показателей</label>
+          </div>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="hide_edit"
+              >
+                Отмена
+              </button>
+            </div>
+            <div class="col-xs-4">
+              <button
+                :disabled="!valid_reg"
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="save()"
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import moment from 'moment';
+import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ResultControlParams',
+  components: { Modal },
   props: {
     card_pk: {
       type: Number,
@@ -175,6 +232,7 @@ export default {
       start_year: moment().format('YYYY'),
       end_year: moment().format('YYYY'),
       data: '',
+      edit_pk: -3,
     };
   },
   computed: {
@@ -206,6 +264,12 @@ export default {
         'end_year',
       ]);
       this.data = result.results;
+    },
+    hide_edit() {
+      if (this.$refs.modalEdit) {
+        this.$refs.modalEdit.$el.style.display = 'none';
+      }
+      this.edit_pk = -2;
     },
     plus_year(typeYear) {
       if (typeYear === 'startYear') {
@@ -318,6 +382,10 @@ a:hover {
   color: #16a085;
   float: right;
   font-size: 18px;
+
+  i {
+    color: #aab2bd;
+  }
 }
 
 </style>
