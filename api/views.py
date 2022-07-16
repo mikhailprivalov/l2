@@ -379,6 +379,8 @@ def endpoint(request):
                                 comments = data.get('comments', [])
                                 if code:
                                     culture = Culture.objects.filter(Q(lis=code) | Q(title=name)).filter(hide=False).first()
+                                    if not culture:
+                                        culture = models.RelationCultureASTM.objects.filter(Q(astm_field=code) | Q(astm_field=name)).first()
                                     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=True, research__is_microbiology=True)
                                     if iss.filter(pk=iss_pk).exists():
                                         iss = iss.filter(pk=iss_pk)
