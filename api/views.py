@@ -2342,7 +2342,7 @@ def get_current_coast_researches_in_price(request):
 def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
     current_coast = PriceCoast.objects.get(id=request_data["coastResearchId"])
-    if current_coast.price_name.active_status == False:
+    if not current_coast.price_name.active_status:
         return JsonResponse({"ok": False, "message": "Прайс не активен"})
     current_coast.coast = request_data["coast"]
     current_coast.save()
@@ -2364,7 +2364,7 @@ def get_research_list(request):
 
 def update_research_list_in_price(request):
     request_data = json.loads(request.body)
-    if PriceName.objects.get(request_data["priceId"]).active_status == False:
+    if not PriceName.objects.get(request_data["priceId"]).active_status:
         return JsonResponse({"ok": False, "message": "Прайс не активен"})
     coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
     coast_data.save()
