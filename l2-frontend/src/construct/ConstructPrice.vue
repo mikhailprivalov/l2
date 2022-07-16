@@ -7,7 +7,7 @@
       :clearable="false"
       placeholder="Выберите прайс"
       value-format="object"
-      @input="getCurrentCoastResearchesData(); disabled_status()"
+      @input="getCurrentCoastResearchesInPrice(), disabled_status()"
     />
     <h4>Исследования</h4>
     <div class="card-no-hover card card-1">
@@ -138,9 +138,9 @@ export default {
       });
     },
   },
-  mounted() {
-    this.getPriceList();
-    this.getResearchList();
+  async mounted() {
+    await this.getPriceList();
+    await this.getResearchList();
   },
   methods: {
     async getPriceList() {
@@ -149,19 +149,19 @@ export default {
     async getResearchList() {
       this.researchList = await this.$api('/get-research-list');
     },
-    async getCurrentCoastResearchesData() {
-      this.coastResearches = await this.$api('/get-current-coast-researches', this.selectedPrice);
+    async getCurrentCoastResearchesInPrice() {
+      this.coastResearches = await this.$api('/get-current-coast-researches-in-price', this.selectedPrice);
       this.originalCoastResearch = this.coastResearches.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
-      const { ok } = await this.$api('/update-coast-research-in-price', {
+      const { ok, message } = await this.$api('/update-coast-research-in-price', {
         coastResearchId: coastResearch.id,
         coast: coastResearch.coast,
       });
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Цена обновлена');
       } else {
-        this.$root.$emit('msg', 'error', 'Цена не обновлена');
+        this.$root.$emit('msg', 'error', message);
       }
     },
     async updateResearchListInPrice() {
@@ -170,18 +170,18 @@ export default {
       } else if (this.coastResearches.data.find((i) => i.research.id === this.selectedResearch)) {
         this.$root.$emit('msg', 'error', 'Исследование уже есть в прайсе');
       } else {
-        const { ok } = await this.$api('/update-research-list-in-price', {
+        const { ok, message } = await this.$api('/update-research-list-in-price', {
           priceId: this.selectedPrice,
           researchId: this.selectedResearch,
           coast: this.coast,
         });
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Исследование добавлено');
-          await this.getCurrentCoastResearchesData();
+          await this.getCurrentCoastResearchesInPrice();
           this.selectedResearch = null;
           this.coast = null;
         } else {
-          this.$root.$emit('msg', 'error', 'Исследование не добавлено');
+          this.$root.$emit('msg', 'error', message);
         }
       }
     },
@@ -204,7 +204,8 @@ export default {
   padding: 6px 0;
 }
 ::v-deep .form-control:focus {
-  background-color: greenyellow;
+  border: 2px solid #4caf50;
+  background-color: #fff;
 }
 ::v-deep .card {
   margin: 1rem 0;
