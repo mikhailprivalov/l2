@@ -140,7 +140,6 @@ class RelationCultureASTM(models.Model):
     astm_field = models.CharField(max_length=127, help_text="ASTM-поле", db_index=True)
     culture = models.ForeignKey(directory_models.Culture, help_text="Культура", on_delete=models.CASCADE)
 
-
     def __str__(self):
         return self.astm_field + " to \"" + self.culture.title
 
