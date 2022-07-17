@@ -137,7 +137,7 @@
                   {{ key }}
                 </div>
                 <div v-else>
-                  <div
+                  <span
                     v-for="(jval, jkey, jindex) in value"
                     :key="jindex"
                   >
@@ -149,9 +149,9 @@
                         href="#"
                         :title="`№${k.dir} от ${jkey}`"
                         @click.prevent="print_result(k.dir)"
-                      >{{ k.value }};</a>
+                      >{{ k.value }}; </a>
                     </span>
-                  </div>
+                  </span>
                 </div>
               </td>
             </tr>
