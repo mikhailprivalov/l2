@@ -1002,6 +1002,18 @@ def load_control_param(request):
     return JsonResponse({"results": unique_month_result})
 
 
+def load_selected_control_params(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data.get("card_pk") or None
+    return JsonResponse({"results": ""})
+
+
+def save_patient_control_params(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data.get("card_pk") or None
+    return JsonResponse({"results": ""})
+
+
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
     results = []
     filter = {

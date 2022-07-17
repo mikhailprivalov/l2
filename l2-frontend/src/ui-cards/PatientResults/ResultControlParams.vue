@@ -233,6 +233,7 @@ export default {
       end_year: moment().format('YYYY'),
       data: '',
       edit_pk: -3,
+      selectedParams: {},
     };
   },
   computed: {
@@ -264,6 +265,19 @@ export default {
         'end_year',
       ]);
       this.data = result.results;
+    },
+    async loadSelectedControlParams() {
+      const result = await this.$api('patients/individuals/load-selected-control-params', this, [
+        'card_pk',
+      ]);
+      this.selectedParams = result.results;
+    },
+    async savePatientControlParams() {
+      const result = await this.$api('patients/individuals/save-patient-control-params', this, [
+        'card_pk',
+        'selectedParams',
+      ]);
+      this.selectedParams = result.results;
     },
     hide_edit() {
       if (this.$refs.modalEdit) {
