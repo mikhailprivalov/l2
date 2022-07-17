@@ -11,6 +11,8 @@ class ApplicationAdmin(admin.ModelAdmin):
 
 admin.site.register(models.RelationFractionASTM)
 
+admin.site.register(models.RelationCultureASTM)
+
 
 @admin.register(models.Analyzer)
 class AnalyzerAdmin(AjaxSelectAdmin):
