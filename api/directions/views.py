@@ -3462,7 +3462,7 @@ def eds_documents(request):
                 filename = f'{pk}-{last_time_confirm}.pdf'
                 file = ContentFile(result_print(request_tuple(**req)), filename)
             elif d.file_type == DirectionDocument.CDA:
-                if SettingManager.l2('l2vi'):
+                if SettingManager.l2('l2vi') or SettingManager.l2('cdator'):
                     cda_data = gen_cda_xml(pk=pk)
                     cda_xml = cda_data.get('result', {}).get('content')
                 else:
