@@ -520,6 +520,11 @@ class PatientControlParam(models.Model):
             all_patient_contol = PatientControlParam.objects.filter(all_patient_contol=True).order_by("order")
         return {cc.pk: {"title": cc.title, "purpose": ""} for cc in all_patient_contol}
 
+    @staticmethod
+    def get_contol_param_in_system():
+        contol_param_system = PatientControlParam.objects.filter().order_by("order")
+        return [{"id": cc.pk, "title": cc.title, "purpose": ""} for cc in contol_param_system]
+
 
 class ParaclinicInputField(models.Model):
     TYPES = (

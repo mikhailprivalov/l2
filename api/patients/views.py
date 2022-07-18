@@ -42,7 +42,7 @@ from clients.models import (
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
-from directory.models import Researches
+from directory.models import Researches, PatientControlParam
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year, localtime
 from rmis_integration.client import Client
@@ -1005,12 +1005,23 @@ def load_control_param(request):
 def load_selected_control_params(request):
     request_data = json.loads(request.body)
     card_pk = request_data.get("card_pk") or None
-    return JsonResponse({"results": ""})
+    data_params = CardControlParam.get_patient_control_param(card_pk)
+    control_param = PatientControlParam.get_contol_param_in_system()
+    for element in control_param:
+        if not data_params.get(element["id"], None):
+            data_params[element["id"]] = {"title": element["title"], "selected": False, "isGlobal": False}
+    result = [{"id": k, "title": v.get("title", ""), "isSelected": v.get("selected", False), "isGlobal":  v.get("isGlobal", False)} for k, v in data_params.items()]
+    print(result)
+
+    return JsonResponse({"results": result})
 
 
 def save_patient_control_params(request):
     request_data = json.loads(request.body)
     card_pk = request_data.get("card_pk") or None
+    selected_params = request_data.get("selectedParams") or None
+    CardControlParam.save_patient_control_param(card_pk, selected_params)
+
     return JsonResponse({"results": ""})
 
 

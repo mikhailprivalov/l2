@@ -23,7 +23,7 @@ urlpatterns = [
     path('individuals/load-screening', views.load_screening),
     path('individuals/load-control-param', views.load_control_param),
     path('individuals/load-selected-control-params', views.load_selected_control_params),
-    path('individuals/save-patient-control-params', views.save_patient_control_params),
+    path('individuals/save-selected-control-params', views.save_patient_control_params),
     path('individuals/load-vaccine', views.load_vaccine),
     path('individuals/load-ambulatory-data', views.load_ambulatory_data),
     path('individuals/load-benefit', views.load_benefit),

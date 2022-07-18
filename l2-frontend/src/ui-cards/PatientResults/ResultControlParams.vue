@@ -105,7 +105,7 @@
                   <a
                     href="#"
                     title="Настроить"
-                    @click.prevent="edit_pk=3"
+                    @click.prevent="open_modal"
                   >
                     <i class="fa fa-cog" />
                   </a>
@@ -185,6 +185,27 @@
           <div class="radio-button-object radio-button-groups">
             <label>Настройка контролируемых показателей</label>
           </div>
+          <ul>
+            <li
+              v-for="row in selectedParams"
+              :key="row.index"
+            >
+              <label
+                v-tippy="{ placement: 'right', arrow: true }"
+                class="mh-34"
+                :title="row.isGlobal ? 'Контролируется для всех пациентов' : ''"
+              >
+                <input
+                  v-model="row.isSelected"
+                  type="checkbox"
+                  class="mp-5"
+                  :checked="row.isSelected"
+                  :disabled="row.isGlobal"
+                >
+                {{ row.title }}
+              </label>
+            </li>
+          </ul>
         </div>
         <div slot="footer">
           <div class="row">
@@ -199,10 +220,9 @@
             </div>
             <div class="col-xs-4">
               <button
-                :disabled="!valid_reg"
                 class="btn btn-primary-nb btn-blue-nb"
                 type="button"
-                @click="save()"
+                @click="saveSelectedControlParams()"
               >
                 Сохранить
               </button>
@@ -233,7 +253,7 @@ export default {
       end_year: moment().format('YYYY'),
       data: '',
       edit_pk: -3,
-      selectedParams: {},
+      selectedParams: [],
     };
   },
   computed: {
@@ -272,12 +292,16 @@ export default {
       ]);
       this.selectedParams = result.results;
     },
-    async savePatientControlParams() {
-      const result = await this.$api('patients/individuals/save-patient-control-params', this, [
+    async saveSelectedControlParams() {
+      await this.$api('patients/individuals/save-selected-control-params', this, [
         'card_pk',
         'selectedParams',
       ]);
-      this.selectedParams = result.results;
+      this.edit_pk = -2;
+    },
+    open_modal() {
+      this.edit_pk = 3;
+      this.loadSelectedControlParams();
     },
     hide_edit() {
       if (this.$refs.modalEdit) {
@@ -400,6 +424,18 @@ a:hover {
   i {
     color: #aab2bd;
   }
+}
+
+.mp-5 {
+  margin-right: 5px !important;
+}
+
+.mh-34 {
+  min-height: 24px;
+}
+
+li {
+  list-style-type: none;
 }
 
 </style>

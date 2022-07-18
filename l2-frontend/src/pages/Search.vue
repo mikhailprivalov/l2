@@ -199,7 +199,7 @@
                   <input
                     v-model="searchStationar"
                     type="checkbox"
-                    class="ml-5"
+                      class="ml-5"
                   >
                 </label>
               </th>
