@@ -485,7 +485,7 @@ class Napravleniya(models.Model):
             research: directory.Researches = i.research
             if research.desc:
                 return research.generator_name
-        return 'labortory_gen'
+        return 'Laboratory_min'
 
     def required_signatures(self, fast=False, need_save=False):
         if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):
