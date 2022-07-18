@@ -102,6 +102,13 @@
                   />
                 </button>
                 <div class="title-control-param">
+                  <a
+                    href="#"
+                    title="Настроить"
+                    @click.prevent="open_modal"
+                  >
+                    <i class="fa fa-cog" />
+                  </a>
                   Ключевые показатели здоровья
                 </div>
               </td>
@@ -130,7 +137,7 @@
                   {{ key }}
                 </div>
                 <div v-else>
-                  <div
+                  <span
                     v-for="(jval, jkey, jindex) in value"
                     :key="jindex"
                   >
@@ -142,10 +149,9 @@
                         href="#"
                         :title="`№${k.dir} от ${jkey}`"
                         @click.prevent="print_result(k.dir)"
-                      >{{ k.value }};</a>
-                       &nbsp;
+                      >{{ k.value }}; </a>
                     </span>
-                  </div>
+                  </span>
                 </div>
               </td>
             </tr>
@@ -153,14 +159,89 @@
         </table>
       </div>
     </div>
+    <div
+      class="dreg-flt"
+      style="z-index: 105999"
+    >
+      <Modal
+        v-if="edit_pk > -2"
+        ref="modalEdit"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        margin-left-right="auto"
+        margin-top
+        @close="hide_edit"
+      >
+        <span
+          v-if="edit_pk > -1"
+          slot="header"
+        >Настройка контролируемых показателей пациента</span>
+        <div
+          slot="body"
+          class="registry-body p10"
+        >
+          <div class="radio-button-object radio-button-groups">
+            <label>Настройка контролируемых показателей</label>
+          </div>
+          <ul>
+            <li
+              v-for="row in selectedParams"
+              :key="row.index"
+              class="li-no-marker"
+            >
+              <label
+                v-tippy="{ placement: 'right', arrow: true }"
+                class="mh-34"
+                :title="row.isGlobal ? 'Контролируется для всех пациентов' : ''"
+              >
+                <input
+                  v-model="row.isSelected"
+                  type="checkbox"
+                  class="mp-5"
+                  :checked="row.isSelected"
+                  :disabled="row.isGlobal"
+                >
+                {{ row.title }}
+              </label>
+            </li>
+          </ul>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="hide_edit"
+              >
+                Отмена
+              </button>
+            </div>
+            <div class="col-xs-4">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="saveSelectedControlParams()"
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import moment from 'moment';
+import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ResultControlParams',
+  components: { Modal },
   props: {
     card_pk: {
       type: Number,
@@ -172,6 +253,8 @@ export default {
       start_year: moment().format('YYYY'),
       end_year: moment().format('YYYY'),
       data: '',
+      edit_pk: -3,
+      selectedParams: [],
     };
   },
   computed: {
@@ -203,6 +286,30 @@ export default {
         'end_year',
       ]);
       this.data = result.results;
+    },
+    async loadSelectedControlParams() {
+      const result = await this.$api('patients/individuals/load-selected-control-params', this, [
+        'card_pk',
+      ]);
+      this.selectedParams = result.results;
+    },
+    async saveSelectedControlParams() {
+      await this.$api('patients/individuals/save-selected-control-params', this, [
+        'card_pk',
+        'selectedParams',
+      ]);
+      this.edit_pk = -2;
+      this.load();
+    },
+    open_modal() {
+      this.edit_pk = 3;
+      this.loadSelectedControlParams();
+    },
+    hide_edit() {
+      if (this.$refs.modalEdit) {
+        this.$refs.modalEdit.$el.style.display = 'none';
+      }
+      this.edit_pk = -2;
     },
     plus_year(typeYear) {
       if (typeYear === 'startYear') {
@@ -315,6 +422,22 @@ a:hover {
   color: #16a085;
   float: right;
   font-size: 18px;
+
+  i {
+    color: #aab2bd;
+  }
+}
+
+.mp-5 {
+  margin-right: 5px !important;
+}
+
+.mh-34 {
+  min-height: 24px;
+}
+
+.li-no-marker {
+  list-style-type: none;
 }
 
 </style>
