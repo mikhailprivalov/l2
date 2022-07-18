@@ -494,7 +494,7 @@ class Napravleniya(models.Model):
                 "signsRequired": self.eds_required_signature_types,
             }
 
-        if SettingManager.l2('l2vi'):
+        if SettingManager.l2('l2vi') or SettingManager.l2('cdator'):
             data = {
                 "needCda": (
                     Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False)
