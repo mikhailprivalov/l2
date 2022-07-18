@@ -189,6 +189,7 @@
             <li
               v-for="row in selectedParams"
               :key="row.index"
+              class="li-no-marker"
             >
               <label
                 v-tippy="{ placement: 'right', arrow: true }"
@@ -435,7 +436,7 @@ a:hover {
   min-height: 24px;
 }
 
-li {
+.li-no-marker {
   list-style-type: none;
 }
 

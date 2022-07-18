@@ -1008,7 +1008,7 @@ def load_selected_control_params(request):
     data_params = CardControlParam.get_patient_control_param(card_pk)
     control_param = PatientControlParam.get_contol_param_in_system()
     for element in control_param:
-        if not data_params.get(element["id"], None):
+        if not data_params.get(element["id"]):
             data_params[element["id"]] = {"title": element["title"], "selected": False, "isGlobal": False}
     result = [{"id": k, "title": v.get("title", ""), "isSelected": v.get("selected", False), "isGlobal": v.get("isGlobal", False)} for k, v in data_params.items()]
     return JsonResponse({"results": result})
@@ -1019,8 +1019,7 @@ def save_patient_control_params(request):
     card_pk = request_data.get("card_pk") or None
     selected_params = request_data.get("selectedParams") or None
     CardControlParam.save_patient_control_param(card_pk, selected_params)
-
-    return JsonResponse({"results": ""})
+    return JsonResponse({"ok": True})
 
 
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
