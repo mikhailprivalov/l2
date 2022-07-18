@@ -298,6 +298,7 @@ export default {
         'selectedParams',
       ]);
       this.edit_pk = -2;
+      this.load();
     },
     open_modal() {
       this.edit_pk = 3;
