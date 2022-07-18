@@ -330,7 +330,18 @@ def endpoint(request):
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
                                             else:
                                                 fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
-                                            fraction_result.value = str(results[key]).strip()
+                                            tmp_replace_value = {}
+                                            if fraction_rel.replace_value:
+                                                try:
+                                                    tmp_replace_value = json.loads(fraction_rel.replace_value)
+                                                    if not isinstance(tmp_replace_value, dict):
+                                                        tmp_replace_value = {}
+                                                except Exception:
+                                                    tmp_replace_value = {}
+                                            if str(results[key]).strip() in tmp_replace_value:
+                                                fraction_result.value = str(tmp_replace_value[str(results[key]).strip()])
+                                            else:
+                                                fraction_result.value = str(results[key]).strip()
 
                                             if 'Non-React' in fraction_result.value:
                                                 fraction_result.value = 'Отрицательно'
