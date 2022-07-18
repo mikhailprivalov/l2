@@ -1666,7 +1666,7 @@ def get_cda_data(pk):
         "generatorName": n.get_eds_generator(),
         "rawResponse": True,
         "data": {
-            "oidMo": data.get("oidMo"),
+            "oidMo": data["oidMo"],
             "document": data,
             "patient": {
                 'id': card.number,
@@ -1675,6 +1675,7 @@ def get_cda_data(pk):
                 'gender': ind.sex.lower(),
                 'birthdate': ind.birthday.strftime("%Y%m%d"),
             },
+            "organization": data["organization"],
         },
     }
 
