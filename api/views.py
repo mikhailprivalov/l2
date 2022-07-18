@@ -337,7 +337,7 @@ def endpoint(request):
                                                 except Exception:
                                                     tmp_replace_value = {}
                                             if tmp_replace_value.get(results[key], None):
-                                                fraction_result.value = tmp_replace_value.get(results[key])
+                                                fraction_result.value = tmp_replace_value.get(str(results[key]).strip())
                                             else:
                                                 fraction_result.value = str(results[key]).strip()
 
