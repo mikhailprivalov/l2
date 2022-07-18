@@ -334,10 +334,12 @@ def endpoint(request):
                                             if fraction_rel.replace_value:
                                                 try:
                                                     tmp_replace_value = json.loads(fraction_rel.replace_value)
+                                                    if not isinstance(tmp_replace_value, dict):
+                                                        tmp_replace_value = {}
                                                 except Exception:
                                                     tmp_replace_value = {}
-                                            if tmp_replace_value.get(results[key], None):
-                                                fraction_result.value = tmp_replace_value.get(str(results[key]).strip())
+                                            if str(results[key]).strip() in tmp_replace_value:
+                                                fraction_result.value = str(tmp_replace_value[str(results[key]).strip()])
                                             else:
                                                 fraction_result.value = str(results[key]).strip()
 
