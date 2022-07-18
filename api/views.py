@@ -358,8 +358,6 @@ def endpoint(request):
                                                         logger.exception(e)
                                                 fraction_result.value = val_str
 
-
-
                                             fraction_result.iteration = 1
                                             ref = fraction_rel.default_ref
                                             if ref:
