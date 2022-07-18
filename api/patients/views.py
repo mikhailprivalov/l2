@@ -1010,9 +1010,7 @@ def load_selected_control_params(request):
     for element in control_param:
         if not data_params.get(element["id"], None):
             data_params[element["id"]] = {"title": element["title"], "selected": False, "isGlobal": False}
-    result = [{"id": k, "title": v.get("title", ""), "isSelected": v.get("selected", False), "isGlobal":  v.get("isGlobal", False)} for k, v in data_params.items()]
-    print(result)
-
+    result = [{"id": k, "title": v.get("title", ""), "isSelected": v.get("selected", False), "isGlobal": v.get("isGlobal", False)} for k, v in data_params.items()]
     return JsonResponse({"results": result})
 
 
