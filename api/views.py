@@ -330,7 +330,16 @@ def endpoint(request):
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
                                             else:
                                                 fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
-                                            fraction_result.value = str(results[key]).strip()
+                                            tmp_replace_value = {}
+                                            if fraction_rel.replace_value:
+                                                try:
+                                                    tmp_replace_value = json.loads(fraction_rel.replace_value)
+                                                except Exception:
+                                                    tmp_replace_value = {}
+                                            if tmp_replace_value.get(results[key], None):
+                                                fraction_result.value = tmp_replace_value.get(results[key])
+                                            else:
+                                                fraction_result.value = str(results[key]).strip()
 
                                             if 'Non-React' in fraction_result.value:
                                                 fraction_result.value = 'Отрицательно'
@@ -348,6 +357,8 @@ def endpoint(request):
                                                     except Exception as e:
                                                         logger.exception(e)
                                                 fraction_result.value = val_str
+
+
 
                                             fraction_result.iteration = 1
                                             ref = fraction_rel.default_ref

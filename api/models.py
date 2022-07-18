@@ -105,6 +105,7 @@ class RelationFractionASTM(models.Model):
     application_api = models.ManyToManyField('api.Application', help_text="Приложение API", blank=True, default=None)
     is_code = models.BooleanField(default=False, help_text="astm_field - это код (id)?")
     signs_after_point = models.IntegerField(default=None, null=True, blank=True, help_text="Количество знаков после запятой")
+    replace_value = models.CharField(max_length=500, default=None, null=True, blank=True, help_text="подмена пришедших значений на др - анг->рус")
 
     def __str__(self):
         return self.astm_field + " to \"" + self.fraction.research.title + "." + self.fraction.title + "\" x " + str(self.get_multiplier_display())
