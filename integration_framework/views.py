@@ -106,10 +106,12 @@ def next_result_direction(request):
         dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
     next_time = None
-    naprs = [d[0] for d in dirs]
+    naprs = None
     if dirs:
+        naprs = [d[0] for d in dirs]
         next_time = dirs[-1][3]
     elif dirs_eds:
+        naprs = [d[0] for d in dirs_eds]
         next_time = dirs_eds[-1][2]
 
     return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
