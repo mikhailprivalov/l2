@@ -97,10 +97,11 @@ def next_result_direction(request):
         researches = [int(i) for i in type_researches.split(',')]
     else:
         is_research = -1
+    dirs, dirs_eds = None, None
     if only_signed == '1':
         # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
         # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
-        dirs = sql_if.direction_collect_date_signed(d_start, researches, is_research, next_n) or []
+        dirs_eds = sql_if.direction_collect_date_signed(d_start, researches, is_research, next_n) or []
     else:
         dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
@@ -108,6 +109,8 @@ def next_result_direction(request):
     naprs = [d[0] for d in dirs]
     if dirs:
         next_time = dirs[-1][3]
+    elif dirs_eds:
+        next_time = dirs_eds[-1][2]
 
     return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
 
