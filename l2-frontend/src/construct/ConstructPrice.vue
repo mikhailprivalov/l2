@@ -138,9 +138,9 @@ export default {
       });
     },
   },
-  async mounted() {
-    await this.getPriceList();
-    await this.getResearchList();
+  mounted() {
+    this.getPriceList();
+    this.getResearchList();
   },
   methods: {
     async getPriceList() {
