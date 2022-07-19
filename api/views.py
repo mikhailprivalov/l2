@@ -387,7 +387,7 @@ def endpoint(request):
                                 name = mo.get('name')
                                 anti = data.get('anti', {})
                                 phenotype = data.get('phen', [])
-                                comments = [c for c in data.get('comments', []) if not isinstance(c, str)]
+                                comments = [c if not isinstance(c, str) else {"text": c} for c in data.get('comments', [])]
                                 if code:
                                     culture = Culture.objects.filter(Q(lis=code) | Q(title=name)).filter(hide=False).first()
                                     if not culture:
