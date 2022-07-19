@@ -331,7 +331,18 @@ def endpoint(request):
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
                                             else:
                                                 fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
-                                            fraction_result.value = str(results[key]).strip()
+                                            tmp_replace_value = {}
+                                            if fraction_rel.replace_value:
+                                                try:
+                                                    tmp_replace_value = json.loads(fraction_rel.replace_value)
+                                                    if not isinstance(tmp_replace_value, dict):
+                                                        tmp_replace_value = {}
+                                                except Exception:
+                                                    tmp_replace_value = {}
+                                            if str(results[key]).strip() in tmp_replace_value:
+                                                fraction_result.value = str(tmp_replace_value[str(results[key]).strip()])
+                                            else:
+                                                fraction_result.value = str(results[key]).strip()
 
                                             if 'Non-React' in fraction_result.value:
                                                 fraction_result.value = 'Отрицательно'
@@ -380,6 +391,8 @@ def endpoint(request):
                                 comments = data.get('comments', [])
                                 if code:
                                     culture = Culture.objects.filter(Q(lis=code) | Q(title=name)).filter(hide=False).first()
+                                    if not culture:
+                                        culture = models.RelationCultureASTM.objects.filter(Q(astm_field=code) | Q(astm_field=name)).first()
                                     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=True, research__is_microbiology=True)
                                     if iss.filter(pk=iss_pk).exists():
                                         iss = iss.filter(pk=iss_pk)

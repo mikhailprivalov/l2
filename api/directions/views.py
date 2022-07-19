@@ -2,7 +2,7 @@ import base64
 import os
 
 from django.core.paginator import Paginator
-from cda.integration import render_cda
+from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
@@ -3464,6 +3464,9 @@ def eds_documents(request):
             elif d.file_type == DirectionDocument.CDA:
                 if SettingManager.l2('l2vi'):
                     cda_data = gen_cda_xml(pk=pk)
+                    cda_xml = cda_data.get('result', {}).get('content')
+                elif SettingManager.l2('cdator'):
+                    cda_data = cdator_gen_xml(cda_eds_data["generatorName"], direction_data=cda_eds_data["data"])
                     cda_xml = cda_data.get('result', {}).get('content')
                 else:
                     cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)
