@@ -76,6 +76,8 @@
           <Treeselect
             v-model="selectedResearch"
             :options="researchList.data"
+            :disable-branch-nodes="true"
+            :append-to-body="true"
             placeholder="Выберите исследование"
           />
           <td

@@ -107,7 +107,7 @@ const router = new Router({
       name: 'construct_price',
       component: () => import('@/construct/ConstructPrice.vue'),
       meta: {
-        title: 'Настройка цен',
+        title: 'Настройка прайсов',
         groups: ['Конструктор: Настройка организации'],
         narrowLayout: true,
       },

@@ -2364,16 +2364,45 @@ def update_coast_research_in_price(request):
 
 
 def get_research_list(request):
-    research_data = directory.models.Researches.objects.all()
-    research = [{
-        "id": data.podrazdeleniye.pk,
-        "label": data.podrazdeleniye.title,
+    lab_depart = Podrazdeleniya.objects.filter(p_type=2)
+    lab_researches = {"id": 1, "label": "Лаборатория", "children": []}
+    for depart in lab_depart:
+        lab_research_data = directory.models.Researches.objects.filter(podrazdeleniye_id=depart.pk)
+        lab_researches["children"].append({
+            "id": depart.pk,
+            "label": depart.title,
+            "children": [{
+                "id": data.pk,
+                "label": data.title
+            } for data in lab_research_data]
+        })
+    paraclinic_depart = Podrazdeleniya.objects.filter(p_type=3)
+    paraclinic_researches = {"id": 1, "label": "Параклиника", "children": []}
+    for depart in paraclinic_depart:
+        paraclinic_research_data = directory.models.Researches.objects.filter(podrazdeleniye_id=depart.pk)
+        paraclinic_researches["children"].append({
+            "id": depart.pk,
+            "label": depart.title,
+            "children": [{
+                "id": data.pk,
+                "label": data.title
+            } for data in paraclinic_research_data]
+        })
+    doc = directory.models.Researches.objects.filter(is_doc_refferal=True)
+    doc_researches = {
+        "id": 3,
+        "label": "Консультации",
         "children": [{
-            "id": data.pk,
-            "label": data.title,
-        }]
-    } for data in research_data]
-    return JsonResponse({"data": research})
+            "id": i.pk,
+            "label": i.title
+        } for i in doc]}
+
+    research_list = [
+        lab_researches,
+        paraclinic_researches,
+        doc_researches,
+    ]
+    return JsonResponse({"data": research_list})
 
 
 def update_research_list_in_price(request):
