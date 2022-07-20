@@ -2363,16 +2363,15 @@ def update_coast_research_in_price(request):
     return JsonResponse({"ok": "ok"})
 
 
+
 def get_research_list(request):
     researches = directory.models.Researches.objects.filter(hide=False)
     res_list = {
         "Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}
     }
-
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
-
         if research.is_doc_refferal:
             if research.site_type is None:
                 res_list["Консультации"]["Общие"].append({"id": research.pk, "label": research.title})
@@ -2409,23 +2408,30 @@ def get_research_list(request):
             res_list["Лаборатория"].get(research.podrazdeleniye.title).append({"id": research.pk, "label": research.title})
         else:
             pass
-
-    # result_list = []
-    # counter = 1
-    # for key, value in res_list.items():
-    #     print({"key": key, "value": value})
-    #     for v in value:
-    #         result_list.append({
-    #             "id": counter,
-    #             "label": key
-    #             "children": []
-    #         })
-    return JsonResponse({"data": "Привет"})
+    result_list = []
+    counter = 0
+    count = 0
+    for key, value in res_list.items():
+        count += 1
+        result_list.append({
+            "id": f'а{count}',
+            "label": key,
+            "children": []
+        })
+        for k, v in value.items():
+            count += 1
+            result_list[counter]["children"].append({
+                "id": f'а{count}',
+                "label": k,
+                "children": v
+            })
+        counter += 1
+    return JsonResponse({"data": result_list})
 
 
 def update_research_list_in_price(request):
     request_data = json.loads(request.body)
-    if not PriceName.objects.get(request_data["priceId"]).active_status:
+    if not PriceName.objects.get(pk=request_data["priceId"]).active_status:
         return JsonResponse({"ok": False, "message": "Прайс не активен"})
     coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
     coast_data.save()

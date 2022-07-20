@@ -7,7 +7,7 @@
       :clearable="false"
       placeholder="Выберите прайс"
       value-format="object"
-      @input="getCurrentCoastResearchesInPrice(), disabled_status()"
+      @input="getCurrentCoastResearchesInPrice(); disabled_status()"
     />
     <h4>Исследования</h4>
     <div class="card-no-hover card card-1">
@@ -77,6 +77,7 @@
             v-model="selectedResearch"
             :options="researchList.data"
             :disable-branch-nodes="true"
+            :append-to-body="true"
             placeholder="Выберите исследование"
           />
           <td
@@ -172,7 +173,7 @@ export default {
         this.$root.$emit('msg', 'error', 'Исследование уже есть в прайсе');
       } else {
         const { ok, message } = await this.$api('/update-research-list-in-price', {
-          priceId: this.selectedPrice,
+          priceId: this.selectedPrice.id,
           researchId: this.selectedResearch,
           coast: this.coast,
         });
