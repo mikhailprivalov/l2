@@ -72,10 +72,10 @@ from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals
+from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
-
 
 logger = logging.getLogger("API")
 
@@ -585,10 +585,10 @@ def bases(request):
                     "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in x.istochnikifinansirovaniya_set.all()],
                 }
                 for x in CardBase.objects.all()
-                .prefetch_related(
+                    .prefetch_related(
                     Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).exclude(pk__in=disabled_fin_source).order_by('-order_weight'))
                 )
-                .order_by('-order_weight')
+                    .order_by('-order_weight')
             ]
         }
 
@@ -627,8 +627,8 @@ def current_user_info(request):
                         queryset=DResearches.objects.only('pk'),
                     ),
                 )
-                .select_related('podrazdeleniye')
-                .get(user_id=user.pk)
+                    .select_related('podrazdeleniye')
+                    .get(user_id=user.pk)
             )
 
             ret["fio"] = doctorprofile.get_full_fio()
@@ -759,19 +759,19 @@ def directive_from(request):
     hospital = request.user.doctorprofile.hospital
     for dep in (
         Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC), hospital__in=(hospital, None))
-        .prefetch_related(
+            .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
                     users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"])
-                    .distinct('fio', 'pk')
-                    .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
-                    .order_by("fio")
+                        .distinct('fio', 'pk')
+                        .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
+                        .order_by("fio")
                 ),
             )
         )
-        .order_by('title')
-        .only('pk', 'title')
+            .order_by('title')
+            .only('pk', 'title')
     ):
         d = {
             "pk": dep.pk,
@@ -833,13 +833,13 @@ def statistics_tickets_get(request):
     n = 0
     for row in (
         StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile))
-        .filter(
+            .filter(
             date__range=(
                 date_start,
                 date_end,
             )
         )
-        .order_by('pk')
+            .order_by('pk')
     ):
         if not row.invalid_ticket:
             n += 1
@@ -1031,9 +1031,9 @@ def rmis_confirm_list(request):
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     d = (
         directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False, force_rmis_send=False, issledovaniya__time_confirmation__range=(date_start, date_end))
-        .exclude(issledovaniya__time_confirmation__isnull=True)
-        .distinct()
-        .order_by("pk")
+            .exclude(issledovaniya__time_confirmation__isnull=True)
+            .distinct()
+            .order_by("pk")
     )
     data["directions"] = [{"pk": x.pk, "patient": {"fiodr": x.client.individual.fio(full=True), "card": x.client.number_with_type()}, "fin": x.fin_title} for x in d]
     return JsonResponse(data)
@@ -1962,9 +1962,9 @@ def input_templates_suggests(request):
     doc = request.user.doctorprofile
     rows = list(
         ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value_lower__startswith=value)
-        .exclude(value_lower=value)
-        .order_by('value_lower')
-        .values_list('value', flat=True)[:4]
+            .exclude(value_lower=value)
+            .order_by('value_lower')
+            .values_list('value', flat=True)[:4]
     )
 
     return JsonResponse({"rows": rows, "value": data["value"]})
@@ -2363,45 +2363,63 @@ def update_coast_research_in_price(request):
 
 
 def get_research_list(request):
-    lab_depart = Podrazdeleniya.objects.filter(p_type=2)
-    lab_researches = {"id": 1, "label": "Лаборатория", "children": []}
-    for depart in lab_depart:
-        lab_research_data = directory.models.Researches.objects.filter(podrazdeleniye_id=depart.pk)
-        lab_researches["children"].append({
-            "id": depart.pk,
-            "label": depart.title,
-            "children": [{
-                "id": data.pk,
-                "label": data.title
-            } for data in lab_research_data]
-        })
-    paraclinic_depart = Podrazdeleniya.objects.filter(p_type=3)
-    paraclinic_researches = {"id": 1, "label": "Параклиника", "children": []}
-    for depart in paraclinic_depart:
-        paraclinic_research_data = directory.models.Researches.objects.filter(podrazdeleniye_id=depart.pk)
-        paraclinic_researches["children"].append({
-            "id": depart.pk,
-            "label": depart.title,
-            "children": [{
-                "id": data.pk,
-                "label": data.title
-            } for data in paraclinic_research_data]
-        })
-    doc = directory.models.Researches.objects.filter(is_doc_refferal=True)
-    doc_researches = {
-        "id": 3,
-        "label": "Консультации",
-        "children": [{
-            "id": i.pk,
-            "label": i.title
-        } for i in doc]}
+    researches = directory.models.Researches.objects.filter(hide=False)
+    res_list = {
+        "Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}
+    }
 
-    research_list = [
-        lab_researches,
-        paraclinic_researches,
-        doc_researches,
-    ]
-    return JsonResponse({"data": research_list})
+    lab_podr = get_lab_podr()
+    lab_podr = [podr[0] for podr in lab_podr]
+    for research in researches:
+
+        if research.is_doc_refferal:
+            if research.site_type is None:
+                res_list["Консультации"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Консультации"].get(research.site_type.title):
+                res_list["Консультации"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+                continue
+            else:
+                res_list["Консультации"].get(research.site_type.title).append({"id": research.pk, "label": research.title})
+        elif research.is_citology:
+            res_list["Морфология"]["Цитология"].append({"id": research.pk, "label": research.title})
+        elif research.is_gistology:
+            res_list["Морфология"]["Гистология"].append({"id": research.pk, "label": research.title})
+        elif research.is_microbiology:
+            res_list["Морфология"]["Микробиология"].append({"id": research.pk, "label": research.title})
+        elif research.is_form:
+            if research.site_type is None:
+                res_list["Формы"]["Общие"].append({"id": research.pk, "label": research.title})
+            if not res_list["Формы"].get(research.site_type.title):
+                res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+                continue
+            else:
+                res_list["Формы"].get(research.site_type.title).append({"id": research.pk, "label": research.title})
+        elif research.is_paraclinic:
+            if not res_list["Параклиника"].get(research.podrazdeleniye.title):
+                res_list["Параклиника"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
+                continue
+            res_list["Параклиника"].get(research.podrazdeleniye.title).append({"id": research.pk, "label": research.title})
+        elif research.podrazdeleniye is None:
+            pass
+        elif research.podrazdeleniye.pk in lab_podr:
+            if not res_list["Лаборатория"].get(research.podrazdeleniye.title):
+                res_list["Лаборатория"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
+                continue
+            res_list["Лаборатория"].get(research.podrazdeleniye.title).append({"id": research.pk, "label": research.title})
+        else:
+            pass
+
+    # result_list = []
+    # counter = 1
+    # for key, value in res_list.items():
+    #     print({"key": key, "value": value})
+    #     for v in value:
+    #         result_list.append({
+    #             "id": counter,
+    #             "label": key
+    #             "children": []
+    #         })
+    return JsonResponse({"data": "Привет"})
 
 
 def update_research_list_in_price(request):
