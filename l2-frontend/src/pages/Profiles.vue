@@ -352,18 +352,16 @@
                 style="width: 100%"
               >
                 <span class="input-group-addon">Специальность</span>
-                <select
+                <Treeselect
                   v-model="user.speciality"
-                  class="form-control"
-                >
-                  <option
-                    v-for="d in specialities"
-                    :key="d.pk"
-                    :value="d.pk"
-                  >
-                    {{ d.title }}
-                  </option>
-                </select>
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="specialities"
+                  placeholder="Специальность не выбрана"
+                  :append-to-body="true"
+                  :clearable="false"
+                />
               </div>
             </div>
           </div>
@@ -394,18 +392,16 @@
                 style="width: 100%"
               >
                 <span class="input-group-addon">Должность</span>
-                <select
+                <Treeselect
                   v-model="user.position"
-                  class="form-control"
-                >
-                  <option
-                    v-for="d in positions"
-                    :key="d.pk"
-                    :value="d.pk"
-                  >
-                    {{ d.title }}
-                  </option>
-                </select>
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="positions"
+                  placeholder="Должность не выбрана"
+                  :append-to-body="true"
+                  :clearable="false"
+                />
               </div>
             </div>
           </div>
