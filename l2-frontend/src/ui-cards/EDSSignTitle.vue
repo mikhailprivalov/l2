@@ -25,10 +25,11 @@ export default {
     try {
       await getSystemInfo();
       await execute(async ({ cadesplugin }) => {
+        const { signature } = this;
         await cadesplugin.async_spawn(function* (args) {
           const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
           yield oSignedData.propset_ContentEncoding(1);
-          yield oSignedData.propset_Content(this.signature);
+          yield oSignedData.propset_Content(signature);
           console.log(oSignedData);
         });
       });
