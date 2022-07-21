@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { execute } from 'crypto-pro';
+import { getSystemInfo, execute } from 'crypto-pro';
 
 export default {
   name: 'EDSSignTitle',
@@ -23,6 +23,7 @@ export default {
   },
   async mounted() {
     try {
+      await getSystemInfo();
       await execute(async ({ cadesplugin }) => {
         await cadesplugin.async_spawn(function* (args) {
           const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
