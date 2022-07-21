@@ -291,13 +291,58 @@
             :class="expertise ? 'col-xs-5' : 'col-xs-6'"
             style="padding-right: 0"
           >
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 232px"
+              >Метод</span>
+              <Treeselect
+                v-model="currentMethod"
+                class="treeselect-nbr treeselect-wide"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="collectMethods"
+                placeholder="Код не указан"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </div>
+          </div>
+          <div
+            v-if="expertise && direction_expertise_all.length > 0"
+            class="col-xs-7"
+            style="padding-right: 0;padding-left: 0"
+          >
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 150px"
+              >Код НСИ</span>
+              <Treeselect
+                v-model="currentNsiResearchCode"
+                class="treeselect-nbr treeselect-wide"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="collectNsiResearchCode"
+                placeholder="Код не выбран"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div
+            :class="expertise ? 'col-xs-5' : 'col-xs-6'"
+            style="padding-right: 0"
+          >
             <div
               v-if="direction_params_all.length > 1"
               class="input-group"
             >
               <span
                 class="input-group-addon nbr"
-                style="width: 233px"
+                style="width: 232px"
               >Параметры направления</span>
               <Treeselect
                 v-model="direction_current_params"
@@ -334,7 +379,7 @@
             </div>
           </div>
           <div
-            c:class="expertise ? 'col-xs-4' : 'col-xs-6'"
+            class="expertise ? 'col-xs-4' : 'col-xs-6'"
             style="padding-left: 0"
           >
             <div
@@ -1104,6 +1149,10 @@ export default {
       direction_current_params: -1,
       direction_expertise_all: [],
       direction_current_expertise: -1,
+      currentNsiResearchCode: -1,
+      collectNsiResearchCode: [],
+      collectMethods: [],
+      currentMethod: -1,
       assigned_to_params: [],
       type_period: null,
       dynamicDirectories: [],
@@ -1182,6 +1231,12 @@ export default {
         if (o && o.length > 0) {
           this.has_unsaved = true;
         }
+      },
+      deep: true,
+    },
+    currentMethod: {
+      handler() {
+        this.loadcollectNsiCode();
       },
       deep: true,
     },
@@ -1379,6 +1434,8 @@ export default {
       this.direction_current_form = '';
       this.result_current_form = '';
       this.speciality = -1;
+      this.currentMethod = -1;
+      this.collectMethods = [];
       this.hospital_research_department_pk = -1;
       this.type_period = null;
       if (this.pk >= 0) {
@@ -1394,6 +1451,9 @@ export default {
             this.internal_code = data.internal_code;
             this.direction_current_form = data.direction_current_form;
             this.result_current_form = data.result_current_form;
+            this.currentNsiResearchCode = data.currentNsiResearchCode;
+            this.collectNsiResearchCode = data.collectNsiResearchCode;
+            this.collectMethods = data.collectMethods;
             this.speciality = data.speciality;
             this.hospital_research_department_pk = data.department;
             this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
@@ -1456,6 +1516,7 @@ export default {
         'type_period',
         'not_edit',
         'operator_enter_param',
+        'currentNsiResearchCode',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
@@ -1482,6 +1543,10 @@ export default {
     async loadDynamicDirectories() {
       const { rows } = await this.$api('dynamic-directory/list-treeselect');
       this.dynamicDirectories = rows;
+    },
+    async loadcollectNsiCode() {
+      const { rows } = await this.$api('external-system/fsidi-by-method', { method: this.currentMethod });
+      this.collectNsiResearchCode = rows;
     },
   },
 };

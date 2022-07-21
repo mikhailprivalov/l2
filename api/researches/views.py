@@ -432,6 +432,7 @@ def researches_update(request):
         hide_main = request_data.get("hide_main", False)
         show_more_services = request_data.get("show_more_services", True)
         hospital_research_department_pk = request_data.get("hospital_research_department_pk", -1)
+        current_nsi_research_code = request_data.get("currentNsiResearchCode", -1)
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
@@ -478,6 +479,7 @@ def researches_update(request):
                     is_global_direction_params=is_global_direction_params,
                     has_own_form_result=own_form_result,
                     show_more_services=show_more_services,
+                    nsi_id=current_nsi_research_code,
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -518,6 +520,7 @@ def researches_update(request):
                 res.is_global_direction_params = is_global_direction_params
                 res.has_own_form_result = own_form_result
                 res.show_more_services = show_more_services and not res.is_microbiology and not res.is_form
+                res.nsi_id = current_nsi_research_code
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
