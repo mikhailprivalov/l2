@@ -19,6 +19,10 @@ export default {
       type: String,
       required: true,
     },
+    type: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
@@ -32,7 +36,7 @@ export default {
         await cadesplugin.async_spawn((function* (args) {
           const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
           yield oSignedData.propset_ContentEncoding(1);
-          yield oSignedData.propset_Content(this.data);
+          yield oSignedData.propset_Content(this.type === 'PDF' ? this.data : btoa(this.data));
           yield oSignedData.VerifyCades(this.signature, 1, true);
           console.log(oSignedData);
         }).bind(this));

@@ -98,6 +98,7 @@
             :executor="s.executor"
             :signature="s.signValue"
             :data="d.fileContent"
+            :type="d.type"
           />, {{ s.signedAt }}
         </li>
       </ul>
