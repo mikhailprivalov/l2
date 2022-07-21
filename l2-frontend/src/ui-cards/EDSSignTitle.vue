@@ -4,6 +4,7 @@
 
 <script lang="ts">
 import { getSystemInfo, execute } from 'crypto-pro';
+import { encode } from 'js-base64';
 
 export default {
   name: 'EDSSignTitle',
@@ -35,9 +36,9 @@ export default {
       await execute(async ({ cadesplugin }) => {
         await cadesplugin.async_spawn((function* (args) {
           const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
-          yield oSignedData.propset_ContentEncoding(this.type === 'PDF' ? 1 : 0);
-          yield oSignedData.propset_Content(this.data);
-          yield oSignedData.VerifyCades(this.signature, 1, false);
+          yield oSignedData.propset_ContentEncoding(1);
+          yield oSignedData.propset_Content(this.type === 'PDF' ? this.data : encode(this.data));
+          yield oSignedData.VerifyCades(this.signature, 1, true);
           console.log(oSignedData);
         }).bind(this));
       });
