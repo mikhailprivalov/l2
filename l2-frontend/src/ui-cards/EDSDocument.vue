@@ -94,7 +94,10 @@
           >
             <i class="fa fa-download" />
           </a>
-          <strong>{{ s.type }}</strong>, {{ s.executor }}, {{ s.signedAt }}
+          <strong>{{ s.type }}</strong>, <EDSSignTitle
+            :executor="s.executor"
+            :signature="s.signValue"
+          />, {{ s.signedAt }}
         </li>
       </ul>
     </div>
@@ -135,10 +138,15 @@
 <script lang="ts">
 import { createDetachedSignature, createHash } from 'crypto-pro';
 
+import EDSSignTitle from './EDSSignTitle.vue';
+
 import * as actions from '@/store/action-types';
 
 export default {
   name: 'EDSDocument',
+  components: {
+    EDSSignTitle,
+  },
   props: {
     d: {
       type: Object,
