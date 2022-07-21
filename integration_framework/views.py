@@ -341,7 +341,7 @@ def issledovaniye_data(request):
             "docConfirm": i.doc_confirmation_fio,
             "doctorData": doctor_data,
             "results": results_data,
-            "code": i.research.code,
+            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B'),
             "research": i.research.get_title(),
             "comments": i.lab_comment,
         }
