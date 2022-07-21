@@ -30,7 +30,7 @@ def get_researches_details(pk):
             response["currenttMethod"] = -1
         response["pk"] = res.pk
         response["currentNsiResearchCode"] = res.nsi_id if res.nsi_id else -1
-        if response["currentNsiResearchCode"] and str(response["currentNsiResearchCode"]) != "-1" :
+        if response["currentNsiResearchCode"] and str(response["currentNsiResearchCode"]) != "-1":
             nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=int(response["currentNsiResearchCode"])).first()
             response["collectNsiResearchCode"] = [{"id": nsi_res.code_nsi, "label": f"{nsi_res.code_nsi}-{nsi_res.title}; область--{nsi_res.area}; локализация--{nsi_res.localization}"}]
 
