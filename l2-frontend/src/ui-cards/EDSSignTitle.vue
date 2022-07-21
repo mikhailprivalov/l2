@@ -24,7 +24,7 @@ export default {
   async mounted() {
     try {
       await execute(async ({ cadesplugin }) => {
-        cadesplugin.async_spawn(function* (args) {
+        await cadesplugin.async_spawn(function* (args) {
           const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
           yield oSignedData.propset_ContentEncoding(1);
           yield oSignedData.propset_Content(this.signature);
