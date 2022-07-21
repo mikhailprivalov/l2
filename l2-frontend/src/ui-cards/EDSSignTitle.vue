@@ -37,7 +37,7 @@ export default {
           const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
           yield oSignedData.propset_ContentEncoding(this.type === 'PDF' ? 1 : 0);
           yield oSignedData.propset_Content(this.data);
-          yield oSignedData.VerifyCades(this.signature, 1, true);
+          yield oSignedData.VerifyCades(this.signature, 1, false);
           console.log(oSignedData);
         }).bind(this));
       });
