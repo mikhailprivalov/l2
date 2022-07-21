@@ -520,7 +520,7 @@ def researches_update(request):
                 res.is_global_direction_params = is_global_direction_params
                 res.has_own_form_result = own_form_result
                 res.show_more_services = show_more_services and not res.is_microbiology and not res.is_form
-                res.nsi_id=current_nsi_research_code
+                res.nsi_id = current_nsi_research_code
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:

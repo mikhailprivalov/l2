@@ -70,7 +70,6 @@ class Command(BaseCommand):
                     if r.method != cells[method]:
                         r.method = cells[method]
                         updated.append('method')
-                    print(updated)
                     if updated:
                         r.save(update_fields=updated)
                         print('обновлено', cells[code])  # noqa: T001
