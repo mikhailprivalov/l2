@@ -5,6 +5,7 @@
 <script lang="ts">
 import { getSystemInfo, execute } from 'crypto-pro';
 import { encode } from 'js-base64';
+import { convertSubjectNameToTitle } from '@/utils';
 
 export default {
   name: 'EDSSignTitle',
@@ -39,7 +40,12 @@ export default {
           yield oSignedData.propset_ContentEncoding(1);
           yield oSignedData.propset_Content(this.type === 'PDF' ? this.data : encode(this.data));
           yield oSignedData.VerifyCades(this.signature, 1, true);
-          console.log(oSignedData);
+          const signers = yield oSignedData.Signers;
+          const s1 = yield signers.Item(1);
+          const cert = yield s1.Certificate;
+          const sn = yield cert.SubjectName;
+
+          this.title = convertSubjectNameToTitle(null, sn, this.executor);
         }).bind(this));
       });
     } catch (error) {
