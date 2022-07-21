@@ -97,6 +97,7 @@
           <strong>{{ s.type }}</strong>, <EDSSignTitle
             :executor="s.executor"
             :signature="s.signValue"
+            :data="d.fileContent"
           />, {{ s.signedAt }}
         </li>
       </ul>
