@@ -2363,8 +2363,7 @@ def update_coast_research_in_price(request):
     return JsonResponse({"ok": "ok"})
 
 
-
-def get_research_list(request):
+def get_research_tree(request):
     researches = directory.models.Researches.objects.filter(hide=False)
     res_list = {
         "Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}
