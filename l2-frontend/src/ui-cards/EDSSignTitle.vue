@@ -24,10 +24,12 @@ export default {
   async mounted() {
     try {
       await execute(async ({ cadesplugin }) => {
-        const oSignedData = await cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
-        await oSignedData.propset_ContentEncoding(1);
-        await oSignedData.propset_Content(this.signature);
-        console.log(oSignedData);
+        cadesplugin.async_spawn(function* (args) {
+          const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
+          yield oSignedData.propset_ContentEncoding(1);
+          yield oSignedData.propset_Content(this.signature);
+          console.log(oSignedData);
+        });
       });
     } catch (error) {
       console.error(error);
