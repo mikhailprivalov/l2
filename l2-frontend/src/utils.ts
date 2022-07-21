@@ -338,6 +338,9 @@ export const convertSubjectNameToCertObject = (subjectName: string): any => {
 export const convertSubjectNameToTitle = (object: any, subjectName: string | null, name: string) => {
   const obj = object || convertSubjectNameToCertObject(subjectName);
 
+  console.log(obj);
+  console.log(subjectName);
+
   let result = `НЕТ СНИЛС ${name}`;
   if (obj.CN) {
     if (obj.T && obj.SN && obj.G) {
