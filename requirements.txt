@@ -17,7 +17,7 @@ django-celery-results==2.2.0
 django-cors-headers
 django-logtail==0.3.0
 django-redis==5.2.0
-django-silk==4.2.0
+django-silk==5.0.1
 django-manifest-loader==1.0.0
 flake8-black==0.2.3
 gprof2dot==2021.2.21
