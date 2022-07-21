@@ -326,7 +326,7 @@ export const getFormattedDate = (date: Date | void): string => {
 
 export const convertSubjectNameToCertObject = (subjectName: string): any => {
   const result = {};
-  const parts = subjectName.split(/(, )?(\w+)=/);
+  const parts = subjectName.split(/(, )?([a-zа-яё]+)=/gi);
   const p = parts.slice(2).filter((s) => s !== ', ');
   for (let i = 0; i < p.length; i += 2) {
     result[p[i]] = p[i + 1];
@@ -341,6 +341,10 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
   console.log(obj);
   console.log(subjectName);
 
+  if (!obj.SNILS && obj['СНИЛС']) {
+    obj.SNILS = obj['СНИЛС'];
+  }
+
   let result = `НЕТ СНИЛС ${name}`;
   if (obj.CN) {
     if (obj.T && obj.SN && obj.G) {
@@ -350,7 +354,7 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
         CN = CN.slice(1, -1);
       }
       CN = CN.replace('""', '"');
-      result = `${!obj.SNILS ? 'НЕТ СНИЛС ' : ''}${obj.SN} ${obj.G} — ${obj.T} — ${CN}`;
+      result = `${!obj.SNILS ? 'НЕТ СНИЛС ' : ''}${obj.SN} ${obj.G}${obj.SNILS ? `, ${obj.SNILS}` : ''} — ${obj.T} — ${CN}`;
     }
   }
   return result;
