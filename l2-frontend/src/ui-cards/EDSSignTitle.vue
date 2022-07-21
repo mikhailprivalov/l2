@@ -15,10 +15,14 @@ export default {
       type: String,
       required: true,
     },
+    data: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
-      title: this.executor,
+      title: this.executor || '',
     };
   },
   async mounted() {
@@ -28,7 +32,8 @@ export default {
         await cadesplugin.async_spawn((function* (args) {
           const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
           yield oSignedData.propset_ContentEncoding(1);
-          yield oSignedData.propset_Content(this.signature);
+          yield oSignedData.propset_Content(this.data);
+          yield oSignedData.VerifyCades(this.signature, 1, true);
           console.log(oSignedData);
         }).bind(this));
       });
