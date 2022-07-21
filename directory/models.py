@@ -2,6 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from jsonfield import JSONField
 
+from external_system.models import InstrumentalResearchRefbook
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from users.models import DoctorProfile, Speciality

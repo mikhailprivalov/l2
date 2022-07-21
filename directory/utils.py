@@ -6,6 +6,9 @@ from directory.models import (
 )
 import simplejson as json
 
+from external_system.models import InstrumentalResearchRefbook
+from external_system.sql_func import get_unique_method_instrumental_diagnostic
+
 
 def get_researches_details(pk):
     response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False, "groups": []}
@@ -16,7 +19,21 @@ def get_researches_details(pk):
     response["direction_expertise_all"] = direction_expertise_all
     if DResearches.objects.filter(pk=pk).exists():
         res: DResearches = DResearches.objects.get(pk=pk)
+        response["collectMethods"] = [{"id": -1, "label": "Пусто"}]
+        response["collectNsiResearchCode"] = [{"id": -1, "label": "Пусто"}]
+        if res.is_paraclinic:
+            methods = get_unique_method_instrumental_diagnostic()
+            result_method = [{"id": i.method, "label": i.method} for i in methods]
+            response["currentNsiResearchCode"] = res.nsi_id
+            response["collectMethods"].extend(result_method)
+        else:
+            response["currenttMethod"] = -1
         response["pk"] = res.pk
+        response["currentNsiResearchCode"] = res.nsi_id if res.nsi_id else -1
+        if response["currentNsiResearchCode"] and str(response["currentNsiResearchCode"]) != "-1" :
+            nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=int(response["currentNsiResearchCode"])).first()
+            response["collectNsiResearchCode"] = [{"id": nsi_res.code_nsi, "label": f"{nsi_res.code_nsi}-{nsi_res.title}; область--{nsi_res.area}; локализация--{nsi_res.localization}"}]
+
         response["department"] = res.podrazdeleniye_id or (-2 if not res.is_hospital else -1)
         response["title"] = res.title
         response["short_title"] = res.short_title
