@@ -58,6 +58,18 @@ class Command(BaseCommand):
                     if r.title != cells[title]:
                         r.title = cells[title]
                         updated.append('title')
+                    if r.localization != cells[localization]:
+                        r.localization = cells[localization]
+                        updated.append('localization')
+                    if r.code_nmu != cells[code_nmu]:
+                        r.code_nmu = cells[code_nmu]
+                        updated.append('code_nmu')
+                    if r.area != cells[area]:
+                        r.area = cells[area]
+                        updated.append('area')
+                    if r.method != cells[method]:
+                        r.method = cells[method]
+                        updated.append('method')
                     if updated:
                         r.save(update_fields=updated)
                         print('обновлено', cells[code])  # noqa: T001
