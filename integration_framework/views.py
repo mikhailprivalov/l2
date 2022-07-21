@@ -279,7 +279,7 @@ def issledovaniye_data(request):
     results = directions.Result.objects.filter(issledovaniye=i, fraction__fsli__isnull=False)
 
     if (not ignore_sample and not sample) or not results.exists():
-        return Response({"ok": False})
+        return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
 
     results_data = []
 
