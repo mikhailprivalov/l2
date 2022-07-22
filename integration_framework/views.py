@@ -97,17 +97,21 @@ def next_result_direction(request):
         researches = [int(i) for i in type_researches.split(',')]
     else:
         is_research = -1
+    dirs, dirs_eds = None, None
     if only_signed == '1':
         # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
         # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
-        dirs = sql_if.direction_collect_date_signed(d_start, researches, is_research, next_n) or []
+        dirs_eds = sql_if.direction_collect_date_signed(d_start, researches, is_research, next_n) or []
     else:
         dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
-    next_time = None
-    naprs = [d[0] for d in dirs]
+    next_time, naprs = None, None
     if dirs:
+        naprs = [d[0] for d in dirs]
         next_time = dirs[-1][3]
+    elif dirs_eds:
+        naprs = [d[0] for d in dirs_eds]
+        next_time = dirs_eds[-1][2]
 
     return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
 
@@ -276,10 +280,10 @@ def issledovaniye_data(request):
     i = directions.Issledovaniya.objects.get(pk=pk)
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
-    results = directions.Result.objects.filter(issledovaniye=i, fraction__fsli__isnull=False)
+    results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='')
 
     if (not ignore_sample and not sample) or not results.exists():
-        return Response({"ok": False})
+        return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
 
     results_data = []
 
@@ -337,7 +341,7 @@ def issledovaniye_data(request):
             "docConfirm": i.doc_confirmation_fio,
             "doctorData": doctor_data,
             "results": results_data,
-            "code": i.research.code,
+            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B'),
             "research": i.research.get_title(),
             "comments": i.lab_comment,
         }

@@ -491,8 +491,9 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     parent_iss_pk = [k[28] for k in issl_obj if k[28]]
     parent_iss = tuple(set(parent_iss_pk))
     result = {}
-    for k in get_pair_iss_direction(parent_iss):
-        result[k.iss_pk] = k.direction_pk
+    if len(parent_iss) > 0:
+        for k in get_pair_iss_direction(parent_iss):
+            result[k.iss_pk] = k.direction_pk
 
     for issled in issl_obj:
         # Порядок колонок в issled:

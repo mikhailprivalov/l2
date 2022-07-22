@@ -201,7 +201,7 @@
                   </tbody>
                 </table>
                 <div
-                  v-if="bactery.phenotype.length > 0"
+                  v-if="bactery.phenotype && bactery.phenotype.length > 0"
                   class="phen"
                 >
                   <ul>

@@ -388,7 +388,7 @@ def endpoint(request):
                                 name = mo.get('name')
                                 anti = data.get('anti', {})
                                 phenotype = data.get('phen', [])
-                                comments = data.get('comments', [])
+                                comments = [c if not isinstance(c, str) else {"text": c} for c in data.get('comments', [])]
                                 if code:
                                     culture = Culture.objects.filter(Q(lis=code) | Q(title=name)).filter(hide=False).first()
                                     if not culture:
@@ -1332,10 +1332,10 @@ def users_view(request):
             data.append(otd)
 
     spec = users.Speciality.objects.filter(hide=False).order_by("title")
-    spec_data = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in spec]]
+    spec_data = [{"id": -1, "label": "Не выбрано"}, *[{"id": s.pk, "label": f"{s.n3_id} - {s.title}"} for s in spec]]
 
     positions_qs = users.Position.objects.filter(hide=False).order_by("title")
-    positions = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in positions_qs]]
+    positions = [{"id": -1, "label": "Не выбрано"}, *[{"id": s.pk, "label": f"{s.n3_id} - {s.title}"} for s in positions_qs]]
 
     distrits_qs = District.objects.all().order_by("title")
     districts = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in distrits_qs]]
