@@ -34,7 +34,7 @@ from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
-from clients.models import Card, Individual, DispensaryReg, BenefitReg
+from clients.models import Card, Individual, DispensaryReg, BenefitReg, CardDocUsage
 from directions.models import (
     DirectionDocument,
     DocumentSign,
@@ -3414,6 +3414,11 @@ def eds_documents(request):
     data = json.loads(request.body)
     pk = data['pk']
     direction: Napravleniya = Napravleniya.objects.get(pk=pk)
+    if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
+        direction.client.individual.sync_with_tfoms()
+        snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
+        if not snils_used:
+            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "СНИЛС у пациента - Некорректный!"})
 
     if direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
