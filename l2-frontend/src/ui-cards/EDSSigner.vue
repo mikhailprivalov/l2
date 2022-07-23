@@ -91,6 +91,12 @@
         </span>
       </div>
     </div>
+    <div
+      v-if="error"
+      class="status-error"
+    >
+      <h4><strong>{{ message }}</strong></h4>
+    </div>
   </div>
 </template>
 
@@ -125,6 +131,8 @@ export default {
       documents: [],
       executors: {},
       selectedSignatureMode: null,
+      error: false,
+      message: '',
     };
   },
   computed: {
@@ -198,11 +206,15 @@ export default {
   methods: {
     async loadStatus() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { documents, executors } = await this.$api('/directions/eds/documents', {
+      const {
+        documents, executors, error, message,
+      } = await this.$api('/directions/eds/documents', {
         pk: this.directionPk,
       });
       this.documents = documents;
       this.executors = executors;
+      this.error = error;
+      this.message = message;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async addSign() {
