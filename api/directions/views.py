@@ -3654,7 +3654,7 @@ def eds_to_sign(request):
                 'documents': documents,
                 'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
                 'n3number': d.n3_odli_id or d.n3_iemk_ok,
-                'hasSnils': d.client.get_card_documents(check_has_type=['СНИЛС'])
+                'hasSnils': d.client.get_card_documents(check_has_type=['СНИЛС']),
             }
         )
 
