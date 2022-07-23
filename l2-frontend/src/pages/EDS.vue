@@ -214,7 +214,10 @@
           >
             <td>
               {{ r.pk }}
-              <span v-if="!r.hasSnils" class="status-error"> !СНИЛС</span>
+              <span
+                v-if="!r.hasSnils"
+                class="status-error"
+              > <i class="fa fa-exclamation-triangle" />СНИЛС</span>
             </td>
             <td>{{ r.confirmedAt }}, {{ r.docConfirmation }}</td>
             <td>
