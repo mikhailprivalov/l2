@@ -34,7 +34,7 @@ from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
-from clients.models import Card, Individual, DispensaryReg, BenefitReg, CardDocUsage
+from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import (
     DirectionDocument,
     DocumentSign,
