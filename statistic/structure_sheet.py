@@ -448,6 +448,8 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1, d2, style_border, style_o)
         ('Источник по направлению', 13),
         ('Источник по услуге', 13),
         ('Главное направление', 13),
+        ('Категория по направлению', 14),
+        ('Категория по исследованию', 14),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=7, column=idx).value = column[0]
@@ -539,6 +541,9 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         if issled[28]:
             parent_direction = result.get(issled[28], "-")
 
+        direction_price_category = issled[29]
+        iss_price_category = issled[30]
+
         # current_price = ''
 
         if r != 7 and r != 8:
@@ -599,8 +604,10 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         ws1.cell(row=r, column=20).value = direction_fin_source
         ws1.cell(row=r, column=21).value = iss_fin_source
         ws1.cell(row=r, column=22).value = parent_direction
+        ws1.cell(row=r, column=23).value = direction_price_category
+        ws1.cell(row=r, column=24).value = iss_price_category
 
-        rows = ws1[f'A{r}:V{r}']
+        rows = ws1[f'A{r}:X{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border1
@@ -611,7 +618,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     ws1.cell(row=r, column=10).value = f'=SUM(J{r1}:J{r - 1})'
     ws1.row_dimensions.group(r1, r - 1, hidden=True)
     total_sum.append(r)
-    rows = ws1[f'A{r}:V{r}']
+    rows = ws1[f'A{r}:X{r}']
     for row in rows:
         for cell in row:
             cell.fill = my_fill
@@ -628,7 +635,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     ws1.cell(row=r, column=1).value = 'Итого Всего'
     ws1.cell(row=r, column=2).value = t_s
     ws1.cell(row=r, column=10).value = t_s_uet
-    rows = ws1[f'A{r}:V{r}']
+    rows = ws1[f'A{r}:X{r}']
     for row in rows:
         for cell in row:
             cell.fill = total_fill
