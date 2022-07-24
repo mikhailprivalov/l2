@@ -775,6 +775,7 @@ class Fractions(models.Model):
     readonly_title = models.BooleanField(default=False, blank=True, verbose_name='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
+    not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
 
     def get_unit(self):
         if self.unit:
