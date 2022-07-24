@@ -3414,6 +3414,11 @@ def eds_documents(request):
     data = json.loads(request.body)
     pk = data['pk']
     direction: Napravleniya = Napravleniya.objects.get(pk=pk)
+    if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
+        direction.client.individual.sync_with_tfoms()
+        snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
+        if not snils_used:
+            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "СНИЛС у пациента - Некорректный!"})
 
     if direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
@@ -3637,6 +3642,9 @@ def eds_to_sign(request):
                     'empty': empty_signatures,
                 }
             )
+        if not d.client.get_card_documents(check_has_type=['СНИЛС']):
+            d.client.individual.sync_with_tfoms()
+
         rows.append(
             {
                 'pk': d.pk,
@@ -3646,6 +3654,7 @@ def eds_to_sign(request):
                 'documents': documents,
                 'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
                 'n3number': d.n3_odli_id or d.n3_iemk_ok,
+                'hasSnils': d.client.get_card_documents(check_has_type=['СНИЛС']),
             }
         )
 

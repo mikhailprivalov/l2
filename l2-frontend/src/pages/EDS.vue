@@ -214,6 +214,10 @@
           >
             <td>
               {{ r.pk }}
+              <span
+                v-if="!r.hasSnils"
+                class="status-error"
+              > <i class="fa fa-exclamation-triangle" />СНИЛС</span>
             </td>
             <td>{{ r.confirmedAt }}, {{ r.docConfirmation }}</td>
             <td>
@@ -236,7 +240,7 @@
               </div>
             </td>
             <td class="x-cell">
-              <label v-if="!totallySigned(r)">
+              <label v-if="!totallySigned(r) && r.hasSnils">
                 <input
                   v-model="r.checked"
                   type="checkbox"
@@ -648,7 +652,7 @@ export default class EDS extends Vue {
 
   toggleGlobalCheck() {
     const newStatus = !this.globalCheckStatus;
-    this.rows = this.rows.map(r => ({ ...r, checked: newStatus && !this.totallySigned(r) }));
+    this.rows = this.rows.map(r => ({ ...r, checked: newStatus && !this.totallySigned(r) && r.hasSnils }));
   }
 
   // eslint-disable-next-line class-methods-use-this
