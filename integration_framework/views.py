@@ -1854,6 +1854,26 @@ def get_protocol_result(request):
                 },
             }
         )
+    elif check_type_research(pk) == "is_paraclinic":
+        data = get_json_protocol_data(pk, is_paraclinic=True)
+        return Response(
+            {
+                "title": n.get_eds_title(),
+                "generatorName": n.get_eds_generator(),
+                "data": {
+                    "oidMo": data["oidMo"],
+                    "document": data,
+                    "patient": {
+                        'id': card.number,
+                        'snils': card.get_data_individual()["snils"],
+                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                        'gender': ind.sex.lower(),
+                        'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    },
+                    "organization": data["organization"],
+                },
+            }
+        )
 
     return Response({})
 

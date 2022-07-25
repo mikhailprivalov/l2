@@ -21,7 +21,7 @@ from directions.models import Napravleniya
 from utils.nsi_directories import NSI
 
 
-def get_json_protocol_data(pk):
+def get_json_protocol_data(pk, is_paraclinic=False):
     result_protocol = get_paraclinic_results_by_direction(pk)
     data = {}
     document = {}
@@ -77,6 +77,19 @@ def get_json_protocol_data(pk):
     legal_auth_data = legal_auth_get(legal_auth)
     hosp_obj = doctor_confirm_obj.hospital
     hosp_oid = hosp_obj.oid
+
+    if is_paraclinic:
+        result_paraclinic = {"протокол": "", "заключение": "", "рекомендации": ""}
+        for k, v in data.items():
+            if k.lower() == "заключение":
+                result_paraclinic["заключение"] = v
+            if k.lower() == "рекомендации":
+                result_paraclinic["рекомендации"] = v
+            else:
+                tmp_protocol = result_paraclinic["протокол"]
+                tmp_protocol = f"{tmp_protocol} {k}-{v}"
+                result_paraclinic["протокол"] = tmp_protocol
+        data = result_paraclinic
 
     document["id"] = pk
     time_confirm = iss.time_confirmation
