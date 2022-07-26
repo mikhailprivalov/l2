@@ -1078,7 +1078,8 @@ def result_print(request):
                             s_napr = s_napr + n + '\n'
                         fwb.append(Paragraph("{}".format(s_napr), style))
                     fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
-                    fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                    if not is_extract:
+                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
 
                 fwb.append(Spacer(1, 3 * mm))
                 if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result and not iss.research.is_form:
