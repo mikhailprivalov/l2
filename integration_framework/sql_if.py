@@ -68,7 +68,7 @@ def direction_collect_date_signed(d_s, researches, is_research, limit):
             SELECT 
             id,
             to_char(eds_total_signed_at AT TIME ZONE %(tz)s, 'YYYY-MM-DD HH24:MI') AS t_signed,
-            eds_total_signed_at as time_signed
+            eds_total_signed_at AT TIME ZONE %(tz)s as time_signed
             FROM directions_napravleniya
             WHERE directions_napravleniya.eds_total_signed = true and 
             directions_napravleniya.eds_total_signed_at > %(d_start)s::timestamp AT TIME ZONE %(tz)s

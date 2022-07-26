@@ -111,7 +111,7 @@ def next_result_direction(request):
         next_time = dirs[-1][3]
     elif dirs_eds:
         naprs = [d[0] for d in dirs_eds]
-        next_time = dirs_eds[-1][2]
+        next_time = dirs_eds[-1][1]
 
     return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
 
