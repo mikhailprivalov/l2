@@ -190,5 +190,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
         fwb.append(Paragraph('Дата-время осмотра: {} в {}'.format(date, time), style))
         fwb.append(Spacer(1, 0.5 * mm))
         fwb.append(tbl)
+        fwb.append(Spacer(1, 0.5 * mm))
+        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
 
     return fwb
