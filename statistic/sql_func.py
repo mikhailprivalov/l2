@@ -275,7 +275,9 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
         directions_istochnikifinansirovaniya.title as ist_f,
         directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation,
         statistics_tickets_visitpurpose.title as purpose_title,
-        directions_issledovaniya.purpose_id
+        directions_issledovaniya.purpose_id,
+        dir_price_category.title as dir_category,
+        iss_price_category.title as iss_category
         FROM directions_issledovaniya
         LEFT JOIN directions_napravleniya 
            ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -285,6 +287,10 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
         ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id
         LEFT JOIN statistics_tickets_visitpurpose
         ON statistics_tickets_visitpurpose.id=directions_issledovaniya.purpose_id
+        LEFT JOIN contracts_pricecategory dir_price_category
+        ON directions_napravleniya.price_category_id=dir_price_category.id
+        LEFT JOIN contracts_pricecategory iss_price_category
+        ON directions_issledovaniya.price_category_id=iss_price_category.id
         WHERE directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
         AND directions_issledovaniya.research_id=%(research_id)s 
         AND 
@@ -312,7 +318,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
         SELECT napr, date_confirm, time_confirm, create_date_napr, create_time_napr, doc_fio, coast, discount, 
         how_many, ((coast + (coast/100 * discount)) * how_many)::NUMERIC(10,2) AS sum_money, ist_f, time_confirmation, num_card, 
         ind_family, ind_name, patronymic, birthday, date_born,
-        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title, t_iss.purpose_title, t_iss.vich_code FROM t_iss
+        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title, t_iss.purpose_title, t_iss.vich_code, dir_category, iss_category FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
         LEFT JOIN t_hosp ON t_iss.hospital_id = t_hosp.id
 

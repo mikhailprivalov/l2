@@ -704,6 +704,8 @@ def statistic_research_base(ws1, d1, d2, research_titile):
         ('МО', 30),
         ('Цель', 14),
         ('Код(Вич)', 14),
+        ('Категория по направлению', 14),
+        ('Категория по исследованию', 14),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -747,6 +749,8 @@ def statistic_research_data(ws1, researches):
         current_num_card = res[12]
         current_purpose = res[20]
         vich_code = res[21]
+        direction_category_price = res[22]
+        iss_category_price = res[23]
 
         ws1.cell(row=r, column=1).value = current_doc
         ws1.cell(row=r, column=2).value = f'{current_napr}, {current_napr_atcreate}'
@@ -764,8 +768,10 @@ def statistic_research_data(ws1, researches):
         ws1.cell(row=r, column=14).value = res[19]
         ws1.cell(row=r, column=15).value = current_purpose
         ws1.cell(row=r, column=16).value = vich_code
+        ws1.cell(row=r, column=17).value = direction_category_price
+        ws1.cell(row=r, column=18).value = iss_category_price
 
-        rows = ws1[f'A{r}:P{r}']
+        rows = ws1[f'A{r}:R{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
