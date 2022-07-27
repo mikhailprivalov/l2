@@ -279,8 +279,10 @@ def issledovaniye_data(request):
     ignore_sample = request.GET.get("ignoreSample") == 'true'
     i = directions.Issledovaniya.objects.get(pk=pk)
 
-    # sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
-    sample = None
+    try:
+        sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
+    except:
+        sample = None
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
     if (not ignore_sample and not sample) or not results.exists():
         return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
@@ -342,7 +344,7 @@ def issledovaniye_data(request):
             "docConfirm": i.doc_confirmation_fio,
             "doctorData": doctor_data,
             "results": results_data,
-            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B').strip(),
+            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B').replace('С', 'C').strip(),
             "research": i.research.get_title(),
             "comments": i.lab_comment,
         }
