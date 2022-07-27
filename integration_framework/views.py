@@ -54,7 +54,7 @@ from laboratory.settings import (
     LK_FILE_SIZE_BYTES,
     LK_FILE_COUNT,
     LK_DAY_MONTH_START_SHOW_RESULT,
-    GISTOLOGY_RESEARCH_PK,
+    GISTOLOGY_RESEARCH_PK, REFERENCE_ODLI,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -282,7 +282,6 @@ def issledovaniye_data(request):
     # sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     sample = None
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
-
     if (not ignore_sample and not sample) or not results.exists():
         return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
 
@@ -310,7 +309,8 @@ def issledovaniye_data(request):
         norm = r.calc_normal()
 
         u = r.fraction.get_unit()
-
+        if not REFERENCE_ODLI:
+            refs = ['']
         results_data.append(
             {
                 "pk": r.pk,
@@ -342,7 +342,7 @@ def issledovaniye_data(request):
             "docConfirm": i.doc_confirmation_fio,
             "doctorData": doctor_data,
             "results": results_data,
-            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B'),
+            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B').strip(),
             "research": i.research.get_title(),
             "comments": i.lab_comment,
         }

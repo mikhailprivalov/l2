@@ -378,6 +378,8 @@ BARCODE_SIZE = "43x25"
 SEARCH_PAGE_STATISTIC_PARAMS = {}
 MEDEXAM_FIN_SOURCE_TITLE = ""
 
+REFERENCE_ODLI = False
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
