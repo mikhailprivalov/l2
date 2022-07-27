@@ -279,7 +279,8 @@ def issledovaniye_data(request):
     ignore_sample = request.GET.get("ignoreSample") == 'true'
     i = directions.Issledovaniya.objects.get(pk=pk)
 
-    sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
+    # sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
+    sample = None
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
 
     if (not ignore_sample and not sample) or not results.exists():
