@@ -25,7 +25,7 @@ import clients.models as Clients
 import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED
+from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
@@ -1937,7 +1937,7 @@ class Issledovaniya(models.Model):
         return strdate(self.napravleniye.visit_date)
 
     def get_medical_examination(self):
-        if not self.medical_examination:
+        if not self.medical_examination and self.research.pk not in RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION:
             if self.napravleniye.visit_date or self.time_confirmation:
                 self.medical_examination = (self.napravleniye.visit_date or self.time_confirmation).date()
             else:

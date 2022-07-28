@@ -322,6 +322,8 @@
                   class="additional-number"
                 >
                   <i class="fas fa-registered" />{{ r.additional_number }}
+                  <br>
+                  {{ r.registered_date }}
                 </div>
               </td>
               <td v-if="!isSearchStationar">

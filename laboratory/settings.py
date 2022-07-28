@@ -377,6 +377,7 @@ DASH_REPORT_LIMIT_DURATION_DAYS = {"years": 2, "months": 13, "weeks": 50, "days"
 BARCODE_SIZE = "43x25"
 SEARCH_PAGE_STATISTIC_PARAMS = {}
 MEDEXAM_FIN_SOURCE_TITLE = ""
+RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION = []
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
