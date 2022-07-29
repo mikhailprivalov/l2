@@ -171,4 +171,5 @@ class Command(BaseCommand):
                             obj_iss.time_confirmation = t
                             obj_iss.time_save = t
                             obj_iss.save(update_fields=['doc_confirmation', 'time_save', 'time_confirmation', 'link_file'])
+                            obj_iss.napravleniye.sync_confirmed_fields()
                             rmtree(temp_dir)

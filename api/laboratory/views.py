@@ -582,6 +582,7 @@ def confirm(request):
             r.get_ref()
         iss.time_confirmation = timezone.now()
         iss.save()
+        iss.napravleniye.sync_confirmed_fields()
         Log.log(str(pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
     else:
         return JsonResponse(
@@ -614,6 +615,7 @@ def confirm_list(request):
                 for r in Result.objects.filter(issledovaniye=iss):
                     iss.def_uet += Decimal(r.fraction.uet_co_executor_1)
             iss.save()
+            iss.napravleniye.sync_confirmed_fields()
             Log.log(str(iss.pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
     n.qr_check_token = None
     n.save(update_fields=['qr_check_token'])
@@ -637,6 +639,7 @@ def reset_confirm(request):
             predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": pk, "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
             iss.save()
+            iss.napravleniye.sync_confirmed_fields()
             if iss.napravleniye.result_rmis_send:
                 c = Client()
                 c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)

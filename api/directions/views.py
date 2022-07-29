@@ -2042,6 +2042,7 @@ def directions_paraclinic_result(request):
             iss.gen_direction_with_research_after_confirm_id = stationar_research
 
         iss.save()
+        iss.napravleniye.sync_confirmed_fields()
         more = request_data.get("more", [])
         h = []
         for m in more:
@@ -2063,6 +2064,7 @@ def directions_paraclinic_result(request):
                         i.napravleniye.save(update_fields=['qr_check_token'])
                 i.fin_source = iss.fin_source
                 i.save()
+                i.napravleniye.sync_confirmed_fields()
                 h.append(i.pk)
             else:
                 for i2 in Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile, research_id=m):
@@ -2080,6 +2082,7 @@ def directions_paraclinic_result(request):
                             i2.napravleniye.save(update_fields=['qr_check_token'])
                     i2.fin_source = iss.fin_source
                     i2.save()
+                    i2.napravleniye.sync_confirmed_fields()
                     h.append(i2.pk)
 
         Issledovaniya.objects.filter(parent=iss).exclude(pk__in=h).delete()
@@ -2170,11 +2173,13 @@ def directions_paraclinic_confirm(request):
             iss.napravleniye.save(update_fields=['qr_check_token'])
         iss.time_confirmation = t
         iss.save()
+        iss.napravleniye.sync_confirmed_fields()
         iss.gen_after_confirm(request.user)
         for i in Issledovaniya.objects.filter(parent=iss):
             i.doc_confirmation = request.user.doctorprofile
             i.time_confirmation = t
             i.save()
+            i.napravleniye.sync_confirmed_fields()
             if i.napravleniye:
                 i.napravleniye.qr_check_token = None
                 i.napravleniye.save(update_fields=['qr_check_token'])
@@ -2220,6 +2225,7 @@ def directions_paraclinic_confirm_reset(request):
             iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
             iss.n3_odii_uploaded_task_id = None
             iss.save()
+            iss.napravleniye.sync_confirmed_fields()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             if transfer_d:
                 # transfer_d.cancel = True
@@ -2233,6 +2239,7 @@ def directions_paraclinic_confirm_reset(request):
                 i.executor_confirmation = None
                 i.time_confirmation = None
                 i.save()
+                i.napravleniye.sync_confirmed_fields()
             if iss.napravleniye:
                 n: Napravleniya = iss.napravleniye
                 n.need_resend_amd = False
@@ -3579,7 +3586,7 @@ def eds_to_sign(request):
 
     rows = []
 
-    d_qs = Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(issledovaniya__time_confirmation__isnull=True)
+    d_qs = Napravleniya.objects.filter(total_confirmed=True)
     if number:
         d_qs = d_qs.filter(pk=number if number.isdigit() else -1)
     else:
@@ -3592,7 +3599,7 @@ def eds_to_sign(request):
             ),
         )
         day2 = day1 + timedelta(days=1)
-        d_qs = d_qs.filter(issledovaniya__time_confirmation__range=(day1, day2))
+        d_qs = d_qs.filter(last_confirmed_at__range=(day1, day2))
         if mode == 'mo':
             d_qs = d_qs.filter(eds_required_signature_types__contains=['Медицинская организация'])
             if department == -1:
@@ -3616,7 +3623,7 @@ def eds_to_sign(request):
             d_qs = d_qs.filter(eds_total_signed=False)
 
     d: Napravleniya
-    p = Paginator(d_qs.order_by('pk', 'issledovaniya__time_confirmation').distinct('pk'), SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
+    p = Paginator(d_qs.order_by('pk', 'last_confirmed_at').distinct('pk'), SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
     for d in p.page(page).object_list:
         documents = []
         ltc = d.last_time_confirm()
