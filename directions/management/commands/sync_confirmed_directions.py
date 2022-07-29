@@ -14,6 +14,6 @@ class Command(BaseCommand):
         for n in d:
             cnt += 1
 
-            print(f"{cnt}/{total} синхронизируем {n.pk}...")  # noqa: T001
+            self.stdout.write(f"{cnt}/{total} синхронизируем {n.pk}...\n")
             n.sync_confirmed_fields()
-            print(f"total_confirmed={n.total_confirmed} last_confirmed_at={n.last_confirmed_at}")  # noqa: T001
+            self.stdout.write(f"total_confirmed={n.total_confirmed} last_confirmed_at={n.last_confirmed_at}\n")
