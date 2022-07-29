@@ -2576,6 +2576,7 @@ def document_lk_save(request):
         iss.doc_confirmation = user
         iss.time_confirmation = date
         iss.save()
+        iss.napravleniye.sync_confirmed_fields()
         iss.napravleniye.visit_who_mark = user
         iss.napravleniye.visit_date = date
         iss.napravleniye.save()

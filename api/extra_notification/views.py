@@ -114,6 +114,7 @@ def save(request):
                 i.napravleniye.qr_check_token = None
                 i.napravleniye.save(update_fields=['qr_check_token'])
             i.save()
+            i.napravleniye.sync_confirmed_fields()
             confirmed_at = strdate(i.time_confirmation)
             ok = True
             message = None

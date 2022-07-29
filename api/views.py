@@ -1085,6 +1085,7 @@ def flg(request):
                     i.napravleniye.visit_who_mark = doc
                     i.napravleniye.visit_date = date
                     i.napravleniye.save()
+            i.napravleniye.sync_confirmed_fields()
     slog.Log(key=dpk, type=13, body=json.dumps({"content": content, "doc_f": doc_f}), user=None).save()
     return JsonResponse({"ok": ok})
 
