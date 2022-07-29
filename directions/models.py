@@ -489,7 +489,6 @@ class Napravleniya(models.Model):
         if last_confirmed_at != self.last_confirmed_at:
             self.last_confirmed_at = last_confirmed_at
             updated.append('last_confirmed_at')
-        
         if updated:
             self.save(update_fields=updated)
 
