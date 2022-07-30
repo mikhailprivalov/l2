@@ -2688,12 +2688,7 @@ def register_document(request):
             "data": "Данные в base64",
             "checksum": "Контрольная сумма файла, вычисленная по алгоритму CRC-32-IEEE 802.3 (в десятичном представлении).Ограничивается длиной в 30 символов",
         },
-        "recipient": {
-            "kind": "PATIENT",
-            "recipientKindPerson": {
-                "snils": patient["snils"]
-            }
-        },
+        "recipient": {"kind": "PATIENT", "recipientKindPerson": {"snils": patient["snils"]}},
         "description": iss.research.title,
         "personalSignature": {
             "signer": {
