@@ -2710,7 +2710,7 @@ def register_document(request):
                 "checksum": "",
             },
             "description": "Подпись сотрудника",
-        }
+        },
     }
 
     return Response({"ok": True, "message": "", "data": return_data})
