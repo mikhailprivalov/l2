@@ -1,6 +1,7 @@
 import base64
 import os
 import html
+import uuid
 
 from django.test import Client as TC
 import datetime
@@ -15,6 +16,7 @@ from api.views import mkb10_dict
 from clients.utils import find_patient
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
+from external_system.models import ArchiveMedicalDocuments
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
@@ -55,7 +57,7 @@ from laboratory.settings import (
     LK_FILE_COUNT,
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
-    REFERENCE_ODLI,
+    REFERENCE_ODLI, AMD_REMS_SYSTEM,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -67,7 +69,7 @@ from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, matc
 from users.models import DoctorProfile
 from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range
+from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range, normalize_dots_date
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
@@ -2638,68 +2640,82 @@ def register_document(request):
     body = json.loads(request.body)
     pk = body.get("pk")
     direction = Napravleniya.objects.get(pk=pk)
+    iss = Issledovaniya.objects.filter(napravleniye=direction).first()
+    doc_confirm = iss.doc_confirmation
+    hospital_oid = doc_confirm.get_hospital().oid
+    department_oid = doc_confirm.podrazdeleniye.oid
+    department_name = doc_confirm.podrazdeleniye.nsi_title
+
+    time_confirm = iss.time_confirmation
+    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y-%m-%dT%H:%M:%S')
+    patient = direction.client.get_data_individual()
+
+    renderedServices = [{"code": iss.research.code, "renderedDate": iss.medical_examination}]
+
+    local_uid = uuid.uuid4()
+    message_id = uuid.uuid4()
+    amd = ArchiveMedicalDocuments(
+        direction=direction,
+        local_uid = local_uid,
+        message_id = message_id,
+        time_exec = current_time()
+    )
+    amd.save()
+
+    doctor_data = doc_confirm.dict_data
 
     return_data = {
-        "medOrgOid": "Указывается OID МО согласно ФРМО.Заполняется по справочнику «Регистр медицинских организаций Российской Федерации. Версия 2», OID 1.2.643.5.1.13.13.11.1461",
-        "messageId": "Будет передан в запросе к callback-сервису ИС",
-        "localUid": "Предоставляется в формате UUID.Ограничивается длиной в 36 символов",
-        "kind": "Вид документа 1.2.643.5.1.13.13.11.1520",
-        "system": "Присваивается ИС при регистрации в РЭМД и передается при информационном взаимодействии",
-        "organization": "Указывается OID МО согласно ФРМО",
+        "medOrgOid": hospital_oid,
+        "messageId": amd.message_id,
+        "localUid": amd.local_uid,
+        "kind": iss.research.oid_kind,
+        "system": AMD_REMS_SYSTEM,
+        "organization": hospital_oid,
         "department": {
-            "localId": "OID подразделения организации согласно сведениям ФРМО. Заполняется по справочнику «ФРМО. Справочник структурных подразделений», OID 1.2.643.5.1.13.13.99.2.114",
-            "name": "Наименование подразделения организации согласно сведениям ФРМО"
+            "localId": department_oid,
+            "name": department_name
         },
-        "documentNumber": "Регистрационный номер документа внутри организации или подразделения",
-        "creationDateTime": "Дата и время создания документа внутри организации или ее подразделения",
+        "documentNumber": pk,
+        "creationDateTime": f"{confirmed_time}.000+0800",
         "patient": {
-            "surname": "",
-            "name": "",
-            "patrName": "",
-            "birthDate": "",
-            "gender": "",
-            "localId": "",
-            "snils": "",
-            "enp": "",
+            "surname": patient['family'],
+            "name": patient['name'],
+            "patrName": patient['patronymic'],
+            "birthDate": normalize_dots_date(patient['born']),
+            "gender": "1" if patient['sex'] == "м" else "2",
+            "localId": direction.client.pk,
+            "snils": patient["snils"],
+            "enp": patient["enp"],
         },
         "assistance": {
-            "renderedServices": [
-                {
-                    "code": "Код услуги по справочнику «Номенклатура медицинских услуг», OID 1.2.643.5.1.13.13.11.1070",
-                    "renderedDate": "Код услуги по справочнику «Номенклатура медицинских услуг», OID 1.2.643.5.1.13.13.11.1070"
-                },
-                {
-                    "code": "Код услуги по справочнику «Номенклатура медицинских услуг», OID 1.2.643.5.1.13.13.11.1070",
-                    "renderedDate": "Код услуги по справочнику «Номенклатура медицинских услуг», OID 1.2.643.5.1.13.13.11.1070"
-                }
-            ]
+            "renderedServices": renderedServices
         },
         "orgSignature": {
             "data": "Данные в base64",
             "checksum": "Контрольная сумма файла, вычисленная по алгоритму CRC-32-IEEE 802.3 (в десятичном представлении).Ограничивается длиной в 30 символов",
         },
         "recipient": {
-            "kind": "",
+            "kind": "PATIENT",
             "recipientKindPerson": {
-                "snils": ""
+                "snils": patient["snils"]
             }
         },
-        "description": "Краткое произвольное описание документа. Порядок заполнения значения см. в разделе 6.6 текущего документа.",
+        "description": iss.research.title,
         "personalSignature": {
             "signer": {
-                "localId": "",
-                "role": "1.2.643.5.1.13.2.1.1.734",
-                "surname": "",
-                "name": "",
-                "patrName": "",
-                "snils": "",
-                "position": "1.2.643.5.1.13.13.99.2.181",
+                "localId": doc_confirm.pk,
+                "role": "DOCTOR",
+                "surname": doctor_data["family"],
+                "name": doctor_data["name"],
+                "patrName": doctor_data["patronymic"],
+                "snils": doctor_data["snils"],
+                "position": doctor_data["position"],
             },
             "signature": {
                 "data": "",
                 "checksum": "",
             },
-            "description": "",
+            "description": "Подпись сотрудника",
         }
     }
 

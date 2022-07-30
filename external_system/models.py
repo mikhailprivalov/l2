@@ -1,5 +1,7 @@
 from django.db import models
 
+from directions.models import Napravleniya
+
 
 class FsliRefbookTest(models.Model):
     """
@@ -56,3 +58,22 @@ class BodySiteRefbook(models.Model):
 
     def __str__(self):
         return f"{self.code} – {self.title}"
+
+
+class ArchiveMedicalDocuments(models.Model):
+    local_uid = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='uid_localid')
+    direction = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.SET_NULL)
+    status = models.IntegerField(default=-1, help_text='Кол-во услуг назначено оператором')
+    message_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='uid_localid')
+    time_exec = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время Запроса на регистрацию')
+
+    def __str__(self):
+        return f"{self.direction.pk} – {self.time_exec}"
+
+
+class TypesMedicalDocuments(models.Model):
+    oid = models.CharField(max_length=55, default="", blank=True, help_text='OID документа')
+    name = models.CharField(max_length=255, help_text='Наименование')
+
+    def __str__(self):
+        return f"{self.oid} - {self.name}"
