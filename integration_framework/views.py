@@ -2683,9 +2683,7 @@ def register_document(request):
             "snils": patient["snils"],
             "enp": patient["enp"],
         },
-        "assistance": {
-            "renderedServices": renderedServices
-        },
+        "assistance": {"renderedServices": renderedServices},
         "orgSignature": {
             "data": "Данные в base64",
             "checksum": "Контрольная сумма файла, вычисленная по алгоритму CRC-32-IEEE 802.3 (в десятичном представлении).Ограничивается длиной в 30 символов",
