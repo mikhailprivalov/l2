@@ -2655,12 +2655,7 @@ def register_document(request):
 
     local_uid = uuid.uuid4()
     message_id = uuid.uuid4()
-    amd = ArchiveMedicalDocuments(
-        direction=direction,
-        local_uid = local_uid,
-        message_id = message_id,
-        time_exec = current_time()
-    )
+    amd = ArchiveMedicalDocuments(direction=direction, local_uid=local_uid, message_id=message_id, time_exec=current_time())
     amd.save()
 
     doctor_data = doc_confirm.dict_data
