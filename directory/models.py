@@ -272,7 +272,6 @@ class Researches(models.Model):
     convert_to_doc_call = models.BooleanField(blank=True, default=False, help_text="Конвертировать форму в заявку DocCall")
     oid_kind = models.CharField(max_length=5, null=True, blank=True, default="", help_text="oid-документа 1.2.643.5.1.13.13.11.1520")
 
-
     @staticmethod
     def filter_type(t):
         ts = {
