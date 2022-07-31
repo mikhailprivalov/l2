@@ -254,6 +254,8 @@ def direction_data(request):
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
+            "department_name": iss[iss_index].doc_confirmation.podrazdeleniye.nsi_title if iss[iss_index].doc_confirmation else None,
+            "kind": iss[iss_index].research.oid_kind if iss[iss_index].doc_confirmation else None,
             "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else 'другое',
             "finSourceCode": direction.istochnik_f.get_n3_code() if direction.istochnik_f else '6',
             "finSourceEcpCode": direction.istochnik_f.get_ecp_code() if direction.istochnik_f else '380101000000023',
@@ -271,6 +273,7 @@ def direction_data(request):
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
             "hasN3IemkUploading": direction.n3_iemk_ok,
+            "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid
         }
     )
 
@@ -2634,87 +2637,3 @@ def document_lk_save(request):
             return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
 
     return Response({"ok": True, "message": f"Форма \"{service.get_title()}\" ({direction}) сохранена"})
-
-
-@api_view()
-def req_register_document(request):
-    body = json.loads(request.body)
-    pk = body.get("pk")
-    direction = Napravleniya.objects.get(pk=pk)
-    iss = Issledovaniya.objects.filter(napravleniye=direction).first()
-    doc_confirm = iss.doc_confirmation
-    hospital_oid = doc_confirm.get_hospital().oid
-    department_oid = doc_confirm.podrazdeleniye.oid
-    department_name = doc_confirm.podrazdeleniye.nsi_title
-
-    time_confirm = iss.time_confirmation
-    confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y-%m-%dT%H:%M:%S')
-    patient = direction.client.get_data_individual()
-
-    renderedServices = [{"code": iss.research.code, "renderedDate": iss.medical_examination}]
-
-    local_uid = uuid.uuid4()
-    message_id = uuid.uuid4()
-    amd = ArchiveMedicalDocuments(direction=direction, local_uid=local_uid, message_id=message_id, time_exec=current_time())
-    amd.save()
-
-    doctor_data = doc_confirm.dict_data
-
-    return_data = {
-        "medOrgOid": hospital_oid,
-        "messageId": amd.message_id,
-        "localUid": amd.local_uid,
-        "kind": iss.research.oid_kind,
-        "system": AMD_REMD_SYSTEM,
-        "organization": hospital_oid,
-        "department": {
-            "localId": department_oid,
-            "name": department_name
-        },
-        "documentNumber": pk,
-        "creationDateTime": f"{confirmed_time}.000+0800",
-        "patient": {
-            "surname": patient['family'],
-            "name": patient['name'],
-            "patrName": patient['patronymic'],
-            "birthDate": normalize_dots_date(patient['born']),
-            "gender": "1" if patient['sex'] == "м" else "2",
-            "localId": direction.client.pk,
-            "snils": patient["snils"],
-            "enp": patient["enp"],
-        },
-        "assistance": {"renderedServices": renderedServices},
-        "orgSignature": {
-            "data": "Данные в base64",
-            "checksum": "Контрольная сумма файла, вычисленная по алгоритму CRC-32-IEEE 802.3 (в десятичном представлении).Ограничивается длиной в 30 символов",
-        },
-        "recipient": {"kind": "PATIENT", "recipientKindPerson": {"snils": patient["snils"]}},
-        "description": iss.research.title,
-        "personalSignature": {
-            "signer": {
-                "localId": doc_confirm.pk,
-                "role": "DOCTOR",
-                "surname": doctor_data["family"],
-                "name": doctor_data["name"],
-                "patrName": doctor_data["patronymic"],
-                "snils": doctor_data["snils"],
-                "position": doctor_data["position"],
-            },
-            "signature": {
-                "data": "",
-                "checksum": "",
-            },
-            "description": "Подпись сотрудника",
-        },
-    }
-
-    return Response({"ok": True, "message": "", "data": return_data})
-
-
-def resp_register_document(request):
-    body = json.loads(request.body)
-    request_register_document_message_id = body.get("id")
-    status = body.get("status")
-    errors = body.get("errors")
-
-    return Response({"ok": True, "message": ""})
