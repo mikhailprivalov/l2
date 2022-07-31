@@ -1,7 +1,6 @@
 import base64
 import os
 import html
-import uuid
 
 from django.test import Client as TC
 import datetime
