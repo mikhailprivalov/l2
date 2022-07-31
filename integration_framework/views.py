@@ -58,7 +58,6 @@ from laboratory.settings import (
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
     REFERENCE_ODLI,
-    AMD_REMD_SYSTEM,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
