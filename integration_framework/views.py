@@ -16,7 +16,6 @@ from api.views import mkb10_dict
 from clients.utils import find_patient
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
-from external_system.models import ArchiveMedicalDocuments
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
