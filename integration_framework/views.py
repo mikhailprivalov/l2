@@ -58,7 +58,7 @@ from laboratory.settings import (
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
     REFERENCE_ODLI,
-    AMD_REMS_SYSTEM,
+    AMD_REMD_SYSTEM,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -2637,7 +2637,7 @@ def document_lk_save(request):
 
 
 @api_view()
-def register_document(request):
+def req_register_document(request):
     body = json.loads(request.body)
     pk = body.get("pk")
     direction = Napravleniya.objects.get(pk=pk)
@@ -2665,7 +2665,7 @@ def register_document(request):
         "messageId": amd.message_id,
         "localUid": amd.local_uid,
         "kind": iss.research.oid_kind,
-        "system": AMD_REMS_SYSTEM,
+        "system": AMD_REMD_SYSTEM,
         "organization": hospital_oid,
         "department": {
             "localId": department_oid,
@@ -2709,3 +2709,12 @@ def register_document(request):
     }
 
     return Response({"ok": True, "message": "", "data": return_data})
+
+
+def resp_register_document(request):
+    body = json.loads(request.body)
+    request_register_document_message_id = body.get("id")
+    status = body.get("status")
+    errors = body.get("errors")
+
+    return Response({"ok": True, "message": ""})

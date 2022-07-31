@@ -52,5 +52,6 @@ urlpatterns = [
     path('pdf-forms-lk', views.pdf_form_lk),
     path('files-params', views.get_limit_download_files),
     path('plan-messages', views.get_all_messages_by_plan_id),
-    path('bus/register-document', views.register_document),
+    path('bus/req-register-document', views.req_register_document),
+    path('bus/resp-register-document', views.resp_register_document),
 ]
