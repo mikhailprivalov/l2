@@ -69,7 +69,7 @@ from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, matc
 from users.models import DoctorProfile
 from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range, normalize_dots_date
+from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
