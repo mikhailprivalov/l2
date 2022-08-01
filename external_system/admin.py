@@ -1,6 +1,6 @@
 from django.contrib import admin
-
 from .models import FsliRefbookTest, InstrumentalResearchRefbook, BodySiteRefbook, ArchiveMedicalDocuments, TypesMedicalDocuments
+
 
 class ResArchiveMedicalDocuments(admin.ModelAdmin):
     list_display = (
@@ -15,6 +15,7 @@ class ResArchiveMedicalDocuments(admin.ModelAdmin):
     )
 
     search_fields = ('direction__pk',)
+
 
 admin.site.register(FsliRefbookTest)
 admin.site.register(InstrumentalResearchRefbook)
