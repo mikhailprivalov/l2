@@ -73,7 +73,7 @@ class ArchiveMedicalDocuments(models.Model):
     kind = models.SmallIntegerField(default=-1, blank=True, help_text='oid документа', db_index=True)
     emdr_id = models.CharField(max_length=128, blank=True, default='', help_text="Номер ЭМД в реестре")
     registration_date = models.DateTimeField(null=True, blank=True, help_text='Дата создания записи в реестр')
-    result_message = models.TextField(default="", null=True, blank=True, help_text='Сообщение')
+    message = models.TextField(default="", null=True, blank=True, help_text='Сообщение')
 
     def __str__(self):
         return f"{self.direction.pk} – {self.time_exec}"

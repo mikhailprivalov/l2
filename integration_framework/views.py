@@ -15,6 +15,7 @@ from api.views import mkb10_dict
 from clients.utils import find_patient
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
+from external_system.models import ArchiveMedicalDocuments
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
@@ -2634,3 +2635,49 @@ def document_lk_save(request):
             return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
 
     return Response({"ok": True, "message": f"Форма \"{service.get_title()}\" ({direction}) сохранена"})
+
+
+@api_view(['POST'])
+def amd_save(request):
+    data = json.loads(request.body)
+    local_uid = data.get('localUid')
+    direction_pk = data.get('pk')
+    status = data.get('status')
+    message_id = data.get('messageId')
+    message = data.get('message')
+    kind = data.get('kind')
+    organization_oid = data.get('organizationOid')
+    hospital = Hospitals.objects.filter(oid=organization_oid).first()
+
+    emdr_id = data.get('emdrId')
+    registration_date = data.get('registrationDate')
+
+    type = data.get('type')
+    if type and type == "registerDocument":
+        time_exec = data.get('timeExec')
+        department_oid = data.get('departmentOid')
+        podrazdeleniye = Podrazdeleniya.objects.filter(oid=department_oid).first()
+        amd = ArchiveMedicalDocuments(
+            local_uid=local_uid,
+            direction_id=direction_pk,
+            status=status,
+            message_id=message_id,
+            hospital=hospital,
+            department=podrazdeleniye,
+            message=message,
+            kind=kind,
+        )
+        amd.save()
+    elif type and type == "getDocumentFile":
+        amd = ArchiveMedicalDocuments.objects.get(hospital=hospital, local_uid=local_uid, direction_id=direction_pk)
+        amd.emdr_id = emdr_id
+        amd.registration_date = registration_date
+        amd.save()
+    elif type and type == "sendRegisterDocumentResult":
+        code = data.get('code')
+        amd = ArchiveMedicalDocuments.objects.get(message_id=message_id)
+        amd.emdr_id = emdr_id
+        amd.registration_date = registration_date
+        amd.message = f"{code}@{message}"
+        amd.save()
+
