@@ -2651,10 +2651,13 @@ def amd_save(request):
 
     emdr_id = data.get('emdrId')
     registration_date = data.get('registrationDate')
+    if registration_date:
+        registration_date = datetime.datetime.strptime(registration_date, '%Y-%m-%d %H:%M:%S')
 
     type = data.get('type')
     if type and type == "registerDocument":
         time_exec = data.get('timeExec')
+        time_exec = datetime.datetime.strptime(time_exec, '%Y-%m-%d %H:%M:%S')
         department_oid = data.get('departmentOid')
         podrazdeleniye = Podrazdeleniya.objects.filter(oid=department_oid).first()
         amd = ArchiveMedicalDocuments(
@@ -2666,6 +2669,7 @@ def amd_save(request):
             department=podrazdeleniye,
             message=message,
             kind=kind,
+            time_exec=time_exec
         )
         amd.save()
     elif type and type == "getDocumentFile":
@@ -2674,10 +2678,10 @@ def amd_save(request):
         amd.registration_date = registration_date
         amd.save()
     elif type and type == "sendRegisterDocumentResult":
-        code = data.get('code')
         amd = ArchiveMedicalDocuments.objects.get(message_id=message_id)
         amd.emdr_id = emdr_id
         amd.registration_date = registration_date
+        code = data.get('code')
         amd.message = f"{code}@{message}"
         amd.save()
-
+    return Response({"ok": True})
