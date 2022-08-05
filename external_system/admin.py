@@ -2,7 +2,6 @@ from django.contrib import admin
 from .models import FsliRefbookTest, InstrumentalResearchRefbook, BodySiteRefbook, ArchiveMedicalDocuments, TypesMedicalDocuments
 
 
-
 class ResArchiveMedicalDocuments(admin.ModelAdmin):
     list_display = (
         'local_uid',
