@@ -2669,7 +2669,7 @@ def amd_save(request):
             department=podrazdeleniye,
             message=message,
             kind=kind,
-            time_exec=time_exec
+            time_exec=time_exec,
         )
         amd.save()
     elif type and type == "getDocumentFile":
