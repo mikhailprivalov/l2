@@ -17,7 +17,6 @@ class ResArchiveMedicalDocuments(admin.ModelAdmin):
     search_fields = ('direction__pk',)
 
 
-
 admin.site.register(FsliRefbookTest)
 admin.site.register(InstrumentalResearchRefbook)
 admin.site.register(BodySiteRefbook)
