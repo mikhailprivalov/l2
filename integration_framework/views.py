@@ -271,7 +271,7 @@ def direction_data(request):
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
             "hasN3IemkUploading": direction.n3_iemk_ok,
-            "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid
+            "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
         }
     )
 
