@@ -1457,11 +1457,11 @@ def form_02(request_data):
         example_template = result_data[0]
 
         list_g = []
-        route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB)]]
+        route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB)]]
         # используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
         for i in range(len(example_template)):
             list_t = []
-            for j in range(len(example_template[i])):
+            for j in range(len(example_template[i]) - 1):
                 if j in (3, 5, 7):
                     s = styleTCright
                 elif j in (4, 6):
@@ -1470,7 +1470,7 @@ def form_02(request_data):
                     s = styleTC
                 list_t.append(Paragraph(example_template[i][j], s))
             list_g.append(list_t)
-            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC)])
+            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC), Paragraph(example_template[i][8], styleTC)])
 
         opinion.extend(list_g)
 
@@ -1780,7 +1780,7 @@ def form_02(request_data):
                 else:
                     objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
-            tbl = Table(route_list, colWidths=(30 * mm, 100 * mm), hAlign='LEFT')
+            tbl = Table(route_list, colWidths=(30 * mm, 70 * mm, 90 * mm), hAlign='LEFT')
             tbl.setStyle(
                 TableStyle(
                     [

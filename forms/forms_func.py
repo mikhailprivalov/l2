@@ -137,6 +137,8 @@ def get_final_data(research_price_loc):
                     h.append(research_coast[2])
                     research_sum = coast_with_discount * research_coast[2]
                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
+                    res_obj = Researches.objects.get(pk=research_id)
+                    h.append(res_obj.paraclinic_info)
                     h[0], h[1] = h[1], h[0]
                     total_sum += research_sum
                     research_attr_list.remove(j)
