@@ -1077,7 +1077,6 @@ def form_02(request_data):
     else:
         work_dir = PersonContract.objects.values_list("dir_list", flat=True).get(pk=int(contract_id))
         work_dir = work_dir.split(",")
-    print(work_dir)
     napr = Napravleniya.objects.filter(pk__in=work_dir)
 
     dir_temp = []
