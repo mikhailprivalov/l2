@@ -1784,7 +1784,7 @@ def form_02(request_data):
                 else:
                     objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
-            tbl = Table(route_list, colWidths=(30 * mm, 58 * mm, 60 * mm, 42 * mm ), hAlign='LEFT')
+            tbl = Table(route_list, colWidths=(30 * mm, 58 * mm, 60 * mm, 42 * mm), hAlign='LEFT')
             tbl.setStyle(
                 TableStyle(
                     [
