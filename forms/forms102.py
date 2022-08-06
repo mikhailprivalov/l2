@@ -1220,7 +1220,7 @@ def form_02(request_data):
             payer_data = p_payer.get_data_individual()
 
         # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
-        research_direction = forms_func.get_research_by_dir(contract["directions_contract"])
+        research_direction = forms_func.get_research_by_dir(contract["directions_contract"], only_new=False)
 
         if not research_direction:
             return False
