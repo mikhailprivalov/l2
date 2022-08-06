@@ -292,6 +292,8 @@ def issledovaniye_data(request):
     results_data = []
 
     for r in results:
+        if r.value in ["", None]:
+            continue
         refs = r.calc_normal(only_ref=True, raw_ref=False)
 
         if isinstance(refs, ResultRight):
