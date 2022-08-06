@@ -1,5 +1,9 @@
 from django.db import models
 
+from directions.models import Napravleniya
+from hospitals.models import Hospitals
+from podrazdeleniya.models import Podrazdeleniya
+
 
 class FsliRefbookTest(models.Model):
     """
@@ -56,3 +60,28 @@ class BodySiteRefbook(models.Model):
 
     def __str__(self):
         return f"{self.code} – {self.title}"
+
+
+class ArchiveMedicalDocuments(models.Model):
+    local_uid = models.UUIDField(null=True, default=None, blank=True, help_text='uid_localid', db_index=True)
+    direction = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.SET_NULL)
+    status = models.SmallIntegerField(default=-1, help_text='Статус')
+    message_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='message_id_uuid', db_index=True)
+    time_exec = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время запроса на регистрацию')
+    organization = models.ForeignKey(Hospitals, null=True, blank=True, default=None, help_text="Больница", db_index=True, on_delete=models.SET_NULL)
+    department = models.ForeignKey(Podrazdeleniya, help_text="Подразделение", null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    kind = models.SmallIntegerField(default=-1, blank=True, help_text='oid документа', db_index=True)
+    emdr_id = models.CharField(max_length=128, blank=True, default='', help_text="Номер ЭМД в реестре")
+    registration_date = models.DateTimeField(null=True, blank=True, help_text='Дата создания записи в реестр')
+    message = models.TextField(default="", null=True, blank=True, help_text='Сообщение')
+
+    def __str__(self):
+        return f"{self.direction.pk} – {self.time_exec}"
+
+
+class TypesMedicalDocuments(models.Model):
+    oid = models.SmallIntegerField(default=-1, blank=True, help_text='oid документа', db_index=True)
+    name = models.CharField(max_length=255, help_text='Наименование')
+
+    def __str__(self):
+        return f"{self.oid} - {self.name}"
