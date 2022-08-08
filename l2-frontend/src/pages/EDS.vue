@@ -111,10 +111,12 @@
     </button>
 
     <div
-      v-if="!loaded"
+      v-if="!loaded || error"
       class="not-loaded"
     >
       Данные не загружены
+      <br>
+      <span class="status-error">{{ message }}</span>
     </div>
     <div
       v-else
@@ -431,6 +433,8 @@ const STATUSES = [
       pages: 0,
       total: 0,
       loaded: false,
+      error: false,
+      message: '',
       rows: [],
       selectedSignatureMode: null,
       signingProcess: {
@@ -500,6 +504,10 @@ export default class EDS extends Vue {
   total: number;
 
   loaded: boolean;
+
+  error: boolean;
+
+  message: string;
 
   rows: any[];
 
@@ -637,12 +645,14 @@ export default class EDS extends Vue {
     }
     await this.$store.dispatch(actions.INC_LOADING);
     const {
-      rows, page, pages, total,
+      rows, page, pages, total, error, message,
     } = await this.$api('/directions/eds/to-sign', this, ['filters', 'page']);
     this.rows = rows.map(r => ({ ...r, checked: false }));
     this.page = page;
     this.pages = pages;
     this.total = total;
+    this.error = error;
+    this.message = message;
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
     if (this.commonSignModes.includes(prevSelectedSignatureMode)) {

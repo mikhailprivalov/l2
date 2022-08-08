@@ -3421,6 +3421,18 @@ def eds_documents(request):
     data = json.loads(request.body)
     pk = data['pk']
     direction: Napravleniya = Napravleniya.objects.get(pk=pk)
+    iss_obj = Issledovaniya.objects.filter(napravleniye=direction).first()
+    doctor_data = iss_obj.doc_confirmation.dict_data
+    error_doctor = ""
+    for k, v in doctor_data.items():
+        if v in ["", None]:
+            error_doctor = f"{k} - не верно;{error_doctor}"
+
+    if error_doctor:
+        error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
+        error_doctor = f"В профиле врача {iss_obj.doc_confirmation.get_fio()} ошибки: {error_doctor}"
+        return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
+
     if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
         direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
@@ -3607,6 +3619,16 @@ def eds_to_sign(request):
             else:
                 d_qs = d_qs.filter(issledovaniya__doc_confirmation__podrazdeleniye_id=department)
         elif mode == 'my':
+            doctor_data = request.user.doctorprofile.dict_data
+            error_doctor = ""
+            for k, v in doctor_data.items():
+                if v in ["", None]:
+                    error_doctor = f"{k} - не верно;{error_doctor}"
+
+            if error_doctor:
+                error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
+                error_doctor = f"В профиле врача {request.user.doctorprofile.get_fio()} ошибки: {error_doctor}"
+                return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": error_doctor})
             d_qs = d_qs.filter(eds_required_signature_types__contains=['Врач'], issledovaniya__doc_confirmation=request.user.doctorprofile)
 
         if status == 'ok-full':
@@ -3665,7 +3687,7 @@ def eds_to_sign(request):
             }
         )
 
-    return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count})
+    return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count, "error": False, "message": ''})
 
 
 @login_required
