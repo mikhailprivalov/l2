@@ -3628,7 +3628,7 @@ def eds_to_sign(request):
             if error_doctor:
                 error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
                 error_doctor = f"В профиле врача {request.user.doctorprofile.get_fio()} ошибки: {error_doctor}"
-                return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0,"error": True, "message": error_doctor})
+                return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": error_doctor})
             d_qs = d_qs.filter(eds_required_signature_types__contains=['Врач'], issledovaniya__doc_confirmation=request.user.doctorprofile)
 
         if status == 'ok-full':
