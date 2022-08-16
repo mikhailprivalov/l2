@@ -357,7 +357,7 @@ def issledovaniye_data(request):
             "code": i.research.code.upper().replace('А', 'A').replace('В', 'B').replace('С', 'C').strip(),
             "research": i.research.get_title(),
             "comments": i.lab_comment,
-            "isGistology": i.research.is_gistology
+            "isGistology": i.research.is_gistology,
         }
     )
 
