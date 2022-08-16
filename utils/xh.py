@@ -62,7 +62,7 @@ def check_type_research(pk):
     lab_podr = [i[0] for i in lab_podr]
     for k in is_obj:
         research = k.research
-        if research.is_form or research.is_stom or research.is_doc_refferal:
+        if research.is_form or research.is_stom or research.is_doc_refferal or research.is_gistology:
             return "is_refferal"
         if research.is_paraclinic:
             return "is_paraclinic"
