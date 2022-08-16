@@ -95,6 +95,8 @@ def next_result_direction(request):
     researches = [-999]
     if type_researches == 'lab':
         researches = [x.pk for x in Researches.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY)]
+    elif type_researches == 'gistology':
+        researches = [x.pk for x in Researches.objects.filter(is_gistology=True)]
     elif type_researches != '*':
         researches = [int(i) for i in type_researches.split(',')]
     else:
@@ -355,6 +357,7 @@ def issledovaniye_data(request):
             "code": i.research.code.upper().replace('А', 'A').replace('В', 'B').replace('С', 'C').strip(),
             "research": i.research.get_title(),
             "comments": i.lab_comment,
+            "isGistology": i.research.is_gistology
         }
     )
 
