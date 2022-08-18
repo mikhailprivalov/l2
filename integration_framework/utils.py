@@ -91,6 +91,17 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 result_paraclinic["протокол"] = tmp_protocol
         data = result_paraclinic
 
+    direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
+    direction_params = {}
+    for dp in direction_params_obj:
+        try:
+            val = json.loads(dp.value)
+            if not val or not isinstance(val, dict):
+                pass
+        except Exception:
+            val = dp.value
+        direction_params[dp.title] = val
+
     document["id"] = pk
     time_confirm = iss.time_confirmation
     confirmed_time = time_confirm.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y%m%d%H%M')
@@ -103,6 +114,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["organization"] = organization_get(hosp_obj)
     document["orgName"] = hosp_obj.title
     document["tel"] = hosp_obj.phones
+    document["direction_params"] = direction_params
 
     return document
 
