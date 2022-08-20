@@ -1679,6 +1679,7 @@ def get_cda_data(pk):
         data = get_json_labortory_data(pk)
     else:
         data = {}
+    data_individual = card.get_data_individual()
     return {
         "title": n.get_eds_title(),
         "generatorName": n.get_eds_generator(),
@@ -1688,10 +1689,11 @@ def get_cda_data(pk):
             "document": data,
             "patient": {
                 'id': card.number,
-                'snils': card.get_data_individual()["snils"],
+                'snils': data_individual["snils"],
                 'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
                 'gender': ind.sex.lower(),
                 'birthdate': ind.birthday.strftime("%Y%m%d"),
+                'oms': data_individual['oms']
             },
             "organization": data["organization"],
         },
