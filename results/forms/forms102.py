@@ -307,8 +307,8 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     )
     fwb.append(
         Paragraph(
-            f'{open_bold_tag}12. Материал доставлен в 10%-ный раствор нейтрального формалина:{close_tag_bold} {space_symbol * 2}{data.get("Материал в 10% растворе", "Да")} {space_symbol * 4}'
-            f'{open_bold_tag}загрязнен {close_tag_bold} {data.get("Загрязнен", "Нет")}',
+            f'{open_bold_tag}12. Материал доставлен в 10%-ный раствор нейтрального формалина:{close_tag_bold}{space_symbol * 2}{data.get("Материал в 10% растворе", "Да")}{space_symbol * 4}'
+            f'{open_bold_tag}загрязнен{close_tag_bold} {data.get("Загрязнен", "Нет")}',
             style_ml,
         )
     )
