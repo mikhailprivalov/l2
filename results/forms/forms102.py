@@ -286,7 +286,10 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     except:
         data_address["address"] = ""
     fwb.append(Paragraph(f'{open_bold_tag}7. Место регистрации:{close_tag_bold} {data_address["address"]}', style_ml))
-    place = json.loads(data["Местность"])
+    try:
+        place = json.loads(data["Местность"])
+    except:
+        place = {"code": "1"}
     if place["code"] == "1":
         place_fact = "городская — 1"
     else:
@@ -304,8 +307,8 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     )
     fwb.append(
         Paragraph(
-            f'{open_bold_tag}12. Материал доставлен в 10%-ный раствор нейтрального формалина:{close_tag_bold} {space_symbol * 2}{data["Материал в 10% растворе"]} {space_symbol * 4} '
-            f'{open_bold_tag}загрязнен {close_tag_bold} {data["Загрязнен"]}',
+            f'{open_bold_tag}12. Материал доставлен в 10%-ный раствор нейтрального формалина:{close_tag_bold} {space_symbol * 2}{data.get("Материал в 10% растворе", "Да")} {space_symbol * 4}'
+            f'{open_bold_tag}загрязнен {close_tag_bold} {data.get("Загрязнен", "Нет")}',
             style_ml,
         )
     )
@@ -316,7 +319,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
             style_ml,
         )
     )
-    fwb.append(Paragraph(f'{open_bold_tag}14. Отметка о сохранности упаковки:{close_tag_bold} {space_symbol * 2}{data["Сохранность упаковки"]}', style_ml))
+    fwb.append(Paragraph(f'{open_bold_tag}14. Отметка о сохранности упаковки:{close_tag_bold} {space_symbol * 2}{data.get("Сохранность упаковки", "Да")}', style_ml))
     fwb.append(
         Paragraph(
             f'{open_bold_tag}15. Дата регистрации биопсийного (операционного) материала:{close_tag_bold} {space_symbol * 2}{normalize_date(data["Дата регистрации"])} {space_symbol * 4}'
@@ -332,7 +335,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(
         Paragraph(
             f'{open_bold_tag}19. Вырезка проводилась:{close_tag_bold} {space_symbol * 2}{normalize_date(data["Дата вырезки"])} {space_symbol * 4} {open_bold_tag}время{close_tag_bold} '
-            f'{data["Время вырезки"]} {open_bold_tag}20. В проводку взято:{close_tag_bold} {space_symbol * 2} {data["В проводку взято"]} объектов',
+            f'{data["Время вырезки"]} {open_bold_tag}20. В проводку взято:{close_tag_bold} {space_symbol * 2} {data.get("В проводку взято", "0")} объектов',
             style_ml,
         )
     )
