@@ -42,4 +42,6 @@ def render_cda(service: str, direction_data: dict) -> dict:
 
 
 def cdator_gen_xml(eds_generator: str, direction_data: dict) -> dict:
+    print(eds_generator)
+    print(direction_data)
     return make_request('/generate', data=json.dumps({"generatorName": eds_generator, "data": direction_data}))

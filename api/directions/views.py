@@ -3439,8 +3439,8 @@ def eds_documents(request):
         if not snils_used:
             return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "СНИЛС у пациента - Некорректный!"})
 
-    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
-        return status_response(False, 'Направление не в вашу организацию!')
+    # if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+    #     return status_response(False, 'Направление не в вашу организацию!')
 
     if not direction.is_all_confirm():
         return status_response(False, 'Направление должно быть подтверждено!')
@@ -3491,6 +3491,7 @@ def eds_documents(request):
                     cda_xml = cda_data.get('result', {}).get('content')
                 elif SettingManager.l2('cdator'):
                     cda_data = cdator_gen_xml(cda_eds_data["generatorName"], direction_data=cda_eds_data["data"])
+                    print(cda_data)
                     cda_xml = cda_data.get('result', {}).get('content')
                 else:
                     cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)

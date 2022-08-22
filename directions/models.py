@@ -1719,7 +1719,8 @@ class AdditionNapravleniya(models.Model):
 
 
 def get_direction_file_path(instance: 'DirectionDocument', filename):
-    return os.path.join('directions', str(instance.direction.get_hospital_tfoms_id()), str(instance.direction.pk), filename)
+    iss = Issledovaniya.objects.filter(napravleniye_id=instance.direction.pk).first()
+    return os.path.join('directions', str(iss.doc_confirmation.hospital.code_tfoms), str(instance.direction.pk), filename)
 
 
 class DirectionDocument(models.Model):

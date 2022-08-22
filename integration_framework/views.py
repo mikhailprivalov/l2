@@ -1680,24 +1680,32 @@ def get_cda_data(pk):
     else:
         data = {}
     data_individual = card.get_data_individual()
-    return {
-        "title": n.get_eds_title(),
-        "generatorName": n.get_eds_generator(),
-        "rawResponse": True,
-        "data": {
-            "oidMo": data["oidMo"],
-            "document": data,
-            "patient": {
-                'id': card.number,
-                'snils': data_individual["snils"],
-                'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
-                'oms': data_individual['oms']
+    p_enp_re = re.compile(r'^[0-9]{16}$')
+    p_enp = bool(re.search(p_enp_re, card.get_data_individual()['oms']['polis_num']))
+    if p_enp:
+        return {
+            "title": n.get_eds_title(),
+            "generatorName": n.get_eds_generator(),
+            "rawResponse": True,
+            "data": {
+                "oidMo": data["oidMo"],
+                "document": data,
+                "patient": {
+                    'id': card.number,
+                    'snils': data_individual["snils"],
+                    'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                    'gender': ind.sex.lower(),
+                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    'oms': {
+                        'number': card.get_data_individual()['oms']['polis_num'],
+                        'issueOrgName': '',
+                        'issueOrgCode': ''
+                    }
+                },
+                "organization": data["organization"],
             },
-            "organization": data["organization"],
-        },
-    }
+        }
+    return {}
 
 
 @api_view(['POST'])
