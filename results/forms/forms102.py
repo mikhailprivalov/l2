@@ -280,7 +280,12 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     if not data.get("СНИЛС"):
         data["СНИЛС"] = ""
     fwb.append(Paragraph(f'{open_bold_tag}5. Полис ОМС:{close_tag_bold}{data["Полис ОМС"]} {space_symbol * 4} {open_bold_tag}6. СНИЛС:{close_tag_bold} {data["СНИЛС"]}', style_ml))
-    data_address = json.loads(data["Место регистрации"])
+    data_address = {}
+    try:
+        data_address = json.loads(data["Место регистрации"])
+    except:
+        data_address["address"] = ""
+
     fwb.append(Paragraph(f'{open_bold_tag}7. Место регистрации:{close_tag_bold} {data_address["address"]}', style_ml))
     place = json.loads(data["Местность"])
     if place["code"] == "1":

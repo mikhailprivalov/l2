@@ -3649,7 +3649,7 @@ def eds_to_sign(request):
                     'empty': empty_signatures,
                 }
             )
-        if not d.client.get_card_documents(check_has_type=['СНИЛС']):
+        if not d.client.get_card_documents(check_has_type=['СНИЛС']) and "-" not in d.client.individual.fio() and "(" not in d.client.individual.fio():
             d.client.individual.sync_with_tfoms()
 
         rows.append(

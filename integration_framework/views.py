@@ -1820,65 +1820,83 @@ def get_protocol_result(request):
     n: Napravleniya = Napravleniya.objects.get(pk=pk)
     card = n.client
     ind = n.client.individual
-    if check_type_research(pk) == "is_refferal":
-        data = get_json_protocol_data(pk)
-        return Response(
-            {
-                "title": n.get_eds_title(),
-                "generatorName": n.get_eds_generator(),
-                "data": {
-                    "oidMo": data["oidMo"],
-                    "document": data,
-                    "patient": {
-                        'id': card.number,
-                        'snils': card.get_data_individual()["snils"],
-                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
-                        'gender': ind.sex.lower(),
-                        'birthdate': ind.birthday.strftime("%Y%m%d"),
+    p_enp_re = re.compile(r'^[0-9]{16}$')
+    p_enp = bool(re.search(p_enp_re, card.get_data_individual()['oms']['polis_num']))
+    if p_enp:
+        if check_type_research(pk) == "is_refferal":
+            data = get_json_protocol_data(pk)
+            return Response(
+                {
+                    "title": n.get_eds_title(),
+                    "generatorName": n.get_eds_generator(),
+                    "data": {
+                        "oidMo": data["oidMo"],
+                        "document": data,
+                        "patient": {
+                            'id': card.number,
+                            'snils': card.get_data_individual()["snils"],
+                            'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                            'gender': ind.sex.lower(),
+                            'birthdate': ind.birthday.strftime("%Y%m%d"),
+                            'oms': {
+                                'number':  card.get_data_individual()['oms']['polis_num'],
+                                'issueOrgName': '',
+                                'issueOrgCode': ''
+                            }
+                        },
+                        "organization": data["organization"],
                     },
-                    "organization": data["organization"],
-                },
-            }
-        )
-    elif check_type_research(pk) == "is_lab":
-        data = get_json_labortory_data(pk)
-        return Response(
-            {
-                "generatorName": "Laboratory_min",
-                "data": {
-                    "oidMo": data["oidMo"],
-                    "document": data,
-                    "patient": {
-                        'id': card.number,
-                        'snils': card.get_data_individual()["snils"],
-                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
-                        'gender': ind.sex.lower(),
-                        'birthdate': ind.birthday.strftime("%Y%m%d"),
+                }
+            )
+        elif check_type_research(pk) == "is_lab":
+            data = get_json_labortory_data(pk)
+            return Response(
+                {
+                    "generatorName": "Laboratory_min",
+                    "data": {
+                        "oidMo": data["oidMo"],
+                        "document": data,
+                        "patient": {
+                            'id': card.number,
+                            'snils': card.get_data_individual()["snils"],
+                            'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                            'gender': ind.sex.lower(),
+                            'birthdate': ind.birthday.strftime("%Y%m%d"),
+                            'oms': {
+                                'number': card.get_data_individual()['oms']['polis_num'],
+                                'issueOrgName': '',
+                                'issueOrgCode': ''
+                            }
+                        },
+                        "organization": data["organization"],
                     },
-                    "organization": data["organization"],
-                },
-            }
-        )
-    elif check_type_research(pk) == "is_paraclinic":
-        data = get_json_protocol_data(pk, is_paraclinic=True)
-        return Response(
-            {
-                "title": n.get_eds_title(),
-                "generatorName": n.get_eds_generator(),
-                "data": {
-                    "oidMo": data["oidMo"],
-                    "document": data,
-                    "patient": {
-                        'id': card.number,
-                        'snils': card.get_data_individual()["snils"],
-                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
-                        'gender': ind.sex.lower(),
-                        'birthdate': ind.birthday.strftime("%Y%m%d"),
+                }
+            )
+        elif check_type_research(pk) == "is_paraclinic":
+            data = get_json_protocol_data(pk, is_paraclinic=True)
+            return Response(
+                {
+                    "title": n.get_eds_title(),
+                    "generatorName": n.get_eds_generator(),
+                    "data": {
+                        "oidMo": data["oidMo"],
+                        "document": data,
+                        "patient": {
+                            'id': card.number,
+                            'snils': card.get_data_individual()["snils"],
+                            'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                            'gender': ind.sex.lower(),
+                            'birthdate': ind.birthday.strftime("%Y%m%d"),
+                            'oms': {
+                                'number': card.get_data_individual()['oms']['polis_num'],
+                                'issueOrgName': '',
+                                'issueOrgCode': ''
+                            }
+                        },
+                        "organization": data["organization"],
                     },
-                    "organization": data["organization"],
-                },
-            }
-        )
+                }
+            )
 
     return Response({})
 

@@ -54,7 +54,7 @@ class NapravleniyaAdmin(admin.ModelAdmin):
 @admin.register(DirectionDocument)
 class DirectionDocumentAdmin(admin.ModelAdmin):
     autocomplete_fields = ('direction',)
-    search_fields = ('direction',)
+    search_fields = ('direction__pk',)
 
 
 @admin.register(DocumentSign)
@@ -64,8 +64,7 @@ class DocumentSignAdmin(admin.ModelAdmin):
         'executor',
     )
     search_fields = (
-        'document',
-        'executor',
+        'document__id',
     )
 
 
