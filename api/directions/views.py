@@ -3491,7 +3491,6 @@ def eds_documents(request):
                     cda_xml = cda_data.get('result', {}).get('content')
                 elif SettingManager.l2('cdator'):
                     cda_data = cdator_gen_xml(cda_eds_data["generatorName"], direction_data=cda_eds_data["data"])
-                    print(cda_data)
                     cda_xml = cda_data.get('result', {}).get('content')
                 else:
                     cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)
