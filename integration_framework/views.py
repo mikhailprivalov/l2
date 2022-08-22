@@ -1696,11 +1696,7 @@ def get_cda_data(pk):
                     'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
                     'gender': ind.sex.lower(),
                     'birthdate': ind.birthday.strftime("%Y%m%d"),
-                    'oms': {
-                        'number': card.get_data_individual()['oms']['polis_num'],
-                        'issueOrgName': '',
-                        'issueOrgCode': ''
-                    }
+                    'oms': {'number': card.get_data_individual()['oms']['polis_num'], 'issueOrgName': '', 'issueOrgCode': ''},
                 },
                 "organization": data["organization"],
             },
