@@ -57,8 +57,8 @@ class SettingManager:
             row.save()
 
     @staticmethod
-    def l2(key):
-        return SettingManager.get('l2_{}'.format(key), default='false', default_type='b')
+    def l2(key, default='false'):
+        return SettingManager.get('l2_{}'.format(key), default=default, default_type='b')
 
     @staticmethod
     def get_eds_base_url():

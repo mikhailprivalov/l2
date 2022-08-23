@@ -3439,8 +3439,8 @@ def eds_documents(request):
         if not snils_used:
             return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "СНИЛС у пациента - Некорректный!"})
 
-    # if direction.get_hospital() != request.user.doctorprofile.get_hospital():
-    #     return status_response(False, 'Направление не в вашу организацию!')
+    if SettingManager.l2('required_equal_hosp_for_eds', default='true') and direction.get_hospital() != request.user.doctorprofile.get_hospital():
+        return status_response(False, 'Направление не в вашу организацию!')
 
     if not direction.is_all_confirm():
         return status_response(False, 'Направление должно быть подтверждено!')
