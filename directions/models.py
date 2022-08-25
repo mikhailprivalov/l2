@@ -506,6 +506,8 @@ class Napravleniya(models.Model):
 
         for i in iss:
             research: directory.Researches = i.research
+            if research.is_paraclinic:
+                return 'Instrumental_min'
             if research.desc:
                 return research.generator_name
         return 'Laboratory_min'
@@ -632,8 +634,9 @@ class Napravleniya(models.Model):
     @property
     def hospital_n3id(self):
         hosp = self.get_hospital()
-        if hosp:
-            return hosp.n3_id
+        iss = Issledovaniya.objects.filter(napravleniye_id=self).first()
+        if iss:
+            return iss.doc_confirmation.hospital.n3_id
         return None
 
     @property

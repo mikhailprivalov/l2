@@ -2,6 +2,8 @@ import datetime
 
 import magic
 import pytz
+
+from external_system.models import InstrumentalResearchRefbook
 from laboratory import settings
 import simplejson as json
 from dateutil.relativedelta import relativedelta
@@ -115,6 +117,9 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["orgName"] = hosp_obj.title
     document["tel"] = hosp_obj.phones
     document["direction_params"] = direction_params
+    document["nsi_id"] = iss.research.nsi_id
+    nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=iss.research.nsi_id).first()
+    document["nsi_title"] = nsi_res.title
 
     return document
 
