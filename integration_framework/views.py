@@ -1676,6 +1676,8 @@ def get_cda_data(pk):
         data = get_json_protocol_data(pk)
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
+    elif check_type_research(pk) == "is_paraclinic":
+        data = get_json_protocol_data(pk, is_paraclinic=True)
     else:
         data = {}
     data_individual = card.get_data_individual()
