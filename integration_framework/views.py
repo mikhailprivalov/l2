@@ -196,9 +196,9 @@ def direction_data(request):
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
-    for i in iss:
-        if i.research.podrazdeleniye.p_type != 2:
-            return Response({"ok": False})
+    # for i in iss:
+    #     if not i.research.is_gistology or i.research.podrazdeleniye.p_type != 2:
+    #         return Response({"ok": False})
 
     if not iss:
         return Response({"ok": False})
@@ -292,7 +292,7 @@ def issledovaniye_data(request):
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
-    if (not ignore_sample and not sample) or not results.exists():
+    if (not ignore_sample and not sample) or not results.exists() and not i.research.is_gistology:
         return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
 
     results_data = []
@@ -341,7 +341,6 @@ def issledovaniye_data(request):
 
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
-
     return Response(
         {
             "ok": True,

@@ -3548,7 +3548,7 @@ def eds_add_sign(request):
     direction_document: DirectionDocument = DirectionDocument.objects.get(pk=pk)
     direction: Napravleniya = direction_document.direction
 
-    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+    if SettingManager.l2('required_equal_hosp_for_eds', default='true') and direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
 
     if not direction.is_all_confirm():
