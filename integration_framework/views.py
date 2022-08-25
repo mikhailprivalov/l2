@@ -196,9 +196,9 @@ def direction_data(request):
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
-    # for i in iss:
-    #     if not i.research.is_gistology or i.research.podrazdeleniye.p_type != 2:
-    #         return Response({"ok": False})
+    for i in iss:
+        if not i.research.is_gistology or (i.research.podrazdeleniye and i.research.podrazdeleniye.p_type != 2):
+            return Response({"ok": False})
 
     if not iss:
         return Response({"ok": False})
