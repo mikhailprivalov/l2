@@ -77,6 +77,8 @@ def get_json_protocol_data(pk, is_paraclinic=False):
 
     legal_auth = data.get("Подпись от организации", None)
     legal_auth_data = legal_auth_get(legal_auth)
+    if (legal_auth_data["positionCode"] not in [7] or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]):
+        legal_auth_data = author_data
     hosp_obj = doctor_confirm_obj.hospital
     hosp_oid = hosp_obj.oid
 
@@ -91,8 +93,11 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 tmp_protocol = result_paraclinic["протокол"]
                 tmp_protocol = f"{tmp_protocol} {k}-{v}"
                 result_paraclinic["протокол"] = tmp_protocol
+        if not result_paraclinic["заключение"]:
+            for r in result_protocol:
+                if r.group_title.lower() == "заключение":
+                    result_paraclinic["заключение"] = f"{result_paraclinic.get('заключение')}; {r.value}"
         data = result_paraclinic
-
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
     for dp in direction_params_obj:
@@ -119,7 +124,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["direction_params"] = direction_params
     document["nsi_id"] = iss.research.nsi_id
     nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=iss.research.nsi_id).first()
-    document["nsi_title"] = nsi_res.title
+    document["nsi_title"] = nsi_res.title if nsi_res else ""
 
     return document
 
