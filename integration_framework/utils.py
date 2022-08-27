@@ -13,7 +13,7 @@ from directory.models import Fractions
 from laboratory.settings import (
     DEATH_RESEARCH_PK,
     DEF_LABORATORY_AUTH_PK,
-    DEF_LABORATORY_LEGAL_AUTH_PK,
+    DEF_LABORATORY_LEGAL_AUTH_PK, ODII_METHODS,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
@@ -125,6 +125,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["nsi_id"] = iss.research.nsi_id
     nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=iss.research.nsi_id).first()
     document["nsi_title"] = nsi_res.title if nsi_res else ""
+    document["odii_code_method"] = ODII_METHODS.get(nsi_res.method)
 
     return document
 

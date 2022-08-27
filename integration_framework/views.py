@@ -97,6 +97,8 @@ def next_result_direction(request):
         researches = [x.pk for x in Researches.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY)]
     elif type_researches == 'gistology':
         researches = [x.pk for x in Researches.objects.filter(is_gistology=True)]
+    elif type_researches == 'paraclinic':
+        researches = [x.pk for x in Researches.objects.filter(is_paraclinic=True)]
     elif type_researches != '*':
         researches = [int(i) for i in type_researches.split(',')]
     else:
@@ -195,11 +197,10 @@ def direction_data(request):
     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False).select_related('research', 'doc_confirmation')
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
-
     for i in iss:
-        if not i.research.is_gistology or (i.research.podrazdeleniye and i.research.podrazdeleniye.p_type != 2):
-            return Response({"ok": False})
-
+        if not i.research.is_paraclinic:
+            if not i.research.is_gistology or (i.research.podrazdeleniye and i.research.podrazdeleniye.p_type != 2):
+                return Response({"ok": False})
     if not iss:
         return Response({"ok": False})
 
@@ -265,7 +266,7 @@ def direction_data(request):
             "ogrnInitiator": direction.get_ogrn_org_initiator(),
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
-            "hospitalN3Id": direction.hospital_n3id,
+            "hospitalN3Id": iss[iss_index].doc_confirmation.podrazdeleniye.n3_id if iss[iss_index].doc_confirmation.podrazdeleniye.n3_id else direction.hospital_n3id,
             "hospitalEcpId": direction.hospital_ecp_id,
             "signed": direction.eds_total_signed,
             "totalSignedAt": direction.eds_total_signed_at,
@@ -274,6 +275,7 @@ def direction_data(request):
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
             "hasN3IemkUploading": direction.n3_iemk_ok,
             "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
+            "generatorName": direction.get_eds_generator()
         }
     )
 
@@ -292,7 +294,7 @@ def issledovaniye_data(request):
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
-    if (not ignore_sample and not sample) or not results.exists() and not i.research.is_gistology:
+    if (not ignore_sample and not sample) or not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic:
         return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
 
     results_data = []
@@ -357,6 +359,7 @@ def issledovaniye_data(request):
             "research": i.research.get_title(),
             "comments": i.lab_comment,
             "isGistology": i.research.is_gistology,
+            "isParaclinic": i.research.is_paraclinic,
         }
     )
 
