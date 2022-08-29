@@ -380,6 +380,7 @@ MEDEXAM_FIN_SOURCE_TITLE = ""
 RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION = []
 
 REFERENCE_ODLI = False
+ODII_METHODS = {}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

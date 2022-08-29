@@ -507,7 +507,7 @@ class Napravleniya(models.Model):
         for i in iss:
             research: directory.Researches = i.research
             if research.is_paraclinic:
-                return 'Instrumental_min'
+                return 'Instrumental'
             if research.desc:
                 return research.generator_name
         return 'Laboratory_min'

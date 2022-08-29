@@ -57,6 +57,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     nsi_title = models.CharField(max_length=50, default='', blank=True, help_text='по ФРМО')
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
     ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Код для ECP")
+    n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
 
     def get_title(self):
         return self.short_title or self.title
