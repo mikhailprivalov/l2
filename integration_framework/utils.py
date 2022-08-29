@@ -2,6 +2,8 @@ import datetime
 
 import magic
 import pytz
+
+from external_system.models import InstrumentalResearchRefbook
 from laboratory import settings
 import simplejson as json
 from dateutil.relativedelta import relativedelta
@@ -11,7 +13,7 @@ from directory.models import Fractions
 from laboratory.settings import (
     DEATH_RESEARCH_PK,
     DEF_LABORATORY_AUTH_PK,
-    DEF_LABORATORY_LEGAL_AUTH_PK,
+    DEF_LABORATORY_LEGAL_AUTH_PK, ODII_METHODS,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
@@ -21,7 +23,7 @@ from directions.models import Napravleniya
 from utils.nsi_directories import NSI
 
 
-def get_json_protocol_data(pk):
+def get_json_protocol_data(pk, is_paraclinic=False):
     result_protocol = get_paraclinic_results_by_direction(pk)
     data = {}
     document = {}
@@ -75,8 +77,37 @@ def get_json_protocol_data(pk):
 
     legal_auth = data.get("Подпись от организации", None)
     legal_auth_data = legal_auth_get(legal_auth)
+    if (legal_auth_data["positionCode"] not in [7] or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]):
+        legal_auth_data = author_data
     hosp_obj = doctor_confirm_obj.hospital
     hosp_oid = hosp_obj.oid
+
+    if is_paraclinic:
+        result_paraclinic = {"протокол": "", "заключение": "", "рекомендации": ""}
+        for k, v in data.items():
+            if k.lower() == "заключение":
+                result_paraclinic["заключение"] = v
+            if k.lower() == "рекомендации":
+                result_paraclinic["рекомендации"] = v
+            else:
+                tmp_protocol = result_paraclinic["протокол"]
+                tmp_protocol = f"{tmp_protocol} {k}-{v}"
+                result_paraclinic["протокол"] = tmp_protocol
+        if not result_paraclinic["заключение"]:
+            for r in result_protocol:
+                if r.group_title.lower() == "заключение":
+                    result_paraclinic["заключение"] = f"{result_paraclinic.get('заключение')}; {r.value}"
+        data = result_paraclinic
+    direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
+    direction_params = {}
+    for dp in direction_params_obj:
+        try:
+            val = json.loads(dp.value)
+            if not val or not isinstance(val, dict):
+                pass
+        except Exception:
+            val = dp.value
+        direction_params[dp.title] = val
 
     document["id"] = pk
     time_confirm = iss.time_confirmation
@@ -90,6 +121,11 @@ def get_json_protocol_data(pk):
     document["organization"] = organization_get(hosp_obj)
     document["orgName"] = hosp_obj.title
     document["tel"] = hosp_obj.phones
+    document["direction_params"] = direction_params
+    document["nsi_id"] = iss.research.nsi_id
+    nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=iss.research.nsi_id).first()
+    document["nsi_title"] = nsi_res.title if nsi_res else ""
+    document["odii_code_method"] = ODII_METHODS.get(nsi_res.method)
 
     return document
 

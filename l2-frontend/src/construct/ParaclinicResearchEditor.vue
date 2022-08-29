@@ -309,7 +309,6 @@
             </div>
           </div>
           <div
-            v-if="expertise && direction_expertise_all.length > 0"
             class="col-xs-7"
             style="padding-right: 0;padding-left: 0"
           >

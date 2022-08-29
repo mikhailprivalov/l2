@@ -15,6 +15,7 @@ from api.views import mkb10_dict
 from clients.utils import find_patient
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
+from external_system.models import ArchiveMedicalDocuments
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
@@ -55,6 +56,7 @@ from laboratory.settings import (
     LK_FILE_COUNT,
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
+    REFERENCE_ODLI,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -93,6 +95,10 @@ def next_result_direction(request):
     researches = [-999]
     if type_researches == 'lab':
         researches = [x.pk for x in Researches.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY)]
+    elif type_researches == 'gistology':
+        researches = [x.pk for x in Researches.objects.filter(is_gistology=True)]
+    elif type_researches == 'paraclinic':
+        researches = [x.pk for x in Researches.objects.filter(is_paraclinic=True)]
     elif type_researches != '*':
         researches = [int(i) for i in type_researches.split(',')]
     else:
@@ -191,7 +197,10 @@ def direction_data(request):
     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False).select_related('research', 'doc_confirmation')
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
-
+    for i in iss:
+        if not i.research.is_paraclinic:
+            if not i.research.is_gistology or (i.research.podrazdeleniye and i.research.podrazdeleniye.p_type != 2):
+                return Response({"ok": False})
     if not iss:
         return Response({"ok": False})
 
@@ -246,6 +255,8 @@ def direction_data(request):
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
+            "department_name": iss[iss_index].doc_confirmation.podrazdeleniye.nsi_title if iss[iss_index].doc_confirmation else None,
+            "kind": iss[iss_index].research.oid_kind if iss[iss_index].doc_confirmation else None,
             "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else 'другое',
             "finSourceCode": direction.istochnik_f.get_n3_code() if direction.istochnik_f else '6',
             "finSourceEcpCode": direction.istochnik_f.get_ecp_code() if direction.istochnik_f else '380101000000023',
@@ -255,7 +266,7 @@ def direction_data(request):
             "ogrnInitiator": direction.get_ogrn_org_initiator(),
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
-            "hospitalN3Id": direction.hospital_n3id,
+            "hospitalN3Id": iss[iss_index].doc_confirmation.podrazdeleniye.n3_id if iss[iss_index].doc_confirmation.podrazdeleniye.n3_id else direction.hospital_n3id,
             "hospitalEcpId": direction.hospital_ecp_id,
             "signed": direction.eds_total_signed,
             "totalSignedAt": direction.eds_total_signed_at,
@@ -263,6 +274,8 @@ def direction_data(request):
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
             "hasN3IemkUploading": direction.n3_iemk_ok,
+            "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
+            "generatorName": direction.get_eds_generator()
         }
     )
 
@@ -280,14 +293,15 @@ def issledovaniye_data(request):
     i = directions.Issledovaniya.objects.get(pk=pk)
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
-    results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='')
-
-    if (not ignore_sample and not sample) or not results.exists():
+    results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
+    if (not ignore_sample and not sample) or not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic:
         return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
 
     results_data = []
 
     for r in results:
+        if r.value in ["", None]:
+            continue
         refs = r.calc_normal(only_ref=True, raw_ref=False)
 
         if isinstance(refs, ResultRight):
@@ -309,7 +323,8 @@ def issledovaniye_data(request):
         norm = r.calc_normal()
 
         u = r.fraction.get_unit()
-
+        if not REFERENCE_ODLI:
+            refs = ['']
         results_data.append(
             {
                 "pk": r.pk,
@@ -328,7 +343,6 @@ def issledovaniye_data(request):
 
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
-
     return Response(
         {
             "ok": True,
@@ -341,9 +355,11 @@ def issledovaniye_data(request):
             "docConfirm": i.doc_confirmation_fio,
             "doctorData": doctor_data,
             "results": results_data,
-            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B'),
+            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B').replace('С', 'C').strip(),
             "research": i.research.get_title(),
             "comments": i.lab_comment,
+            "isGistology": i.research.is_gistology,
+            "isParaclinic": i.research.is_paraclinic,
         }
     )
 
@@ -1663,25 +1679,33 @@ def get_cda_data(pk):
         data = get_json_protocol_data(pk)
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
+    elif check_type_research(pk) == "is_paraclinic":
+        data = get_json_protocol_data(pk, is_paraclinic=True)
     else:
         data = {}
-    return {
-        "title": n.get_eds_title(),
-        "generatorName": n.get_eds_generator(),
-        "rawResponse": True,
-        "data": {
-            "oidMo": data["oidMo"],
-            "document": data,
-            "patient": {
-                'id': card.number,
-                'snils': card.get_data_individual()["snils"],
-                'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
+    data_individual = card.get_data_individual()
+    p_enp_re = re.compile(r'^[0-9]{16}$')
+    p_enp = bool(re.search(p_enp_re, card.get_data_individual()['oms']['polis_num']))
+    if p_enp:
+        return {
+            "title": n.get_eds_title(),
+            "generatorName": n.get_eds_generator(),
+            "rawResponse": True,
+            "data": {
+                "oidMo": data["oidMo"],
+                "document": data,
+                "patient": {
+                    'id': card.number,
+                    'snils': data_individual["snils"],
+                    'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                    'gender': ind.sex.lower(),
+                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    'oms': {'number': card.get_data_individual()['oms']['polis_num'], 'issueOrgName': '', 'issueOrgCode': ''},
+                },
+                "organization": data["organization"],
             },
-            "organization": data["organization"],
-        },
-    }
+        }
+    return {}
 
 
 @api_view(['POST'])
@@ -1840,6 +1864,26 @@ def get_protocol_result(request):
         return Response(
             {
                 "generatorName": "Laboratory_min",
+                "data": {
+                    "oidMo": data["oidMo"],
+                    "document": data,
+                    "patient": {
+                        'id': card.number,
+                        'snils': card.get_data_individual()["snils"],
+                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                        'gender': ind.sex.lower(),
+                        'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    },
+                    "organization": data["organization"],
+                },
+            }
+        )
+    elif check_type_research(pk) == "is_paraclinic":
+        data = get_json_protocol_data(pk, is_paraclinic=True)
+        return Response(
+            {
+                "title": n.get_eds_title(),
+                "generatorName": n.get_eds_generator(),
                 "data": {
                     "oidMo": data["oidMo"],
                     "document": data,
@@ -2551,6 +2595,7 @@ def document_lk_save(request):
         iss.doc_confirmation = user
         iss.time_confirmation = date
         iss.save()
+        iss.napravleniye.sync_confirmed_fields()
         iss.napravleniye.visit_who_mark = user
         iss.napravleniye.visit_date = date
         iss.napravleniye.save()
@@ -2605,3 +2650,53 @@ def document_lk_save(request):
             return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
 
     return Response({"ok": True, "message": f"Форма \"{service.get_title()}\" ({direction}) сохранена"})
+
+
+@api_view(['POST'])
+def amd_save(request):
+    data = json.loads(request.body)
+    local_uid = data.get('localUid')
+    direction_pk = data.get('pk')
+    status = data.get('status')
+    message_id = data.get('messageId')
+    message = data.get('message')
+    kind = data.get('kind')
+    organization_oid = data.get('organizationOid')
+    hospital = Hospitals.objects.filter(oid=organization_oid).first()
+
+    emdr_id = data.get('emdrId')
+    registration_date = data.get('registrationDate')
+    if registration_date:
+        registration_date = datetime.datetime.strptime(registration_date, '%Y-%m-%d %H:%M:%S')
+
+    type = data.get('type')
+    if type and type == "registerDocument":
+        time_exec = data.get('timeExec')
+        time_exec = datetime.datetime.strptime(time_exec, '%Y-%m-%d %H:%M:%S')
+        department_oid = data.get('departmentOid')
+        podrazdeleniye = Podrazdeleniya.objects.filter(oid=department_oid).first()
+        amd = ArchiveMedicalDocuments(
+            local_uid=local_uid,
+            direction_id=direction_pk,
+            status=status,
+            message_id=message_id,
+            hospital=hospital,
+            department=podrazdeleniye,
+            message=message,
+            kind=kind,
+            time_exec=time_exec,
+        )
+        amd.save()
+    elif type and type == "getDocumentFile":
+        amd = ArchiveMedicalDocuments.objects.get(hospital=hospital, local_uid=local_uid, direction_id=direction_pk)
+        amd.emdr_id = emdr_id
+        amd.registration_date = registration_date
+        amd.save()
+    elif type and type == "sendRegisterDocumentResult":
+        amd = ArchiveMedicalDocuments.objects.get(message_id=message_id)
+        amd.emdr_id = emdr_id
+        amd.registration_date = registration_date
+        code = data.get('code')
+        amd.message = f"{code}@{message}"
+        amd.save()
+    return Response({"ok": True})

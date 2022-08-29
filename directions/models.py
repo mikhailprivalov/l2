@@ -25,7 +25,7 @@ import clients.models as Clients
 import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED
+from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
@@ -468,6 +468,29 @@ class Napravleniya(models.Model):
     co_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_co_executor", db_index=True, help_text='Со-исполнитель', on_delete=models.SET_NULL)
     register_number = models.CharField(db_column='additional_number', max_length=24, blank=True, default='', help_text="Дополнительный номер при регистрации направления", db_index=True)
     planed_doctor_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="planed_doctor", db_index=True, help_text='Планируемый врач', on_delete=models.SET_NULL)
+    total_confirmed = models.BooleanField(verbose_name='Результат полностью подтверждён', blank=True, default=False, db_index=True)
+    last_confirmed_at = models.DateTimeField(help_text='Дата и время последнего подтверждения', db_index=True, blank=True, default=None, null=True)
+
+    def sync_confirmed_fields(self):
+        has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
+        no_unconfirmed_iss = not Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=True).exists()
+
+        total_confirmed = has_confirmed_iss and no_unconfirmed_iss
+        last_confirmed_at = None
+        if has_confirmed_iss:
+            last_confirmed_at = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).order_by('time_confirmation').values_list('time_confirmation', flat=True)[0]
+
+        updated = []
+
+        if total_confirmed != self.total_confirmed:
+            self.total_confirmed = total_confirmed
+            updated.append('total_confirmed')
+
+        if last_confirmed_at != self.last_confirmed_at:
+            self.last_confirmed_at = last_confirmed_at
+            updated.append('last_confirmed_at')
+        if updated:
+            self.save(update_fields=updated)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -483,6 +506,8 @@ class Napravleniya(models.Model):
 
         for i in iss:
             research: directory.Researches = i.research
+            if research.is_paraclinic:
+                return 'Instrumental'
             if research.desc:
                 return research.generator_name
         return 'Laboratory_min'
@@ -609,8 +634,9 @@ class Napravleniya(models.Model):
     @property
     def hospital_n3id(self):
         hosp = self.get_hospital()
-        if hosp:
-            return hosp.n3_id
+        iss = Issledovaniya.objects.filter(napravleniye_id=self).first()
+        if iss:
+            return iss.doc_confirmation.hospital.n3_id
         return None
 
     @property
@@ -1696,7 +1722,8 @@ class AdditionNapravleniya(models.Model):
 
 
 def get_direction_file_path(instance: 'DirectionDocument', filename):
-    return os.path.join('directions', str(instance.direction.get_hospital_tfoms_id()), str(instance.direction.pk), filename)
+    iss = Issledovaniya.objects.filter(napravleniye_id=instance.direction.pk).first()
+    return os.path.join('directions', str(iss.doc_confirmation.hospital.code_tfoms), str(instance.direction.pk), filename)
 
 
 class DirectionDocument(models.Model):
@@ -1937,7 +1964,7 @@ class Issledovaniya(models.Model):
         return strdate(self.napravleniye.visit_date)
 
     def get_medical_examination(self):
-        if not self.medical_examination:
+        if not self.medical_examination and self.research.pk not in RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION:
             if self.napravleniye.visit_date or self.time_confirmation:
                 self.medical_examination = (self.napravleniye.visit_date or self.time_confirmation).date()
             else:

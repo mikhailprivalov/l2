@@ -80,7 +80,7 @@ def get_coast_from_issledovanie(dir_research_loc):
         return 0
 
 
-def get_research_by_dir(dir_temp_l):
+def get_research_by_dir(dir_temp_l, only_new=True):
     """
     Получить словаь: {направление1:[услуга1, услуга2, услуга3],направление2:[услуга1].....}
     :param dir_temp_l:
@@ -89,7 +89,7 @@ def get_research_by_dir(dir_temp_l):
     dict_research_dir = {}
     for i in dir_temp_l:
         # Если есть хотя бы одно сохранения услуги по направлению, то не учитывается
-        if any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
+        if only_new and any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
             continue
         else:
             research_l = [x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)]
@@ -137,6 +137,8 @@ def get_final_data(research_price_loc):
                     h.append(research_coast[2])
                     research_sum = coast_with_discount * research_coast[2]
                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
+                    res_obj = Researches.objects.get(pk=research_id)
+                    h.append(res_obj.paraclinic_info)
                     h[0], h[1] = h[1], h[0]
                     total_sum += research_sum
                     research_attr_list.remove(j)

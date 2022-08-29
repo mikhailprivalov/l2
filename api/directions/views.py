@@ -2042,6 +2042,7 @@ def directions_paraclinic_result(request):
             iss.gen_direction_with_research_after_confirm_id = stationar_research
 
         iss.save()
+        iss.napravleniye.sync_confirmed_fields()
         more = request_data.get("more", [])
         h = []
         for m in more:
@@ -2063,6 +2064,7 @@ def directions_paraclinic_result(request):
                         i.napravleniye.save(update_fields=['qr_check_token'])
                 i.fin_source = iss.fin_source
                 i.save()
+                i.napravleniye.sync_confirmed_fields()
                 h.append(i.pk)
             else:
                 for i2 in Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile, research_id=m):
@@ -2080,6 +2082,7 @@ def directions_paraclinic_result(request):
                             i2.napravleniye.save(update_fields=['qr_check_token'])
                     i2.fin_source = iss.fin_source
                     i2.save()
+                    i2.napravleniye.sync_confirmed_fields()
                     h.append(i2.pk)
 
         Issledovaniya.objects.filter(parent=iss).exclude(pk__in=h).delete()
@@ -2170,11 +2173,13 @@ def directions_paraclinic_confirm(request):
             iss.napravleniye.save(update_fields=['qr_check_token'])
         iss.time_confirmation = t
         iss.save()
+        iss.napravleniye.sync_confirmed_fields()
         iss.gen_after_confirm(request.user)
         for i in Issledovaniya.objects.filter(parent=iss):
             i.doc_confirmation = request.user.doctorprofile
             i.time_confirmation = t
             i.save()
+            i.napravleniye.sync_confirmed_fields()
             if i.napravleniye:
                 i.napravleniye.qr_check_token = None
                 i.napravleniye.save(update_fields=['qr_check_token'])
@@ -2220,6 +2225,7 @@ def directions_paraclinic_confirm_reset(request):
             iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
             iss.n3_odii_uploaded_task_id = None
             iss.save()
+            iss.napravleniye.sync_confirmed_fields()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             if transfer_d:
                 # transfer_d.cancel = True
@@ -2233,6 +2239,7 @@ def directions_paraclinic_confirm_reset(request):
                 i.executor_confirmation = None
                 i.time_confirmation = None
                 i.save()
+                i.napravleniye.sync_confirmed_fields()
             if iss.napravleniye:
                 n: Napravleniya = iss.napravleniye
                 n.need_resend_amd = False
@@ -3414,8 +3421,25 @@ def eds_documents(request):
     data = json.loads(request.body)
     pk = data['pk']
     direction: Napravleniya = Napravleniya.objects.get(pk=pk)
+    iss_obj = Issledovaniya.objects.filter(napravleniye=direction).first()
+    doctor_data = iss_obj.doc_confirmation.dict_data
+    error_doctor = ""
+    for k, v in doctor_data.items():
+        if v in ["", None]:
+            error_doctor = f"{k} - не верно;{error_doctor}"
 
-    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+    if error_doctor:
+        error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
+        error_doctor = f"В профиле врача {iss_obj.doc_confirmation.get_fio()} ошибки: {error_doctor}"
+        return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
+
+    if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
+        direction.client.individual.sync_with_tfoms()
+        snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
+        if not snils_used:
+            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "СНИЛС у пациента - Некорректный!"})
+
+    if SettingManager.l2('required_equal_hosp_for_eds', default='true') and direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
 
     if not direction.is_all_confirm():
@@ -3524,7 +3548,7 @@ def eds_add_sign(request):
     direction_document: DirectionDocument = DirectionDocument.objects.get(pk=pk)
     direction: Napravleniya = direction_document.direction
 
-    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+    if SettingManager.l2('required_equal_hosp_for_eds', default='true') and direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
 
     if not direction.is_all_confirm():
@@ -3574,7 +3598,7 @@ def eds_to_sign(request):
 
     rows = []
 
-    d_qs = Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(issledovaniya__time_confirmation__isnull=True)
+    d_qs = Napravleniya.objects.filter(total_confirmed=True)
     if number:
         d_qs = d_qs.filter(pk=number if number.isdigit() else -1)
     else:
@@ -3587,7 +3611,7 @@ def eds_to_sign(request):
             ),
         )
         day2 = day1 + timedelta(days=1)
-        d_qs = d_qs.filter(issledovaniya__time_confirmation__range=(day1, day2))
+        d_qs = d_qs.filter(last_confirmed_at__range=(day1, day2))
         if mode == 'mo':
             d_qs = d_qs.filter(eds_required_signature_types__contains=['Медицинская организация'])
             if department == -1:
@@ -3595,6 +3619,16 @@ def eds_to_sign(request):
             else:
                 d_qs = d_qs.filter(issledovaniya__doc_confirmation__podrazdeleniye_id=department)
         elif mode == 'my':
+            doctor_data = request.user.doctorprofile.dict_data
+            error_doctor = ""
+            for k, v in doctor_data.items():
+                if v in ["", None]:
+                    error_doctor = f"{k} - не верно;{error_doctor}"
+
+            if error_doctor:
+                error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
+                error_doctor = f"В профиле врача {request.user.doctorprofile.get_fio()} ошибки: {error_doctor}"
+                return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": error_doctor})
             d_qs = d_qs.filter(eds_required_signature_types__contains=['Врач'], issledovaniya__doc_confirmation=request.user.doctorprofile)
 
         if status == 'ok-full':
@@ -3611,7 +3645,7 @@ def eds_to_sign(request):
             d_qs = d_qs.filter(eds_total_signed=False)
 
     d: Napravleniya
-    p = Paginator(d_qs.order_by('pk', 'issledovaniya__time_confirmation').distinct('pk'), SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
+    p = Paginator(d_qs.order_by('pk', 'last_confirmed_at').distinct('pk'), SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
     for d in p.page(page).object_list:
         documents = []
         ltc = d.last_time_confirm()
@@ -3637,6 +3671,9 @@ def eds_to_sign(request):
                     'empty': empty_signatures,
                 }
             )
+        if not d.client.get_card_documents(check_has_type=['СНИЛС']):
+            d.client.individual.sync_with_tfoms()
+
         rows.append(
             {
                 'pk': d.pk,
@@ -3646,10 +3683,11 @@ def eds_to_sign(request):
                 'documents': documents,
                 'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
                 'n3number': d.n3_odli_id or d.n3_iemk_ok,
+                'hasSnils': d.client.get_card_documents(check_has_type=['СНИЛС']),
             }
         )
 
-    return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count})
+    return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count, "error": False, "message": ''})
 
 
 @login_required

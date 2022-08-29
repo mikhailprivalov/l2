@@ -1220,7 +1220,7 @@ def form_02(request_data):
             payer_data = p_payer.get_data_individual()
 
         # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
-        research_direction = forms_func.get_research_by_dir(contract["directions_contract"])
+        research_direction = forms_func.get_research_by_dir(contract["directions_contract"], only_new=False)
 
         if not research_direction:
             return False
@@ -1457,11 +1457,11 @@ def form_02(request_data):
         example_template = result_data[0]
 
         list_g = []
-        route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB)]]
+        route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB), Paragraph(' Ш/к', styleTB)]]
         # используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
         for i in range(len(example_template)):
             list_t = []
-            for j in range(len(example_template[i])):
+            for j in range(len(example_template[i]) - 1):
                 if j in (3, 5, 7):
                     s = styleTCright
                 elif j in (4, 6):
@@ -1470,7 +1470,11 @@ def form_02(request_data):
                     s = styleTC
                 list_t.append(Paragraph(example_template[i][j], s))
             list_g.append(list_t)
-            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC)])
+            if example_template[i][1]:
+                barcode = code128.Code128(example_template[i][1], barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
+            else:
+                barcode = Paragraph('', styleTC)
+            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC), Paragraph(example_template[i][8], styleTC), barcode])
 
         opinion.extend(list_g)
 
@@ -1780,7 +1784,7 @@ def form_02(request_data):
                 else:
                     objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
-            tbl = Table(route_list, colWidths=(30 * mm, 100 * mm), hAlign='LEFT')
+            tbl = Table(route_list, colWidths=(30 * mm, 58 * mm, 60 * mm, 42 * mm), hAlign='LEFT')
             tbl.setStyle(
                 TableStyle(
                     [

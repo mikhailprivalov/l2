@@ -448,6 +448,8 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1, d2, style_border, style_o)
         ('Источник по направлению', 13),
         ('Источник по услуге', 13),
         ('Главное направление', 13),
+        ('Категория по направлению', 14),
+        ('Категория по исследованию', 14),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=7, column=idx).value = column[0]
@@ -512,7 +514,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         n = issled[23] or empty
         p = issled[24] or empty
         current_napr = str(issled[6])
-        current_patient_napr = f'{f} {n} {p}\n{current_napr}'
+        current_patient_napr = f'{f} {n} {p}; {current_napr}'
         current_born = issled[25]
         current_card = issled[21]
         polis_n = issled[3] or ''
@@ -538,6 +540,9 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         parent_direction = " -"
         if issled[28]:
             parent_direction = result.get(issled[28], "-")
+
+        direction_price_category = issled[29]
+        iss_price_category = issled[30]
 
         # current_price = ''
 
@@ -599,8 +604,10 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         ws1.cell(row=r, column=20).value = direction_fin_source
         ws1.cell(row=r, column=21).value = iss_fin_source
         ws1.cell(row=r, column=22).value = parent_direction
+        ws1.cell(row=r, column=23).value = direction_price_category
+        ws1.cell(row=r, column=24).value = iss_price_category
 
-        rows = ws1[f'A{r}:V{r}']
+        rows = ws1[f'A{r}:X{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border1
@@ -611,7 +618,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     ws1.cell(row=r, column=10).value = f'=SUM(J{r1}:J{r - 1})'
     ws1.row_dimensions.group(r1, r - 1, hidden=True)
     total_sum.append(r)
-    rows = ws1[f'A{r}:V{r}']
+    rows = ws1[f'A{r}:X{r}']
     for row in rows:
         for cell in row:
             cell.fill = my_fill
@@ -628,7 +635,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     ws1.cell(row=r, column=1).value = 'Итого Всего'
     ws1.cell(row=r, column=2).value = t_s
     ws1.cell(row=r, column=10).value = t_s_uet
-    rows = ws1[f'A{r}:V{r}']
+    rows = ws1[f'A{r}:X{r}']
     for row in rows:
         for cell in row:
             cell.fill = total_fill
@@ -697,6 +704,8 @@ def statistic_research_base(ws1, d1, d2, research_titile):
         ('МО', 30),
         ('Цель', 14),
         ('Код(Вич)', 14),
+        ('Категория по направлению', 14),
+        ('Категория по исследованию', 14),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -740,6 +749,8 @@ def statistic_research_data(ws1, researches):
         current_num_card = res[12]
         current_purpose = res[20]
         vich_code = res[21]
+        direction_category_price = res[22]
+        iss_category_price = res[23]
 
         ws1.cell(row=r, column=1).value = current_doc
         ws1.cell(row=r, column=2).value = f'{current_napr}, {current_napr_atcreate}'
@@ -757,8 +768,10 @@ def statistic_research_data(ws1, researches):
         ws1.cell(row=r, column=14).value = res[19]
         ws1.cell(row=r, column=15).value = current_purpose
         ws1.cell(row=r, column=16).value = vich_code
+        ws1.cell(row=r, column=17).value = direction_category_price
+        ws1.cell(row=r, column=18).value = iss_category_price
 
-        rows = ws1[f'A{r}:P{r}']
+        rows = ws1[f'A{r}:R{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res

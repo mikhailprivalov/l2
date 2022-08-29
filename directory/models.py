@@ -270,6 +270,7 @@ class Researches(models.Model):
     can_created_patient = models.BooleanField(blank=True, default=False, help_text="Может создаваться пациентом")
     enabled_add_files = models.BooleanField(blank=True, default=False, help_text="Можно добавить файлы")
     convert_to_doc_call = models.BooleanField(blank=True, default=False, help_text="Конвертировать форму в заявку DocCall")
+    oid_kind = models.CharField(max_length=5, null=True, blank=True, default="", help_text="oid-документа 1.2.643.5.1.13.13.11.1520")
 
     @staticmethod
     def filter_type(t):
@@ -775,6 +776,7 @@ class Fractions(models.Model):
     readonly_title = models.BooleanField(default=False, blank=True, verbose_name='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
+    not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
 
     def get_unit(self):
         if self.unit:
