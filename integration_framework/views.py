@@ -266,7 +266,7 @@ def direction_data(request):
             "ogrnInitiator": direction.get_ogrn_org_initiator(),
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
-            "hospitalN3Id": iss[iss_index].doc_confirmation.podrazdeleniye.n3_id if iss[iss_index].doc_confirmation.podrazdeleniye.n3_id else direction.hospital_n3id,
+            "hospitalN3Id": direction.hospital_n3id,
             "hospitalEcpId": direction.hospital_ecp_id,
             "signed": direction.eds_total_signed,
             "totalSignedAt": direction.eds_total_signed_at,
