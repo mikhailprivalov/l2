@@ -56,7 +56,8 @@ from laboratory.settings import (
     LK_FILE_COUNT,
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
-    REFERENCE_ODLI, ODII_METHODS_IEMK,
+    REFERENCE_ODLI,
+    ODII_METHODS_IEMK,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -391,7 +392,7 @@ def issledovaniye_data_simple(request):
             "visitPurpose": (i.purpose.n3_id if i.purpose else None) or '2',
             "typeFlags": i.research.get_flag_types_n3(),
             "typeResInstr": type_res_instr_iemk,
-            "activityCodeResearch": i.research.code
+            "activityCodeResearch": i.research.code,
         }
     )
 
