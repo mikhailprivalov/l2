@@ -374,7 +374,7 @@ def issledovaniye_data_simple(request):
 
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
-    type_res_instr_iemk = ""
+    type_res_instr_iemk = None
     if i.research.is_paraclinic:
         nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=i.research.nsi_id).first()
         type_res_instr_iemk = ODII_METHODS_IEMK.get(nsi_res.method)
