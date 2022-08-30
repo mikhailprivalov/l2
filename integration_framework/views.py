@@ -15,7 +15,7 @@ from api.views import mkb10_dict
 from clients.utils import find_patient
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
-from external_system.models import ArchiveMedicalDocuments
+from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
@@ -57,6 +57,7 @@ from laboratory.settings import (
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
     REFERENCE_ODLI,
+    ODII_METHODS_IEMK, ID_MED_DOCUMENT_TYPE_IEMK_N3,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -267,6 +268,7 @@ def direction_data(request):
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
             "hospitalN3Id": direction.hospital_n3id,
+            "departmentN3Id": direction.department_n3id,
             "hospitalEcpId": direction.hospital_ecp_id,
             "signed": direction.eds_total_signed,
             "totalSignedAt": direction.eds_total_signed_at,
@@ -373,6 +375,12 @@ def issledovaniye_data_simple(request):
 
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
+    type_res_instr_iemk = None
+    id_med_document_type = None
+    if i.research.is_paraclinic:
+        nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=i.research.nsi_id).first()
+        type_res_instr_iemk = ODII_METHODS_IEMK.get(nsi_res.method)
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_paraclinic")
 
     return Response(
         {
@@ -385,6 +393,9 @@ def issledovaniye_data_simple(request):
             "visitPlace": (i.place.n3_id if i.place else None) or '1',
             "visitPurpose": (i.purpose.n3_id if i.purpose else None) or '2',
             "typeFlags": i.research.get_flag_types_n3(),
+            "typeResInstr": type_res_instr_iemk,
+            "activityCodeResearch": i.research.code,
+            "IdMedDocumentType": id_med_document_type
         }
     )
 
