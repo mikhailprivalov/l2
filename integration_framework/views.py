@@ -391,7 +391,7 @@ def issledovaniye_data_simple(request):
             "visitPurpose": (i.purpose.n3_id if i.purpose else None) or '2',
             "typeFlags": i.research.get_flag_types_n3(),
             "typeResInstr": type_res_instr_iemk,
-            "activityCodeResearch": i.research.code
+            "activityCodeResearch": i.research.code,
         }
     )
 
