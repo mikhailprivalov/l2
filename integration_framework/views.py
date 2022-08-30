@@ -57,7 +57,7 @@ from laboratory.settings import (
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
     REFERENCE_ODLI,
-    ODII_METHODS_IEMK,
+    ODII_METHODS_IEMK, ID_MED_DOCUMENT_TYPE_IEMK_N3,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -376,9 +376,11 @@ def issledovaniye_data_simple(request):
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
     type_res_instr_iemk = None
+    id_med_document_type = None
     if i.research.is_paraclinic:
         nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=i.research.nsi_id).first()
         type_res_instr_iemk = ODII_METHODS_IEMK.get(nsi_res.method)
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_paraclinic")
 
     return Response(
         {
@@ -393,6 +395,7 @@ def issledovaniye_data_simple(request):
             "typeFlags": i.research.get_flag_types_n3(),
             "typeResInstr": type_res_instr_iemk,
             "activityCodeResearch": i.research.code,
+            "IdMedDocumentType": id_med_document_type
         }
     )
 
