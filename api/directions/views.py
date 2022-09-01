@@ -16,13 +16,13 @@ import time
 from datetime import datetime, time as dtime, timedelta
 from operator import itemgetter
 
-import pytz
+import pytz_deprecation_shim as pytz
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import HttpRequest
 from django.http import JsonResponse
 from django.utils import dateformat

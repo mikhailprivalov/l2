@@ -23,7 +23,7 @@ from utils.dates import try_parse_range
 @login_required
 @ensure_csrf_cookie
 def dashboard(request):
-    if not request.is_ajax():
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         return redirect('/ui/menu')
     return HttpResponse(f"OK:{request.user.username}:{VERSION}")
 

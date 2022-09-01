@@ -1,7 +1,7 @@
 import datetime
 
 import magic
-import pytz
+import pytz_deprecation_shim as pytz
 
 from external_system.models import InstrumentalResearchRefbook
 from laboratory import settings

@@ -46,7 +46,6 @@ INSTALLED_APPS = (
     'rmis_integration',
     'rest_framework',
     'integration_framework',
-    'django_logtail',
     'statistics_tickets',
     'reports',
     'cases.apps.CasesConfig',
@@ -250,13 +249,6 @@ DEBUG = False
 
 LOGOUT_REDIRECT_URL = '/'
 
-LOGTAIL_FILES = {'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')}
-
-
-def SILKY_INTERCEPT_FUNC(request):
-    return request.path not in ['/mainmenu/']
-
-
 AFTER_DATE_HOLTER = None
 
 DICOM_SEARCH_TAGS = []
@@ -353,6 +345,8 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_BROKER_URL = 'redis://localhost:6379/4'
 CELERY_RESULT_BACKEND = 'django-db'
 
+USE_DEPRECATED_PYTZ = True
+
 FORWARD_DAYS_SCHEDULE = -1
 
 SCHEDULE_AGE_LIMIT_LTE = None
@@ -388,10 +382,6 @@ try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
     pass
-
-if PROFILING:
-    INSTALLED_APPS += ('silk',)
-    MIDDLEWARE += ('silk.middleware.SilkyMiddleware',)
 
 MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
@@ -441,6 +431,9 @@ if DB_PORT:
 
 if ENV_SECRET_KEY:
     SECRET_KEY = ENV_SECRET_KEY
+
+if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
+    CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
 
 
 # db = DATABASES.get('default', {})
