@@ -2,6 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from jsonfield import JSONField
 
+from laboratory.settings import DEATH_RESEARCH_PK
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from users.models import DoctorProfile, Speciality
@@ -341,6 +342,7 @@ class Researches(models.Model):
             "isDocReferral": self.is_doc_refferal,
             "isParaclinic": self.is_paraclinic,
             "isForm": self.is_form,
+            "isDeathCertificate": self.pk == DEATH_RESEARCH_PK
         }
 
     @property
