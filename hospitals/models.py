@@ -28,6 +28,7 @@ class Hospitals(models.Model):
     okato = models.CharField(max_length=11, blank=True, default='', help_text="ОКАТО")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код для ECP")
+    legal_auth_doc_id = models.CharField(max_length=9, default="", blank=True, verbose_name="Код для кто заверил")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
