@@ -342,7 +342,7 @@ class Researches(models.Model):
             "isDocReferral": self.is_doc_refferal,
             "isParaclinic": self.is_paraclinic,
             "isForm": self.is_form,
-            "isDeathCertificate": self.pk == DEATH_RESEARCH_PK
+            "isDeathCertificate": self.pk == DEATH_RESEARCH_PK,
         }
 
     @property
