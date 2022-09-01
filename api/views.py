@@ -1,4 +1,3 @@
-import datetime
 import logging
 import threading
 import time
@@ -263,7 +262,6 @@ def send(request):
 @csrf_exempt
 def endpoint(request):
     result = {"answer": False, "body": "", "patientData": {}}
-    print(request.POST)
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
@@ -587,10 +585,10 @@ def bases(request):
                     "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in x.istochnikifinansirovaniya_set.all()],
                 }
                 for x in CardBase.objects.all()
-                    .prefetch_related(
+                .prefetch_related(
                     Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).exclude(pk__in=disabled_fin_source).order_by('-order_weight'))
                 )
-                    .order_by('-order_weight')
+                .order_by('-order_weight')
             ]
         }
 
@@ -629,8 +627,8 @@ def current_user_info(request):
                         queryset=DResearches.objects.only('pk'),
                     ),
                 )
-                    .select_related('podrazdeleniye')
-                    .get(user_id=user.pk)
+                .select_related('podrazdeleniye')
+                .get(user_id=user.pk)
             )
 
             ret["fio"] = doctorprofile.get_full_fio()
@@ -761,19 +759,19 @@ def directive_from(request):
     hospital = request.user.doctorprofile.hospital
     for dep in (
         Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC), hospital__in=(hospital, None))
-            .prefetch_related(
+        .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
                     users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"])
-                        .distinct('fio', 'pk')
-                        .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
-                        .order_by("fio")
+                    .distinct('fio', 'pk')
+                    .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
+                    .order_by("fio")
                 ),
             )
         )
-            .order_by('title')
-            .only('pk', 'title')
+        .order_by('title')
+        .only('pk', 'title')
     ):
         d = {
             "pk": dep.pk,
@@ -835,13 +833,13 @@ def statistics_tickets_get(request):
     n = 0
     for row in (
         StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile))
-            .filter(
+        .filter(
             date__range=(
                 date_start,
                 date_end,
             )
         )
-            .order_by('pk')
+        .order_by('pk')
     ):
         if not row.invalid_ticket:
             n += 1
@@ -1033,9 +1031,9 @@ def rmis_confirm_list(request):
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     d = (
         directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False, force_rmis_send=False, issledovaniya__time_confirmation__range=(date_start, date_end))
-            .exclude(issledovaniya__time_confirmation__isnull=True)
-            .distinct()
-            .order_by("pk")
+        .exclude(issledovaniya__time_confirmation__isnull=True)
+        .distinct()
+        .order_by("pk")
     )
     data["directions"] = [{"pk": x.pk, "patient": {"fiodr": x.client.individual.fio(full=True), "card": x.client.number_with_type()}, "fin": x.fin_title} for x in d]
     return JsonResponse(data)
@@ -1965,9 +1963,9 @@ def input_templates_suggests(request):
     doc = request.user.doctorprofile
     rows = list(
         ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value_lower__startswith=value)
-            .exclude(value_lower=value)
-            .order_by('value_lower')
-            .values_list('value', flat=True)[:4]
+        .exclude(value_lower=value)
+        .order_by('value_lower')
+        .values_list('value', flat=True)[:4]
     )
 
     return JsonResponse({"rows": rows, "value": data["value"]})
@@ -2335,22 +2333,14 @@ def statistic_params_search(request):
 
 def get_price_list(request):
     price_data = PriceName.objects.all()
-    data = [{
-        "id": price.pk,
-        "label": price.title,
-        "status": price.active_status
-    } for price in price_data]
+    data = [{"id": price.pk, "label": price.title, "status": price.active_status} for price in price_data]
     return JsonResponse({"data": data})
 
 
 def get_current_coast_researches_in_price(request):
     request_data = json.loads(request.body)
     coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["id"])
-    coast_research = [{
-        "id": data.pk,
-        "research": {"title": data.research.title, "id": data.research.pk},
-        "coast": data.coast.__float__()
-    } for data in coast_researches_data]
+    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__float__()} for data in coast_researches_data]
     coast_research = sorted(coast_research, key=lambda d: d['research']['title'])
     return JsonResponse({"data": coast_research})
 
@@ -2367,9 +2357,7 @@ def update_coast_research_in_price(request):
 
 def get_research_list(request):
     researches = directory.models.Researches.objects.filter(hide=False)
-    res_list = {
-        "Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}
-    }
+    res_list = {"Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}}
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
@@ -2414,18 +2402,10 @@ def get_research_list(request):
     count = 0
     for key, value in res_list.items():
         count += 1
-        result_list.append({
-            "id": f'а{count}',
-            "label": key,
-            "children": []
-        })
+        result_list.append({"id": f'а{count}', "label": key, "children": []})
         for k, v in value.items():
             count += 1
-            result_list[counter]["children"].append({
-                "id": f'а{count}',
-                "label": k,
-                "children": v
-            })
+            result_list[counter]["children"].append({"id": f'а{count}', "label": k, "children": v})
         counter += 1
     return JsonResponse({"data": result_list})
 
