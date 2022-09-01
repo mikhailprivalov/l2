@@ -57,7 +57,9 @@ from laboratory.settings import (
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
     REFERENCE_ODLI,
-    ODII_METHODS_IEMK, ID_MED_DOCUMENT_TYPE_IEMK_N3, DEATH_RESEARCH_PK,
+    ODII_METHODS_IEMK,
+    ID_MED_DOCUMENT_TYPE_IEMK_N3,
+    DEATH_RESEARCH_PK,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
