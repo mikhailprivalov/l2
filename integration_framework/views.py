@@ -57,11 +57,12 @@ from laboratory.settings import (
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
     REFERENCE_ODLI,
-    ODII_METHODS_IEMK, ID_MED_DOCUMENT_TYPE_IEMK_N3,
+    ODII_METHODS_IEMK, ID_MED_DOCUMENT_TYPE_IEMK_N3, DEATH_RESEARCH_PK,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
+from results.prepare_data import fields_result_only_title_fields
 from results.sql_func import get_laboratory_results_by_directions, get_not_confirm_direction
 from rmis_integration.client import Client
 from slog.models import Log
@@ -382,6 +383,36 @@ def issledovaniye_data_simple(request):
         type_res_instr_iemk = ODII_METHODS_IEMK.get(nsi_res.method)
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_paraclinic")
 
+    mkb10 = None
+    if i.research.pk == DEATH_RESEARCH_PK:
+        title_fields = ["а) Болезнь или состояние, непосредственно приведшее к смерти",
+                        "б) патологическое состояние, которое привело к возникновению вышеуказанной причины:",
+                        "в) первоначальная причина смерти:"
+                        ]
+        data = {}
+        result = fields_result_only_title_fields(i, title_fields, False)
+        for i in result:
+            data[i["title"]] = i["value"]
+        data["а"] = json.loads(data["а) Болезнь или состояние, непосредственно приведшее к смерти"])
+        result_a = data["а"]["rows"][0]
+        data["б"] = json.loads(data["б) патологическое состояние, которое привело к возникновению вышеуказанной причины:"])
+        result_b = data["б"]["rows"][0]
+        data["в"] = json.loads(data["в) первоначальная причина смерти:"])
+        result_v = data["в"]["rows"][0]
+
+        if len(result_v["result"][2]) > 1:
+            start_diag = result_v
+        elif len(result_b["result"][2]) > 1:
+            start_diag = result_b
+        else:
+            start_diag = result_a
+
+        description_diag = start_diag["result"][2]
+        if len(description_diag) > 1:
+            description_diag_json = json.loads(description_diag)
+            if len(description_diag) > 1:
+                mkb10 = description_diag_json["code"]
+
     return Response(
         {
             "ok": True,
@@ -395,7 +426,8 @@ def issledovaniye_data_simple(request):
             "typeFlags": i.research.get_flag_types_n3(),
             "typeResInstr": type_res_instr_iemk,
             "activityCodeResearch": i.research.code,
-            "IdMedDocumentType": id_med_document_type
+            "IdMedDocumentType": id_med_document_type,
+            "causeDeathCodeMcb": mkb10
         }
     )
 
