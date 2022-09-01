@@ -3,6 +3,7 @@ from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
 from statistics_tickets.models import VisitPurpose
 from utils.db import namedtuplefetchall
+from directory.models import Researches
 
 
 def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
@@ -335,6 +336,10 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
     """
+    res = Researches.objects.get(pk=research_id)
+    is_form = -1
+    if res.is_form:
+        is_form = 1
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -373,21 +378,25 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
                 LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
                 WHERE 
+                  directions_issledovaniya.research_id=%(research_id)s
+                  and directory_paraclinicinputfield.for_talon = true
+                  and directions_issledovaniya.time_confirmation IS NOT NULL
+                  and directions_napravleniya.parent_id IS NULL
+                AND
                 CASE WHEN %(filter_hospital_id)s > 0 THEN
-                  directions_issledovaniya.research_id=%(research_id)s
-                  and directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                  and directory_paraclinicinputfield.for_talon = true
-                  and directions_napravleniya.hospital_id = %(filter_hospital_id)s
-                  and directions_issledovaniya.time_confirmation IS NOT NULL
-                WHEN %(filter_hospital_id)s = -1 THEN
-                  directions_issledovaniya.research_id=%(research_id)s
-                  and directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                  and directory_paraclinicinputfield.for_talon = true
-                  and directions_issledovaniya.time_confirmation IS NOT NULL
-                END
+                  directions_napravleniya.hospital_id = %(filter_hospital_id)s
+                  WHEN %(filter_hospital_id)s = -1 THEN
+                    directions_issledovaniya.napravleniye_id IS NOT NULL
+                  END
+                AND 
+                CASE WHEN %(is_form)s > 0 THEN
+                    directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                WHEN %(is_form)s = -1 THEN
+                     directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                END                
                 order by directions_issledovaniya.napravleniye_id
             """,
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'filter_hospital_id': filter_hospital_id},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'filter_hospital_id': filter_hospital_id, 'is_form': is_form},
         )
 
         rows = namedtuplefetchall(cursor)
