@@ -57,8 +57,7 @@ from laboratory.settings import (
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
     REFERENCE_ODLI,
-    ODII_METHODS_IEMK,
-    ID_MED_DOCUMENT_TYPE_IEMK_N3,
+    ODII_METHODS_IEMK, ID_MED_DOCUMENT_TYPE_IEMK_N3,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -278,7 +277,7 @@ def direction_data(request):
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
             "hasN3IemkUploading": direction.n3_iemk_ok,
             "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
-            "generatorName": direction.get_eds_generator(),
+            "generatorName": direction.get_eds_generator()
         }
     )
 
@@ -396,7 +395,7 @@ def issledovaniye_data_simple(request):
             "typeFlags": i.research.get_flag_types_n3(),
             "typeResInstr": type_res_instr_iemk,
             "activityCodeResearch": i.research.code,
-            "IdMedDocumentType": id_med_document_type,
+            "IdMedDocumentType": id_med_document_type
         }
     )
 
@@ -555,7 +554,7 @@ def make_log(request):
             d = directions.Napravleniya.objects.get(pk=k)
             d.ecp_ok = True
             d.save(update_fields=['ecp_ok'])
-
+            
             iss: Issledovaniya
             for iss in Issledovaniya.objects.filter(napravleniye_id=k):
                 if str(iss.pk) in body.get(k, {}):
