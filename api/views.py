@@ -1,3 +1,4 @@
+import datetime
 import logging
 import threading
 import time
@@ -262,6 +263,7 @@ def send(request):
 @csrf_exempt
 def endpoint(request):
     result = {"answer": False, "body": "", "patientData": {}}
+    print(request.POST)
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
