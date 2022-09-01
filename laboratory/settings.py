@@ -381,6 +381,8 @@ RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION = []
 
 REFERENCE_ODLI = False
 ODII_METHODS = {}
+ODII_METHODS_IEMK = {}
+ID_MED_DOCUMENT_TYPE_IEMK_N3 = {}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

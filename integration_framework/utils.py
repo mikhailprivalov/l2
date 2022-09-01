@@ -126,6 +126,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=iss.research.nsi_id).first()
     document["nsi_title"] = nsi_res.title if nsi_res else ""
     document["odii_code_method"] = ODII_METHODS.get(nsi_res.method)
+    document["codeService"] = iss.research.code
 
     return document
 

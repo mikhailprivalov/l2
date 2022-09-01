@@ -633,10 +633,16 @@ class Napravleniya(models.Model):
 
     @property
     def hospital_n3id(self):
-        hosp = self.get_hospital()
         iss = Issledovaniya.objects.filter(napravleniye_id=self).first()
         if iss:
             return iss.doc_confirmation.hospital.n3_id
+        return None
+
+    @property
+    def department_n3id(self):
+        iss = Issledovaniya.objects.filter(napravleniye_id=self).first()
+        if iss:
+            return iss.doc_confirmation.podrazdeleniye.n3_id if iss.doc_confirmation.podrazdeleniye.n3_id else iss.doc_confirmation.hospital.n3_id
         return None
 
     @property
