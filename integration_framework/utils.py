@@ -3,6 +3,7 @@ import datetime
 import magic
 import pytz
 
+from appconf.manager import SettingManager
 from external_system.models import InstrumentalResearchRefbook
 from laboratory import settings
 import simplejson as json
@@ -72,7 +73,10 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             time_death = data.get("Время смерти", "00:00")
             if period_befor_death and type_period_befor_death:
                 data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
+
     doctor_confirm_obj = iss.doc_confirmation
+    if iss.doc_confirmation.hospital.legal_auth_doc_id and SettingManager.get("use_def_hospital_legal_auth", default='false', default_type='b'):
+        doctor_confirm_obj = DoctorProfile.objects.get(pk=int(iss.doc_confirmation.hospital.legal_auth_doc_id))
     author_data = author_doctor(doctor_confirm_obj)
 
     legal_auth = data.get("Подпись от организации", None)
