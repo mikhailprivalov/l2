@@ -430,7 +430,7 @@ def issledovaniye_data_simple(request):
             "typeResInstr": type_res_instr_iemk,
             "activityCodeResearch": i.research.code,
             "IdMedDocumentType": id_med_document_type,
-            "causeDeathCodeMcb": mkb10
+            "causeDeathCodeMcb": mkb10,
         }
     )
 
