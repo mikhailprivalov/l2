@@ -78,7 +78,7 @@ class Command(BaseCommand):
                     n = 0
                     for data in diagnoses:
                         n += 1
-                        nsi_code, title, mkb_code, actual = "", "", "", "1"
+                        nsi_code, title, mkb_code = "", "", ""
                         for p in data:
                             if p['column'] == 'ID':
                                 nsi_code = p['value']
@@ -90,12 +90,6 @@ class Command(BaseCommand):
                                 mkb_code = p['value']
                             if p['column'] == 'MKB_CODE' and not mkb_code:
                                 mkb_code = p['value']
-                            if p['column'] == 'ACTUAL':
-                                actual = p['value']
-                        if actual != '1' or not mkb_code:
-                            print(f'пропуск {mkb_code} — actual={actual}')  # noqa: T001
-                            continue
-
                         n_str = f"({i + 1}/{data_parts}) ({n}/{len(diagnoses)}): {diag_key}-{mkb_code}-{title}-{nsi_code}"
 
                         if is_empty:
