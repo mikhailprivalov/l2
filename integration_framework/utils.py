@@ -1,7 +1,7 @@
 import datetime
 
 import magic
-import pytz
+import pytz_deprecation_shim as pytz
 
 from appconf.manager import SettingManager
 from external_system.models import InstrumentalResearchRefbook

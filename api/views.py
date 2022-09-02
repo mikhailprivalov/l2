@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from typing import Optional, Union
 
-import pytz
+import pytz_deprecation_shim as pytz
 
 from doctor_schedule.models import ScheduleResource
 from laboratory.settings import (
@@ -30,7 +30,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
 from django.db import connections, transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie

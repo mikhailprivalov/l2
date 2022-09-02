@@ -52,9 +52,6 @@ urlpatterns = [
     path('medical_certificates/', include('medical_certificates.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-if 'silk' in settings.INSTALLED_APPS:
-    urlpatterns.append(path('silk/', include('silk.urls', namespace='silk')))
-
 if 'debug_toolbar' in settings.INSTALLED_APPS:
     import debug_toolbar
 

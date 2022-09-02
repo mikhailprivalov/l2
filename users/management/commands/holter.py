@@ -9,7 +9,7 @@ import pdfkit
 from dateutil.relativedelta import relativedelta
 from django.core.management import BaseCommand
 from django.utils import timezone
-from django.utils.timezone import pytz
+import pytz_deprecation_shim as pytz
 from pyvirtualdisplay import Display
 
 from appconf.manager import SettingManager
