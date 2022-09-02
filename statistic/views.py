@@ -1,7 +1,7 @@
 from collections import defaultdict
 from copy import deepcopy
 
-import pytz
+import pytz_deprecation_shim as pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q

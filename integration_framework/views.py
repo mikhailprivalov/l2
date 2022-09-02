@@ -6,7 +6,7 @@ from django.test import Client as TC
 import datetime
 import logging
 
-import pytz
+import pytz_deprecation_shim as pytz
 from django.utils.module_loading import import_string
 
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
@@ -30,7 +30,7 @@ import petrovna
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes

@@ -4,7 +4,7 @@ from typing import Union
 
 from django.db import reset_queries, connection
 from django.utils import timezone
-from django.utils.timezone import pytz
+import pytz_deprecation_shim as pytz
 
 from laboratory.settings import TIME_ZONE
 

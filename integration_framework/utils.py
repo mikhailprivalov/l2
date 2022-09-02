@@ -1,7 +1,7 @@
 import datetime
 
 import magic
-import pytz
+import pytz_deprecation_shim as pytz
 
 from appconf.manager import SettingManager
 from external_system.models import InstrumentalResearchRefbook
@@ -130,7 +130,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["nsi_id"] = iss.research.nsi_id
     nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=iss.research.nsi_id).first()
     document["nsi_title"] = nsi_res.title if nsi_res else ""
-    document["odii_code_method"] = ODII_METHODS.get(nsi_res.method)
+    document["odii_code_method"] = ODII_METHODS.get(nsi_res.method) if nsi_res else None
     document["codeService"] = iss.research.code
 
     return document

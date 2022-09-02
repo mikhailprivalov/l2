@@ -17,9 +17,6 @@ updates:
   - dependency-name: urllib3
     versions:
     - 1.26.3
-  - dependency-name: django
-    versions:
-    - 3.1.7
   - dependency-name: pyvirtualdisplay
     versions:
     - "2.0"
@@ -30,13 +27,6 @@ updates:
     versions:
     - 3.11.2
     - 3.11.3
-  - dependency-name: django-extensions
-    versions:
-    - 3.1.0
-    - 3.1.1
-  - dependency-name: django-debug-toolbar
-    versions:
-    - "3.2"
   - dependency-name: jsonpickle
     versions:
     - 1.5.0

@@ -5,7 +5,7 @@ from typing import Optional
 
 import bleach
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 import simplejson as json
 from django.utils import dateformat, timezone
