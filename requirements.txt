@@ -26,7 +26,7 @@ openpyxl==3.0.10
 pdfrw==0.4
 pdfminer==20191125
 petrovna==1.0.2
-Pillow==8.3.2
+Pillow==9.2.0
 pymorphy2==0.9.1
 pymorphy2-dicts==2.4.393442.3710985
 pymorphy2-dicts-ru==2.4.417127.4579844
