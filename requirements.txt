@@ -37,7 +37,7 @@ python-docx
 python-magic==0.4.27
 #pdf2docx
 pytils==0.3
-pytz==2021.3
+pytz==2022.2.1
 pytz_deprecation_shim==0.1.0.post0
 PyYAML==5.4.1
 redis==4.1.1
