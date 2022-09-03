@@ -2743,3 +2743,14 @@ def amd_save(request):
         amd.message = f"{code}@{message}"
         amd.save()
     return Response({"ok": True})
+
+
+@api_view(['POST'])
+def register_emdr_id(request):
+    data = json.loads(request.body)
+    emdr_id = data.get('localUid')
+    direction_pk = data.get('pk')
+    direction = Napravleniya.objects.get(pk=direction_pk)
+    direction.emdr_id = emdr_id
+    direction.save(update_fields=['emdr_id'])
+    return Response({"ok": True})

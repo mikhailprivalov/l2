@@ -53,4 +53,5 @@ urlpatterns = [
     path('files-params', views.get_limit_download_files),
     path('plan-messages', views.get_all_messages_by_plan_id),
     path('amd-save', views.amd_save),
+    path('register-emdr-id', views.register_emdr_id),
 ]
