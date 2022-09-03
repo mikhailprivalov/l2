@@ -2754,3 +2754,11 @@ def register_emdr_id(request):
     direction.emdr_id = emdr_id
     direction.save(update_fields=['emdr_id'])
     return Response({"ok": True})
+
+
+@api_view(['POST'])
+def get_direction_pk_by_emdr_id(request):
+    data = json.loads(request.body)
+    emdr_id = data.get('emdrId')
+    direction = Napravleniya.objects.get(emdr_id=emdr_id)
+    return Response({"pk": direction.pk})

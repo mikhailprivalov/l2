@@ -54,4 +54,5 @@ urlpatterns = [
     path('plan-messages', views.get_all_messages_by_plan_id),
     path('amd-save', views.amd_save),
     path('register-emdr-id', views.register_emdr_id),
+    path('get-direction-pk-by-emdr-id', views.get_direction_pk_by_emdr_id),
 ]
