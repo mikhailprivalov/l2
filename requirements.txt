@@ -40,7 +40,7 @@ pytils==0.3
 pytz==2022.2.1
 pytz_deprecation_shim==0.1.0.post0
 PyYAML==5.4.1
-redis==4.1.1
+redis==4.3.4
 reportlab==3.6.5
 requests==2.28.1
 requests-toolbelt==0.9.1
