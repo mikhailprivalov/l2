@@ -384,7 +384,6 @@ def issledovaniye_data_simple(request):
 
     mkb10 = None
     if i.research.pk == DEATH_RESEARCH_PK:
-        print("DEATH_RESEARCH_PK")
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_death")
         title_fields = [
             "а) Болезнь или состояние, непосредственно приведшее к смерти",
@@ -401,9 +400,6 @@ def issledovaniye_data_simple(request):
         result_b = data["б"]["rows"][0]
         data["в"] = json.loads(data["в) первоначальная причина смерти:"])
         result_v = data["в"]["rows"][0]
-        print(result_v)
-        print(result_b)
-        print(result_a)
         if len(result_v[2]) > 1:
             start_diag = result_v
         elif len(result_b[2]) > 1:
