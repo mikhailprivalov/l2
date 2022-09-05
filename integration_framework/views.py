@@ -384,6 +384,8 @@ def issledovaniye_data_simple(request):
 
     mkb10 = None
     if i.research.pk == DEATH_RESEARCH_PK:
+        print("DEATH_RESEARCH_PK")
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_death")
         title_fields = [
             "а) Болезнь или состояние, непосредственно приведшее к смерти",
             "б) патологическое состояние, которое привело к возникновению вышеуказанной причины:",
@@ -391,23 +393,25 @@ def issledovaniye_data_simple(request):
         ]
         data = {}
         result = fields_result_only_title_fields(i, title_fields, False)
-        for i in result:
-            data[i["title"]] = i["value"]
+        for r in result:
+            data[r["title"]] = r["value"]
         data["а"] = json.loads(data["а) Болезнь или состояние, непосредственно приведшее к смерти"])
         result_a = data["а"]["rows"][0]
         data["б"] = json.loads(data["б) патологическое состояние, которое привело к возникновению вышеуказанной причины:"])
         result_b = data["б"]["rows"][0]
         data["в"] = json.loads(data["в) первоначальная причина смерти:"])
         result_v = data["в"]["rows"][0]
-
-        if len(result_v["result"][2]) > 1:
+        print(result_v)
+        print(result_b)
+        print(result_a)
+        if len(result_v[2]) > 1:
             start_diag = result_v
-        elif len(result_b["result"][2]) > 1:
+        elif len(result_b[2]) > 1:
             start_diag = result_b
         else:
             start_diag = result_a
 
-        description_diag = start_diag["result"][2]
+        description_diag = start_diag[2]
         if len(description_diag) > 1:
             description_diag_json = json.loads(description_diag)
             if len(description_diag) > 1:
