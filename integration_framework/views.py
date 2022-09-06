@@ -278,7 +278,7 @@ def direction_data(request):
             "hasN3IemkUploading": direction.n3_iemk_ok,
             "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
             "generatorName": direction.get_eds_generator(),
-            "legalAuth": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}),
+            "legalAuth": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
         }
     )
 
