@@ -231,6 +231,7 @@ def legal_auth_get(legal_auth_doc, is_recursion=False, as_uploading_data=False):
         legal_doctor = DoctorProfile.objects.get(pk=id_doc)
         if as_uploading_data:
             legal_auth = {
+                "id": legal_doctor.pk,
                 **legal_auth,
                 **legal_doctor.uploading_data,
             }
