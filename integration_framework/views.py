@@ -79,7 +79,7 @@ from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Na
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
-from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
+from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get
 from django.contrib.auth.models import User
 
 logger = logging.getLogger("IF")
@@ -277,7 +277,8 @@ def direction_data(request):
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
             "hasN3IemkUploading": direction.n3_iemk_ok,
             "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
-            "generatorName": direction.get_eds_generator()
+            "generatorName": direction.get_eds_generator(),
+            "legalAuth": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}),
         }
     )
 
