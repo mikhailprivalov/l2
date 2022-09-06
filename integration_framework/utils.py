@@ -224,20 +224,27 @@ def author_doctor(doctor_confirm_obj, is_recursion=False):
     return author
 
 
-def legal_auth_get(legal_auth_doc, is_recursion=False):
+def legal_auth_get(legal_auth_doc, is_recursion=False, as_uploading_data=False):
     legal_auth = {"id": "", "snils": "", "positionCode": "", "positionName": "", "name": {"family": "", "name": "", "patronymic": ""}}
     if legal_auth_doc and legal_auth_doc["id"]:
         id_doc = legal_auth_doc["id"]
         legal_doctor = DoctorProfile.objects.get(pk=id_doc)
-        legal_auth["id"] = legal_doctor.pk
-        legal_auth["snils"] = legal_doctor.snils
-        legal_auth["positionCode"] = legal_doctor.position.n3_id
-        legal_auth["positionName"] = legal_doctor.position.title
-        legal_auth["name"]["family"] = legal_doctor.family
-        legal_auth["name"]["name"] = legal_doctor.name
-        legal_auth["name"]["patronymic"] = legal_doctor.patronymic
+        if as_uploading_data:
+            legal_auth = {
+                "id": legal_doctor.pk,
+                **legal_auth,
+                **legal_doctor.uploading_data,
+            }
+        else:
+            legal_auth["id"] = legal_doctor.pk
+            legal_auth["snils"] = legal_doctor.snils
+            legal_auth["positionCode"] = legal_doctor.position.n3_id
+            legal_auth["positionName"] = legal_doctor.position.title
+            legal_auth["name"]["family"] = legal_doctor.family
+            legal_auth["name"]["name"] = legal_doctor.name
+            legal_auth["name"]["patronymic"] = legal_doctor.patronymic
     if (legal_auth["positionCode"] not in [7] or "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]]) and DEF_LABORATORY_LEGAL_AUTH_PK and not is_recursion:
-        return legal_auth_get({"id": DEF_LABORATORY_LEGAL_AUTH_PK}, True)
+        return legal_auth_get({"id": DEF_LABORATORY_LEGAL_AUTH_PK}, True, as_uploading_data=as_uploading_data)
     return legal_auth
 
 
