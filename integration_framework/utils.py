@@ -81,7 +81,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
 
     legal_auth = data.get("Подпись от организации", None)
     legal_auth_data = legal_auth_get(legal_auth)
-    if (legal_auth_data["positionCode"] not in [7] or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]):
+    if legal_auth_data["positionCode"] not in [7] or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]:
         legal_auth_data = author_doctor(doctor_legal_confirm_obj)
     hosp_obj = doctor_confirm_obj.hospital
     hosp_oid = hosp_obj.oid
