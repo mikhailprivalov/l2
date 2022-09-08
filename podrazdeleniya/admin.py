@@ -6,6 +6,7 @@ class PodrazdeleniyaAdmin(admin.ModelAdmin):
     list_display = ('pk', 'title', 'hospital', 'p_type', 'hide')
     autocomplete_fields = ('hospital',)
     search_fields = ('title', 'hospital')
+    list_filter = ('hospital',)
 
 
 class RoomAdmin(admin.ModelAdmin):
