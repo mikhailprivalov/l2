@@ -3461,7 +3461,6 @@ def eds_documents(request):
     DirectionDocument.objects.filter(direction=direction, is_archive=False).exclude(last_confirmed_at=last_time_confirm).update(is_archive=True)
 
     cda_eds_data = get_cda_data(pk)
-    print(cda_eds_data)
 
     for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
         if not d.file:
