@@ -415,8 +415,6 @@ def issledovaniye_data_simple(request):
             if len(description_diag) > 1:
                 mkb10 = description_diag_json["code"]
 
-    print("causeDeathCodeMcb", mkb10)
-    print("pk", i.napravleniye_id)
     return Response(
         {
             "ok": True,
