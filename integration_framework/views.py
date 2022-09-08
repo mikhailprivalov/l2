@@ -268,7 +268,6 @@ def direction_data(request):
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
             "hospitalN3Id": direction.hospital_n3id,
-            "hospitalOkpo": iss[iss_index].doc_confirmation.get_hospital.okpo,
             "departmentN3Id": direction.department_n3id,
             "hospitalEcpId": direction.hospital_ecp_id,
             "signed": direction.eds_total_signed,
