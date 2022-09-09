@@ -2669,9 +2669,9 @@ class Result(models.Model):
             v = str(v).replace(" ", "")
             for j in range(1, 9):
                 for i in range(0, 12):
-                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j * (10 ** i)))
+                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j * (10**i)))
             for i in range(0, 12):
-                v = v.replace("10<sup>%s</sup>" % str(i), str(10 ** i))
+                v = v.replace("10<sup>%s</sup>" % str(i), str(10**i))
             return v
 
         def val_normalize(v):
