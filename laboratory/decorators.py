@@ -2,7 +2,7 @@ from functools import wraps
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponseRedirect
-from django.utils.http import urlquote
+from urllib.parse import quote
 
 
 def group_required(*group_names):
@@ -21,6 +21,6 @@ def logged_in_or_token(view_func):
             return view_func(request, *args, **kwargs)
         if request.GET.get('token', request.POST.get('token')) == "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7":
             return view_func(request, *args, **kwargs)
-        return HttpResponseRedirect('/?next=' + urlquote(request.get_full_path()))
+        return HttpResponseRedirect('/?next=' + quote(request.get_full_path()))
 
     return _wrapped_view

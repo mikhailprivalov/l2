@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 
 from api.researches.help_files.constructor_help import constructor_help_message

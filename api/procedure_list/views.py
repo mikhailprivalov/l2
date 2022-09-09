@@ -1,4 +1,4 @@
-import pytz
+import pytz_deprecation_shim as pytz
 import simplejson as json
 from django.db.models import Prefetch
 from django.http import JsonResponse

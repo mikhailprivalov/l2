@@ -4,7 +4,7 @@ import re
 import threading
 from typing import Optional, List
 
-import pytz
+import pytz_deprecation_shim as pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 

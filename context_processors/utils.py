@@ -25,7 +25,7 @@ def menu(request):
     from laboratory import VERSION
 
     data = []
-    if request.user.is_authenticated and not request.is_ajax():
+    if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
         k = f'menu:{VERSION}:{get_md5(";".join(groups))}:4'
@@ -185,8 +185,6 @@ def menu(request):
                 # {"url": '/ui/cases', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 
-            if settings.PROFILING:
-                pages.append({"url": "/silk/", "title": "Профилирование", "nt": False, "access": []})
             pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
 
             hp = SettingManager.get(key="home_page", default="false")

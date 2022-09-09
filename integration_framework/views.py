@@ -6,7 +6,7 @@ from django.test import Client as TC
 import datetime
 import logging
 
-import pytz
+import pytz_deprecation_shim as pytz
 from django.utils.module_loading import import_string
 
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
@@ -15,7 +15,7 @@ from api.views import mkb10_dict
 from clients.utils import find_patient
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
-from external_system.models import ArchiveMedicalDocuments
+from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
@@ -30,7 +30,7 @@ import petrovna
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
@@ -57,10 +57,14 @@ from laboratory.settings import (
     LK_DAY_MONTH_START_SHOW_RESULT,
     GISTOLOGY_RESEARCH_PK,
     REFERENCE_ODLI,
+    ODII_METHODS_IEMK,
+    ID_MED_DOCUMENT_TYPE_IEMK_N3,
+    DEATH_RESEARCH_PK,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
+from results.prepare_data import fields_result_only_title_fields
 from results.sql_func import get_laboratory_results_by_directions, get_not_confirm_direction
 from rmis_integration.client import Client
 from slog.models import Log
@@ -75,7 +79,7 @@ from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Na
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
-from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
+from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get
 from django.contrib.auth.models import User
 
 logger = logging.getLogger("IF")
@@ -197,10 +201,7 @@ def direction_data(request):
     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False).select_related('research', 'doc_confirmation')
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
-    for i in iss:
-        if not i.research.is_paraclinic:
-            if not i.research.is_gistology or (i.research.podrazdeleniye and i.research.podrazdeleniye.p_type != 2):
-                return Response({"ok": False})
+
     if not iss:
         return Response({"ok": False})
 
@@ -266,7 +267,8 @@ def direction_data(request):
             "ogrnInitiator": direction.get_ogrn_org_initiator(),
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
-            "hospitalN3Id": iss[iss_index].doc_confirmation.podrazdeleniye.n3_id if iss[iss_index].doc_confirmation.podrazdeleniye.n3_id else direction.hospital_n3id,
+            "hospitalN3Id": direction.hospital_n3id,
+            "departmentN3Id": direction.department_n3id,
             "hospitalEcpId": direction.hospital_ecp_id,
             "signed": direction.eds_total_signed,
             "totalSignedAt": direction.eds_total_signed_at,
@@ -275,7 +277,8 @@ def direction_data(request):
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
             "hasN3IemkUploading": direction.n3_iemk_ok,
             "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
-            "generatorName": direction.get_eds_generator()
+            "generatorName": direction.get_eds_generator(),
+            "legalAuth": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
         }
     )
 
@@ -373,6 +376,43 @@ def issledovaniye_data_simple(request):
 
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
+    type_res_instr_iemk = None
+    id_med_document_type = None
+    if i.research.is_paraclinic:
+        nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=i.research.nsi_id).first()
+        type_res_instr_iemk = ODII_METHODS_IEMK.get(nsi_res.method)
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_paraclinic")
+
+    mkb10 = None
+    if i.research.pk == DEATH_RESEARCH_PK:
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_death")
+        title_fields = [
+            "а) Болезнь или состояние, непосредственно приведшее к смерти",
+            "б) патологическое состояние, которое привело к возникновению вышеуказанной причины:",
+            "в) первоначальная причина смерти:",
+        ]
+        data = {}
+        result = fields_result_only_title_fields(i, title_fields, False)
+        for r in result:
+            data[r["title"]] = r["value"]
+        data["а"] = json.loads(data["а) Болезнь или состояние, непосредственно приведшее к смерти"])
+        result_a = data["а"]["rows"][0]
+        data["б"] = json.loads(data["б) патологическое состояние, которое привело к возникновению вышеуказанной причины:"])
+        result_b = data["б"]["rows"][0]
+        data["в"] = json.loads(data["в) первоначальная причина смерти:"])
+        result_v = data["в"]["rows"][0]
+        if len(result_v[2]) > 1:
+            start_diag = result_v
+        elif len(result_b[2]) > 1:
+            start_diag = result_b
+        else:
+            start_diag = result_a
+
+        description_diag = start_diag[2]
+        if len(description_diag) > 1:
+            description_diag_json = json.loads(description_diag)
+            if len(description_diag) > 1:
+                mkb10 = description_diag_json["code"]
 
     return Response(
         {
@@ -385,6 +425,10 @@ def issledovaniye_data_simple(request):
             "visitPlace": (i.place.n3_id if i.place else None) or '1',
             "visitPurpose": (i.purpose.n3_id if i.purpose else None) or '2',
             "typeFlags": i.research.get_flag_types_n3(),
+            "typeResInstr": type_res_instr_iemk,
+            "activityCodeResearch": i.research.code,
+            "IdMedDocumentType": id_med_document_type,
+            "causeDeathCodeMcb": mkb10,
         }
     )
 
@@ -2700,3 +2744,22 @@ def amd_save(request):
         amd.message = f"{code}@{message}"
         amd.save()
     return Response({"ok": True})
+
+
+@api_view(['POST'])
+def register_emdr_id(request):
+    data = json.loads(request.body)
+    emdr_id = data.get('localUid')
+    direction_pk = data.get('pk')
+    direction = Napravleniya.objects.get(pk=direction_pk)
+    direction.emdr_id = emdr_id
+    direction.save(update_fields=['emdr_id'])
+    return Response({"ok": True})
+
+
+@api_view(['POST'])
+def get_direction_pk_by_emdr_id(request):
+    data = json.loads(request.body)
+    emdr_id = data.get('emdrId')
+    direction = Napravleniya.objects.get(emdr_id=emdr_id)
+    return Response({"pk": direction.pk})

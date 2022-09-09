@@ -1,4 +1,4 @@
-name: Py3.7 Django testing
+name: Py (max version) 3.10 Django testing
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:11
+        image: postgres:14
         env:
           POSTGRES_DB: l2
           POSTGRES_PASSWORD: 123456
@@ -23,11 +23,11 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.7
+        python-version: '3.10'
     - name: Install mupdf
       run: sudo apt install libmupdf-dev
     - name: Install Dependencies

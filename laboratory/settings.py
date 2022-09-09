@@ -46,7 +46,6 @@ INSTALLED_APPS = (
     'rmis_integration',
     'rest_framework',
     'integration_framework',
-    'django_logtail',
     'statistics_tickets',
     'reports',
     'cases.apps.CasesConfig',
@@ -68,14 +67,14 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 INSTALLED_APPS_PRE_ADD = ()
 INSTALLED_APPS_ADD = ()
@@ -118,6 +117,7 @@ LOGIN_REDIRECT_URL = '/ui/menu'
 
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_NAME = 'csrftoken'
 
 DATABASES = {
     'default': {
@@ -131,7 +131,7 @@ DATABASES = {
 }
 
 CACHES = {
-    'default': {'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache', 'LOCATION': '127.0.0.1:11211', 'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")},
+    'default': {'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache', 'LOCATION': '127.0.0.1:11211', 'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")},
 }
 LANGUAGE_CODE = 'ru-ru'
 DATE_FORMAT = 'd.m.Y'
@@ -250,13 +250,6 @@ DEBUG = False
 
 LOGOUT_REDIRECT_URL = '/'
 
-LOGTAIL_FILES = {'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')}
-
-
-def SILKY_INTERCEPT_FUNC(request):
-    return request.path not in ['/mainmenu/']
-
-
 AFTER_DATE_HOLTER = None
 
 DICOM_SEARCH_TAGS = []
@@ -353,6 +346,8 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_BROKER_URL = 'redis://localhost:6379/4'
 CELERY_RESULT_BACKEND = 'django-db'
 
+USE_DEPRECATED_PYTZ = True
+
 FORWARD_DAYS_SCHEDULE = -1
 
 SCHEDULE_AGE_LIMIT_LTE = None
@@ -381,15 +376,13 @@ RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION = []
 
 REFERENCE_ODLI = False
 ODII_METHODS = {}
+ODII_METHODS_IEMK = {}
+ID_MED_DOCUMENT_TYPE_IEMK_N3 = {}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
     pass
-
-if PROFILING:
-    INSTALLED_APPS += ('silk',)
-    MIDDLEWARE += ('silk.middleware.SilkyMiddleware',)
 
 MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
@@ -439,6 +432,9 @@ if DB_PORT:
 
 if ENV_SECRET_KEY:
     SECRET_KEY = ENV_SECRET_KEY
+
+if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
+    CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
 
 
 # db = DATABASES.get('default', {})

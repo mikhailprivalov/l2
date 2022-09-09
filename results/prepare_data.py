@@ -1,4 +1,4 @@
-import pytz
+import pytz_deprecation_shim as pytz
 from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont

@@ -1,8 +1,9 @@
 import datetime
 
 import magic
-import pytz
+import pytz_deprecation_shim as pytz
 
+from appconf.manager import SettingManager
 from external_system.models import InstrumentalResearchRefbook
 from laboratory import settings
 import simplejson as json
@@ -72,13 +73,16 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             time_death = data.get("Время смерти", "00:00")
             if period_befor_death and type_period_befor_death:
                 data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
+
     doctor_confirm_obj = iss.doc_confirmation
+    if iss.doc_confirmation.hospital.legal_auth_doc_id and SettingManager.get("use_def_hospital_legal_auth", default='false', default_type='b'):
+        doctor_legal_confirm_obj = DoctorProfile.objects.get(pk=int(iss.doc_confirmation.hospital.legal_auth_doc_id))
     author_data = author_doctor(doctor_confirm_obj)
 
     legal_auth = data.get("Подпись от организации", None)
     legal_auth_data = legal_auth_get(legal_auth)
-    if (legal_auth_data["positionCode"] not in [7] or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]):
-        legal_auth_data = author_data
+    if legal_auth_data["positionCode"] not in [7] or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]:
+        legal_auth_data = author_doctor(doctor_legal_confirm_obj)
     hosp_obj = doctor_confirm_obj.hospital
     hosp_oid = hosp_obj.oid
 
@@ -125,7 +129,8 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["nsi_id"] = iss.research.nsi_id
     nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=iss.research.nsi_id).first()
     document["nsi_title"] = nsi_res.title if nsi_res else ""
-    document["odii_code_method"] = ODII_METHODS.get(nsi_res.method)
+    document["odii_code_method"] = ODII_METHODS.get(nsi_res.method) if nsi_res else None
+    document["codeService"] = iss.research.code
 
     return document
 
@@ -219,20 +224,27 @@ def author_doctor(doctor_confirm_obj, is_recursion=False):
     return author
 
 
-def legal_auth_get(legal_auth_doc, is_recursion=False):
+def legal_auth_get(legal_auth_doc, is_recursion=False, as_uploading_data=False):
     legal_auth = {"id": "", "snils": "", "positionCode": "", "positionName": "", "name": {"family": "", "name": "", "patronymic": ""}}
     if legal_auth_doc and legal_auth_doc["id"]:
         id_doc = legal_auth_doc["id"]
         legal_doctor = DoctorProfile.objects.get(pk=id_doc)
-        legal_auth["id"] = legal_doctor.pk
-        legal_auth["snils"] = legal_doctor.snils
-        legal_auth["positionCode"] = legal_doctor.position.n3_id
-        legal_auth["positionName"] = legal_doctor.position.title
-        legal_auth["name"]["family"] = legal_doctor.family
-        legal_auth["name"]["name"] = legal_doctor.name
-        legal_auth["name"]["patronymic"] = legal_doctor.patronymic
+        if as_uploading_data:
+            legal_auth = {
+                "id": legal_doctor.pk,
+                **legal_auth,
+                **legal_doctor.uploading_data,
+            }
+        else:
+            legal_auth["id"] = legal_doctor.pk
+            legal_auth["snils"] = legal_doctor.snils
+            legal_auth["positionCode"] = legal_doctor.position.n3_id
+            legal_auth["positionName"] = legal_doctor.position.title
+            legal_auth["name"]["family"] = legal_doctor.family
+            legal_auth["name"]["name"] = legal_doctor.name
+            legal_auth["name"]["patronymic"] = legal_doctor.patronymic
     if (legal_auth["positionCode"] not in [7] or "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]]) and DEF_LABORATORY_LEGAL_AUTH_PK and not is_recursion:
-        return legal_auth_get({"id": DEF_LABORATORY_LEGAL_AUTH_PK}, True)
+        return legal_auth_get({"id": DEF_LABORATORY_LEGAL_AUTH_PK}, True, as_uploading_data=as_uploading_data)
     return legal_auth
 
 
