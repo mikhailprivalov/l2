@@ -458,6 +458,12 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.COMPANY],
         url: '/forms/pdf?type=200.01&company=<company>&date1=<date-start>&date2=<date-end>',
       },
+      consolidate: {
+        groups: ['Статистика-профосмотры'],
+        title: 'Сводный',
+        params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>',
+      },
     },
   },
   screening: {

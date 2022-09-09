@@ -664,6 +664,53 @@ def statistics_details_research_by_lab(podrazdeleniye: tuple, d_s: object, d_e: 
     return rows
 
 
+def statistics_consolidate_research(d_s, d_e, fin_source_pk):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.napravleniye_id as dir_id,
+                    directory_researches.title as research_title,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') AS time_confirm,
+                    directions_issledovaniya.time_confirmation,
+                    users_doctorprofile.family as doc_f,
+                    users_doctorprofile.name as doc_n,
+                    users_doctorprofile.patronymic as doc_p,
+                    directions_napravleniya.client_id,
+                    directions_napravleniya.workplace,
+                    directions_napravleniya.harmful_factor as dir_harmful_factor,
+                    cc.harmful_factor as card_harmful_factor,
+                    cc.number,
+                    ci.family,
+                    ci.name,
+                    ci.patronymic,
+                    ci.birthday as born,
+                    age(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s,  ci.birthday) as age_patient
+
+                FROM public.directions_issledovaniya
+                LEFT JOIN directory_researches
+                ON directory_researches.id = directions_issledovaniya.research_id
+                LEFT JOIN directions_napravleniya
+                ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN users_doctorprofile
+                ON users_doctorprofile.id = directions_issledovaniya.doc_confirmation_id
+                LEFT JOIN clients_card cc 
+                ON directions_napravleniya.client_id = cc.id
+                LEFT JOIN clients_individual ci 
+                ON ci.id = cc.individual_id
+                where time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                and (directions_issledovaniya.fin_source_id=%(fin_source_pk)s or directions_napravleniya.istochnik_f_id=%(fin_source_pk)s)
+                ORDER BY directions_napravleniya.client_id, directions_issledovaniya.time_confirmation
+                            """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+
 def disp_diagnos(diagnos, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
