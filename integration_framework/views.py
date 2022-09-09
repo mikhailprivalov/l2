@@ -587,7 +587,7 @@ def make_log(request):
             d = directions.Napravleniya.objects.get(pk=k)
             d.ecp_ok = True
             d.save(update_fields=['ecp_ok'])
-            
+
             iss: Issledovaniya
             for iss in Issledovaniya.objects.filter(napravleniye_id=k):
                 if str(iss.pk) in body.get(k, {}):
