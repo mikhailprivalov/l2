@@ -30,7 +30,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -97,7 +97,7 @@ def statistic_xls(request):
 
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
-    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details"]:
+    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"]:
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -1734,17 +1734,13 @@ def statistic_xls(request):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
 
         type_fin = request_data.get("fin")
-        # title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
-        print(start_date, end_date, type_fin)
+        title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
         query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
         for i in query:
             print(i)
 
-        # result_dates = dispanserization.dispanserization_data(query, services_start, service_end, doctors_count_pass_patient)
-
-        # ws = dispanserization.dispanserization_base(ws, d1, d2, result_dates)
-        # ws = dispanserization.dispanserization_fill_data(ws, result_dates)
-
+        ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
+        ws = consolidates.consolidate_fill_data(ws, query)
 
     wb.save(response)
     return response
