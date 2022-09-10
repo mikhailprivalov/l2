@@ -1736,9 +1736,6 @@ def statistic_xls(request):
         type_fin = request_data.get("fin")
         title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
         query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
-        for i in query:
-            print(i)
-
         ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
         ws = consolidates.consolidate_fill_data(ws, query)
 
@@ -1862,6 +1859,4 @@ def sreening_xls(request):
     screening_data['count_pap_analysys'] = len(researches_sql)
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
     wb.save(response)
-
     return response
-

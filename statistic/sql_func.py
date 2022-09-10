@@ -712,7 +712,6 @@ def statistics_consolidate_research(d_s, d_e, fin_source_pk):
     return rows
 
 
-
 def disp_diagnos(diagnos, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
