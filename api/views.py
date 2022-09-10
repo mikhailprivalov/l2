@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
+import directory
 from doctor_schedule.models import ScheduleResource
 from laboratory.settings import (
     SYSTEM_AS_VI,
@@ -38,7 +39,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -71,6 +72,7 @@ from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals
+from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
