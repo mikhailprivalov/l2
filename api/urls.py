@@ -90,4 +90,9 @@ urlpatterns = [
     path('dashboards/', include('api.dashboards.urls')),
     path('districts/', include('api.districts.urls')),
     path('dynamic-directory/', include('api.dynamic_directory.urls')),
+    path('get-price-list', views.get_price_list),
+    path('get-current-coast-researches-in-price', views.get_current_coast_researches_in_price),
+    path('update-coast-research-in-price', views.update_coast_research_in_price),
+    path('update-research-list-in-price', views.update_research_list_in_price),
+    path('get-research-list', views.get_research_list),
 ]

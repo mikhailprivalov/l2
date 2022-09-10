@@ -155,7 +155,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
         doctor_data = data["Врач"]["fio"]
     fwb.append(Paragraph(f"Врач: {doctor_data}", style))
     fwb.append(Paragraph('телефон ____________________________ "_____" _____________ 20__ г.', style))
-    fwb.append(Paragraph(f"Руководитель: направившей медицинской организации {data['Руководитель МО']}", style))
+    fwb.append(Paragraph(f"Руководитель направившей медицинской организации: {data['Руководитель МО']}", style))
     fwb.append(Paragraph("Согласие пациента на передачу сведений электронной почтой для осуществления предварительной записи и передачи заключения:", style))
 
     return fwb
