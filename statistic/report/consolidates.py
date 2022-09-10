@@ -2,8 +2,8 @@ from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
 
-def consolidate_base(ws1, d1, d2, fin_source, row=5):
-    style_border = NamedStyle(name=f"style_border_ca{row}")
+def consolidate_base(ws1, d1, d2, fin_source):
+    style_border = NamedStyle(name="style_border_ca5")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border.font = Font(bold=True, size=11)
@@ -38,14 +38,14 @@ def consolidate_base(ws1, d1, d2, fin_source, row=5):
     return ws1
 
 
-def consolidate_fill_data(ws1, result_query, row=5):
+def consolidate_fill_data(ws1, result_query):
     style_border1 = NamedStyle(name="style_border1")
     bd = Side(style='thin', color="000000")
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border1.font = Font(bold=False, size=11)
     style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-    r = row
+    r = 5
     for i in result_query:
         r += 1
         ws1.cell(row=r, column=1).value = i.patient_card_num
