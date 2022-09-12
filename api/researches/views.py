@@ -808,9 +808,16 @@ def fields_and_groups_titles(request):
 @login_required
 def descriptive_research(request):
     hiden_department = Podrazdeleniya.objects.values_list('pk', flat=True).filter(p_type=0)
-    rows = DResearches.objects.filter(hide=False).filter(
-        Q(is_paraclinic=True) | Q(is_doc_refferal=SettingManager.get("consults_module", default='false')) | Q(is_gistology=True) | Q(is_form=True)).order_by('title').values('pk','title').\
-        exclude(podrazdeleniye__in=hiden_department).exclude(is_stom=True).exclude(is_treatment=True).exclude(is_direction_params=True)
+    rows = (
+        DResearches.objects.filter(hide=False)
+        .filter(Q(is_paraclinic=True) | Q(is_doc_refferal=SettingManager.get("consults_module", default='false')) | Q(is_gistology=True) | Q(is_form=True))
+        .order_by('title')
+        .values('pk', 'title')
+        .exclude(podrazdeleniye__in=hiden_department)
+        .exclude(is_stom=True)
+        .exclude(is_treatment=True)
+        .exclude(is_direction_params=True)
+    )
     rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
     return JsonResponse(rows, safe=False)
 
