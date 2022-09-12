@@ -2216,7 +2216,6 @@ def current_time(request):
 
 def search_param(request):
     data = json.loads(request.body)
-
     year_period = data.get('year_period') or -1
     research_id = data.get('research_id') or -1
     date_create_start = f"{year_period}-01-01 00:00:00"
