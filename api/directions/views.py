@@ -3630,7 +3630,7 @@ def eds_to_sign(request):
             else:
                 d_qs = d_qs.filter(issledovaniya__doc_confirmation__podrazdeleniye_id=department)
         elif mode == 'my':
-            if not request.user.doctorprofile.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
+            if not request.user.doctorprofile.podrazdeleniye.n3_id or not request.user.doctorprofile.hospital.code_tfoms:
                 return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
             doctor_data = request.user.doctorprofile.dict_data
             error_doctor = ""
