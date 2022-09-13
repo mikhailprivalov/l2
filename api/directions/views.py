@@ -28,7 +28,7 @@ from django.http import JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
 from api import sql_func
-from api.dicom import search_dicom_study
+from api.dicom import search_dicom_study, check_server_port
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
@@ -3427,6 +3427,10 @@ def eds_documents(request):
     for k, v in doctor_data.items():
         if v in ["", None]:
             error_doctor = f"{k} - не верно;{error_doctor}"
+    base = SettingManager.get_cda_base_url()
+    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+    if not available:
+        return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
 
     if error_doctor:
         error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
@@ -3588,6 +3592,7 @@ def eds_add_sign(request):
 
 @login_required
 def eds_to_sign(request):
+
     data = json.loads(request.body)
     page = max(int(data["page"]), 1)
     filters = data['filters']
@@ -3597,6 +3602,10 @@ def eds_to_sign(request):
     number = filters['number']
 
     rows = []
+    base = SettingManager.get_cda_base_url()
+    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+    if not available:
+        return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "CDA-сервер не доступен"})
 
     d_qs = Napravleniya.objects.filter(total_confirmed=True)
     if number:
