@@ -3430,12 +3430,12 @@ def eds_documents(request):
     base = SettingManager.get_cda_base_url()
     available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
     if not available:
-        return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
+        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
 
     if error_doctor:
         error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
         error_doctor = f"В профиле врача {iss_obj.doc_confirmation.get_fio()} ошибки: {error_doctor}"
-        return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
+        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
 
     if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
         direction.client.individual.sync_with_tfoms()
