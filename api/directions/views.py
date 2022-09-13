@@ -3429,6 +3429,9 @@ def eds_documents(request):
             error_doctor = f"{k} - не верно;{error_doctor}"
     base = SettingManager.get_cda_base_url()
     available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+    if not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
+        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения код ТФОМС не заполнен"})
+
     if not available:
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
 
@@ -3592,7 +3595,6 @@ def eds_add_sign(request):
 
 @login_required
 def eds_to_sign(request):
-
     data = json.loads(request.body)
     page = max(int(data["page"]), 1)
     filters = data['filters']
@@ -3628,6 +3630,8 @@ def eds_to_sign(request):
             else:
                 d_qs = d_qs.filter(issledovaniya__doc_confirmation__podrazdeleniye_id=department)
         elif mode == 'my':
+            if not request.user.doctorprofile.podrazdeleniye.n3_id or not request.user.doctorprofile.hospital.code_tfoms:
+                return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
             doctor_data = request.user.doctorprofile.dict_data
             error_doctor = ""
             for k, v in doctor_data.items():
