@@ -299,7 +299,7 @@ def issledovaniye_data(request):
     ignore_sample = request.GET.get("ignoreSample") == 'true'
     i = directions.Issledovaniya.objects.get(pk=pk)
 
-    sample = None
+    sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
     if (not ignore_sample and not sample) or (not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic) or i.research.pk in REMD_EXCLUDE_RESEARCH:
         return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
