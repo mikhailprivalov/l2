@@ -60,6 +60,7 @@ from laboratory.settings import (
     ODII_METHODS_IEMK,
     ID_MED_DOCUMENT_TYPE_IEMK_N3,
     DEATH_RESEARCH_PK,
+    REMD_EXCLUDE_RESEARCH,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -201,6 +202,9 @@ def direction_data(request):
     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False).select_related('research', 'doc_confirmation')
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
+    for i in iss:
+        if i.pk != DEATH_RESEARCH_PK:
+            return Response({"ok": False})
 
     if not iss:
         return Response({"ok": False})
@@ -297,7 +301,7 @@ def issledovaniye_data(request):
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
-    if (not ignore_sample and not sample) or not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic:
+    if (not ignore_sample and not sample) or (not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic) or i.research.pk in REMD_EXCLUDE_RESEARCH:
         return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
 
     results_data = []

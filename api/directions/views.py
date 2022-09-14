@@ -62,7 +62,7 @@ from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplat
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
-from laboratory.settings import DICOM_SERVER, TIME_ZONE
+from laboratory.settings import DICOM_SERVER, TIME_ZONE, REMD_ONLY_RESEARCH, REMD_EXCLUDE_RESEARCH
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
@@ -3424,6 +3424,9 @@ def eds_documents(request):
     iss_obj = Issledovaniya.objects.filter(napravleniye=direction).first()
     doctor_data = iss_obj.doc_confirmation.dict_data
     error_doctor = ""
+    if (len(REMD_ONLY_RESEARCH) > 0 and iss_obj.research.pk not in REMD_ONLY_RESEARCH) or iss_obj.research.pk in REMD_EXCLUDE_RESEARCH:
+        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "Данная услуга не настроена для подписания"})
+
     for k, v in doctor_data.items():
         if v in ["", None]:
             error_doctor = f"{k} - не верно;{error_doctor}"
@@ -3643,6 +3646,11 @@ def eds_to_sign(request):
                 error_doctor = f"В профиле врача {request.user.doctorprofile.get_fio()} ошибки: {error_doctor}"
                 return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": error_doctor})
             d_qs = d_qs.filter(eds_required_signature_types__contains=['Врач'], issledovaniya__doc_confirmation=request.user.doctorprofile)
+        if len(REMD_ONLY_RESEARCH) > 0:
+            d_qs = d_qs.filter(issledovaniya__research_id__in=REMD_ONLY_RESEARCH)
+
+        if len(REMD_EXCLUDE_RESEARCH) > 0:
+            d_qs = d_qs.exclude(issledovaniya__research_id__in=REMD_EXCLUDE_RESEARCH)
 
         if status == 'ok-full':
             d_qs = d_qs.filter(eds_total_signed=True)
