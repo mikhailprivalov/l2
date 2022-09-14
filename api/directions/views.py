@@ -3424,7 +3424,7 @@ def eds_documents(request):
     iss_obj = Issledovaniya.objects.filter(napravleniye=direction).first()
     doctor_data = iss_obj.doc_confirmation.dict_data
     error_doctor = ""
-    if len(REMD_ONLY_RESEARCH) > 0 and iss_obj.research.pk not in REMD_ONLY_RESEARCH or iss_obj.research.pk in REMD_EXCLUDE_RESEARCH:
+    if (len(REMD_ONLY_RESEARCH) > 0 and iss_obj.research.pk not in REMD_ONLY_RESEARCH) or iss_obj.research.pk in REMD_EXCLUDE_RESEARCH:
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "Данная услуга не настроена для подписания"})
 
     for k, v in doctor_data.items():
