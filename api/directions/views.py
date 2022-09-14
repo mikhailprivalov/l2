@@ -28,7 +28,7 @@ from django.http import JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
 from api import sql_func
-from api.dicom import search_dicom_study
+from api.dicom import search_dicom_study, check_server_port
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
@@ -3427,11 +3427,18 @@ def eds_documents(request):
     for k, v in doctor_data.items():
         if v in ["", None]:
             error_doctor = f"{k} - не верно;{error_doctor}"
+    base = SettingManager.get_cda_base_url()
+    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+    if not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
+        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения код ТФОМС не заполнен"})
+
+    if not available:
+        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
 
     if error_doctor:
         error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
         error_doctor = f"В профиле врача {iss_obj.doc_confirmation.get_fio()} ошибки: {error_doctor}"
-        return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
+        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
 
     if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
         direction.client.individual.sync_with_tfoms()
@@ -3597,6 +3604,10 @@ def eds_to_sign(request):
     number = filters['number']
 
     rows = []
+    base = SettingManager.get_cda_base_url()
+    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+    if not available:
+        return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "CDA-сервер не доступен"})
 
     d_qs = Napravleniya.objects.filter(total_confirmed=True)
     if number:
@@ -3619,6 +3630,8 @@ def eds_to_sign(request):
             else:
                 d_qs = d_qs.filter(issledovaniya__doc_confirmation__podrazdeleniye_id=department)
         elif mode == 'my':
+            if not request.user.doctorprofile.podrazdeleniye.n3_id or not request.user.doctorprofile.hospital.code_tfoms:
+                return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
             doctor_data = request.user.doctorprofile.dict_data
             error_doctor = ""
             for k, v in doctor_data.items():
