@@ -59,7 +59,8 @@ from laboratory.settings import (
     REFERENCE_ODLI,
     ODII_METHODS_IEMK,
     ID_MED_DOCUMENT_TYPE_IEMK_N3,
-    DEATH_RESEARCH_PK, REMD_EXCLUDE_RESEARCH,
+    DEATH_RESEARCH_PK,
+    REMD_EXCLUDE_RESEARCH,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
