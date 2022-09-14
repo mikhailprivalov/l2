@@ -51,27 +51,24 @@ def direction_collect(d_s, researches, is_research, limit):
 def direction_collect_date_signed(d_s, researches, is_research, limit):
     """
     парам: d_s - date-start, researches - списко исследований которые требуются по дате подписания
-
     Вернуть:
-    Направления, в к-рых все исследования подтверждены, и подтверждены после определенной даты
-
-    в SQL:
-    t_iss - это временная таблица запроса для направлений в к-рых есть подтвержденные исследований (Направления уникальны)
-    t_iss_null - это временная таблица запроса направлений, у к-рых есть неподтвержденные исследования
-    t_all - это готовая выборка направлений, где подтверждены ВСЕ исследования в определенном направлении
-    SELECT research_id FROM integration_framework_integrationresearches WHERE
+    Направления, в к-рых все исследования подписаны
     """
 
     with connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT 
-            id,
-            to_char(eds_total_signed_at AT TIME ZONE %(tz)s, 'YYYY-MM-DD HH24:MI:SS') AS t_signed,
-            eds_total_signed_at AT TIME ZONE %(tz)s as time_signed
-            FROM directions_napravleniya
-            WHERE directions_napravleniya.eds_total_signed = true and 
+            directions_napravleniya.id,
+            to_char(directions_napravleniya.eds_total_signed_at AT TIME ZONE %(tz)s, 'YYYY-MM-DD HH24:MI:SS') AS t_signed,
+            directions_napravleniya.eds_total_signed_at AT TIME ZONE %(tz)s as time_signed
+            FROM directions_issledovaniya
+            LEFT JOIN directions_napravleniya
+            ON directions_napravleniya.id=directions_issledovaniya.napravleniye_id
+            WHERE directions_napravleniya.eds_total_signed = true 
+            AND 
             directions_napravleniya.eds_total_signed_at > %(d_start)s::timestamp AT TIME ZONE %(tz)s
+            AND (directions_issledovaniya.research_id=ANY(ARRAY[%(researches)s]))
             ORDER BY eds_total_signed_at
             """,
             params={'d_start': d_s if str(d_s) != 'None' else '2018-01-01', 'tz': TIME_ZONE, 'researches': researches, 'is_research': is_research, 'limit': limit},
