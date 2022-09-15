@@ -60,7 +60,7 @@ from laboratory.settings import (
     ODII_METHODS_IEMK,
     ID_MED_DOCUMENT_TYPE_IEMK_N3,
     DEATH_RESEARCH_PK,
-    REMD_EXCLUDE_RESEARCH,
+    REMD_EXCLUDE_RESEARCH, REMD_ONLY_RESEARCH,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -203,7 +203,7 @@ def direction_data(request):
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
     for i in iss:
-        if i.pk != DEATH_RESEARCH_PK:
+        if len(REMD_ONLY_RESEARCH) > 0 and i.pk not in REMD_ONLY_RESEARCH:
             return Response({"ok": False})
 
     if not iss:
