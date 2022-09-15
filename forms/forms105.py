@@ -901,7 +901,7 @@ def form_03(request_data):
     )
     objs.append(Spacer(1, 7 * mm))
     objs.append(
-        Paragraph(f'Подпись заведующего отделением({manager_depart}) ____________________________', style),
+        Paragraph(f'Подпись заведующего отделением ({manager_depart}) ____________________________', style),
     )
 
     def first_pages(canvas, document):

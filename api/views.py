@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-import directory
+from directory.models import Researches
 from doctor_schedule.models import ScheduleResource
 from laboratory.settings import (
     SYSTEM_AS_VI,
@@ -2331,20 +2331,26 @@ def statistic_params_search(request):
     return JsonResponse({"rows": result, "hasParam": has_param})
 
 
+@login_required
+@group_required('Конструктор: Настройка организации')
 def get_price_list(request):
     price_data = PriceName.objects.all()
     data = [{"id": price.pk, "label": price.title, "status": price.active_status} for price in price_data]
     return JsonResponse({"data": data})
 
 
+@login_required
+@group_required('Конструктор: Настройка организации')
 def get_current_coast_researches_in_price(request):
     request_data = json.loads(request.body)
     coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["id"])
-    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__float__()} for data in coast_researches_data]
+    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__str__()} for data in coast_researches_data]
     coast_research = sorted(coast_research, key=lambda d: d['research']['title'])
     return JsonResponse({"data": coast_research})
 
 
+@login_required
+@group_required('Конструктор: Настройка организации')
 def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
     current_coast = PriceCoast.objects.get(id=request_data["coastResearchId"])
@@ -2355,8 +2361,10 @@ def update_coast_research_in_price(request):
     return JsonResponse({"ok": "ok"})
 
 
+@login_required
+@group_required('Конструктор: Настройка организации')
 def get_research_list(request):
-    researches = directory.models.Researches.objects.filter(hide=False)
+    researches = Researches.objects.filter(hide=False)
     res_list = {"Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}}
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
@@ -2368,7 +2376,7 @@ def get_research_list(request):
                 res_list["Консультации"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
                 continue
             else:
-                res_list["Консультации"].get(research.site_type.title).append({"id": research.pk, "label": research.title})
+                res_list["Консультации"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_citology:
             res_list["Морфология"]["Цитология"].append({"id": research.pk, "label": research.title})
         elif research.is_gistology:
@@ -2382,34 +2390,34 @@ def get_research_list(request):
                 res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
                 continue
             else:
-                res_list["Формы"].get(research.site_type.title).append({"id": research.pk, "label": research.title})
+                res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_paraclinic:
             if not res_list["Параклиника"].get(research.podrazdeleniye.title):
                 res_list["Параклиника"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
                 continue
-            res_list["Параклиника"].get(research.podrazdeleniye.title).append({"id": research.pk, "label": research.title})
+            res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
         elif research.podrazdeleniye is None:
             pass
         elif research.podrazdeleniye.pk in lab_podr:
             if not res_list["Лаборатория"].get(research.podrazdeleniye.title):
                 res_list["Лаборатория"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
                 continue
-            res_list["Лаборатория"].get(research.podrazdeleniye.title).append({"id": research.pk, "label": research.title})
-        else:
-            pass
+            res_list["Лаборатория"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+
     result_list = []
-    counter = 0
     count = 0
     for key, value in res_list.items():
         count += 1
-        result_list.append({"id": f'а{count}', "label": key, "children": []})
+        current_researches = {"id": f'а{count}', "label": key, "children": []}
         for k, v in value.items():
             count += 1
-            result_list[counter]["children"].append({"id": f'а{count}', "label": k, "children": v})
-        counter += 1
+            current_researches["children"].append({"id": f'а{count}', "label": k, "children": v})
+        result_list.append(current_researches)
     return JsonResponse({"data": result_list})
 
 
+@login_required
+@group_required('Конструктор: Настройка организации')
 def update_research_list_in_price(request):
     request_data = json.loads(request.body)
     if not PriceName.objects.get(pk=request_data["priceId"]).active_status:

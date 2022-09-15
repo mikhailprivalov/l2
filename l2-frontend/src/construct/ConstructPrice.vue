@@ -7,14 +7,13 @@
       :clearable="false"
       placeholder="Выберите прайс"
       value-format="object"
-      @input="getCurrentCoastResearchesInPrice(); disabled_status()"
     />
     <h4>Исследования</h4>
     <div class="card-no-hover card card-1">
       <input
         v-model="search"
         class="form-control"
-        style="padding-left: 1%"
+        style="padding-left: 6px"
         placeholder="Поиск исследования"
       >
       <table>
@@ -31,13 +30,13 @@
           </td>
         </tr>
         <tr
-          v-for="(coastResearch, idx) in filteredRows"
-          :key="idx"
+          v-for="(coastResearch) in filteredRows"
+          :key="coastResearch.id"
           class="tablerow"
         >
           <td
             class="tablerow"
-            style="padding-left: 1%"
+            style="padding-left: 6px"
           >
             {{ coastResearch.research.title }}
           </td>
@@ -109,7 +108,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -122,7 +121,7 @@ export default {
       priceList: {},
       selectedPrice: null,
       selectedResearch: null,
-      coast: null,
+      coast: '',
       researchList: {},
       search: '',
       coastResearches: [],
@@ -133,11 +132,17 @@ export default {
   computed: {
     filteredRows() {
       return this.originalCoastResearch.filter(CoastResearch => {
-        const research = CoastResearch.research.title.toString().toLowerCase();
+        const research = CoastResearch.research.title.toLowerCase();
         const searchTerm = this.search.toLowerCase();
 
         return research.includes(searchTerm);
       });
+    },
+  },
+  watch: {
+    selectedPrice() {
+      this.getCurrentCoastResearchesInPrice();
+      this.disabled = this.selectedPrice.status === false;
     },
   },
   mounted() {
@@ -187,9 +192,6 @@ export default {
         }
       }
     },
-    disabled_status() {
-      this.disabled = this.selectedPrice.status === false;
-    },
   },
 };
 </script>
@@ -197,7 +199,7 @@ export default {
 <style scoped>
 .filters {
   padding: 10px;
-  margin: 10px 8%;
+  margin: 10px 50px;
 }
 ::v-deep .form-control {
   border-radius: 0;
