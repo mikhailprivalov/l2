@@ -14,7 +14,7 @@ from directory.models import Fractions
 from laboratory.settings import (
     DEATH_RESEARCH_PK,
     DEF_LABORATORY_AUTH_PK,
-    DEF_LABORATORY_LEGAL_AUTH_PK, ODII_METHODS,
+    DEF_LABORATORY_LEGAL_AUTH_PK, ODII_METHODS, REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
@@ -81,8 +81,11 @@ def get_json_protocol_data(pk, is_paraclinic=False):
 
     legal_auth = data.get("Подпись от организации", None)
     legal_auth_data = legal_auth_get(legal_auth)
-    if legal_auth_data["positionCode"] not in [7] or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]:
+    if (legal_auth_data["positionCode"] not in [334, 336, 6, 4, 335]) or \
+        ("" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]) or \
+        iss.research_id in REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH:
         legal_auth_data = author_doctor(doctor_legal_confirm_obj)
+
     hosp_obj = doctor_confirm_obj.hospital
     hosp_oid = hosp_obj.oid
 
@@ -243,7 +246,7 @@ def legal_auth_get(legal_auth_doc, is_recursion=False, as_uploading_data=False):
             legal_auth["name"]["family"] = legal_doctor.family
             legal_auth["name"]["name"] = legal_doctor.name
             legal_auth["name"]["patronymic"] = legal_doctor.patronymic
-    if (legal_auth["positionCode"] not in [7] or "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]]) and DEF_LABORATORY_LEGAL_AUTH_PK and not is_recursion:
+    if (legal_auth["positionCode"] not in [334, 336, 6, 4, 335] or "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]]) and DEF_LABORATORY_LEGAL_AUTH_PK and not is_recursion:
         return legal_auth_get({"id": DEF_LABORATORY_LEGAL_AUTH_PK}, True, as_uploading_data=as_uploading_data)
     return legal_auth
 

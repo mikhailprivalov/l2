@@ -380,6 +380,7 @@ ODII_METHODS_IEMK = {}
 ID_MED_DOCUMENT_TYPE_IEMK_N3 = {}
 REMD_ONLY_RESEARCH = []
 REMD_EXCLUDE_RESEARCH = []
+REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH = []
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
