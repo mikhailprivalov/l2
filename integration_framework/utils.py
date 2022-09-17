@@ -14,7 +14,9 @@ from directory.models import Fractions
 from laboratory.settings import (
     DEATH_RESEARCH_PK,
     DEF_LABORATORY_AUTH_PK,
-    DEF_LABORATORY_LEGAL_AUTH_PK, ODII_METHODS, REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
+    DEF_LABORATORY_LEGAL_AUTH_PK,
+    ODII_METHODS,
+    REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
