@@ -66,6 +66,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
         data[r.title] = val
 
     iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)
+    data["Заключительный диагноз"] = iss.diagnos
     if iss.research_id == DEATH_RESEARCH_PK:
         data_direct_death = data.get("а) Болезнь или состояние, непосредственно приведшее к смерти", None)
         if data_direct_death:
@@ -109,6 +110,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 if r.group_title.lower() == "заключение":
                     result_paraclinic["заключение"] = f"{result_paraclinic.get('заключение')}; {r.value}"
         data = result_paraclinic
+
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
     for dp in direction_params_obj:
