@@ -63,7 +63,6 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             if val and nsi_smo_code:
                 smo_id = nsi_smo_code["values"][val.get("code", "")]
                 val["id"] = smo_id
-
         data[r.title] = val
 
     iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)
@@ -114,13 +113,15 @@ def get_json_protocol_data(pk, is_paraclinic=False):
 
     if iss.research.is_doc_refferal:
         try:
-            val = json.loads(data.get("Cостояние пациента"))
-            print(val)
+            val = data.get("Cостояние пациента", None)
             if not val or not isinstance(val, dict):
                 pass
+            else:
+                data["Состояние код"] = val["code"]
+                data["Состояние наименование"] = val["title"]
         except Exception:
-            data["Состояние код"] = ""
-            data["Состояние наименование"] = ""
+            data["Состояние код"] = "1"
+            data["Состояние наименование"] = "Удовлетворительное"
 
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
