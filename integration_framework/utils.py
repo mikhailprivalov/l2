@@ -16,7 +16,8 @@ from laboratory.settings import (
     DEF_LABORATORY_AUTH_PK,
     DEF_LABORATORY_LEGAL_AUTH_PK,
     ODII_METHODS,
-    REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH, LEGAL_AUTH_CODE_POSITION,
+    REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
+    LEGAL_AUTH_CODE_POSITION,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
@@ -84,9 +85,9 @@ def get_json_protocol_data(pk, is_paraclinic=False):
 
     legal_auth = data.get("Подпись от организации", None)
     legal_auth_data = legal_auth_get(legal_auth)
-    if (legal_auth_data["positionCode"] not in LEGAL_AUTH_CODE_POSITION or
-        "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]) and \
-        iss.research_id in REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH:
+    if (
+        legal_auth_data["positionCode"] not in LEGAL_AUTH_CODE_POSITION or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]
+    ) and iss.research_id in REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH:
         legal_auth_data = author_doctor(doctor_legal_confirm_obj)
     else:
         legal_auth_data = author_data
@@ -110,6 +111,16 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 if r.group_title.lower() == "заключение":
                     result_paraclinic["заключение"] = f"{result_paraclinic.get('заключение')}; {r.value}"
         data = result_paraclinic
+
+    if iss.research.is_doc_refferal:
+        try:
+            val = json.loads(data.get("Cостояние пациента"))
+            print(val)
+            if not val or not isinstance(val, dict):
+                pass
+        except Exception:
+            data["Состояние код"] = ""
+            data["Состояние наименование"] = ""
 
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
