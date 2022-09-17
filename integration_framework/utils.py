@@ -250,7 +250,11 @@ def legal_auth_get(legal_auth_doc, is_recursion=False, as_uploading_data=False):
             legal_auth["name"]["family"] = legal_doctor.family
             legal_auth["name"]["name"] = legal_doctor.name
             legal_auth["name"]["patronymic"] = legal_doctor.patronymic
-    if (legal_auth["positionCode"] not in [334, 336, 6, 4, 335] or "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]]) and DEF_LABORATORY_LEGAL_AUTH_PK and not is_recursion:
+    if (
+        (legal_auth["positionCode"] not in [334, 336, 6, 4, 335] or "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]])
+        and DEF_LABORATORY_LEGAL_AUTH_PK
+        and not is_recursion
+    ):
         return legal_auth_get({"id": DEF_LABORATORY_LEGAL_AUTH_PK}, True, as_uploading_data=as_uploading_data)
     return legal_auth
 
