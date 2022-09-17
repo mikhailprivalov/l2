@@ -83,9 +83,11 @@ def get_json_protocol_data(pk, is_paraclinic=False):
 
     legal_auth = data.get("Подпись от организации", None)
     legal_auth_data = legal_auth_get(legal_auth)
-    if (legal_auth_data["positionCode"] not in [334, 336, 6, 4, 335]) or \
-        ("" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]) or \
-        iss.research_id in REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH:
+    if (
+        (legal_auth_data["positionCode"] not in [334, 336, 6, 4, 335])
+        or ("" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]])
+        or iss.research_id in REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH
+    ):
         legal_auth_data = author_doctor(doctor_legal_confirm_obj)
 
     hosp_obj = doctor_confirm_obj.hospital
