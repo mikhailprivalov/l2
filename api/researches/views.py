@@ -549,7 +549,7 @@ def researches_update(request):
                             hide=group["hide"],
                             visibility=group.get("visibility", ""),
                             fields_inline=group.get("fieldsInline", False),
-                            cda_option_id = group.get("cdaOption", -1) if group.get("cdaOption", -1) != -1 else None,
+                            cda_option_id=group.get("cdaOption", -1) if group.get("cdaOption", -1) != -1 else None,
                         )
                     elif ParaclinicInputGroups.objects.filter(pk=pk).exists():
                         g = ParaclinicInputGroups.objects.get(pk=pk)
