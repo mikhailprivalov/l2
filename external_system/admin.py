@@ -25,8 +25,15 @@ class ResCdaFields(admin.ModelAdmin):
         'is_treatment',
         'is_form',
     )
-    list_filter = ('is_doc_refferal', 'is_treatment', 'is_form',)
-    search_fields = ('code', 'title',)
+    list_filter = (
+        'is_doc_refferal',
+        'is_treatment',
+        'is_form',
+    )
+    search_fields = (
+        'code',
+        'title',
+    )
 
 
 admin.site.register(FsliRefbookTest)
