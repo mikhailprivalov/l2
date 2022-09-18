@@ -549,6 +549,7 @@ def researches_update(request):
                             hide=group["hide"],
                             visibility=group.get("visibility", ""),
                             fields_inline=group.get("fieldsInline", False),
+                            cda_option_id = group.get("cdaOption", -1) if group.get("cdaOption", -1) != -1 else None,
                         )
                     elif ParaclinicInputGroups.objects.filter(pk=pk).exists():
                         g = ParaclinicInputGroups.objects.get(pk=pk)
@@ -558,6 +559,7 @@ def researches_update(request):
                         g.order = group["order"]
                         g.hide = group["hide"]
                         g.visibility = group.get("visibility", "")
+                        g.cda_option_id = group.get("cdaOption", -1) if group.get("cdaOption", -1) != -1 else None
                         g.fields_inline = group.get("fieldsInline", False)
                     if g:
                         g.save()
@@ -565,7 +567,6 @@ def researches_update(request):
                             f = None
                             pk = field["pk"]
                             if pk == -1:
-
                                 f = ParaclinicInputField(
                                     title=field["title"],
                                     short_title=field.get("short_title", ""),
@@ -586,6 +587,7 @@ def researches_update(request):
                                     operator_enter_param=field.get("operator_enter_param", False),
                                     attached=field.get("attached", ''),
                                     control_param=field.get("controlParam", ""),
+                                    cda_option_id=field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None,
                                     patient_control_param_id=field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None,
                                 )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
@@ -611,6 +613,7 @@ def researches_update(request):
                                 f.attached = field.get("attached", '')
                                 f.control_param = field.get("controlParam", '')
                                 f.patient_control_param_id = field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None
+                                f.cda_option_id = field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None
                             if f:
                                 f.save()
 

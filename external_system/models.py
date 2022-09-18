@@ -85,3 +85,24 @@ class TypesMedicalDocuments(models.Model):
 
     def __str__(self):
         return f"{self.oid} - {self.name}"
+
+
+class CdaFields(models.Model):
+    code = models.IntegerField(default=-1, blank=True, help_text='code документа', db_index=True)
+    title = models.CharField(max_length=255, default="", help_text='Наименование')
+    is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу", db_index=True)
+    is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение", db_index=True)
+    is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления", db_index=True)
+
+    def __str__(self):
+        return f"{self.code} - {self.title}"
+
+    @staticmethod
+    def get_cda_params(is_doc_refferal, is_treatment, is_form):
+        if is_doc_refferal:
+            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
+        if is_treatment:
+            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_treatment=True).order_by("title")]]
+        if is_form:
+            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_form=True).order_by("title")]]
+        return [{"id": -1, "label": "Пусто"}]

@@ -495,6 +495,19 @@
               placeholder="Условие"
             >
           </div>
+          <div>
+            <strong>CDA-отношение:</strong>
+            <Treeselect
+              v-model="group.cdaOption"
+              class="treeselect treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="cda_options"
+              placeholder="CDA-отношение"
+              :append-to-body="true"
+              :clearable="false"
+            />
+          </div>
           <div
             v-if="ex_dep !== 12 && ex_dep !== 13"
             class="row"
@@ -574,10 +587,21 @@
                     <strong>Контролируемый параметр:</strong>
                     <Treeselect
                       v-model="row.patientControlParam"
-                      class="treeselect treeselect-wide"
+                      class="treeselect treeselect-26px"
                       :multiple="false"
                       :disable-branch-nodes="true"
                       :options="patient_control_param_all"
+                      placeholder="Контролируемый параметр"
+                      :append-to-body="true"
+                      :clearable="false"
+                    />
+                    <strong>CDA-отношение:</strong>
+                    <Treeselect
+                      v-model="row.cdaOption"
+                      class="treeselect treeselect-26px"
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="cda_options"
                       placeholder="Контролируемый параметр"
                       :append-to-body="true"
                       :clearable="false"
@@ -1154,6 +1178,7 @@ export default {
       currentMethod: -1,
       assigned_to_params: [],
       type_period: null,
+      cda_options: [],
       dynamicDirectories: [],
     };
   },
@@ -1462,6 +1487,7 @@ export default {
             this.groups = data.groups;
             this.direction_params_all = data.direction_params_all;
             this.patient_control_param_all = data.patient_control_param_all;
+            this.cda_options = data.cda_options;
             this.direction_current_params = data.direction_current_params;
             this.direction_expertise_all = data.direction_expertise_all;
             this.direction_current_expertise = data.direction_current_expertise;
