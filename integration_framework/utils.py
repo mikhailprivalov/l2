@@ -32,6 +32,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     data = {}
     document = {}
     for r in result_protocol:
+        print(r)
         if "{" in r.value and "}" in r.value:
             try:
                 val = json.loads(r.value)

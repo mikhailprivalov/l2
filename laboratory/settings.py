@@ -382,6 +382,7 @@ REMD_ONLY_RESEARCH = []
 REMD_EXCLUDE_RESEARCH = []
 REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH = []
 LEGAL_AUTH_CODE_POSITION = [334, 336, 6, 4, 335]
+REMD_FIELDS_BY_TYPE_DOCUMENT = {"ConsultationProtocol_max": {}}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
