@@ -489,6 +489,7 @@ class ParaclinicInputGroups(models.Model):
     hide = models.BooleanField()
     visibility = models.TextField(default='', blank=True)
     fields_inline = models.BooleanField(default=False, blank=True)
+    cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text='CDA-поле для всей группы', on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.research.title} – {self.title}"
@@ -594,6 +595,7 @@ class ParaclinicInputField(models.Model):
     not_edit = models.BooleanField(default=False, help_text='Не редактируемое', blank=True)
     control_param = models.TextField(default='', blank=True)
     operator_enter_param = models.BooleanField(default=False, help_text='Поле ввода для оператора(лаборанта)', blank=True)
+    cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text='CDA-поле для всей группы', on_delete=models.SET_NULL)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
