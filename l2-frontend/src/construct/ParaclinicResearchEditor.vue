@@ -460,7 +460,7 @@
         >
           <div
             v-if="ex_dep !== 12 && ex_dep !== 13"
-            class="input-group"
+            class="input-group treeselect-input-group-simple"
           >
             <span class="input-group-btn">
               <button
@@ -494,19 +494,19 @@
               class="form-control"
               placeholder="Условие"
             >
-          </div>
-          <div>
-            <strong>CDA-отношение:</strong>
-            <Treeselect
-              v-model="group.cdaOption"
-              class="treeselect treeselect-wide"
-              :multiple="false"
-              :disable-branch-nodes="true"
-              :options="cda_options"
-              placeholder="CDA-отношение"
-              :append-to-body="true"
-              :clearable="false"
-            />
+            <span class="input-group-addon">CDA-отношение</span>
+            <span class="input-group-btn">
+              <Treeselect
+                v-model="group.cdaOption"
+                class="treeselect-wide treeselect-noborder-left"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="cda_options"
+                placeholder="CDA-отношение"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </span>
           </div>
           <div
             v-if="ex_dep !== 12 && ex_dep !== 13"
@@ -583,29 +583,33 @@
                       class="form-control"
                     >
                   </div>
-                  <div>
-                    <strong>Контролируемый параметр:</strong>
-                    <Treeselect
-                      v-model="row.patientControlParam"
-                      class="treeselect treeselect-26px"
-                      :multiple="false"
-                      :disable-branch-nodes="true"
-                      :options="patient_control_param_all"
-                      placeholder="Контролируемый параметр"
-                      :append-to-body="true"
-                      :clearable="false"
-                    />
-                    <strong>CDA-отношение:</strong>
-                    <Treeselect
-                      v-model="row.cdaOption"
-                      class="treeselect treeselect-26px"
-                      :multiple="false"
-                      :disable-branch-nodes="true"
-                      :options="cda_options"
-                      placeholder="Контролируемый параметр"
-                      :append-to-body="true"
-                      :clearable="false"
-                    />
+                  <div class="row">
+                    <div class="col-xs-6">
+                      <strong>Контролируемый параметр:</strong>
+                      <Treeselect
+                        v-model="row.patientControlParam"
+                        class="treeselect treeselect-26px"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="patient_control_param_all"
+                        placeholder="Контролируемый параметр"
+                        :append-to-body="true"
+                        :clearable="false"
+                      />
+                    </div>
+                    <div class="col-xs-6">
+                      <strong>CDA-отношение:</strong>
+                      <Treeselect
+                        v-model="row.cdaOption"
+                        class="treeselect treeselect-26px"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="cda_options"
+                        placeholder="CDA-отношение"
+                        :append-to-body="true"
+                        :clearable="false"
+                      />
+                    </div>
                   </div>
                   <div v-if="row.field_type === 0 || row.field_type === 29">
                     <strong>Значение по умолчанию:</strong>
