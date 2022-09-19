@@ -43,7 +43,7 @@
           <td>
             <input
               v-model="coastResearch.coast"
-              :disabled="disabled_status"
+              :disabled="!selectedPrice.status"
               type="number"
               min="0"
               step="0.01"
@@ -53,7 +53,7 @@
           <td>
             <button
               v-tippy
-              :disabled="disabled_status"
+              :disabled="!selectedPrice.status"
               class="btn btn-blue-nb"
               title="Сохранить цену"
               @click="updateCoastResearchInPrice(coastResearch)"
@@ -84,7 +84,7 @@
           >
             <input
               v-model="coast"
-              :disabled="disabled_status"
+              :disabled="!selectedPrice.status"
               type="number"
               class="text-right form-control"
               min="0"
@@ -94,7 +94,7 @@
           <td>
             <button
               v-tippy
-              :disabled="disabled_status"
+              :disabled="!selectedPrice.status"
               class="btn btn-blue-nb"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
@@ -127,7 +127,6 @@ export default {
       search: '',
       coastResearches: [],
       originalCoastResearch: [],
-      disabled: false,
     };
   },
   computed: {
@@ -138,9 +137,6 @@ export default {
 
         return research.includes(searchTerm);
       });
-    },
-    disabled_status() {
-      return this.disabled === this.selectedPrice.status;
     },
   },
   watch: {
