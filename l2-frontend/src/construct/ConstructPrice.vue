@@ -120,7 +120,7 @@ export default {
   data() {
     return {
       priceList: {},
-      selectedPrice: { id: -1, label: 'Выберите прайс', status: true },
+      selectedPrice: { id: -1, label: 'Выберите прайс', status: false },
       selectedResearch: null,
       coast: '',
       researchList: {},
