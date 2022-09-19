@@ -272,6 +272,7 @@
 import { debounce } from 'lodash/function';
 import CategoryPick from '@/ui-cards/CategoryPick.vue';
 import * as actions from '@/store/action-types';
+import { sendEvent } from '@/metrics';
 import ResearchPick from './ResearchPick.vue';
 
 export default {
@@ -642,10 +643,16 @@ export default {
     select_type(pk) {
       this.type = pk;
       this.checkType();
+      sendEvent('researches-picker:select_type', {
+        pk,
+      });
     },
     select_dep(pk) {
       this.dep = pk;
       window.$(this.$refs.fndsrc).focus();
+      sendEvent('researches-picker:select_dep', {
+        pk,
+      });
     },
     checkType() {
       if (this.type === '-109999') {
@@ -764,11 +771,17 @@ export default {
     },
     founded_select(clearOrig = false) {
       const clear = clearOrig || false;
+      const selected = [];
       for (const row of this.researches_display) {
         if (this.highlight_search(row)) {
+          selected.push(row.pk);
           this.select_research_ignore(row.pk);
         }
       }
+      sendEvent('researches-picker:founded_select', {
+        clear,
+        selected,
+      });
       if (clear) {
         this.clear_search();
       } else {

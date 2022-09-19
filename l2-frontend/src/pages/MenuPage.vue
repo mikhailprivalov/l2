@@ -39,6 +39,7 @@
               <a
                 href="/logout"
                 class="btn btn-blue-nb"
+                @click="logout"
               >Выход</a>
             </div>
           </div>
@@ -94,6 +95,17 @@
           :target="b.nt && '_blank'"
         >
           <span>{{ b.title }}</span>
+        </router-link>
+      </div><div
+        v-if="forms_url"
+        class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn"
+      >
+        <router-link
+          :to="forms_url"
+          class="panel-body"
+          target="_blank"
+        >
+          <span>Оставть отзыв о системе L2</span>
         </router-link>
       </div>
     </div>
@@ -382,6 +394,9 @@ import { validateEmail } from '@/utils';
     email() {
       return this.user_data?.email;
     },
+    forms_url() {
+      return this.user_data?.modules.forms_url;
+    },
     changePassword() {
       return this.$store.getters.modules.change_password;
     },
@@ -393,6 +408,8 @@ export default class MenuPage extends Vue {
   buttons: Button[];
 
   fio_dep: string;
+
+  forms_url: string;
 
   changePassword: boolean;
 
@@ -509,6 +526,14 @@ export default class MenuPage extends Vue {
       this.$root.$emit('msg', 'error', message);
       this.loading = false;
     }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  logout() {
+    window.posthog?.reset();
+    window.posthogInit(
+      window.posthog,
+    );
   }
 }
 </script>
