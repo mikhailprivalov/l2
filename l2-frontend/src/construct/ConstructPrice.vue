@@ -43,7 +43,7 @@
           <td>
             <input
               v-model="coastResearch.coast"
-              :disabled="disabled"
+              :disabled="disabled_status"
               type="number"
               min="0"
               step="0.01"
@@ -53,7 +53,7 @@
           <td>
             <button
               v-tippy
-              :disabled="disabled"
+              :disabled="disabled_status"
               class="btn btn-blue-nb"
               title="Сохранить цену"
               @click="updateCoastResearchInPrice(coastResearch)"
@@ -84,7 +84,7 @@
           >
             <input
               v-model="coast"
-              :disabled="disabled"
+              :disabled="disabled_status"
               type="number"
               class="text-right form-control"
               min="0"
@@ -94,7 +94,7 @@
           <td>
             <button
               v-tippy
-              :disabled="disabled"
+              :disabled="disabled_status"
               class="btn btn-blue-nb"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
@@ -112,6 +112,7 @@
 
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'ConstructPrice',
@@ -119,7 +120,7 @@ export default {
   data() {
     return {
       priceList: {},
-      selectedPrice: null,
+      selectedPrice: { id: -1, label: 'Выберите прайс', status: true },
       selectedResearch: null,
       coast: '',
       researchList: {},
@@ -138,11 +139,13 @@ export default {
         return research.includes(searchTerm);
       });
     },
+    disabled_status() {
+      return this.disabled === this.selectedPrice.status;
+    },
   },
   watch: {
     selectedPrice() {
       this.getCurrentCoastResearchesInPrice();
-      this.disabled = this.selectedPrice.status === false;
     },
   },
   mounted() {
@@ -161,10 +164,12 @@ export default {
       this.originalCoastResearch = this.coastResearches.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
+      await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('/update-coast-research-in-price', {
         coastResearchId: coastResearch.id,
         coast: coastResearch.coast,
       });
+      await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Цена обновлена');
       } else {
@@ -177,11 +182,13 @@ export default {
       } else if (this.coastResearches.data.find((i) => i.research.id === this.selectedResearch)) {
         this.$root.$emit('msg', 'error', 'Исследование уже есть в прайсе');
       } else {
+        await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/update-research-list-in-price', {
           priceId: this.selectedPrice.id,
           researchId: this.selectedResearch,
           coast: this.coast,
         });
+        await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Исследование добавлено');
           await this.getCurrentCoastResearchesInPrice();
