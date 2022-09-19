@@ -59,3 +59,4 @@ beren==0.7.1
 transliterate==1.10.2
 imgkit==1.2.2
 PyYAML==5.4.1
+posthog==2.1.2
