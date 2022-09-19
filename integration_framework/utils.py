@@ -17,7 +17,8 @@ from laboratory.settings import (
     DEF_LABORATORY_LEGAL_AUTH_PK,
     ODII_METHODS,
     REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
-    LEGAL_AUTH_CODE_POSITION, REMD_FIELDS_BY_TYPE_DOCUMENT,
+    LEGAL_AUTH_CODE_POSITION,
+    REMD_FIELDS_BY_TYPE_DOCUMENT,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
