@@ -105,7 +105,7 @@
           class="panel-body"
           target="_blank"
         >
-          <span>Оставть отзыв о системе L2</span>
+          <span>Ваши предложения по улучшению системы L2</span>
         </router-link>
       </div>
     </div>
