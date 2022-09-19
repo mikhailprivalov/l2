@@ -14,7 +14,10 @@ from directory.models import Fractions
 from laboratory.settings import (
     DEATH_RESEARCH_PK,
     DEF_LABORATORY_AUTH_PK,
-    DEF_LABORATORY_LEGAL_AUTH_PK, ODII_METHODS,
+    DEF_LABORATORY_LEGAL_AUTH_PK,
+    ODII_METHODS,
+    REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
+    LEGAL_AUTH_CODE_POSITION,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
@@ -60,10 +63,10 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             if val and nsi_smo_code:
                 smo_id = nsi_smo_code["values"][val.get("code", "")]
                 val["id"] = smo_id
-
         data[r.title] = val
 
     iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)
+    data["Заключительный диагноз"] = iss.diagnos
     if iss.research_id == DEATH_RESEARCH_PK:
         data_direct_death = data.get("а) Болезнь или состояние, непосредственно приведшее к смерти", None)
         if data_direct_death:
@@ -81,8 +84,13 @@ def get_json_protocol_data(pk, is_paraclinic=False):
 
     legal_auth = data.get("Подпись от организации", None)
     legal_auth_data = legal_auth_get(legal_auth)
-    if legal_auth_data["positionCode"] not in [7] or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]:
+    if (
+        legal_auth_data["positionCode"] not in LEGAL_AUTH_CODE_POSITION or "" in [legal_auth_data["positionCode"], legal_auth_data["positionName"], legal_auth_data["snils"]]
+    ) and iss.research_id in REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH:
         legal_auth_data = author_doctor(doctor_legal_confirm_obj)
+    else:
+        legal_auth_data = author_data
+
     hosp_obj = doctor_confirm_obj.hospital
     hosp_oid = hosp_obj.oid
 
@@ -102,6 +110,19 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 if r.group_title.lower() == "заключение":
                     result_paraclinic["заключение"] = f"{result_paraclinic.get('заключение')}; {r.value}"
         data = result_paraclinic
+
+    if iss.research.is_doc_refferal:
+        try:
+            val = data.get("Cостояние пациента", None)
+            if not val or not isinstance(val, dict):
+                pass
+            else:
+                data["Состояние код"] = val["code"]
+                data["Состояние наименование"] = val["title"]
+        except Exception:
+            data["Состояние код"] = "1"
+            data["Состояние наименование"] = "Удовлетворительное"
+
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
     for dp in direction_params_obj:
@@ -243,7 +264,11 @@ def legal_auth_get(legal_auth_doc, is_recursion=False, as_uploading_data=False):
             legal_auth["name"]["family"] = legal_doctor.family
             legal_auth["name"]["name"] = legal_doctor.name
             legal_auth["name"]["patronymic"] = legal_doctor.patronymic
-    if (legal_auth["positionCode"] not in [7] or "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]]) and DEF_LABORATORY_LEGAL_AUTH_PK and not is_recursion:
+    if (
+        (legal_auth["positionCode"] not in LEGAL_AUTH_CODE_POSITION or "" in [legal_auth["positionCode"], legal_auth["positionName"], legal_auth["snils"]])
+        and DEF_LABORATORY_LEGAL_AUTH_PK
+        and not is_recursion
+    ):
         return legal_auth_get({"id": DEF_LABORATORY_LEGAL_AUTH_PK}, True, as_uploading_data=as_uploading_data)
     return legal_auth
 

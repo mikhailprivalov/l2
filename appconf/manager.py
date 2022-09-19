@@ -7,7 +7,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-3"
+    VERSION = f"{laboratory.VERSION}-4"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -59,6 +59,10 @@ class SettingManager:
     @staticmethod
     def l2(key, default='false'):
         return SettingManager.get('l2_{}'.format(key), default=default, default_type='b')
+
+    @staticmethod
+    def forms_url():
+        return 'https://forms.yandex.ru/u/6327b35ab4d9a1750ea721f2/'
 
     @staticmethod
     def get_eds_base_url():
@@ -162,6 +166,7 @@ class SettingManager:
             "auto_clinical_examination_direct": SettingManager.get("auto_clinical_examination_direct", default='false', default_type='b'),
             "legal_authenticator": SettingManager.get("legal_authenticator", default='false', default_type='b'),
             "change_password": SettingManager.get("change_password", default='false', default_type='b'),
+            "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 

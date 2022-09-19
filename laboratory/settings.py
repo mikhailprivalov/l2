@@ -104,6 +104,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'context_processors.utils.card_bases',
+                'context_processors.utils.default_org',
                 'context_processors.utils.menu',
                 'context_processors.utils.profile',
                 'context_processors.utils.local_settings',
@@ -380,6 +381,9 @@ ODII_METHODS_IEMK = {}
 ID_MED_DOCUMENT_TYPE_IEMK_N3 = {}
 REMD_ONLY_RESEARCH = []
 REMD_EXCLUDE_RESEARCH = []
+REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH = []
+LEGAL_AUTH_CODE_POSITION = [334, 336, 6, 4, 335]
+REMD_FIELDS_BY_TYPE_DOCUMENT = {"ConsultationProtocol_max": {}}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

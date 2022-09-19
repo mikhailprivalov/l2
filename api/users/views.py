@@ -24,7 +24,15 @@ def auth(request):
             log = slog.Log(key="", type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile)
             log.save()
             request.user.doctorprofile.register_login(slog.Log.get_client_ip(request))
-            return status_response(True, data={'fio': user.doctorprofile.get_full_fio()})
+            return status_response(
+                True,
+                data={
+                    'fio': user.doctorprofile.get_full_fio(),
+                    'orgId': user.doctorprofile.get_hospital_full_id(),
+                    'orgTitle': user.doctorprofile.get_hospital_title(),
+                    'userId': user.doctorprofile.pk,
+                }
+            )
 
         return status_response(False, message="Ваш аккаунт отключен")
     elif len(password) == 0 and len(f1) == 1 and len(f1[0]) == 2:

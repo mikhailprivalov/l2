@@ -20,6 +20,7 @@ import plural from 'plural-ru';
 import moment from 'moment';
 import VueFormulate from '@braid/vue-formulate';
 import { ru } from '@braid/vue-formulate-i18n';
+import { sendEvent } from '@/metrics';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 
 import api from './api';
@@ -98,5 +99,6 @@ export default (): void => {
   Vue.config.errorHandler = function (msg, vm) {
     console.error(msg);
     vm.$root.$emit('msg', 'error', `Vue Error: ${msg}`);
+    sendEvent('vue_error', { msg });
   };
 };
