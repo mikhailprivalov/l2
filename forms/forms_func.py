@@ -540,7 +540,9 @@ def hosp_extract_get_data(hosp_last_num):
 
     titles_field = [
         'Время выписки',
+        'Время смерти',
         'Дата выписки',
+        'Дата смерти',
         'Основной диагноз (описание)',
         'Основной диагноз по МКБ',
         'Осложнение основного диагноза (описание)',
@@ -562,9 +564,9 @@ def hosp_extract_get_data(hosp_last_num):
 
     if list_values:
         for i in list_values:
-            if i[3] == 'Дата выписки':
+            if i[3] == 'Дата выписки' or i[3] == 'Дата смерти':
                 date_value = normalize_date(i[2])
-            if i[3] == 'Время выписки':
+            if i[3] == 'Время выписки' or i[3] == 'Время смерти':
                 time_value = i[2]
             if i[3] == 'Основной диагноз (описание)':
                 final_diagnos = i[2]
