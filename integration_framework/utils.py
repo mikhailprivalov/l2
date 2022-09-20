@@ -67,7 +67,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
         data[r.title] = val
 
     iss = directions.Issledovaniya.objects.get(napravleniye_id=pk)
-    data["Заключительный диагноз"] = iss.diagnos
+
     if iss.research_id == DEATH_RESEARCH_PK:
         data_direct_death = data.get("а) Болезнь или состояние, непосредственно приведшее к смерти", None)
         if data_direct_death:
@@ -127,10 +127,15 @@ def get_json_protocol_data(pk, is_paraclinic=False):
         for i in REMD_FIELDS_BY_TYPE_DOCUMENT.get("ConsultationProtocol_max"):
             data[i] = "-"
         for r in result_protocol:
-            if r.cda_title_field is None:
-                data[r.cda_title_group] = f"{data.get(r.cda_title_group)}; {r.value}"
-            else:
-                data[r.cda_title_field] = f"{data.get(r.cda_title_field)}; {r.value}"
+            if r.value:
+                if r.cda_title_field is None:
+                    data[r.cda_title_group] = f"{data.get(r.cda_title_group)}; {r.title}:{r.value}"
+                else:
+                    data[r.cda_title_field] = f"{data.get(r.cda_title_field)}; {r.title}:{r.value}"
+                if r.cda_title_field == "Шифр по МКБ-10":
+                    diag_data = r.value.split(" ")
+                    data["Шифр по МКБ-10 код"] = diag_data.pop(0)
+                    data["Шифр по МКБ-10 наименование"] = " ".join(diag_data)
         data["Код услуги"] = iss.research.code
 
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
