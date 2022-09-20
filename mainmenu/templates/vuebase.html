@@ -36,7 +36,7 @@
                 return;
             }
 
-            const hospId = orgId || '{% firstof default_org.oid default_org.code_tfoms default_org.n3_id %}/{% firstof request.user.doctorprofile.hospital.oid request.user.doctorprofile.hospital.code_tfoms request.user.doctorprofile.hospital.n3_id -1 %}/{% firstof request.user.doctorprofile.hospital_id -1 %}';
+            const hospId = orgId || '{% firstof default_org.oid default_org.code_tfoms default_org.n3_id %}/{% firstof default_org.pk -1 %}/{% firstof request.user.doctorprofile.hospital.oid request.user.doctorprofile.hospital.code_tfoms request.user.doctorprofile.hospital.n3_id -1 %}/{% firstof request.user.doctorprofile.hospital_id -1 %}';
 
             posthog.group(
                 'hospital',
