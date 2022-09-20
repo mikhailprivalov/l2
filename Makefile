@@ -11,11 +11,11 @@ watch:
 	yarn --cwd l2-frontend serve
 
 build:
-	-(cd l2-frontend && npx --yes browserslist@latest --update-db && cd ..)
+	-#(cd l2-frontend && npx --yes browserslist@latest --update-db && cd ..)
 	yarn --cwd l2-frontend build
 
 build_prod:
-	-(cd l2-frontend && npx --yes browserslist@latest --update-db && cd ..)
+	-#(cd l2-frontend && npx --yes browserslist@latest --update-db && cd ..)
 	yarn --cwd l2-frontend build_prod
 
 ci_lint:
