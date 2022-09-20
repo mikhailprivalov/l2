@@ -21,6 +21,7 @@ import moment from 'moment';
 import VueFormulate from '@braid/vue-formulate';
 import { ru } from '@braid/vue-formulate-i18n';
 import { sendEvent } from '@/metrics';
+import error2json from '@stdlib/error-to-json';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 
 import api from './api';
@@ -96,9 +97,9 @@ export default (): void => {
     newestOnTop: false,
   });
 
-  Vue.config.errorHandler = function (msg, vm) {
-    console.error(msg);
-    vm.$root.$emit('msg', 'error', `Vue Error: ${msg}`);
-    sendEvent('vue_error', { msg: String(msg) });
+  Vue.config.errorHandler = (error, vm) => {
+    console.error(error);
+    vm.$root.$emit('msg', 'error', `Vue Error: ${error}`);
+    sendEvent('vue_error', { error: error2json(error) });
   };
 };

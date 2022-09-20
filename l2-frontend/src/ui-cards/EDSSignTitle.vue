@@ -35,7 +35,7 @@ export default {
     try {
       await getSystemInfo();
       await execute(async ({ cadesplugin }) => {
-        await cadesplugin.async_spawn((function* (args) {
+        await cadesplugin.async_spawn((function* () {
           const oSignedData = yield cadesplugin.CreateObjectAsync('CAdESCOM.CadesSignedData');
           yield oSignedData.propset_ContentEncoding(1);
           yield oSignedData.propset_Content(this.type === 'PDF' ? this.data : encode(this.data));
