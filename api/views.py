@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
+from directory.models import Researches
 from doctor_schedule.models import ScheduleResource
 from laboratory.settings import (
     SYSTEM_AS_VI,
@@ -38,7 +39,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -71,6 +72,7 @@ from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals
+from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
@@ -1990,6 +1992,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
         {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2326,3 +2329,99 @@ def statistic_params_search(request):
     if len(result) > 0:
         has_param = True
     return JsonResponse({"rows": result, "hasParam": has_param})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_price_list(request):
+    price_data = PriceName.objects.all()
+    data = [{"id": price.pk, "label": price.title, "status": price.active_status} for price in price_data]
+    return JsonResponse({"data": data})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_current_coast_researches_in_price(request):
+    request_data = json.loads(request.body)
+    coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["id"])
+    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__str__()} for data in coast_researches_data]
+    coast_research = sorted(coast_research, key=lambda d: d['research']['title'])
+    return JsonResponse({"data": coast_research})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_coast_research_in_price(request):
+    request_data = json.loads(request.body)
+    current_coast = PriceCoast.objects.get(id=request_data["coastResearchId"])
+    if not current_coast.price_name.active_status:
+        return JsonResponse({"ok": False, "message": "Прайс не активен"})
+    current_coast.coast = request_data["coast"]
+    current_coast.save()
+    return JsonResponse({"ok": "ok"})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_research_list(request):
+    researches = Researches.objects.filter(hide=False)
+    res_list = {"Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}}
+    lab_podr = get_lab_podr()
+    lab_podr = [podr[0] for podr in lab_podr]
+    for research in researches:
+        if research.is_doc_refferal:
+            if research.site_type is None:
+                res_list["Консультации"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Консультации"].get(research.site_type.title):
+                res_list["Консультации"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+                continue
+            else:
+                res_list["Консультации"][research.site_type.title].append({"id": research.pk, "label": research.title})
+        elif research.is_citology:
+            res_list["Морфология"]["Цитология"].append({"id": research.pk, "label": research.title})
+        elif research.is_gistology:
+            res_list["Морфология"]["Гистология"].append({"id": research.pk, "label": research.title})
+        elif research.is_microbiology:
+            res_list["Морфология"]["Микробиология"].append({"id": research.pk, "label": research.title})
+        elif research.is_form:
+            if research.site_type is None:
+                res_list["Формы"]["Общие"].append({"id": research.pk, "label": research.title})
+            if not res_list["Формы"].get(research.site_type.title):
+                res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+                continue
+            else:
+                res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
+        elif research.is_paraclinic:
+            if not res_list["Параклиника"].get(research.podrazdeleniye.title):
+                res_list["Параклиника"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
+                continue
+            res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+        elif research.podrazdeleniye is None:
+            pass
+        elif research.podrazdeleniye.pk in lab_podr:
+            if not res_list["Лаборатория"].get(research.podrazdeleniye.title):
+                res_list["Лаборатория"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
+                continue
+            res_list["Лаборатория"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+
+    result_list = []
+    count = 0
+    for key, value in res_list.items():
+        count += 1
+        current_researches = {"id": f'а{count}', "label": key, "children": []}
+        for k, v in value.items():
+            count += 1
+            current_researches["children"].append({"id": f'а{count}', "label": k, "children": v})
+        result_list.append(current_researches)
+    return JsonResponse({"data": result_list})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_research_list_in_price(request):
+    request_data = json.loads(request.body)
+    if not PriceName.objects.get(pk=request_data["priceId"]).active_status:
+        return JsonResponse({"ok": False, "message": "Прайс не активен"})
+    coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
+    coast_data.save()
+    return JsonResponse({"ok": "ok"})
