@@ -131,8 +131,8 @@ export default {
   },
   computed: {
     filteredRows() {
-      return this.originalCoastResearch.filter(CoastResearch => {
-        const research = CoastResearch.research.title.toLowerCase();
+      return this.originalCoastResearch.filter(coastResearch => {
+        const research = coastResearch.research.title.toLowerCase();
         const searchTerm = this.search.toLowerCase();
 
         return research.includes(searchTerm);
