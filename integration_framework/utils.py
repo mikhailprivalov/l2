@@ -18,6 +18,7 @@ from laboratory.settings import (
     ODII_METHODS,
     REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
     LEGAL_AUTH_CODE_POSITION,
+    REMD_FIELDS_BY_TYPE_DOCUMENT,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
@@ -122,6 +123,15 @@ def get_json_protocol_data(pk, is_paraclinic=False):
         except Exception:
             data["Состояние код"] = "1"
             data["Состояние наименование"] = "Удовлетворительное"
+
+        for i in REMD_FIELDS_BY_TYPE_DOCUMENT.get("ConsultationProtocol_max"):
+            data[i] = "-"
+        for r in result_protocol:
+            if r.cda_title_field is None:
+                data[r.cda_title_group] = f"{data.get(r.cda_title_group)}; {r.value}"
+            else:
+                data[r.cda_title_field] = f"{data.get(r.cda_title_field)}; {r.value}"
+        data["Код услуги"] = iss.research.code
 
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
