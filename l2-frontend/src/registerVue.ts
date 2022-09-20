@@ -99,6 +99,6 @@ export default (): void => {
   Vue.config.errorHandler = function (msg, vm) {
     console.error(msg);
     vm.$root.$emit('msg', 'error', `Vue Error: ${msg}`);
-    sendEvent('vue_error', { msg });
+    sendEvent('vue_error', { msg: String(msg) });
   };
 };
