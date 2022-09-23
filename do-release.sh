@@ -7,6 +7,9 @@ if [ $(git rev-parse --abbrev-ref HEAD) != "develop" ]; then
     exit 1
 fi
 
+echo "Sleeping for 5 seconds to allow you to cancel"
+sleep 5
+
 V=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
 
 git tag -a v$V -m "Release $V"
