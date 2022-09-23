@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 ]
+
 INSTALLED_APPS_PRE_ADD = ()
 INSTALLED_APPS_ADD = ()
 MIDDLEWARE_ADD = []
