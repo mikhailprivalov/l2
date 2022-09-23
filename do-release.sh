@@ -7,8 +7,8 @@ if [ $(git rev-parse --abbrev-ref HEAD) != "develop" ]; then
     exit 1
 fi
 
-echo "Sleeping for 5 seconds to allow you to cancel"
-sleep 5
+echo "Sleeping for 3 seconds to allow you to cancel"
+sleep 3
 
 V=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
 
