@@ -45,7 +45,7 @@
               v-model="coastResearch.coast"
               :disabled="!selectedPrice.status"
               type="number"
-              min="0"
+              min="1"
               step="0.01"
               class="text-right form-control"
             >
@@ -79,16 +79,15 @@
             :append-to-body="true"
             placeholder="Выберите исследование"
           />
-          <td
-            style="border: 1px solid #dddddd"
-          >
+          <td>
             <input
               v-model="coast"
               :disabled="!selectedPrice.status"
               type="number"
               class="text-right form-control"
-              min="0"
+              min="1"
               step="0.01"
+              placeholder="Цена"
             >
           </td>
           <td>
@@ -160,23 +159,29 @@ export default {
       this.originalCoastResearch = this.coastResearches.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/update-coast-research-in-price', {
-        coastResearchId: coastResearch.id,
-        coast: coastResearch.coast,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Цена обновлена');
+      if (Number(coastResearch.coast) >= 1) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/update-coast-research-in-price', {
+          coastResearchId: coastResearch.id,
+          coast: coastResearch.coast,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Цена обновлена');
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
       } else {
-        this.$root.$emit('msg', 'error', message);
+        this.$root.$emit('msg', 'error', 'Не верная цена');
       }
     },
     async updateResearchListInPrice() {
-      if (!(this.selectedResearch && this.coast && this.selectedPrice)) {
+      if (!(this.selectedResearch && this.coast && this.selectedPrice.id !== -1)) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
       } else if (this.coastResearches.data.find((i) => i.research.id === this.selectedResearch)) {
         this.$root.$emit('msg', 'error', 'Исследование уже есть в прайсе');
+      } else if (Number(this.coast) < 1) {
+        this.$root.$emit('msg', 'error', 'Не верная цена');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/update-research-list-in-price', {
@@ -221,6 +226,7 @@ export default {
   margin: auto;
   display: block;
   border-radius: 0;
+  padding: 7px 12px;
 }
 .tablerow {
   border: 1px solid #dddddd;
