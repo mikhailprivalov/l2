@@ -1,7 +1,7 @@
 #!/bin/bash
-DAY=$(date '+%-d')
-MONTH=$(date '+%-m')
-YEAR=$(date '+%Y')
+DAY=$(date -u '+%-d')
+MONTH=$(date -u '+%-m')
+YEAR=$(date -u '+%Y')
 HASH=$(git describe --always)
 V="$YEAR.$MONTH.$DAY+$HASH"
 
