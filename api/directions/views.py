@@ -2042,7 +2042,8 @@ def directions_paraclinic_result(request):
             iss.gen_direction_with_research_after_confirm_id = stationar_research
 
         iss.save()
-        iss.napravleniye.sync_confirmed_fields()
+        if iss.napravleniye:
+            iss.napravleniye.sync_confirmed_fields()
         more = request_data.get("more", [])
         h = []
         for m in more:
@@ -2064,7 +2065,8 @@ def directions_paraclinic_result(request):
                         i.napravleniye.save(update_fields=['qr_check_token'])
                 i.fin_source = iss.fin_source
                 i.save()
-                i.napravleniye.sync_confirmed_fields()
+                if i.napravleniye:
+                    i.napravleniye.sync_confirmed_fields()
                 h.append(i.pk)
             else:
                 for i2 in Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile, research_id=m):
@@ -2082,7 +2084,8 @@ def directions_paraclinic_result(request):
                             i2.napravleniye.save(update_fields=['qr_check_token'])
                     i2.fin_source = iss.fin_source
                     i2.save()
-                    i2.napravleniye.sync_confirmed_fields()
+                    if i2.napravleniye:
+                        i2.napravleniye.sync_confirmed_fields()
                     h.append(i2.pk)
 
         Issledovaniya.objects.filter(parent=iss).exclude(pk__in=h).delete()
@@ -2173,13 +2176,15 @@ def directions_paraclinic_confirm(request):
             iss.napravleniye.save(update_fields=['qr_check_token'])
         iss.time_confirmation = t
         iss.save()
-        iss.napravleniye.sync_confirmed_fields()
+        if iss.napravleniye:
+            iss.napravleniye.sync_confirmed_fields()
         iss.gen_after_confirm(request.user)
         for i in Issledovaniya.objects.filter(parent=iss):
             i.doc_confirmation = request.user.doctorprofile
             i.time_confirmation = t
             i.save()
-            i.napravleniye.sync_confirmed_fields()
+            if i.napravleniye:
+                i.napravleniye.sync_confirmed_fields()
             if i.napravleniye:
                 i.napravleniye.qr_check_token = None
                 i.napravleniye.save(update_fields=['qr_check_token'])
@@ -2225,7 +2230,8 @@ def directions_paraclinic_confirm_reset(request):
             iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
             iss.n3_odii_uploaded_task_id = None
             iss.save()
-            iss.napravleniye.sync_confirmed_fields()
+            if iss.napravleniye:
+                iss.napravleniye.sync_confirmed_fields()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             if transfer_d:
                 # transfer_d.cancel = True
@@ -2239,7 +2245,8 @@ def directions_paraclinic_confirm_reset(request):
                 i.executor_confirmation = None
                 i.time_confirmation = None
                 i.save()
-                i.napravleniye.sync_confirmed_fields()
+                if i.napravleniye:
+                    i.napravleniye.sync_confirmed_fields()
             if iss.napravleniye:
                 n: Napravleniya = iss.napravleniye
                 n.need_resend_amd = False
@@ -3422,9 +3429,9 @@ def eds_documents(request):
     pk = data['pk']
     direction: Napravleniya = Napravleniya.objects.get(pk=pk)
     iss_obj = Issledovaniya.objects.filter(napravleniye=direction).first()
-    doctor_data = iss_obj.doc_confirmation.dict_data
+    doctor_data = iss_obj.doc_confirmation.dict_data if iss_obj.doc_confirmation else None
     error_doctor = ""
-    if (len(REMD_ONLY_RESEARCH) > 0 and iss_obj.research.pk not in REMD_ONLY_RESEARCH) or iss_obj.research.pk in REMD_EXCLUDE_RESEARCH:
+    if (len(REMD_ONLY_RESEARCH) > 0 and iss_obj.research.pk not in REMD_ONLY_RESEARCH) or iss_obj.research.pk in REMD_EXCLUDE_RESEARCH or not doctor_data:
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "Данная услуга не настроена для подписания"})
 
     for k, v in doctor_data.items():
@@ -3495,7 +3502,7 @@ def eds_documents(request):
                 }
                 filename = f'{pk}-{last_time_confirm}.pdf'
                 file = ContentFile(result_print(request_tuple(**req)), filename)
-            elif d.file_type == DirectionDocument.CDA:
+            elif d.file_type == DirectionDocument.CDA and "generatorName" in cda_eds_data:
                 if SettingManager.l2('l2vi'):
                     cda_data = gen_cda_xml(pk=pk)
                     cda_xml = cda_data.get('result', {}).get('content')

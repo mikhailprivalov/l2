@@ -183,7 +183,10 @@ def get_json_labortory_data(pk):
     author_data = None
     iss = None
     for k in result_protocol:
-        iss = directions.Issledovaniya.objects.get(pk=k.iss_id)
+        iss_s = directions.Issledovaniya.objects.get(pk=k.iss_id)
+        if not iss_s.doc_confirmation:
+            return {}
+        iss = iss_s
         next_research_title = iss.research.title
         if (prev_research_title != next_research_title) and count != 0:
             if len(tests) > 0:
@@ -208,6 +211,9 @@ def get_json_labortory_data(pk):
         count += 1
     if len(tests) > 0:
         data.append({"title": prev_research_title, "tests": tests, "confirmedAt": confirmed_at, "receivedAt": date_reiceve, "author_data": author_data})
+
+    if not iss:
+        return {}
 
     hosp_obj = iss.doc_confirmation.hospital
     hosp_oid = hosp_obj.oid

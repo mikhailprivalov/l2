@@ -1,6 +1,8 @@
 from django.http import HttpResponse
 from django.utils.module_loading import import_string
 
+from hospitals.models import Hospitals
+
 
 def pdf(request):
     """
@@ -16,7 +18,7 @@ def pdf(request):
             request_data={
                 **dict(request.GET.items()),
                 "user": request.user,
-                "hospital": request.user.doctorprofile.get_hospital(),
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
             }
         )
     )
