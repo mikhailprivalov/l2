@@ -1680,7 +1680,10 @@ def directions_anesthesia_load(request):
     tb_data = []
     row_category = {}
     if anesthesia_data:
-        result = eval(anesthesia_data)
+        try:
+            result = json.loads(anesthesia_data)
+        except:
+            result = None
         if isinstance(result, dict):
             cols_template = [''] * (len(result['times']) + 1)
             times_row = ['Параметр']

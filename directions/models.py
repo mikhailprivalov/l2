@@ -2385,7 +2385,10 @@ class ParaclinicResult(models.Model):
             value_anesthesia = {}
         previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
         if previus_result:
-            previus_result = eval(previus_result)
+            try:
+                previus_result = json.loads(previus_result)
+            except:
+                previus_result = None
         else:
             previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
 
