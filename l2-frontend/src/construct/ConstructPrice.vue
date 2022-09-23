@@ -8,15 +8,20 @@
       placeholder="Выберите прайс"
       value-format="object"
     />
-    <h4>Исследования</h4>
-    <div class="card-no-hover card card-1">
+    <h4 v-if="selectedPrice.id !== -1">
+      Исследования
+    </h4>
+    <div
+      v-if="selectedPrice.id !== -1"
+      class="card-no-hover card card-1"
+    >
       <input
         v-model="search"
         class="form-control"
         style="padding-left: 6px"
         placeholder="Поиск исследования"
       >
-      <table>
+      <table class="table table-bordered">
         <colgroup>
           <col width="85%">
           <col width="15%">
@@ -30,12 +35,20 @@
           </td>
         </tr>
         <tr
+          v-if="filteredRows.length === 0"
+          class="text-center"
+        >
+          <td colspan="2">
+            Нет данных
+          </td>
+        </tr>
+        <tr
           v-for="(coastResearch) in filteredRows"
           :key="coastResearch.id"
-          class="tablerow"
+          class="tablerow table-hover"
         >
           <td
-            class="tablerow"
+            class="tablerow table-hover"
             style="padding-left: 6px"
           >
             {{ coastResearch.research.title }}
@@ -64,9 +77,13 @@
         </tr>
       </table>
     </div>
-    <h4>Добавить исследование в прайс</h4>
-    <div>
-      <table>
+    <h4 v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
+      Добавить исследование в прайс
+    </h4>
+    <div v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
+      <table
+        class="table table-bordered"
+      >
         <colgroup>
           <col width="85%">
           <col width="15%">
@@ -210,14 +227,9 @@ export default {
   margin: 10px 50px;
 }
 ::v-deep .form-control {
-  border-radius: 0;
   border: none;
   background-color: transparent;
   padding: 6px 0;
-}
-::v-deep .form-control:focus {
-  border: 2px solid #4caf50;
-  background-color: #fff;
 }
 ::v-deep .card {
   margin: 1rem 0;
@@ -230,8 +242,5 @@ export default {
 }
 .tablerow {
   border: 1px solid #dddddd;
-}
-.tablerow:hover {
-  background: #4caf50;
 }
 </style>
