@@ -8,32 +8,9 @@ updates:
   open-pull-requests-limit: 10
   target-branch: develop
   ignore:
-  - dependency-name: psycopg2
-    versions:
-    - "> 2.8.2"
-  - dependency-name: autopep8
-    versions:
-    - 1.5.5
-  - dependency-name: urllib3
-    versions:
-    - 1.26.3
   - dependency-name: pyvirtualdisplay
     versions:
     - "2.0"
-  - dependency-name: bleach
-    versions:
-    - 3.3.0
-  - dependency-name: pymongo
-    versions:
-    - 3.11.2
-    - 3.11.3
-  - dependency-name: jsonpickle
-    versions:
-    - 1.5.0
-    - 1.5.1
-  - dependency-name: pytz
-    versions:
-    - "2020.5"
 - package-ecosystem: npm
   directory: "/l2-frontend"
   schedule:
@@ -42,66 +19,6 @@ updates:
   open-pull-requests-limit: 10
   target-branch: develop
   ignore:
-  - dependency-name: vue-tippy
-    versions:
-    - ">= 4.a, < 5"
-  - dependency-name: webpack-manifest-plugin
-    versions:
-    - ">= 3.0.a, < 3.1"
-  - dependency-name: "@babel/core"
-    versions:
-    - 7.13.1
-    - 7.13.10
-    - 7.13.13
-    - 7.13.14
-    - 7.13.15
-    - 7.13.16
-    - 7.13.8
-  - dependency-name: ssri
-    versions:
-    - 6.0.2
-  - dependency-name: y18n
-    versions:
-    - 4.0.1
-    - 4.0.2
-    - 4.0.3
-  - dependency-name: tiptap
-    versions:
-    - 1.32.1
-  - dependency-name: autoprefixer
-    versions:
-    - 10.2.3
-    - 10.2.4
-    - 10.2.5
-  - dependency-name: html-webpack-plugin
-    versions:
-    - 4.5.2
-  - dependency-name: lodash-webpack-plugin
-    versions:
-    - 0.11.6
-  - dependency-name: babel-loader
-    versions:
-    - 8.2.2
-  - dependency-name: lodash
-    versions:
-    - 4.17.21
-  - dependency-name: node-sass
-    versions:
-    - 5.0.0
-  - dependency-name: elliptic
-    versions:
-    - 6.5.4
-  - dependency-name: mini-css-extract-plugin
-    versions:
-    - 1.3.5
-    - 1.3.6
-    - 1.3.7
-  - dependency-name: css-loader
-    versions:
-    - 5.0.1
-  - dependency-name: vue2-filters
-    versions:
-    - 0.11.1
   - dependency-name: sass-loader
     versions:
     - 10.1.1
