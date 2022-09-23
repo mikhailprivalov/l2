@@ -217,6 +217,8 @@ def direction_data(request):
     if direction.eds_total_signed:
         last_time_confirm = direction.last_time_confirm()
         for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
+            if not d.file:
+                continue
             document = {
                 'type': d.file_type.upper(),
                 'content': base64.b64encode(d.file.read()).decode('utf-8'),
@@ -303,7 +305,9 @@ def issledovaniye_data(request):
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
     if (not ignore_sample and not sample) or (not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic) or i.research.pk in REMD_EXCLUDE_RESEARCH:
-        return Response({"ok": False, "ignore_sample": ignore_sample, "sample": sample, "results.exists": results.exists()})
+        return Response(
+            {"ok": False, "ignore_sample": ignore_sample, "sample": {"date": sample.time_get.date() if sample else i.time_confirmation.date()}, "results.exists": results.exists()}
+        )
 
     results_data = []
 
@@ -592,7 +596,7 @@ def make_log(request):
             d = directions.Napravleniya.objects.get(pk=k)
             d.ecp_ok = True
             d.save(update_fields=['ecp_ok'])
-            
+
             iss: Issledovaniya
             for iss in Issledovaniya.objects.filter(napravleniye_id=k):
                 if str(iss.pk) in body.get(k, {}):
@@ -2644,10 +2648,11 @@ def document_lk_save(request):
         iss.doc_confirmation = user
         iss.time_confirmation = date
         iss.save()
-        iss.napravleniye.sync_confirmed_fields()
-        iss.napravleniye.visit_who_mark = user
-        iss.napravleniye.visit_date = date
-        iss.napravleniye.save()
+        if iss.napravleniye:
+            iss.napravleniye.sync_confirmed_fields()
+            iss.napravleniye.visit_who_mark = user
+            iss.napravleniye.visit_date = date
+            iss.napravleniye.save()
 
         fields_count = 0
 

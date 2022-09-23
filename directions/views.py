@@ -27,6 +27,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from transliterate import translit
 
 import directory.models as directory
+from hospitals.models import Hospitals
 import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
@@ -331,7 +332,7 @@ def gen_pdf_dir(request):
                         **dict(request.GET.items()),
                         "user": request.user,
                         "card_pk": card_pk_set.pop(),
-                        "hospital": request.user.doctorprofile.get_hospital(),
+                        "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
                     }
                 )
                 if fc:
