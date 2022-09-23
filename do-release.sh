@@ -1,3 +1,5 @@
+#!/bin/bash
+
 make release
 
 if [ $(git rev-parse --abbrev-ref HEAD) != "develop" ]; then
