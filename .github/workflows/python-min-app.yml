@@ -47,13 +47,17 @@ jobs:
       run: poetry install --no-interaction --no-root
     - name: Migrate
       run: |
+        source .venv/bin/activate
         python manage.py migrate
     - name: Make migrations
       run: |
+        source .venv/bin/activate
         python manage.py makemigrations
     - name: Migrate
       run: |
+        source .venv/bin/activate
         python manage.py migrate
     - name: Run Tests
       run: |
+        source .venv/bin/activate
         python manage.py test
