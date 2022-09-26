@@ -4,6 +4,7 @@ on:
     paths-ignore:
       - pyproject.toml
       - laboratory/__init__.py
+      - .github/**/*
 
 name: Update Version
 jobs:
