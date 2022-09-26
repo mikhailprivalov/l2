@@ -2395,10 +2395,13 @@ def get_research_list(request):
             else:
                 res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_paraclinic:
-            if not res_list["Параклиника"].get(research.podrazdeleniye.title):
+            if research.podrazdeleniye is None:
+                pass
+            elif not res_list["Параклиника"].get(research.podrazdeleniye.title):
                 res_list["Параклиника"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
                 continue
-            res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+            else:
+                res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
         elif research.podrazdeleniye is None:
             pass
         elif research.podrazdeleniye.pk in lab_podr:
