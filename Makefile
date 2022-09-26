@@ -1,4 +1,4 @@
-all: install update_browserlist front mm
+all: install front mm
 all_prod: install_prod front_prod mm
 mm: makemigrations migrate
 front: build collect
@@ -6,6 +6,7 @@ front_prod: build_prod collect
 install: poetry_bootstrap npm_install
 install_prod: poetry_bootstrap npm_install
 release: update_browserlist up git_commit_up git_push
+version_updater: update_browserlist up
 
 watch:
 	yarn --cwd l2-frontend serve
