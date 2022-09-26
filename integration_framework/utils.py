@@ -113,7 +113,6 @@ def get_json_protocol_data(pk, is_paraclinic=False):
         data = result_paraclinic
 
     if iss.research.is_doc_refferal:
-        print(data)
         try:
             val = data.get("Cостояние пациента", None)
             if not val or not isinstance(val, dict):
