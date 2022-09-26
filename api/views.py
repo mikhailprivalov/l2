@@ -256,7 +256,8 @@ def send(request):
                 resdict["pk"] = dpk
             slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None).save()
     except Exception as e:
-        result = {"ok": False, "Exception": True, "MSG": str(e)}
+        logger.exception(e)
+        result = {"ok": False, "message": "Серверная ошибка"}
     return JsonResponse(result)
 
 
