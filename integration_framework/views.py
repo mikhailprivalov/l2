@@ -1334,7 +1334,9 @@ def external_research_create(request):
             return Response({"ok": True, 'id': str(direction.pk)})
 
     except InvalidData as e:
-        message = str(e)
+        logger.exception(e)
+        if hasattr(e, 'message'):
+            message = e.message
     except Exception as e:
         logger.exception(e)
         message = 'Серверная ошибка'
@@ -1592,7 +1594,9 @@ def external_direction_create(request):
             return Response({"ok": True, 'id': str(direction.pk)})
 
     except InvalidData as e:
-        message = str(e)
+        logger.exception(e)
+        if hasattr(e, 'message'):
+            message = e.message
     except Exception as e:
         logger.exception(e)
         message = 'Серверная ошибка'
