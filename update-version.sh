@@ -10,7 +10,7 @@ newVersion="__version__ = \"$V\""
 echo "New version is $V"
 echo "Current directory is $(pwd)"
 
-SEDOPTION=
+SEDOPTION="-i"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   SEDOPTION="-i ''"
