@@ -171,10 +171,10 @@ def send(request):
     result = {"ok": False}
     try:
         if request.method == "POST":
-            resdict = yaml.load(request.POST["result"])
+            resdict = yaml.safe_load(request.POST["result"])
             appkey = request.POST.get("key", "")
         else:
-            resdict = yaml.load(request.GET["result"])
+            resdict = yaml.safe_load(request.GET["result"])
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
