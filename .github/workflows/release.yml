@@ -11,7 +11,7 @@ jobs:
   createTag:
     runs-on: self-hosted
     outputs:
-      tag: ${{ steps.tag_check.outputs.tag }}
+      tag: ${{ steps.version_check.outputs.tag }}
     steps:
       - uses: actions/checkout@v3
       - name: Check if version is changed
