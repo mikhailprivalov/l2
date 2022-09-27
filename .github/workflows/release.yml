@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+\+.+"
+
+
+jobs:
+  webpack_build_prod:
+
+    runs-on: self-hosted
+
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+          cache-dependency-path: 'l2-frontend/yarn.lock'
+
+      - name: Install Dependencies
+        run: make npm_install_cached
+
+      - name: Build for production
+        run: make build_prod
+
+      - name: Make webpack_bundles.tar.gz
+        run: tar -czvf webpack_bundles.tar.gz webpack_bundles
+
+      - name: Release
+        uses: docker://antonyurchenko/git-release:latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: assets/webpack_bundles.tar.gz
+
