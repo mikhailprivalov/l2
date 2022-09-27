@@ -8,6 +8,10 @@ on:
       - CHANGELOG.md
       - README.md
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 name: Update Version
 jobs:
   createPullRequest:
