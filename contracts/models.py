@@ -118,13 +118,11 @@ class Company(models.Model):
             return ""
 
     @staticmethod
-    def get_company(request, raw_response=False):
-        q = (request.GET.get("query", '') or '').strip()
-        if not q:
-            if raw_response:
-                return []
-        company_query = get_companies(company_title=q)
-        return [{"code": d.id, "title": d.title}for d in company_query]
+    def get_company(query):
+        if not query:
+            return []
+        company_query = get_companies(company_title=query)
+        return [{"id": d.id, "title": d.title} for d in company_query]
 
     class Meta:
         verbose_name = 'Компания'

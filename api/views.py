@@ -964,6 +964,12 @@ def mkb10_dict(request, raw_response=False):
     return JsonResponse({"data": data})
 
 
+def companies_find(request):
+    q = (request.GET.get("query", '') or '').strip()
+    companies_data = Company.get_company(q)
+    return JsonResponse({"data": companies_data})
+
+
 def doctorprofile_search(request):
     q = request.GET["query"].strip()
     if not q:

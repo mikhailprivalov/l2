@@ -385,79 +385,88 @@
                 </option>
               </select>
             </div>
-            <div class="row">
+            <div class="form-row sm-f">
               <div
-                class="col-xs-6"
-                style="padding-right: 0"
+                class="row-t"
               >
-                <div class="form-row nbt-i sm-f">
-                  <div
-                    class="row-t"
-                    style="display: flex; width: 45%; flex: 0 45%"
-                  >
-                    <input
-                      v-model="card.custom_workplace"
-                      v-tippy="{ placement: 'bottom', arrow: true }"
-                      type="checkbox"
-                      title="Ручной ввод названия"
-                      style="height: auto; flex: 0 23px"
-                    >
-                    Место работы
-                  </div>
-                  <TypeAhead
-                    v-if="card.custom_workplace"
-                    ref="wp"
-                    v-model="card.work_place"
-                    :delay-time="100"
-                    :get-response="getResponse"
-                    :highlighting="highlighting"
-                    :limit="10"
-                    :min-chars="1"
-                    :on-hit="onHit('work_place')"
-                    :select-first="true"
-                    maxlength="128"
-                    src="/api/autocomplete?value=:keyword&type=work_place"
-                  />
-                  <div
-                    v-else
-                    style="width: 55%"
-                  >
-                    <Treeselect
-                      v-model="card.work_place_db"
-                      class="treeselect-noborder treeselect-26px"
-                      :multiple="false"
-                      :disable-branch-nodes="true"
-                      :append-to-body="true"
-                      :z-index="99999"
-                      :options="companiesTreeselect(card.av_companies)"
-                      placeholder="НЕ ВЫБРАНО"
-                    />
-                  </div>
-                </div>
+                <input
+                  v-model="card.custom_workplace"
+                  v-tippy="{ placement: 'bottom', arrow: true }"
+                  type="checkbox"
+                  title="Ручной ввод названия"
+                  style="height: auto; flex: 0 23px"
+                >
+                Место работы (учёбы)
               </div>
+              <TypeAhead
+                v-if="card.custom_workplace"
+                ref="wp"
+                v-model="card.work_place"
+                :delay-time="100"
+                :get-response="getResponse"
+                :highlighting="highlighting"
+                :limit="10"
+                :min-chars="1"
+                :on-hit="onHit('work_place')"
+                :select-first="true"
+                maxlength="128"
+                src="/api/autocomplete?value=:keyword&type=work_place"
+              />
               <div
-                class="col-xs-6"
-                style="padding-left: 0"
+                v-else
+                v-tippy="{ placement: 'bottom', arrow: true }"
+                style="width: 65%"
+                type="checkbox"
+                :title="card.work_place_db"
               >
-                <div class="form-row nbt-i sm-f">
-                  <div class="row-t">
-                    Должность
+                <Treeselect
+                  v-model="card.work_place_db"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  class="treeselect-wide treeselect-26px treeselect-nbr"
+                  :async="true"
+                  :append-to-body="true"
+                  :clearable="true"
+                  :disabled="disabled"
+                  :value="content"
+                  :z-index="5001"
+                  placeholder="Укажите организацию"
+                  :load-options="loadOptions"
+                  loading-text="Загрузка"
+                  no-results-text="Не найдено"
+                  search-prompt-text="Начните писать для поиска"
+                  :cache-options="false"
+                  open-direction="top"
+                  :open-on-focus="true"
+                  @select="selectValue"
+                  @input="input"
+                >
+                  <div
+                    slot="value-label"
+                    slot-scope="{ node }"
+                  >
+                    {{ node.raw.label || node.raw.id }}
                   </div>
-                  <TypeAhead
-                    ref="wpos"
-                    v-model="card.work_position"
-                    :delay-time="100"
-                    :get-response="getResponse"
-                    :highlighting="highlighting"
-                    :limit="10"
-                    :min-chars="1"
-                    :on-hit="onHit('work_position')"
-                    :select-first="true"
-                    maxlength="128"
-                    src="/api/autocomplete?value=:keyword&type=work_position"
-                  />
-                </div>
+                </Treeselect>
               </div>
+            </div>
+            <div class="form-row sm-f">
+              <div class="row-t">
+                Должность
+              </div>
+              <TypeAhead
+                ref="wpos"
+                v-model="card.work_position"
+                :delay-time="100"
+                :get-response="getResponse"
+                :highlighting="highlighting"
+                :limit="10"
+                :min-chars="1"
+                :on-hit="onHit('work_position')"
+                :select-first="true"
+                maxlength="128"
+                src="/api/autocomplete?value=:keyword&type=work_position"
+              />
             </div>
             <div class="form-row sm-f">
               <div class="row-t">
@@ -1166,7 +1175,7 @@
 // @ts-ignore
 import TypeAhead from 'vue2-typeahead';
 import moment from 'moment';
-import Treeselect from '@riophae/vue-treeselect';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import _ from 'lodash';
 import {
@@ -1232,8 +1241,8 @@ export default {
         docs_to_delete: [],
         rmis_uid: null,
         work_place_db: null,
+        work_place_db_title: '',
         doc_types: [],
-        av_companies: [],
         main_docs: {},
         districts: [],
         district: -1,
@@ -1280,6 +1289,8 @@ export default {
       loading: false,
       loaded: false,
       new_card_num: '',
+      content: '',
+      detailsData: {},
     };
   },
   computed: {
@@ -1364,6 +1375,27 @@ export default {
     },
   },
   watch: {
+    value: {
+      immediate: true,
+      handler() {
+        let data: any = {};
+        try {
+          data = JSON.parse(this.value);
+          this.content = `${data.title}`;
+        } catch (e) {
+          if (this.value && !this.value.includes('{')) {
+            this.content = this.value;
+          }
+        }
+        this.detailsData = data;
+      },
+    },
+    detailsData: {
+      deep: true,
+      handler() {
+        this.emit();
+      },
+    },
     sex() {
       let s = swapLayouts((this.card.sex || '').toLowerCase());
       if (s.length > 1) {
@@ -1412,6 +1444,7 @@ export default {
     this.$root.$on('reload_editor', () => {
       this.load_data();
     });
+    this.content = this.card.work_place_db_title;
   },
   updated() {
     // Костыль, что бы не вылезал автокомплит полей от браузера
@@ -1428,6 +1461,29 @@ export default {
     }, 100);
   },
   methods: {
+    emit() {
+      const v = Object.keys(this.detailsData).length > 0 ? JSON.stringify(this.detailsData) : '';
+      this.$emit('modified', v || '');
+    },
+    async loadOptions({ action, searchQuery, callback }) {
+      if (action === ASYNC_SEARCH) {
+        const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
+        callback(
+          null,
+          data.map(d => ({ ...d, label: `${d.title}` })),
+        );
+      }
+    },
+    selectValue(node) {
+      this.content = node.title;
+      this.detailsData = { label: node.title, id: node.id };
+    },
+    input(v) {
+      if (!v) {
+        this.content = '';
+        this.detailsData = {};
+      }
+    },
     async get_disabled_forms() {
       const resultData = await this.$api('disabled-forms');
       this.disabled_forms = resultData.rows;
