@@ -9,10 +9,6 @@ on:
       - 'poetry.lock'
   pull_request:
     branches: [ develop ]
-    paths:
-      - '**.py'
-      - 'pyproject.toml'
-      - 'poetry.lock'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
