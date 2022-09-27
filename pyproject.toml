@@ -4,7 +4,7 @@ license = "MIT"
 
 [tool.black]
 line-length = 190
-target_version = ['py38']
+target_version = ['py310']
 skip-string-normalization = true
 
 [tool.poetry]
