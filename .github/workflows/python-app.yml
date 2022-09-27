@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: self-hosted
 
-    name: Build and test python on 3.10
     env:
       SECRET_KEY: 'COMMIT_${SHORT_SHA}'
 
@@ -30,7 +29,7 @@ jobs:
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10
+        python-version: '3.10'
     - run: poetry install
     - name: Migrate
       run: |
