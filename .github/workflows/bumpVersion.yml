@@ -5,6 +5,8 @@ on:
       - pyproject.toml
       - laboratory/__init__.py
       - .github/**/*
+      - CHANGELOG.md
+      - README.md
 
 name: Update Version
 jobs:
