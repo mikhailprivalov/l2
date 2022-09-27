@@ -3,12 +3,19 @@ name: Webpack
 on:
   push:
     branches: [ develop ]
+    paths:
+      - 'l2-frontend/**'
   pull_request:
     branches: [ develop ]
+    paths:
+      - 'l2-frontend/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   webpack_build_prod:
-
     runs-on: self-hosted
 
     steps:

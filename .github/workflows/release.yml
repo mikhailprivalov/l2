@@ -1,20 +1,43 @@
-name: Release
-
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+.+"
+    branches: [ develop ]
+    paths:
+      - pyproject.toml
+      - laboratory/__init__.py
+      - .github/workflows/release.yml
 
-
+name: Make new tag
 jobs:
-  webpack_build_prod:
-
+  createTag:
     runs-on: self-hosted
-
+    outputs:
+      tag: ${{ steps.version_check.outputs.tag }}
     steps:
-      - name: Check out source repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - name: Check if version is changed
+        id: version_check
+        run: |
+          version=`./current-version.sh`
+          echo "::set-output name=version::v$version"
+      - name: Check if tag exists
+        id: tag_check
+        run: |
+          tag=`git tag -l ${{ steps.version_check.outputs.version }}`
+          echo "::set-output name=tag::$tag"
+      - name: Create tag if not exists
+        if: ${{ steps.tag_check.outputs.tag == '' }}
+        run: |
+          git tag ${{ steps.version_check.outputs.version }}
+          git push origin ${{ steps.version_check.outputs.version }}
 
+  makeRelease:
+    needs: createTag
+    runs-on: self-hosted
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v3
+        with:
+          ref: 'tags/${{ needs.createTag.outputs.tag }}'
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -28,13 +51,12 @@ jobs:
       - name: Build for production
         run: make build_prod
 
-      - name: Make webpack_bundles.tar.gz
-        run: tar -czvf webpack_bundles.tar.gz webpack_bundles
+      - name: Make webpack_bundles.tar.gz from assets/webpack_bundles
+        run: tar -czf webpack_bundles.tar.gz assets/webpack_bundles
 
       - name: Release
         uses: docker://antonyurchenko/git-release:latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: assets/webpack_bundles.tar.gz
-
+          args: '*.tar.gz'
