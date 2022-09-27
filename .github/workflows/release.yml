@@ -19,13 +19,8 @@ jobs:
         run: |
           version=`./current-version.sh`
           echo "::set-output name=version::v$version"
-      - name: Check if tag exists
-        id: tag_check
-        run: |
-          tag=`git tag -l ${{ steps.version_check.outputs.version }}`
-          echo "::set-output name=tag::$tag"
-      - name: Create tag if not exists
-        if: ${{ steps.tag_check.outputs.tag == '' }}
+          echo "::debug::version=$version"
+      - name: Create tag
         run: |
           git tag ${{ steps.version_check.outputs.version }}
           git push origin ${{ steps.version_check.outputs.version }}
@@ -34,10 +29,15 @@ jobs:
     needs: createTag
     runs-on: self-hosted
     steps:
+      - name: Take tag from context
+        id: tag
+        run: |
+          echo "::set-output name=tag::${{ needs.createTag.outputs.tag }}"
+          echo "::debug::version=$version"
       - name: Checkout tag
         uses: actions/checkout@v3
         with:
-          ref: 'tags/${{ needs.createTag.outputs.tag }}'
+          ref: 'tags/${{ steps.tag.outputs.tag }}'
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
