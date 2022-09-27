@@ -22,19 +22,6 @@ jobs:
   build:
     runs-on: self-hosted
 
-    env:
-      SECRET_KEY: 'COMMIT_${SHORT_SHA}'
-
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_DB: l2
-          POSTGRES_PASSWORD: 123456
-          POSTGRES_USER: postgres
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 5s --health-timeout 1s --health-retries 25
-
     steps:
     - uses: actions/checkout@v3
     - run: sudo apt install libmupdf-dev
@@ -49,6 +36,13 @@ jobs:
         virtualenvs-in-project: true
     - run: cp -r $HOME/.poetry/lib/poetry/_vendor/py3.9 $HOME/.poetry/lib/poetry/_vendor/py3.10
     - run: poetry install
+    - run: |
+        local_config="DATABASES = {
+            'default': {
+                ''ENGINE': 'django.db.backends.dummy',
+            }
+        }"
+        echo "$local_config" > laboratory/local_settings.py
     - name: Migrate
       run: |
         source .venv/bin/activate
