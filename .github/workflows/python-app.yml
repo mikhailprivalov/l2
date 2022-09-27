@@ -9,10 +9,7 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    strategy:
-      matrix:
-        py: [ '3.8', '3.10' ]
-    name: Build and test python on ${{ matrix.py }}
+
     env:
       SECRET_KEY: 'COMMIT_${SHORT_SHA}'
 
@@ -28,12 +25,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.py }}
+    - run: sudo apt install libmupdf-dev
+    - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.py }}
-        cache: 'poetry'
-    - run: sudo apt install libmupdf-dev
+        python-version: '3.10'
     - run: poetry install
     - name: Migrate
       run: |
