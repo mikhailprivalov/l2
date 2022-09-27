@@ -4,8 +4,8 @@ updates:
   directory: "/"
   schedule:
     interval: daily
-    time: "02:00"
-  open-pull-requests-limit: 10
+    time: "02:30"
+  open-pull-requests-limit: 20
   target-branch: develop
   ignore:
   - dependency-name: pyvirtualdisplay
@@ -15,8 +15,8 @@ updates:
   directory: "/l2-frontend"
   schedule:
     interval: daily
-    time: "02:00"
-  open-pull-requests-limit: 10
+    time: "02:30"
+  open-pull-requests-limit: 20
   target-branch: develop
   ignore:
   - dependency-name: sass-loader
