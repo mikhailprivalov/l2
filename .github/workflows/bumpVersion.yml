@@ -18,7 +18,7 @@ jobs:
         run: make version_updater
       - id: version_var
         run: |
-          version=`sed -n 's/^ *version.*=.*"\([^"]*\)".*/\1/p' pyproject.toml`
+          version=`./current-version.sh`
           echo "::set-output name=version::$version"
       - name: Create Pull Request
         id: cpr
