@@ -16,7 +16,7 @@ jobs:
           cache: "pip"
       - run: pip install black
       - name: black Lint
-        uses: reviewdog/action-black@v3.5.1
+        uses: reviewdog/action-black@v3.7.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
