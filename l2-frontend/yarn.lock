@@ -10033,10 +10033,10 @@ vue-eslint-parser@^8.0.0, vue-eslint-parser@^8.0.1:
     lodash "^4.17.21"
     semver "^7.3.5"
 
-vue-frag@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/vue-frag/-/vue-frag-1.4.0.tgz#eede3df860163f6c2d9b07c7d9492b2cf53de24b"
-  integrity sha512-S3LfATqRwSMR6O8mf92wKF3y2E/Gs/3MFJXW4CozMOLUeOopNUlkcYuhVLagw7fkNmn/Pyb1zfRY5UCwU+X6Gw==
+vue-frag@^1.4.1:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/vue-frag/-/vue-frag-1.4.1.tgz#c0c2e633ce36b0b5eb8373c539c90d3bab25a7f8"
+  integrity sha512-1EAPTI/F6huKp8U7lgjCDT119mrJgjrsNJY0j4MD+mNAVqE9LyIBXuWlMpPTFiTH45XDEhiKa4UZoUoW8V72Jg==
 
 vue-full-loading@^1.2.1:
   version "1.2.1"
