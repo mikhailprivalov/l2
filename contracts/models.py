@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db import models
 
 import directory.models as directory
+from contracts.sql_func import get_companies
 
 
 class PriceCategory(models.Model):
@@ -115,6 +116,15 @@ class Company(models.Model):
             return "{}".format(self.contract.modifier)
         else:
             return ""
+
+    @staticmethod
+    def get_company(request, raw_response=False):
+        q = (request.GET.get("query", '') or '').strip()
+        if not q:
+            if raw_response:
+                return []
+        company_query = get_companies(company_title=q)
+        return [{"code": d.id, "title": d.title}for d in company_query]
 
     class Meta:
         verbose_name = 'Компания'
