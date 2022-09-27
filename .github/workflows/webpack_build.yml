@@ -16,7 +16,6 @@ concurrency:
 
 jobs:
   webpack_build_prod:
-
     runs-on: self-hosted
 
     steps:

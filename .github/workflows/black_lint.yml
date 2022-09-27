@@ -10,12 +10,12 @@ jobs:
       - name: Check out source repository
         uses: actions/checkout@v3
       - name: Set up Python environment
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.10"
       - run: pip install black
       - name: black Lint
-        uses: reviewdog/action-black@v3.7.0
+        uses: reviewdog/action-black@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
