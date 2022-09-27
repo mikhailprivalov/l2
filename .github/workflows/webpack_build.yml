@@ -3,8 +3,28 @@ name: Webpack
 on:
   push:
     branches: [ develop ]
+    paths:
+      - '**.ts'
+      - '**.js'
+      - '**.json'
+      - '**.vue'
+      - '**.scss'
+      - '**.css'
+      - '**.html'
+      - '**/package.json'
+      - '**/yarn.lock'
   pull_request:
     branches: [ develop ]
+    paths:
+      - '**.ts'
+      - '**.js'
+      - '**.json'
+      - '**.vue'
+      - '**.scss'
+      - '**.css'
+      - '**.html'
+      - '**/package.json'
+      - '**/yarn.lock'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
