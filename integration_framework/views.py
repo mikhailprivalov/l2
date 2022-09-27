@@ -423,6 +423,9 @@ def issledovaniye_data_simple(request):
             if len(description_diag) > 1:
                 mkb10 = description_diag_json["code"]
 
+    if i.research.is_doc_refferal:
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_doc_refferal")
+
     return Response(
         {
             "ok": True,
@@ -1331,6 +1334,7 @@ def external_research_create(request):
             return Response({"ok": True, 'id': str(direction.pk)})
 
     except InvalidData as e:
+        logger.exception(e)
         message = str(e)
     except Exception as e:
         logger.exception(e)
@@ -1589,6 +1593,7 @@ def external_direction_create(request):
             return Response({"ok": True, 'id': str(direction.pk)})
 
     except InvalidData as e:
+        logger.exception(e)
         message = str(e)
     except Exception as e:
         logger.exception(e)

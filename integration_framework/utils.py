@@ -137,6 +137,9 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                     data["Шифр по МКБ-10 код"] = diag_data.pop(0)
                     data["Шифр по МКБ-10 наименование"] = " ".join(diag_data)
         data["Код услуги"] = iss.research.code
+        if not data.get("Состояние код"):
+            data["Состояние код"] = "1"
+            data["Состояние наименование"] = "Удовлетворительное"
 
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}

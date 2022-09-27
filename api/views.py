@@ -171,10 +171,10 @@ def send(request):
     result = {"ok": False}
     try:
         if request.method == "POST":
-            resdict = yaml.load(request.POST["result"])
+            resdict = yaml.safe_load(request.POST["result"])
             appkey = request.POST.get("key", "")
         else:
-            resdict = yaml.load(request.GET["result"])
+            resdict = yaml.safe_load(request.GET["result"])
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
@@ -256,7 +256,8 @@ def send(request):
                 resdict["pk"] = dpk
             slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None).save()
     except Exception as e:
-        result = {"ok": False, "Exception": True, "MSG": str(e)}
+        logger.exception(e)
+        result = {"ok": False, "message": "Серверная ошибка"}
     return JsonResponse(result)
 
 

@@ -653,6 +653,7 @@ def patients_card_save(request):
                     c.medbook_number = Card.next_medbook_n()
                     c.medbook_type = medbook_type
         except Exception as e:
+            logger.exception(e)
             messages.append(str(e))
     c.save()
     if c.individual.primary_for_rmis:

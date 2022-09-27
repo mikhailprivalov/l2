@@ -7,5 +7,14 @@ V="$YEAR.$MONTH.$DAY+$HASH"
 
 newVersion="__version__ = \"$V\""
 
-sed -i '' "1s/^.*$/$newVersion/" "laboratory/__init__.py"
-sed -i '' "s/^version = \".*\"/version = \"$V\"/" "pyproject.toml"
+echo "New version is $V"
+echo "Current directory is $(pwd)"
+
+SEDOPTION="-i"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  SEDOPTION="-i ''"
+fi
+
+sed $SEDOPTION "1s/^.*$/$newVersion/" "laboratory/__init__.py"
+sed $SEDOPTION "s/^version = \".*\"/version = \"$V\"/" "pyproject.toml"

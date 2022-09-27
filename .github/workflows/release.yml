@@ -1,10 +1,10 @@
-name: Webpack
+name: Release
 
 on:
   push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+\+.+"
+
 
 jobs:
   webpack_build_prod:
@@ -27,3 +27,14 @@ jobs:
 
       - name: Build for production
         run: make build_prod
+
+      - name: Make webpack_bundles.tar.gz
+        run: tar -czvf webpack_bundles.tar.gz webpack_bundles
+
+      - name: Release
+        uses: docker://antonyurchenko/git-release:latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: assets/webpack_bundles.tar.gz
+

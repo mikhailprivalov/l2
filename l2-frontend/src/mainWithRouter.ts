@@ -684,7 +684,7 @@ router.beforeEach(async (to, from, next) => {
       next();
     }
   } else {
-    window.location.href = to.fullPath;
+    window.location.href = String(to.fullPath);
   }
 });
 
