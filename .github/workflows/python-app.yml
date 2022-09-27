@@ -28,12 +28,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - run: sudo apt install libmupdf-dev
     - name: Set up Python ${{ matrix.py }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.py }}
         cache: 'poetry'
-    - run: sudo apt install libmupdf-dev
     - run: poetry install
     - name: Migrate
       run: |
