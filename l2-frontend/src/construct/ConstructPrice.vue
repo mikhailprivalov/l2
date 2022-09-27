@@ -58,12 +58,12 @@
               v-model="coastResearch.coast"
               :disabled="!selectedPrice.status"
               type="number"
-              min="1"
+              min="0.01"
               step="0.01"
               class="text-right form-control"
             >
           </td>
-          <td>
+          <td class="tablerow">
             <button
               v-tippy
               :disabled="!selectedPrice.status"
@@ -72,6 +72,17 @@
               @click="updateCoastResearchInPrice(coastResearch)"
             >
               <i class="fa fa-save" />
+            </button>
+          </td>
+          <td>
+            <button
+              v-tippy
+              :disabled="!selectedPrice.status"
+              class="btn btn-blue-nb"
+              title="Удалить исследование"
+              @click="deleteResearchInPrice(coastResearch)"
+            >
+              <i class="fa fa-times" />
             </button>
           </td>
         </tr>
@@ -102,7 +113,7 @@
               :disabled="!selectedPrice.status"
               type="number"
               class="text-right form-control"
-              min="1"
+              min="0.01"
               step="0.01"
               placeholder="Цена"
             >
@@ -176,7 +187,7 @@ export default {
       this.originalCoastResearch = this.coastResearches.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
-      if (Number(coastResearch.coast) >= 1) {
+      if (Number(coastResearch.coast) > 0) {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/update-coast-research-in-price', {
           coastResearchId: coastResearch.id,
@@ -189,7 +200,14 @@ export default {
           this.$root.$emit('msg', 'error', message);
         }
       } else {
-        this.$root.$emit('msg', 'error', 'Не верная цена');
+        this.$root.$emit('msg', 'error', 'Неверная цена');
+      }
+    },
+    async deleteResearchInPrice(coastResearch) {
+      if (window.confirm('Услуга будет удалена')) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        await this.$api('/delete-research-in-price', coastResearch.id);
+        await this.$store.dispatch(actions.DEC_LOADING);
       }
     },
     async updateResearchListInPrice() {
@@ -197,8 +215,8 @@ export default {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
       } else if (this.coastResearches.data.find((i) => i.research.id === this.selectedResearch)) {
         this.$root.$emit('msg', 'error', 'Исследование уже есть в прайсе');
-      } else if (Number(this.coast) < 1) {
-        this.$root.$emit('msg', 'error', 'Не верная цена');
+      } else if (Number(this.coast) <= 0) {
+        this.$root.$emit('msg', 'error', 'Неверная цена');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/update-research-list-in-price', {
