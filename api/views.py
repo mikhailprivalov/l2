@@ -2428,7 +2428,7 @@ def get_research_list(request):
 def update_research_list_in_price(request):
     request_data = json.loads(request.body)
     if not PriceName.objects.get(pk=request_data["priceId"]).active_status:
-        return JsonResponse({"ok": False, "message": "Прайс не активен"})
+        return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) < 1:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
