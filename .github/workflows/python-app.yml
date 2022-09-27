@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: self-hosted
 
-    name: Build and test python on 3.10
     env:
       SECRET_KEY: 'COMMIT_${SHORT_SHA}'
 
