@@ -21,7 +21,7 @@ jobs:
           POSTGRES_PASSWORD: 123456
           POSTGRES_USER: postgres
         ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 1s --health-retries 25
 
     steps:
     - uses: actions/checkout@v3
@@ -35,6 +35,7 @@ jobs:
       with:
         virtualenvs-create: true
         virtualenvs-in-project: true
+    - run: cp -r $HOME/.poetry/lib/poetry/_vendor/py3.9 $HOME/.poetry/lib/poetry/_vendor/py3.10
     - run: poetry install
     - name: Migrate
       run: |
