@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   black-lint:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ubuntu-latest]
     name: Lint
     steps:
       - name: Check out source repository
