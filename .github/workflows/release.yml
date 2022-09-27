@@ -10,6 +10,8 @@ name: Make new tag
 jobs:
   createTag:
     runs-on: self-hosted
+    outputs:
+      tag: ${{ steps.tag_check.outputs.tag }}
     steps:
       - uses: actions/checkout@v3
       - name: Check if version is changed
@@ -35,7 +37,7 @@ jobs:
       - name: Checkout tag
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.createTag.outputs.tag }}
+          ref: 'tags/${{ needs.createTag.outputs.tag }}'
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
