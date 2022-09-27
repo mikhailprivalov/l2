@@ -45,12 +45,12 @@ jobs:
       - name: Build for production
         run: make build_prod
 
-      - name: Make webpack_bundles.tar.gz
-        run: tar -czvf webpack_bundles.tar.gz webpack_bundles
+      - name: Make webpack_bundles.tar.gz from assets/webpack_bundles
+        run: tar -czf webpack_bundles.tar.gz assets/webpack_bundles
 
       - name: Release
         uses: docker://antonyurchenko/git-release:latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: assets/webpack_bundles.tar.gz
+          args: '*.tar.gz'
