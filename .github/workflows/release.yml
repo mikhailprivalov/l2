@@ -1,20 +1,37 @@
-name: Release
-
 on:
   push:
-    tags:
-      - '**'
+    branches: [ develop ]
+    paths:
+      - pyproject.toml
+      - laboratory/__init__.py
 
-
+name: Make new tag
 jobs:
-  webpack_build_prod:
-
+  createTag:
     runs-on: self-hosted
-
     steps:
-      - name: Check out source repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - name: Check if version is changed
+        id: version_check
+        run: |
+          version=`./current-version.sh`
+          echo "::set-output name=version::v$version"
+      - name: Check if tag exists
+        id: tag_check
+        run: |
+          tag=`git tag -l ${{ steps.version_check.outputs.version }}`
+          echo "::set-output name=tag::$tag"
+      - name: Create tag if not exists
+        if: ${{ steps.tag_check.outputs.tag == '' }}
+        run: |
+          git tag ${{ steps.version_check.outputs.version }}
+          git push origin ${{ steps.version_check.outputs.version }}
 
+  makeRelease:
+    needs: createTag
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -37,4 +54,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: assets/webpack_bundles.tar.gz
-
