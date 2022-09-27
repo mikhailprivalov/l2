@@ -28,6 +28,8 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.8'
+    - name: Set up Python dev headers
+      run: sudo apt-get install python3.8-dev
     - name: Install mupdf
       run: sudo apt install libmupdf-dev
     - name: Install Poetry
