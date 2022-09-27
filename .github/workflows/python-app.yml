@@ -29,6 +29,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: sudo apt install libmupdf-dev
+    - name: Install poetry
+      run: pipx install poetry
     - name: Set up Python ${{ matrix.py }}
       uses: actions/setup-python@v4
       with:
