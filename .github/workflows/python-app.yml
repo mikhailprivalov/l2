@@ -6,11 +6,13 @@ on:
     paths:
       - '**.py'
       - 'pyproject.toml'
+      - 'poetry.lock'
   pull_request:
     branches: [ develop ]
     paths:
       - '**.py'
       - 'pyproject.toml'
+      - 'poetry.lock'
 
 jobs:
   build:
