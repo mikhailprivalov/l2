@@ -33,10 +33,10 @@ jobs:
     - run: cp -r $HOME/.poetry/lib/poetry/_vendor/py3.9 $HOME/.poetry/lib/poetry/_vendor/py3.10
     - run: poetry install
     - run: |
-        local_config="DATABASES = {
-            'default': {
-                ''ENGINE': 'django.db.backends.dummy',
-            }
+        local_config="DATABASES = {\
+            'default': {\
+                ''ENGINE': 'django.db.backends.dummy',\
+            }\
         }"
         echo "$local_config" > laboratory/local_settings.py
     - name: Migrate
