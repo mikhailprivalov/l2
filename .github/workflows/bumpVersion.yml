@@ -15,7 +15,7 @@ concurrency:
 name: Update Version
 jobs:
   createPullRequestWithNewVersion:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Bump version
