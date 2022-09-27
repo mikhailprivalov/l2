@@ -11,7 +11,7 @@ jobs:
     runs-on: self-hosted
     strategy:
       matrix:
-        py: [ 3.8, 3.10 ]
+        py: [ '3.8', '3.10' ]
     name: Build and test python on ${{ matrix.py }}
     env:
       SECRET_KEY: 'COMMIT_${SHORT_SHA}'
