@@ -4,6 +4,7 @@ on:
     paths:
       - pyproject.toml
       - laboratory/__init__.py
+      - .github/workflows/release.yml
 
 name: Make new tag
 jobs:
@@ -31,7 +32,10 @@ jobs:
     needs: createTag
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.createTag.outputs.tag }}
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
