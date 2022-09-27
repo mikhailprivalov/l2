@@ -19,7 +19,6 @@ jobs:
         run: |
           version=`./current-version.sh`
           echo "::set-output name=version::v$version"
-          echo "::debug::version=$version"
       - name: Create tag
         run: |
           git tag ${{ steps.version_check.outputs.version }}
@@ -29,15 +28,15 @@ jobs:
     needs: createTag
     runs-on: self-hosted
     steps:
-      - name: Take tag from context
-        id: tag
+      - name: Check if version is changed
+        id: version_check
         run: |
-          echo "::set-output name=tag::${{ needs.createTag.outputs.tag }}"
-          echo "::debug::version=$version"
-      - name: Checkout tag
+          version=`./current-version.sh`
+          echo "::set-output name=version::v$version"
+      - name: Checkout last tag
         uses: actions/checkout@v3
         with:
-          ref: 'tags/${{ steps.tag.outputs.tag }}'
+          ref: 'tags/${{ needs.createTag.outputs.tag }}'
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
