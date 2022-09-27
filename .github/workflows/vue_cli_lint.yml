@@ -22,7 +22,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install Dependencies
-        run: make npm_install
+        run: make npm_install_cached
 
       - name: Running linter
         run: make ci_lint

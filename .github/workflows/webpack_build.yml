@@ -22,7 +22,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install Dependencies
-        run: make npm_install
+        run: make npm_install_cached
 
       - name: Build for production
         run: make build_prod

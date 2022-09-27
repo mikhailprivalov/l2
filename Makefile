@@ -38,6 +38,9 @@ up:
 npm_install:
 	yarn --cwd l2-frontend
 
+npm_install_cached:
+	yarn --prefer-offline --cwd l2-frontend
+
 poetry_bootstrap:
 	poetry install
 
