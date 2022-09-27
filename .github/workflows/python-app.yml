@@ -3,8 +3,14 @@ name: Py Django testing
 on:
   push:
     branches: [ develop ]
+    paths:
+      - '**.py'
+      - 'pyproject.toml'
   pull_request:
     branches: [ develop ]
+    paths:
+      - '**.py'
+      - 'pyproject.toml'
 
 jobs:
   build:
