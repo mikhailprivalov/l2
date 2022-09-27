@@ -3,8 +3,12 @@ name: VUE CLI Lint
 on:
   push:
     branches: [ develop ]
+    paths:
+      - 'l2-frontend/**'
   pull_request:
     branches: [ develop ]
+    paths:
+      - 'l2-frontend/**'
 
 jobs:
   webpack_build_prod:

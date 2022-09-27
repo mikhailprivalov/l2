@@ -4,27 +4,11 @@ on:
   push:
     branches: [ develop ]
     paths:
-      - '**.ts'
-      - '**.js'
-      - '**.json'
-      - '**.vue'
-      - '**.scss'
-      - '**.css'
-      - '**.html'
-      - '**/package.json'
-      - '**/yarn.lock'
+      - 'l2-frontend/**'
   pull_request:
     branches: [ develop ]
     paths:
-      - '**.ts'
-      - '**.js'
-      - '**.json'
-      - '**.vue'
-      - '**.scss'
-      - '**.css'
-      - '**.html'
-      - '**/package.json'
-      - '**/yarn.lock'
+      - 'l2-frontend/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
