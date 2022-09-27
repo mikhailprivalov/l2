@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ develop ]
 
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   webpack_build_prod:
 
