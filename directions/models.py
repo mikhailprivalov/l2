@@ -25,7 +25,7 @@ import clients.models as Clients
 import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED
+from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
@@ -233,6 +233,7 @@ class IstochnikiFinansirovaniya(models.Model):
     contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE, verbose_name="Договоры")
     order_weight = models.SmallIntegerField(default=0, verbose_name="Сортировка")
     n3_code = models.CharField(max_length=2, default="", blank=True, verbose_name="Код источника финансирования для N3")
+    ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Код источника финансирования для ECP")
 
     def get_n3_code(self):
         codes = {
@@ -252,6 +253,9 @@ class IstochnikiFinansirovaniya(models.Model):
                 self.save()
 
         return self.n3_code or codes['другое']
+
+    def get_ecp_code(self):
+        return self.ecp_code or '380101000000023'
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
@@ -455,6 +459,7 @@ class Napravleniya(models.Model):
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
     n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
     n3_iemk_ok = models.BooleanField(default=False, blank=True, null=True)
+    ecp_ok = models.BooleanField(default=False, blank=True, null=True)
     vi_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД VI', db_index=True)
     eds_required_documents = ArrayField(models.CharField(max_length=3), verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True)
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
@@ -463,6 +468,30 @@ class Napravleniya(models.Model):
     co_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_co_executor", db_index=True, help_text='Со-исполнитель', on_delete=models.SET_NULL)
     register_number = models.CharField(db_column='additional_number', max_length=24, blank=True, default='', help_text="Дополнительный номер при регистрации направления", db_index=True)
     planed_doctor_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="planed_doctor", db_index=True, help_text='Планируемый врач', on_delete=models.SET_NULL)
+    total_confirmed = models.BooleanField(verbose_name='Результат полностью подтверждён', blank=True, default=False, db_index=True)
+    last_confirmed_at = models.DateTimeField(help_text='Дата и время последнего подтверждения', db_index=True, blank=True, default=None, null=True)
+    emdr_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД РЭМД', db_index=True)
+
+    def sync_confirmed_fields(self):
+        has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
+        no_unconfirmed_iss = not Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=True).exists()
+
+        total_confirmed = has_confirmed_iss and no_unconfirmed_iss
+        last_confirmed_at = None
+        if has_confirmed_iss:
+            last_confirmed_at = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).order_by('time_confirmation').values_list('time_confirmation', flat=True)[0]
+
+        updated = []
+
+        if total_confirmed != self.total_confirmed:
+            self.total_confirmed = total_confirmed
+            updated.append('total_confirmed')
+
+        if last_confirmed_at != self.last_confirmed_at:
+            self.last_confirmed_at = last_confirmed_at
+            updated.append('last_confirmed_at')
+        if updated:
+            self.save(update_fields=updated)
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -478,9 +507,11 @@ class Napravleniya(models.Model):
 
         for i in iss:
             research: directory.Researches = i.research
+            if research.is_paraclinic:
+                return 'Instrumental'
             if research.desc:
                 return research.generator_name
-        return 'labortory_gen'
+        return 'Laboratory_min'
 
     def required_signatures(self, fast=False, need_save=False):
         if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):
@@ -489,7 +520,7 @@ class Napravleniya(models.Model):
                 "signsRequired": self.eds_required_signature_types,
             }
 
-        if SettingManager.l2('l2vi'):
+        if SettingManager.l2('l2vi') or SettingManager.l2('cdator'):
             data = {
                 "needCda": (
                     Issledovaniya.objects.filter(napravleniye=self, research__generator_name__isnull=False)
@@ -603,9 +634,23 @@ class Napravleniya(models.Model):
 
     @property
     def hospital_n3id(self):
+        iss = Issledovaniya.objects.filter(napravleniye_id=self).first()
+        if iss:
+            return iss.doc_confirmation.hospital.n3_id
+        return None
+
+    @property
+    def department_n3id(self):
+        iss = Issledovaniya.objects.filter(napravleniye_id=self).first()
+        if iss:
+            return iss.doc_confirmation.podrazdeleniye.n3_id if iss.doc_confirmation.podrazdeleniye.n3_id else iss.doc_confirmation.hospital.n3_id
+        return None
+
+    @property
+    def hospital_ecp_id(self):
         hosp = self.get_hospital()
         if hosp:
-            return hosp.n3_id
+            return hosp.ecp_id
         return None
 
     def get_ogrn_org_initiator(self):
@@ -1092,7 +1137,7 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def monitoring_week_correct(period_param_week_day_start, period_param_week_date_start):
-        week_days = {"Понедельник": 0, "Всторник": 1, "Среда": 2, "Четверг": 3, "Пятница": 4, "Суббота": 5, "Воскресенье": 6}
+        week_days = {"Понедельник": 0, "Вторник": 1, "Среда": 2, "Четверг": 3, "Пятница": 4, "Суббота": 5, "Воскресенье": 6}
         short_week_days = {0: "пн", 1: "вт", 2: "ср", 3: "чт", 4: "пт", 5: "сб", 6: "вc"}
         start_day = datetime.datetime.strptime(period_param_week_date_start, '%Y-%m-%d').date()
         if week_days.get(period_param_week_day_start) != start_day.weekday():
@@ -1684,7 +1729,8 @@ class AdditionNapravleniya(models.Model):
 
 
 def get_direction_file_path(instance: 'DirectionDocument', filename):
-    return os.path.join('directions', str(instance.direction.get_hospital_tfoms_id()), str(instance.direction.pk), filename)
+    iss = Issledovaniya.objects.filter(napravleniye_id=instance.direction.pk).first()
+    return os.path.join('directions', str(iss.doc_confirmation.hospital.code_tfoms), str(instance.direction.pk), filename)
 
 
 class DirectionDocument(models.Model):
@@ -1825,6 +1871,7 @@ class Issledovaniya(models.Model):
     n3_odii_service_request = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор ServiceRequest заявки")
     n3_odii_patient = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор пациента заявки")
     n3_odii_uploaded_task_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="N3-ОДИИ идентификатор Task результата")
+    ecp_evn_id = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="ECP Evn_id")
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )
@@ -1924,7 +1971,7 @@ class Issledovaniya(models.Model):
         return strdate(self.napravleniye.visit_date)
 
     def get_medical_examination(self):
-        if not self.medical_examination:
+        if not self.medical_examination and self.research.pk not in RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION:
             if self.napravleniye.visit_date or self.time_confirmation:
                 self.medical_examination = (self.napravleniye.visit_date or self.time_confirmation).date()
             else:
@@ -2247,8 +2294,12 @@ class ParaclinicResult(models.Model):
     value = models.TextField()
     value_json = JSONField(default=dict, blank=True)
 
-    def get_field_type(self):
-        return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
+    def get_field_type(self, default_field_type=None, is_confirmed_strict=None):
+        return (
+            self.field_type
+            if (is_confirmed_strict is None and self.issledovaniye.time_confirmation and self.field_type) or (is_confirmed_strict and self.field_type) is not None
+            else default_field_type or self.field.field_type
+        )
 
     class JsonParser:
         PARSERS = {
@@ -2334,7 +2385,10 @@ class ParaclinicResult(models.Model):
             value_anesthesia = {}
         previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
         if previus_result:
-            previus_result = eval(previus_result)
+            try:
+                previus_result = json.loads(previus_result)
+            except:
+                previus_result = None
         else:
             previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
 
@@ -2462,6 +2516,9 @@ class MicrobiologyResultCulture(models.Model):
     koe = models.CharField(max_length=16, help_text='КОЕ')
     comments = models.TextField(default='')
 
+    def __str__(self):
+        return f"{self.issledovaniye} — {self.culture}"
+
     class Meta:
         verbose_name = 'Результат-культура'
         verbose_name_plural = 'Результат-культуры'
@@ -2483,6 +2540,15 @@ class MicrobiologyResultCultureAntibiotic(models.Model):
     class Meta:
         verbose_name = 'Результат-культура-антибиотик'
         verbose_name_plural = 'Результат-культура-антибиотики'
+
+
+class MicrobiologyResultPhenotype(models.Model):
+    result_culture = models.ForeignKey(MicrobiologyResultCulture, help_text="Результат-культура", on_delete=models.CASCADE, related_name='culture_phenotip')
+    phenotype = models.ForeignKey(directory.Phenotype, help_text="Фенотип", on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = 'Результат-культура-фенотип'
+        verbose_name_plural = 'Результат-культура-фенотипы'
 
 
 class RmisServices(models.Model):

@@ -182,7 +182,8 @@ export default {
             this.content = `${jval.code} ${jval.title}`;
           }
         } catch (e) {
-          console.log(e);
+          // eslint-disable-next-line no-console
+          console.error(e);
         }
       }
     },

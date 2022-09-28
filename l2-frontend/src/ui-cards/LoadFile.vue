@@ -76,6 +76,7 @@
 <script lang="ts">
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
+
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {
@@ -121,6 +122,7 @@ export default {
         this.file = '';
         this.$root.$emit('msg', 'ok', 'Файл загружен');
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.$root.$emit('msg', 'error', 'Ошибка');
       }

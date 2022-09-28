@@ -39,6 +39,7 @@
               <a
                 href="/logout"
                 class="btn btn-blue-nb"
+                @click="logout"
               >Выход</a>
             </div>
           </div>
@@ -94,6 +95,17 @@
           :target="b.nt && '_blank'"
         >
           <span>{{ b.title }}</span>
+        </router-link>
+      </div><div
+        v-if="forms_url"
+        class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn"
+      >
+        <router-link
+          :to="forms_url"
+          class="panel-body"
+          target="_blank"
+        >
+          <span>Отзывы и предложения</span>
         </router-link>
       </div>
     </div>
@@ -335,8 +347,9 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
+
 import Modal from '@/ui-cards/Modal.vue';
-import { Menu, Button } from '@/types/menu';
+import { Button, Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
 
 @Component({
@@ -382,6 +395,9 @@ import { validateEmail } from '@/utils';
     email() {
       return this.user_data?.email;
     },
+    forms_url() {
+      return this.user_data?.modules.forms_url;
+    },
     changePassword() {
       return this.$store.getters.modules.change_password;
     },
@@ -393,6 +409,8 @@ export default class MenuPage extends Vue {
   buttons: Button[];
 
   fio_dep: string;
+
+  forms_url: string;
 
   changePassword: boolean;
 
@@ -459,6 +477,7 @@ export default class MenuPage extends Vue {
 
       this.$root.$emit('msg', 'error', message || 'Что-то пошло не так');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(error);
     }
     this.loading = false;
@@ -509,6 +528,14 @@ export default class MenuPage extends Vue {
       this.$root.$emit('msg', 'error', message);
       this.loading = false;
     }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  logout() {
+    window.posthog?.reset();
+    window.posthogInit(
+      window.posthog,
+    );
   }
 }
 </script>

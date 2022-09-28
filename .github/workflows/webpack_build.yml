@@ -3,20 +3,34 @@ name: Webpack
 on:
   push:
     branches: [ develop ]
+    paths:
+      - 'l2-frontend/**'
   pull_request:
     branches: [ develop ]
+    paths:
+      - 'l2-frontend/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   webpack_build_prod:
-
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Check out source repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+          cache-dependency-path: 'l2-frontend/yarn.lock'
 
       - name: Install Dependencies
-        run: make npm_install
+        run: make npm_install_cached
 
       - name: Build for production
         run: make build_prod

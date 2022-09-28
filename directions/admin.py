@@ -29,6 +29,8 @@ from .models import (
     AdditionNapravleniya,
     IssledovaniyaFiles,
     IssledovaniyaResultLaborant,
+    MicrobiologyResultCulture,
+    MicrobiologyResultPhenotype,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -52,7 +54,7 @@ class NapravleniyaAdmin(admin.ModelAdmin):
 @admin.register(DirectionDocument)
 class DirectionDocumentAdmin(admin.ModelAdmin):
     autocomplete_fields = ('direction',)
-    search_fields = ('direction',)
+    search_fields = ('direction__id',)
 
 
 @admin.register(DocumentSign)
@@ -231,6 +233,27 @@ class ResIssledovaniyaResultLaborant(admin.ModelAdmin):
     search_fields = ('napravleniye__pk',)
 
 
+class MicrobiologyResultCultureAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('issledovaniye',)
+    list_display = (
+        'issledovaniye',
+        'culture',
+    )
+    search_fields = ('issledovaniye', 'culture__title')
+
+
+class MicrobiologyResultPhenotypeAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
+        'result_culture',
+        'phenotype',
+    )
+    list_display = (
+        'result_culture',
+        'phenotype',
+    )
+    search_fields = ('phenotype__title',)
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -253,3 +276,5 @@ admin.site.register(MonitoringSumFieldTotal)
 admin.site.register(AdditionNapravleniya, ResAdditionNapravleniya)
 admin.site.register(IssledovaniyaFiles, ResIssledovaniyaFiles)
 admin.site.register(IssledovaniyaResultLaborant, ResIssledovaniyaResultLaborant)
+admin.site.register(MicrobiologyResultCulture, MicrobiologyResultCultureAdmin)
+admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmin)

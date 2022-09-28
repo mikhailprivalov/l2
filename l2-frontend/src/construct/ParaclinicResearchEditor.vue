@@ -291,13 +291,57 @@
             :class="expertise ? 'col-xs-5' : 'col-xs-6'"
             style="padding-right: 0"
           >
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 232px"
+              >Метод</span>
+              <Treeselect
+                v-model="currentMethod"
+                class="treeselect-nbr treeselect-wide"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="collectMethods"
+                placeholder="Код не указан"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </div>
+          </div>
+          <div
+            class="col-xs-7"
+            style="padding-right: 0;padding-left: 0"
+          >
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 150px"
+              >Код НСИ</span>
+              <Treeselect
+                v-model="currentNsiResearchCode"
+                class="treeselect-nbr treeselect-wide"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="collectNsiResearchCode"
+                placeholder="Код не выбран"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div
+            :class="expertise ? 'col-xs-5' : 'col-xs-6'"
+            style="padding-right: 0"
+          >
             <div
               v-if="direction_params_all.length > 1"
               class="input-group"
             >
               <span
                 class="input-group-addon nbr"
-                style="width: 233px"
+                style="width: 232px"
               >Параметры направления</span>
               <Treeselect
                 v-model="direction_current_params"
@@ -334,7 +378,7 @@
             </div>
           </div>
           <div
-            c:class="expertise ? 'col-xs-4' : 'col-xs-6'"
+            class="expertise ? 'col-xs-4' : 'col-xs-6'"
             style="padding-left: 0"
           >
             <div
@@ -416,7 +460,7 @@
         >
           <div
             v-if="ex_dep !== 12 && ex_dep !== 13"
-            class="input-group"
+            class="input-group treeselect-input-group-simple"
           >
             <span class="input-group-btn">
               <button
@@ -450,6 +494,19 @@
               class="form-control"
               placeholder="Условие"
             >
+            <span class="input-group-addon">CDA-отношение</span>
+            <span class="input-group-btn">
+              <Treeselect
+                v-model="group.cdaOption"
+                class="treeselect-wide treeselect-noborder-left"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="cda_options"
+                placeholder="CDA-отношение"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </span>
           </div>
           <div
             v-if="ex_dep !== 12 && ex_dep !== 13"
@@ -526,6 +583,34 @@
                       class="form-control"
                     >
                   </div>
+                  <div class="row">
+                    <div class="col-xs-6">
+                      <strong>Контролируемый параметр:</strong>
+                      <Treeselect
+                        v-model="row.patientControlParam"
+                        class="treeselect treeselect-26px"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="patient_control_param_all"
+                        placeholder="Контролируемый параметр"
+                        :append-to-body="true"
+                        :clearable="false"
+                      />
+                    </div>
+                    <div class="col-xs-6">
+                      <strong>CDA-отношение:</strong>
+                      <Treeselect
+                        v-model="row.cdaOption"
+                        class="treeselect treeselect-26px"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="cda_options"
+                        placeholder="CDA-отношение"
+                        :append-to-body="true"
+                        :clearable="false"
+                      />
+                    </div>
+                  </div>
                   <div v-if="row.field_type === 0 || row.field_type === 29">
                     <strong>Значение по умолчанию:</strong>
                     <textarea
@@ -540,7 +625,7 @@
                       class="form-control"
                     >
                   </div>
-                  <div v-if="row.field_type === 1 ">
+                  <div v-if="[1, 20].includes(row.field_type)">
                     <strong>Значение по умолчанию:</strong>
                     <input
                       v-model="row.default"
@@ -635,6 +720,21 @@
                   </div>
                   <div v-else-if="row.field_type === 27">
                     <strong>Таблица:</strong>
+                  </div>
+                  <div v-else-if="row.field_type === 39">
+                    <strong>Справочник:</strong>
+                    <br>
+                    <Treeselect
+                      :value="row.values_to_input[0] || null"
+                      class="treeselect-wide"
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="dynamicDirectories"
+                      placeholder="Справочник не выбран"
+                      :append-to-body="true"
+                      :clearable="true"
+                      @input="e => e ? row.values_to_input = [e] : row.values_to_input = []"
+                    />
                   </div>
                   <PermanentDirectories
                     v-if="row.field_type === 28"
@@ -880,6 +980,7 @@
                         Сведения о прикреплении застрахованного лица (ТФОМС)
                       </option>
                       <option value="35">Врач</option>
+                      <option value="39">Динамический справочник</option>
                     </select>
                   </label>
                 </div>
@@ -961,9 +1062,9 @@ import NumberRangeField from '@/fields/NumberRangeField.vue';
 import ConfigureAnesthesiaField from '@/fields/ConfigureAnesthesiaField.vue';
 import NumberField from '@/fields/NumberField.vue';
 import FieldHelper from '@/ui-cards/FieldHelper.vue';
-
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
+
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
 Vue.use(Vue2Filters);
@@ -1072,11 +1173,18 @@ export default {
       departments: [],
       hospital_research_department_pk: -1,
       direction_params_all: [],
+      patient_control_param_all: [],
       direction_current_params: -1,
       direction_expertise_all: [],
       direction_current_expertise: -1,
+      currentNsiResearchCode: -1,
+      collectNsiResearchCode: [],
+      collectMethods: [],
+      currentMethod: -1,
       assigned_to_params: [],
       type_period: null,
+      cda_options: [],
+      dynamicDirectories: [],
     };
   },
   computed: {
@@ -1155,10 +1263,17 @@ export default {
       },
       deep: true,
     },
+    currentMethod: {
+      handler() {
+        this.loadcollectNsiCode();
+      },
+      deep: true,
+    },
   },
   created() {
     this.load();
     this.load_deparments();
+    this.loadDynamicDirectories();
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -1348,6 +1463,8 @@ export default {
       this.direction_current_form = '';
       this.result_current_form = '';
       this.speciality = -1;
+      this.currentMethod = -1;
+      this.collectMethods = [];
       this.hospital_research_department_pk = -1;
       this.type_period = null;
       if (this.pk >= 0) {
@@ -1363,6 +1480,9 @@ export default {
             this.internal_code = data.internal_code;
             this.direction_current_form = data.direction_current_form;
             this.result_current_form = data.result_current_form;
+            this.currentNsiResearchCode = data.currentNsiResearchCode;
+            this.collectNsiResearchCode = data.collectNsiResearchCode;
+            this.collectMethods = data.collectMethods;
             this.speciality = data.speciality;
             this.hospital_research_department_pk = data.department;
             this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
@@ -1371,6 +1491,8 @@ export default {
             this.loaded_pk = this.pk;
             this.groups = data.groups;
             this.direction_params_all = data.direction_params_all;
+            this.patient_control_param_all = data.patient_control_param_all;
+            this.cda_options = data.cda_options;
             this.direction_current_params = data.direction_current_params;
             this.direction_expertise_all = data.direction_expertise_all;
             this.direction_current_expertise = data.direction_current_expertise;
@@ -1424,6 +1546,7 @@ export default {
         'type_period',
         'not_edit',
         'operator_enter_param',
+        'currentNsiResearchCode',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
@@ -1446,6 +1569,14 @@ export default {
     async load_deparments() {
       const { data } = await this.$api('procedural-list/suitable-departments');
       this.departments = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
+    },
+    async loadDynamicDirectories() {
+      const { rows } = await this.$api('dynamic-directory/list-treeselect');
+      this.dynamicDirectories = rows;
+    },
+    async loadcollectNsiCode() {
+      const { rows } = await this.$api('external-system/fsidi-by-method', { method: this.currentMethod });
+      this.collectNsiResearchCode = rows;
     },
   },
 };

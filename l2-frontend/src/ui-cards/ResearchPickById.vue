@@ -13,7 +13,8 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { ResearchPk, Research } from '@/types/research';
+
+import { Research, ResearchPk } from '@/types/research';
 import ResearchPick from '@/ui-cards/ResearchPick.vue';
 
 @Component({

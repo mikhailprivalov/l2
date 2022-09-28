@@ -57,6 +57,7 @@
 
 <script lang="ts">
 import Split from 'split.js';
+
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import IndividualPicker from '@/ui-cards/IndividualPicker.vue';
 import ResultsReportViewer from '@/ui-cards/ResultsReportViewer.vue';

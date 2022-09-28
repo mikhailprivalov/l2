@@ -7,6 +7,7 @@ import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import Component from 'vue-class-component';
 import { POSITION } from 'vue-toastification/src/ts/constants';
+
 import * as actions from '@/store/action-types';
 
 @Component({
@@ -118,6 +119,7 @@ export default class CheckBackend extends Vue {
         }
 
         if (this.authenticated && this.version && this.version !== version) {
+          // eslint-disable-next-line no-console
           console.log({ uiVersion: this.version, newVersion: version });
           this.$store.dispatch(actions.HAS_NEW_VERSION);
         }

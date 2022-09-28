@@ -103,6 +103,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/price',
+      name: 'construct_price',
+      component: () => import('@/construct/ConstructPrice.vue'),
+      meta: {
+        title: 'Настройка прайсов',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
@@ -307,6 +317,7 @@ const router = new Router({
           'Конструктор: Параклинические (описательные) исследования',
         ],
         module: 'paraclinic_module',
+        showHelpLinkField: true,
       },
     },
     {
@@ -542,6 +553,14 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/directories',
+      name: 'directories',
+      component: () => import('@/pages/Directories/index.vue'),
+      meta: {
+        title: 'Справочники',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
@@ -665,11 +684,14 @@ router.beforeEach(async (to, from, next) => {
       next();
     }
   } else {
-    window.location.href = to.fullPath;
+    window.location.href = String(to.fullPath);
   }
 });
 
 router.afterEach(async () => {
+  if (window.posthog) {
+    window.posthog.capture('$pageview');
+  }
   await router.app.$store.dispatch(actions.DEC_G_LOADING);
 });
 

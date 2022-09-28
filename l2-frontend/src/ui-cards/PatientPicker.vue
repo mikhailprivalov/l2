@@ -687,6 +687,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { mapGetters } from 'vuex';
 import { debounce } from 'lodash';
+
 import L2CardCreate from '@/modals/L2CardCreate.vue';
 import DReg from '@/modals/DReg.vue';
 import Benefit from '@/modals/Benefit.vue';
@@ -694,6 +695,8 @@ import * as actions from '@/store/action-types';
 import patientsPoint from '@/api/patients-point';
 import Vaccine from '@/modals/Vaccine.vue';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
+import { sendEvent } from '@/metrics';
+
 import Modal from './Modal.vue';
 
 const tfomsRe = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
@@ -1104,12 +1107,19 @@ export default {
     },
     select_suggest(i) {
       this.founded_cards = this.suggests.data;
+      sendEvent('patient-picker:search-select-suggest', {
+        query: this.normalized_query,
+        suggestsCount: this.suggests.data.length,
+      });
       window.$('input').each(function () {
         window.$(this).trigger('blur');
       });
       this.select_card(i);
     },
     clear_input() {
+      sendEvent('patient-picker:search-clear-input', {
+        query: this.normalized_query,
+      });
       this.query = '';
       window.$(this.$refs.q).focus();
     },
@@ -1161,6 +1171,9 @@ export default {
           this.$store.dispatch(actions.DEC_LOADING);
           this.anamnesis = true;
         });
+      sendEvent('patient-picker:open-anamnesis', {
+        card_pk: this.selected_card.pk,
+      });
     },
     hide_modal_anamnesis() {
       if (this.$refs.modalAnamnesis) {
@@ -1168,18 +1181,30 @@ export default {
       }
       this.anamnesis_data = {};
       this.anamnesis = false;
+      sendEvent('patient-picker:hide-modal-anamnesis', {
+        card_pk: this.selected_card.pk,
+      });
     },
     an_tab(tab) {
       this.an_state.tab = tab;
     },
     open_dreg() {
       this.dreg = true;
+      sendEvent('patient-picker:open-dreg', {
+        card_pk: this.selected_card.pk,
+      });
     },
     open_vaccine() {
       this.vaccine = true;
+      sendEvent('patient-picker:open-vaccine', {
+        card_pk: this.selected_card.pk,
+      });
     },
     open_benefit() {
       this.benefit = true;
+      sendEvent('patient-picker:open-benefit', {
+        card_pk: this.selected_card.pk,
+      });
     },
     open_ambulatory_data() {
       this.ambulatory_data = true;
@@ -1190,6 +1215,10 @@ export default {
       } else {
         this.editor_pk = this.selected_card.pk;
       }
+      sendEvent('patient-picker:open-editor', {
+        card_pk: this.selected_card.pk,
+        editor_pk: this.editor_pk,
+      });
     },
     format_number(a) {
       if (a.length === 6) {
@@ -1262,6 +1291,9 @@ export default {
       this.suggests.loading = false;
       this.suggests.data = [];
       this.selected_card = this.founded_cards[index];
+      sendEvent('patient-picker:select-card', {
+        card_pk: this.selected_card.pk,
+      });
       if (this.selected_card.base_pk) {
         if (this.base && this.base !== this.selected_card.base_pk) {
           this.query = '';
@@ -1434,6 +1466,10 @@ export default {
         window.$(this).trigger('blur');
       });
       this.$store.dispatch(actions.ENABLE_LOADING, { loadingLabel: 'Поиск карты' });
+      sendEvent('patient-picker:search', {
+        query: q,
+        base: this.selected_base,
+      });
       patientsPoint
         .searchCard({
           type: this.base,
@@ -1445,6 +1481,11 @@ export default {
         .then((result) => {
           this.clear();
           if (result.results) {
+            sendEvent('patient-picker:search:success', {
+              query: q,
+              base: this.selected_base,
+              resultsCount: result.results.length,
+            });
             this.founded_cards = result.results;
             if (this.founded_cards.length > 1) {
               this.showModal = true;

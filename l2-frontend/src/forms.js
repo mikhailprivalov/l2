@@ -12,6 +12,7 @@ export default [
       { url: '/forms/pdf?type=101.06&card_pk={card}', title: 'Согласие COVID-19', type: '101.06' },
       { url: '/forms/pdf?type=101.02&card_pk={card}', title: 'Согласие на обработку персональных данных', type: '101.02' },
       { url: '/forms/pdf?type=101.14&card_pk={card}', title: 'Согласие на оперативное вмешательство', type: '101.14' },
+      { url: '/forms/pdf?type=101.15&card_pk={card}', title: 'Согласие на анестезиологическое обеспечение', type: '101.15' },
       { url: '/forms/pdf?type=101.03&card_pk={card}', title: 'Согласие на медицинское вмешательство', type: '101.03' },
       {
         url: '/forms/pdf?type=101.01&individual={individual}',
@@ -27,9 +28,6 @@ export default [
 ];
 
 export const forDirs = [
-  {
-    url: '/forms/pdf?type=102.01&card_pk={card}&napr_id={dir}', title: 'Договор', need_dirs: true, type: '102.01',
-  },
   {
     url: '/forms/pdf?type=102.02&card_pk={card}&napr_id={dir}', title: 'Договор-печать', need_dirs: true, type: '102.02',
   },

@@ -13,6 +13,7 @@
 
 <script lang="ts">
 import { mapGetters } from 'vuex';
+
 import usersPoint from '@/api/user-point';
 
 export default {
@@ -34,7 +35,6 @@ export default {
       if (!this.init && rl) {
         this.init = true;
         this.loading = true;
-        console.log('rmis_location', rl);
         this.data = await usersPoint.loadLocation({});
         this.loading = false;
       }

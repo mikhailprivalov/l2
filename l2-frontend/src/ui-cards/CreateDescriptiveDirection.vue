@@ -83,6 +83,7 @@
 
 <script lang="ts">
 import { mapGetters } from 'vuex';
+
 import Modal from '@/ui-cards/Modal.vue';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '@/ui-cards/SelectedResearches.vue';

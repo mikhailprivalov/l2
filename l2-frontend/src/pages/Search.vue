@@ -248,6 +248,30 @@
           </span>
         </div>
       </div>
+      <div
+        v-if="hasParam && count > 0"
+        class="inner"
+      >
+        <h5>Параметры статистики</h5>
+        <Treeselect
+          v-model="statisticParam"
+          :multiple="false"
+          :disable-branch-nodes="true"
+          class="treeselect-noborder treeselect-wide"
+          :options="statisticParams"
+          :append-to-body="true"
+          placeholder="Не выбрано"
+          :clearable="false"
+        />
+        <button
+          v-if="statisticParam !== -1"
+          class="btn btn-blue-nb btn-block"
+          type="button"
+          @click="genReport"
+        >
+          Сформировать отчёт
+        </button>
+      </div>
     </div>
     <div class="right-content">
       <div class="inner">
@@ -298,6 +322,8 @@
                   class="additional-number"
                 >
                   <i class="fas fa-registered" />{{ r.additional_number }}
+                  <br>
+                  {{ r.registered_date }}
                 </div>
               </td>
               <td v-if="!isSearchStationar">
@@ -348,6 +374,8 @@ import Component from 'vue-class-component';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Paginate from 'vuejs-paginate';
+import axios from 'axios';
+import * as Cookies from 'es-cookie';
 
 import * as actions from '@/store/action-types';
 import usersPoint from '@/api/user-point';
@@ -390,6 +418,10 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       count: 0,
       hospital_ids: [{ id: -1, label: 'По умолчанию' }],
       hospitalId: -1,
+      statisticParams: [{ id: -1, label: 'Не выбрано' }],
+      statisticParam: -1,
+      hasParam: false,
+      directionsReport: [],
     };
   },
   async mounted() {
@@ -431,9 +463,13 @@ export default class SearchPage extends Vue {
 
   hospitalId: number;
 
+  statisticParam: number;
+
   count: number;
 
   researches: any[];
+
+  directionsReport: any[];
 
   caseNumber: string;
 
@@ -451,6 +487,8 @@ export default class SearchPage extends Vue {
 
   searchStationar: boolean;
 
+  hasParam: boolean;
+
   dateRegisteredRange: string[];
 
   docConfirm: null | number;
@@ -463,6 +501,8 @@ export default class SearchPage extends Vue {
 
   dateReceive: string | null;
 
+  statisticParams: any[];
+
   get isValid() {
     return this.searchStationar || (!!this.year && !!this.research && this.research !== -1);
   }
@@ -471,8 +511,12 @@ export default class SearchPage extends Vue {
     return this.searchStationar;
   }
 
+  get userGroups() {
+    return this.$store.getters.user_data.groups || [];
+  }
+
   get canSelectHospitals() {
-    const groups = this.$store.getters.user_data.groups || [];
+    const groups = this.userGroups;
     return groups.includes('Направления-все МО');
   }
 
@@ -499,8 +543,63 @@ export default class SearchPage extends Vue {
     const dataRows = await this.$api('/search-param', data);
     this.results = dataRows.rows || [];
     this.count = dataRows.count || 0;
-
+    if (this.count > 0) {
+      this.statisticParamsSerch();
+      this.directionsReport = [];
+      for (const element of this.results) {
+        this.directionsReport.push(element.direction_number);
+      }
+    }
     await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async statisticParamsSerch() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const dataRows = await this.$api('/statistic-params-search');
+    this.statisticParams = [{ id: -1, label: 'Не выбрано' }, ...dataRows.rows];
+    this.hasParam = dataRows.hasParam;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  genReport() {
+    axios({
+      method: 'post',
+      url: '/api/reports/statistic-params-search',
+      data: {
+        directions: this.directionsReport,
+        param: this.statisticParam,
+        researchId: this.research,
+      },
+      responseType: 'blob',
+      headers: {
+        'X-CSRFToken': Cookies.get('csrftoken'),
+      },
+    })
+      .then((response) => {
+        const blob = new Blob([response.data], { type: 'application/ms-excel' });
+        const downloadUrl = window.URL.createObjectURL(blob);
+        let filename = '';
+        const disposition = response.headers['content-disposition'];
+        if (disposition && disposition.indexOf('attachment') !== -1) {
+          const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+          const matches = filenameRegex.exec(disposition);
+          filename = matches?.[1].replace(/['"]/g, '') || '';
+        }
+        const a = document.createElement('a');
+        if (typeof a.download === 'undefined') {
+          window.location.href = downloadUrl;
+        } else {
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+        }
+      })
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error(error);
+        this.$root.$emit('msg', 'error', 'Сохранить данные в виде XLSX не удалось');
+      });
   }
 
   print(pk) {

@@ -1,0 +1,38 @@
+name: Make release
+
+on:
+  workflow_run:
+    workflows: [ "Make new tag" ]
+    types:
+      - completed
+
+jobs:
+  makeRelease:
+    runs-on: self-hosted
+    steps:
+      - name: Get actual version
+        id: version_check
+        run: |
+          version=`./current-version.sh`
+          echo "::set-output name=version::v$version"
+
+      - uses: actions/checkout@v3
+
+      - name: Get tags
+        run: git fetch --tags -f
+
+      - name: Checkout tag
+        run: git checkout tags/${{ steps.version_check.outputs.version }}
+
+      - name: 'Download workflow artifact: webpack_bundles.tar.gz'
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: webpack_bundles.tar.gz
+          run_id: ${{ github.event.workflow_run.id }}
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "*.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.version_check.outputs.version }}

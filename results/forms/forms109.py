@@ -1,7 +1,5 @@
-import datetime
 import json
 
-import pytils
 
 from hospitals.models import Hospitals
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, HRFlowable
@@ -22,7 +20,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     """
     Карта учета профилактического медицинского осмотра (диспансеризации)
     """
-    ind_card = direction.client
 
     hospital: Hospitals = direction.hospital
     hospital_name = hospital.safe_short_title
@@ -697,10 +694,30 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     objs.append(tbl)
 
-    objs.append(Paragraph('15. Дата окончания профилактического медицинского осмотра __________________', style, ))
-    objs.append(Paragraph(f'Дата окончания первого этапа диспансеризации {data["Дата окончания первого этапа диспансеризации"]}', style,))
-    objs.append(Paragraph(f'Дата окончания второго этапа диспансеризации {data["Дата окончания второго этапа диспансеризации"]}', style, ))
-    objs.append(Paragraph(f'16. Профилактический медицинский осмотр (диспансеризация) проведен(а): {data["Медицинский осмотр проведен"]}', style,))
+    objs.append(
+        Paragraph(
+            '15. Дата окончания профилактического медицинского осмотра __________________',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            f'Дата окончания первого этапа диспансеризации {data["Дата окончания первого этапа диспансеризации"]}',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            f'Дата окончания второго этапа диспансеризации {data["Дата окончания второго этапа диспансеризации"]}',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            f'16. Профилактический медицинский осмотр (диспансеризация) проведен(а): {data["Медицинский осмотр проведен"]}',
+            style,
+        )
+    )
     objs.append(
         Paragraph(
             '17. Выявленные при проведении профилактического медицинского осмотра (диспансеризации) факторы риска и другие патологические '

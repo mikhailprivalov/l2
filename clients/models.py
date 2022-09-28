@@ -1009,23 +1009,33 @@ class Card(models.Model):
             for p in Phones.objects.filter(card=self, number=t):
                 p.normalize_number()
 
-    def get_card_documents(self, as_model=False):
-        types = [t.pk for t in DocumentType.objects.all()]
+    def get_card_documents(self, as_model=False, check_has_type=None):
+        if not check_has_type:
+            types = [t.pk for t in DocumentType.objects.all()]
+        else:
+            types = [t.pk for t in DocumentType.objects.filter(title__in=check_has_type)]
         docs = {}
         for t in types:
-            CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=False).delete()
+            if not check_has_type:
+                CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=False).delete()
             if CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=True).exists():
+                if check_has_type:
+                    return True
                 docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document
             elif Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).exists():
                 d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by('-id')[0]
                 c = CardDocUsage(card=self, document=d)
                 c.save()
                 docs[t] = d
-            else:
+                if check_has_type:
+                    return True
+            elif not check_has_type:
                 docs[t] = None
 
-            if docs[t] and not as_model:
+            if not check_has_type and docs[t] and not as_model:
                 docs[t] = docs[t].pk
+        if check_has_type:
+            return False
         return docs
 
     def get_n3_documents(self):
@@ -1701,9 +1711,9 @@ class AmbulatoryDataHistory(models.Model):
 class CardControlParam(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
-    purpose_value = models.CharField(max_length=50, help_text='Целевое значение-нормальност', db_index=True)
-    date_start = models.DateField(help_text='Дата начала контроля', db_index=True, default=None, blank=True, null=True)
-    date_end = models.DateField(help_text='Дата окончания контроля', db_index=True, default=None, blank=True, null=True)
+    purpose_value = models.CharField(max_length=50, help_text='Целевое значение-нормальност', default="")
+    date_start = models.DateField(help_text='Дата начала контроля', default=None, blank=True, null=True)
+    date_end = models.DateField(help_text='Дата окончания контроля', default=None, blank=True, null=True)
 
     def __str__(self):
         return f"{self.patient_control_param} - {self.purpose_value}"
@@ -1711,3 +1721,35 @@ class CardControlParam(models.Model):
     class Meta:
         verbose_name = 'Контролируемый параметр у пациента'
         verbose_name_plural = 'Контролируемые параметры у пациента'
+
+    @staticmethod
+    def get_patient_control_param(card_pk, code_param_id=None):
+        card_controls = CardControlParam.objects.filter(card_id=card_pk).order_by("pk")
+        if code_param_id:
+            card_controls = CardControlParam.objects.filter(card_id=card_pk, patient_control_param_id=code_param_id).order_by("pk")
+        control_params = {cc.patient_control_param_id: {"title": cc.patient_control_param.title, "purpose": "", "selected": True, "isGlobal": False} for cc in card_controls}
+        for cc in card_controls:
+            tmp_data: dict = control_params[cc.patient_control_param_id]
+            date_start = cc.date_start.strftime("%m.%y") if cc.date_start else "-"
+            date_end = cc.date_end.strftime("%m.%y") if cc.date_end else "-"
+            tmp_purpose = f"{tmp_data['purpose']} {date_start}:{date_end}={cc.purpose_value};"
+            tmp_data["purpose"] = tmp_purpose
+            control_params[cc.patient_control_param_id] = tmp_data.copy()
+        all_patient_contol_param = PatientControlParam.get_all_patient_contol_param(code_param_id=code_param_id)
+        for k, v in all_patient_contol_param.items():
+            if not control_params.get(k, None):
+                control_params[k] = v
+                control_params[k]["selected"] = True
+                control_params[k]["isGlobal"] = True
+            if control_params.get(k, None):
+                control_params[k]["isGlobal"] = True
+        return control_params
+
+    @staticmethod
+    def save_patient_control_param(card_pk, save_params):
+        CardControlParam.objects.filter(card_id=card_pk).order_by("pk").delete()
+        for i in save_params:
+            if i.get("isGlobal", False):
+                continue
+            elif i.get("isSelected", False):
+                CardControlParam(card_id=card_pk, patient_control_param_id=i["id"]).save()

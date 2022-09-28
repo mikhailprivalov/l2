@@ -133,6 +133,7 @@
 
 <script lang="ts">
 import moment from 'moment';
+
 import ResultDetails from './ResultDetails.vue';
 
 export default {

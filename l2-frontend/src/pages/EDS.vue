@@ -111,10 +111,12 @@
     </button>
 
     <div
-      v-if="!loaded"
+      v-if="!loaded || error"
       class="not-loaded"
     >
       Данные не загружены
+      <br>
+      <span class="status-error">{{ message }}</span>
     </div>
     <div
       v-else
@@ -214,6 +216,10 @@
           >
             <td>
               {{ r.pk }}
+              <span
+                v-if="!r.hasSnils"
+                class="status-error"
+              > <i class="fa fa-exclamation-triangle" />СНИЛС</span>
             </td>
             <td>{{ r.confirmedAt }}, {{ r.docConfirmation }}</td>
             <td>
@@ -236,7 +242,7 @@
               </div>
             </td>
             <td class="x-cell">
-              <label v-if="!totallySigned(r)">
+              <label v-if="!totallySigned(r) && r.hasSnils">
                 <input
                   v-model="r.checked"
                   type="checkbox"
@@ -369,7 +375,7 @@
 
 <script lang="ts">
 import {
-  getSystemInfo, getUserCertificates, createDetachedSignature, createHash,
+  createDetachedSignature, createHash, getSystemInfo, getUserCertificates,
 } from 'crypto-pro';
 import moment from 'moment';
 import Vue from 'vue';
@@ -427,6 +433,8 @@ const STATUSES = [
       pages: 0,
       total: 0,
       loaded: false,
+      error: false,
+      message: '',
       rows: [],
       selectedSignatureMode: null,
       signingProcess: {
@@ -496,6 +504,10 @@ export default class EDS extends Vue {
   total: number;
 
   loaded: boolean;
+
+  error: boolean;
+
+  message: string;
 
   rows: any[];
 
@@ -595,24 +607,31 @@ export default class EDS extends Vue {
   async getEDSStatus() {
     try {
       this.systemInfo = await getSystemInfo();
+      // eslint-disable-next-line no-console
       console.log('getStatus', true, this.systemInfo);
       this.hasCP = true;
       try {
         this.certificates = await getUserCertificates();
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.log('getCertificates error');
+        // eslint-disable-next-line no-console
         console.error(e);
         this.checked = false;
       }
       if (this.certificates.length > 0) {
+        // eslint-disable-next-line no-console
         console.log('getCertificates', true, this.certificates);
-        this.selectedCertificate = (this.certificates[0] || {}).thumbprint;
+        this.selectedCertificate = this.certificates[0]?.thumbprint;
       } else {
+        // eslint-disable-next-line no-console
         console.log('getCertificates', false);
       }
       this.checked = true;
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error(e);
+      // eslint-disable-next-line no-console
       console.log('getStatus', false);
       this.hasCP = false;
       this.checked = true;
@@ -633,12 +652,14 @@ export default class EDS extends Vue {
     }
     await this.$store.dispatch(actions.INC_LOADING);
     const {
-      rows, page, pages, total,
+      rows, page, pages, total, error, message,
     } = await this.$api('/directions/eds/to-sign', this, ['filters', 'page']);
     this.rows = rows.map(r => ({ ...r, checked: false }));
     this.page = page;
     this.pages = pages;
     this.total = total;
+    this.error = error;
+    this.message = message;
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
     if (this.commonSignModes.includes(prevSelectedSignatureMode)) {
@@ -648,7 +669,7 @@ export default class EDS extends Vue {
 
   toggleGlobalCheck() {
     const newStatus = !this.globalCheckStatus;
-    this.rows = this.rows.map(r => ({ ...r, checked: newStatus && !this.totallySigned(r) }));
+    this.rows = this.rows.map(r => ({ ...r, checked: newStatus && !this.totallySigned(r) && r.hasSnils }));
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -720,6 +741,7 @@ export default class EDS extends Vue {
               this.$root.$emit('msg', 'error', message);
             }
           } catch (e) {
+            // eslint-disable-next-line no-console
             console.error(e);
             this.$root.$emit('msg', 'error', 'Ошибка создания подписи!');
           }
@@ -727,7 +749,8 @@ export default class EDS extends Vue {
           this.signingProcess.currentDocument++;
         }
       } catch (e) {
-        console.log(e);
+        // eslint-disable-next-line no-console
+        console.error(e);
         this.$root.$emit('msg', 'error', `Ошибка подписи ${r.pk}`);
         const docToLog = {
           direction: r.pk,

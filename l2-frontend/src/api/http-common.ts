@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
 import { merge, pick } from 'lodash/object';
+
 import { valuesToString } from '@/utils';
 
 export const HTTP = axios.create({
@@ -39,6 +40,7 @@ export const smartCall = async ({
       return response.data;
     }
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e);
   }
   return onReject;

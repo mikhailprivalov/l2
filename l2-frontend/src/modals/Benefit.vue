@@ -208,6 +208,7 @@
 
 <script lang="ts">
 import moment from 'moment';
+
 import Modal from '@/ui-cards/Modal.vue';
 import patientsPoint from '@/api/patients-point';
 import * as actions from '@/store/action-types';

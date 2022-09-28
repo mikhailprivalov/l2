@@ -28,13 +28,16 @@ from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from clients.models import Card
-from directions.models import Napravleniya, IstochnikiFinansirovaniya, PersonContract
+from directions.models import Napravleniya, IstochnikiFinansirovaniya, PersonContract, Issledovaniya
 from hospitals.models import Hospitals
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER, BASE_DIR
+from utils.xh import save_tmp_file
 from . import forms_func
 from utils.pagenum import PageNumCanvasPartitionAll
 from .sql_func import sort_direction_by_file_name_contract
+from directions.views import gen_pdf_dir as f_print_direction
+from django.http import HttpRequest
 
 
 def form_01(request_data):
@@ -42,6 +45,7 @@ def form_01(request_data):
     Договор, включающий услуги на оплату и необходимые реквизиты. С Учетом представителей и Заказчиков(Плательщиков)
     у пациента
     """
+    return False
     p_payer = None
     p_agent = None
     ind_card = Card.objects.get(pk=request_data["card_pk"])
@@ -1188,6 +1192,7 @@ def form_02(request_data):
     styleTR.alignment = TA_RIGHT
 
     objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
+    direction_data = []
     for contract in sorted_contract_result:
         person_contract_data = PersonContract.objects.get(num_contract=contract["num_contract"])
         exec_person = request_data['user'].doctorprofile.get_full_fio()
@@ -1215,7 +1220,7 @@ def form_02(request_data):
             payer_data = p_payer.get_data_individual()
 
         # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
-        research_direction = forms_func.get_research_by_dir(contract["directions_contract"])
+        research_direction = forms_func.get_research_by_dir(contract["directions_contract"], only_new=False)
 
         if not research_direction:
             return False
@@ -1234,13 +1239,30 @@ def form_02(request_data):
         bstr = (qr_napr + protect_val).encode()
         protect_code = str(zlib.crc32(bstr))
 
-        today = utils.current_time()
-        date_now1 = datetime.datetime.strftime(today, '%y%m%d%H%M%S%f')[:-3]
-        date_now_str = str(ind_card.pk) + str(date_now1)
+        date_create = datetime.datetime.strftime(person_contract_data.create_at, '%y%m%d%H%M%S')
+        date_now_str = f'{ind_card.pk}-{date_create}/{person_contract_data.pk}'
+        book = person_contract_data.pk
+        barcode128 = code128.Code128(book, barHeight=6 * mm, barWidth=1.25)
+        contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
+        if not os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"]):
+            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', "default")
+        else:
+            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"])
+        if contract_from_file:
+            with open(contract_file) as json_file:
+                data = json.load(json_file)
+                contract_header = data['contract_header']
+                body_paragraphs = data['body_paragraphs']
+                org_contacts = data['org_contacts']
+                executor = data['executor']
+                appendix_paragraphs = data.get('appendix_paragraphs', None)
+                appendix_route_list = data.get('appendix_route_list', None)
+                appendix_direction_list = data.get('appendix_direction_list', None)
+        else:
+            executor = None
 
-        barcode128 = code128.Code128(date_now_str, barHeight=6 * mm, barWidth=1.25)
         objs.append(Spacer(1, 11 * mm))
-        objs.append(Paragraph(f'ДОГОВОР &nbsp;&nbsp; № <u>{date_now_str}-{person_contract_data.pk}</u>', styleCenter))
+        objs.append(Paragraph(f'ДОГОВОР &nbsp;&nbsp; № <u>{date_now_str}</u>', styleCenter))
         objs.append(Spacer(1, 1 * mm))
         objs.append(Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter))
 
@@ -1268,46 +1290,13 @@ def form_02(request_data):
 
         hospital: Hospitals = request_data["hospital"]
 
-        hospital_name = hospital.safe_short_title
         hospital_short_name = hospital.safe_short_title
         hospital_address = hospital.safe_address
-
-        post_contract = SettingManager.get("post_contract")
-        document_base = SettingManager.get("document_base")
-
-        contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
-
-        if not os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"]):
-            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', "default")
-        else:
-            contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', contract["file_name_contract"])
-
-        executor = None
-        if contract_from_file:
-            with open(contract_file) as json_file:
-                data = json.load(json_file)
-                contract_header = data['contract_header']
-                body_paragraphs = data['body_paragraphs']
-                org_contacts = data['org_contacts']
-                executor = data['executor']
-                appendix_paragraphs = data.get('appendix_paragraphs', None)
-                appendix_route_list = data.get('appendix_route_list', None)
-
-        else:
-            executor = None
 
         if contract_from_file:
             objs.append(Paragraph('{}'.format(contract_header), style))
         else:
-            objs.append(
-                Paragraph(
-                    '<font fontname ="PTAstraSerifBold"> Исполнитель:  </font>  {}, в лице {} {}, действующего(ей) на основании {} с одной стороны, и'.format(
-                        hospital_name, post_contract, exec_person, document_base
-                    ),
-                    style,
-                )
-            )
-
+            return False
         them_contract = 'настоящий договор о нижеследующем:'
         client_who = 'Заказчик'
         is_payer = False
@@ -1468,11 +1457,11 @@ def form_02(request_data):
         example_template = result_data[0]
 
         list_g = []
-        route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB)]]
+        route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB), Paragraph(' Ш/к', styleTB)]]
         # используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
         for i in range(len(example_template)):
             list_t = []
-            for j in range(len(example_template[i])):
+            for j in range(len(example_template[i]) - 1):
                 if j in (3, 5, 7):
                     s = styleTCright
                 elif j in (4, 6):
@@ -1481,7 +1470,11 @@ def form_02(request_data):
                     s = styleTC
                 list_t.append(Paragraph(example_template[i][j], s))
             list_g.append(list_t)
-            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC)])
+            if example_template[i][1]:
+                barcode = code128.Code128(example_template[i][1], barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
+            else:
+                barcode = Paragraph('', styleTC)
+            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC), Paragraph(example_template[i][8], styleTC), barcode])
 
         opinion.extend(list_g)
 
@@ -1791,7 +1784,7 @@ def form_02(request_data):
                 else:
                     objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
-            tbl = Table(route_list, colWidths=(30 * mm, 100 * mm), hAlign='LEFT')
+            tbl = Table(route_list, colWidths=(30 * mm, 58 * mm, 60 * mm, 42 * mm), hAlign='LEFT')
             tbl.setStyle(
                 TableStyle(
                     [
@@ -1804,7 +1797,36 @@ def form_02(request_data):
 
             objs.append(Spacer(1, 5 * mm))
             objs.append(tbl)
-        objs.append(PageBreak())
+
+        if contract_from_file and appendix_direction_list:
+            types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set()}
+            for d in result_data[3]:
+                iss_obj = Issledovaniya.objects.filter(napravleniye_id=d).first()
+                if iss_obj.research.is_doc_refferal:
+                    types_direction["isDocrefferal"].add(d)
+                elif iss_obj.research.is_paraclinic:
+                    types_direction["isParaclinic"].add(d)
+                elif iss_obj.research.is_paraclinic:
+                    types_direction["isGistology"].add(d)
+                elif (
+                    not iss_obj.research.is_form
+                    and not iss_obj.research.is_citology
+                    and not iss_obj.research.is_gistology
+                    and not iss_obj.research.is_stom
+                    and not iss_obj.research.is_application
+                    and not iss_obj.research.is_direction_params
+                    and not iss_obj.research.is_microbiology
+                    and not iss_obj.research.is_treatment
+                ):
+                    types_direction["islab"].add(d)
+
+            for section in appendix_direction_list:
+                if section.get('islab'):
+                    direction_data.extend(list(types_direction["islab"]))
+                elif section.get('isDocrefferal'):
+                    direction_data.extend(list(types_direction["isDocrefferal"]))
+                elif section.get('isParaclinic'):
+                    direction_data.extend(list(types_direction["isParaclinic"]))
 
     def first_pages(canvas, document):
         canvas.saveState()
@@ -1829,7 +1851,7 @@ def form_02(request_data):
         )
 
         # Вывести на первой странице код-номер договора
-        barcode128.drawOn(canvas, 120 * mm, 283 * mm)
+        barcode128.drawOn(canvas, 10 * mm, 282 * mm)
 
         # вывести внизу QR-code (ФИО, (номера направлений))
         qr_code = qr.QrCodeWidget(qr_value)
@@ -1888,6 +1910,40 @@ def form_02(request_data):
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
 
     pdf = buffer.getvalue()
+
+    if SettingManager.get("print_direction_after_contract", default='False', default_type='b') and len(direction_data) > 0:
+        direction_obj = HttpRequest()
+        direction_obj._body = json.dumps({"napr_id": direction_data})
+        direction_obj.user = request_data['user']
+        fc = f_print_direction(direction_obj)
+        if fc:
+            fc_buf = BytesIO()
+            fc_buf.write(fc.content)
+            fc_buf.seek(0)
+            buffer.seek(0)
+            from pdfrw import PdfReader, PdfWriter
+
+            today = datetime.datetime.now()
+            date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+            date_now_str = str(ind_card.pk) + str(date_now1)
+            dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+            file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
+            file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
+            save_tmp_file(fc_buf, filename=file_dir)
+            save_tmp_file(buffer, filename=file_contract)
+            pdf_all = BytesIO()
+            inputs = [file_contract, file_dir]
+            writer = PdfWriter()
+            for inpfn in inputs:
+                writer.addpages(PdfReader(inpfn).pages)
+            writer.write(pdf_all)
+            pdf_out = pdf_all.getvalue()
+            pdf_all.close()
+            buffer.close()
+            os.remove(file_dir)
+            os.remove(file_contract)
+            fc_buf.close()
+            return pdf_out
 
     buffer.close()
     return pdf

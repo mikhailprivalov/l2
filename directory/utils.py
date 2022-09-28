@@ -2,19 +2,40 @@ from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
     ParaclinicInputField,
+    PatientControlParam,
 )
 import simplejson as json
+
+from external_system.models import InstrumentalResearchRefbook, CdaFields
+from external_system.sql_func import get_unique_method_instrumental_diagnostic
 
 
 def get_researches_details(pk):
     response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False, "groups": []}
     direction_params_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_direction_params=True).order_by("title")]]
     response["direction_params_all"] = direction_params_all
+    response["patient_control_param_all"] = PatientControlParam.get_patient_control_params()
+    research = DResearches.objects.filter(pk=pk).first()
+    response["cda_options"] = CdaFields.get_cda_params(research.is_doc_refferal, research.is_treatment, research.is_form)
     direction_expertise_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_expertise=True).order_by("title")]]
     response["direction_expertise_all"] = direction_expertise_all
     if DResearches.objects.filter(pk=pk).exists():
         res: DResearches = DResearches.objects.get(pk=pk)
+        response["collectMethods"] = [{"id": -1, "label": "Пусто"}]
+        response["collectNsiResearchCode"] = [{"id": -1, "label": "Пусто"}]
+        if res.is_paraclinic:
+            methods = get_unique_method_instrumental_diagnostic()
+            result_method = [{"id": i.method, "label": i.method} for i in methods]
+            response["currentNsiResearchCode"] = res.nsi_id
+            response["collectMethods"].extend(result_method)
+        else:
+            response["currenttMethod"] = -1
         response["pk"] = res.pk
+        response["currentNsiResearchCode"] = res.nsi_id if res.nsi_id else -1
+        if response["currentNsiResearchCode"] and str(response["currentNsiResearchCode"]) != "-1":
+            nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=int(response["currentNsiResearchCode"])).first()
+            response["collectNsiResearchCode"] = [{"id": nsi_res.code_nsi, "label": f"{nsi_res.code_nsi}-{nsi_res.title}; область--{nsi_res.area}; локализация--{nsi_res.localization}"}]
+
         response["department"] = res.podrazdeleniye_id or (-2 if not res.is_hospital else -1)
         response["title"] = res.title
         response["short_title"] = res.short_title
@@ -50,6 +71,7 @@ def get_researches_details(pk):
                 "fields": [],
                 "visibility": group.visibility,
                 "fieldsInline": group.fields_inline,
+                "cdaOption": group.cda_option_id if group.cda_option else -1,
             }
             for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
                 g["fields"].append(
@@ -75,6 +97,8 @@ def get_researches_details(pk):
                         "new_value": "",
                         "attached": field.attached,
                         "controlParam": field.control_param,
+                        "patientControlParam": field.patient_control_param_id if field.patient_control_param else -1,
+                        "cdaOption": field.cda_option_id if field.cda_option else -1,
                     }
                 )
             response["groups"].append(g)

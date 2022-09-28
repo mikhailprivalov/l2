@@ -88,7 +88,7 @@ export default class PermanentDirectories extends Vue {
   open: boolean;
 
   get variants() {
-    return (this.permanent_directories[this.code] || {}).values || {};
+    return this.permanent_directories[this.code]?.values || {};
   }
 
   get variantsCount() {

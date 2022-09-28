@@ -304,7 +304,7 @@
                 class="input-group"
                 style="width: 100%"
               >
-                <span class="input-group-addon">РМИС employee</span>
+                <span class="input-group-addon">External_id</span>
                 <input
                   v-model="user.rmis_employee_id"
                   class="form-control"
@@ -352,18 +352,16 @@
                 style="width: 100%"
               >
                 <span class="input-group-addon">Специальность</span>
-                <select
+                <Treeselect
                   v-model="user.speciality"
-                  class="form-control"
-                >
-                  <option
-                    v-for="d in specialities"
-                    :key="d.pk"
-                    :value="d.pk"
-                  >
-                    {{ d.title }}
-                  </option>
-                </select>
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="specialities"
+                  placeholder="Специальность не выбрана"
+                  :append-to-body="true"
+                  :clearable="false"
+                />
               </div>
             </div>
           </div>
@@ -394,18 +392,16 @@
                 style="width: 100%"
               >
                 <span class="input-group-addon">Должность</span>
-                <select
+                <Treeselect
                   v-model="user.position"
-                  class="form-control"
-                >
-                  <option
-                    v-for="d in positions"
-                    :key="d.pk"
-                    :value="d.pk"
-                  >
-                    {{ d.title }}
-                  </option>
-                </select>
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="positions"
+                  placeholder="Должность не выбрана"
+                  :append-to-body="true"
+                  :clearable="false"
+                />
               </div>
             </div>
           </div>
@@ -719,7 +715,8 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { debounce } from 'lodash';
 import { mapGetters } from 'vuex';
-import { validateSnils, validateEmail } from '@/utils';
+
+import { validateEmail, validateSnils } from '@/utils';
 import usersPoint from '@/api/user-point';
 import * as actions from '@/store/action-types';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';

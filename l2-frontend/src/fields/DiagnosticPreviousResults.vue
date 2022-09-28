@@ -82,6 +82,7 @@
 
 <script lang="ts">
 import { debounce } from 'lodash';
+
 import { Research } from '@/types/research';
 
 const makeDefaultRow = () => ({

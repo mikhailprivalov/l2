@@ -1996,6 +1996,13 @@ input[type="date"].form-control {
   }
 }
 
+.input-group-btn {
+  .vue-treeselect {
+    min-width: 220px;
+    font-size: 14px;
+  }
+}
+
 .treeselect-input-group {
   height: 34px;
   max-height: 34px;
@@ -2024,6 +2031,29 @@ input[type="date"].form-control {
   .has-error {
     .vue-treeselect__control {
       border-color: #f00 !important;
+    }
+  }
+}
+
+.treeselect-input-group-simple {
+  height: 34px;
+  max-height: 34px;
+
+  .input-group-addon {
+    height: 34px;
+    line-height: 18px;
+    vertical-align: middle;
+  }
+
+  .vue-treeselect {
+    &__control {
+      border-left: none !important;
+      height: 34px !important;
+    }
+
+    &__placeholder,
+    &__single-value {
+      line-height: 34px !important;
     }
   }
 }

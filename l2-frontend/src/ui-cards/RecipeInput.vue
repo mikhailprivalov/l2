@@ -139,6 +139,7 @@
 
 <script lang="ts">
 import TypeAhead from 'vue2-typeahead';
+
 import * as actions from '@/store/action-types';
 
 export default {

@@ -1,11 +1,9 @@
 import Vue from 'vue';
 
-import store from './store';
 // @ts-ignore
 import * as actions from './store/action-types';
-
+import store from './store';
 import './styles/index.scss';
-
 import registerHooks from './registerHooks';
 import registerVue from './registerVue';
 

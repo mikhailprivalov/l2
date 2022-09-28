@@ -9,7 +9,7 @@ import pdfkit
 from dateutil.relativedelta import relativedelta
 from django.core.management import BaseCommand
 from django.utils import timezone
-from django.utils.timezone import pytz
+import pytz_deprecation_shim as pytz
 from pyvirtualdisplay import Display
 
 from appconf.manager import SettingManager
@@ -171,4 +171,5 @@ class Command(BaseCommand):
                             obj_iss.time_confirmation = t
                             obj_iss.time_save = t
                             obj_iss.save(update_fields=['doc_confirmation', 'time_save', 'time_confirmation', 'link_file'])
+                            obj_iss.napravleniye.sync_confirmed_fields()
                             rmtree(temp_dir)

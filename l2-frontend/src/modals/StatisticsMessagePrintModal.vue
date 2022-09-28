@@ -82,6 +82,7 @@
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import moment from 'moment';
+
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {
@@ -117,8 +118,6 @@ export default {
     },
   },
   mounted() {
-    console.log(this.date1);
-    console.log(this.date2);
     this.$root.$on('hide_message_tickets', () => {
       if (this.$refs.modal) {
         this.$refs.modal.$el.style.display = 'none';

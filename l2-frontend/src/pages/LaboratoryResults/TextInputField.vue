@@ -119,7 +119,9 @@
 
 <script lang="ts">
 import vClickOutside from 'v-click-outside';
+
 import * as actions from '@/store/action-types';
+
 import Typeahead from './Typeahead.vue';
 
 function isFloat(str) {
@@ -329,6 +331,7 @@ export default {
           }, 50);
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.$root.$emit('msg', 'error', 'Произошла ошибка рассчёта');
       }

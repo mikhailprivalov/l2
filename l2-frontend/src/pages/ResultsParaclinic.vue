@@ -535,6 +535,9 @@
                 :card_pk="data.patient.card_pk"
                 is-lab
               />
+              <ResultControlParams
+                :card_pk="data.patient.card_pk"
+              />
             </div>
             <div
               v-if="!data.patient.imported_from_rmis && !data.has_monitoring"
@@ -1739,6 +1742,7 @@ import { vField, vGroup } from '@/components/visibility-triggers';
 import { cleanCaches } from '@/utils';
 import { enterField, leaveField } from '@/forms/utils';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
+import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
 import patientsPoint from '@/api/patients-point';
@@ -1762,6 +1766,7 @@ import ScreeningButton from '@/ui-cards/ScreeningButton.vue';
 import LastResult from '@/ui-cards/LastResult.vue';
 import IssStatus from '@/ui-cards/IssStatus.vue';
 import MedicalCertificates from '@/ui-cards/MedicalCertificates.vue';
+
 import DescriptiveForm from '../forms/DescriptiveForm.vue';
 import BacMicroForm from '../forms/BacMicroForm.vue';
 import UrlData from '../UrlData';
@@ -1806,6 +1811,7 @@ export default {
     IssStatus,
     MedicalCertificates,
     ResultsByYear,
+    ResultControlParams,
     RmisLink,
     ScreeningButton,
     Treeselect,
@@ -2190,7 +2196,8 @@ export default {
         }
       }
     } catch (e) {
-      console.log(e);
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
 
     this.$store.dispatch(actions.LOAD_REQUIRED_STATTALON_FIELDS);
@@ -2253,11 +2260,13 @@ export default {
       try {
         this.location.data = (
           await usersPoint.loadLocation({ date: this.td }).catch((e) => {
+            // eslint-disable-next-line no-console
             console.error(e);
             return { data: [] };
           })
         ).data;
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.location.data = [];
       }

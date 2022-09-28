@@ -27,6 +27,9 @@ class Hospitals(models.Model):
     okpo = models.CharField(max_length=10, blank=True, default='', help_text="ОКПО")
     okato = models.CharField(max_length=11, blank=True, default='', help_text="ОКАТО")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
+    ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код для ECP")
+    legal_auth_doc_id = models.CharField(max_length=9, default="", blank=True, verbose_name="Код для кто заверил")
+    oktmo = models.CharField(max_length=8, default="", blank=True, verbose_name="ОКТМО")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
@@ -114,3 +117,16 @@ class DisableIstochnikiFinansirovaniya(models.Model):
     class Meta:
         verbose_name = 'Запрещенные источники оплаты для Больницы'
         verbose_name_plural = 'Запрещенные источники оплаты для Больницы'
+
+
+class HospitalParams(models.Model):
+    hospital = models.ForeignKey(Hospitals, blank=False, null=False, help_text="Больница", on_delete=models.CASCADE)
+    param_title = models.CharField(max_length=255, help_text="Наименование параметра")
+    param_value = models.CharField(max_length=255, help_text="Значение параметра")
+
+    def __str__(self):
+        return f"{self.hospital.title}-{self.param_value}"
+
+    class Meta:
+        verbose_name = 'Параметр больницы произвольный'
+        verbose_name_plural = 'Параметры больницы произвоньные'

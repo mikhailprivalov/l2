@@ -82,7 +82,7 @@ def get_fraction_result(client_id, fraction_id, count=1):
     return row
 
 
-def get_field_result(client_id, field_id, count=1):
+def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:00:00', months_ago='-1'):
     """
     на входе: id-поля, id-карты,
     выход: последний результат поля
@@ -103,9 +103,15 @@ def get_field_result(client_id, field_id, count=1):
             WHERE directions_napravleniya.client_id = %(client_p)s
             and directions_paraclinicresult.field_id = %(field_id)s
             and directions_issledovaniya.time_confirmation is not NULL
+            AND CASE WHEN %(current_year)s != '1900-01-01 00:00:00' THEN 
+                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > %(current_year)s
+                     WHEN %(months_ago)s != '-1' THEN 
+                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > (current_date AT TIME ZONE 'ASIA/IRKUTSK'  - interval %(months_ago)s)
+                     WHEN %(current_year)s = '1900-01-01 00:00:00' THEN directions_issledovaniya.time_confirmation is not Null
+                END
             ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s
             """,
-            params={'client_p': client_id, 'field_id': field_id, 'count_p': count, 'tz': TIME_ZONE},
+            params={'client_p': client_id, 'field_id': field_id, 'count_p': count, 'tz': TIME_ZONE, 'current_year': current_year, 'months_ago': months_ago},
         )
 
         row = cursor.fetchall()

@@ -15,6 +15,7 @@ urlpatterns = [
     path('results', views.directions_results),
     path('services', views.directions_services),
     path('mark-visit', views.directions_mark_visit),
+    path('clear-register-number', views.clear_register_number),
     path('receive-material', views.directions_receive_material),
     path('visit-journal', views.directions_visit_journal),
     path('recv-journal', views.directions_recv_journal),

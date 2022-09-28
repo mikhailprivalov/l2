@@ -249,6 +249,7 @@
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import draggable from 'vuedraggable';
+
 import bacteriaPoint from '@/api/bacteria-point';
 import RadioField from '@/fields/RadioField.vue';
 import BacteriaEditTitleGroup from '@/modals/BacteriaEditTitleGroup.vue';

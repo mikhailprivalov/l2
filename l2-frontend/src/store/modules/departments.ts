@@ -1,5 +1,6 @@
 import api from '@/api';
 import departmentsDirectory from '@/api/departments-directory';
+
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 

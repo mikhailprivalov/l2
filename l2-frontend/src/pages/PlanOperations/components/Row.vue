@@ -62,9 +62,11 @@
 
 <script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import plansPoint from '@/api/plans-point';
+
 import PlanOperationEdit from '../../../modals/PlanOperationEdit.vue';
 
 export default {

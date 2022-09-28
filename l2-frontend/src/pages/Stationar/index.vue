@@ -403,6 +403,10 @@
                   :card_pk="patient.cardId"
                   is-lab
                 />
+                <ResultControlParams
+                  :card_pk="patient.cardId"
+                  is-lab
+                />
               </span>
               <FileAdd
                 v-if="row.research.enabled_add_files"
@@ -924,6 +928,7 @@
 import { mapGetters } from 'vuex';
 import dropdown from 'vue-my-dropdown';
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import stationarPoint from '@/api/stationar-point';
@@ -938,6 +943,8 @@ import UrlData from '@/UrlData';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import RadioField from '@/fields/RadioField.vue';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
+import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
+
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
 import PatientCard from './PatientCard.vue';
@@ -955,6 +962,7 @@ export default {
     PatientCard,
     AmbulatoryData,
     ResultsByYear,
+    ResultControlParams,
     FileAdd: () => import('@/ui-cards/FileAdd.vue'),
     DirectionsHistory: () => import('@/ui-cards/DirectionsHistory/index.vue'),
     AggregateTADP: () => import('@/fields/AggregateTADP.vue'),
@@ -1160,7 +1168,7 @@ export default {
   },
   methods: {
     getDepartmentTitle(pk) {
-      return (this.departments.find((d) => d.id === pk) || {}).label || '';
+      return this.departments.find((d) => d.id === pk)?.label || '';
     },
     async changeDepartmentToggle() {
       if (!this.change_department) {
@@ -2070,7 +2078,7 @@ export default {
       width: calc(100% - 500px);
     }
     .research-right {
-      width: 500px;
+      width: 530px;
     }
   }
 }
@@ -2078,7 +2086,7 @@ export default {
 .research-left {
   position: relative;
   text-align: left;
-  width: calc(100% - 390px);
+  width: calc(100% - 490px);
 
   .btn {
     border-radius: 0;
@@ -2091,7 +2099,7 @@ export default {
 
 .research-right {
   text-align: right;
-  width: 390px;
+  width: 490px;
   margin-top: -5px;
   margin-right: -5px;
   margin-bottom: -5px;

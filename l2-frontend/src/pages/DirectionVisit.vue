@@ -116,13 +116,25 @@
                       Рег. номер
                     </td>
                     <td class="cl-td">
-                      <input
-                        v-model.trim="direction_data.additionalNumber"
-                        type="text"
-                        class="form-control"
-                        maxlength="24"
-                        :readonly="visit_status"
-                      >
+                      <div class="input-group">
+                        <input
+                          id="create-title"
+                          v-model.trim="direction_data.additionalNumber"
+                          class="form-control"
+                          :disabled="visit_status"
+                        >
+                        <span class="input-group-btn">
+                          <button
+                            v-tippy="{ placement : 'bottom'}"
+                            class="btn btn-default btn-primary-nb"
+                            title="Освободить номер"
+                            :disabled="visit_status"
+                            @click="clearAdditionalNumber"
+                          >
+                            <i class="fa fa-times" />
+                          </button>
+                        </span>
+                      </div>
                     </td>
                   </tr>
                   <tr v-if="direction_data.has_gistology">
@@ -525,6 +537,7 @@
 <script lang="ts">
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import DateFieldNav from '@/fields/DateFieldNav.vue';
 import DateRange from '@/ui-cards/DateRange.vue';
@@ -756,6 +769,18 @@ export default {
     },
     blur() {
       window.$(this.$refs.field).blur();
+    },
+    async clearAdditionalNumber() {
+      const data = await this.$api('directions/clear-register-number', {
+        additionalNumber: this.direction_data.additionalNumber,
+        pk: this.loaded_pk,
+      });
+      this.direction_data.additionalNumber = '';
+      if (data.ok) {
+        this.$root.$emit('msg', 'ok', data.message);
+      } else {
+        this.$root.$emit('msg', 'error', data.message);
+      }
     },
     cancel_visit() {
       // eslint-disable-next-line no-restricted-globals,no-alert

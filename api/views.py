@@ -5,10 +5,20 @@ import re
 from collections import defaultdict
 from typing import Optional, Union
 
-import pytz
+import pytz_deprecation_shim as pytz
 
+from directory.models import Researches
 from doctor_schedule.models import ScheduleResource
-from laboratory.settings import SYSTEM_AS_VI, SOME_LINKS, DISABLED_FORMS, DISABLED_STATISTIC_CATEGORIES, DISABLED_STATISTIC_REPORTS, TIME_ZONE, TITLE_REPORT_FILTER_STATTALON_FIELDS
+from laboratory.settings import (
+    SYSTEM_AS_VI,
+    SOME_LINKS,
+    DISABLED_FORMS,
+    DISABLED_STATISTIC_CATEGORIES,
+    DISABLED_STATISTIC_REPORTS,
+    TIME_ZONE,
+    TITLE_REPORT_FILTER_STATTALON_FIELDS,
+    SEARCH_PAGE_STATISTIC_PARAMS,
+)
 from utils.response import status_response
 
 from django.core.validators import validate_email
@@ -21,7 +31,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
 from django.db import connections, transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
@@ -29,13 +39,24 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
 from context_processors.utils import menu
-from directory.models import Fractions, ParaclinicInputField, ParaclinicUserInputTemplateField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
+from directory.models import (
+    Fractions,
+    ParaclinicInputField,
+    ParaclinicUserInputTemplateField,
+    ResearchSite,
+    Culture,
+    Antibiotic,
+    ResearchGroup,
+    Researches as DResearches,
+    ScreeningPlan,
+    Phenotype,
+)
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
 from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
@@ -51,6 +72,7 @@ from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals
+from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
@@ -149,10 +171,10 @@ def send(request):
     result = {"ok": False}
     try:
         if request.method == "POST":
-            resdict = yaml.load(request.POST["result"])
+            resdict = yaml.safe_load(request.POST["result"])
             appkey = request.POST.get("key", "")
         else:
-            resdict = yaml.load(request.GET["result"])
+            resdict = yaml.safe_load(request.GET["result"])
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
@@ -234,7 +256,8 @@ def send(request):
                 resdict["pk"] = dpk
             slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None).save()
     except Exception as e:
-        result = {"ok": False, "Exception": True, "MSG": str(e)}
+        logger.exception(e)
+        result = {"ok": False, "message": "Серверная ошибка"}
     return JsonResponse(result)
 
 
@@ -310,7 +333,18 @@ def endpoint(request):
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
                                             else:
                                                 fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
-                                            fraction_result.value = str(results[key]).strip()
+                                            tmp_replace_value = {}
+                                            if fraction_rel.replace_value:
+                                                try:
+                                                    tmp_replace_value = json.loads(fraction_rel.replace_value)
+                                                    if not isinstance(tmp_replace_value, dict):
+                                                        tmp_replace_value = {}
+                                                except Exception:
+                                                    tmp_replace_value = {}
+                                            if str(results[key]).strip() in tmp_replace_value:
+                                                fraction_result.value = str(tmp_replace_value[str(results[key]).strip()])
+                                            else:
+                                                fraction_result.value = str(results[key]).strip()
 
                                             if 'Non-React' in fraction_result.value:
                                                 fraction_result.value = 'Отрицательно'
@@ -355,9 +389,12 @@ def endpoint(request):
                                 code = mo.get('code')
                                 name = mo.get('name')
                                 anti = data.get('anti', {})
-                                comments = data.get('comments', [])
+                                phenotype = data.get('phen', [])
+                                comments = [c if not isinstance(c, str) else {"text": c} for c in data.get('comments', [])]
                                 if code:
-                                    culture = Culture.objects.filter(lis=code).first()
+                                    culture = Culture.objects.filter(Q(lis=code) | Q(title=name)).filter(hide=False).first()
+                                    if not culture:
+                                        culture = models.RelationCultureASTM.objects.filter(Q(astm_field=code) | Q(astm_field=name)).first()
                                     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=True, research__is_microbiology=True)
                                     if iss.filter(pk=iss_pk).exists():
                                         iss = iss.filter(pk=iss_pk)
@@ -390,6 +427,14 @@ def endpoint(request):
                                                     antibiotic_amount=a_name,
                                                 )
                                                 anti_result.save()
+                                        for ph in phenotype:
+                                            phen_obj = Phenotype.objects.filter(lis=ph["code"], hide=False).first()
+                                            if phen_obj and not directions.MicrobiologyResultPhenotype.objects.filter(result_culture=culture_result, phenotype=phen_obj).exists():
+                                                phen_result = directions.MicrobiologyResultPhenotype(
+                                                    result_culture=culture_result,
+                                                    phenotype=phen_obj,
+                                                )
+                                                phen_result.save()
                     result["body"] = "{} {} {} {} {}".format(dw, pk, iss_pk, json.dumps(oks), direction is not None)
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)
@@ -919,6 +964,12 @@ def mkb10_dict(request, raw_response=False):
     return JsonResponse({"data": data})
 
 
+def companies_find(request):
+    q = (request.GET.get("query", '') or '').strip()
+    companies_data = Company.search_company(q)
+    return JsonResponse({"data": companies_data})
+
+
 def doctorprofile_search(request):
     q = request.GET["query"].strip()
     if not q:
@@ -1043,6 +1094,8 @@ def flg(request):
                     i.napravleniye.visit_who_mark = doc
                     i.napravleniye.visit_date = date
                     i.napravleniye.save()
+            if i.napravleniye:
+                i.napravleniye.sync_confirmed_fields()
     slog.Log(key=dpk, type=13, body=json.dumps({"content": content, "doc_f": doc_f}), user=None).save()
     return JsonResponse({"ok": ok})
 
@@ -1289,10 +1342,10 @@ def users_view(request):
             data.append(otd)
 
     spec = users.Speciality.objects.filter(hide=False).order_by("title")
-    spec_data = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in spec]]
+    spec_data = [{"id": -1, "label": "Не выбрано"}, *[{"id": s.pk, "label": f"{s.n3_id} - {s.title}"} for s in spec]]
 
     positions_qs = users.Position.objects.filter(hide=False).order_by("title")
-    positions = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in positions_qs]]
+    positions = [{"id": -1, "label": "Не выбрано"}, *[{"id": s.pk, "label": f"{s.n3_id} - {s.title}"} for s in positions_qs]]
 
     distrits_qs = District.objects.all().order_by("title")
     districts = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in distrits_qs]]
@@ -1947,6 +2000,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
         {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2173,7 +2227,6 @@ def current_time(request):
 
 def search_param(request):
     data = json.loads(request.body)
-
     year_period = data.get('year_period') or -1
     research_id = data.get('research_id') or -1
     date_create_start = f"{year_period}-01-01 00:00:00"
@@ -2270,4 +2323,128 @@ def search_param(request):
             }
             for i in result
         ]
+
     return JsonResponse({"rows": rows, "count": len(rows)})
+
+
+def statistic_params_search(request):
+    user_groups = [str(x) for x in request.user.groups.all()]
+    result = []
+    has_param = False
+    for k, v in SEARCH_PAGE_STATISTIC_PARAMS.items():
+        if k in user_groups:
+            result.extend(v)
+    if len(result) > 0:
+        has_param = True
+    return JsonResponse({"rows": result, "hasParam": has_param})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_price_list(request):
+    price_data = PriceName.objects.all()
+    data = [{"id": price.pk, "label": price.title, "status": price.active_status} for price in price_data]
+    return JsonResponse({"data": data})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_current_coast_researches_in_price(request):
+    request_data = json.loads(request.body)
+    coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["id"])
+    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__str__()} for data in coast_researches_data]
+    coast_research = sorted(coast_research, key=lambda d: d['research']['title'])
+    return JsonResponse({"data": coast_research})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_coast_research_in_price(request):
+    request_data = json.loads(request.body)
+    current_coast = PriceCoast.objects.get(id=request_data["coastResearchId"])
+    if not current_coast.price_name.active_status:
+        return JsonResponse({"ok": False, "message": "Прайс неактивен"})
+    elif float(request_data["coast"]) <= 0:
+        return JsonResponse({"ok": False, "message": "Неверная цена"})
+    current_coast.coast = request_data["coast"]
+    current_coast.save()
+    return JsonResponse({"ok": "ok"})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_research_list(request):
+    researches = Researches.objects.filter(hide=False)
+    res_list = {"Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}}
+    lab_podr = get_lab_podr()
+    lab_podr = [podr[0] for podr in lab_podr]
+    for research in researches:
+        if research.is_doc_refferal:
+            if research.site_type is None:
+                res_list["Консультации"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Консультации"].get(research.site_type.title):
+                res_list["Консультации"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Консультации"][research.site_type.title].append({"id": research.pk, "label": research.title})
+        elif research.is_citology:
+            res_list["Морфология"]["Цитология"].append({"id": research.pk, "label": research.title})
+        elif research.is_gistology:
+            res_list["Морфология"]["Гистология"].append({"id": research.pk, "label": research.title})
+        elif research.is_microbiology:
+            res_list["Морфология"]["Микробиология"].append({"id": research.pk, "label": research.title})
+        elif research.is_form:
+            if research.site_type is None:
+                res_list["Формы"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Формы"].get(research.site_type.title):
+                res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
+        elif research.is_paraclinic:
+            if research.podrazdeleniye is None:
+                pass
+            elif not res_list["Параклиника"].get(research.podrazdeleniye.title):
+                res_list["Параклиника"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+        elif research.podrazdeleniye is None:
+            pass
+        elif research.podrazdeleniye.pk in lab_podr:
+            if not res_list["Лаборатория"].get(research.podrazdeleniye.title):
+                res_list["Лаборатория"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Лаборатория"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+
+    result_list = []
+    count = 0
+    for key, value in res_list.items():
+        count += 1
+        current_researches = {"id": f'а{count}', "label": key, "children": []}
+        for k, v in value.items():
+            count += 1
+            current_researches["children"].append({"id": f'а{count}', "label": k, "children": v})
+        result_list.append(current_researches)
+    return JsonResponse({"data": result_list})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_research_list_in_price(request):
+    request_data = json.loads(request.body)
+    if not PriceName.objects.get(pk=request_data["priceId"]).active_status:
+        return JsonResponse({"ok": False, "message": "Прайс неактивен"})
+    elif float(request_data["coast"]) <= 0:
+        return JsonResponse({"ok": False, "message": "Неверная цена"})
+    coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
+    coast_data.save()
+    return JsonResponse({"ok": "ok"})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def delete_research_in_price(request):
+    request_data = json.loads(request.body)
+    current_research = PriceCoast.objects.get(pk=request_data["coastResearchId"])
+    if not current_research.price_name.active_status:
+        return JsonResponse({"ok": False, "message": "Прайс неактивен"})
+    current_research.delete()
+    return JsonResponse({"ok": "ok"})

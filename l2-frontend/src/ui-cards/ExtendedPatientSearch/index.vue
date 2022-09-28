@@ -159,6 +159,7 @@ import _ from 'lodash';
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import Component from 'vue-class-component';
+
 import Modal from '@/ui-cards/Modal.vue';
 import PatientSearchForm from '@/ui-cards/ExtendedPatientSearch/PatientSearchForm.vue';
 import { PatientForm } from '@/ui-cards/ExtendedPatientSearch/types';
@@ -253,7 +254,6 @@ export default class ExtendedPatientSearch extends Vue {
 
   mounted() {
     this.$root.$on('global:select-base', (pk) => {
-      console.log('select', pk);
       this.baseGlobal = pk;
     });
   }
@@ -292,7 +292,8 @@ export default class ExtendedPatientSearch extends Vue {
         }
       }
     } catch (e) {
-      console.log(e);
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
 
     this.opened = true;
@@ -340,7 +341,8 @@ export default class ExtendedPatientSearch extends Vue {
         window.localStorage.setItem(savedBaseKey, JSON.stringify(this.base));
       }
     } catch (e) {
-      console.log(e);
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   }
 

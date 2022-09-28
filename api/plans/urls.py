@@ -14,4 +14,5 @@ urlpatterns = [
     path('files-params', views.get_limit_download_files),
     path('plan-messages', views.get_all_messages_by_plan_id),
     path('save-message', views.save_masseges),
+    path('get-offset-hours-plan-operations', views.get_offset_hours_plan_operations),
 ]

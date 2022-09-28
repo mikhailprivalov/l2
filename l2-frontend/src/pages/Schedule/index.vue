@@ -120,7 +120,9 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import moment, { Moment } from 'moment';
+
 import * as actions from '@/store/action-types';
+
 import DaysGridNatural from './DaysGridNatural.vue';
 
 @Component({

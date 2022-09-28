@@ -159,10 +159,12 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 import { POSITION } from 'vue-toastification/src/ts/constants';
+
 import * as actions from '@/store/action-types';
 import { Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
 import Modal from '@/ui-cards/Modal.vue';
+import { sendEvent } from '@/metrics';
 
 @Component({
   components: { Modal },
@@ -279,7 +281,14 @@ export default class LoginPage extends Vue {
 
   async auth() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message, fio } = await this.$api('users/auth', this, ['username', 'password']);
+    const {
+      ok,
+      message,
+      fio,
+      orgId,
+      orgTitle,
+      userId,
+    } = await this.$api('users/auth', this, ['username', 'password']);
     await this.$store.dispatch(actions.DEC_LOADING);
     if (!ok) {
       this.$toast.error(message, {
@@ -289,7 +298,14 @@ export default class LoginPage extends Vue {
         pauseOnHover: true,
         icon: true,
       });
+      sendEvent('fail-login', { status: 'error', message });
     } else {
+      window.posthogInit(
+        window.posthog,
+        orgId,
+        orgTitle,
+        userId,
+      );
       this.$toast.success(`Вы вошли как ${fio}`, {
         position: POSITION.BOTTOM_RIGHT,
         timeout: 6000,
@@ -298,6 +314,7 @@ export default class LoginPage extends Vue {
         icon: true,
       });
       this.afterOkAuth();
+      sendEvent('successful-login', {});
     }
   }
 

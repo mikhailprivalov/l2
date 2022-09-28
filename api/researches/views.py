@@ -5,8 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
+
+from api.researches.help_files.constructor_help import constructor_help_message
+from appconf.manager import SettingManager
 from directions.models import FrequencyOfUseResearches
 
 import users.models as users
@@ -26,7 +29,7 @@ from directory.models import (
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
-from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS
+from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, DISABLED_RESULT_FORMS
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from rmis_integration.client import get_md5
@@ -307,7 +310,7 @@ def localization_save(request):
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
-    result_form = DResearches.RESULT_FORMS
+    result_form = [i for i in DResearches.RESULT_FORMS if i[0] not in DISABLED_RESULT_FORMS]
     period_types = [{'id': x[0], 'label': x[1]} for x in DResearches.PERIOD_TYPES]
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
 
@@ -430,6 +433,7 @@ def researches_update(request):
         hide_main = request_data.get("hide_main", False)
         show_more_services = request_data.get("show_more_services", True)
         hospital_research_department_pk = request_data.get("hospital_research_department_pk", -1)
+        current_nsi_research_code = request_data.get("currentNsiResearchCode", -1)
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
@@ -476,6 +480,7 @@ def researches_update(request):
                     is_global_direction_params=is_global_direction_params,
                     has_own_form_result=own_form_result,
                     show_more_services=show_more_services,
+                    nsi_id=current_nsi_research_code,
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -516,6 +521,7 @@ def researches_update(request):
                 res.is_global_direction_params = is_global_direction_params
                 res.has_own_form_result = own_form_result
                 res.show_more_services = show_more_services and not res.is_microbiology and not res.is_form
+                res.nsi_id = current_nsi_research_code
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -543,6 +549,7 @@ def researches_update(request):
                             hide=group["hide"],
                             visibility=group.get("visibility", ""),
                             fields_inline=group.get("fieldsInline", False),
+                            cda_option_id=group.get("cdaOption", -1) if group.get("cdaOption", -1) != -1 else None,
                         )
                     elif ParaclinicInputGroups.objects.filter(pk=pk).exists():
                         g = ParaclinicInputGroups.objects.get(pk=pk)
@@ -552,6 +559,7 @@ def researches_update(request):
                         g.order = group["order"]
                         g.hide = group["hide"]
                         g.visibility = group.get("visibility", "")
+                        g.cda_option_id = group.get("cdaOption", -1) if group.get("cdaOption", -1) != -1 else None
                         g.fields_inline = group.get("fieldsInline", False)
                     if g:
                         g.save()
@@ -579,6 +587,8 @@ def researches_update(request):
                                     operator_enter_param=field.get("operator_enter_param", False),
                                     attached=field.get("attached", ''),
                                     control_param=field.get("controlParam", ""),
+                                    cda_option_id=field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None,
+                                    patient_control_param_id=field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None,
                                 )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
@@ -602,6 +612,8 @@ def researches_update(request):
                                 f.helper = field.get("helper", '')
                                 f.attached = field.get("attached", '')
                                 f.control_param = field.get("controlParam", '')
+                                f.patient_control_param_id = field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None
+                                f.cda_option_id = field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None
                             if f:
                                 f.save()
 
@@ -798,7 +810,17 @@ def fields_and_groups_titles(request):
 
 @login_required
 def descriptive_research(request):
-    rows = DResearches.objects.filter(hide=False).filter(Q(is_paraclinic=True) | Q(is_doc_refferal=True) | Q(is_gistology=True)).order_by('title').values('pk', 'title')
+    hiden_department = Podrazdeleniya.objects.values_list('pk', flat=True).filter(p_type=0)
+    rows = (
+        DResearches.objects.filter(hide=False)
+        .filter(Q(is_paraclinic=True) | Q(is_doc_refferal=SettingManager.get("consults_module", default='false')) | Q(is_gistology=True) | Q(is_form=True))
+        .order_by('title')
+        .values('pk', 'title')
+        .exclude(podrazdeleniye__in=hiden_department)
+        .exclude(is_stom=True)
+        .exclude(is_treatment=True)
+        .exclude(is_direction_params=True)
+    )
     rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
     return JsonResponse(rows, safe=False)
 
@@ -885,3 +907,13 @@ def required_stattalon_fields(request):
 
 def researches_required_stattalon_fields(request):
     return JsonResponse(RESEARCHES_PK_REQUIRED_STATTALON_FIELDS)
+
+
+@login_required
+def help_link_field(request):
+    address_url = request.headers['Referer'].split(request.headers['Origin'])
+    help_message = [{"param": "", "value": ""}]
+    if address_url[1] == "/ui/construct/descriptive":
+        help_message = constructor_help_message
+
+    return JsonResponse({"data": help_message})

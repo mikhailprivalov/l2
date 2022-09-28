@@ -124,6 +124,7 @@ import Vue, { PropType } from 'vue';
 import Component from 'vue-class-component';
 import _ from 'lodash';
 import { debounce } from 'lodash/function';
+
 import { PatientForm } from '@/ui-cards/ExtendedPatientSearch/types';
 
 const makeForm = (): PatientForm => ({

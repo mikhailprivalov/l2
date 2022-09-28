@@ -7,7 +7,7 @@ from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 from appconf.manager import SettingManager
 from directions.models import ParaclinicResult
-from results.prepare_data import html_to_pdf, text_iss_to_pdf, text_to_bold, lab_iss_to_pdf
+from results.prepare_data import html_to_pdf, text_iss_to_pdf, text_to_bold, lab_iss_to_pdf, previous_laboratory_result, previous_doc_refferal_result
 from utils.dates import normalize_date
 from api.stationar.stationar_func import hosp_get_curent_hosp_dir
 import datetime
@@ -86,6 +86,10 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
             if results.exists():
                 if group.show_title and group.title != "":
                     txt += "<font face=\"FreeSansBold\">{}:</font>&nbsp;".format(group.title.replace('<', '&lt;').replace('>', '&gt;'))
+                    txt += "<br/>"
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
                 vals = []
                 for r in results:
                     field_type = r.get_field_type()
@@ -126,6 +130,20 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                         aggr_lab = lab_iss_to_pdf(v)
                         fwb.extend(aggr_lab)
                         continue
+                    if field_type == 24:
+                        previous_laboratory = previous_laboratory_result(v)
+                        if not previous_laboratory:
+                            continue
+                        fwb.append(Spacer(1, 2 * mm))
+                        fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                        fwb.extend(previous_laboratory)
+                        continue
+                    if field_type in [26, 25]:
+                        if v:
+                            fwb.append(Spacer(1, 2 * mm))
+                            fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                            fwb = previous_doc_refferal_result(v, fwb)
+                            continue
                     if field_type == 17:
                         if v:
                             v = json.loads(v)
@@ -138,12 +156,14 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     else:
                         vals.append(v)
 
-                txt += "; ".join(vals)
-                txt = txt.strip()
-                if len(txt) > 0 and txt.strip()[-1] != ".":
-                    txt += ". "
-                elif len(txt) > 0:
-                    txt += " "
+                    txt += "; ".join(vals)
+                    txt = txt.strip()
+                    if len(txt) > 0 and txt.strip()[-1] != ".":
+                        txt += ". "
+                    elif len(txt) > 0:
+                        txt += " "
+                fwb.append(Paragraph(txt, style))
+                txt = ''
 
     fwb.append(Spacer(1, 0.5 * mm))
     if i <= 3:
@@ -170,7 +190,6 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
         fwb.append(Paragraph('Дата-время осмотра: {} в {}'.format(date, time), style))
         fwb.append(Spacer(1, 0.5 * mm))
         fwb.append(tbl)
-    else:
-        fwb.append(Paragraph(txt, style))
+        fwb.append(Spacer(1, 0.5 * mm))
 
     return fwb
