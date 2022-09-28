@@ -4,6 +4,11 @@ on:
     paths:
       - pyproject.toml
       - laboratory/__init__.py
+  workflow_call:
+    outputs:
+      version:
+        description: 'Version of the release'
+        value: ${{ steps.version_check.outputs.version }}
 
 name: Make new tag
 jobs:

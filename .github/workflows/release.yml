@@ -10,16 +10,10 @@ jobs:
   makeRelease:
     runs-on: self-hosted
     steps:
-      - name: Get current version
-        id: version_check
-        run: |
-          version=`./current-version.sh`
-          echo "::set-output name=version::v$version"
-
       - name: Checkout last tag
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.version_check.outputs.version }}
+          ref: ${{ github.event.workflow_run.outputs.version }}
 
       - name: 'Download workflow artifact: webpack_bundles.tar.gz'
         uses: dawidd6/action-download-artifact@v2
