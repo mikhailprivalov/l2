@@ -13,7 +13,7 @@ jobs:
       tag: ${{ steps.version_check.outputs.tag }}
     steps:
       - uses: actions/checkout@v3
-      - name: Check if version is changed
+      - name: Get actual version
         id: version_check
         run: |
           version=`./current-version.sh`
@@ -40,10 +40,10 @@ jobs:
         run: make build_prod
 
       - name: Make webpack_bundles.tar.gz from assets/webpack_bundles
-        run: tar -czf webpack_bundles${{ steps.version_check.outputs.version }}.tar.gz assets/webpack_bundles
+        run: tar -czf webpack_bundles_${{ steps.version_check.outputs.version }}.tar.gz assets/webpack_bundles
 
       - name: upload artifacts for version
         uses: actions/upload-artifact@v2
         with:
-          name: webpack_bundles${{ steps.version_check.outputs.version }}.tar.gz
-          path: webpack_bundles${{ steps.version_check.outputs.version }}.tar.gz
+          name: webpack_bundles.tar.gz
+          path: webpack_bundles_${{ steps.version_check.outputs.version }}.tar.gz

@@ -65,7 +65,7 @@
     "vue-meta": "^2.4.0",
     "vue-my-dropdown": "^2.1.0",
     "vue-property-decorator": "^9.1.2",
-    "vue-router": "^3.5.3",
+    "vue-router": "^3.6.5",
     "vue-select": "^3.20.0",
     "vue-simple-progress": "^1.1.1",
     "vue-tippy": "^2.1.3",

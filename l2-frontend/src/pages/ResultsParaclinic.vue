@@ -2196,6 +2196,7 @@ export default {
         }
       }
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.log(e);
     }
 
@@ -2259,11 +2260,13 @@ export default {
       try {
         this.location.data = (
           await usersPoint.loadLocation({ date: this.td }).catch((e) => {
+            // eslint-disable-next-line no-console
             console.error(e);
             return { data: [] };
           })
         ).data;
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.location.data = [];
       }

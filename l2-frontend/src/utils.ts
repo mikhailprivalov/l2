@@ -218,7 +218,6 @@ export const CalculateFormula = (fields: Field[], formula: string, patient = {},
       const result = new Function('isEmpty', 'isFilled', s)(isEmpty, isFilled);
       FUNCTION_CACHE[s] = typeof result === 'boolean' || result ? result : 0;
     }
-    // console.log(FUNCTION_CACHE);
     return FUNCTION_CACHE[s];
   } catch (e) {
     FUNCTION_CACHE[s] = null;
@@ -338,7 +337,9 @@ export const convertSubjectNameToCertObject = (subjectName: string): any => {
 export const convertSubjectNameToTitle = (object: any, subjectName: string | null, name: string) => {
   const obj = object || convertSubjectNameToCertObject(subjectName);
 
+  // eslint-disable-next-line no-console
   console.log(obj);
+  // eslint-disable-next-line no-console
   console.log(subjectName);
 
   if (!obj.SNILS && obj['СНИЛС']) {

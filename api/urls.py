@@ -26,6 +26,7 @@ urlpatterns = [
     path('statistics-tickets/invalidate', views.statistics_tickets_invalidate),
     path('mkb10', views.mkb10),
     path('mkb10-dict', views.mkb10_dict),
+    path('companies-find', views.companies_find),
     path('doctorprofile-search', views.doctorprofile_search),
     path('methods-of-taking', views.methods_of_taking),
     path('key-value', views.key_value),

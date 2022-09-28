@@ -885,6 +885,7 @@
                     data = JSON.parse(data);
                 } catch (e) {
                     this.log('addRouteCache', 'JSON parse error');
+                    // eslint-disable-next-line no-console
                     console.error(e);
                     return;
                 }

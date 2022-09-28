@@ -542,6 +542,7 @@ export default {
           }
         })
         .catch((error) => {
+          // eslint-disable-next-line no-console
           console.error(error);
           this.$root.$emit('msg', 'error', 'Сохранить данные в виде XLSX не удалось');
         });
