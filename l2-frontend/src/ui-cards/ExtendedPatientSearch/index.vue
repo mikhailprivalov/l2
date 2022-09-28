@@ -293,7 +293,7 @@ export default class ExtendedPatientSearch extends Vue {
       }
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log(e);
+      console.error(e);
     }
 
     this.opened = true;
@@ -342,7 +342,7 @@ export default class ExtendedPatientSearch extends Vue {
       }
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log(e);
+      console.error(e);
     }
   }
 
