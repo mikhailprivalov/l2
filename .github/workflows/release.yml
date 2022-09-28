@@ -22,7 +22,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          name: webpack_bundles${{ steps.version_check.outputs.version }}.tar.gz
+          name: webpack_bundles.tar.gz
           path: webpack_bundles_${{ steps.version_check.outputs.version }}.tar.gz
 
       - name: Release
