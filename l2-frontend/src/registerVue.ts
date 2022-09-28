@@ -96,6 +96,7 @@ export default (): void => {
   });
 
   Vue.config.errorHandler = (error, vm) => {
+    // eslint-disable-next-line no-console
     console.error(error);
     vm.$root.$emit('msg', 'error', `Vue Error: ${error}`);
     sendEvent('vue_error', { error: error2json(error) });

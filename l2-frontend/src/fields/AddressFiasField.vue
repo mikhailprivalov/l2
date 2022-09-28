@@ -744,6 +744,7 @@ export default class AddressFiasField extends Vue {
         this.address = '';
       }
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error(e);
       this.address = '';
       this.fias = null;

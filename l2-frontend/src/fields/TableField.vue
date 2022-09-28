@@ -379,6 +379,7 @@ export default {
               validatorSource,
             );
           } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(error);
             this.$root.$emit('msg', 'error', `Некорректная функция валидации в колонке ${i + 1} поля ${this.fieldPk}`);
           }

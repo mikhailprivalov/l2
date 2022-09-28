@@ -304,6 +304,7 @@ export default {
           this.$root.$emit('msg', 'error', message);
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.$root.$emit('msg', 'error', 'Ошибка создания подписи!');
       }

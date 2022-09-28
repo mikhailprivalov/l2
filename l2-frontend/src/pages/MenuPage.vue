@@ -477,6 +477,7 @@ export default class MenuPage extends Vue {
 
       this.$root.$emit('msg', 'error', message || 'Что-то пошло не так');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(error);
     }
     this.loading = false;

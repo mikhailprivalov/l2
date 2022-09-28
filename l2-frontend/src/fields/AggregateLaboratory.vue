@@ -285,6 +285,7 @@ export default {
         this.excluded.titles = valOrig.excluded.titles || [];
       }
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.log('Aggregate error:', e);
     }
     this.inited = true;

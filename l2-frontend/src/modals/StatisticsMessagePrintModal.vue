@@ -118,8 +118,6 @@ export default {
     },
   },
   mounted() {
-    console.log(this.date1);
-    console.log(this.date2);
     this.$root.$on('hide_message_tickets', () => {
       if (this.$refs.modal) {
         this.$refs.modal.$el.style.display = 'none';

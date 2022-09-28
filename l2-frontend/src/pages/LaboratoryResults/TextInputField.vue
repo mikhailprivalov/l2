@@ -331,6 +331,7 @@ export default {
           }, 50);
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.$root.$emit('msg', 'error', 'Произошла ошибка рассчёта');
       }
