@@ -20,6 +20,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import moment, { Moment } from 'moment';
+
 import Day from './Day.vue';
 
 @Component({

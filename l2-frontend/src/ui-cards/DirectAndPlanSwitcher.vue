@@ -9,8 +9,8 @@
 <script lang="ts">
 import RadioField from '@/fields/RadioField.vue';
 import {
-  DIRECTION_MODE_DIRECTION,
   DIRECTION_MODE_CALL,
+  DIRECTION_MODE_DIRECTION,
   DIRECTION_MODE_WAIT,
 } from '@/constants';
 

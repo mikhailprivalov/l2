@@ -1,5 +1,6 @@
 import api from '@/api';
 import researchesPoint from '@/api/researches-point';
+
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 

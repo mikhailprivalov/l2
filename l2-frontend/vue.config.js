@@ -2,6 +2,9 @@
 const path = require('path');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
+// mini css
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const assetsPath = path.resolve(__dirname, '../assets/');
 
@@ -51,6 +54,10 @@ module.exports = {
         publicPath: 'webpack_bundles/',
         writeToFileEmit: true,
         fileName: path.resolve(assetsPath, 'webpack_bundles/manifest.json'),
+      }),
+      new MiniCssExtractPlugin({
+        ignoreOrder: true,
+        filename: '[name].[chunkhash:8].css',
       }),
     ],
   },

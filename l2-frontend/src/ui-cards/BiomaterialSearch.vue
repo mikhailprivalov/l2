@@ -424,6 +424,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { debounce } from 'lodash/function';
+
 import * as actions from '@/store/action-types';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import Modal from '@/ui-cards/Modal.vue';

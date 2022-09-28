@@ -375,7 +375,7 @@
 
 <script lang="ts">
 import {
-  getSystemInfo, getUserCertificates, createDetachedSignature, createHash,
+  createDetachedSignature, createHash, getSystemInfo, getUserCertificates,
 } from 'crypto-pro';
 import moment from 'moment';
 import Vue from 'vue';

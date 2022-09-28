@@ -98,6 +98,7 @@
 
 <script lang="ts">
 import plansPoint from '@/api/plans-point';
+
 import LinkPlanOperations from '../pages/Stationar/LinkPlanOperations.vue';
 
 export default {

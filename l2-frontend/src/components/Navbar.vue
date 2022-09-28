@@ -161,6 +161,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
+
 import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
 import { sendEvent } from '@/metrics';
 

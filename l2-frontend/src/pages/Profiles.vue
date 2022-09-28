@@ -715,7 +715,8 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { debounce } from 'lodash';
 import { mapGetters } from 'vuex';
-import { validateSnils, validateEmail } from '@/utils';
+
+import { validateEmail, validateSnils } from '@/utils';
 import usersPoint from '@/api/user-point';
 import * as actions from '@/store/action-types';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';

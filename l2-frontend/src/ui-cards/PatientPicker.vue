@@ -687,6 +687,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { mapGetters } from 'vuex';
 import { debounce } from 'lodash';
+
 import L2CardCreate from '@/modals/L2CardCreate.vue';
 import DReg from '@/modals/DReg.vue';
 import Benefit from '@/modals/Benefit.vue';
@@ -695,6 +696,7 @@ import patientsPoint from '@/api/patients-point';
 import Vaccine from '@/modals/Vaccine.vue';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import { sendEvent } from '@/metrics';
+
 import Modal from './Modal.vue';
 
 const tfomsRe = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;

@@ -190,6 +190,7 @@
 
 <script lang="ts">
 import Split from 'split-grid';
+
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import PatientPicker from '@/ui-cards/PatientPicker.vue';
 import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
@@ -199,7 +200,7 @@ import RmisDirectionsViewer from '@/modals/RmisDirectionsViewer.vue';
 import LastResult from '@/ui-cards/LastResult.vue';
 import DirectAndPlanSwitcher from '@/ui-cards/DirectAndPlanSwitcher.vue';
 import forms from '@/forms';
-import { DIRECTION_MODE_DIRECTION, DIRECTION_MODE_CALL, DIRECTION_MODE_WAIT } from '@/constants';
+import { DIRECTION_MODE_CALL, DIRECTION_MODE_DIRECTION, DIRECTION_MODE_WAIT } from '@/constants';
 import CallDoctor from '@/ui-cards/CallDoctor.vue';
 import ListWaitCreator from '@/ui-cards/ListWaitCreator.vue';
 import { valuesToString } from '@/utils';

@@ -106,6 +106,7 @@ import moment from 'moment';
 
 import * as actions from '@/store/action-types';
 import { convertSubjectNameToTitle } from '@/utils';
+
 import EDSDocument from './EDSDocument.vue';
 
 export default {

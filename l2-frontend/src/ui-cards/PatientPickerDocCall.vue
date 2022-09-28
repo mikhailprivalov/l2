@@ -93,6 +93,7 @@
 <script lang="ts">
 import { mapGetters } from 'vuex';
 import { debounce } from 'lodash';
+
 import * as actions from '@/store/action-types';
 import patientsPoint from '@/api/patients-point';
 

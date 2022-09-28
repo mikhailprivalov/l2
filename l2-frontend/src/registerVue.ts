@@ -1,5 +1,4 @@
 import Vue from 'vue';
-
 import promiseFinally from 'promise.prototype.finally';
 // @ts-ignore
 import VueAutosize from 'vue-autosize';
@@ -14,18 +13,17 @@ import PortalVue from 'portal-vue';
 import Inputmask from 'inputmask';
 import Toast from 'vue-toastification';
 import VueFullscreen from 'vue-fullscreen';
-import 'vue-toastification/dist/index.css';
 // @ts-ignore
 import plural from 'plural-ru';
 import moment from 'moment';
 import VueFormulate from '@braid/vue-formulate';
 import { ru } from '@braid/vue-formulate-i18n';
-import { sendEvent } from '@/metrics';
 import error2json from '@stdlib/error-to-json';
+
+import { sendEvent } from '@/metrics';
+
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
-
 import api from './api';
-
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal.vue';
 
 export default (): void => {

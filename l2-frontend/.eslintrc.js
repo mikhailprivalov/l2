@@ -10,6 +10,9 @@ module.exports = {
     '@vue/airbnb',
     '@vue/typescript/recommended',
   ],
+  plugins: [
+    'sort-imports-es6-autofix',
+  ],
   parserOptions: {
     ecmaVersion: 2020,
   },
@@ -44,6 +47,25 @@ module.exports = {
     'vuejs-accessibility/iframe-has-title': 'off',
     'vuejs-accessibility/no-autofocus': 'off',
     'vuejs-accessibility/alt-text': 'off',
+    'import/order': [
+      'error',
+      {
+        groups: [
+          ['builtin', 'external'],
+          'internal',
+          ['parent', 'sibling', 'index'],
+        ],
+        'newlines-between': 'always',
+      },
+    ],
+    'sort-imports': [
+      'error',
+      {
+        ignoreDeclarationSort: true,
+        ignoreCase: true,
+        ignoreMemberSort: false,
+      },
+    ],
   },
   overrides: [
     {

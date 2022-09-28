@@ -27,6 +27,7 @@
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import Component from 'vue-class-component';
+
 import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
 import directionsPoint from '@/api/directions-point';
 

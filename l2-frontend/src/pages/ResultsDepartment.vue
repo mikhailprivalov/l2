@@ -164,9 +164,10 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import moment from 'moment';
+import Treeselect from '@riophae/vue-treeselect';
+
 import * as actions from '@/store/action-types';
 import directionsPoint from '@/api/directions-point';
-import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import usersPoint from '@/api/user-point';
 

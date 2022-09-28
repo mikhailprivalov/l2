@@ -355,6 +355,7 @@ import _ from 'lodash';
 // @ts-ignore
 import DatePicker from 'v-calendar/lib/components/date-picker.umd';
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import LaboratoryPicker from '@/fields/LaboratoryPicker.vue';
 import DateSelector from '@/fields/DateSelector.vue';

@@ -139,6 +139,7 @@
 
 <script lang="ts">
 import { createDetachedSignature, createHash } from 'crypto-pro';
+
 import * as actions from '@/store/action-types';
 
 import EDSSignTitle from './EDSSignTitle.vue';

@@ -3,8 +3,9 @@
 </template>
 
 <script lang="ts">
-import { getSystemInfo, execute } from 'crypto-pro';
+import { execute, getSystemInfo } from 'crypto-pro';
 import { encode } from 'js-base64';
+
 import { convertSubjectNameToTitle } from '@/utils';
 
 export default {

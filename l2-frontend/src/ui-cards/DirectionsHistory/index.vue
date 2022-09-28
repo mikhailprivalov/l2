@@ -323,9 +323,11 @@
 <script lang="ts">
 import moment from 'moment';
 import { mapGetters } from 'vuex';
+
 import { Research } from '@/types/research';
 import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
+
 import SelectPickerM from '../../fields/SelectPickerM.vue';
 import DateRange from '../DateRange.vue';
 import Bottom from './Bottom/index.vue';

@@ -1169,6 +1169,7 @@ import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import _ from 'lodash';
+
 import {
   normalizeNamePart, swapLayouts, validateSnils, valuesToString,
 } from '@/utils';

@@ -1,4 +1,5 @@
 import { flatten } from 'lodash/array';
+
 import { CalculateVisibility } from '@/utils';
 
 export const objFields = (groups: any): any => flatten(

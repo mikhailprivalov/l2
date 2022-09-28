@@ -76,6 +76,7 @@
 <script lang="ts">
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
+
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {

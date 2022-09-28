@@ -119,7 +119,9 @@
 
 <script lang="ts">
 import vClickOutside from 'v-click-outside';
+
 import * as actions from '@/store/action-types';
+
 import Typeahead from './Typeahead.vue';
 
 function isFloat(str) {
