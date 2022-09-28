@@ -34,7 +34,9 @@ jobs:
       - name: Make webpack_bundles.tar.gz from assets/webpack_bundles
         run: tar -czf webpack_bundles.tar.gz assets/webpack_bundles
 
-      - name: Create tag
-        run: |
-          git tag -a ${{ steps.version_check.outputs.version }} -m "Release ${{ steps.version_check.outputs.version }}"
-          git push origin ${{ steps.version_check.outputs.version }}
+      - name: Create Tag
+        uses: negz/create-tag@v1
+        with:
+          version: ${{ steps.version_check.outputs.version }}
+          message: 'New version ${{ steps.version_check.outputs.version }}'
+          token: ${{ secrets.GITHUB_TOKEN }}
