@@ -2437,7 +2437,7 @@ def update_research_list_in_price(request):
 @group_required('Конструктор: Настройка организации')
 def delete_research_in_price(request):
     request_data = json.loads(request.body)
-    current_research = PriceCoast.objects.get(pk=request_data)
+    current_research = PriceCoast.objects.get(pk=request_data["coastResearchId"])
     if not current_research.price_name.active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     current_research.delete()
