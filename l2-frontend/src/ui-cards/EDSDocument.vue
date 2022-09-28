@@ -257,6 +257,7 @@ export default {
       if (data.ok) {
         this.$root.$emit('msg', 'ok', 'Успешная отправка!');
       } else {
+        // eslint-disable-next-line no-console
         console.log(data);
         this.$root.$emit('msg', 'error', 'Ошибка!');
       }
@@ -303,6 +304,7 @@ export default {
           this.$root.$emit('msg', 'error', message);
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.$root.$emit('msg', 'error', 'Ошибка создания подписи!');
       }
