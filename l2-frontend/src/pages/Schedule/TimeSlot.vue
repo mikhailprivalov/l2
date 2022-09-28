@@ -117,6 +117,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';

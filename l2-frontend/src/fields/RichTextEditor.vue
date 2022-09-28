@@ -215,20 +215,20 @@
 <script lang="ts">
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap';
 import {
+  Bold,
+  BulletList,
   HardBreak,
   Heading,
-  OrderedList,
-  BulletList,
-  ListItem,
-  Bold,
-  Italic,
-  Table,
-  TableHeader,
-  TableCell,
-  TableRow,
-  Strike,
-  Underline,
   History,
+  Italic,
+  ListItem,
+  OrderedList,
+  Strike,
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
+  Underline,
 } from 'tiptap-extensions';
 
 export default {

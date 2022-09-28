@@ -95,6 +95,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import * as actions from '@/store/action-types';
+
 import Charts from './Charts.vue';
 
 export default {
@@ -270,7 +271,7 @@ export default {
       }
       this.loadedDashboardDate = moment().format('YYYY-MM-DD');
       this.dashboard = {
-        title: (this.dashboards.find((d) => d.id === this.dashboardPk) || {}).label,
+        title: this.dashboards.find((d) => d.id === this.dashboardPk)?.label,
       };
       const {
         rows, ok, intervalReloadSeconds, datesParam, showDatesParam,
@@ -411,7 +412,7 @@ export default {
 
     td,
     th {
-      transition: 0.15 all linear;
+      transition: all 0.15s linear;
       &:hover {
         background-color: rgba(#049372, 0.1);
       }

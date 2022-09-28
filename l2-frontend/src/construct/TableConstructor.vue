@@ -273,6 +273,7 @@
 import _ from 'lodash';
 import { debounce } from 'lodash/function';
 import VueCodeditor from 'vue-codeditor';
+
 import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
 import MKBFieldForm from '@/fields/MKBFieldForm.vue';

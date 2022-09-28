@@ -25,6 +25,7 @@
 
 <script lang="ts">
 import _ from 'lodash';
+
 import ResearchParamsSelect from './ResearchParamsSelect.vue';
 
 export default {

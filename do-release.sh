@@ -17,7 +17,7 @@ git pull
 echo "Sleeping for 3 seconds to allow you to cancel"
 sleep 3
 
-V=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+V=$(./current-version.sh)
 
 echo "Releasing version $V"
 

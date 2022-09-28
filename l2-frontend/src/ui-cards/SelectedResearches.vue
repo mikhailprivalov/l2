@@ -553,11 +553,13 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 // @ts-ignore
 import TypeAhead from 'vue2-typeahead';
+
 import { vField, vGroup } from '@/components/visibility-triggers';
 import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
 import MKBField from '@/fields/MKBField.vue';
 import SelectFieldTitled from '@/fields/SelectFieldTitled.vue';
+
 import ResearchDisplay from './ResearchDisplay.vue';
 import Modal from './Modal.vue';
 import 'vue-select/dist/vue-select.css';

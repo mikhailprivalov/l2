@@ -163,7 +163,6 @@
 <script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-
 import moment from 'moment';
 
 export default {

@@ -270,9 +270,11 @@
 
 <script lang="ts">
 import { debounce } from 'lodash/function';
+
 import CategoryPick from '@/ui-cards/CategoryPick.vue';
 import * as actions from '@/store/action-types';
 import { sendEvent } from '@/metrics';
+
 import ResearchPick from './ResearchPick.vue';
 
 export default {

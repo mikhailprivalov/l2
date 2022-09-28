@@ -72,6 +72,7 @@
 
 <script lang="ts">
 import Split from 'split-grid';
+
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 import Modal from '@/ui-cards/Modal.vue';

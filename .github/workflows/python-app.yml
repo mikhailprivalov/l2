@@ -3,15 +3,21 @@ name: Py Django testing
 on:
   push:
     branches: [ develop ]
+    paths:
+      - '**.py'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.github/workflows/python-app.yml'
   pull_request:
     branches: [ develop ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: self-hosted
-
-    env:
-      SECRET_KEY: 'COMMIT_${SHORT_SHA}'
+    runs-on: ubuntu-latest
 
     services:
       postgres:
@@ -30,6 +36,11 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
+    - name: Install poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
     - run: poetry install
     - name: Migrate
       run: |

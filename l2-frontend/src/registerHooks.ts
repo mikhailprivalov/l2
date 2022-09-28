@@ -1,7 +1,8 @@
 import Vue from 'vue';
-
 import { POSITION, TYPE } from 'vue-toastification/src/ts/constants';
+
 import { sendEvent } from '@/metrics';
+
 import * as actions from './store/action-types';
 import directionsPoint from './api/directions-point';
 

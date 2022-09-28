@@ -207,6 +207,7 @@
 
 <script lang="ts">
 import _ from 'lodash';
+
 import * as actions from '@/store/action-types';
 
 export default {

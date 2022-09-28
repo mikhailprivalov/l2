@@ -112,6 +112,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
+
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import JournalGetMaterial from '@/modals/JournalGetMaterial.vue';
 

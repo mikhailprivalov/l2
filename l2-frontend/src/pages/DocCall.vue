@@ -301,10 +301,10 @@
 <script lang="ts">
 import moment from 'moment';
 import _ from 'lodash';
-
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Paginate from 'vuejs-paginate';
+
 import * as actions from '@/store/action-types';
 import DocCallRow from '@/pages/DocCallRow.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';

@@ -13,6 +13,7 @@
 
 <script lang="ts">
 import { mapGetters } from 'vuex';
+
 import usersPoint from '@/api/user-point';
 
 export default {

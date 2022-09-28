@@ -149,8 +149,9 @@
 
 <script lang="ts">
 import moment from 'moment';
-import DateFieldNav from '@/fields/DateFieldNav.vue';
+
 import * as actions from '@/store/action-types';
+import DateFieldNav from '@/fields/DateFieldNav.vue';
 import statisticsTicketsPoint from '@/api/statistics-tickets-point';
 
 export default {

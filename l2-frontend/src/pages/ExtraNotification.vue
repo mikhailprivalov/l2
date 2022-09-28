@@ -205,8 +205,8 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import moment from 'moment';
 import _ from 'lodash';
-
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import DocCallRow from '@/pages/DocCallRow.vue';

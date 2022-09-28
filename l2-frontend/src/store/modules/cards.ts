@@ -1,5 +1,6 @@
 import { Base } from '@/types/cards';
 import cardsPoint from '@/api/cards-point';
+
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 

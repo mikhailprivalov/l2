@@ -21,6 +21,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
+
 import BiomaterialSearch from '@/ui-cards/BiomaterialSearch.vue';
 import BiomaterialHistory from '@/ui-cards/BiomaterialHistory.vue';
 

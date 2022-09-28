@@ -69,6 +69,7 @@
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { mapGetters } from 'vuex';
+
 import departmentsDirectory from '@/api/departments-directory';
 import DepartmentEditRow from '@/forms/DepartmentEditRow.vue';
 import * as actions from '@/store/action-types';
