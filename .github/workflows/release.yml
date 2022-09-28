@@ -35,5 +35,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: "*.tar.gz"
-          token: ${{ secrets.YOUR_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.version_check.outputs.version }}
