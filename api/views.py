@@ -2367,8 +2367,16 @@ def update_coast_research_in_price(request):
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
+    old_coast = current_coast.coast
     current_coast.coast = request_data["coast"]
     current_coast.save()
+    Log.log(current_coast.pk, 130000, request.user.doctorprofile, {
+        "pk": current_coast.pk,
+        "price": {"pk": current_coast.price_name.pk, "title": current_coast.price_name.title},
+        "research": {"pk": current_coast.research.pk, "title": current_coast.research.title},
+        "old_coast": old_coast,
+        "new_coast": current_coast.coast
+    })
     return JsonResponse({"ok": "ok"})
 
 
@@ -2437,6 +2445,12 @@ def update_research_list_in_price(request):
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
     coast_data.save()
+    Log.log(coast_data.pk, 130000, request.user.doctorprofile, {
+        "pk": coast_data.pk,
+        "price": {"pk": coast_data.price_name.pk, "title": coast_data.price_name.title},
+        "research": {"pk": coast_data.research.pk, "title": coast_data.research.title},
+        "coast": coast_data.coast
+    })
     return JsonResponse({"ok": "ok"})
 
 
@@ -2447,11 +2461,15 @@ def delete_research_in_price(request):
     current_coast_research = PriceCoast.objects.get(pk=request_data["coastResearchId"])
     if not current_coast_research.price_name.active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
-    Log.log(current_coast_research.pk, 130001, request.user.doctorprofile, {
-        "price_pk": current_coast_research.price_name.pk,
-        "price_name": current_coast_research.price_name.title,
-        "research_pk": current_coast_research.research.pk,
-        "research_name": current_coast_research.research.title,
-    })
+    data = {
+        "pk": current_coast_research.pk,
+        "data_json": {
+            "pk": current_coast_research.pk,
+            "price": {"pk": current_coast_research.price_name.pk, "title": current_coast_research.price_name.title},
+            "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
+            "coast": current_coast_research.coast
+        }
+     }
     current_coast_research.delete()
+    Log.log(data["pk"], 130001, request.user.doctorprofile, data["data_json"])
     return JsonResponse({"ok": "ok"})
