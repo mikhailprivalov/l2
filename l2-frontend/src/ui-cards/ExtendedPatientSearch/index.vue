@@ -159,6 +159,7 @@ import _ from 'lodash';
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import Component from 'vue-class-component';
+
 import Modal from '@/ui-cards/Modal.vue';
 import PatientSearchForm from '@/ui-cards/ExtendedPatientSearch/PatientSearchForm.vue';
 import { PatientForm } from '@/ui-cards/ExtendedPatientSearch/types';

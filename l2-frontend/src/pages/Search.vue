@@ -374,6 +374,8 @@ import Component from 'vue-class-component';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Paginate from 'vuejs-paginate';
+import axios from 'axios';
+import * as Cookies from 'es-cookie';
 
 import * as actions from '@/store/action-types';
 import usersPoint from '@/api/user-point';
@@ -381,8 +383,6 @@ import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import DoctorProfileTreeselectField from '@/fields/DoctorProfileTreeselectField.vue';
 import DateRange from '@/ui-cards/DateRange.vue';
-import axios from 'axios';
-import * as Cookies from 'es-cookie';
 
 const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
 

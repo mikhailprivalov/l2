@@ -62,6 +62,7 @@
 <script lang="ts">
 import SelectPickerM from '@/fields/SelectPickerM.vue';
 import * as actions from '@/store/action-types';
+
 import TemplateEditor from './TemplateEditor.vue';
 
 export default {

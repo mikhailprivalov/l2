@@ -39,10 +39,9 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import moment from 'moment';
-
 // @ts-ignore
 import DatePicker from 'v-calendar/lib/components/date-picker.umd';
+import moment from 'moment';
 
 @Component({
   components: {

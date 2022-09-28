@@ -1,57 +1,23 @@
+name: Make release
+
 on:
-  push:
-    branches: [ develop ]
-    paths:
-      - pyproject.toml
-      - laboratory/__init__.py
-      - .github/workflows/release.yml
+  workflow_run:
+    workflows: [ "Make new tag" ]
+    types:
+      - completed
 
-name: Make new tag
 jobs:
-  createTag:
-    runs-on: self-hosted
-    outputs:
-      tag: ${{ steps.version_check.outputs.tag }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Check if version is changed
-        id: version_check
-        run: |
-          version=`./current-version.sh`
-          echo "::set-output name=version::v$version"
-      - name: Create tag
-        run: |
-          git tag ${{ steps.version_check.outputs.version }}
-          git push origin ${{ steps.version_check.outputs.version }}
-
   makeRelease:
-    needs: createTag
     runs-on: self-hosted
     steps:
-      - name: Check if version is changed
-        id: version_check
-        run: |
-          version=`./current-version.sh`
-          echo "::set-output name=version::v$version"
       - name: Checkout last tag
         uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
         with:
-          ref: ${{ steps.version_check.outputs.version }}
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-          cache: 'yarn'
-          cache-dependency-path: 'l2-frontend/yarn.lock'
-
-      - name: Install Dependencies
-        run: make npm_install_cached
-
-      - name: Build for production
-        run: make build_prod
-
-      - name: Make webpack_bundles.tar.gz from assets/webpack_bundles
-        run: tar -czf webpack_bundles.tar.gz assets/webpack_bundles
+          name: webpack_bundles${{ steps.version_check.outputs.version }}.tar.gz
+          path: webpack_bundles_${{ steps.version_check.outputs.version }}.tar.gz
 
       - name: Release
         uses: docker://antonyurchenko/git-release:latest

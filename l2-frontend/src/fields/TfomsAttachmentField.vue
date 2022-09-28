@@ -18,6 +18,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
+
 import * as actions from '@/store/action-types';
 import directionsPoint from '@/api/directions-point';
 

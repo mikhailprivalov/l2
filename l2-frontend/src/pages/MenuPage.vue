@@ -347,8 +347,9 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
+
 import Modal from '@/ui-cards/Modal.vue';
-import { Menu, Button } from '@/types/menu';
+import { Button, Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
 
 @Component({

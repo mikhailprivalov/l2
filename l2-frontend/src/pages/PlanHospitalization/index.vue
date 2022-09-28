@@ -63,9 +63,11 @@
 import moment from 'moment';
 import Component from 'vue-class-component';
 import Vue from 'vue';
+
 import MessagesData from '@/pages/PlanHospitalization/components/MessagesData.vue';
 import plansPoint from '@/api/plans-point';
 import * as actions from '@/store/action-types';
+
 import Filters from './components/Filters.vue';
 import Row from './components/Row.vue';
 

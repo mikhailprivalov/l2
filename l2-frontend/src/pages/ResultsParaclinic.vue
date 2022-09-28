@@ -1766,6 +1766,7 @@ import ScreeningButton from '@/ui-cards/ScreeningButton.vue';
 import LastResult from '@/ui-cards/LastResult.vue';
 import IssStatus from '@/ui-cards/IssStatus.vue';
 import MedicalCertificates from '@/ui-cards/MedicalCertificates.vue';
+
 import DescriptiveForm from '../forms/DescriptiveForm.vue';
 import BacMicroForm from '../forms/BacMicroForm.vue';
 import UrlData from '../UrlData';

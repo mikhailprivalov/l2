@@ -23,6 +23,7 @@
 <script lang="ts">
 import Component from 'vue-class-component';
 import Vue from 'vue';
+
 import * as actions from '@/store/action-types';
 
 @Component({

@@ -1061,9 +1061,9 @@ import NumberRangeField from '@/fields/NumberRangeField.vue';
 import ConfigureAnesthesiaField from '@/fields/ConfigureAnesthesiaField.vue';
 import NumberField from '@/fields/NumberField.vue';
 import FieldHelper from '@/ui-cards/FieldHelper.vue';
-
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
+
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
 Vue.use(Vue2Filters);

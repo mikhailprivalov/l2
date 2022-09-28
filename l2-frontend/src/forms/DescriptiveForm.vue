@@ -490,6 +490,7 @@
 
 <script lang="ts">
 import LPress from '@/ui-cards/LPress.vue';
+
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
 import FastTemplates from './FastTemplates.vue';

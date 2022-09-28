@@ -143,7 +143,7 @@ export const PrepareFormula = (
     for (const n of necessary) {
       let v = null;
       const vid = cleanBrackets(n);
-      const vFromField = (fields[vid] || {}).value;
+      const vFromField = fields[vid]?.value;
       if (DEBUG) {
         // eslint-disable-next-line no-console
         console.log('vFromField', vid, vFromField);

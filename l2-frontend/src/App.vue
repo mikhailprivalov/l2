@@ -42,6 +42,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
+
 import Navbar from '@/components/Navbar.vue';
 import CheckBackend from '@/ui-cards/CheckBackend.vue';
 

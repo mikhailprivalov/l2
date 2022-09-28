@@ -165,6 +165,7 @@
 <script lang="ts">
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
+
 import DocCallLog from './DocCallLog.vue';
 
 export default {

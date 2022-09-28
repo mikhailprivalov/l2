@@ -106,6 +106,7 @@ import moment from 'moment';
 
 import * as actions from '@/store/action-types';
 import { convertSubjectNameToTitle } from '@/utils';
+
 import EDSDocument from './EDSDocument.vue';
 
 export default {
@@ -248,7 +249,7 @@ export default {
         if (this.certificates.length > 0) {
           // eslint-disable-next-line no-console
           console.log('getCertificates', true, this.certificates);
-          this.selectedCertificate = (this.certificates[0] || {}).thumbprint;
+          this.selectedCertificate = this.certificates[0]?.thumbprint;
         } else {
           // eslint-disable-next-line no-console
           console.log('getCertificates', false);

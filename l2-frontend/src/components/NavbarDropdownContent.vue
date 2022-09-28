@@ -34,6 +34,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
+
 import { sendEvent } from '@/metrics';
 
 @Component({

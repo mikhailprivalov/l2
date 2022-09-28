@@ -68,6 +68,7 @@
 
 <script lang="ts">
 import directionsPoint from '@/api/directions-point';
+
 import LinkToHistory from '../pages/Stationar/LinkToHistory.vue';
 import Favorite from '../pages/Stationar/Favorite.vue';
 

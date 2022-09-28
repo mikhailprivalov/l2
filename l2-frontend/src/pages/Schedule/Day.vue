@@ -63,6 +63,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
+
 import TimeSlot from './TimeSlot.vue';
 import TimeMarker from './TimeMarker.vue';
 import DayHeader from './DayHeader.vue';

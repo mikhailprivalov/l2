@@ -375,7 +375,7 @@
 
 <script lang="ts">
 import {
-  getSystemInfo, getUserCertificates, createDetachedSignature, createHash,
+  createDetachedSignature, createHash, getSystemInfo, getUserCertificates,
 } from 'crypto-pro';
 import moment from 'moment';
 import Vue from 'vue';
@@ -618,7 +618,7 @@ export default class EDS extends Vue {
       }
       if (this.certificates.length > 0) {
         console.log('getCertificates', true, this.certificates);
-        this.selectedCertificate = (this.certificates[0] || {}).thumbprint;
+        this.selectedCertificate = this.certificates[0]?.thumbprint;
       } else {
         console.log('getCertificates', false);
       }

@@ -237,6 +237,7 @@
 
 <script lang="ts">
 import moment from 'moment';
+
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {

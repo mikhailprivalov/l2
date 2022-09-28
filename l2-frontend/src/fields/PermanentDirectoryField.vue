@@ -27,6 +27,7 @@
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import Component from 'vue-class-component';
+
 import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
 import directionsPoint from '@/api/directions-point';
 
@@ -115,12 +116,12 @@ export default class PermanentDirectoryField extends Vue {
 
   get variants() {
     const [oid] = this.oid;
-    return (this.permanentDirectories[oid] || {}).values || {};
+    return this.permanentDirectories[oid]?.values || {};
   }
 
   get directoryTitle() {
     const [oid] = this.oid;
-    return (this.permanentDirectories[oid] || {}).title || '';
+    return this.permanentDirectories[oid]?.title || '';
   }
 
   get variantsToSelect() {

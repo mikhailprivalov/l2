@@ -77,6 +77,7 @@
 <script lang="ts">
 import TypeAhead from 'vue2-typeahead';
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import laboratoryPoint from '@/api/laboratory-point';

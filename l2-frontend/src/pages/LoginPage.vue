@@ -159,6 +159,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 import { POSITION } from 'vue-toastification/src/ts/constants';
+
 import * as actions from '@/store/action-types';
 import { Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';

@@ -181,6 +181,7 @@
 <script lang="ts">
 import * as actions from '@/store/action-types';
 import patientsPoint from '@/api/patients-point';
+
 import Modal from './Modal.vue';
 
 export default {

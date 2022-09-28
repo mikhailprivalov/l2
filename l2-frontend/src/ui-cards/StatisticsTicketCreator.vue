@@ -128,6 +128,7 @@
 
 <script lang="ts">
 import moment from 'moment';
+
 import * as actions from '@/store/action-types';
 import statisticsTicketsPoint from '@/api/statistics-tickets-point';
 import SelectPickerB from '@/fields/SelectPickerB.vue';

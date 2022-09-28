@@ -7,6 +7,7 @@ import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import Component from 'vue-class-component';
 import { POSITION } from 'vue-toastification/src/ts/constants';
+
 import * as actions from '@/store/action-types';
 
 @Component({
