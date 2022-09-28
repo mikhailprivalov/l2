@@ -19,8 +19,8 @@ jobs:
           version=`./current-version.sh`
           echo "::set-output name=version::v$version"
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
+      - name: 'Download workflow artifact: webpack_bundles.tar.gz'
+        uses: dawidd6/action-download-artifact@v2
         with:
           name: webpack_bundles.tar.gz
           path: webpack_bundles.tar.gz
