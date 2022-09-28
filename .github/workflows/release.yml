@@ -23,7 +23,8 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: webpack_bundles.tar.gz
-          path: webpack_bundles_${{ steps.version_check.outputs.version }}.tar.gz
+          path: webpack_bundles.tar.gz
+          run_id: ${{ github.event.workflow_run.id }}
 
       - name: Release
         uses: docker://antonyurchenko/git-release:latest
