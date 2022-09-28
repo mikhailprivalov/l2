@@ -205,17 +205,19 @@ export default {
       }
     },
     async deleteResearchInPrice(coastResearch) {
-      // eslint-disable-next-line no-alert
-      if (window.confirm('Исследование будет удалено из прайса')) {
-        await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/delete-research-in-price', { coastResearchId: coastResearch.id });
-        await this.$store.dispatch(actions.DEC_LOADING);
-        if (ok) {
-          this.$root.$emit('msg', 'ok', 'Исследование удалено');
-          await this.getCurrentCoastResearchesInPrice();
-        } else {
-          this.$root.$emit('msg', 'error', message);
-        }
+      try {
+        await this.$dialog.confirm('Подтвердите удаление исследования из прайса');
+      } catch (_) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/delete-research-in-price', { coastResearchId: coastResearch.id });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Исследование удалено');
+        await this.getCurrentCoastResearchesInPrice();
+      } else {
+        this.$root.$emit('msg', 'error', message);
       }
     },
     async updateResearchListInPrice() {

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import threading
 import time
@@ -2443,8 +2444,14 @@ def update_research_list_in_price(request):
 @group_required('Конструктор: Настройка организации')
 def delete_research_in_price(request):
     request_data = json.loads(request.body)
-    current_research = PriceCoast.objects.get(pk=request_data["coastResearchId"])
-    if not current_research.price_name.active_status:
+    current_coast_research = PriceCoast.objects.get(pk=request_data["coastResearchId"])
+    if not current_coast_research.price_name.active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
-    current_research.delete()
+    Log.log(current_coast_research.pk, 130001, request.user.doctorprofile, {
+        "price_pk": current_coast_research.price_name.pk,
+        "price_name": current_coast_research.price_name.title,
+        "research_pk": current_coast_research.research.pk,
+        "research_name": current_coast_research.research.title,
+    })
+    current_coast_research.delete()
     return JsonResponse({"ok": "ok"})
