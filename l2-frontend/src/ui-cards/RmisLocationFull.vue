@@ -35,8 +35,6 @@ export default {
       if (!this.init && rl) {
         this.init = true;
         this.loading = true;
-        // eslint-disable-next-line no-console
-        console.log('rmis_location', rl);
         this.data = await usersPoint.loadLocation({});
         this.loading = false;
       }
