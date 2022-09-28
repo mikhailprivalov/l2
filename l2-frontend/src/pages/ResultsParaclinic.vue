@@ -2197,7 +2197,7 @@ export default {
       }
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log(e);
+      console.error(e);
     }
 
     this.$store.dispatch(actions.LOAD_REQUIRED_STATTALON_FIELDS);
