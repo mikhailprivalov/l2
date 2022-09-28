@@ -13,6 +13,12 @@ jobs:
       - name: Checkout last tag
         uses: actions/checkout@v3
 
+      - name: Check if version is changed
+        id: version_check
+        run: |
+          version=`./current-version.sh`
+          echo "::set-output name=version::v$version"
+
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
