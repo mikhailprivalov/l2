@@ -510,7 +510,7 @@ def patients_get_card_data(request, card_id):
             "has_rmis_card": rc.exists(),
             "custom_workplace": card.work_place != "",
             "work_place_db": card.work_place_db_id or -1,
-            "work_place_db_title": card.work_place_db.title or "",
+            "work_place_db_title": card.work_place_db.title if card.work_place_db else "",
             "district": card.district_id or -1,
             "districts": [{"id": -1, "title": "НЕ ВЫБРАН"}, *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
             "ginekolog_district": card.ginekolog_district_id or -1,
