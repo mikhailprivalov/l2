@@ -2493,7 +2493,7 @@ class DirectionParamsResult(models.Model):
 
 
 class ParaclinicResultMultidimensionalTable(models.Model):
-    paraclinic_record = models.ForeignKey(ParaclinicResult, db_index=True, help_text='поле результата', on_delete=models.CASCADE)
+    paraclinic_record = models.ForeignKey(ParaclinicResult, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление для которого сохранение', db_index=True, on_delete=models.CASCADE)
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Исследование, для которого сохранен результат', on_delete=models.CASCADE)
     fieldpk_directory = models.IntegerField(default=None, blank=True, null=True, help_text="Сущности")
