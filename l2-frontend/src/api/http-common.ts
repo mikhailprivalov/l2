@@ -40,6 +40,7 @@ export const smartCall = async ({
       return response.data;
     }
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e);
   }
   return onReject;

@@ -1,9 +1,10 @@
-name: release
+name: Make release
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_run:
+    workflows: [ "Make new tag" ]
+    types:
+      - completed
 
 jobs:
   makeRelease:
@@ -11,6 +12,15 @@ jobs:
     steps:
       - name: Checkout last tag
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.outputs.version }}
+
+      - name: 'Download workflow artifact: webpack_bundles.tar.gz'
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: webpack_bundles.tar.gz
+          path: webpack_bundles.tar.gz
+          run_id: ${{ github.event.workflow_run.id }}
 
       - name: Release
         uses: docker://antonyurchenko/git-release:latest

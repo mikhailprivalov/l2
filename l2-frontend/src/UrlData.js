@@ -13,9 +13,11 @@ export default class UrlData {
   static get() {
     try {
       const data = JSON.parse(decodeURI(window.location.hash.substring(1)) || 'null');
+      // eslint-disable-next-line no-console
       console.log(data);
       return data;
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error(e);
     }
     return null;

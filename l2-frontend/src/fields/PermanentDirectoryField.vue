@@ -167,6 +167,7 @@ export default class PermanentDirectoryField extends Vue {
         this.localTitle = String(jval.title);
       }
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.log(e);
     }
   }

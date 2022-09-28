@@ -254,7 +254,6 @@ export default class ExtendedPatientSearch extends Vue {
 
   mounted() {
     this.$root.$on('global:select-base', (pk) => {
-      console.log('select', pk);
       this.baseGlobal = pk;
     });
   }
@@ -293,7 +292,8 @@ export default class ExtendedPatientSearch extends Vue {
         }
       }
     } catch (e) {
-      console.log(e);
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
 
     this.opened = true;
@@ -341,7 +341,8 @@ export default class ExtendedPatientSearch extends Vue {
         window.localStorage.setItem(savedBaseKey, JSON.stringify(this.base));
       }
     } catch (e) {
-      console.log(e);
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   }
 

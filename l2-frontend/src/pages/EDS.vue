@@ -607,24 +607,31 @@ export default class EDS extends Vue {
   async getEDSStatus() {
     try {
       this.systemInfo = await getSystemInfo();
+      // eslint-disable-next-line no-console
       console.log('getStatus', true, this.systemInfo);
       this.hasCP = true;
       try {
         this.certificates = await getUserCertificates();
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.log('getCertificates error');
+        // eslint-disable-next-line no-console
         console.error(e);
         this.checked = false;
       }
       if (this.certificates.length > 0) {
+        // eslint-disable-next-line no-console
         console.log('getCertificates', true, this.certificates);
         this.selectedCertificate = this.certificates[0]?.thumbprint;
       } else {
+        // eslint-disable-next-line no-console
         console.log('getCertificates', false);
       }
       this.checked = true;
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error(e);
+      // eslint-disable-next-line no-console
       console.log('getStatus', false);
       this.hasCP = false;
       this.checked = true;
@@ -734,6 +741,7 @@ export default class EDS extends Vue {
               this.$root.$emit('msg', 'error', message);
             }
           } catch (e) {
+            // eslint-disable-next-line no-console
             console.error(e);
             this.$root.$emit('msg', 'error', 'Ошибка создания подписи!');
           }
@@ -741,6 +749,7 @@ export default class EDS extends Vue {
           this.signingProcess.currentDocument++;
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.log(e);
         this.$root.$emit('msg', 'error', `Ошибка подписи ${r.pk}`);
         const docToLog = {

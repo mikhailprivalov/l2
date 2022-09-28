@@ -119,6 +119,7 @@ export default class CheckBackend extends Vue {
         }
 
         if (this.authenticated && this.version && this.version !== version) {
+          // eslint-disable-next-line no-console
           console.log({ uiVersion: this.version, newVersion: version });
           this.$store.dispatch(actions.HAS_NEW_VERSION);
         }
