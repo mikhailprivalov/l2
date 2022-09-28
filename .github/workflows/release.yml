@@ -32,8 +32,8 @@ jobs:
           run_id: ${{ github.event.workflow_run.id }}
 
       - name: Release
-        uses: docker://antonyurchenko/git-release:latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          args: '*.tar.gz'
+          artifacts: "*.tar.gz"
+          token: ${{ secrets.YOUR_GITHUB_TOKEN }}
+          tag: ${{ steps.version_check.outputs.version }}
