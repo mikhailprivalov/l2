@@ -18,24 +18,6 @@ jobs:
         run: |
           version=`./current-version.sh`
           echo "::set-output name=version::v$version"
-      - name: Create tag
-        run: |
-          git tag ${{ steps.version_check.outputs.version }}
-          git push origin ${{ steps.version_check.outputs.version }}
-
-  makeRelease:
-    needs: createTag
-    runs-on: self-hosted
-    steps:
-      - name: Check if version is changed
-        id: version_check
-        run: |
-          version=`./current-version.sh`
-          echo "::set-output name=version::v$version"
-      - name: Checkout last tag
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ steps.version_check.outputs.version }}
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -52,9 +34,7 @@ jobs:
       - name: Make webpack_bundles.tar.gz from assets/webpack_bundles
         run: tar -czf webpack_bundles.tar.gz assets/webpack_bundles
 
-      - name: Release
-        uses: docker://antonyurchenko/git-release:latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: '*.tar.gz'
+      - name: Create tag
+        run: |
+          git tag -a ${{ steps.version_check.outputs.version }} -m "Release ${{ steps.version_check.outputs.version }}"
+          git push origin ${{ steps.version_check.outputs.version }}

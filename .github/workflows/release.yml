@@ -11,21 +11,6 @@ jobs:
     steps:
       - name: Checkout last tag
         uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-          cache: 'yarn'
-          cache-dependency-path: 'l2-frontend/yarn.lock'
-
-      - name: Install Dependencies
-        run: make npm_install_cached
-
-      - name: Build for production
-        run: make build_prod
-
-      - name: Make webpack_bundles.tar.gz from assets/webpack_bundles
-        run: tar -czf webpack_bundles.tar.gz assets/webpack_bundles
 
       - name: Release
         uses: docker://antonyurchenko/git-release:latest
