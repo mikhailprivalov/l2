@@ -42,7 +42,7 @@ jobs:
       - name: Make webpack_bundles.tar.gz from assets/webpack_bundles
         run: tar -czf webpack_bundles_${{ steps.version_check.outputs.version }}.tar.gz assets/webpack_bundles
 
-      - name: upload artifacts for version
+      - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: webpack_bundles.tar.gz
