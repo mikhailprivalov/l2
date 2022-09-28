@@ -417,7 +417,7 @@
                 v-tippy="{ placement: 'bottom', arrow: true }"
                 style="width: 65%"
                 type="checkbox"
-                :title="card.work_place_db"
+                :title="card.work_place_db_title"
               >
                 <Treeselect
                   v-model="card.work_place_db"
@@ -428,7 +428,6 @@
                   :append-to-body="true"
                   :clearable="true"
                   :disabled="disabled"
-                  :value="content"
                   :z-index="5001"
                   placeholder="Укажите организацию"
                   :load-options="loadOptions"
@@ -438,14 +437,12 @@
                   :cache-options="false"
                   open-direction="top"
                   :open-on-focus="true"
-                  @select="selectValue"
-                  @input="input"
                 >
                   <div
                     slot="value-label"
                     slot-scope="{ node }"
                   >
-                    {{ node.raw.label || node.raw.id }}
+                    {{ node.raw.label || card.work_place_db_title }}
                   </div>
                 </Treeselect>
               </div>
@@ -1376,27 +1373,6 @@ export default {
     },
   },
   watch: {
-    value: {
-      immediate: true,
-      handler() {
-        let data: any = {};
-        try {
-          data = JSON.parse(this.value);
-          this.content = `${data.title}`;
-        } catch (e) {
-          if (this.value && !this.value.includes('{')) {
-            this.content = this.value;
-          }
-        }
-        this.detailsData = data;
-      },
-    },
-    detailsData: {
-      deep: true,
-      handler() {
-        this.emit();
-      },
-    },
     sex() {
       let s = swapLayouts((this.card.sex || '').toLowerCase());
       if (s.length > 1) {
@@ -1462,27 +1438,13 @@ export default {
     }, 100);
   },
   methods: {
-    emit() {
-      const v = Object.keys(this.detailsData).length > 0 ? JSON.stringify(this.detailsData) : '';
-      this.$emit('modified', v || '');
-    },
     async loadOptions({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
         const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
         callback(
           null,
-          data.map(d => ({ ...d, label: `${d.title}` })),
+          data.map(d => ({ id: `${d.id}`, label: `${d.title}` })),
         );
-      }
-    },
-    selectValue(node) {
-      this.content = node.title;
-      this.detailsData = { label: node.title, id: node.id };
-    },
-    input(v) {
-      if (!v) {
-        this.content = '';
-        this.detailsData = {};
       }
     },
     async get_disabled_forms() {

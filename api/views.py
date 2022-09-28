@@ -966,7 +966,7 @@ def mkb10_dict(request, raw_response=False):
 
 def companies_find(request):
     q = (request.GET.get("query", '') or '').strip()
-    companies_data = Company.get_company(q)
+    companies_data = Company.search_company(q)
     return JsonResponse({"data": companies_data})
 
 

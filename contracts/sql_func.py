@@ -2,7 +2,7 @@ from django.db import connection
 from utils.db import namedtuplefetchall
 
 
-def get_companies(company_title="-1", limit=400):
+def search_companies(company_title="-1", limit=400):
     with connection.cursor() as cursor:
         cursor.execute(
             """
