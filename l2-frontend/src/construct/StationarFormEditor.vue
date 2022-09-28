@@ -43,6 +43,7 @@ import * as actions from '@/store/action-types';
 import constructPoint from '@/api/construct-point';
 import researchesPoint from '@/api/researches-point';
 import SelectFieldTitled from '@/fields/SelectFieldTitled.vue';
+
 import ParaclinicResearchEditor from './ParaclinicResearchEditor.vue';
 
 export default {

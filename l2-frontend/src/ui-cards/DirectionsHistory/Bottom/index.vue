@@ -56,6 +56,7 @@
 
 <script lang="ts">
 import { valuesToString } from '@/utils';
+
 import menuMixin from './mixins/menu';
 import { forDirs } from '../../../forms';
 import DirectionsChangeParent from '../../../modals/DirectionsChangeParent.vue';
@@ -100,7 +101,7 @@ export default {
           card: this.card_pk,
           dir: JSON.stringify(this.checked),
         }),
-      })).filter(f => (!this.disabled_forms.includes(f.type)));
+      })).filter(f => (!this.disabled_forms?.includes(f.type)));
     },
     formsFiltered() {
       return this.forms.filter(f => this.card_pk !== -1 && (!f.need_dirs || this.checked.length > 0));

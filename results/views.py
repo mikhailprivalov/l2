@@ -14,7 +14,7 @@ import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Prefetch, Count
+from django.db.models import Count, Prefetch, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.utils import dateformat
@@ -1078,6 +1078,8 @@ def result_print(request):
                             s_napr = s_napr + n + '\n'
                         fwb.append(Paragraph("{}".format(s_napr), style))
                     fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
+                    if iss.research.has_own_form_result:
+                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
 
                 fwb.append(Spacer(1, 3 * mm))
                 if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result and not iss.research.is_form:

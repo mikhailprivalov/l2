@@ -10,12 +10,15 @@ module.exports = {
     '@vue/airbnb',
     '@vue/typescript/recommended',
   ],
+  plugins: [
+    'sort-imports-es6-autofix',
+  ],
   parserOptions: {
     ecmaVersion: 2020,
   },
   rules: {
-    'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
     'no-plusplus': 'off',
     'no-restricted-syntax': ['error', 'ForInStatement', 'LabeledStatement', 'WithStatement'],
@@ -44,6 +47,25 @@ module.exports = {
     'vuejs-accessibility/iframe-has-title': 'off',
     'vuejs-accessibility/no-autofocus': 'off',
     'vuejs-accessibility/alt-text': 'off',
+    'import/order': [
+      'error',
+      {
+        groups: [
+          ['builtin', 'external'],
+          'internal',
+          ['parent', 'sibling', 'index'],
+        ],
+        'newlines-between': 'always',
+      },
+    ],
+    'sort-imports': [
+      'error',
+      {
+        ignoreDeclarationSort: true,
+        ignoreCase: true,
+        ignoreMemberSort: false,
+      },
+    ],
   },
   overrides: [
     {

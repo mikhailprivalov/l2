@@ -5,8 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
+
+from api.researches.help_files.constructor_help import constructor_help_message
+from appconf.manager import SettingManager
+from directions.models import FrequencyOfUseResearches
 
 import users.models as users
 from api.directions.views import get_research_for_direction_params
@@ -25,7 +29,7 @@ from directory.models import (
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
-from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS
+from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, DISABLED_RESULT_FORMS
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from rmis_integration.client import get_md5
@@ -59,7 +63,7 @@ def get_researches_templates(request):
     return JsonResponse(result)
 
 
-def get_researches(request):
+def get_researches(request, last_used=False):
     deps = defaultdict(list)
     doctorprofile = request.user.doctorprofile
     k = f'get_researches:restricted_to_direct:{doctorprofile.pk}'
@@ -103,11 +107,17 @@ def get_researches(request):
     else:
         restricted_to_direct = json.loads(restricted_to_direct)
     mk = f'get_researches:result:{get_md5(";".join([str(x) for x in restricted_to_direct]))}'
-    result = cache.get(mk)
+    result = cache.get(mk) if not last_used else None
 
     if not result:
+        q = {}
+        cnts = {}
+        if last_used:
+            res = FrequencyOfUseResearches.objects.filter(user=doctorprofile, research__hide=False, cnt__gt=0).order_by('-cnt')[:20]
+            q['pk__in'] = [x.research_id for x in res]
+            cnts = {x.research_id: x.cnt for x in res}
         res = (
-            DResearches.objects.filter(hide=False)
+            DResearches.objects.filter(hide=False, **q)
             .exclude(pk__in=restricted_to_direct)
             .select_related('podrazdeleniye', 'comment_variants')
             .prefetch_related(
@@ -182,60 +192,72 @@ def get_researches(request):
             else:
                 research_data = json.loads(research_data)
 
-            tpls = []
-            if r.is_microbiology and 'is_microbiology' not in has_morfology:
-                has_morfology['is_microbiology'] = True
-                for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True):
-                    tpls.append(at.as_research())
+            if not last_used:
+                tpls = []
+                if r.is_microbiology and 'is_microbiology' not in has_morfology:
+                    has_morfology['is_microbiology'] = True
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True):
+                        tpls.append(at.as_research())
 
-            if r.is_citology and 'is_citology' not in has_morfology:
-                has_morfology['is_citology'] = True
-                for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True):
-                    tpls.append(at.as_research())
+                if r.is_citology and 'is_citology' not in has_morfology:
+                    has_morfology['is_citology'] = True
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True):
+                        tpls.append(at.as_research())
 
-            if r.is_gistology and 'is_gistology' not in has_morfology:
-                has_morfology['is_gistology'] = True
-                for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True):
-                    tpls.append(at.as_research())
+                if r.is_gistology and 'is_gistology' not in has_morfology:
+                    has_morfology['is_gistology'] = True
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True):
+                        tpls.append(at.as_research())
 
-            if r.reversed_type not in deps:
-                if r.reversed_type > 0:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type):
-                        tpls.append(at.as_research())
-                if r.is_doc_refferal:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True):
-                        tpls.append(at.as_research())
-                if r.is_treatment:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True):
-                        tpls.append(at.as_research())
-                if r.is_stom:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True):
-                        tpls.append(at.as_research())
-                if r.is_hospital:
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
-                        tpls.append(at.as_research())
-            if tpls:
-                deps[r.reversed_type].extend(tpls)
-            deps[r.reversed_type].append(research_data)
+                if r.reversed_type not in deps:
+                    if r.reversed_type > 0:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type):
+                            tpls.append(at.as_research())
+                    if r.is_doc_refferal:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True):
+                            tpls.append(at.as_research())
+                    if r.is_treatment:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True):
+                            tpls.append(at.as_research())
+                    if r.is_stom:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True):
+                            tpls.append(at.as_research())
+                    if r.is_hospital:
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
+                            tpls.append(at.as_research())
+                if tpls:
+                    deps[r.reversed_type].extend(tpls)
+            deps['-109999' if last_used else r.reversed_type].append(research_data)
 
         for dk in deps:
-            deps[dk] = list(sorted(deps[dk], key=lambda d: d['title']))
-        k = 'get_researches:tubes'
-        tubes = cache.get(k)
-        if not tubes:
-            tubes = list(Tubes.objects.values('pk', 'title', 'color'))
-            cache.set(k, json.dumps(tubes), 60)
-        else:
-            tubes = json.loads(tubes)
+            if last_used:
+                deps[dk] = list(sorted(deps[dk], key=lambda d: cnts.get(d['pk'], 0), reverse=True))
+            else:
+                deps[dk] = list(sorted(deps[dk], key=lambda d: d['title']))
 
-        result = {"researches": deps, "tubes": tubes}
-        cache.set(mk, json.dumps(result), 30)
+        if not last_used:
+            k = 'get_researches:tubes'
+            tubes = cache.get(k)
+            if not tubes:
+                tubes = list(Tubes.objects.values('pk', 'title', 'color'))
+                cache.set(k, json.dumps(tubes), 60)
+            else:
+                tubes = json.loads(tubes)
+
+            result = {"researches": deps, "tubes": tubes}
+            cache.set(mk, json.dumps(result), 30)
+        else:
+            result = {"researches": deps, "cnts": cnts}
     else:
         result = json.loads(result)
 
     if hasattr(request, 'plain_response') and request.plain_response:
         return result
     return JsonResponse(result)
+
+
+def last_used_researches(request):
+    return get_researches(request, last_used=True)
 
 
 def by_direction_params(request):
@@ -288,7 +310,7 @@ def localization_save(request):
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
-    result_form = DResearches.RESULT_FORMS
+    result_form = [i for i in DResearches.RESULT_FORMS if i[0] not in DISABLED_RESULT_FORMS]
     period_types = [{'id': x[0], 'label': x[1]} for x in DResearches.PERIOD_TYPES]
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
 
@@ -411,6 +433,7 @@ def researches_update(request):
         hide_main = request_data.get("hide_main", False)
         show_more_services = request_data.get("show_more_services", True)
         hospital_research_department_pk = request_data.get("hospital_research_department_pk", -1)
+        current_nsi_research_code = request_data.get("currentNsiResearchCode", -1)
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
@@ -457,6 +480,7 @@ def researches_update(request):
                     is_global_direction_params=is_global_direction_params,
                     has_own_form_result=own_form_result,
                     show_more_services=show_more_services,
+                    nsi_id=current_nsi_research_code,
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -497,6 +521,7 @@ def researches_update(request):
                 res.is_global_direction_params = is_global_direction_params
                 res.has_own_form_result = own_form_result
                 res.show_more_services = show_more_services and not res.is_microbiology and not res.is_form
+                res.nsi_id = current_nsi_research_code
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -517,7 +542,14 @@ def researches_update(request):
                     pk = group["pk"]
                     if pk == -1:
                         g = ParaclinicInputGroups(
-                            title=group["title"], show_title=group["show_title"], research=res, order=group["order"], hide=group["hide"], visibility=group.get("visibility", "")
+                            title=group["title"],
+                            show_title=group["show_title"],
+                            research=res,
+                            order=group["order"],
+                            hide=group["hide"],
+                            visibility=group.get("visibility", ""),
+                            fields_inline=group.get("fieldsInline", False),
+                            cda_option_id=group.get("cdaOption", -1) if group.get("cdaOption", -1) != -1 else None,
                         )
                     elif ParaclinicInputGroups.objects.filter(pk=pk).exists():
                         g = ParaclinicInputGroups.objects.get(pk=pk)
@@ -527,6 +559,8 @@ def researches_update(request):
                         g.order = group["order"]
                         g.hide = group["hide"]
                         g.visibility = group.get("visibility", "")
+                        g.cda_option_id = group.get("cdaOption", -1) if group.get("cdaOption", -1) != -1 else None
+                        g.fields_inline = group.get("fieldsInline", False)
                     if g:
                         g.save()
                         for field in group["fields"]:
@@ -535,6 +569,7 @@ def researches_update(request):
                             if pk == -1:
                                 f = ParaclinicInputField(
                                     title=field["title"],
+                                    short_title=field.get("short_title", ""),
                                     group=g,
                                     order=field["order"],
                                     lines=field["lines"],
@@ -552,10 +587,13 @@ def researches_update(request):
                                     operator_enter_param=field.get("operator_enter_param", False),
                                     attached=field.get("attached", ''),
                                     control_param=field.get("controlParam", ""),
+                                    cda_option_id=field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None,
+                                    patient_control_param_id=field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None,
                                 )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
                                 f.title = field["title"]
+                                f.short_title = field["short_title"]
                                 f.group = g
                                 f.order = field["order"]
                                 f.lines = field["lines"]
@@ -574,6 +612,8 @@ def researches_update(request):
                                 f.helper = field.get("helper", '')
                                 f.attached = field.get("attached", '')
                                 f.control_param = field.get("controlParam", '')
+                                f.patient_control_param_id = field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None
+                                f.cda_option_id = field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None
                             if f:
                                 f.save()
 
@@ -610,6 +650,7 @@ def paraclinic_details(request):
             "show_title": group.show_title,
             "hide": group.hide,
             "fields": [],
+            "fieldsInline": group.fields_inline,
         }
         for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
             g["fields"].append(
@@ -769,7 +810,17 @@ def fields_and_groups_titles(request):
 
 @login_required
 def descriptive_research(request):
-    rows = DResearches.objects.filter(hide=False).filter(Q(is_paraclinic=True) | Q(is_doc_refferal=True) | Q(is_gistology=True)).order_by('title').values('pk', 'title')
+    hiden_department = Podrazdeleniya.objects.values_list('pk', flat=True).filter(p_type=0)
+    rows = (
+        DResearches.objects.filter(hide=False)
+        .filter(Q(is_paraclinic=True) | Q(is_doc_refferal=SettingManager.get("consults_module", default='false')) | Q(is_gistology=True) | Q(is_form=True))
+        .order_by('title')
+        .values('pk', 'title')
+        .exclude(podrazdeleniye__in=hiden_department)
+        .exclude(is_stom=True)
+        .exclude(is_treatment=True)
+        .exclude(is_direction_params=True)
+    )
     rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
     return JsonResponse(rows, safe=False)
 
@@ -856,3 +907,13 @@ def required_stattalon_fields(request):
 
 def researches_required_stattalon_fields(request):
     return JsonResponse(RESEARCHES_PK_REQUIRED_STATTALON_FIELDS)
+
+
+@login_required
+def help_link_field(request):
+    address_url = request.headers['Referer'].split(request.headers['Origin'])
+    help_message = [{"param": "", "value": ""}]
+    if address_url[1] == "/ui/construct/descriptive":
+        help_message = constructor_help_message
+
+    return JsonResponse({"data": help_message})

@@ -492,7 +492,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       this.loadedDashboardDate = this.dateDashboard;
       this.dashboard = {
-        title: (this.dashboards.find((d) => d.id === this.dashboardPk) || {}).label,
+        title: this.dashboards.find((d) => d.id === this.dashboardPk)?.label,
       };
       const { rows } = await this.$api('/monitorings/dashboard', {
         dashboard: this.dashboardPk,
@@ -542,6 +542,7 @@ export default {
           }
         })
         .catch((error) => {
+          // eslint-disable-next-line no-console
           console.error(error);
           this.$root.$emit('msg', 'error', 'Сохранить данные в виде XLSX не удалось');
         });

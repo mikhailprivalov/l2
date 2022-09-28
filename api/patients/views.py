@@ -4,10 +4,12 @@ import re
 import threading
 from typing import Optional, List
 
-import pytz
+import pytz_deprecation_shim as pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 
+from api.patients.common_func import get_card_control_param
+from api.patients.sql_func import get_patient_control_params
 from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connections
@@ -36,10 +38,11 @@ from clients.models import (
     DispensaryRegPlans,
     ScreeningRegPlan,
     AdditionalPatientDispensaryPlan,
+    CardControlParam,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
-from directory.models import Researches
+from directory.models import Researches, PatientControlParam
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year, localtime
 from rmis_integration.client import Client
@@ -505,9 +508,9 @@ def patients_get_card_data(request, card_id):
             "main_address_full": card.main_address_full,
             "fact_address_full": card.fact_address_full,
             "has_rmis_card": rc.exists(),
-            "av_companies": [{"id": -1, "title": "НЕ ВЫБРАНО", "short_title": ""}, *[model_to_dict(x) for x in Company.objects.filter(active_status=True).order_by('title')]],
             "custom_workplace": card.work_place != "",
             "work_place_db": card.work_place_db_id or -1,
+            "work_place_db_title": card.work_place_db.title if card.work_place_db else "",
             "district": card.district_id or -1,
             "districts": [{"id": -1, "title": "НЕ ВЫБРАН"}, *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
             "ginekolog_district": card.ginekolog_district_id or -1,
@@ -650,6 +653,7 @@ def patients_card_save(request):
                     c.medbook_number = Card.next_medbook_n()
                     c.medbook_type = medbook_type
         except Exception as e:
+            logger.exception(e)
             messages.append(str(e))
     c.save()
     if c.individual.primary_for_rmis:
@@ -985,6 +989,38 @@ def load_screening(request):
     screening = ScreeningRegPlan.get_screening_data(card_pk)
 
     return JsonResponse({"data": screening})
+
+
+def load_control_param(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data.get("card_pk") or None
+    start_date = request_data["start_year"]
+    end_date = request_data["end_year"]
+
+    if not (card_pk and start_date and end_date):
+        return JsonResponse({"results": ""})
+    unique_month_result = get_card_control_param(card_pk, start_date, end_date)
+    return JsonResponse({"results": unique_month_result})
+
+
+def load_selected_control_params(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data.get("card_pk") or None
+    data_params = CardControlParam.get_patient_control_param(card_pk)
+    control_param = PatientControlParam.get_contol_param_in_system()
+    for element in control_param:
+        if not data_params.get(element["id"]):
+            data_params[element["id"]] = {"title": element["title"], "selected": False, "isGlobal": False}
+    result = [{"id": k, "title": v.get("title", ""), "isSelected": v.get("selected", False), "isGlobal": v.get("isGlobal", False)} for k, v in data_params.items()]
+    return JsonResponse({"results": result})
+
+
+def save_patient_control_params(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data.get("card_pk") or None
+    selected_params = request_data.get("selectedParams") or None
+    CardControlParam.save_patient_control_param(card_pk, selected_params)
+    return JsonResponse({"ok": True})
 
 
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):

@@ -6,7 +6,7 @@ from django.test import Client as TC
 import datetime
 import logging
 
-import pytz
+import pytz_deprecation_shim as pytz
 from django.utils.module_loading import import_string
 
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
@@ -15,6 +15,7 @@ from api.views import mkb10_dict
 from clients.utils import find_patient
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
+from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
@@ -29,7 +30,7 @@ import petrovna
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
@@ -40,7 +41,7 @@ import directions.models as directions
 from appconf.manager import SettingManager
 from clients.models import Individual, Card
 from clients.sql_func import last_results_researches_by_time_ago
-from directory.models import Researches, Fractions, ReleationsFT, HospitalService
+from directory.models import Researches, Fractions, ReleationsFT, HospitalService, ParaclinicInputGroups, ParaclinicInputField
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
 from laboratory.settings import (
@@ -54,10 +55,18 @@ from laboratory.settings import (
     LK_FILE_SIZE_BYTES,
     LK_FILE_COUNT,
     LK_DAY_MONTH_START_SHOW_RESULT,
+    GISTOLOGY_RESEARCH_PK,
+    REFERENCE_ODLI,
+    ODII_METHODS_IEMK,
+    ID_MED_DOCUMENT_TYPE_IEMK_N3,
+    DEATH_RESEARCH_PK,
+    REMD_EXCLUDE_RESEARCH,
+    REMD_ONLY_RESEARCH,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
+from results.prepare_data import fields_result_only_title_fields
 from results.sql_func import get_laboratory_results_by_directions, get_not_confirm_direction
 from rmis_integration.client import Client
 from slog.models import Log
@@ -65,13 +74,14 @@ from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, matc
 from users.models import DoctorProfile
 from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date, try_strptime
+from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
+from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
-from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file
+from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get
 from django.contrib.auth.models import User
 
 logger = logging.getLogger("IF")
@@ -91,21 +101,29 @@ def next_result_direction(request):
     researches = [-999]
     if type_researches == 'lab':
         researches = [x.pk for x in Researches.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY)]
+    elif type_researches == 'gistology':
+        researches = [x.pk for x in Researches.objects.filter(is_gistology=True)]
+    elif type_researches == 'paraclinic':
+        researches = [x.pk for x in Researches.objects.filter(is_paraclinic=True)]
     elif type_researches != '*':
         researches = [int(i) for i in type_researches.split(',')]
     else:
         is_research = -1
+    dirs, dirs_eds = None, None
     if only_signed == '1':
         # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
         # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
-        dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
+        dirs_eds = sql_if.direction_collect_date_signed(d_start, researches, is_research, next_n) or []
     else:
         dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
-    next_time = None
-    naprs = [d[0] for d in dirs]
+    next_time, naprs = None, None
     if dirs:
+        naprs = [d[0] for d in dirs]
         next_time = dirs[-1][3]
+    elif dirs_eds:
+        naprs = [d[0] for d in dirs_eds]
+        next_time = dirs_eds[-1][2]
 
     return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
 
@@ -185,6 +203,9 @@ def direction_data(request):
     iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False).select_related('research', 'doc_confirmation')
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
+    for i in iss:
+        if len(REMD_ONLY_RESEARCH) > 0 and i.pk not in REMD_ONLY_RESEARCH:
+            return Response({"ok": False})
 
     if not iss:
         return Response({"ok": False})
@@ -196,6 +217,8 @@ def direction_data(request):
     if direction.eds_total_signed:
         last_time_confirm = direction.last_time_confirm()
         for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
+            if not d.file:
+                continue
             document = {
                 'type': d.file_type.upper(),
                 'content': base64.b64encode(d.file.read()).decode('utf-8'),
@@ -240,8 +263,11 @@ def direction_data(request):
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
+            "department_name": iss[iss_index].doc_confirmation.podrazdeleniye.nsi_title if iss[iss_index].doc_confirmation else None,
+            "kind": iss[iss_index].research.oid_kind if iss[iss_index].doc_confirmation else None,
             "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else 'другое',
             "finSourceCode": direction.istochnik_f.get_n3_code() if direction.istochnik_f else '6',
+            "finSourceEcpCode": direction.istochnik_f.get_ecp_code() if direction.istochnik_f else '380101000000023',
             "oldPk": direction.core_id,
             "isExternal": direction.is_external,
             "titleInitiator": direction.get_title_org_initiator(),
@@ -249,12 +275,17 @@ def direction_data(request):
             "titleLaboratory": direction.hospital_title.replace("\"", " "),
             "ogrnLaboratory": direction.hospital_ogrn,
             "hospitalN3Id": direction.hospital_n3id,
+            "departmentN3Id": direction.department_n3id,
+            "hospitalEcpId": direction.hospital_ecp_id,
             "signed": direction.eds_total_signed,
             "totalSignedAt": direction.eds_total_signed_at,
             "signedDocuments": signed_documents,
             "REGION": REGION,
             "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
             "hasN3IemkUploading": direction.n3_iemk_ok,
+            "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
+            "generatorName": direction.get_eds_generator(),
+            "legalAuth": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
         }
     )
 
@@ -272,14 +303,17 @@ def issledovaniye_data(request):
     i = directions.Issledovaniya.objects.get(pk=pk)
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
-    results = directions.Result.objects.filter(issledovaniye=i, fraction__fsli__isnull=False)
-
-    if (not ignore_sample and not sample) or not results.exists():
-        return Response({"ok": False})
+    results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
+    if (not ignore_sample and not sample) or (not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic) or i.research.pk in REMD_EXCLUDE_RESEARCH:
+        return Response(
+            {"ok": False, "ignore_sample": ignore_sample, "sample": {"date": sample.time_get.date() if sample else i.time_confirmation.date()}, "results.exists": results.exists()}
+        )
 
     results_data = []
 
     for r in results:
+        if r.value in ["", None]:
+            continue
         refs = r.calc_normal(only_ref=True, raw_ref=False)
 
         if isinstance(refs, ResultRight):
@@ -301,7 +335,8 @@ def issledovaniye_data(request):
         norm = r.calc_normal()
 
         u = r.fraction.get_unit()
-
+        if not REFERENCE_ODLI:
+            refs = ['']
         results_data.append(
             {
                 "pk": r.pk,
@@ -320,7 +355,6 @@ def issledovaniye_data(request):
 
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
-
     return Response(
         {
             "ok": True,
@@ -333,8 +367,11 @@ def issledovaniye_data(request):
             "docConfirm": i.doc_confirmation_fio,
             "doctorData": doctor_data,
             "results": results_data,
-            "code": i.research.code,
+            "code": i.research.code.upper().replace('А', 'A').replace('В', 'B').replace('С', 'C').strip(),
+            "research": i.research.get_title(),
             "comments": i.lab_comment,
+            "isGistology": i.research.is_gistology,
+            "isParaclinic": i.research.is_paraclinic,
         }
     )
 
@@ -348,6 +385,46 @@ def issledovaniye_data_simple(request):
 
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
+    type_res_instr_iemk = None
+    id_med_document_type = None
+    if i.research.is_paraclinic:
+        nsi_res = InstrumentalResearchRefbook.objects.filter(code_nsi=i.research.nsi_id).first()
+        type_res_instr_iemk = ODII_METHODS_IEMK.get(nsi_res.method)
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_paraclinic")
+
+    mkb10 = None
+    if i.research.pk == DEATH_RESEARCH_PK:
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_death")
+        title_fields = [
+            "а) Болезнь или состояние, непосредственно приведшее к смерти",
+            "б) патологическое состояние, которое привело к возникновению вышеуказанной причины:",
+            "в) первоначальная причина смерти:",
+        ]
+        data = {}
+        result = fields_result_only_title_fields(i, title_fields, False)
+        for r in result:
+            data[r["title"]] = r["value"]
+        data["а"] = json.loads(data["а) Болезнь или состояние, непосредственно приведшее к смерти"])
+        result_a = data["а"]["rows"][0]
+        data["б"] = json.loads(data["б) патологическое состояние, которое привело к возникновению вышеуказанной причины:"])
+        result_b = data["б"]["rows"][0]
+        data["в"] = json.loads(data["в) первоначальная причина смерти:"])
+        result_v = data["в"]["rows"][0]
+        if len(result_v[2]) > 1:
+            start_diag = result_v
+        elif len(result_b[2]) > 1:
+            start_diag = result_b
+        else:
+            start_diag = result_a
+
+        description_diag = start_diag[2]
+        if len(description_diag) > 1:
+            description_diag_json = json.loads(description_diag)
+            if len(description_diag) > 1:
+                mkb10 = description_diag_json["code"]
+
+    if i.research.is_doc_refferal:
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_doc_refferal")
 
     return Response(
         {
@@ -360,6 +437,10 @@ def issledovaniye_data_simple(request):
             "visitPlace": (i.place.n3_id if i.place else None) or '1',
             "visitPurpose": (i.purpose.n3_id if i.purpose else None) or '2',
             "typeFlags": i.research.get_flag_types_n3(),
+            "typeResInstr": type_res_instr_iemk,
+            "activityCodeResearch": i.research.code,
+            "IdMedDocumentType": id_med_document_type,
+            "causeDeathCodeMcb": mkb10,
         }
     )
 
@@ -464,6 +545,9 @@ def make_log(request):
     pks_to_set_vi = [x for x in keys if x] if t in (60020,) else []
     pks_to_set_vi_fail = [x for x in keys if x] if t in (60021,) else []
 
+    pks_to_set_ecp = [x for x in keys if x] if t in (60022,) else []
+    pks_to_set_ecp_fail = [x for x in keys if x] if t in (60022,) else []
+
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
@@ -505,6 +589,23 @@ def make_log(request):
             d = directions.Napravleniya.objects.get(pk=k)
             d.n3_iemk_ok = True
             d.save(update_fields=['n3_iemk_ok'])
+
+        for k in pks_to_set_ecp_fail:
+            Log.log(key=k, type=t, body=body.get(str(k), body.get(k, {})))
+
+        for k in pks_to_set_ecp:
+            Log.log(key=k, type=t, body=body.get(str(k), body.get(k, {})))
+
+            d = directions.Napravleniya.objects.get(pk=k)
+            d.ecp_ok = True
+            d.save(update_fields=['ecp_ok'])
+
+            iss: Issledovaniya
+            for iss in Issledovaniya.objects.filter(napravleniye_id=k):
+                if str(iss.pk) in body.get(k, {}):
+                    if 'ecpServiceId' in body[k][str(iss.pk)]:
+                        iss.ecp_evn_id = str(body[k][str(iss.pk)]['ecpServiceId'] or '') or None
+                        iss.save(update_fields=['ecp_evn_id'])
 
     return Response({"ok": True})
 
@@ -1233,12 +1334,376 @@ def external_research_create(request):
             return Response({"ok": True, 'id': str(direction.pk)})
 
     except InvalidData as e:
+        logger.exception(e)
         message = str(e)
     except Exception as e:
         logger.exception(e)
         message = 'Серверная ошибка'
 
     return Response({"ok": False, 'message': message})
+
+
+@api_view(['POST'])
+def external_direction_create(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+
+    org = body.get("org", {})
+    code_tfoms = org.get("codeTFOMS")
+    oid_org = org.get("oid")
+
+    if not code_tfoms and not oid_org:
+        return Response({"ok": False, 'message': 'Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid'})
+
+    if code_tfoms:
+        hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
+    else:
+        hospital = Hospitals.objects.filter(oid=oid_org).first()
+
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
+
+    patient = body.get("patient", {})
+
+    enp = (patient.get("enp") or '').replace(' ', '')
+
+    if enp and (len(enp) != 16 or not enp.isdigit()):
+        return Response({"ok": False, 'message': 'Неверные данные полиса, должно быть 16 чисел'})
+
+    snils = (patient.get("snils") or '').replace(' ', '').replace('-', '')
+
+    if not enp and not snils:
+        return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber'})
+
+    if snils and not petrovna.validate_snils(snils):
+        return Response({"ok": False, 'message': 'patient.snils: не прошёл валидацию'})
+
+    lastname = str(patient.get("lastName") or '')
+    firstname = str(patient.get('firstName') or '')
+    patronymic = str(patient.get('patronymicName') or '')
+    birthdate = str(patient.get('birthDate') or '')
+    sex = patient.get('sex') or ''
+    if sex == 1:
+        sex = "м"
+    else:
+        sex = "ж"
+
+    if not enp and not (lastname and firstname and birthdate and birthdate):
+        return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано поле patient.individual'})
+
+    if lastname and not firstname:
+        return Response({"ok": False, 'message': 'При передаче lastname должен быть передан и firstname'})
+
+    if firstname and not lastname:
+        return Response({"ok": False, 'message': 'При передаче firstname должен быть передан и lastname'})
+
+    if firstname and lastname and not birthdate:
+        return Response({"ok": False, 'message': 'При передаче firstname и lastname должно быть передано поле birthdate'})
+
+    if birthdate and (not re.fullmatch(r'\d{4}-\d\d-\d\d', birthdate) or birthdate[0] not in ['1', '2']):
+        return Response({"ok": False, 'message': 'birthdate должно соответствовать формату YYYY-MM-DD'})
+
+    if birthdate and sex not in ['м', 'ж']:
+        return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
+
+    individual = None
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        if not individuals.exists():
+            individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
+            individual = individuals.first()
+        if not individual:
+            tfoms_data = match_enp(enp)
+            if tfoms_data:
+                individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+
+            individual = individuals.first()
+
+    if not individual and lastname:
+        tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
+        if tfoms_data:
+            individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual and lastname:
+        individual = Individual.import_from_tfoms(
+            {
+                "family": lastname,
+                "given": firstname,
+                "patronymic": patronymic,
+                "gender": sex,
+                "birthdate": birthdate,
+                "enp": enp,
+                "snils": snils,
+            },
+            need_return_individual=True,
+        )
+
+    if not individual:
+        return Response({"ok": False, 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    if not card:
+        card = Card.add_l2_card(individual)
+
+    if not card:
+        return Response({"ok": False, 'message': 'Карта не найдена'})
+
+    financing_source_title = body.get("financingSource", '')
+    if financing_source_title.lower() not in ["омс", "бюджет"]:
+        return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
+
+    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
+
+    if not financing_source:
+        return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
+
+    message = None
+
+    id_in_hospital = body.get("internalId", '')
+    if id_in_hospital is not None:
+        id_in_hospital = limit_str(id_in_hospital, 15)
+
+    department = body.get("department", '')
+    additiona_info = body.get("additionalInfo", '')
+    last_result_data = body.get("lastResultData", '')
+
+    diag_text = body.get("diagText", '')  # обязательно
+    if not diag_text:
+        return Response({"ok": False, 'message': 'Диагноз описание не заполнено'})
+
+    diag_mkb10 = body.get("diagMKB10", '')  # обязательно
+    if not diag_mkb10:
+        return Response({"ok": False, 'message': 'Диагноз по МКБ10 не заполнен (не верно)'})
+    open_skob = "{"
+    close_skob = "}"
+
+    diag_mcb10_data = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=diag_mkb10, hide=False).order_by("code").first()
+    diag_mkb10 = f'{open_skob}"code": "{diag_mcb10_data.code}", "title": "{diag_mcb10_data.title}", "id":"{diag_mcb10_data.pk}"{close_skob}'
+    obtain_material = {
+        1: "эндоскопическая биопсия—1",
+        2: "пункционная биопсия—2",
+        3: "аспирационная биопсия—3",
+        4: "инцизионная биопсия—4",
+        5: "операционная биопсия—5",
+        6: "операционный материал—6",
+        7: "самопроизвольно отделившиеся фрагменты тканей—7",
+    }
+    method_obtain_material = body.get("methodObtainMaterial", '')  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
+    if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
+        return Response({"ok": False, 'message': 'Способо забора не верно заполнено'})
+
+    resident_code = patient.get("residentCode", '')  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
+    if not resident_code or resident_code not in [1, 2]:
+        return Response({"ok": False, 'message': 'Не указан вид жительства'})
+    if resident_code == 1:
+        resident_data = f'{open_skob}"code": "1", "title": "Город"{close_skob}'
+    else:
+        resident_data = f'{open_skob}"code": "2", "title": "Село"{close_skob}'
+
+    solution10 = body.get("solution10", '')  # обязательно
+    if not solution10 or solution10 not in ["true", "false"]:
+        return Response({"ok": False, 'message': 'Не указано помещен в 10% раствор'})
+
+    doctor_fio = body.get("doctorFio", '')  # обязательно
+    if not doctor_fio:
+        return Response({"ok": False, 'message': 'Не указан врач производивший забор материала'})
+    material_mark = body.get("materialMark", '')
+    numbers_vial = []
+    for k in material_mark:
+        result_check = check_valid_material_mark(k, numbers_vial)
+        if not result_check:
+            return Response({"ok": False, 'message': 'Не верная маркировка материала'})
+        numbers_vial = result_check
+    if len(numbers_vial) != sorted(numbers_vial)[-1]:
+        return Response({"ok": False, 'message': 'Не верная маркировка флаконов (порядок 1,2,3,4...)'})
+
+    try:
+        with transaction.atomic():
+            direction = Napravleniya.objects.create(
+                client=card,
+                is_external=True,
+                istochnik_f=financing_source,
+                polis_who_give=card.polis.who_give if card.polis else None,
+                polis_n=card.polis.number if card.polis else None,
+                hospital=hospital,
+                id_in_hospital=id_in_hospital,
+            )
+
+            time_get = str(body.get("dateTimeGet", "") or "") or None
+            if time_get and not valid_date(time_get) or not time_get:
+                raise InvalidData('Содержит некорректное поле dateTimeGet. Оно должно соответствовать шаблону YYYY-MM-DD HH:MM')
+
+            directions.Issledovaniya.objects.create(
+                napravleniye=direction,
+                research_id=GISTOLOGY_RESEARCH_PK,
+            )
+            research = Researches.objects.filter(pk=GISTOLOGY_RESEARCH_PK).first()
+            direction_params = research.direction_params
+            data_marked = {
+                "columns": {
+                    "titles": ["Номер флакона", "Локализация патологического процесса (орган, топография)", "Характер патологического процесса", "Количество объектов", "Описание"],
+                    "settings": [{"type": "rowNumber", "width": "7%"}, {"type": 0, "width": "25%"}, {"type": 10, "width": "20%"}, {"type": 18, "width": "10%"}, {"type": 0, "width": "38%"}],
+                }
+            }
+
+            result_table_field = []
+            pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
+            for m_m in material_mark:
+                result_table_field.append(
+                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")]
+                )
+            data_marked["rows"] = result_table_field
+            match_keys = {
+                "Диагноз основной": diag_text,
+                "Код по МКБ": diag_mkb10,
+                "Дополнительные клинические сведения": additiona_info,
+                "Результаты предыдущие": last_result_data,
+                "Способ получения биопсийного (операционного) материала": obtain_material[method_obtain_material],
+                "Материал помещен в 10%-ный раствор нейтрального формалина": "Да" if solution10.lower() == "true" else "Нет",
+                "Дата забора материала": time_get.split(" ")[0],
+                "Время забора материала": time_get.split(" ")[1],
+                "Маркировка материала": json.dumps(data_marked),
+                "отделение": department,
+                "ФИО врача": doctor_fio,
+                "Вид места жительства": resident_data,
+            }
+
+            for group in ParaclinicInputGroups.objects.filter(research=direction_params):
+                for f in ParaclinicInputField.objects.filter(group=group):
+                    if match_keys.get(f.title, None):
+                        directions.DirectionParamsResult(napravleniye=direction, title=f.title, field=f, field_type=f.field_type, value=match_keys[f.title], order=f.order).save()
+
+            try:
+                Log.log(
+                    str(direction.pk),
+                    122001,
+                    body={"data": body},
+                )
+            except Exception as e:
+                logger.exception(e)
+            return Response({"ok": True, 'id': str(direction.pk)})
+
+    except InvalidData as e:
+        logger.exception(e)
+        message = str(e)
+    except Exception as e:
+        logger.exception(e)
+        message = 'Серверная ошибка'
+
+    return Response({"ok": False, 'message': message})
+
+
+@api_view(['POST'])
+def get_directions(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    else:
+        hospital = check_result["hospital"]
+        create_from = body.get(("createFrom") or '')
+        create_to = body.get(('createTo') or '')
+        directions_data = Napravleniya.objects.values_list('pk', flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
+        return Response({"ok": True, 'data': directions_data})
+
+
+@api_view(['POST'])
+def get_direction_data_by_num(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+
+    pk = int(body.get(("directionNum") or ''))
+    data_result = get_data_direction_with_param(pk)
+    if not data_result:
+        return Response({"ok": False})
+    return Response({"ok": True, 'data': data_result})
+
+
+@api_view(['POST'])
+def get_direction_data_by_period(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    hospital = check_result["hospital"]
+    create_from = body.get(("createFrom") or '')
+    create_to = body.get(('createTo') or '')
+    dot_format_create_from = normalize_date(create_from.split(" ")[0])
+    dot_format_create_to = normalize_date(create_to.split(" ")[0])
+    date_start, date_end = try_parse_range(dot_format_create_from, dot_format_create_to)
+    if date_start and date_end:
+        delta = date_end - date_start
+        if abs(delta.days) > 2:
+            return Response({"ok": False, 'message': 'Период между датами не более 48 часов'})
+
+    directions_data = Napravleniya.objects.values_list('pk', flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
+    result = []
+    for direction_number in directions_data:
+        data_result = get_data_direction_with_param(direction_number)
+        if not data_result:
+            continue
+        result.append(data_result)
+    return Response({"ok": True, 'data': result})
+
+
+@api_view(['POST'])
+def external_get_pdf_result(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+    oid_org = body.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    hospital = check_result["hospital"]
+    pk = int(body.get(("directionNum") or ''))
+    direction = directions.Napravleniya.objects.filter(hospital=hospital, pk=pk).first()
+    if not direction:
+        return Response({"ok": False, 'message': 'Номер направления не принадлежит организации'})
+    pdf_data = direction_pdf_result(direction.pk)
+    return JsonResponse({"result": pdf_data})
+
+
+def check_valid_material_mark(current_material_data, current_numbers_vial):
+    for k, v in current_material_data.items():
+        if k == "numberVial" and not isinstance(v, int):  # обязательно число
+            return False
+        if k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]:  # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
+            return False
+        if k == "objectValue" and not isinstance(v, int):  # обязательно число
+            return False
+        if k == "description" and v and not isinstance(v, str):
+            return False
+        if k == "localization" and v and not isinstance(v, str):
+            return False
+    if current_material_data["numberVial"] in current_numbers_vial:
+        return False
+    else:
+        current_numbers_vial.append(current_material_data["numberVial"])
+    return current_numbers_vial
 
 
 @api_view(['POST'])
@@ -1272,24 +1737,33 @@ def get_cda_data(pk):
         data = get_json_protocol_data(pk)
     elif check_type_research(pk) == "is_lab":
         data = get_json_labortory_data(pk)
+    elif check_type_research(pk) == "is_paraclinic":
+        data = get_json_protocol_data(pk, is_paraclinic=True)
     else:
         data = {}
-    return {
-        "title": n.get_eds_title(),
-        "generatorName": n.get_eds_generator(),
-        "rawResponse": True,
-        "data": {
-            "oidMo": data.get("oidMo"),
-            "document": data,
-            "patient": {
-                'id': card.number,
-                'snils': card.get_data_individual()["snils"],
-                'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
-                'gender': ind.sex.lower(),
-                'birthdate': ind.birthday.strftime("%Y%m%d"),
+    data_individual = card.get_data_individual()
+    p_enp_re = re.compile(r'^[0-9]{16}$')
+    p_enp = bool(re.search(p_enp_re, card.get_data_individual()['oms']['polis_num']))
+    if p_enp:
+        return {
+            "title": n.get_eds_title(),
+            "generatorName": n.get_eds_generator(),
+            "rawResponse": True,
+            "data": {
+                "oidMo": data["oidMo"],
+                "document": data,
+                "patient": {
+                    'id': card.number,
+                    'snils': data_individual["snils"],
+                    'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                    'gender': ind.sex.lower(),
+                    'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    'oms': {'number': card.get_data_individual()['oms']['polis_num'], 'issueOrgName': '', 'issueOrgCode': ''},
+                },
+                "organization": data["organization"],
             },
-        },
-    }
+        }
+    return {}
 
 
 @api_view(['POST'])
@@ -1448,6 +1922,26 @@ def get_protocol_result(request):
         return Response(
             {
                 "generatorName": "Laboratory_min",
+                "data": {
+                    "oidMo": data["oidMo"],
+                    "document": data,
+                    "patient": {
+                        'id': card.number,
+                        'snils': card.get_data_individual()["snils"],
+                        'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
+                        'gender': ind.sex.lower(),
+                        'birthdate': ind.birthday.strftime("%Y%m%d"),
+                    },
+                    "organization": data["organization"],
+                },
+            }
+        )
+    elif check_type_research(pk) == "is_paraclinic":
+        data = get_json_protocol_data(pk, is_paraclinic=True)
+        return Response(
+            {
+                "title": n.get_eds_title(),
+                "generatorName": n.get_eds_generator(),
                 "data": {
                     "oidMo": data["oidMo"],
                     "document": data,
@@ -1811,16 +2305,29 @@ def directions_by_category_result_year(request):
 @api_view(['POST'])
 def results_by_direction(request):
     request_data = json.loads(request.body)
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+    oid_org = request_data.get(("oid") or '')
+    check_result = check_correct_hosp(request, oid_org)
+    if not check_result["OK"]:
+        return Response({"ok": False, 'message': check_result["message"]})
+    hospital = check_result["hospital"]
     mode = request_data.get('mode')
     is_lab = request_data.get('isLab', mode == 'laboratory')
     is_paraclinic = request_data.get('isParaclinic', mode == 'paraclinic')
     is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
     is_user_forms = request_data.get('isUserFroms', mode == 'forms')
     direction = request_data.get('pk')
-
     directions = request_data.get('directions', [])
-    if not directions and direction:
+    if is_lab and not directions:
         directions = [direction]
+    else:
+        directions = [direction]
+    for d in directions:
+        direction_obj = Napravleniya.objects.filter(hospital=hospital, pk=d).first()
+        if not direction_obj:
+            return Response({"ok": False, 'message': 'Номер направления не принадлежит организации'})
+
     objs_result = {}
     if is_lab:
         direction_result = get_laboratory_results_by_directions(directions)
@@ -1902,11 +2409,7 @@ def check_hosp_slot_before_save(request):
 def get_pdf_result(request):
     data = json.loads(request.body)
     pk = data.get('pk')
-    localclient = TC(enforce_csrf_checks=False)
-    addr = "/results/pdf"
-    params = {"pk": json.dumps([pk]), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
-    result = localclient.get(addr, params).content
-    pdf_content = base64.b64encode(result).decode('utf-8')
+    pdf_content = direction_pdf_result(pk)
     return JsonResponse({"result": pdf_content})
 
 
@@ -2150,9 +2653,11 @@ def document_lk_save(request):
         iss.doc_confirmation = user
         iss.time_confirmation = date
         iss.save()
-        iss.napravleniye.visit_who_mark = user
-        iss.napravleniye.visit_date = date
-        iss.napravleniye.save()
+        if iss.napravleniye:
+            iss.napravleniye.sync_confirmed_fields()
+            iss.napravleniye.visit_who_mark = user
+            iss.napravleniye.visit_date = date
+            iss.napravleniye.save()
 
         fields_count = 0
 
@@ -2204,3 +2709,72 @@ def document_lk_save(request):
             return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
 
     return Response({"ok": True, "message": f"Форма \"{service.get_title()}\" ({direction}) сохранена"})
+
+
+@api_view(['POST'])
+def amd_save(request):
+    data = json.loads(request.body)
+    local_uid = data.get('localUid')
+    direction_pk = data.get('pk')
+    status = data.get('status')
+    message_id = data.get('messageId')
+    message = data.get('message')
+    kind = data.get('kind')
+    organization_oid = data.get('organizationOid')
+    hospital = Hospitals.objects.filter(oid=organization_oid).first()
+
+    emdr_id = data.get('emdrId')
+    registration_date = data.get('registrationDate')
+    if registration_date:
+        registration_date = datetime.datetime.strptime(registration_date, '%Y-%m-%d %H:%M:%S')
+
+    type = data.get('type')
+    if type and type == "registerDocument":
+        time_exec = data.get('timeExec')
+        time_exec = datetime.datetime.strptime(time_exec, '%Y-%m-%d %H:%M:%S')
+        department_oid = data.get('departmentOid')
+        podrazdeleniye = Podrazdeleniya.objects.filter(oid=department_oid).first()
+        amd = ArchiveMedicalDocuments(
+            local_uid=local_uid,
+            direction_id=direction_pk,
+            status=status,
+            message_id=message_id,
+            hospital=hospital,
+            department=podrazdeleniye,
+            message=message,
+            kind=kind,
+            time_exec=time_exec,
+        )
+        amd.save()
+    elif type and type == "getDocumentFile":
+        amd = ArchiveMedicalDocuments.objects.get(hospital=hospital, local_uid=local_uid, direction_id=direction_pk)
+        amd.emdr_id = emdr_id
+        amd.registration_date = registration_date
+        amd.save()
+    elif type and type == "sendRegisterDocumentResult":
+        amd = ArchiveMedicalDocuments.objects.get(message_id=message_id)
+        amd.emdr_id = emdr_id
+        amd.registration_date = registration_date
+        code = data.get('code')
+        amd.message = f"{code}@{message}"
+        amd.save()
+    return Response({"ok": True})
+
+
+@api_view(['POST'])
+def register_emdr_id(request):
+    data = json.loads(request.body)
+    emdr_id = data.get('localUid')
+    direction_pk = data.get('pk')
+    direction = Napravleniya.objects.get(pk=direction_pk)
+    direction.emdr_id = emdr_id
+    direction.save(update_fields=['emdr_id'])
+    return Response({"ok": True})
+
+
+@api_view(['POST'])
+def get_direction_pk_by_emdr_id(request):
+    data = json.loads(request.body)
+    emdr_id = data.get('emdrId')
+    direction = Napravleniya.objects.get(emdr_id=emdr_id)
+    return Response({"pk": direction.pk})

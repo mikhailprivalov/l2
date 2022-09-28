@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from clients.models import Card
 from forms.forms_func import primary_reception_get_data
-from laboratory.settings import LK_FILE_COUNT, LK_FILE_SIZE_BYTES, MEDIA_URL
+from laboratory.settings import LK_FILE_COUNT, LK_FILE_SIZE_BYTES, MEDIA_URL, OFFSET_HOURS_PLAN_OPERATIONS
 from laboratory.utils import strdate, current_time, strfdatetime
 from plans.models import PlanOperations, PlanHospitalization, Messages
 from .sql_func import get_plans_by_params_sql, get_plans_hospitalization_sql, get_plans_hospitalizationfiles
@@ -254,3 +254,8 @@ def change_anestesiolog(request):
 @login_required
 def get_limit_download_files(request):
     return JsonResponse({"lk_file_count": LK_FILE_COUNT, "lk_file_size_bytes": LK_FILE_SIZE_BYTES})
+
+
+@login_required
+def get_offset_hours_plan_operations(request):
+    return JsonResponse({"data": OFFSET_HOURS_PLAN_OPERATIONS})

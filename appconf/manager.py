@@ -7,7 +7,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-3"
+    VERSION = f"{laboratory.VERSION}-4"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -48,8 +48,21 @@ class SettingManager:
         return value
 
     @staticmethod
-    def l2(key):
-        return SettingManager.get('l2_{}'.format(key), default='false', default_type='b')
+    def set_value(key, value, default_type='s'):
+        row = appconf.Setting.objects.filter(name=key).first()
+        if not row:
+            SettingManager.get(key, value, default_type=default_type)
+        else:
+            row.value = value or ''
+            row.save()
+
+    @staticmethod
+    def l2(key, default='false'):
+        return SettingManager.get('l2_{}'.format(key), default=default, default_type='b')
+
+    @staticmethod
+    def forms_url():
+        return 'https://forms.yandex.ru/u/6327b35ab4d9a1750ea721f2/'
 
     @staticmethod
     def get_eds_base_url():
@@ -78,6 +91,15 @@ class SettingManager:
     @staticmethod
     def instance_id():
         return SettingManager.get("instance_id", default='', default_type='s')
+
+    @staticmethod
+    def get_dynamic_directory_version():
+        return SettingManager.get("dynamic_directory_version", default='0', default_type='i')
+
+    @staticmethod
+    def inc_dynamic_directory_version():
+        current_version = SettingManager.get_dynamic_directory_version()
+        SettingManager.set_value("dynamic_directory_version", str(current_version + 1), default_type='i')
 
     @staticmethod
     def l2_modules() -> dict:
@@ -144,6 +166,7 @@ class SettingManager:
             "auto_clinical_examination_direct": SettingManager.get("auto_clinical_examination_direct", default='false', default_type='b'),
             "legal_authenticator": SettingManager.get("legal_authenticator", default='false', default_type='b'),
             "change_password": SettingManager.get("change_password", default='false', default_type='b'),
+            "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 

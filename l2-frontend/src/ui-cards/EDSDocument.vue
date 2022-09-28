@@ -94,7 +94,12 @@
           >
             <i class="fa fa-download" />
           </a>
-          <strong>{{ s.type }}</strong>, {{ s.executor }}, {{ s.signedAt }}
+          <strong>{{ s.type }}</strong>, <EDSSignTitle
+            :executor="s.executor"
+            :signature="s.signValue"
+            :data="d.fileContent"
+            :type="d.type"
+          />, {{ s.signedAt }}
         </li>
       </ul>
     </div>
@@ -137,8 +142,13 @@ import { createDetachedSignature, createHash } from 'crypto-pro';
 
 import * as actions from '@/store/action-types';
 
+import EDSSignTitle from './EDSSignTitle.vue';
+
 export default {
   name: 'EDSDocument',
+  components: {
+    EDSSignTitle,
+  },
   props: {
     d: {
       type: Object,
@@ -247,6 +257,7 @@ export default {
       if (data.ok) {
         this.$root.$emit('msg', 'ok', 'Успешная отправка!');
       } else {
+        // eslint-disable-next-line no-console
         console.log(data);
         this.$root.$emit('msg', 'error', 'Ошибка!');
       }
@@ -293,6 +304,7 @@ export default {
           this.$root.$emit('msg', 'error', message);
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.$root.$emit('msg', 'error', 'Ошибка создания подписи!');
       }

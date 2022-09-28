@@ -40,24 +40,12 @@
               </td>
             </tr>
             <tr>
-              <th>Номер случая</th>
-              <td class="x-cell">
-                <input
-                  v-model.trim="caseNumber"
-                  type="text"
-                  class="form-control"
-                  placeholder="номер"
-                  :disabled="isSearchStationar"
-                >
-              </td>
-            </tr>
-            <tr>
               <th>
-                Номер истории
+                № направления
               </th>
               <td class="x-cell">
                 <input
-                  v-model.trim="hospNumber"
+                  v-model.trim="directionNumber"
                   type="text"
                   class="form-control"
                   placeholder="номер"
@@ -68,12 +56,32 @@
             <tr>
               <th class="cl-td text-left">
                 <label class="mh-34">
-                  Дата выписки
+                  Дата направления
+                  <input
+                    v-model="directionCreatedDate"
+                    type="checkbox"
+                    class="ml-5"
+                    :disabled="isSearchStationar || hospCheck"
+                  >
+                </label>
+              </th>
+              <td class="cl-td">
+                <DateRange
+                  v-if="directionCreatedDate"
+                  v-model="dateCreateRange"
+                  :disabled="isSearchStationar || hospCheck"
+                />
+              </td>
+            </tr>
+            <tr>
+              <th class="cl-td text-left">
+                <label class="mh-34">
+                  Дата результата
                   <input
                     v-model="hospCheck"
                     type="checkbox"
                     class="ml-5"
-                    :disabled="isSearchStationar"
+                    :disabled="isSearchStationar || directionCreatedDate"
                   >
                 </label>
               </th>
@@ -81,11 +89,11 @@
                 <DateRange
                   v-if="hospCheck"
                   v-model="dateExaminationRange"
-                  :disabled="isSearchStationar"
+                  :disabled="isSearchStationar || directionCreatedDate"
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th class="cl-td text-left">
                 <label class="mh-34">
                   Регистрация
@@ -105,7 +113,7 @@
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 <div class="mh-34">
                   Исполнитель
@@ -124,7 +132,7 @@
                 />
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 Дата забора
               </th>
@@ -148,7 +156,7 @@
                 </div>
               </td>
             </tr>
-            <tr>
+            <tr v-if="canSelectHospitals">
               <th>
                 Дата получения
               </th>
@@ -170,6 +178,18 @@
                     ><i class="fa fa-times" /></button>
                   </span>
                 </div>
+              </td>
+            </tr>
+            <tr>
+              <th>№ случая</th>
+              <td class="x-cell">
+                <input
+                  v-model.trim="caseNumber"
+                  type="text"
+                  class="form-control"
+                  placeholder="номер"
+                  :disabled="isSearchStationar"
+                >
               </td>
             </tr>
             <tr>
@@ -228,6 +248,30 @@
           </span>
         </div>
       </div>
+      <div
+        v-if="hasParam && count > 0"
+        class="inner"
+      >
+        <h5>Параметры статистики</h5>
+        <Treeselect
+          v-model="statisticParam"
+          :multiple="false"
+          :disable-branch-nodes="true"
+          class="treeselect-noborder treeselect-wide"
+          :options="statisticParams"
+          :append-to-body="true"
+          placeholder="Не выбрано"
+          :clearable="false"
+        />
+        <button
+          v-if="statisticParam !== -1"
+          class="btn btn-blue-nb btn-block"
+          type="button"
+          @click="genReport"
+        >
+          Сформировать отчёт
+        </button>
+      </div>
     </div>
     <div class="right-content">
       <div class="inner">
@@ -253,7 +297,7 @@
               </th>
               <th>Пациент</th>
               <th>Текст</th>
-              <th>Исполнитель</th>
+              <th>Статус</th>
             </tr>
           </thead>
           <tbody>
@@ -263,12 +307,24 @@
             >
               <td>
                 <a
+                  v-if="r.date_confirm"
                   href="#"
                   class="a-under"
                   @click="print(r.direction_number)"
                 >
                   {{ r.direction_number }}
                 </a>
+                <div v-else>
+                  {{ r.direction_number }}
+                </div>
+                <div
+                  v-if="r.additional_number"
+                  class="additional-number"
+                >
+                  <i class="fas fa-registered" />{{ r.additional_number }}
+                  <br>
+                  {{ r.registered_date }}
+                </div>
               </td>
               <td v-if="!isSearchStationar">
                 {{ r.hosp_title }}
@@ -289,7 +345,19 @@
                 {{ r.field_value }}
               </td>
               <td>
-                {{ r.doc_fio }}
+                <div v-if="r.date_confirm">
+                  <strong class="approved">Утвержден</strong>
+                  <br>
+                  {{ r.doc_fio }}
+                </div>
+                <div v-else-if="r.registered_date">
+                  <strong class="registered">В работе</strong>
+                  <br>
+                  {{ r.doc_plan_fio }}
+                </div>
+                <div v-else-if="r.time_gistology_receive">
+                  <span class="received">Материал поступил</span>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -306,6 +374,8 @@ import Component from 'vue-class-component';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Paginate from 'vuejs-paginate';
+import axios from 'axios';
+import * as Cookies from 'es-cookie';
 
 import * as actions from '@/store/action-types';
 import usersPoint from '@/api/user-point';
@@ -331,9 +401,11 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       research: -1,
       researches: [],
       caseNumber: '',
-      hospNumber: '',
+      directionNumber: '',
       hospCheck: false,
+      directionCreatedDate: false,
       dateExaminationRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+      dateCreateRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       registerCheck: false,
       searchStationar: false,
       dateRegisteredRange: [moment().subtract(2, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
@@ -346,6 +418,10 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       count: 0,
       hospital_ids: [{ id: -1, label: 'По умолчанию' }],
       hospitalId: -1,
+      statisticParams: [{ id: -1, label: 'Не выбрано' }],
+      statisticParam: -1,
+      hasParam: false,
+      directionsReport: [],
     };
   },
   async mounted() {
@@ -369,8 +445,9 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       if (this.searchStationar) {
         this.research = -1;
         this.caseNumber = '';
-        this.hospNumber = '';
+        this.directionNumber = '';
         this.hospCheck = false;
+        this.directionCreatedDate = false;
         this.registerCheck = false;
         this.docConfirm = null;
         this.dateReceive = '';
@@ -386,21 +463,31 @@ export default class SearchPage extends Vue {
 
   hospitalId: number;
 
+  statisticParam: number;
+
   count: number;
 
   researches: any[];
 
+  directionsReport: any[];
+
   caseNumber: string;
 
-  hospNumber: string;
+  directionNumber: string;
 
   hospCheck: boolean;
 
+  directionCreatedDate: boolean;
+
   dateExaminationRange: string[];
+
+  dateCreateRange: string[];
 
   registerCheck: boolean;
 
   searchStationar: boolean;
+
+  hasParam: boolean;
 
   dateRegisteredRange: string[];
 
@@ -414,6 +501,8 @@ export default class SearchPage extends Vue {
 
   dateReceive: string | null;
 
+  statisticParams: any[];
+
   get isValid() {
     return this.searchStationar || (!!this.year && !!this.research && this.research !== -1);
   }
@@ -422,8 +511,12 @@ export default class SearchPage extends Vue {
     return this.searchStationar;
   }
 
+  get userGroups() {
+    return this.$store.getters.user_data.groups || [];
+  }
+
   get canSelectHospitals() {
-    const groups = this.$store.getters.user_data.groups || [];
+    const groups = this.userGroups;
     return groups.includes('Направления-все МО');
   }
 
@@ -433,10 +526,12 @@ export default class SearchPage extends Vue {
       year_period: this.year,
       research_id: this.research,
       case_number: this.caseNumber,
-      hospitalNumber: this.hospNumber,
+      directionNumber: this.directionNumber,
       hospitalId: this.hospitalId,
       dateExaminationStart: this.hospCheck ? formatDate(this.dateExaminationRange[0]) : null,
       dateExaminationEnd: this.hospCheck ? formatDate(this.dateExaminationRange[1]) : null,
+      dateCreateStart: this.directionCreatedDate ? formatDate(this.dateCreateRange[0]) : null,
+      dateCreateEnd: this.directionCreatedDate ? formatDate(this.dateCreateRange[1]) : null,
       docConfirm: this.docConfirm,
       dateRegistredStart: this.registerCheck ? formatDate(this.dateRegisteredRange[0]) : null,
       dateRegistredEnd: this.registerCheck ? formatDate(this.dateRegisteredRange[1]) : null,
@@ -448,8 +543,63 @@ export default class SearchPage extends Vue {
     const dataRows = await this.$api('/search-param', data);
     this.results = dataRows.rows || [];
     this.count = dataRows.count || 0;
-
+    if (this.count > 0) {
+      this.statisticParamsSerch();
+      this.directionsReport = [];
+      for (const element of this.results) {
+        this.directionsReport.push(element.direction_number);
+      }
+    }
     await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async statisticParamsSerch() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const dataRows = await this.$api('/statistic-params-search');
+    this.statisticParams = [{ id: -1, label: 'Не выбрано' }, ...dataRows.rows];
+    this.hasParam = dataRows.hasParam;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  genReport() {
+    axios({
+      method: 'post',
+      url: '/api/reports/statistic-params-search',
+      data: {
+        directions: this.directionsReport,
+        param: this.statisticParam,
+        researchId: this.research,
+      },
+      responseType: 'blob',
+      headers: {
+        'X-CSRFToken': Cookies.get('csrftoken'),
+      },
+    })
+      .then((response) => {
+        const blob = new Blob([response.data], { type: 'application/ms-excel' });
+        const downloadUrl = window.URL.createObjectURL(blob);
+        let filename = '';
+        const disposition = response.headers['content-disposition'];
+        if (disposition && disposition.indexOf('attachment') !== -1) {
+          const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+          const matches = filenameRegex.exec(disposition);
+          filename = matches?.[1].replace(/['"]/g, '') || '';
+        }
+        const a = document.createElement('a');
+        if (typeof a.download === 'undefined') {
+          window.location.href = downloadUrl;
+        } else {
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+        }
+      })
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error(error);
+        this.$root.$emit('msg', 'error', 'Сохранить данные в виде XLSX не удалось');
+      });
   }
 
   print(pk) {
@@ -545,6 +695,24 @@ $sidebar-width: 400px;
   font-size: 16px;
   font-weight: normal;
 }
+
+.approved {
+  color: #049372;
+}
+
+.registered {
+  color: #3BAFDA;
+}
+
+.received {
+  color: #932a04
+}
+
+.additional-number {
+  color: #046d93;
+  font-size: 15px;
+}
+
 </style>
 
 <style>

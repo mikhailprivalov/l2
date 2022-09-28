@@ -53,6 +53,7 @@
 
 <script lang="ts">
 import { getFormattedDate } from '@/utils';
+
 import SelectPicker from './SelectPicker.vue';
 import DateField from './DateField.vue';
 
@@ -77,8 +78,9 @@ export default {
   },
   data() {
     return {
-      date_type: 'd',
+      date_type: 'null',
       date_types: [
+        { value: 'null', label: 'Период не указан' },
         { value: 'd', label: 'За день' },
         { value: 'm', label: 'За месяц' },
       ],

@@ -161,7 +161,9 @@
             </td>
           </tr>
           <tr v-if="external_organizations_enabled && canChangeHospitalDirection">
-            <th>Внешняя организация:</th>
+            <th :class="needSelectHospital && 'has-error-message'">
+              Внешняя организация:
+            </th>
             <td class="cl-td">
               <Treeselect
                 v-model="hospital_override"
@@ -551,11 +553,13 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 // @ts-ignore
 import TypeAhead from 'vue2-typeahead';
+
 import { vField, vGroup } from '@/components/visibility-triggers';
 import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
 import MKBField from '@/fields/MKBField.vue';
 import SelectFieldTitled from '@/fields/SelectFieldTitled.vue';
+
 import ResearchDisplay from './ResearchDisplay.vue';
 import Modal from './Modal.vue';
 import 'vue-select/dist/vue-select.css';
@@ -738,7 +742,7 @@ export default {
       return this.get_fin_obj(this.fin);
     },
     pay_source() {
-      return this.current_fin.title.toLowerCase() === 'платно';
+      return this.current_fin.title.toLowerCase().includes('пл');
     },
     needShowPriceCategory() {
       return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 0 && this.show_additions;
@@ -809,6 +813,10 @@ export default {
         return false;
       }
 
+      if (this.needSelectHospital) {
+        return false;
+      }
+
       return !this.researches.find(pk => {
         if (!this.form_params[pk]) {
           return false;
@@ -816,6 +824,9 @@ export default {
 
         return !this.r(this.form_params[pk]);
       });
+    },
+    needSelectHospital() {
+      return this.canChangeHospitalDirection && this.hospital_override === -1;
     },
     need_update_object() {
       const r = [];

@@ -14,7 +14,10 @@
         >
           {{ group.title }}
         </div>
-        <div class="fields">
+        <div
+          class="fields"
+          :class="{ 'fields-inline': group.fieldsInline }"
+        >
           <VisibilityFieldWrapper
             v-for="field in group.fields"
             :key="field.pk"
@@ -24,10 +27,10 @@
             :patient="patient"
           >
             <div
-              v-if="field.title !== '' && research.wide_headers"
+              v-if="field.title !== '' && (research.wide_headers || group.fieldsInline)"
               class="wide-field-title"
             >
-              <template v-if="field.title.endsWith('?')">
+              <template v-if="field.title.endsWith('?') || field.title.endsWith(':')">
                 {{ field.title }}
               </template>
               <template v-else>
@@ -50,7 +53,7 @@
               }"
             >
               <div
-                v-if="field.title !== '' && !research.wide_headers"
+                v-if="field.title !== '' && !research.wide_headers && !group.fieldsInline"
                 class="field-title"
               >
                 {{ field.title }}
@@ -74,6 +77,7 @@
                       27: 1,
                       28: 1,
                       30: 1,
+                      39: 1,
                     }[field.field_type]
                 "
                 :pk="field.pk"
@@ -453,6 +457,17 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 39"
+                class="field-value field-value-address mkb"
+              >
+                <DynamicDirectoryField
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :edit-title="`${group.title} ${field.title}`.trim()"
+                  :directory="field.values_to_input[0]"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -475,6 +490,7 @@
 
 <script lang="ts">
 import LPress from '@/ui-cards/LPress.vue';
+
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
 import FastTemplates from './FastTemplates.vue';
@@ -514,6 +530,7 @@ export default {
     TfomsAttachmentField: () => import('@/fields/TfomsAttachmentField.vue'),
     DoctorProfileTreeselectField: () => import('@/fields/DoctorProfileTreeselectField.vue'),
     ProcedureListResult: () => import('@/fields/ProcedureListResult.vue'),
+    DynamicDirectoryField: () => import('@/fields/DynamicDirectoryField.vue'),
   },
   props: {
     research: {
@@ -640,5 +657,26 @@ export default {
   flex: 1 0 70px;
   padding-left: 5px;
   padding-top: 5px;
+}
+
+.fields-inline {
+  display: flex;
+  flex-direction: row;
+  justify-content: stretch;
+
+  > div {
+    align-self: stretch;
+    flex: 1 1 0;
+  }
+
+  &:not(:first-child) {
+    > div {
+      padding-left: 5px;
+    }
+  }
+
+  .wide-field-title {
+    padding-left: 0;
+  }
 }
 </style>

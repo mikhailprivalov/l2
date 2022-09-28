@@ -270,8 +270,11 @@
 
 <script lang="ts">
 import { debounce } from 'lodash/function';
+
 import CategoryPick from '@/ui-cards/CategoryPick.vue';
 import * as actions from '@/store/action-types';
+import { sendEvent } from '@/metrics';
+
 import ResearchPick from './ResearchPick.vue';
 
 export default {
@@ -365,6 +368,17 @@ export default {
           && row.pk !== '13'
           && (!this.l2_without_lab_and_paraclinic || (row.pk !== '2' && row.pk !== '3')),
       );
+
+      if (result.length > 1) {
+        result = [
+          ...result,
+          {
+            pk: '-109999',
+            title: 'Частый выбор',
+          },
+        ];
+      }
+
       if (this.typesOnly && this.typesOnly.length > 0) {
         result = this.typesOnly.map((t) => result.find((r) => Number(r.pk) === Number(t))).filter(Boolean);
       } else {
@@ -620,7 +634,6 @@ export default {
           break;
       }
     },
-
     check_found_tip() {
       const el = this.$refs.fndsrc;
       // eslint-disable-next-line no-underscore-dangle
@@ -632,12 +645,21 @@ export default {
     select_type(pk) {
       this.type = pk;
       this.checkType();
+      sendEvent('researches-picker:select_type', {
+        pk,
+      });
     },
     select_dep(pk) {
       this.dep = pk;
       window.$(this.$refs.fndsrc).focus();
+      sendEvent('researches-picker:select_dep', {
+        pk,
+      });
     },
     checkType() {
+      if (this.type === '-109999') {
+        this.$store.dispatch(actions.GET_LAST_USED_RESEARCHES);
+      }
       if (this.types.length > 0 && !this.types.map((t) => Number(t.pk)).includes(Number(this.type))) {
         this.type = JSON.parse(JSON.stringify(this.types[0].pk));
       }
@@ -738,6 +760,9 @@ export default {
     },
     clear() {
       this.checked_researches = [];
+      if (this.type === '-109999') {
+        this.$store.dispatch(actions.GET_LAST_USED_RESEARCHES);
+      }
     },
     research_selected(pk) {
       return this.checked_researches.indexOf(pk) !== -1;
@@ -748,11 +773,17 @@ export default {
     },
     founded_select(clearOrig = false) {
       const clear = clearOrig || false;
+      const selected = [];
       for (const row of this.researches_display) {
         if (this.highlight_search(row)) {
+          selected.push(row.pk);
           this.select_research_ignore(row.pk);
         }
       }
+      sendEvent('researches-picker:founded_select', {
+        clear,
+        selected,
+      });
       if (clear) {
         this.clear_search();
       } else {

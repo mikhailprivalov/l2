@@ -1334,6 +1334,7 @@ def form_11(request_data):
     patient = Napravleniya.objects.get(pk=direction)
     fio = patient.client.individual.fio()
     fio_short = patient.client.individual.fio(short=True, dots=True)
+    born = patient.client.individual.bd()
 
     iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
     if not iss.time_confirmation:
@@ -1378,19 +1379,19 @@ def form_11(request_data):
     fwb.append(Paragraph('Заключение по результатам', styleCenterBold))
     fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) № {direction}', styleCenterBold))
     fwb.append(Spacer(1, 8 * mm))
-    fwb.append(Paragraph(f'1. Ф.И.О:  {fio}', style))
+    fwb.append(Paragraph(f'1. Ф.И.О:  {fio}, {born} ', style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph("2. Место работы:", style))
     fwb.append(Paragraph(f"2.1 Организация (предприятие): {work_place}", style))
     fwb.append(Paragraph(f"2.2 Цех, участок ОПУ: {department}", style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f"3 Профессия (должность) (в настоящее время): {work_position}", style))
-    fwb.append(Paragraph(f"Вредный производственный фактор или вид работы: {harmful_factor}", style))
+    fwb.append(Paragraph(f"4 Вредный производственный фактор или вид работы: согласно приказу № 29Н - {harmful_factor}", style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(
         Paragraph(
-            f"4. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
+            f"5. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
             f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами заключение <u>{med_report}</u> ",
             style,
         )

@@ -6,14 +6,13 @@ on:
 
 jobs:
   stale:
-
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-    - uses: actions/stale@v1
+    - uses: actions/stale@v6
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-issue-message: 'Stale issue message'
-        stale-pr-message: 'Stale pull request message'
+        stale-issue-message: 'Устаревший issue'
+        stale-pr-message: 'Устаревший pull request'
         stale-issue-label: 'no-issue-activity'
         stale-pr-label: 'no-pr-activity'

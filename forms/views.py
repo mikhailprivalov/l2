@@ -15,6 +15,7 @@ import datetime
 from forms.sql_func import get_covid_to_json, get_extra_notification_data_for_pdf
 from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
 from utils.dates import normalize_date
+from hospitals.models import Hospitals
 
 
 def pdf(request):
@@ -36,7 +37,7 @@ def pdf(request):
             request_data={
                 **dict(request.GET.items()),
                 "user": request.user,
-                "hospital": request.user.doctorprofile.get_hospital(),
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
             }
         )
     )

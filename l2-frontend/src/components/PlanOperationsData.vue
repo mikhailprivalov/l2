@@ -134,6 +134,7 @@
 <script lang="ts">
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Modal from '@/ui-cards/Modal.vue';
 import * as actions from '@/store/action-types';
@@ -186,16 +187,19 @@ export default {
       patient_to_edit: false,
       patient_data: '',
       current_direction: '',
-      timeValue: moment().format('YYYY-MM-DD'),
       current_hirurg: this.pk_hirurg,
       current_time: this.date,
       type_operation: this.operation,
       base_pk: -1,
+      offsetHoursForPlanOperations: 0,
     };
   },
   computed: {
     bases() {
       return this.$store.getters.bases.filter(b => !b.hide);
+    },
+    timeValue() {
+      return moment().add(this.offsetHoursForPlanOperations, 'hours').format('YYYY-MM-DD');
     },
   },
   watch: {
@@ -218,6 +222,7 @@ export default {
     );
     this.check_base();
     this.load_hirurgs();
+    this.loadOffsetHoursForPlanOperations();
     if (this.patient_fio && this.card_pk) {
       this.patient_data = this.patient_fio;
     }
@@ -233,6 +238,10 @@ export default {
           }
         }
       }
+    },
+    async loadOffsetHoursForPlanOperations() {
+      const { data } = await plansPoint.getOffsetHoursForPlanOperations();
+      this.offsetHoursForPlanOperations = data;
     },
     async load_hirurgs() {
       await this.$store.dispatch(actions.INC_LOADING);

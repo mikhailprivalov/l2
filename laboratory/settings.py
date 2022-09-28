@@ -29,6 +29,7 @@ INSTALLED_APPS = (
     'health',
     'appconf.apps.AppconfConfig',
     'manifest_loader',
+    'dynamic_directory.apps.DynamicDirectoryConfig',
     'clients',
     'users',
     'mainmenu',
@@ -45,7 +46,6 @@ INSTALLED_APPS = (
     'rmis_integration',
     'rest_framework',
     'integration_framework',
-    'django_logtail',
     'statistics_tickets',
     'reports',
     'cases.apps.CasesConfig',
@@ -68,14 +68,14 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 INSTALLED_APPS_PRE_ADD = ()
 INSTALLED_APPS_ADD = ()
@@ -105,6 +105,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'context_processors.utils.card_bases',
+                'context_processors.utils.default_org',
                 'context_processors.utils.menu',
                 'context_processors.utils.profile',
                 'context_processors.utils.local_settings',
@@ -118,6 +119,7 @@ LOGIN_REDIRECT_URL = '/ui/menu'
 
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_NAME = 'csrftoken'
 
 DATABASES = {
     'default': {
@@ -131,7 +133,7 @@ DATABASES = {
 }
 
 CACHES = {
-    'default': {'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache', 'LOCATION': '127.0.0.1:11211', 'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")},
+    'default': {'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache', 'LOCATION': '127.0.0.1:11211', 'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")},
 }
 LANGUAGE_CODE = 'ru-ru'
 DATE_FORMAT = 'd.m.Y'
@@ -250,13 +252,6 @@ DEBUG = False
 
 LOGOUT_REDIRECT_URL = '/'
 
-LOGTAIL_FILES = {'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')}
-
-
-def SILKY_INTERCEPT_FUNC(request):
-    return request.path not in ['/mainmenu/']
-
-
 AFTER_DATE_HOLTER = None
 
 DICOM_SEARCH_TAGS = []
@@ -288,8 +283,10 @@ DEF_CONSULT_AUTH = None
 DEF_CONSULT_LEGALAUTH = None
 
 DEATH_RESEARCH_PK = None
+GISTOLOGY_RESEARCH_PK = None
 PERINATAL_DEATH_RESEARCH_PK = None
 COVID_RESEARCHES_PK = []
+
 
 RESEARCH_SPECIAL_REPORT = {"driver_research": None, "weapon_research_pk": None}
 
@@ -299,6 +296,7 @@ EXCLUDE_HOSP_SEND_EPGU = []
 
 SOME_LINKS = []
 DISABLED_FORMS = []
+DISABLED_RESULT_FORMS = []
 DISABLED_STATISTIC_CATEGORIES = []
 DISABLED_STATISTIC_REPORTS = []
 COVID_QUESTION_ID = None
@@ -350,6 +348,8 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_BROKER_URL = 'redis://localhost:6379/4'
 CELERY_RESULT_BACKEND = 'django-db'
 
+USE_DEPRECATED_PYTZ = True
+
 FORWARD_DAYS_SCHEDULE = -1
 
 SCHEDULE_AGE_LIMIT_LTE = None
@@ -364,6 +364,7 @@ DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK = []
 HIDE_TITLE_BUTTONS_MAIN_MENU = {}
 
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
+OFFSET_HOURS_PLAN_OPERATIONS = 0
 
 TITLE_REPORT_FILTER_STATTALON_FIELDS = []
 
@@ -371,15 +372,24 @@ DISPANSERIZATION_SERVICE_PK = {}  # {"pkServiceStart": [12, 13], "pkServiceEnd":
 EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED = []
 DASH_REPORT_LIMIT_DURATION_DAYS = {"years": 2, "months": 13, "weeks": 50, "days": 90, "max_delta_days": 740}
 BARCODE_SIZE = "43x25"
+SEARCH_PAGE_STATISTIC_PARAMS = {}
+MEDEXAM_FIN_SOURCE_TITLE = ""
+RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION = []
+
+REFERENCE_ODLI = False
+ODII_METHODS = {}
+ODII_METHODS_IEMK = {}
+ID_MED_DOCUMENT_TYPE_IEMK_N3 = {}
+REMD_ONLY_RESEARCH = []
+REMD_EXCLUDE_RESEARCH = []
+REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH = []
+LEGAL_AUTH_CODE_POSITION = [334, 336, 6, 4, 335]
+REMD_FIELDS_BY_TYPE_DOCUMENT = {"ConsultationProtocol_max": []}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
     pass
-
-if PROFILING:
-    INSTALLED_APPS += ('silk',)
-    MIDDLEWARE += ('silk.middleware.SilkyMiddleware',)
 
 MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
@@ -429,6 +439,9 @@ if DB_PORT:
 
 if ENV_SECRET_KEY:
     SECRET_KEY = ENV_SECRET_KEY
+
+if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
+    CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
 
 
 # db = DATABASES.get('default', {})

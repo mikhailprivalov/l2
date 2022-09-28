@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from appconf.manager import SettingManager
+from external_system.sql_func import get_nsi_code_fsidi
 from laboratory.settings import BASE_DIR
 
 
@@ -31,3 +32,12 @@ def get_phones_transfers(request):
             extrenal_phones = []
 
     return JsonResponse({"org_phones": list(org_phones), "extrenal_phones": list(extrenal_phones)})
+
+
+@login_required
+def fsidi_by_method(request):
+    request_data = json.loads(request.body)
+    method = request_data.get("method", "")
+    result_nsi = get_nsi_code_fsidi(method)
+    result = [{"id": i.code_nsi, "label": f"{i.code_nsi} {i.title}; область- {i.area}; локализация- {i.localization}; - {i.code_nmu}"} for i in result_nsi]
+    return JsonResponse({"rows": result})

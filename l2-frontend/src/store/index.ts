@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+
 import departments from './modules/departments';
 import cards from './modules/cards';
 import directory from './modules/directory';

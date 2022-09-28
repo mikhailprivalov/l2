@@ -388,7 +388,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import {
-  REGION_TYPES, AREA_TYPES, CITY_TYPES, SETTLEMENT_TYPES, STREET_TYPES,
+  AREA_TYPES, CITY_TYPES, REGION_TYPES, SETTLEMENT_TYPES, STREET_TYPES,
 } from '@/fias';
 import directionsPoint from '@/api/directions-point';
 import Modal from '@/ui-cards/Modal.vue';
@@ -744,6 +744,7 @@ export default class AddressFiasField extends Vue {
         this.address = '';
       }
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error(e);
       this.address = '';
       this.fias = null;

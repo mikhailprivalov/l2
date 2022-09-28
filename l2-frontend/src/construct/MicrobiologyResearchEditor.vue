@@ -188,6 +188,7 @@
 
 <script lang="ts">
 import { mapGetters } from 'vuex';
+
 import constructPoint from '@/api/construct-point';
 import * as actions from '@/store/action-types';
 

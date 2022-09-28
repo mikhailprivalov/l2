@@ -1,7 +1,7 @@
 from collections import defaultdict
 from copy import deepcopy
 
-import pytz
+import pytz_deprecation_shim as pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -30,7 +30,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -97,7 +97,7 @@ def statistic_xls(request):
 
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
-    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details"]:
+    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"]:
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -632,6 +632,7 @@ def statistic_xls(request):
                         titles_list = list(titles_set.keys())
                         ws = wb.create_sheet(i.get_fio() + ' - Итог')
                         ws = structure_sheet.job_total_base(ws, month_obj, type_fin)
+
                         ws, cell_research = structure_sheet.jot_total_titles(ws, titles_list)
                         ws = structure_sheet.job_total_data(ws, cell_research, total_report_dict)
 
@@ -677,7 +678,6 @@ def statistic_xls(request):
         ws = wb.create_sheet(f'{d_s}-{d_e}')
         ws = structure_sheet.onco_base(ws, d_s, d_e)
         ws = structure_sheet.passed_onco_data(ws, onco_query)
-
         response['Content-Disposition'] = str.translate("attachment; filename=\"Онкоподозрения.xlsx\"", tr)
         wb.save(response)
         return response
@@ -700,11 +700,16 @@ def statistic_xls(request):
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             month_obj = ''
-        else:
+        elif request_data.get("date_type") == 'm':
             month_obj = int(data_date['month']) + 1
             _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
             d1 = datetime.date(int(data_date['year']), month_obj, 1)
             d2 = datetime.date(int(data_date['year']), month_obj, num_days)
+        else:
+            d_s = request_data.get("date-start")
+            d_e = request_data.get("date-end")
+            d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
+            d2 = datetime.datetime.strptime(d_e, '%d.%m.%Y')
 
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
@@ -1718,6 +1723,22 @@ def statistic_xls(request):
         message_total_purpose_sql = sql_func.message_ticket_purpose_total(rows_hosp, start_date, end_date)
         ws = structure_sheet.statistic_message_purpose_total_data(ws, message_total_purpose_sql, date_start_o, date_end_o, styles_obj[3])
 
+    elif tp == "statistics-consolidate":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Свод пациенты-услуги_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Сводный")
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+
+        type_fin = request_data.get("fin")
+        title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
+        query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
+        ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
+        ws = consolidates.consolidate_fill_data(ws, query)
+
     wb.save(response)
     return response
 
@@ -1838,5 +1859,4 @@ def sreening_xls(request):
     screening_data['count_pap_analysys'] = len(researches_sql)
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
     wb.save(response)
-
     return response

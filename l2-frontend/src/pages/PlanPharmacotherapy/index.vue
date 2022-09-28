@@ -13,6 +13,7 @@
 
 <script lang="ts">
 import moment from 'moment';
+
 import Filters from './components/Filters.vue';
 import AggregatePharmacoTherapyDepartment from './components/AggregatePharmacoTherapyDepartment.vue';
 

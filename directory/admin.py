@@ -175,8 +175,12 @@ class ResParaclinicInputGroups(admin.ModelAdmin):
         'title',
         'pk',
         'research',
+        'order',
     )
-    list_display_links = ('title',)
+    list_display_links = (
+        'title',
+        'order',
+    )
     list_filter = ('research',)
     search_fields = ('research__title',)
 
@@ -222,8 +226,23 @@ class UnitAdmin(admin.ModelAdmin):
 
 
 class ResPatientControlParam(admin.ModelAdmin):
-    list_display = ('title', 'code')
+    list_display = (
+        'title',
+        'code',
+        'all_patient_contol',
+        'order',
+    )
     search_fields = ('title',)
+
+
+class PhenotypeAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'fsli',
+        'lis',
+        'hide',
+    )
+    search_fields = ('title', 'fsli', 'lis')
 
 
 admin.site.register(models.ResearchSite, RefSiteType)
@@ -254,3 +273,4 @@ admin.site.register(models.ScreeningPlan, ScreeningPlanAdmin)
 admin.site.register(models.Unit, UnitAdmin)
 admin.site.register(models.MethodLaboratoryAnalisis)
 admin.site.register(models.PatientControlParam, ResPatientControlParam)
+admin.site.register(models.Phenotype, PhenotypeAdmin)

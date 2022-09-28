@@ -10,6 +10,7 @@ from clients.models import Document, DispensaryReg, Card
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult, IstochnikiFinansirovaniya, PersonContract
 from directory.models import Researches
 from laboratory import utils
+from laboratory.settings import MEDEXAM_FIN_SOURCE_TITLE
 from laboratory.utils import strdate
 from api.stationar.stationar_func import hosp_get_data_direction, check_transfer_epicrisis
 from api.stationar.sql_func import get_result_value_iss
@@ -79,7 +80,7 @@ def get_coast_from_issledovanie(dir_research_loc):
         return 0
 
 
-def get_research_by_dir(dir_temp_l):
+def get_research_by_dir(dir_temp_l, only_new=True):
     """
     Получить словаь: {направление1:[услуга1, услуга2, услуга3],направление2:[услуга1].....}
     :param dir_temp_l:
@@ -88,7 +89,7 @@ def get_research_by_dir(dir_temp_l):
     dict_research_dir = {}
     for i in dir_temp_l:
         # Если есть хотя бы одно сохранения услуги по направлению, то не учитывается
-        if any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
+        if only_new and any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
             continue
         else:
             research_l = [x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)]
@@ -136,6 +137,8 @@ def get_final_data(research_price_loc):
                     h.append(research_coast[2])
                     research_sum = coast_with_discount * research_coast[2]
                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
+                    res_obj = Researches.objects.get(pk=research_id)
+                    h.append(res_obj.paraclinic_info)
                     h[0], h[1] = h[1], h[0]
                     total_sum += research_sum
                     research_attr_list.remove(j)
@@ -275,7 +278,7 @@ def get_finaldata_talon(doc_result_obj):
     fin_oms = 'омс'
     fin_dms = 'дмс'
     fin_pay = 'платно'
-    fin_medexam = 'медосмотр'
+    fin_medexam = MEDEXAM_FIN_SOURCE_TITLE
     fin_disp = 'диспансеризация'
     fin_budget = 'бюджет'
 
@@ -322,7 +325,7 @@ def get_finaldata_talon(doc_result_obj):
             dms_count += 1
             dict_fsourcce = fin_dms
             order = dms_count
-        elif napr_attr['istochnik_f'] == 'медосмотр':
+        elif napr_attr['istochnik_f'] == MEDEXAM_FIN_SOURCE_TITLE:
             medexam_count += 1
             dict_fsourcce = fin_medexam
             order = medexam_count
@@ -749,6 +752,7 @@ def hosp_get_operation_data(num_dir):
 
     titles_field = [
         'Название операции',
+        'Название манипуляции',
         'Дата проведения',
         'Время начала',
         'Время окончания',
@@ -757,12 +761,15 @@ def hosp_get_operation_data(num_dir):
         'Код операции',
         'Код манипуляции',
         'Оперативное вмешательство',
+        'Описание манипуляции',
         'Код анестезиолога',
         'Категория сложности',
         'Диагноз после оперативного лечения',
         'МКБ 10',
         'Оперировал',
         'Код хирурга',
+        'Код врача',
+        'Заключение',
     ]
     list_values = []
 
@@ -789,6 +796,7 @@ def hosp_get_operation_data(num_dir):
                 'mkb10': '',
                 'category_difficult': '',
                 'doc_code': '',
+                'final': '',
             }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.time_confirmation:
@@ -799,7 +807,7 @@ def hosp_get_operation_data(num_dir):
                 operation_data['doc_code'] = ''
             category_difficult = ''
             for field in fields_operation:
-                if field[3] == 'Название операции':
+                if field[3] == 'Название операции' or field[3] == 'Название манипуляции':
                     operation_data['name_operation'] = field[2]
                     continue
                 if field[3] == 'Дата проведения':
@@ -842,9 +850,13 @@ def hosp_get_operation_data(num_dir):
                     if field[2]:
                         operation_data['doc_fio'] = field[2]
                     continue
-                if field[3] == 'Код хирурга':
+                if field[3] == 'Код хирурга' or field[3] == 'Код врача':
                     if field[2]:
                         operation_data['doc_code'] = field[2]
+                    continue
+                if field[3] == 'Заключение':
+                    if field[2]:
+                        operation_data['final'] = field[2]
                     continue
 
             operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"

@@ -82,7 +82,7 @@ def get_fraction_result(client_id, fraction_id, count=1):
     return row
 
 
-def get_field_result(client_id, field_id, count=1):
+def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:00:00', months_ago='-1'):
     """
     на входе: id-поля, id-карты,
     выход: последний результат поля
@@ -103,9 +103,15 @@ def get_field_result(client_id, field_id, count=1):
             WHERE directions_napravleniya.client_id = %(client_p)s
             and directions_paraclinicresult.field_id = %(field_id)s
             and directions_issledovaniya.time_confirmation is not NULL
+            AND CASE WHEN %(current_year)s != '1900-01-01 00:00:00' THEN 
+                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > %(current_year)s
+                     WHEN %(months_ago)s != '-1' THEN 
+                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > (current_date AT TIME ZONE 'ASIA/IRKUTSK'  - interval %(months_ago)s)
+                     WHEN %(current_year)s = '1900-01-01 00:00:00' THEN directions_issledovaniya.time_confirmation is not Null
+                END
             ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s
             """,
-            params={'client_p': client_id, 'field_id': field_id, 'count_p': count, 'tz': TIME_ZONE},
+            params={'client_p': client_id, 'field_id': field_id, 'count_p': count, 'tz': TIME_ZONE, 'current_year': current_year, 'months_ago': months_ago},
         )
 
         row = cursor.fetchall()
@@ -130,13 +136,13 @@ def users_by_group(title_groups, hosp_id):
           SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
             
         t_users AS (
-          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id, position_id
           FROM users_doctorprofile
           LEFT JOIN
           t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
           WHERE user_id in (SELECT user_id FROM t_users_id) and hospital_id = %(hosp_id)s) 
     
-        SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title FROM t_users
+        SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title, position_id FROM t_users
         ORDER BY podrazdeleniye_id                    
         """,
             params={'title_groups': title_groups, "hosp_id": hosp_id},
@@ -158,7 +164,7 @@ def users_all(hosp_id):
           SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
             
         t_users AS (
-          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title, hospital_id, position_id
           FROM users_doctorprofile
           LEFT JOIN
           t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
@@ -227,6 +233,7 @@ def search_data_by_param(
     date_recieve_end,
     date_get,
     final_text,
+    direction_number,
 ):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
@@ -241,6 +248,7 @@ def search_data_by_param(
                 users_doctorprofile.fio as doc_fio,
 
                 directions_napravleniya.client_id,
+                directions_napravleniya.additional_number,
                 concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as patient_fio,
 
                 hospitals_hospitals.title as hosp_title,
@@ -255,20 +263,30 @@ def search_data_by_param(
                 directions_issledovaniya.research_id,
                 directions_paraclinicresult.value as field_value,
                 directions_paraclinicresult.field_id,
-                directory_paraclinicinputfield.title
+                directory_paraclinicinputfield.title,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
+                to_char(directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as medical_examination,
+                to_char(directions_napravleniya.visit_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as registered_date,
+                to_char(directions_napravleniya.time_gistology_receive AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as time_gistology_receive,
+                doc_plan.fio as doc_plan_fio
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
                 LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
+                LEFT JOIN users_doctorprofile doc_plan ON directions_napravleniya.planed_doctor_executor_id=doc_plan.id
                 LEFT JOIN directions_paraclinicresult on directions_paraclinicresult.issledovaniye_id=directions_issledovaniya.id
                 LEFT JOIN directory_paraclinicinputfield on directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
+                
                 WHERE 
                     directions_issledovaniya.research_id=%(research_id)s 
                     and (directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s)
                 AND CASE WHEN %(case_number)s != '-1' THEN directions_napravleniya.additional_number = %(case_number)s 
                          WHEN %(case_number)s = '-1' THEN directions_napravleniya.cancel is not Null 
+                END
+                AND CASE WHEN %(direction_number)s != '-1' THEN directions_napravleniya.id = %(direction_number)s 
+                         WHEN %(direction_number)s = '-1' THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN (%(hospital_id)s)::int > -1 THEN directions_napravleniya.hospital_id = %(hospital_id)s
                          WHEN (%(hospital_id)s)::int = -1 THEN directions_napravleniya.cancel is not Null 
@@ -313,6 +331,7 @@ def search_data_by_param(
                 'date_get': date_get,
                 'final_text': final_text,
                 'tz': TIME_ZONE,
+                'direction_number': direction_number,
             },
         )
 
@@ -339,7 +358,8 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
                 directions_paraclinicresult.value as field_value,
                 directions_paraclinicresult.field_id,
                 directory_paraclinicinputfield.title,
-                directory_researches.title as research_title
+                directory_researches.title as research_title,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN directory_researches ON directions_issledovaniya.research_id = directory_researches.id

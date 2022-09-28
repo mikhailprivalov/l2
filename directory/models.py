@@ -2,6 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from jsonfield import JSONField
 
+from laboratory.settings import DEATH_RESEARCH_PK
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from users.models import DoctorProfile, Speciality
@@ -151,10 +152,12 @@ class Researches(models.Model):
         (10401, '104.01 - Заключение на ВМП'),
         (10402, '104.02 - Направление на ВМП'),
         (10403, '104.03 - Рапорт на ВМП'),
+        (10404, '104.04 - Заявление на возврат'),
         (10501, '105.01 - Свидетельство о смерти'),
         (10601, '106.01 - Свидетельство о о перинатальной смерти'),
         (10701, '107.01 - МСЭ'),
         (10801, '108.01 - 83-МПР'),
+        (10901, '109.01 - 131/у'),
     )
 
     RESULT_TITLE_FORMS = (
@@ -224,7 +227,6 @@ class Researches(models.Model):
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
-    is_office_documentation = models.BooleanField(default=False, blank=True, help_text="Другие типы документов", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -269,6 +271,7 @@ class Researches(models.Model):
     can_created_patient = models.BooleanField(blank=True, default=False, help_text="Может создаваться пациентом")
     enabled_add_files = models.BooleanField(blank=True, default=False, help_text="Можно добавить файлы")
     convert_to_doc_call = models.BooleanField(blank=True, default=False, help_text="Конвертировать форму в заявку DocCall")
+    oid_kind = models.CharField(max_length=5, null=True, blank=True, default="", help_text="oid-документа 1.2.643.5.1.13.13.11.1520")
 
     @staticmethod
     def filter_type(t):
@@ -339,6 +342,7 @@ class Researches(models.Model):
             "isDocReferral": self.is_doc_refferal,
             "isParaclinic": self.is_paraclinic,
             "isForm": self.is_form,
+            "isDeathCertificate": self.pk == DEATH_RESEARCH_PK,
         }
 
     @property
@@ -484,6 +488,8 @@ class ParaclinicInputGroups(models.Model):
     order = models.IntegerField()
     hide = models.BooleanField()
     visibility = models.TextField(default='', blank=True)
+    fields_inline = models.BooleanField(default=False, blank=True)
+    cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text='CDA-поле для всей группы', on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.research.title} – {self.title}"
@@ -494,8 +500,10 @@ class ParaclinicInputGroups(models.Model):
 
 
 class PatientControlParam(models.Model):
-    title = models.CharField(max_length=400, help_text='Название название контролируемого параметра')
+    title = models.CharField(max_length=400, unique=True, help_text='Название название контролируемого параметра')
     code = models.CharField(max_length=400, help_text='Код параметра')
+    all_patient_contol = models.BooleanField(default=False, blank=True, help_text='Контролировать у всех по умолчанию', db_index=True)
+    order = models.IntegerField(default=-1)
 
     def __str__(self):
         return f"{self.title} - {self.code}"
@@ -503,6 +511,23 @@ class PatientControlParam(models.Model):
     class Meta:
         verbose_name = 'Контролируемый параметр справочник'
         verbose_name_plural = 'Контролируемые параметры справочник'
+
+    @staticmethod
+    def get_patient_control_params():
+        return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in PatientControlParam.objects.all().order_by("title")]]
+
+    @staticmethod
+    def get_all_patient_contol_param(code_param_id=None):
+        if code_param_id:
+            all_patient_contol = PatientControlParam.objects.filter(all_patient_contol=True, pk=code_param_id).order_by("order")
+        else:
+            all_patient_contol = PatientControlParam.objects.filter(all_patient_contol=True).order_by("order")
+        return {cc.pk: {"title": cc.title, "purpose": ""} for cc in all_patient_contol}
+
+    @staticmethod
+    def get_contol_param_in_system():
+        contol_param_system = PatientControlParam.objects.filter().order_by("order")
+        return [{"id": cc.pk, "title": cc.title, "purpose": ""} for cc in contol_param_system]
 
 
 class ParaclinicInputField(models.Model):
@@ -546,11 +571,11 @@ class ParaclinicInputField(models.Model):
         (36, 'МКБ-10(комбинация 1489, 692)'),
         (37, 'Генератор номера перинатального МСС'),
         (38, 'Procedure list result'),
-        (39, 'Подразделение'),
-        (40, 'Табель'),
+        (39, 'Динамический справочник'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
+    short_title = models.CharField(max_length=400, default='', blank=True, help_text='Синоним-короткое название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
     order = models.IntegerField()
@@ -570,6 +595,7 @@ class ParaclinicInputField(models.Model):
     not_edit = models.BooleanField(default=False, help_text='Не редактируемое', blank=True)
     control_param = models.TextField(default='', blank=True)
     operator_enter_param = models.BooleanField(default=False, help_text='Поле ввода для оператора(лаборанта)', blank=True)
+    cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text='CDA-поле для всей группы', on_delete=models.SET_NULL)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
@@ -754,6 +780,7 @@ class Fractions(models.Model):
     readonly_title = models.BooleanField(default=False, blank=True, verbose_name='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
+    not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
 
     def get_unit(self):
         if self.unit:
@@ -976,6 +1003,23 @@ class Culture(models.Model):
                 gr = GroupCulture.objects.get(title=group)
 
             Culture.objects.filter(pk__in=elements).update(group_culture=gr)
+
+
+class Phenotype(models.Model):
+    title = models.CharField(max_length=255, help_text="Название фенотипа")
+    fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    lis = models.CharField(max_length=32, default=None, null=True, blank=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фенотипа', db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    def get_full_title(self):
+        return f'{self.lis} {self.title}'.strip()
+
+    class Meta:
+        verbose_name = 'Фенотип'
+        verbose_name_plural = 'Фенотипы'
 
 
 class GroupAntibiotic(models.Model):

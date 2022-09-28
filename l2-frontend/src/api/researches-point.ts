@@ -9,7 +9,12 @@ export default generator({
   getResearches: {
     method: 'get',
     url: 'researches/all',
-    onReject: { researches: [] },
+    onReject: { researches: {} },
+  },
+  getLastUsedResearches: {
+    method: 'get',
+    url: 'researches/last-used',
+    onReject: { researches: {} },
   },
   getResearchesByDepartment: {
     url: 'researches/by-department',

@@ -5,7 +5,7 @@ from typing import Optional
 
 import bleach
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 import simplejson as json
 from django.utils import dateformat, timezone
@@ -113,7 +113,7 @@ def laboratories(request):
 def ready(request):
     request_data = json.loads(request.body)
     dates = request_data['date_range']
-    laboratory_pk = request_data['laboratory']
+    laboratory_pk = request_data.get('laboratory', -1)
     result = {"tubes": [], "directions": []}
 
     date_start, date_end = try_parse_range(*dates)
@@ -582,6 +582,8 @@ def confirm(request):
             r.get_ref()
         iss.time_confirmation = timezone.now()
         iss.save()
+        if iss.napravleniye:
+            iss.napravleniye.sync_confirmed_fields()
         Log.log(str(pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
     else:
         return JsonResponse(
@@ -614,6 +616,8 @@ def confirm_list(request):
                 for r in Result.objects.filter(issledovaniye=iss):
                     iss.def_uet += Decimal(r.fraction.uet_co_executor_1)
             iss.save()
+            if iss.napravleniye:
+                iss.napravleniye.sync_confirmed_fields()
             Log.log(str(iss.pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
     n.qr_check_token = None
     n.save(update_fields=['qr_check_token'])
@@ -637,13 +641,12 @@ def reset_confirm(request):
             predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": pk, "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
             iss.save()
-            if iss.napravleniye.result_rmis_send:
-                c = Client()
-                c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
             if iss.napravleniye:
+                iss.napravleniye.sync_confirmed_fields()
+                if iss.napravleniye.result_rmis_send:
+                    c = Client()
+                    c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
                 iss.napravleniye.need_resend_amd = False
-                iss.napravleniye.save()
-            if iss.napravleniye:
                 iss.napravleniye.need_resend_amd = False
                 iss.napravleniye.eds_total_signed = False
                 iss.napravleniye.eds_total_signed_at = None

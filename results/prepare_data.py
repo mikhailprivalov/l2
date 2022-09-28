@@ -1,4 +1,4 @@
-import pytz
+import pytz_deprecation_shim as pytz
 from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -358,9 +358,11 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
         ]
 
     if direction.is_external and direction.hospital:
-        data.append(["Организация:", direction.get_doc_podrazdeleniye_title()])
+        data.append(["Организация:", direction.hospital.safe_short_title])
         if direction.id_in_hospital is not None:
             data += [["Номер в организации:", direction.id_in_hospital]]
+        else:
+            data += [["", ""]]
         tube = TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).first()
         if tube and (tube.time_get or tube.time_recive):
             data += [["Забор биоматериала:", strfdatetime((tube.time_get or tube.time_recive), "%d.%m.%Y %H:%M")]]
@@ -907,7 +909,7 @@ def previous_doc_refferal_result(value, fwb):
     return fwb
 
 
-def table_part_result(value):
+def table_part_result(value, width_max_table=None):
     try:
         value = json.loads(value)
     except:
@@ -954,7 +956,8 @@ def table_part_result(value):
         else:
             table_width.append(t['width'])
 
-    width_max_table = 170
+    if not width_max_table:
+        width_max_table = 170
     width_min_column = width_max_table / 100
     empty_count = 0
     not_empty_sum = 0

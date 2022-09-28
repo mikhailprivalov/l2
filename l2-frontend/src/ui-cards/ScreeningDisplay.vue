@@ -139,6 +139,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
+
 import ScreeningDate from '@/ui-cards/ScreeningDate.vue';
 import ResearchPickById from '@/ui-cards/ResearchPickById.vue';
 import * as actions from '@/store/action-types';

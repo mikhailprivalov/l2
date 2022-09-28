@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('templates', views.get_researches_templates),
     path('all', views.get_researches),
+    path('last-used', views.last_used_researches),
     path('by-department', views.researches_by_department),
     path('params', views.researches_params),
     path('update', views.researches_update),
@@ -27,4 +28,5 @@ urlpatterns = [
     path('localization/save', views.localization_save),
     path('required-stattalon-fields', views.required_stattalon_fields),
     path('researches-required-stattalon-fields', views.researches_required_stattalon_fields),
+    path('help-link-field', views.help_link_field),
 ]

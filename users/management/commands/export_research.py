@@ -22,6 +22,7 @@ class Command(BaseCommand):
             for f in ParaclinicInputField.objects.filter(group=group, hide=False):
                 field_data = {
                     'title': f.title,
+                    'short_title': f.short_title,
                     'order': f.order,
                     'default_value': f.default_value,
                     'lines': f.lines,
@@ -34,7 +35,16 @@ class Command(BaseCommand):
                     'hide': f.hide,
                 }
                 fields_in_group.append(field_data)
-            groups_to_save.append({'title': group.title, 'show_title': group.show_title, 'order': group.order, 'hide': group.hide, 'paraclinic_input_field': fields_in_group})
+            groups_to_save.append(
+                {
+                    'title': group.title,
+                    'show_title': group.show_title,
+                    'order': group.order,
+                    'hide': group.hide,
+                    'paraclinic_input_field': fields_in_group,
+                    'fieldsInline': group.fields_inline,
+                }
+            )
         research_data['paraclinic_input_groups'] = groups_to_save
         dir_tmp = SettingManager.get("dir_param")
         with open(f'{dir_tmp}/{research_pk}.json', 'w') as fp:

@@ -102,8 +102,9 @@ class DoctorProfile(models.Model):
     signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
 
     def get_signature_stamp_pdf(self):
-        # return os.path.join('doctorprofile_stamp_pdf', self.signature_stamp_pdf)
-        return os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf', "kanya_oleg.jpeg")
+        if self.signature_stamp_pdf:
+            return os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf', self.signature_stamp_pdf)
+        return None
 
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:
@@ -179,8 +180,10 @@ class DoctorProfile(models.Model):
         return {
             "pk": self.pk,
             "n3Id": self.n3_id,
+            "externalId": self.rmis_employee_id,
             "spec": self.specialities.n3_id if self.specialities else None,
             "role": self.position.n3_id if self.position else None,
+            "podrazdeleniyeEcpCode": self.podrazdeleniye.ecp_code if self.podrazdeleniye else None,
             **self.dict_data,
         }
 
@@ -202,6 +205,29 @@ class DoctorProfile(models.Model):
         if hosp:
             return hosp.pk
         return None
+
+    def get_hospital_full_id(self):
+        from hospitals.models import Hospitals
+
+        hosps = [
+            Hospitals.get_default_hospital(),
+            self.get_hospital(),
+        ]
+
+        parts = []
+        for hosp in hosps:
+            if hosp:
+                if hosp.oid:
+                    parts.append(hosp.oid)
+                elif hosp.code_tfoms:
+                    parts.append(hosp.code_tfoms)
+                else:
+                    parts.append(hosp.n3_id)
+                parts.append(hosp.pk)
+            else:
+                parts.append(-1)
+
+        return '/'.join([str(x) for x in parts])
 
     def get_hospital_title(self):
         hosp = self.get_hospital()

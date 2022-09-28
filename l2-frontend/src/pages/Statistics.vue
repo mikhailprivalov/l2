@@ -355,6 +355,7 @@ import _ from 'lodash';
 // @ts-ignore
 import DatePicker from 'v-calendar/lib/components/date-picker.umd';
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import LaboratoryPicker from '@/fields/LaboratoryPicker.vue';
 import DateSelector from '@/fields/DateSelector.vue';
@@ -436,9 +437,9 @@ const STATS_CATEGORIES = {
       research: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
         title: 'По услуге',
-        params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS],
+        params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
-          + 'purposes=<purposes>&special-fields=<special-fields>',
+          + 'purposes=<purposes>&special-fields=<special-fields>&date-start=<date-start>&date-end=<date-end>',
       },
       dispanserization: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
@@ -457,6 +458,12 @@ const STATS_CATEGORIES = {
         title: 'Контрагенты',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.COMPANY],
         url: '/forms/pdf?type=200.01&company=<company>&date1=<date-start>&date2=<date-end>',
+      },
+      consolidate: {
+        groups: ['Статистика-профосмотры'],
+        title: 'Сводный',
+        params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>',
       },
     },
   },

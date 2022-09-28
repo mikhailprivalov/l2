@@ -23,7 +23,7 @@ def make_request(path, query=None, as_json=True, **kwargs):
         query = {}
     try:
         url = get_url(path, query=query)
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json", "Authorization": "Bearer a-super-secret-key"}
         data = requests.post(url, headers=headers, **kwargs)
         if as_json:
             return data.json()
@@ -39,3 +39,7 @@ def get_required_signatures(service: str) -> dict:
 
 def render_cda(service: str, direction_data: dict) -> dict:
     return make_request('/render/njk.xml', as_json=False, data=json.dumps({"title": str(service), **direction_data}))
+
+
+def cdator_gen_xml(eds_generator: str, direction_data: dict) -> dict:
+    return make_request('/generate', data=json.dumps({"generatorName": eds_generator, "data": direction_data}))

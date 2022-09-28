@@ -3,6 +3,7 @@ import simplejson as json
 
 from django.core.cache import cache
 import clients.models as Clients
+import hospitals.models as Hospitals
 from appconf.manager import SettingManager
 from laboratory import settings
 from laboratory.settings import PROTOCOL_PLAIN_TEXT, SPLIT_PRINT_RESULT, HIDE_TITLE_BUTTONS_MAIN_MENU
@@ -25,7 +26,7 @@ def menu(request):
     from laboratory import VERSION
 
     data = []
-    if request.user.is_authenticated and not request.is_ajax():
+    if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
         k = f'menu:{VERSION}:{get_md5(";".join(groups))}:4'
@@ -33,7 +34,7 @@ def menu(request):
         if not data:
             pages = [
                 {"url": "/ui/menu", "title": f"Меню {get_system_name()}", "nt": False, "access": ["*"], "not_show_home": True},
-                {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
+                {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True, "metrics": "logout"},
                 {"hr": True, "access": ["*"]},
                 {
                     "url": "/ui/directions",
@@ -175,11 +176,16 @@ def menu(request):
                     "access": ["*"],
                     "module": "l2_some_links",
                 },
+                {
+                    "url": '/ui/directories',
+                    "title": "Справочники",
+                    "nt": False,
+                    "access": ["*"],
+                    "module": "l2_dynamic_directories",
+                },
                 # {"url": '/ui/cases', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 
-            if settings.PROFILING:
-                pages.append({"url": "/silk/", "title": "Профилирование", "nt": False, "access": []})
             pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
 
             hp = SettingManager.get(key="home_page", default="false")
@@ -235,3 +241,8 @@ def profile(request):
     specialities = request.user.doctorprofile.specialities
     # return {"specialities": [x.title for x in request.user.doctorprofile.specialities.all() if not x.hide]}
     return {"specialities": [] if not specialities else [specialities.title]}
+
+def default_org(request):
+    if not request.user.is_authenticated or not hasattr(request.user, 'doctorprofile'):
+        return {"default_org": Hospitals.Hospitals.get_default_hospital()}
+    return {"default_org": request.user.doctorprofile.get_hospital()}

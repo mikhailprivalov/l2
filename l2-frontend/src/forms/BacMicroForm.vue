@@ -200,6 +200,20 @@
                     </tr>
                   </tbody>
                 </table>
+                <div
+                  v-if="bactery.phenotype && bactery.phenotype.length > 0"
+                  class="phen"
+                >
+                  <ul>
+                    <li><strong>Фенотип:</strong></li>
+                    <li
+                      v-for="p in bactery.phenotype"
+                      :key="p.pk"
+                    >
+                      {{ p.title }}
+                    </li>
+                  </ul>
+                </div>
               </div>
               <div class="right">
                 <div class="right-inner">
@@ -264,10 +278,12 @@
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import { createPopper } from '@popperjs/core';
+
 import bacteriaPoint from '@/api/bacteria-point';
 import * as actions from '@/store/action-types';
 import RadioField from '@/fields/RadioField.vue';
 import KOEField from '@/fields/KOEField.vue';
+
 import { enterField, leaveField } from './utils';
 import FastTemplates from './FastTemplates.vue';
 
