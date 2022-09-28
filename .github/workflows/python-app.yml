@@ -35,7 +35,7 @@ jobs:
     - run: |
         local_config="DATABASES = {\
             'default': {\
-                ''ENGINE': 'django.db.backends.dummy',\
+                'ENGINE': 'django.db.backends.dummy',\
             }\
         }"
         echo "$local_config" > laboratory/local_settings.py
