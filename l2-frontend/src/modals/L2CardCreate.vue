@@ -430,7 +430,7 @@
                   :disabled="disabled"
                   :z-index="5001"
                   placeholder="Укажите организацию"
-                  :load-options="loadOptions"
+                  :load-options="loadCompanies"
                   loading-text="Загрузка"
                   no-results-text="Не найдено"
                   search-prompt-text="Начните писать для поиска"
@@ -1419,7 +1419,6 @@ export default {
     this.$root.$on('reload_editor', () => {
       this.load_data();
     });
-    this.content = this.card.work_place_db_title;
   },
   updated() {
     // Костыль, что бы не вылезал автокомплит полей от браузера
@@ -1436,7 +1435,7 @@ export default {
     }, 100);
   },
   methods: {
-    async loadOptions({ action, searchQuery, callback }) {
+    async loadCompanies({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
         const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
         callback(
