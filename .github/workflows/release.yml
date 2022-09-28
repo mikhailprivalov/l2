@@ -1,9 +1,10 @@
 name: Make release
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_run:
+    workflows: [ "Make new tag" ]
+    types:
+      - completed
 
 jobs:
   makeRelease:
