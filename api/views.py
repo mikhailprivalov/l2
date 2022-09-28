@@ -2363,7 +2363,9 @@ def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
     current_coast = PriceCoast.objects.get(id=request_data["coastResearchId"])
     if not current_coast.price_name.active_status:
-        return JsonResponse({"ok": False, "message": "Прайс не активен"})
+        return JsonResponse({"ok": False, "message": "Прайс неактивен"})
+    elif float(request_data["coast"]) <= 0:
+        return JsonResponse({"ok": False, "message": "Неверная цена"})
     current_coast.coast = request_data["coast"]
     current_coast.save()
     return JsonResponse({"ok": "ok"})
@@ -2382,7 +2384,6 @@ def get_research_list(request):
                 res_list["Консультации"]["Общие"].append({"id": research.pk, "label": research.title})
             elif not res_list["Консультации"].get(research.site_type.title):
                 res_list["Консультации"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
-                continue
             else:
                 res_list["Консультации"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_citology:
@@ -2394,23 +2395,24 @@ def get_research_list(request):
         elif research.is_form:
             if research.site_type is None:
                 res_list["Формы"]["Общие"].append({"id": research.pk, "label": research.title})
-            if not res_list["Формы"].get(research.site_type.title):
+            elif not res_list["Формы"].get(research.site_type.title):
                 res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
-                continue
             else:
                 res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_paraclinic:
-            if not res_list["Параклиника"].get(research.podrazdeleniye.title):
+            if research.podrazdeleniye is None:
+                pass
+            elif not res_list["Параклиника"].get(research.podrazdeleniye.title):
                 res_list["Параклиника"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
-                continue
-            res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+            else:
+                res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
         elif research.podrazdeleniye is None:
             pass
         elif research.podrazdeleniye.pk in lab_podr:
             if not res_list["Лаборатория"].get(research.podrazdeleniye.title):
                 res_list["Лаборатория"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
-                continue
-            res_list["Лаборатория"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+            else:
+                res_list["Лаборатория"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
 
     result_list = []
     count = 0
@@ -2429,7 +2431,20 @@ def get_research_list(request):
 def update_research_list_in_price(request):
     request_data = json.loads(request.body)
     if not PriceName.objects.get(pk=request_data["priceId"]).active_status:
-        return JsonResponse({"ok": False, "message": "Прайс не активен"})
+        return JsonResponse({"ok": False, "message": "Прайс неактивен"})
+    elif float(request_data["coast"]) <= 0:
+        return JsonResponse({"ok": False, "message": "Неверная цена"})
     coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
     coast_data.save()
+    return JsonResponse({"ok": "ok"})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def delete_research_in_price(request):
+    request_data = json.loads(request.body)
+    current_research = PriceCoast.objects.get(pk=request_data["coastResearchId"])
+    if not current_research.price_name.active_status:
+        return JsonResponse({"ok": False, "message": "Прайс неактивен"})
+    current_research.delete()
     return JsonResponse({"ok": "ok"})

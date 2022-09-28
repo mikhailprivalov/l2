@@ -8,15 +8,20 @@
       placeholder="Выберите прайс"
       value-format="object"
     />
-    <h4>Исследования</h4>
-    <div class="card-no-hover card card-1">
+    <h4 v-if="selectedPrice.id !== -1">
+      Исследования
+    </h4>
+    <div
+      v-if="selectedPrice.id !== -1"
+      class="card-no-hover card card-1"
+    >
       <input
         v-model="search"
         class="form-control"
         style="padding-left: 6px"
         placeholder="Поиск исследования"
       >
-      <table>
+      <table class="table table-bordered">
         <colgroup>
           <col width="85%">
           <col width="15%">
@@ -30,12 +35,20 @@
           </td>
         </tr>
         <tr
+          v-if="filteredRows.length === 0"
+          class="text-center"
+        >
+          <td colspan="2">
+            Нет данных
+          </td>
+        </tr>
+        <tr
           v-for="(coastResearch) in filteredRows"
           :key="coastResearch.id"
-          class="tablerow"
+          class="tablerow table-hover"
         >
           <td
-            class="tablerow"
+            class="tablerow table-hover"
             style="padding-left: 6px"
           >
             {{ coastResearch.research.title }}
@@ -45,12 +58,12 @@
               v-model="coastResearch.coast"
               :disabled="!selectedPrice.status"
               type="number"
-              min="0"
+              min="0.01"
               step="0.01"
               class="text-right form-control"
             >
           </td>
-          <td>
+          <td class="tablerow">
             <button
               v-tippy
               :disabled="!selectedPrice.status"
@@ -61,12 +74,27 @@
               <i class="fa fa-save" />
             </button>
           </td>
+          <td>
+            <button
+              v-tippy
+              :disabled="!selectedPrice.status"
+              class="btn btn-blue-nb"
+              title="Удалить исследование"
+              @click="deleteResearchInPrice(coastResearch)"
+            >
+              <i class="fa fa-times" />
+            </button>
+          </td>
         </tr>
       </table>
     </div>
-    <h4>Добавить исследование в прайс</h4>
-    <div>
-      <table>
+    <h4 v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
+      Добавить исследование в прайс
+    </h4>
+    <div v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
+      <table
+        class="table table-bordered"
+      >
         <colgroup>
           <col width="85%">
           <col width="15%">
@@ -79,16 +107,15 @@
             :append-to-body="true"
             placeholder="Выберите исследование"
           />
-          <td
-            style="border: 1px solid #dddddd"
-          >
+          <td>
             <input
               v-model="coast"
               :disabled="!selectedPrice.status"
               type="number"
               class="text-right form-control"
-              min="0"
+              min="0.01"
               step="0.01"
+              placeholder="Цена"
             >
           </td>
           <td>
@@ -161,23 +188,43 @@ export default {
       this.originalCoastResearch = this.coastResearches.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/update-coast-research-in-price', {
-        coastResearchId: coastResearch.id,
-        coast: coastResearch.coast,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Цена обновлена');
+      if (Number(coastResearch.coast) > 0) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/update-coast-research-in-price', {
+          coastResearchId: coastResearch.id,
+          coast: coastResearch.coast,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Цена обновлена');
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
       } else {
-        this.$root.$emit('msg', 'error', message);
+        this.$root.$emit('msg', 'error', 'Неверная цена');
+      }
+    },
+    async deleteResearchInPrice(coastResearch) {
+      // eslint-disable-next-line no-alert
+      if (window.confirm('Исследование будет удалено из прайса')) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/delete-research-in-price', { coastResearchId: coastResearch.id });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Исследование удалено');
+          await this.getCurrentCoastResearchesInPrice();
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
       }
     },
     async updateResearchListInPrice() {
-      if (!(this.selectedResearch && this.coast && this.selectedPrice)) {
+      if (!(this.selectedResearch && this.coast && this.selectedPrice.id !== -1)) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
       } else if (this.coastResearches.data.find((i) => i.research.id === this.selectedResearch)) {
         this.$root.$emit('msg', 'error', 'Исследование уже есть в прайсе');
+      } else if (Number(this.coast) <= 0) {
+        this.$root.$emit('msg', 'error', 'Неверная цена');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/update-research-list-in-price', {
@@ -190,7 +237,7 @@ export default {
           this.$root.$emit('msg', 'ok', 'Исследование добавлено');
           await this.getCurrentCoastResearchesInPrice();
           this.selectedResearch = null;
-          this.coast = null;
+          this.coast = '';
         } else {
           this.$root.$emit('msg', 'error', message);
         }
@@ -206,14 +253,9 @@ export default {
   margin: 10px 50px;
 }
 ::v-deep .form-control {
-  border-radius: 0;
   border: none;
   background-color: transparent;
   padding: 6px 0;
-}
-::v-deep .form-control:focus {
-  border: 2px solid #4caf50;
-  background-color: #fff;
 }
 ::v-deep .card {
   margin: 1rem 0;
@@ -222,11 +264,9 @@ export default {
   margin: auto;
   display: block;
   border-radius: 0;
+  padding: 7px 12px;
 }
 .tablerow {
   border: 1px solid #dddddd;
-}
-.tablerow:hover {
-  background: #4caf50;
 }
 </style>
