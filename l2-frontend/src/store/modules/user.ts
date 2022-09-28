@@ -53,7 +53,7 @@ const getters = {
   directive_from: state => state.directive_from,
   modules: state => state.data.modules || {},
   menu: (state): Menu => state.menu as Menu,
-  version: (state, g) => (g.menu || {}).version || null,
+  version: (state, g) => g.menu?.version || null,
   hasNewVersion: state => state.hasNewVersion,
   semiLazyState: state => state.semiLazyState,
   hasGroup: (state, g) => (group) => g.user_groups.includes(group),

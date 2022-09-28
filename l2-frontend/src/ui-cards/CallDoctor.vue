@@ -357,7 +357,7 @@ export default {
         address: r.address,
         district: r.district__title,
         doc: r.doc_assigned__fio && `${r.doc_assigned__fio}, ${r.doc_assigned__podrazdeleniye__title}`,
-        purpose: (this.purposes || {})[r.purpose],
+        purpose: this.purposes?.[r.purpose],
         hospital: r.hospital__short_title || r.hospital__title,
         comment: r.comment,
         phone: r.phone,

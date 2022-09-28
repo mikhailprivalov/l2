@@ -115,12 +115,12 @@ export default class PermanentDirectoryField extends Vue {
 
   get variants() {
     const [oid] = this.oid;
-    return (this.permanentDirectories[oid] || {}).values || {};
+    return this.permanentDirectories[oid]?.values || {};
   }
 
   get directoryTitle() {
     const [oid] = this.oid;
-    return (this.permanentDirectories[oid] || {}).title || '';
+    return this.permanentDirectories[oid]?.title || '';
   }
 
   get variantsToSelect() {

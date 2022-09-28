@@ -1299,7 +1299,7 @@ export default {
     doc_edit_type_title() {
       const t = this.document.document_type;
       if (!t) return '';
-      return (this.card.doc_types.find((x) => x.pk === t) || {}).title || '';
+      return this.card.doc_types.find((x) => x.pk === t)?.title || '';
     },
     is_snils() {
       const tt = this.doc_edit_type_title;

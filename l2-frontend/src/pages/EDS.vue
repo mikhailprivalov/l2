@@ -618,7 +618,7 @@ export default class EDS extends Vue {
       }
       if (this.certificates.length > 0) {
         console.log('getCertificates', true, this.certificates);
-        this.selectedCertificate = (this.certificates[0] || {}).thumbprint;
+        this.selectedCertificate = this.certificates[0]?.thumbprint;
       } else {
         console.log('getCertificates', false);
       }

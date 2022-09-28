@@ -1166,7 +1166,7 @@ export default {
   },
   methods: {
     getDepartmentTitle(pk) {
-      return (this.departments.find((d) => d.id === pk) || {}).label || '';
+      return this.departments.find((d) => d.id === pk)?.label || '';
     },
     async changeDepartmentToggle() {
       if (!this.change_department) {

@@ -248,7 +248,7 @@ export default {
         if (this.certificates.length > 0) {
           // eslint-disable-next-line no-console
           console.log('getCertificates', true, this.certificates);
-          this.selectedCertificate = (this.certificates[0] || {}).thumbprint;
+          this.selectedCertificate = this.certificates[0]?.thumbprint;
         } else {
           // eslint-disable-next-line no-console
           console.log('getCertificates', false);
