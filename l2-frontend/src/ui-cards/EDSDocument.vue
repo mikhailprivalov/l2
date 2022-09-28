@@ -257,6 +257,7 @@ export default {
       if (data.ok) {
         this.$root.$emit('msg', 'ok', 'Успешная отправка!');
       } else {
+        // eslint-disable-next-line no-console
         console.log(data);
         this.$root.$emit('msg', 'error', 'Ошибка!');
       }
