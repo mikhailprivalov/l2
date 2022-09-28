@@ -1287,8 +1287,6 @@ export default {
       loading: false,
       loaded: false,
       new_card_num: '',
-      content: '',
-      detailsData: {},
     };
   },
   computed: {
