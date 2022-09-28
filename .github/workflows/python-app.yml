@@ -19,6 +19,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: l2
+          POSTGRES_PASSWORD: 123456
+          POSTGRES_USER: postgres
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
     - uses: actions/checkout@v3
     - run: sudo apt install libmupdf-dev
@@ -32,13 +42,6 @@ jobs:
         virtualenvs-create: true
         virtualenvs-in-project: true
     - run: poetry install
-    - run: |
-        local_config="DATABASES = {\
-            'default': {\
-                'ENGINE': 'django.db.backends.dummy',\
-            }\
-        }"
-        echo "$local_config" > laboratory/local_settings.py
     - name: Migrate
       run: |
         source .venv/bin/activate
