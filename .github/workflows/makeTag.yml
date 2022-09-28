@@ -4,7 +4,6 @@ on:
     paths:
       - pyproject.toml
       - laboratory/__init__.py
-      - .github/workflows/release.yml
 
 name: Make new tag
 jobs:
