@@ -84,7 +84,7 @@ from .sql_func import (
     filter_direction_doctor,
     get_confirm_direction_patient_year,
     get_patient_contract,
-    get_directions_by_user,
+    get_directions_by_user, get_confirm_direction_by_hospital,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -4006,3 +4006,27 @@ def send_results_to_hospital(request):
             )
 
     return status_response(True)
+
+
+@login_required
+@group_required("Отправка результатов в организации")
+def get_directions_by_hospital_sent(request):
+    request_data = json.loads(request.body)
+    d1 = datetime.strptime(request_data.get("date"), '%d.%m.%Y')
+    start_date = datetime.combine(d1, dtime.min)
+    end_date = datetime.combine(d1, dtime.max)
+    hospitlas_need_email_send = tuple(Hospitals.objects.values_list("pk", flat=True).filter(need_send_result=True))
+    confirm_direction = get_confirm_direction_by_hospital(hospitlas_need_email_send, start_date, end_date)
+    data = {}
+    for obj in confirm_direction:
+        if not data.get(obj.hospital):
+            data[obj.hospital] = {obj.direction: obj.email_with_results_sent}
+        else:
+            tmp_data = data[obj.hospital]
+            tmp_data[obj.direction] = obj.email_with_results_sent
+            data[obj.hospital] = tmp_data.copy()
+    hospitals_data = {}
+    for hosp_pk in hospitlas_need_email_send:
+        data_hosp = Hospitals.objects.get(pk=hosp_pk)
+        hospitals_data = {hosp_pk: {"title": data_hosp.title, "email": data_hosp.email}}
+    return JsonResponse({"data": data, "hospitals": hospitals_data})

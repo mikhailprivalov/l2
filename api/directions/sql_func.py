@@ -445,3 +445,22 @@ def get_type_confirm_direction(directions_tuple):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_confirm_direction_by_hospital(hospitals, d_start, d_end):
+    with connection.cursor() as cursor:
+        cursor.execute(
+        """ 
+        SELECT 
+            DISTINCT (directions_napravleniya.id) as direction,
+            directions_napravleniya.hospital_id as hospital,
+            directions_napravleniya.email_with_results_sent
+        FROM directions_napravleniya
+        WHERE directions_napravleniya.hospital_id in %(hospitals)s and
+        directions_napravleniya.last_confirmed_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+        ORDER BY directions_napravleniya.hospital_id
+        """,
+            params={'hospitals': hospitals, 'd_start': d_start, 'd_end': d_end},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

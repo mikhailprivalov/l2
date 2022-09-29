@@ -32,6 +32,7 @@ class Hospitals(models.Model):
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код для ECP")
     legal_auth_doc_id = models.CharField(max_length=9, default="", blank=True, verbose_name="Код для кто заверил")
     oktmo = models.CharField(max_length=8, default="", blank=True, verbose_name="ОКТМО")
+    need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
