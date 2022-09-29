@@ -3929,6 +3929,9 @@ def check_direction(request):
 @login_required
 @group_required("Отправка результатов в организации")
 def send_results_to_hospital(request):
+    if not SettingManager.l2("send_orgs_email_results"):
+        return status_response(False, "Отправка результатов в организации отключена")
+
     request_data = json.loads(request.body)
     hospital_pk = request_data.get("hospitalId")
     if not hospital_pk:
