@@ -104,8 +104,9 @@
           :to="forms_url"
           class="panel-body"
           target="_blank"
+          @click="addFeedback"
         >
-          <span>Отзывы и предложения</span>
+          <span><i class="fas fa-comment"></i> Оставить отзыв</span>
         </router-link>
       </div>
     </div>
@@ -351,6 +352,7 @@ import { mapGetters } from 'vuex';
 import Modal from '@/ui-cards/Modal.vue';
 import { Button, Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
+import { sendEvent } from '@/metrics';
 
 @Component({
   components: { Modal },
@@ -536,6 +538,11 @@ export default class MenuPage extends Vue {
     window.posthogInit(
       window.posthog,
     );
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  addFeedback() {
+    sendEvent('add_feedback', {});
   }
 }
 </script>
