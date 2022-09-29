@@ -3392,7 +3392,7 @@ def eds_required_signatures(request):
     pk = data['pk']
     direction: Napravleniya = Napravleniya.objects.get(pk=pk)
 
-    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+    if SettingManager.l2('required_equal_hosp_for_eds', default='true') and direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
 
     if not direction.is_all_confirm():
@@ -3440,11 +3440,12 @@ def eds_documents(request):
     for k, v in doctor_data.items():
         if v in ["", None]:
             error_doctor = f"{k} - не верно;{error_doctor}"
+
+    if not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
+        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
+
     base = SettingManager.get_cda_base_url()
     available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
-    if not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
-        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения код ТФОМС не заполнен"})
-
     if not available:
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
 
