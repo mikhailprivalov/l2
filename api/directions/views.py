@@ -4005,5 +4005,4 @@ def send_results_to_hospital(request):
                 },
             )
 
-
     return status_response(True)
