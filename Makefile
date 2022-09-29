@@ -9,6 +9,7 @@ install: poetry_bootstrap npm_install
 install_prod: poetry_bootstrap npm_install
 release: update_browserlist up git_commit_up git_push
 version_updater: update_browserlist up
+fast: checkout_last all_fast
 
 watch:
 	yarn --cwd l2-frontend serve
@@ -54,3 +55,6 @@ git_push:
 
 take_release:
 	python take_release.py
+
+checkout_last:
+	/bin/bash checkout-last.sh
