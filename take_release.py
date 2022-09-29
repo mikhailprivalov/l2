@@ -41,7 +41,7 @@ def main():
     for asset in release_info["assets"]:
         if asset["name"] == webpack_bundle_name:
             print("Found webpack bundle asset")
-            print("Download asset")
+            print("Downloading asset...")
             with tempfile.NamedTemporaryFile() as f:
                 with requests.get(asset["browser_download_url"], stream=True) as response:
                     total_length = int(response.headers.get('content-length'))

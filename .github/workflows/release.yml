@@ -10,13 +10,13 @@ jobs:
   makeRelease:
     runs-on: self-hosted
     steps:
+      - uses: actions/checkout@v3
+
       - name: Get actual version
         id: version_check
         run: |
           version=`./current-version.sh`
           echo "::set-output name=version::v$version"
-
-      - uses: actions/checkout@v3
 
       - name: Get tags
         run: git fetch --tags -f
