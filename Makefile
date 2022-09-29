@@ -1,8 +1,10 @@
 all: install front mm
 all_prod: install_prod front_prod mm
+all_fast: poetry_bootstrap front_fast mm
 mm: makemigrations migrate
 front: build collect
 front_prod: build_prod collect
+front_fast: take_release collect
 install: poetry_bootstrap npm_install
 install_prod: poetry_bootstrap npm_install
 release: update_browserlist up git_commit_up git_push
@@ -49,3 +51,6 @@ git_commit_up:
 
 git_push:
 	git push
+
+take_release:
+	python take_release.py
