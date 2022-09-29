@@ -4,6 +4,7 @@ import os
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory
+from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
 
@@ -59,7 +60,7 @@ from directions.models import (
     IssledovaniyaResultLaborant,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
-from laboratory import settings
+from laboratory import settings, VERSION
 from laboratory import utils
 from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE, REMD_ONLY_RESEARCH, REMD_EXCLUDE_RESEARCH
@@ -3923,3 +3924,67 @@ def check_direction(request):
     pk = request_data.get("q", "-1") or -1
 
     return JsonResponse({"ok": Napravleniya.objects.filter(pk=pk).exists()})
+
+
+@login_required
+@group_required("Отправка результатов в организации")
+def send_results_to_hospital(request):
+    request_data = json.loads(request.body)
+    hospital_pk = request_data.get("hospitalId")
+    if not hospital_pk:
+        return status_response(False, "Invalid hospital id")
+
+    hospital = Hospitals.objects.get(pk=hospital_pk)
+
+    if hospital.pk == request.user.doctorprofile.get_hospital_id():
+        return status_response(False, "Нельзя отправить результаты в свою организацию")
+
+    directions_ids = request_data.get("directionsIds")
+
+    for direction_id in directions_ids:
+        n = Napravleniya.objects.get(pk=direction_id)
+        if n.hospital != hospital:
+            return status_response(False, "Направление №{} не принадлежит организации {}".format(n.pk, hospital.title))
+        if not n.total_confirmed:
+            return status_response(False, "Направление №{} не подтверждено".format(n.pk))
+
+    directions_ids = list(set(directions_ids))
+    directions_ids.sort(key=lambda x: Napravleniya.objects.get(pk=x).last_confirmed_at, reverse=True)
+
+    if not directions_ids:
+        return status_response(False, "Empty directions ids")
+
+    directions_ids_chunks = [directions_ids[i:i + 20] for i in range(0, len(directions_ids), 20)]
+
+    for directions_ids_chunk in directions_ids_chunks:
+        ids_from = directions_ids_chunk[0]
+        ids_to = directions_ids_chunk[-1]
+        pdf = directions_pdf_result(directions_ids_chunk)
+        filename = "results_{}_{}.pdf".format(ids_from, ids_to)
+        file = ContentFile(base64.b64decode(pdf), name=filename)
+
+        body_lines = [
+            "Результаты с номерами от {} до {}".format(ids_from, ids_to),
+            "",
+        ]
+
+        for direction_id in directions_ids_chunk:
+            n = Napravleniya.objects.get(pk=direction_id)
+            body_lines.append("Результат №{} от {}".format(n.pk, strdatetime(n.data_sozdaniya)))
+            for iss in Issledovaniya.objects.filter(napravleniye=n):
+                body_lines.append(" - {}".format(iss.research.title))
+            body_lines.append("")
+
+        body_lines.append("")
+
+        body_lines.append("Отправлено из {}".format(request.user.doctorprofile.get_hospital_title()))
+        body_lines.append("Отправлено в {}".format(hospital.title))
+
+        body_lines.append("")
+        body_lines.append("L2 v{}".format(VERSION))
+
+        body = "\n".join(body_lines)
+
+        hospital.send_email_with_file("Результаты исследований", body, file)
+
+    return status_response(True)

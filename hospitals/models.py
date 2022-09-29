@@ -1,4 +1,6 @@
 from typing import Optional
+
+from django.core.mail import EmailMessage
 from django.db import models
 from appconf.manager import SettingManager
 from clients.models import Card
@@ -71,6 +73,11 @@ class Hospitals(models.Model):
     def safe_email(self):
         # если отсутствует email то адрес сайта
         return self.email or SettingManager.get("org_www")
+
+    def send_email_with_file(self, subject, message, file):
+        email = EmailMessage(subject, message, to=[self.email])
+        email.attach(file.name, file.read(), file.content_type)
+        email.send()
 
     def __str__(self):
         return f"{self.short_title} – {self.code_tfoms}"
