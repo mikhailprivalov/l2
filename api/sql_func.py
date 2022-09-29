@@ -143,7 +143,7 @@ def users_by_group(title_groups, hosp_id):
           WHERE user_id in (SELECT user_id FROM t_users_id) and hospital_id = %(hosp_id)s) 
     
         SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title, position_id FROM t_users
-        ORDER BY podrazdeleniye_id                    
+        ORDER BY podrazdeleniye_id, fio DESC              
         """,
             params={'title_groups': title_groups, "hosp_id": hosp_id},
         )

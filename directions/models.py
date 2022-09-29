@@ -2492,6 +2492,22 @@ class DirectionParamsResult(models.Model):
                             direction_params_obj.save()
 
 
+class ParaclinicResultMultidimensionalTable(models.Model):
+    paraclinic_record = models.ForeignKey(ParaclinicResult, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление для которого сохранение', db_index=True, on_delete=models.CASCADE)
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Исследование, для которого сохранен результат', on_delete=models.CASCADE)
+    fieldpk_directory = models.IntegerField(default=None, blank=True, null=True, help_text="Сущности")
+    directory_model = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Название-ссылка на справочник(модель)")
+    fieldpk_directory_second = models.IntegerField(default=None, blank=True, null=True, help_text="Связанная сущность")
+    directory_model_second = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Название-ссылка на справочник(модель) связанной сущности")
+    fieldpk_attribute = models.IntegerField(default=None, blank=True, null=True, help_text="Атрибут")
+    directory_model_attribute = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Название-ссылка на атрибут")
+    date_param = models.DateField(default=None, blank=True, null=True, db_index=True, help_text="Если связанная сущность дата")
+    is_number = models.BooleanField(default=False, help_text="Если результат число")
+    value_number = models.FloatField(default=0, verbose_name='Значение число', blank=True, help_text="Результат-Число")
+    value = models.TextField(default=None, blank=True, null=True, help_text="Результат-текст")
+
+
 class MicrobiologyResultCulture(models.Model):
     issledovaniye = models.ForeignKey(
         Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE, related_name='culture_results'
