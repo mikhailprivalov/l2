@@ -450,7 +450,7 @@ def get_type_confirm_direction(directions_tuple):
 def get_confirm_direction_by_hospital(hospitals, d_start, d_end):
     with connection.cursor() as cursor:
         cursor.execute(
-        """ 
+            """ 
         SELECT 
             DISTINCT (directions_napravleniya.id) as direction,
             directions_napravleniya.hospital_id as hospital,
