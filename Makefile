@@ -57,4 +57,4 @@ take_release:
 	python take_release.py
 
 checkout_last:
-	/bin/bash checkout-last.sh
+	/bin/bash checkout_last.sh
