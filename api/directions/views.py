@@ -3957,7 +3957,7 @@ def send_results_to_hospital(request):
     if not directions_ids:
         return status_response(False, "Empty directions ids")
 
-    directions_ids_chunks = [directions_ids[i:i + 20] for i in range(0, len(directions_ids), 20)]
+    directions_ids_chunks = [directions_ids[i : i + 20] for i in range(0, len(directions_ids), 20)]
 
     for directions_ids_chunk in directions_ids_chunks:
         ids_from = directions_ids_chunk[0]
