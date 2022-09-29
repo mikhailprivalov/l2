@@ -152,6 +152,7 @@ class SettingManager:
                     "decriptive_coexecutor",
                     "decriptive_additional_number",
                     "employee_job",
+                    "send_orgs_email_results",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

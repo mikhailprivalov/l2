@@ -471,6 +471,7 @@ class Napravleniya(models.Model):
     total_confirmed = models.BooleanField(verbose_name='Результат полностью подтверждён', blank=True, default=False, db_index=True)
     last_confirmed_at = models.DateTimeField(help_text='Дата и время последнего подтверждения', db_index=True, blank=True, default=None, null=True)
     emdr_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД РЭМД', db_index=True)
+    email_with_results_sent = models.BooleanField(verbose_name='Результаты отправлены на почту', blank=True, default=False, db_index=True)
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
