@@ -84,7 +84,8 @@ from .sql_func import (
     filter_direction_doctor,
     get_confirm_direction_patient_year,
     get_patient_contract,
-    get_directions_by_user, get_confirm_direction_by_hospital,
+    get_directions_by_user,
+    get_confirm_direction_by_hospital,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
