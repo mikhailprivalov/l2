@@ -4028,5 +4028,5 @@ def get_directions_by_hospital_sent(request):
     hospitals_data = {}
     for hosp_pk in hospitlas_need_email_send:
         data_hosp = Hospitals.objects.get(pk=hosp_pk)
-        hospitals_data = {hosp_pk: {"title": data_hosp.title, "email": data_hosp.email}}
+        hospitals_data[hosp_pk] = {"title": data_hosp.title, "email": data_hosp.email}
     return JsonResponse({"data": data, "hospitals": hospitals_data})
