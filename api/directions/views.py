@@ -4002,7 +4002,7 @@ def send_results_to_hospital(request):
                     "hospital": hospital.title,
                     "hospital_id": hospital.pk,
                     "directions_ids": directions_ids_chunk,
-                }
+                },
             )
 
 
