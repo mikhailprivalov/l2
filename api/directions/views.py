@@ -3988,7 +3988,7 @@ def send_results_to_hospital(request):
 
         body = "\n".join(body_lines)
 
-        hospital.send_email_with_file("Результаты исследований", body, file)
+        hospital.send_email_with_pdf_file("Результаты исследований", body, file)
 
         for direction_id in directions_ids_chunk:
             n = Napravleniya.objects.get(pk=direction_id)

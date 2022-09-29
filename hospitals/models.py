@@ -74,9 +74,9 @@ class Hospitals(models.Model):
         # если отсутствует email то адрес сайта
         return self.email or SettingManager.get("org_www")
 
-    def send_email_with_file(self, subject, message, file):
+    def send_email_with_pdf_file(self, subject, message, file):
         email = EmailMessage(subject, message, to=[self.email])
-        email.attach(file.name, file.read(), file.content_type)
+        email.attach(file.name, file.read(), 'application/pdf')
         email.send()
 
     def __str__(self):
