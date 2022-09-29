@@ -3987,4 +3987,9 @@ def send_results_to_hospital(request):
 
         hospital.send_email_with_file("Результаты исследований", body, file)
 
+        for direction_id in directions_ids_chunk:
+            n = Napravleniya.objects.get(pk=direction_id)
+            n.email_with_results_sent = True
+            n.save(update_fields=["email_with_results_sent"])
+
     return status_response(True)
