@@ -3991,5 +3991,16 @@ def send_results_to_hospital(request):
             n = Napravleniya.objects.get(pk=direction_id)
             n.email_with_results_sent = True
             n.save(update_fields=["email_with_results_sent"])
+            Log.log(
+                direction_id,
+                140000,
+                request.user.doctorprofile,
+                {
+                    "hospital": hospital.title,
+                    "hospital_id": hospital.pk,
+                    "directions_ids": directions_ids_chunk,
+                }
+            )
+
 
     return status_response(True)

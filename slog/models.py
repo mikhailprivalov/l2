@@ -121,6 +121,7 @@ class Log(models.Model):
         (122001, 'Гистология: api-приём направлений'),
         (130000, 'Настройка прайсов: изменение цены'),
         (130001, 'Настройка прайсов: удаление цены'),
+        (140000, 'Email: отправка результатов'),
     )
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)
