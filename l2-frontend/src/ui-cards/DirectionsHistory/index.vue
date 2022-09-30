@@ -487,11 +487,11 @@ export default {
   },
   methods: {
     async serachDicom(pk) {
-      await this.$store.dispatch(actions.INC_G_LOADING);
       const { data } = await this.$api('/search-dicom', { pk });
-      await this.$store.dispatch(actions.DEC_G_LOADING);
       if (data) {
         window.open(data, '_blank');
+      } else {
+        this.$root.$emit('msg', 'warning', 'Снимок не  найден');
       }
     },
     print_contract(pk, card) {
