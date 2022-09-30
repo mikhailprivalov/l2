@@ -207,7 +207,7 @@
                   },
                   {
                     has_pacs:
-                      (!!row.pacs && !row.parent.parent_is_hosp) ||
+                      ((!!row.pacs || !!row.can_has_pacs) && !row.parent.parent_is_hosp) ||
                       (!row.pacs && !!row.parent.parent_is_hosp) ||
                       (!row.pacs && !!row.parent.parent_is_doc_refferal),
                   },
@@ -222,6 +222,17 @@
                   class="btn btn-blue-nb"
                 >
                   <i class="fa fa-camera" />
+                </a>
+                <a
+                  v-if="row.can_has_pacs"
+                  v-tippy
+                  href="#"
+                  title="Запросить снимок"
+                  target="_blank"
+                  class="btn btn-blue-nb"
+                  @click.prevent="serachDicom(row.pk)"
+                >
+                  <i class="fa fa-search" />
                 </a>
                 <a
                   v-if="!!row.parent.parent_is_hosp"
@@ -475,6 +486,14 @@ export default {
     this.$root.$on(`researches-picker:refresh${this.kk}`, this.load_history_safe);
   },
   methods: {
+    async serachDicom(pk) {
+      await this.$store.dispatch(actions.INC_G_LOADING);
+      const { data } = await this.$api('/search-dicom', { pk });
+      await this.$store.dispatch(actions.DEC_G_LOADING);
+      if (data) {
+        window.open(data, '_blank');
+      }
+    },
     print_contract(pk, card) {
       window.open(`/forms/pdf?type=102.02&card_pk=${card}&contract_id=${pk}`, '_blank');
     },

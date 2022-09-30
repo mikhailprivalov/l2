@@ -312,7 +312,7 @@ def directions_history(request):
     researches_titles = ''
 
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
-    maybe_onco, is_application, is_expertise, expertise_status = False, False, False, False
+    maybe_onco, is_application, is_expertise, expertise_status, can_has_pacs = False, False, False, False, False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     person_contract_pk = -1
     status_set = {-2}
@@ -348,6 +348,7 @@ def directions_history(request):
                         'cancel': cancel,
                         'checked': False,
                         'pacs': pacs,
+                        'can_has_pacs': can_has_pacs,
                         'has_hosp': has_hosp,
                         'has_descriptive': has_descriptive,
                         'maybe_onco': maybe_onco,
@@ -377,12 +378,14 @@ def directions_history(request):
             pacs = None
             maybe_onco = False
             is_application = False
+            can_has_pacs = False
             parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
             if i[13]:
+                can_has_pacs = True
                 if i[21]:
                     pacs = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}'
                 else:
-                    pacs = search_dicom_study(int(dir))
+                    pacs = None
             has_hosp = False
             if i[11]:
                 has_hosp = True
@@ -436,6 +439,7 @@ def directions_history(request):
                 'cancel': cancel,
                 'checked': False,
                 'pacs': pacs,
+                'can_has_pacs': can_has_pacs,
                 'has_hosp': has_hosp,
                 'has_descriptive': has_descriptive,
                 'maybe_onco': maybe_onco,

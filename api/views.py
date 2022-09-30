@@ -72,6 +72,7 @@ from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals
+from .dicom import search_dicom_study
 from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
@@ -968,6 +969,14 @@ def companies_find(request):
     q = (request.GET.get("query", '') or '').strip()
     companies_data = Company.search_company(q)
     return JsonResponse({"data": companies_data})
+
+
+@login_required
+def search_dicom(request):
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk")
+    link_study = search_dicom_study(int(pk))
+    return JsonResponse({"data": link_study})
 
 
 def doctorprofile_search(request):
