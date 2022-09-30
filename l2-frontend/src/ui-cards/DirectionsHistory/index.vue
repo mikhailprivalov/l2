@@ -232,7 +232,7 @@
                   class="btn btn-blue-nb"
                   @click.prevent="serachDicom(row.pk)"
                 >
-                  <i class="fa fa-search" />
+                  <i class="fa fa-camera-rotate" />
                 </a>
                 <a
                   v-if="!!row.parent.parent_is_hosp"
@@ -491,7 +491,7 @@ export default {
       if (data) {
         window.open(data, '_blank');
       } else {
-        this.$root.$emit('msg', 'warning', 'Снимок не  найден');
+        this.$root.$emit('msg', 'warning', 'Снимок не найден');
       }
     },
     print_contract(pk, card) {
