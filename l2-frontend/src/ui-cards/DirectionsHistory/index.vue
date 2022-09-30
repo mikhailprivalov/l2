@@ -224,7 +224,7 @@
                   <i class="fa fa-camera" />
                 </a>
                 <a
-                  v-if="row.can_has_pacs"
+                  v-if="row.can_has_pacs && !row.pacs"
                   v-tippy
                   href="#"
                   title="Запросить снимок"
