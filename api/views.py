@@ -2361,24 +2361,24 @@ def get_current_coast_researches_in_price(request):
 @group_required('Конструктор: Настройка организации')
 def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
-    current_coast = PriceCoast.objects.get(id=request_data["coastResearchId"])
-    if not current_coast.price_name.active_status:
+    current_coast_research = PriceCoast.objects.get(id=request_data["coastResearchId"])
+    if not current_coast_research.price_name.active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
-    old_coast = current_coast.coast
-    current_coast.coast = request_data["coast"]
-    current_coast.save()
+    old_coast = current_coast_research.coast
+    current_coast_research.coast = request_data["coast"]
+    current_coast_research.save()
     Log.log(
-        current_coast.pk,
+        current_coast_research.pk,
         130000,
         request.user.doctorprofile,
         {
-            "pk": current_coast.pk,
-            "price": {"pk": current_coast.price_name.pk, "title": current_coast.price_name.title},
-            "research": {"pk": current_coast.research.pk, "title": current_coast.research.title},
+            "pk": current_coast_research.pk,
+            "price": {"pk": current_coast_research.price_name.pk, "title": current_coast_research.price_name.title},
+            "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
             "old_coast": old_coast,
-            "new_coast": current_coast.coast,
+            "new_coast": current_coast_research.coast,
         },
     )
     return JsonResponse({"ok": "ok"})
@@ -2447,17 +2447,17 @@ def update_research_list_in_price(request):
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
-    coast_data = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
-    coast_data.save()
+    current_coast_research = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
+    current_coast_research.save()
     Log.log(
-        coast_data.pk,
+        current_coast_research.pk,
         130000,
         request.user.doctorprofile,
         {
-            "pk": coast_data.pk,
-            "price": {"pk": coast_data.price_name.pk, "title": coast_data.price_name.title},
-            "research": {"pk": coast_data.research.pk, "title": coast_data.research.title},
-            "coast": coast_data.coast,
+            "pk": current_coast_research.pk,
+            "price": {"pk": current_coast_research.price_name.pk, "title": current_coast_research.price_name.title},
+            "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
+            "coast": current_coast_research.coast,
         },
     )
     return JsonResponse({"ok": "ok"})
