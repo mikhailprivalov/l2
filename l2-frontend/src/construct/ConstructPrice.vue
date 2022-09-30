@@ -18,38 +18,41 @@
       <input
         v-model="search"
         class="form-control"
-        style="padding-left: 6px"
+        style="padding-left: 6px; border-radius: 0; border-bottom: 1px solid #dddddd"
         placeholder="Поиск исследования"
       >
-      <table class="table-bordered">
-        <colgroup>
-          <col width="800">
-          <col width="150">
-        </colgroup>
-        <thead>
-          <tr>
-            <th class="text-center tablerow">
-              <strong>Название</strong>
-            </th>
-            <th class="text-center tablerow">
-              <strong>Цена</strong>
-            </th>
-            <th style="width: 100%"></th>
-            <th style="width: 100%"></th>
-          </tr>
-        </thead>
-      </table>
       <div class="scroll">
-        <table class="table table-bordered no-first-border-top">
+        <table class="table">
           <colgroup>
-            <col width="800">
-            <col width="150">
+            <col width="85%">
+            <col width="15%">
           </colgroup>
+          <thead>
+            <tr>
+              <th
+                class="text-center"
+                style="border-right: 1px solid #ddd; border-left: 1px solid #ddd"
+              >
+                <strong>Название</strong>
+              </th>
+              <th
+                class="text-center"
+                style="border-right: 1px solid #ddd"
+              >
+                <strong>Цена</strong>
+              </th>
+              <th />
+              <th />
+            </tr>
+          </thead>
           <tr
             v-if="filteredRows.length === 0"
             class="text-center"
           >
-            <td colspan="2">
+            <td
+              colspan="4"
+              style="border-top: 1px solid #ddd"
+            >
               Нет данных
             </td>
           </tr>
@@ -122,7 +125,6 @@
           <td>
             <input
               v-model="coast"
-              :disabled="!selectedPrice.status"
               type="number"
               class="text-right form-control"
               min="0.01"
@@ -133,7 +135,6 @@
           <td>
             <button
               v-tippy
-              :disabled="!selectedPrice.status"
               class="btn btn-blue-nb"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
@@ -280,11 +281,22 @@ export default {
   border-radius: 0;
   padding: 7px 12px;
 }
+::v-deep .table {
+  margin-bottom: 0;
+}
 .tablerow {
-  border: 1px solid #dddddd;
+  border: 1px solid #ddd;
 }
 .scroll {
-  max-height: 450px;
+  max-height: 555px;
   overflow: auto;
+}
+thead th {
+  position: sticky;
+  top: 0px;
+  background-color: white;
+}
+.table > thead > tr > th {
+  border-bottom: 0;
 }
 </style>
