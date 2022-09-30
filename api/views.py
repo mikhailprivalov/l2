@@ -976,7 +976,7 @@ def search_dicom(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
     link_study = search_dicom_study(int(pk))
-    return JsonResponse({"data": link_study})
+    return JsonResponse({"url": link_study})
 
 
 def doctorprofile_search(request):

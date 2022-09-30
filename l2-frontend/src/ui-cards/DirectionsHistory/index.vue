@@ -487,9 +487,9 @@ export default {
   },
   methods: {
     async serachDicom(pk) {
-      const { data } = await this.$api('/search-dicom', { pk });
-      if (data) {
-        window.open(data, '_blank');
+      const { url } = await this.$api('/search-dicom', { pk });
+      if (url) {
+        window.open(url, '_blank');
       } else {
         this.$root.$emit('msg', 'warning', 'Снимок не найден');
       }
