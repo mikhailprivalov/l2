@@ -17,8 +17,8 @@
     >
       <input
         v-model="search"
-        class="form-control"
-        style="padding-left: 6px; border-radius: 0; border-bottom: 1px solid #dddddd"
+        class="form-control tablerow"
+        style="padding-left: 6px;"
         placeholder="Поиск исследования"
       >
       <div class="scroll">
@@ -286,6 +286,7 @@ export default {
 }
 .tablerow {
   border: 1px solid #ddd;
+  border-radius: 0;
 }
 .scroll {
   max-height: 555px;
@@ -293,7 +294,7 @@ export default {
 }
 thead th {
   position: sticky;
-  top: 0px;
+  top: 0;
   background-color: white;
 }
 .table > thead > tr > th {
