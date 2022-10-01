@@ -183,6 +183,13 @@ def menu(request):
                     "access": ["*"],
                     "module": "l2_dynamic_directories",
                 },
+                {
+                    "url": '/ui/email-org',
+                    "title": "Отправка результатов в организации",
+                    "nt": False,
+                    "access": ["Отправка результатов в организации"],
+                    "module": "l2_dynamic_directories",
+                },
                 # {"url": '/ui/cases', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 
@@ -241,6 +248,7 @@ def profile(request):
     specialities = request.user.doctorprofile.specialities
     # return {"specialities": [x.title for x in request.user.doctorprofile.specialities.all() if not x.hide]}
     return {"specialities": [] if not specialities else [specialities.title]}
+
 
 def default_org(request):
     if not request.user.is_authenticated or not hasattr(request.user, 'doctorprofile'):
