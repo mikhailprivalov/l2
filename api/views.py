@@ -1787,23 +1787,31 @@ def hospitals(request):
     if request.user.is_authenticated and request.user.doctorprofile:
         if data.get('filterByUserHospital') and not any_hospital:
             filters['pk'] = request.user.doctorprofile.get_hospital_id()
-        rows = Hospitals.objects.filter(hide=False, **filters).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+        if data.get('filterByNeedSendResult'):
+            filters['need_send_result'] = True
+        rows = Hospitals.objects.filter(hide=False, **filters).order_by('-is_default', 'short_title')
+        if data.get('filterByNeedSendResult'):
+            rows = rows.exclude(pk=request.user.doctorprofile.get_hospital_id())
+        rows = rows.values('pk', 'short_title', 'title', 'code_tfoms', 'email')
     else:
         rows = []
     default_hospital = []
-    if any_hospital:
-        default_hospital = [
+    if any_hospital or data.get('filterByNeedSendResult'):
+        default_hospital.append(
             {
                 "id": -1,
                 "label": "Все",
                 "code_tfoms": "000000",
-            },
+            }
+        )
+    if any_hospital and not data.get('filterByNeedSendResult'):
+        default_hospital.append(
             {
                 "id": -2,
                 "label": "Не выбрано",
                 "code_tfoms": "000001",
-            },
-        ]
+            }
+        )
     result = {
         "hospitals": [
             *[
@@ -1811,6 +1819,7 @@ def hospitals(request):
                     "id": x['pk'],
                     "label": x["short_title"] or x["title"],
                     "code_tfoms": x["code_tfoms"],
+                    "email": x["email"],
                 }
                 for x in rows
             ],

@@ -59,4 +59,5 @@ urlpatterns = [
     path('direction-history', views.direction_history),
     path('check-direction', views.check_direction),
     path('send-results-to-hospital', views.send_results_to_hospital),
+    path('directions-by-hospital-sent', views.get_directions_by_hospital_sent),
 ]
