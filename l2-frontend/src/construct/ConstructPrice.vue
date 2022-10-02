@@ -17,76 +17,91 @@
     >
       <input
         v-model="search"
-        class="form-control"
-        style="padding-left: 6px"
+        class="form-control tablerow"
+        style="padding-left: 6px;"
         placeholder="Поиск исследования"
       >
-      <table class="table table-bordered">
-        <colgroup>
-          <col width="85%">
-          <col width="15%">
-        </colgroup>
-        <tr>
-          <td class="text-center">
-            <strong>Название</strong>
-          </td>
-          <td class="text-center">
-            <strong>Цена</strong>
-          </td>
-        </tr>
-        <tr
-          v-if="filteredRows.length === 0"
-          class="text-center"
-        >
-          <td colspan="2">
-            Нет данных
-          </td>
-        </tr>
-        <tr
-          v-for="(coastResearch) in filteredRows"
-          :key="coastResearch.id"
-          class="tablerow table-hover"
-        >
-          <td
-            class="tablerow table-hover"
-            style="padding-left: 6px"
+      <div class="scroll">
+        <table class="table">
+          <colgroup>
+            <col width="85%">
+            <col width="15%">
+          </colgroup>
+          <thead class="sticky">
+            <tr>
+              <th
+                class="text-center"
+                style="border-right: 1px solid #ddd; border-left: 1px solid #ddd"
+              >
+                <strong>Название</strong>
+              </th>
+              <th
+                class="text-center"
+                style="border-right: 1px solid #ddd"
+              >
+                <strong>Цена</strong>
+              </th>
+              <th />
+              <th />
+            </tr>
+          </thead>
+          <tr
+            v-if="filteredRows.length === 0"
+            class="text-center"
           >
-            {{ coastResearch.research.title }}
-          </td>
-          <td>
-            <input
-              v-model="coastResearch.coast"
-              :disabled="!selectedPrice.status"
-              type="number"
-              min="0.01"
-              step="0.01"
-              class="text-right form-control"
+            <td
+              colspan="4"
+              style="border-top: 1px solid #ddd"
             >
-          </td>
-          <td class="tablerow">
-            <button
-              v-tippy
-              :disabled="!selectedPrice.status"
-              class="btn btn-blue-nb"
-              title="Сохранить цену"
-              @click="updateCoastResearchInPrice(coastResearch)"
+              Нет данных
+            </td>
+          </tr>
+          <tr
+            v-for="(coastResearch) in filteredRows"
+            :key="coastResearch.id"
+            class="tablerow table-hover"
+          >
+            <td
+              class="tablerow table-hover"
+              style="padding-left: 6px"
             >
-              <i class="fa fa-save" />
-            </button>
-          </td>
-          <td>
-            <button
-              v-tippy
-              :disabled="!selectedPrice.status"
-              class="btn btn-blue-nb"
-              title="Удалить исследование"
-              @click="deleteResearchInPrice(coastResearch)"
-            >
-              <i class="fa fa-times" />
-            </button>
-          </td>
-        </tr>
-      </table>
+              {{ coastResearch.research.title }}
+            </td>
+            <td>
+              <input
+                v-model="coastResearch.coast"
+                :disabled="!selectedPrice.status"
+                type="number"
+                min="0.01"
+                step="0.01"
+                class="text-right form-control"
+              >
+            </td>
+            <td class="tablerow no-first-border-top">
+              <button
+                v-tippy
+                :disabled="!selectedPrice.status"
+                class="btn btn-blue-nb"
+                title="Сохранить цену"
+                @click="updateCoastResearchInPrice(coastResearch)"
+              >
+                <i class="fa fa-save" />
+              </button>
+            </td>
+            <td class="no-first-border-top">
+              <button
+                v-tippy
+                :disabled="!selectedPrice.status"
+                class="btn btn-blue-nb"
+                title="Удалить исследование"
+                @click="deleteResearchInPrice(coastResearch)"
+              >
+                <i class="fa fa-times" />
+              </button>
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
     <h4 v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
       Добавить исследование в прайс
@@ -110,7 +125,6 @@
           <td>
             <input
               v-model="coast"
-              :disabled="!selectedPrice.status"
               type="number"
               class="text-right form-control"
               min="0.01"
@@ -121,7 +135,6 @@
           <td>
             <button
               v-tippy
-              :disabled="!selectedPrice.status"
               class="btn btn-blue-nb"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
@@ -268,7 +281,24 @@ export default {
   border-radius: 0;
   padding: 7px 12px;
 }
+.table {
+  margin-bottom: 0;
+}
 .tablerow {
-  border: 1px solid #dddddd;
+  border: 1px solid #ddd;
+  border-radius: 0;
+}
+.scroll {
+  max-height: 555px;
+  overflow: auto;
+  position: relative;
+}
+.sticky {
+  position: sticky;
+  top: 0;
+  background-color: white;
+}
+.table > thead > tr > th {
+  border-bottom: 0;
 }
 </style>
