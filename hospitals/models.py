@@ -5,6 +5,7 @@ from django.db import models
 from appconf.manager import SettingManager
 from clients.models import Card
 from directory.models import Researches
+from laboratory.settings import EMAIL_HOST_USER
 
 
 class Hospitals(models.Model):
@@ -76,7 +77,12 @@ class Hospitals(models.Model):
         return self.email or SettingManager.get("org_www")
 
     def send_email_with_pdf_file(self, subject, message, file):
-        email = EmailMessage(subject, message, to=[self.email])
+        email = EmailMessage(
+            subject,
+            message,
+            from_email=f"{self.safe_short_title} <{EMAIL_HOST_USER}>",
+            to=[self.email],
+        )
         email.attach(file.name, file.read(), 'application/pdf')
         email.send()
 

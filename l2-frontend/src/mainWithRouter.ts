@@ -558,6 +558,20 @@ const router = new Router({
       component: () => import('@/pages/Directories/index.vue'),
       meta: {
         title: 'Справочники',
+        module: 'l2_dynamic_directories',
+      },
+    },
+    {
+      path: '/ui/email-org',
+      name: 'email-org',
+      component: () => import('@/pages/EmailOrg.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Отправка результатов в организации',
+        module: 'l2_send_orgs_email_results',
+        groups: [
+          'Отправка результатов в организации',
+        ],
       },
     },
     {
