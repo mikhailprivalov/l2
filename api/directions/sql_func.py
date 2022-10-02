@@ -460,7 +460,7 @@ def get_confirm_direction_by_hospital(hospitals, d_start, d_end):
         directions_napravleniya.last_confirmed_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
         ORDER BY directions_napravleniya.hospital_id
         """,
-            params={'hospitals': hospitals, 'd_start': d_start, 'd_end': d_end},
+            params={'hospitals': hospitals, 'd_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE},
         )
         rows = namedtuplefetchall(cursor)
     return rows

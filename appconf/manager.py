@@ -1,3 +1,5 @@
+import hashlib
+
 import simplejson
 from django.core.cache import cache
 from django.db.models.signals import post_save
@@ -7,7 +9,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-4"
+    VERSION = f"{laboratory.VERSION}-5"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -172,6 +174,10 @@ class SettingManager:
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 
         return result
+
+    @staticmethod
+    def l2_modules_md5_of_values():
+        return hashlib.md5(simplejson.dumps(SettingManager.l2_modules()).encode('utf-8')).hexdigest()
 
     @staticmethod
     def en():

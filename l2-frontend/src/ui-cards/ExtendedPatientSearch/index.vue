@@ -412,7 +412,7 @@ export default class ExtendedPatientSearch extends Vue {
   }
 }
 
-.search-body {
+.search-body, .d-root {
   overflow-x: hidden;
 }
 </style>

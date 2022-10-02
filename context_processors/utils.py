@@ -29,7 +29,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:4'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:5'
         data = cache.get(k)
         if not data:
             pages = [
@@ -183,10 +183,15 @@ def menu(request):
                     "access": ["*"],
                     "module": "l2_dynamic_directories",
                 },
-                # {"url": '/ui/cases', "title": "Случаи обслуживания", "nt": False, "access": []},
+                {
+                    "url": '/ui/email-org',
+                    "title": "Отправка результатов в организации",
+                    "nt": False,
+                    "access": ["Отправка результатов в организации"],
+                    "module": "l2_send_orgs_email_results",
+                },
+                {"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []},
             ]
-
-            pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
 
             hp = SettingManager.get(key="home_page", default="false")
             if hp not in ['', 'false']:
@@ -241,6 +246,7 @@ def profile(request):
     specialities = request.user.doctorprofile.specialities
     # return {"specialities": [x.title for x in request.user.doctorprofile.specialities.all() if not x.hide]}
     return {"specialities": [] if not specialities else [specialities.title]}
+
 
 def default_org(request):
     if not request.user.is_authenticated or not hasattr(request.user, 'doctorprofile'):
