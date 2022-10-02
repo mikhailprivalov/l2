@@ -106,7 +106,7 @@
           target="_blank"
           @click="addFeedback"
         >
-          <span><i class="fas fa-comment"></i> Оставить отзыв</span>
+          <span><i class="fas fa-comment" /> Оставить отзыв</span>
         </router-link>
       </div>
     </div>

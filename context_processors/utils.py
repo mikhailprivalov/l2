@@ -29,7 +29,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:4'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:5'
         data = cache.get(k)
         if not data:
             pages = [
@@ -188,12 +188,10 @@ def menu(request):
                     "title": "Отправка результатов в организации",
                     "nt": False,
                     "access": ["Отправка результатов в организации"],
-                    "module": "l2_dynamic_directories",
+                    "module": "l2_send_orgs_email_results",
                 },
-                # {"url": '/ui/cases', "title": "Случаи обслуживания", "nt": False, "access": []},
+                {"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []},
             ]
-
-            pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
 
             hp = SettingManager.get(key="home_page", default="false")
             if hp not in ['', 'false']:

@@ -3947,6 +3947,12 @@ def send_results_to_hospital(request):
     if hospital.pk == request.user.doctorprofile.get_hospital_id():
         return status_response(False, "Нельзя отправить результаты в свою организацию")
 
+    if not hospital.need_send_result:
+        return status_response(False, "Отправка результатов в эту организацию отключена")
+
+    if not hospital.email:
+        return status_response(False, "У организации не указан email")
+
     directions_ids = request_data.get("directionsIds")
 
     for direction_id in directions_ids:
@@ -4017,21 +4023,21 @@ def send_results_to_hospital(request):
 @group_required("Отправка результатов в организации")
 def get_directions_by_hospital_sent(request):
     request_data = json.loads(request.body)
-    d1 = datetime.strptime(request_data.get("date"), '%d.%m.%Y')
+    date = request_data["date"]
+    hospital_pk = request_data["hospitalId"]
+    d1 = try_strptime(date, ('%d.%m.%Y', '%Y-%m-%d'))
     start_date = datetime.combine(d1, dtime.min)
     end_date = datetime.combine(d1, dtime.max)
-    hospitlas_need_email_send = tuple(Hospitals.objects.values_list("pk", flat=True).filter(need_send_result=True))
+    if hospital_pk == -1:
+        hospitlas_need_email_send = tuple(Hospitals.objects.values_list("pk", flat=True).filter(need_send_result=True).exclude(pk=request.user.doctorprofile.get_hospital_id()))
+    else:
+        hospitlas_need_email_send = (hospital_pk,)
     confirm_direction = get_confirm_direction_by_hospital(hospitlas_need_email_send, start_date, end_date)
-    data = {}
+    rows = []
     for obj in confirm_direction:
-        if not data.get(obj.hospital):
-            data[obj.hospital] = {obj.direction: obj.email_with_results_sent}
-        else:
-            tmp_data = data[obj.hospital]
-            tmp_data[obj.direction] = obj.email_with_results_sent
-            data[obj.hospital] = tmp_data.copy()
-    hospitals_data = {}
-    for hosp_pk in hospitlas_need_email_send:
-        data_hosp = Hospitals.objects.get(pk=hosp_pk)
-        hospitals_data[hosp_pk] = {"title": data_hosp.title, "email": data_hosp.email}
-    return JsonResponse({"data": data, "hospitals": hospitals_data})
+        rows.append({
+            "pk": obj.direction,
+            "emailWasSent": obj.email_with_results_sent,
+            "hospitalId": obj.hospital,
+        })
+    return JsonResponse({"rows": rows})
