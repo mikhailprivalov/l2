@@ -19,6 +19,7 @@ update_browserlist:
 
 build:
 	yarn --cwd l2-frontend build
+	-rm -rf static/webpack_bundles
 
 build_prod:
 	yarn --cwd l2-frontend build_prod

@@ -51,8 +51,3 @@ urlpatterns = [
     path('if/', include('integration_framework.urls')),
     path('medical_certificates/', include('medical_certificates.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-if 'debug_toolbar' in settings.INSTALLED_APPS:
-    import debug_toolbar
-
-    urlpatterns.append(path('__debug__/', include(debug_toolbar.urls)))

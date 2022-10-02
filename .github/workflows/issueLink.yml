@@ -5,6 +5,7 @@ on:
     branches:
       - 'issue/**'
       - 'issue-**'
+      - 'ISSUE-**'
 
 jobs:
   issue-links:
