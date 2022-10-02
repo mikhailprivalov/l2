@@ -27,7 +27,7 @@
             <col width="85%">
             <col width="15%">
           </colgroup>
-          <thead>
+          <thead class="sticky">
             <tr>
               <th
                 class="text-center"
@@ -281,7 +281,7 @@ export default {
   border-radius: 0;
   padding: 7px 12px;
 }
-::v-deep .table {
+.table {
   margin-bottom: 0;
 }
 .tablerow {
@@ -291,8 +291,9 @@ export default {
 .scroll {
   max-height: 555px;
   overflow: auto;
+  position: relative;
 }
-thead th {
+.sticky {
   position: sticky;
   top: 0;
   background-color: white;
