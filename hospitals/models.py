@@ -1,6 +1,5 @@
 from typing import Optional
 
-from django.core import mail
 from django.core.mail import EmailMessage
 from django.db import models
 from appconf.manager import SettingManager
