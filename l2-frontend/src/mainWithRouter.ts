@@ -580,6 +580,12 @@ const router = new Router({
       meta: {},
     },
     {
+      path: '/ui/404',
+      name: 'ui404',
+      component: () => import('@/pages/Ui404.vue'),
+      meta: {},
+    },
+    {
       path: '*',
       redirect: (to) => ({ name: '404', hash: to.fullPath }),
       meta: {},

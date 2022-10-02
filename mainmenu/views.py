@@ -262,11 +262,13 @@ def get_userdata(doc: DoctorProfile):
 
 
 def v404(request, exception=None):
-    return render(request, 'dashboard/error.html', {"message": "Ошибка 404 - страница не найдена", "update": False, "to_home": True}, status=404)
+    if request.path.startswith("/api/") or request.path.startswith("/static/"):
+        return render(request, 'dashboard/error.html', {"message": "Страница не найдена"}, status=404)
+    return redirect("/ui/404")
 
 
 def v500(request, exception=None):
-    return render(request, 'dashboard/error.html', {"message": "Ошибка 500 - проблемы на сервере. Сообщите администратору или попробуйте позднее", "update": True, "no_nt": True}, status=500)
+    return render(request, 'dashboard/error.html', {"message": "Ошибка 500 - проблемы на сервере. Сообщите администратору или попробуйте позднее"}, status=500)
 
 
 @login_required

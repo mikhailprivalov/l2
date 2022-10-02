@@ -1,41 +1,21 @@
-{% extends "dbase.html" %}
-{% block title %}Ошибка{% endblock %}
-
-{% block nav %}{#  Скрытие шапки #}{% endblock %}
-{% block container %}container-fluid" style="height: 100%;display: flex;align-items: center;justify-content: center;{% endblock %}
-
-{% block content %}
-    <div>
-        <h1 class="text-center">{{ message }}</h1>
-        {% if update %}
-            <br/>
-            {% if not no_nt %}
-                <button class="btn btn-lg btn-primary-nb" href="#" onclick="window.open(window.location.href, '_blank');window.close();return false;">Попробовать снова</button>
-            {% else %}
-                <button class="btn btn-lg btn-primary-nb" href="#" onclick="location.reload();return false;">Попробовать снова</button>
-            {% endif %}
-        {% endif %}
-    {% if to_home %}
-        <br/>
-        <button class="btn btn-lg btn-primary-nb" href="#" onclick="location.href = '/';return false;">Вернуться в меню</button>
-    {% endif %}
-    {% if SYSTEM_AS_VI %}
-        <div style="font-weight: 200;font-size: 40px;text-align: center;margin-top: 60px;"><i>VI</i></div>
-    {% else %}
-        <div style="font-weight: 200;font-size: 40px;text-align: center;margin-top: 60px;"><i>L<sup style="font-size: 24px;top: -.3em;">2</sup></i></div>
-    {% endif %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Ошибка</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>{{ message }}</h1>
+                <p><a href="/ui/menu">Вернуться на главную</a></p>
+                <p><a href="javascript:location.reload(true)">Обновить страницу</a></p>
+                <p>{% if SYSTEM_AS_VI %}VI{% else %}L2{% endif %} {{ version|safe }}</p>
+            </div>
+        </div>
     </div>
-{% endblock %}
-
-{% block scripts %}
-    <style>
-        html, body {
-            height: 100% !important;
-            min-height: 100% !important;
-            width: 100% !important;
-            min-width: 100% !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-        }
-    </style>
-{% endblock %}
+</body>
