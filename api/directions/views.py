@@ -4035,9 +4035,11 @@ def get_directions_by_hospital_sent(request):
     confirm_direction = get_confirm_direction_by_hospital(hospitlas_need_email_send, start_date, end_date)
     rows = []
     for obj in confirm_direction:
-        rows.append({
-            "pk": obj.direction,
-            "emailWasSent": obj.email_with_results_sent,
-            "hospitalId": obj.hospital,
-        })
+        rows.append(
+            {
+                "pk": obj.direction,
+                "emailWasSent": obj.email_with_results_sent,
+                "hospitalId": obj.hospital,
+            }
+        )
     return JsonResponse({"rows": rows})
