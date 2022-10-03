@@ -101,23 +101,6 @@ def researches_control(request):
 
 
 @login_required
-@group_required("Получатель биоматериала")
-@ensure_csrf_cookie
-def receive_journal_form(request):
-    p = request.GET.get("lab_pk")
-    if p != '-2':
-        lab = Podrazdeleniya.objects.get(pk=p or request.user.doctorprofile.podrazdeleniye_id)
-    else:
-        lab = None
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
-    if not lab or lab.p_type != Podrazdeleniya.LABORATORY:
-        lab = labs[0]
-    groups = directory.ResearchGroup.objects.filter(lab=lab)
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("title")
-    return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
-
-
-@login_required
 @group_required("Создание и редактирование пользователей")
 def users_count(request):
     """Получение количества пользователей"""

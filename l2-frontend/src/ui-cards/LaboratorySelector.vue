@@ -38,11 +38,17 @@ export default {
       required: false,
       default: false,
     },
+    withForcedUpdateQuery: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
       laboratories: [],
       laboratory: -1,
+      useQuery: !!this.withForcedUpdateQuery,
     };
   },
   computed: {
@@ -60,12 +66,16 @@ export default {
     laboratory: {
       handler() {
         this.emit();
+        this.updateQuery();
       },
       immediate: true,
     },
   },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
+
+    const labPk = Number(this.$route.query.lab_pk);
+
     const { rows, active } = await this.$api('laboratory/laboratories');
     if (this.withAllLabs) {
       this.laboratory = -2;
@@ -77,9 +87,15 @@ export default {
         ...rows,
       ];
     } else {
-      this.laboratory = active;
+      if (!Number.isNaN(labPk) && rows.some(l => l.pk === labPk)) {
+        this.laboratory = labPk;
+        this.useQuery = true;
+      } else {
+        this.laboratory = active;
+      }
       this.laboratories = rows;
     }
+
     await this.$store.dispatch(actions.DEC_LOADING);
     this.$root.$on('emit-laboratory', () => {
       this.emit();
@@ -97,6 +113,16 @@ export default {
   methods: {
     emit() {
       this.$root.$emit('change-laboratory', this.laboratory);
+    },
+    updateQuery() {
+      if (this.useQuery) {
+        this.$router.replace({
+          query: {
+            ...this.$route.query,
+            lab_pk: this.laboratory,
+          },
+        });
+      }
     },
   },
 };

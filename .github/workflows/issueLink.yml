@@ -2,10 +2,6 @@ name: 'Issue Links'
 on:
   pull_request:
     types: [opened]
-    branches:
-      - 'issue/**'
-      - 'issue-**'
-      - 'ISSUE-**'
 
 jobs:
   issue-links:

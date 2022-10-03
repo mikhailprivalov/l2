@@ -2,7 +2,7 @@
   <div v-frag>
     <ul class="nav navbar-nav">
       <li class="dropdown">
-        <LaboratorySelector />
+        <LaboratorySelector with-forced-update-query />
       </li>
     </ul>
     <ul class="nav navbar-nav">

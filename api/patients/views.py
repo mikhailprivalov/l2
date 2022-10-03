@@ -551,6 +551,9 @@ def patients_card_save(request):
     message = ""
     messages = []
 
+    for field in ['family', 'name', 'patronymic']:
+        request_data[field] = request_data[field].strip()
+
     if "new_individual" in request_data and (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
         i = Individual(family=request_data["family"], name=request_data["name"], patronymic=request_data["patronymic"], birthday=request_data["birthday"], sex=request_data["sex"])
         i.save()

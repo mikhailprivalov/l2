@@ -78,7 +78,7 @@
         class="fastlinks"
         style="display: inline-block;float: right"
       ><a
-        :href="`/mainmenu/receive/journal_form?lab_pk=${ currentLaboratory }`"
+        :href="`/ui/receive/journal?lab_pk=${ currentLaboratory }`"
         target="_blank"
       >Журнал приёма</a>&nbsp;<ExecutionList /></small> Принятые за сегодня <i
         v-if="historyLoading"

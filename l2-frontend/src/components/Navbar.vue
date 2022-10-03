@@ -73,7 +73,20 @@
           class="nav navbar-nav"
         >
           <li class="dropdown">
-            <LaboratorySelector with-all-labs />
+            <LaboratorySelector
+              with-all-labs
+              with-forced-update-query
+            />
+          </li>
+        </ul>
+        <ul
+          v-if="meta.showLaboratorySelectorWithoutAll"
+          class="nav navbar-nav"
+        >
+          <li class="dropdown">
+            <LaboratorySelector
+              with-forced-update-query
+            />
           </li>
         </ul>
         <ul

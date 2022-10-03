@@ -29,7 +29,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:5'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:6'
         data = cache.get(k)
         if not data:
             pages = [
@@ -55,7 +55,7 @@ def menu(request):
                 {"url": "/ui/statistics-tickets", "title": "Статталоны", "nt": False, "access": ["Оформление статталонов", "Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/ui/receive/one-by-one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/ui/receive/by-direction", "title": "Поступление материала", "nt": False, "access": ["Поступление материала"]},
-                {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
+                {"url": "/ui/receive/journal", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/ui/laboratory/results", "title": "Лабораторные результаты", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
                 {
                     "url": "/ui/employee-jobs",

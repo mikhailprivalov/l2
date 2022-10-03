@@ -427,7 +427,6 @@
                   :async="true"
                   :append-to-body="true"
                   :clearable="true"
-                  :disabled="disabled"
                   :z-index="5001"
                   placeholder="Укажите организацию"
                   :load-options="loadCompanies"
