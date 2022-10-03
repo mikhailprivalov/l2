@@ -544,8 +544,17 @@ def departments(request):
 
 @login_required
 def otds(request):
+    req = json.loads(request.body)
     return JsonResponse(
-        {"rows": [{"id": -1, "label": "Все отделения"}, *[{"id": x.pk, "label": x.title} for x in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")]]}
+        {
+            "rows": [
+                *([] if req.get('withoutDefault', False) else [{"id": -1, "label": "Все отделения"}]),
+                *[
+                    {"id": x.pk, "label": x.title}
+                    for x in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).filter(Q(hospital__isnull=True) | Q(hospital=request.user.doctorprofile.hospital)).order_by("title")
+                ]
+            ]
+        }
     )
 
 

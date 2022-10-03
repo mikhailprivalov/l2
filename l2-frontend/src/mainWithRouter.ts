@@ -575,6 +575,19 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/receive/journal',
+      name: 'receive-journal',
+      component: () => import('@/pages/ReceiveJournal.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Журнал приёма',
+        groups: [
+          'Получатель биоматериала',
+        ],
+        showLaboratorySelectorWithoutAll: true,
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

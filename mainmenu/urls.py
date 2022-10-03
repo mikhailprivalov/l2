@@ -9,7 +9,6 @@ urlpatterns = [
     path('biomaterial/get', views.researches_control),
     path('from', views.dashboard_from),
     path('directions', views.directions),
-    path('receive/journal_form', views.receive_journal_form),
     path('view_log', views.view_log),
     path('view_logs', views.load_logs),
     path('users/count', views.users_count),

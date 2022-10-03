@@ -30,7 +30,6 @@ export const swapLayouts = (origStr: string): string => {
     t: 'е',
     y: 'н',
     u: 'г',
-    i: 'ш',
     o: 'щ',
     p: 'з',
     '[': 'х',
@@ -45,18 +44,15 @@ export const swapLayouts = (origStr: string): string => {
     k: 'л',
     l: 'д',
     ';': 'ж',
-    "'": 'э',
     z: 'я',
-    x: 'ч',
     c: 'с',
-    v: 'м',
     b: 'и',
     n: 'т',
     m: 'ь',
-    ',': 'б',
-    '.': 'ю',
     '/': '.',
   };
+
+  let hasReplaced = false;
 
   for (let i = 0; i < str.length; i++) {
     if (replacer[str[i].toLowerCase()]) {
@@ -68,6 +64,30 @@ export const swapLayouts = (origStr: string): string => {
       }
 
       str = str.replace(str[i], replace);
+      hasReplaced = true;
+    }
+  }
+
+  if (hasReplaced) {
+    const moreReplacers = {
+      "'": 'э',
+      '"': 'Э',
+      ',': 'б',
+      '<': 'Б',
+      '.': 'ю',
+      '>': 'Ю',
+      i: 'ш',
+      I: 'Ш',
+      v: 'м',
+      V: 'М',
+      x: 'ч',
+      X: 'Ч',
+    };
+
+    for (let i = 0; i < str.length; i++) {
+      if (moreReplacers[str[i]]) {
+        str = str.replace(str[i], moreReplacers[str[i]]);
+      }
     }
   }
 
@@ -289,22 +309,29 @@ export const validateSnils = (
   return result;
 };
 
-export const normalizeNamePart = (stringOrig: string): string => {
-  const string = swapLayouts(stringOrig).replace(/  +/g, ' ');
-  const r = [];
-  for (const s of string.split(' ')) {
-    const v = [];
+export const replaceAll = (s: string, a: string, b: string) => s.replace(new RegExp(a, 'gm'), b);
 
-    for (const si of s.split('-')) {
-      v.push(si.charAt(0).toUpperCase() + si.slice(1).toLowerCase());
-    }
+const reName = /[^-а-яёА-ЯЁA-Z.’',() ]/g;
+export const reSpaceDuplication = / +/g;
 
-    r.push(v.join('-'));
-  }
-  return r.join(' ').trim();
+const NAME_REPLACERS = {
+  "'": '’',
 };
 
-export const replaceAll = (s: string, a: string, b: string) => s.replace(new RegExp(a, 'gm'), b);
+export const normalizeNamePart = (stringOrig: string): string => {
+  let string = swapLayouts(stringOrig).replace(reSpaceDuplication, ' ');
+  string = string.replace(reName, '');
+
+  for (const nameReplacer of Object.keys(NAME_REPLACERS)) {
+    string = replaceAll(string, nameReplacer, NAME_REPLACERS[nameReplacer]);
+  }
+
+  if (string.length > 0) {
+    string = string[0].toUpperCase() + string.slice(1);
+  }
+
+  return string;
+};
 
 const keys = (values: StringDict) => Object.keys(values);
 const v2s = (origStr: string, values: StringDict) => keys(values).reduce((s, k) => replaceAll(s, `{${k}}`, values[k]), origStr);

@@ -26,6 +26,7 @@ from directory.models import (
     DispensaryPlan,
     Localization,
     ServiceLocation,
+    ResearchGroup,
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
@@ -917,3 +918,36 @@ def help_link_field(request):
         help_message = constructor_help_message
 
     return JsonResponse({"data": help_message})
+
+
+@login_required
+def research_groups_by_laboratory(request):
+    request_data = json.loads(request.body)
+    lab_pk = request_data["laboratoryId"]
+    if lab_pk >= 0:
+        lab = Podrazdeleniya.objects.get(pk=lab_pk)
+        groups = ResearchGroup.objects.filter(lab=lab).values_list("pk", "title")
+    else:
+        groups = []
+
+    groups = [
+        {
+            "id": -2,
+            "label": "Все исследования",
+        },
+        {
+            "id": -1,
+            "label": "Без группы",
+        },
+        *[
+            {
+                "id": g[0],
+                "label": g[1],
+            }
+            for g in groups
+        ],
+    ]
+
+    return JsonResponse({
+        "groups": groups,
+    })
