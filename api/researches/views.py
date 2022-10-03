@@ -948,6 +948,8 @@ def research_groups_by_laboratory(request):
         ],
     ]
 
-    return JsonResponse({
-        "groups": groups,
-    })
+    return JsonResponse(
+        {
+            "groups": groups,
+        }
+    )
