@@ -207,6 +207,7 @@ export default {
         this.$root.$emit('print:directions', data);
       } catch (e) {
         this.$root.$emit('msg', 'error', 'Ошибка при получении направлений');
+        // eslint-disable-next-line no-console
         console.error(e);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
