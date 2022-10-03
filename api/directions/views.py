@@ -3993,12 +3993,8 @@ def send_results_to_hospital(request):
 
         body_lines.append("Отправлено из {}".format(request.user.doctorprofile.get_hospital_title()))
         body_lines.append("Отправлено в {}".format(hospital.title))
-
         body_lines.append("")
-        body_lines.append("L2 v{}".format(VERSION))
-
         body = "\n".join(body_lines)
-
         hospital.send_email_with_pdf_file("Результаты исследований", body, file)
 
         for direction_id in directions_ids_chunk:
