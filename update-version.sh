@@ -1,10 +1,7 @@
 #!/bin/bash
-DAY=$(date -u '+%-d')
-MONTH=$(date -u '+%-m')
-YEAR=$(date -u '+%Y')
-HOUR=$(date -u '+%-H')
+DATE=$(date -u '+%Y.%-m.%-d-%H.%M')
 HASH=$(git describe --always --abbrev=6 --exclude '*')
-V="$YEAR.$MONTH.$DAY-$HOUR+$HASH"
+V="$DATE+$HASH"
 
 newVersion="__version__ = \"$V\""
 
