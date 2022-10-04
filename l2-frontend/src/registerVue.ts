@@ -61,6 +61,7 @@ export default (): void => {
   });
   Vue.prototype.$api = api;
   Vue.filter('pluralAge', (amount) => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
+  Vue.filter('pluralDays', (amount) => `${amount} ${plural(amount, 'день', 'дня', 'дней')}`);
   Vue.filter('pluralRecords', (amount) => `${amount} ${plural(amount, 'запись', 'записи', 'записей')}`);
   Vue.filter('pluralCount', (amount) => `${amount} ${plural(amount, 'штука', 'штуки', 'штук')}`);
   Vue.filter('formatDate', (s) => moment(s).format('DD.MM.YYYY'));

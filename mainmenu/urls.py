@@ -16,7 +16,6 @@ urlpatterns = [
     path('results_report', views.results_report),
     path('results_fastprint', TemplateView.as_view(template_name="dashboard/results_fastprint.html")),
     path('results_department', views.results_department),
-    path('utils', TemplateView.as_view(template_name="dashboard/utils.html")),
     path('results_history/search', views.results_history_search),
     path('profiles', views.profiles),
     path('researches_from_directions', views.researches_from_directions),

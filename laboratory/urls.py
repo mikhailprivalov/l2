@@ -45,7 +45,6 @@ urlpatterns = [
     path('construct/', include('construct.urls')),
     path('api/', include('api.urls')),
     path('barcodes/', include('barcodes.urls')),
-    path('health/', include('health.urls')),
     path('reports/', include('reports.urls')),
     path('logout/', LogoutView.as_view(), {'next_page': '/'}),
     path('if/', include('integration_framework.urls')),
