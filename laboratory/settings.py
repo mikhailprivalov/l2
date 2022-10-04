@@ -26,7 +26,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'corsheaders',
     'ajax_select',
-    'health',
     'appconf.apps.AppconfConfig',
     'manifest_loader',
     'dynamic_directory.apps.DynamicDirectoryConfig',

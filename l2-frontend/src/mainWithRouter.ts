@@ -588,6 +588,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/utils',
+      name: 'utils',
+      component: () => import('@/pages/Utils.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Инструменты',
+        groups: [],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
