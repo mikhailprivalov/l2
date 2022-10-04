@@ -17,7 +17,7 @@ def log_stats(request):
         {
             "total": Log.objects.all().count(),
             "storeDays": store_days,
-            "toDelete": Log.objects.filter(time__lt=datetime.today() - timedelta(days=store_days), type__in=Log.CLEANUP_TYPES_LOG).count()
+            "toDelete": Log.objects.filter(time__lt=datetime.today() - timedelta(days=store_days), type__in=Log.CLEANUP_TYPES_LOG).count(),
         }
     )
 
