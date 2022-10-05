@@ -35,7 +35,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           fromTag: ${{ steps.prev_version.outputs.version }}
-          toTag: HEAD
+          toTag: ${{ github.ref }}
           configurationJson: |
             {
               "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Uncategorized</summary>\n\n#{{UNCATEGORIZED}}\n</details>",
@@ -52,7 +52,7 @@ jobs:
             }
       - name: "Append to CHANGELOG.md"
         run: |
-          echo "#Version ${{steps.version_var.outputs.version}} ${{ steps.build_changelog.outputs.changelog }}" >> CHANGELOG.md
+          echo "## Version ${{steps.version_var.outputs.version}} ${{ steps.build_changelog.outputs.changelog }}" >> CHANGELOG.md
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v4
