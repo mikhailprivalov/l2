@@ -24,6 +24,28 @@ jobs:
         run: |
           version=`./current-version.sh`
           echo "::set-output name=version::$version"
+      - name: "Build Changelog"
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@{latest-release}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          configurationJson: |
+            {
+              "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Uncategorized</summary>\n\n#{{UNCATEGORIZED}}\n</details>",
+              "categories": [
+                {
+                    "title": "## 💬 Other",
+                    "labels": ["other"]
+                },
+                {
+                    "title": "## 📦 Dependencies",
+                    "labels": ["dependencies"]
+                }
+              ]
+            }
+      - name: "Append to CHANGELOG.md"
+        run: |
+          echo "#Version ${{steps.version_var.outputs.version}} ${{ steps.build_changelog.outputs.changelog }}" >> CHANGELOG.md
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v4

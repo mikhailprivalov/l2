@@ -598,6 +598,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/results/preview',
+      name: 'results-preview',
+      component: () => import('@/pages/ResultsPreview.vue'),
+      meta: {
+        emptyLayout: true,
+        title: 'Предварительный просмотр бланков результатов',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

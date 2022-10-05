@@ -8,7 +8,7 @@ urlpatterns = [
     path('enter', views.enter),
     path('get', views.result_get),
     path('pdf', views.result_print),
-    path('preview', TemplateView.as_view(template_name='dashboard/results_preview.html')),
+    path('preview', views.results_preview),
     path('results', views.results),
     path('journal', views.result_journal_print),
     path('journal_table', views.result_journal_table_print),

@@ -97,6 +97,11 @@ def save(form, filename: str):
 
 
 @logged_in_or_token
+def results_preview(request):
+    return redirect('/ui/results/preview?{}'.format(request.META['QUERY_STRING']))
+
+
+@logged_in_or_token
 def result_print(request):
     """Печать результатов"""
     plain_response = True if hasattr(request, 'plain_response') and request.plain_response else False

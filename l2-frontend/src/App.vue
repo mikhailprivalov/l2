@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <Navbar v-if="!embedded && !hideHeaderWithoutLogin" />
+    <Navbar v-if="!embedded && !hideHeaderWithoutLogin && !isEmptyLayout" />
 
-    <div :class="[isNarrowLayout && 'container', isFullPageLayout && 'full-page-layout']">
+    <div :class="[isNarrowLayout && 'container', isFullPageLayout && 'full-page-layout', isEmptyLayout && 'empty-layout']">
       <router-view />
     </div>
 
@@ -72,6 +72,10 @@ export default class App extends Vue {
   authenticated: boolean;
 
   embedded: boolean;
+
+  get isEmptyLayout() {
+    return !!this.$route?.meta?.emptyLayout;
+  }
 
   get isNarrowLayout() {
     return Boolean(this?.$route?.meta?.narrowLayout);
@@ -201,6 +205,14 @@ export default class App extends Vue {
 .full-page-layout {
   position: absolute;
   top: 36px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.empty-layout {
+  position: absolute;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
