@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - id: prev_version
+        run: |
+          version=`./current-version.sh`
+          echo "::set-output name=version::$version"
       - name: Bump version
         run: make version_updater
       - id: version_var
@@ -30,6 +34,7 @@ jobs:
         uses: mikepenz/release-changelog-builder-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          fromTag: ${{ steps.prev_version.outputs.version }}
           configurationJson: |
             {
               "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Uncategorized</summary>\n\n#{{UNCATEGORIZED}}\n</details>",
