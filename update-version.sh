@@ -1,5 +1,5 @@
 #!/bin/bash
-DATE=$(date -u '+%Y.%-m.%-d-%H.%M')
+DATE=$(date -u '+%Y.%-m.%-d%H%M')
 HASH=$(git describe --always --abbrev=6 --exclude '*')
 V="$DATE+$HASH"
 
