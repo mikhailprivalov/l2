@@ -1,6 +1,8 @@
 <template>
-  <div class="filters">
-    <h4>Прайс</h4>
+  <div>
+    <h4>
+      Прайс
+    </h4>
     <Treeselect
       v-model="selectedPrice"
       :options="priceList.data"
@@ -26,6 +28,8 @@
           <colgroup>
             <col width="85%">
             <col width="15%">
+            <col>
+            <col>
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -42,7 +46,7 @@
                 <strong>Цена</strong>
               </th>
               <th />
-              <th />
+              <th style="border-right: 1px solid #ddd" />
             </tr>
           </thead>
           <tr
@@ -59,10 +63,12 @@
           <tr
             v-for="(coastResearch) in filteredRows"
             :key="coastResearch.id"
-            class="tablerow table-hover"
+            class="tablerow"
           >
             <td
-              class="tablerow table-hover"
+              v-tippy
+              :title="coastResearch.research.title"
+              class="research tablerow"
               style="padding-left: 6px"
             >
               {{ coastResearch.research.title }}
@@ -77,22 +83,22 @@
                 class="text-right form-control"
               >
             </td>
-            <td class="tablerow no-first-border-top">
+            <td class="tablerow">
               <button
                 v-tippy
                 :disabled="!selectedPrice.status"
-                class="btn btn-blue-nb"
+                class="btn last btn-blue-nb nbr"
                 title="Сохранить цену"
                 @click="updateCoastResearchInPrice(coastResearch)"
               >
                 <i class="fa fa-save" />
               </button>
             </td>
-            <td class="no-first-border-top">
+            <td>
               <button
                 v-tippy
                 :disabled="!selectedPrice.status"
-                class="btn btn-blue-nb"
+                class="btn last btn-blue-nb nbr"
                 title="Удалить исследование"
                 @click="deleteResearchInPrice(coastResearch)"
               >
@@ -135,7 +141,8 @@
           <td>
             <button
               v-tippy
-              class="btn btn-blue-nb"
+              class="btn btn-blue-nb nbr"
+              style="padding: 7px 12px"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
             >
@@ -263,10 +270,6 @@ export default {
 </script>
 
 <style scoped>
-.filters {
-  padding: 10px;
-  margin: 10px 50px;
-}
 ::v-deep .form-control {
   border: none;
   background-color: transparent;
@@ -274,12 +277,6 @@ export default {
 }
 ::v-deep .card {
   margin: 1rem 0;
-}
-::v-deep .btn {
-  margin: auto;
-  display: block;
-  border-radius: 0;
-  padding: 7px 12px;
 }
 .table {
   margin-bottom: 0;
@@ -289,9 +286,8 @@ export default {
   border-radius: 0;
 }
 .scroll {
-  max-height: 555px;
-  overflow: auto;
-  position: relative;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 .sticky {
   position: sticky;
@@ -300,5 +296,11 @@ export default {
 }
 .table > thead > tr > th {
   border-bottom: 0;
+}
+.research {
+  white-space: nowrap;
+  max-width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
