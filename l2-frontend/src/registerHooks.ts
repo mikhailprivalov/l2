@@ -57,7 +57,7 @@ export default (instance: Vue): void => {
   });
 
   instance.$root.$on('print:results', pks => {
-    const url = `/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}`;
+    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}`;
     printForm(url, pks);
     sendEvent('print', {
       type: 'results',
@@ -66,7 +66,7 @@ export default (instance: Vue): void => {
   });
 
   instance.$root.$on('print:example', pks => {
-    const url = '/results/preview?pk={pks}&portion=1';
+    const url = '/ui/results/preview?pk={pks}&portion=1';
     printForm(url, pks);
     sendEvent('print', { type: 'example', pks });
   });
