@@ -151,6 +151,7 @@ export default class ResultsPreview extends Vue {
       this.pks = JSON.parse(urlParams.get('pk') || '[]');
     } catch (e) {
       this.pks = [];
+      // eslint-disable-next-line no-console
       console.error(e);
       this.$root.$emit('msg', 'error', 'Ошибка при получении параметров');
     }
