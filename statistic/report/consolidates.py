@@ -65,7 +65,7 @@ def consolidate_fill_data(ws1, result_query):
                 "fio": f"{i.doc_f} {i.doc_n} {i.doc_p}",
                 "patient_workplace": i.patient_workplace,
                 "doc_speciality": i.doc_speciality,
-                "purpose": i.purpose
+                "purpose": i.purpose,
             }
             r += 1
             ws1.cell(row=r, column=1).value = i.patient_card_num
