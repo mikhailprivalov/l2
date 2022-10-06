@@ -572,6 +572,8 @@ class ParaclinicInputField(models.Model):
         (37, 'Генератор номера перинатального МСС'),
         (38, 'Procedure list result'),
         (39, 'Динамический справочник'),
+        (40, 'Dynamic table'),
+
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
