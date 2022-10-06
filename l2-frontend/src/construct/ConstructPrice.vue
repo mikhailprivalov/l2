@@ -29,8 +29,14 @@
           <colgroup>
             <col>
             <col width="100">
-            <col v-if="selectedPrice.status === true" width="39">
-            <col v-if="selectedPrice.status === true" width="35.8">
+            <col
+              v-if="selectedPrice.status === true"
+              width="39"
+            >
+            <col
+              v-if="selectedPrice.status === true"
+              width="35.8"
+            >
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -46,8 +52,11 @@
               >
                 <strong>Цена</strong>
               </th>
-              <th v-if="selectedPrice.status === true"  />
-              <th v-if="selectedPrice.status === true"  style="border-right: 1px solid #ddd"/>
+              <th v-if="selectedPrice.status === true" />
+              <th
+                v-if="selectedPrice.status === true"
+                style="border-right: 1px solid #ddd"
+              />
             </tr>
           </thead>
           <tr
@@ -84,7 +93,10 @@
                 class="text-right form-control"
               >
             </td>
-            <td class="tablerow" v-if="selectedPrice.status === true">
+            <td
+              v-if="selectedPrice.status === true"
+              class="tablerow"
+            >
               <button
                 v-tippy
                 :disabled="!selectedPrice.status"
