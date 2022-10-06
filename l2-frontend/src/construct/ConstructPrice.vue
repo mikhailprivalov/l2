@@ -1,6 +1,8 @@
 <template>
-  <div class="filters">
-    <h4>Прайс</h4>
+  <div>
+    <h4>
+      Прайс
+    </h4>
     <Treeselect
       v-model="selectedPrice"
       :options="priceList.data"
@@ -11,21 +13,30 @@
     <h4 v-if="selectedPrice.id !== -1">
       Исследования
     </h4>
+    <div v-if="selectedPrice.id !== -1">
+      <input
+        v-model="search"
+        class="form-control search"
+        placeholder="Поиск исследования"
+      >
+    </div>
     <div
       v-if="selectedPrice.id !== -1"
       class="card-no-hover card card-1"
     >
-      <input
-        v-model="search"
-        class="form-control tablerow"
-        style="padding-left: 6px;"
-        placeholder="Поиск исследования"
-      >
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col width="85%">
-            <col width="15%">
+            <col>
+            <col width="100">
+            <col
+              v-if="selectedPrice.status === true"
+              width="39"
+            >
+            <col
+              v-if="selectedPrice.status === true"
+              width="35.8"
+            >
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -41,8 +52,11 @@
               >
                 <strong>Цена</strong>
               </th>
-              <th />
-              <th />
+              <th v-if="selectedPrice.status === true" />
+              <th
+                v-if="selectedPrice.status === true"
+                style="border-right: 1px solid #ddd"
+              />
             </tr>
           </thead>
           <tr
@@ -59,10 +73,12 @@
           <tr
             v-for="(coastResearch) in filteredRows"
             :key="coastResearch.id"
-            class="tablerow table-hover"
+            class="tablerow"
           >
             <td
-              class="tablerow table-hover"
+              v-tippy
+              :title="coastResearch.research.title"
+              class="research tablerow"
               style="padding-left: 6px"
             >
               {{ coastResearch.research.title }}
@@ -77,22 +93,25 @@
                 class="text-right form-control"
               >
             </td>
-            <td class="tablerow no-first-border-top">
+            <td
+              v-if="selectedPrice.status === true"
+              class="tablerow"
+            >
               <button
                 v-tippy
                 :disabled="!selectedPrice.status"
-                class="btn btn-blue-nb"
+                class="btn last btn-blue-nb nbr"
                 title="Сохранить цену"
                 @click="updateCoastResearchInPrice(coastResearch)"
               >
                 <i class="fa fa-save" />
               </button>
             </td>
-            <td class="no-first-border-top">
+            <td v-if="selectedPrice.status === true">
               <button
                 v-tippy
                 :disabled="!selectedPrice.status"
-                class="btn btn-blue-nb"
+                class="btn last btn-blue-nb nbr"
                 title="Удалить исследование"
                 @click="deleteResearchInPrice(coastResearch)"
               >
@@ -103,25 +122,28 @@
         </table>
       </div>
     </div>
-    <h4 v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
+    <h4 v-if="selectedPrice.status === true">
       Добавить исследование в прайс
     </h4>
-    <div v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
+    <div v-if="selectedPrice.status === true">
       <table
-        class="table table-bordered"
+        class="table-bordered"
       >
         <colgroup>
-          <col width="85%">
-          <col width="15%">
+          <col>
+          <col width="99">
+          <col width="92">
         </colgroup>
         <tr>
-          <Treeselect
-            v-model="selectedResearch"
-            :options="researchList.data"
-            :disable-branch-nodes="true"
-            :append-to-body="true"
-            placeholder="Выберите исследование"
-          />
+          <td>
+            <Treeselect
+              v-model="selectedResearch"
+              :options="researchList.data"
+              :disable-branch-nodes="true"
+              :append-to-body="true"
+              placeholder="Выберите исследование"
+            />
+          </td>
           <td>
             <input
               v-model="coast"
@@ -135,7 +157,8 @@
           <td>
             <button
               v-tippy
-              class="btn btn-blue-nb"
+              class="btn last btn-blue-nb nbr"
+              style="padding: 7px 12px;"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
             >
@@ -263,35 +286,25 @@ export default {
 </script>
 
 <style scoped>
-.filters {
-  padding: 10px;
-  margin: 10px 50px;
-}
 ::v-deep .form-control {
   border: none;
-  background-color: transparent;
   padding: 6px 0;
+  background-color: transparent;
 }
 ::v-deep .card {
   margin: 1rem 0;
 }
-::v-deep .btn {
-  margin: auto;
-  display: block;
-  border-radius: 0;
-  padding: 7px 12px;
-}
 .table {
   margin-bottom: 0;
+  table-layout: fixed;
 }
 .tablerow {
   border: 1px solid #ddd;
   border-radius: 0;
 }
 .scroll {
-  max-height: 555px;
-  overflow: auto;
-  position: relative;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 .sticky {
   position: sticky;
@@ -300,5 +313,16 @@ export default {
 }
 .table > thead > tr > th {
   border-bottom: 0;
+}
+.research {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding-left: 6px;
+  background-color: white;
 }
 </style>
