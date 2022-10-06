@@ -13,23 +13,24 @@
     <h4 v-if="selectedPrice.id !== -1">
       Исследования
     </h4>
+    <div v-if="selectedPrice.id !== -1">
+      <input
+        v-model="search"
+        class="form-control search"
+        placeholder="Поиск исследования"
+      >
+    </div>
     <div
       v-if="selectedPrice.id !== -1"
       class="card-no-hover card card-1"
     >
-      <input
-        v-model="search"
-        class="form-control tablerow"
-        style="padding-left: 6px;"
-        placeholder="Поиск исследования"
-      >
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col width="85%">
-            <col width="15%">
             <col>
-            <col>
+            <col width="100">
+            <col v-if="selectedPrice.status === true" width="39">
+            <col v-if="selectedPrice.status === true" width="35.8">
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -45,8 +46,8 @@
               >
                 <strong>Цена</strong>
               </th>
-              <th />
-              <th style="border-right: 1px solid #ddd" />
+              <th v-if="selectedPrice.status === true"  />
+              <th v-if="selectedPrice.status === true"  style="border-right: 1px solid #ddd"/>
             </tr>
           </thead>
           <tr
@@ -83,7 +84,7 @@
                 class="text-right form-control"
               >
             </td>
-            <td class="tablerow">
+            <td class="tablerow" v-if="selectedPrice.status === true">
               <button
                 v-tippy
                 :disabled="!selectedPrice.status"
@@ -94,7 +95,7 @@
                 <i class="fa fa-save" />
               </button>
             </td>
-            <td>
+            <td v-if="selectedPrice.status === true">
               <button
                 v-tippy
                 :disabled="!selectedPrice.status"
@@ -109,25 +110,28 @@
         </table>
       </div>
     </div>
-    <h4 v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
+    <h4 v-if="selectedPrice.status === true">
       Добавить исследование в прайс
     </h4>
-    <div v-if="selectedPrice.id !== -1 && selectedPrice.status === true">
+    <div v-if="selectedPrice.status === true">
       <table
-        class="table table-bordered"
+        class="table-bordered"
       >
         <colgroup>
-          <col width="85%">
-          <col width="15%">
+          <col>
+          <col width="99">
+          <col width="92">
         </colgroup>
         <tr>
-          <Treeselect
-            v-model="selectedResearch"
-            :options="researchList.data"
-            :disable-branch-nodes="true"
-            :append-to-body="true"
-            placeholder="Выберите исследование"
-          />
+          <td>
+            <Treeselect
+              v-model="selectedResearch"
+              :options="researchList.data"
+              :disable-branch-nodes="true"
+              :append-to-body="true"
+              placeholder="Выберите исследование"
+            />
+          </td>
           <td>
             <input
               v-model="coast"
@@ -141,8 +145,8 @@
           <td>
             <button
               v-tippy
-              class="btn btn-blue-nb nbr"
-              style="padding: 7px 12px"
+              class="btn last btn-blue-nb nbr"
+              style="padding: 7px 12px;"
               title="Добавить исследование"
               @click="updateResearchListInPrice"
             >
@@ -272,14 +276,15 @@ export default {
 <style scoped>
 ::v-deep .form-control {
   border: none;
-  background-color: transparent;
   padding: 6px 0;
+  background-color: transparent;
 }
 ::v-deep .card {
   margin: 1rem 0;
 }
 .table {
   margin-bottom: 0;
+  table-layout: fixed;
 }
 .tablerow {
   border: 1px solid #ddd;
@@ -299,8 +304,13 @@ export default {
 }
 .research {
   white-space: nowrap;
-  max-width: 85%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.search {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding-left: 6px;
+  background-color: white;
 }
 </style>
