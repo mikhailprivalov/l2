@@ -2373,6 +2373,7 @@ def statistic_params_search(request):
 def get_price_list(request):
     price_data = PriceName.objects.all()
     data = [{"id": price.pk, "label": price.title, "status": price.active_status} for price in price_data]
+    data = sorted(data, key=lambda d: d["label"])
     return JsonResponse({"data": data})
 
 
