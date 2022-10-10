@@ -1,4 +1,3 @@
-
 from hospitals.models import Hospitals
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle, HRFlowable, Frame, PageTemplate, PageBreak, FrameBreak
 from reportlab.platypus import NextPageTemplate
@@ -9,7 +8,7 @@ from copy import deepcopy
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY, TA_RIGHT
 
-from results.forms.flowable import FrameData, FrameDataUniversal
+from results.forms.flowable import FrameData, FrameDataUniversal, FrameDataCol
 from results.prepare_data import fields_result_only_title_fields
 from directions.models import Issledovaniya, Napravleniya
 from laboratory.settings import FONTS_FOLDER
@@ -37,21 +36,25 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     style.leading = 12
     style.spaceAfter = 0 * mm
     style.alignment = TA_JUSTIFY
-    style.firstLineIndent = 15
 
     data = title_fields(iss)
-
-    objs = []
+    underline = '_____________________'
     text = []
-    text.append(Paragraph('Текст в первой колонке', style))
+    params_columns = []
+    text.append(Paragraph(f'17. Осложнения во время проведения прививок: {data["17. Осложнения во время проведения прививок"]}', style))
+    text.append(Paragraph('18. Курс прививок полностью закончен, отменен, так как животное оказалось здоровым, прерван самостоятельно и пр. <br/> (подчеркнуть или вписать)'
+                          f'{underline}', style))
 
-    objs.append(FrameDataUniversal(x=-10 * mm, y=10 * mm, width=148.5 * mm, height=10 * mm, text=text))
+    params_columns.append({"x": -5 * mm, "y": -170 * mm, "width": 136 * mm, "height": 185 * mm, "text": text, "showBoundary": 1})
+
 
     text = []
-    text.append(Paragraph('Текст во второй колонке', style))
-
-    objs.append(FrameDataUniversal(x=138.5 * mm, y=20 * mm, width=148.5 * mm, height=10 * mm, text=text))
-    fwb.extend(objs)
+    text.append(Paragraph('текст в вторйо колонке', style))
+    params_columns.append({"x": 146 * mm, "y": -170 * mm, "width": 136 * mm, "height": 185 * mm, "text": text, "showBoundary": 1})
+    fwb.append(FrameDataCol(params_columns=params_columns))
+    # fwb.append(FrameBreak())
+    # fwb.append(Spacer(1, 5 * mm))
+    # fwb.append(FrameDataCol(columns=col_data))
 
     return fwb
 

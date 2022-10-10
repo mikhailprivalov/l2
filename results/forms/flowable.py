@@ -59,7 +59,7 @@ class FrameDataUniversal(Flowable):
         if self.text:
             data_text = self.text
         if data_text:
-            data_frame = Frame(self.x, self.y, self.width, self.height, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+            data_frame = Frame(self.x, self.y, self.width, self.height, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
             data_inframe = KeepInFrame(
                 self.width,
                 self.height,
@@ -68,4 +68,24 @@ class FrameDataUniversal(Flowable):
                 fakeWidth=False,
             )
             data_frame.addFromList([data_inframe], self.canv)
+        self.canv.restoreState()
+
+
+class FrameDataCol(Flowable):
+    def __init__(self, params_columns=None):
+        Flowable.__init__(self)
+        self.params_columns = params_columns
+
+    def draw(self):
+        self.canv.saveState()
+        for params in self.params_columns:
+            current_data_frame = Frame(params["x"], params["y"], params["width"], params["height"], leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=params["showBoundary"])
+            data_inframe = KeepInFrame(
+                params["width"],
+                params["height"],
+                params["text"],
+                vAlign='TOP',
+                fakeWidth=False
+            )
+            current_data_frame.addFromList([data_inframe], self.canv)
         self.canv.restoreState()
