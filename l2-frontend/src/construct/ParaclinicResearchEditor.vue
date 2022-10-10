@@ -100,13 +100,13 @@
               class="input-group"
               style="margin-right: -1px"
             >
-              <span class="input-group-addon">Код (ОМС)</span>
+              <span class="input-group-addon">Код ОМС</span>
               <input
                 v-model="code"
                 type="text"
                 class="form-control f-code"
               >
-              <span class="input-group-addon">Код (внутр)</span>
+              <span class="input-group-addon">Код Вн</span>
               <input
                 v-model="internal_code"
                 type="text"
@@ -186,17 +186,29 @@
             <input
               v-model="show_more_services"
               type="checkbox"
-            > Дополн. услуги
+            > Доп.услуги
           </label>
-          <span class="input-group-addon">Код (ОМС)</span>
+          <span class="input-group-addon">Код ОМC</span>
           <input
             v-model="code"
             type="text"
             class="form-control f-code"
           >
-          <span class="input-group-addon">Код (внутр)</span>
+          <span class="input-group-addon">Код Вн</span>
           <input
             v-model="internal_code"
+            type="text"
+            class="form-control f-code"
+          >
+          <span class="input-group-addon">УЕТ</span>
+          <input
+            v-model="uet_refferal_doc"
+            type="text"
+            class="form-control f-code"
+          >
+          <span class="input-group-addon">УЕТ(м/с)</span>
+          <input
+            v-model="uet_refferal_co_executor_1"
             type="text"
             class="form-control f-code"
           >
@@ -1147,6 +1159,8 @@ export default {
       is_global_direction_params: false,
       code: '',
       internal_code: '',
+      uet_refferal_doc: '',
+      uet_refferal_co_executor_1: '',
       direction_current_form: 0,
       result_current_form: 0,
       info: '',
@@ -1478,6 +1492,8 @@ export default {
             this.is_global_direction_params = data.is_global_direction_params;
             this.code = data.code;
             this.internal_code = data.internal_code;
+            this.uet_refferal_doc = data.uet_refferal_doc;
+            this.uet_refferal_co_executor_1 = data.uet_refferal_co_executor_1;
             this.direction_current_form = data.direction_current_form;
             this.result_current_form = data.result_current_form;
             this.currentNsiResearchCode = data.currentNsiResearchCode;
@@ -1536,6 +1552,8 @@ export default {
         'groups',
         'site_type',
         'internal_code',
+        'uet_refferal_doc',
+        'uet_refferal_co_executor_1',
         'direction_current_form',
         'result_current_form',
         'speciality',

@@ -1983,6 +1983,10 @@ def directions_paraclinic_result(request):
                 client_obj = iss.napravleniye.client
                 client_obj.death_date = date_death
                 client_obj.save()
+            if iss.research.uet_refferal_doc and iss.research.uet_refferal_doc > 0:
+                iss.def_uet = iss.research.uet_refferal_doc
+            if iss.research.uet_refferal_co_executor_1 and iss.research.uet_refferal_co_executor_1 > 0:
+                iss.co_executor_uet = iss.research.uet_refferal_co_executor_1
 
         if not iss.napravleniye.visit_who_mark or not iss.napravleniye.visit_date:
             iss.napravleniye.visit_who_mark = request.user.doctorprofile
