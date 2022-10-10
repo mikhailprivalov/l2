@@ -406,6 +406,8 @@ def researches_update(request):
         is_global_direction_params = request_data.get("is_global_direction_params", False)
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
+        uet_refferal_doc = float(request_data.get("uet_refferal_doc", 0))
+        uet_refferal_co_executor_1 = float(request_data.get("uet_refferal_co_executor_1", 0))
         spec_pk = request_data.get("speciality", -1)
         speciality = Speciality.objects.filter(pk=spec_pk).first()
         direction_current_form = request_data.get("direction_current_form", 0)
@@ -470,6 +472,8 @@ def researches_update(request):
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
                     internal_code=internal_code,
+                    uet_refferal_doc=uet_refferal_doc,
+                    uet_refferal_co_executor_1=uet_refferal_co_executor_1,
                     direction_form=direction_current_form,
                     result_form=result_current_form,
                     type_period=type_period,
@@ -511,6 +515,8 @@ def researches_update(request):
                 res.hide = hide
                 res.site_type_id = site_type
                 res.internal_code = internal_code
+                res.uet_refferal_doc = uet_refferal_doc
+                res.uet_refferal_co_executor_1 = uet_refferal_co_executor_1
                 res.speciality = speciality
                 res.direction_form = direction_current_form
                 res.result_form = result_current_form

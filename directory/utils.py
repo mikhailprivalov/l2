@@ -46,6 +46,8 @@ def get_researches_details(pk):
         response["tube"] = res.microbiology_tube_id or -1
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code
+        response["uet_refferal_co_executor_1"] = res.uet_refferal_co_executor_1
+        response["uet_refferal_doc"] = res.uet_refferal_doc
         response["direction_current_form"] = res.direction_form
         response["show_more_services"] = res.show_more_services
         response["result_current_form"] = res.result_form
