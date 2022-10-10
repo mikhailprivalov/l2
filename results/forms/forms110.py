@@ -1,14 +1,11 @@
 from hospitals.models import Hospitals
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle, HRFlowable, Frame, PageTemplate, PageBreak, FrameBreak
-from reportlab.platypus import NextPageTemplate
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, FrameBreak
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY, TA_RIGHT
 
-from results.forms.flowable import FrameData, FrameDataUniversal, FrameDataCol
+from results.forms.flowable import FrameDataCol
 from results.prepare_data import fields_result_only_title_fields
 from directions.models import Issledovaniya, Napravleniya
 from laboratory.settings import FONTS_FOLDER
@@ -32,25 +29,53 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 10
-    style.leading = 12
-    style.spaceAfter = 0 * mm
+    style.fontSize = 12
     style.alignment = TA_JUSTIFY
 
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.alignment = TA_CENTER
+
+    styleRight = deepcopy(style)
+    styleRight.alignment = TA_RIGHT
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+
     data = title_fields(iss)
-    underline = '_____________________'
+    underline = '_______________'
     text = []
     params_columns = []
-    text.append(Paragraph(f'17. Осложнения во время проведения прививок: {data["17. Осложнения во время проведения прививок"]}', style))
-    text.append(Paragraph('18. Курс прививок полностью закончен, отменен, так как животное оказалось здоровым, прерван самостоятельно и пр. <br/> (подчеркнуть или вписать)'
-                          f'{underline}', style))
+    text.append(Paragraph(f'<font face="PTAstraSerifBold">17. Осложнения во время проведения прививок:</font> {data["17. Осложнения во время проведения прививок"]}', style))
+    text.append(Paragraph('<font face="PTAstraSerifBold">18. Курс прививок полностью закончен, отменен, так как животное оказалось здоровым, прерван самостоятельно и пр. <br/> '
+                          '(подчеркнуть или вписать)</font>_______________________________________', style))
+    text.append(Paragraph(f'<font face="PTAstraSerifBold">19. Какие меры приняты к продолжению прививок:</font> {data["19. Какие приняты меры к продолжению прерванных прививок"]}', style))
+    text.append(Paragraph(f'<font face="PTAstraSerifBold">20. Примечание:</font> {data["20. Примечание"]}', style))
+    text.append(Paragraph(f'Беседа о профилактике бешенства проведена', styleHeader))
+    text.append(Spacer(1, 5 * mm))
+    text.append(Paragraph(f'Подпись законного представителя{underline}', styleRight))
+    text.append(Spacer(1, 5 * mm))
+    text.append(Paragraph(f'С правилами поведения во время прививок ознакомлен{underline}', styleRight))
+    text.append(Spacer(1, 5 * mm))
+    text.append(Paragraph(f'Подпись врача{underline}', styleRight))
+    text.append(Spacer(1, 5 * mm))
+    text.append(Paragraph(f'Инструкция', styleHeader))
+    text.append(Spacer(1, 5 * mm))
+    text.append(Paragraph('к заполнению карты обратившегося за антирабической помощью', styleCenterBold))
+    text.append(Spacer(1, 5 * mm))
+    text.append(Paragraph(
+        '1. На каждого обратившегося за антирабической помощью в лечебно профилактическое учреждение карта заполняется в двух экземплярах. По окончанию курса прививок '
+        '(срок наблюдения за животным) один экземпляр карты посылается в районную (городскую) санитарно-эпидемиологическую станцию (санэпидотдел больницы, в район '
+        'деятельности которой расположено данное лечебно-профилактическое учреждение). На обратившихся за антирабической помощью в антирабическое отделение '
+        'санитарно-эпидемиологической станции карта заполняется в одном экземпляре, которой остается в данном учреждении.', style))
+    text.append(Paragraph('2. На основании разработки данных карт заполняется соответствующий раздел отчетной формы №36', style))
 
-    params_columns.append({"x": -5 * mm, "y": -170 * mm, "width": 136 * mm, "height": 185 * mm, "text": text, "showBoundary": 1})
-
+    params_columns.append({"x": -5 * mm, "y": -160 * mm, "width": 136 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
 
     text = []
     text.append(Paragraph('текст в вторйо колонке', style))
-    params_columns.append({"x": 146 * mm, "y": -170 * mm, "width": 136 * mm, "height": 185 * mm, "text": text, "showBoundary": 1})
+    params_columns.append({"x": 146 * mm, "y": -160 * mm, "width": 136 * mm, "height": 185 * mm, "text": text, "showBoundary": 1})
     fwb.append(FrameDataCol(params_columns=params_columns))
     # fwb.append(FrameBreak())
     # fwb.append(Spacer(1, 5 * mm))
