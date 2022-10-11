@@ -9,7 +9,7 @@ skip-string-normalization = true
 
 [tool.poetry]
 name = "l2"
-version = "2022.10.60452+039b3c"
+version = "2022.10.101424+ddfd3a"
 description = ""
 authors = ["Mikhail Privalov <n5250@ya.ru>"]
 license = "MIT"
@@ -20,7 +20,7 @@ python = ">=3.8,<4"
 django = "4.1"
 appdirs = "1.4.4"
 attrs = "22.1.0"
-black = "22.8.0"
+black = "22.10.0"
 bleach = "5.0.1"
 autopep8 = "1.7.0"
 cached-property = "1.5.2"
