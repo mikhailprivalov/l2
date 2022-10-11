@@ -74,8 +74,13 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     text = []
     params_columns = []
     text.append(Paragraph(f'{bold_open}17. Осложнения во время проведения прививок:{bold_close} {protocol_data["17. Осложнения во время проведения прививок"]}', style))
-    text.append(Paragraph(f'{bold_open}18. Курс прививок полностью закончен, отменен, так как животное оказалось здоровым, прерван самостоятельно и пр. <br/> '
-                          f'(подчеркнуть или вписать){bold_close}_______________________________________', style))
+    text.append(
+        Paragraph(
+            f'{bold_open}18. Курс прививок полностью закончен, отменен, так как животное оказалось здоровым, прерван самостоятельно и пр. <br/> '
+            f'(подчеркнуть или вписать){bold_close}_______________________________________',
+            style,
+        )
+    )
     text.append(Paragraph(f'{bold_open}19. Какие меры приняты к продолжению прививок:{bold_close} {protocol_data["19. Какие приняты меры к продолжению прерванных прививок"]}', style))
     text.append(Paragraph(f'{bold_open}20. Примечание:{bold_close} {protocol_data["20. Примечание"]}', style))
     text.append(Spacer(1, space))
@@ -91,11 +96,15 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     text.append(Spacer(1, space))
     text.append(Paragraph('к заполнению карты обратившегося за антирабической помощью', style_center_bold))
     text.append(Spacer(1, space))
-    text.append(Paragraph(
-        '1. На каждого обратившегося за антирабической помощью в лечебно профилактическое учреждение карта заполняется в двух экземплярах. По окончанию курса прививок '
-        '(срок наблюдения за животным) один экземпляр карты посылается в районную (городскую) санитарно-эпидемиологическую станцию (санэпидотдел больницы, в район '
-        'деятельности которой расположено данное лечебно-профилактическое учреждение). На обратившихся за антирабической помощью в антирабическое отделение '
-        'санитарно-эпидемиологической станции карта заполняется в одном экземпляре, которой остается в данном учреждении.', style))
+    text.append(
+        Paragraph(
+            '1. На каждого обратившегося за антирабической помощью в лечебно профилактическое учреждение карта заполняется в двух экземплярах. По окончанию курса прививок '
+            '(срок наблюдения за животным) один экземпляр карты посылается в районную (городскую) санитарно-эпидемиологическую станцию (санэпидотдел больницы, в район '
+            'деятельности которой расположено данное лечебно-профилактическое учреждение). На обратившихся за антирабической помощью в антирабическое отделение '
+            'санитарно-эпидемиологической станции карта заполняется в одном экземпляре, которой остается в данном учреждении.',
+            style,
+        )
+    )
     text.append(Paragraph('2. На основании разработки данных карт заполняется соответствующий раздел отчетной формы №36', style))
 
     params_columns.append({"x": -4.5 * mm, "y": -170 * mm, "width": 135.5 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
@@ -108,10 +117,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
     ]
     tbl = Table(opinion, colWidths=[50 * mm, 86 * mm], hAlign='LEFT')
-    table_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('RIGHTPADDING', (1, 0), (1, 0), 50 * mm)
-    ]
+    table_style = [('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('RIGHTPADDING', (1, 0), (1, 0), 50 * mm)]
     tbl.setStyle(table_style)
     text.append(tbl)
     text.append(Spacer(1, 3 * mm))
@@ -124,19 +130,29 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     text.append(Paragraph(f'{bold_open}3. Домашний адрес, телефон:{bold_close} {patient_data["fact_address"]}, {" ".join(patient_data["phone"])}', style))
     text.append(Paragraph(f'{bold_open}4. Школа, д/сад - класс, группа:{bold_close} {patient_data["work_place"]}', style))
     text.append(Paragraph(f'{bold_open}5. Дата укуса, оцарапания, ослюнения:{bold_close} {protocol_data["5. Дата укуса, оцарапания, ослюнения"]}', style))
-    text.append(Paragraph(f'{bold_open}6. В какое лечебное учреждение обращался по поводу укуса и когда:{bold_close} '
-                          f'{protocol_data["6. В какое лечебное учреждение обращался по поводу укуса и когда"]}', style))
+    text.append(
+        Paragraph(
+            f'{bold_open}6. В какое лечебное учреждение обращался по поводу укуса и когда:{bold_close} '
+            f'{protocol_data["6. В какое лечебное учреждение обращался по поводу укуса и когда"]}',
+            style,
+        )
+    )
     text.append(Paragraph(f'{bold_open}7. Описание повреждения и его локализация:{bold_close} {protocol_data["7. Описание повреждения и его локализация"]}', style))
-    text.append(Paragraph(f'{bold_open}8. Сведения об укусившем, оцарапшем, ослюнившем животном:{bold_close} {protocol_data["8. Сведения об укусившем, оцарапавшем, ослюнившем животном"]}',
-                          style))
+    text.append(
+        Paragraph(f'{bold_open}8. Сведения об укусившем, оцарапшем, ослюнившем животном:{bold_close} {protocol_data["8. Сведения об укусившем, оцарапавшем, ослюнившем животном"]}', style)
+    )
     text.append(Paragraph(f'{bold_open}9. Обстоятельства укуса, оцарапания, ослюнения:{bold_close} {protocol_data["9. Обстоятельства укуса, оцарапания, ослюнения"]}', style))
     text.append(Paragraph(f'{bold_open}10. Бешенство животного установлено ветврачом клинически, лабораторно <br/> (подчеркнуть или вписать){bold_close}{underline}', style))
     text.append(Paragraph(f'{bold_open}11.Животное:{bold_close} {protocol_data["11. Животное"]}', style))
     text.append(Paragraph(f'{bold_open}12. Анамнез обратившегося:{bold_close}', style))
     text.append(Paragraph(f'{bold_open}a) заболевание нервной системы:{bold_close} {protocol_data["а) заболевание нервной системы"]}', style))
     text.append(Paragraph(f'{bold_open}б) употребляет ли спиртные напитки, как часто:{bold_close} {protocol_data["б) употребляет ли спиртные напитки, как часто"]}', style))
-    text.append(Paragraph(f'{bold_open}в) получал ли в прошлом антирабические прививки, когда, сколько:{bold_close} '
-                          f'{protocol_data["в) получал ли в прошлом антирабические прививки, когда, сколько"]}', style))
+    text.append(
+        Paragraph(
+            f'{bold_open}в) получал ли в прошлом антирабические прививки, когда, сколько:{bold_close} ' f'{protocol_data["в) получал ли в прошлом антирабические прививки, когда, сколько"]}',
+            style,
+        )
+    )
     text.append(Paragraph(f'{bold_open}г) прочие сведения:{bold_close} {protocol_data["г) прочие сведения"]}', style))
 
     params_columns.append({"x": 145.5 * mm, "y": -170 * mm, "width": 135.5 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
@@ -148,8 +164,9 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     text = []
     text.append(Paragraph(f'{bold_open}13. Назначение прививки:{bold_close} {protocol_data["13. Назначение прививки"]}', style))
     text.append(Paragraph(f'{bold_open}14. Назначенный режим:{bold_close} {protocol_data["14. Назначенный режим"]}', style))
-    text.append(Paragraph(f'{bold_open}15. Введение антирабического гаммаглобулина: Дата, серия:{bold_close} {protocol_data["15. Введение антирабического гаммаглобулина: дата, серия"]}',
-                          style))
+    text.append(
+        Paragraph(f'{bold_open}15. Введение антирабического гаммаглобулина: Дата, серия:{bold_close} {protocol_data["15. Введение антирабического гаммаглобулина: дата, серия"]}', style)
+    )
     text.append(Paragraph(f'{bold_open}16. Реакция на внутрикожную пробу: {bold_close}', style))
     text.append(Paragraph(f'{bold_open}покраснение:{bold_close} {protocol_data["покраснение"]}', style))
     text.append(Paragraph(f'{bold_open}отёк:{bold_close} {protocol_data["отек"]}', style))
@@ -163,17 +180,9 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('Доза', style),
             Paragraph('', style),
             Paragraph('Серия', style),
-            Paragraph('', style)
+            Paragraph('', style),
         ],
-        [
-            Paragraph('', style),
-            Paragraph('Дата', style),
-            Paragraph('', style),
-            Paragraph('Доза', style),
-            Paragraph('', style),
-            Paragraph('Серия', style),
-            Paragraph('', style)
-        ]
+        [Paragraph('', style), Paragraph('Дата', style), Paragraph('', style), Paragraph('Доза', style), Paragraph('', style), Paragraph('Серия', style), Paragraph('', style)],
     ]
     tbl = Table(opinion, colWidths=[45 * mm, 9 * mm, 15 * mm, 9 * mm, 15 * mm, 11.5 * mm, 15 * mm], hAlign='LEFT')
     table_style = [
@@ -183,7 +192,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ('LEFTPADDING', (0, 0), (-1, -1), 0),
         ('LINEBELOW', (2, 0), (2, 1), 0.5, black),
         ('LINEBELOW', (4, 0), (4, 1), 0.5, black),
-        ('LINEBELOW', (6, 0), (6, 1), 0.5, black)
+        ('LINEBELOW', (6, 0), (6, 1), 0.5, black),
     ]
     tbl.setStyle(table_style)
     text.append(tbl)
@@ -194,7 +203,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('Дата', style_center_bold),
             Paragraph('Доза вакцины', style_center_bold),
             Paragraph('№ Серия <br/> вакцины', style_center_bold),
-            Paragraph('Подпись', style_center_bold)
+            Paragraph('Подпись', style_center_bold),
         ],
         [
             Paragraph('1 (0 день)', style_center),
