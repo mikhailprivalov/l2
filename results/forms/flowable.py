@@ -79,13 +79,9 @@ class FrameDataCol(Flowable):
     def draw(self):
         self.canv.saveState()
         for params in self.params_columns:
-            current_data_frame = Frame(params["x"], params["y"], params["width"], params["height"], leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=params["showBoundary"])
-            data_inframe = KeepInFrame(
-                params["width"],
-                params["height"],
-                params["text"],
-                vAlign='TOP',
-                fakeWidth=False
+            current_data_frame = Frame(
+                params["x"], params["y"], params["width"], params["height"], leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=params["showBoundary"]
             )
+            data_inframe = KeepInFrame(params["width"], params["height"], params["text"], vAlign='TOP', fakeWidth=False)
             current_data_frame.addFromList([data_inframe], self.canv)
         self.canv.restoreState()
