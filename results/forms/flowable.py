@@ -59,7 +59,7 @@ class FrameDataUniversal(Flowable):
         if self.text:
             data_text = self.text
         if data_text:
-            data_frame = Frame(self.x, self.y, self.width, self.height, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
+            data_frame = Frame(self.x, self.y, self.width, self.height, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
             data_inframe = KeepInFrame(
                 self.width,
                 self.height,
