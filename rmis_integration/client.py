@@ -1674,7 +1674,7 @@ def get_timetable_doctor(date, med_staff_fact_id):
     result = json.loads(req.content.decode())
     time_table = {}
     for r in result.get('data'):
-        url_patient = f"http://ecp38.is-mis.ru/api//Person?Sess_id={sess_id}&Person_id="
+        url_patient = f"http://ecp38.is-mis.ru/api/Person?Sess_id={sess_id}&Person_id="
         url_patient = f"{url_patient}{r['Person_id']}"
         req = requests.get(url_patient, headers=headers)
         result = json.loads(req.content.decode())
