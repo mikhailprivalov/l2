@@ -2,7 +2,6 @@ on:
   push:
     branches: [ develop ]
     paths:
-      - pyproject.toml
       - laboratory/__init__.py
 
 name: Make new tag
