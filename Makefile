@@ -32,7 +32,7 @@ collect:
 	python manage.py collectstatic --no-input
 
 collect_fast:
-	poetry python manage.py collectstatic --no-input
+	poetry run python manage.py collectstatic --no-input
 
 makemigrations:
 	python manage.py makemigrations
@@ -41,10 +41,10 @@ migrate:
 	python manage.py migrate
 
 migrate_fast:
-	poetry python manage.py migrate
+	poetry run python manage.py migrate
 
 makemigrations_fast:
-	poetry python manage.py makemigrations
+	poetry run python manage.py makemigrations
 
 up:
 	/bin/bash update-version.sh
@@ -65,7 +65,7 @@ git_push:
 	git push
 
 take_release:
-	poetry python take_release.py
+	poetry run python take_release.py
 
 checkout_last:
 	/bin/bash checkout_last.sh
