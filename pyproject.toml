@@ -79,7 +79,7 @@ transliterate = "1.10.2"
 imgkit = "1.2.2"
 posthog = "2.1.2"
 astm = {git = "https://github.com/moodpulse/python-astm.git", rev = "v0.6"}
-psycopg2-binary = "^2.9.3"
+psycopg2-binary = "^2.9.4"
 
 [tool.poetry.extras]
 caching = ["psycopg2"]
