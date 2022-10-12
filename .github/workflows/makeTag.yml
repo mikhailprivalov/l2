@@ -8,7 +8,7 @@ on:
 name: Make new tag
 jobs:
   createTag:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.version_check.outputs.tag }}
     steps:
