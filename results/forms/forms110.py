@@ -262,7 +262,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     text.append(Spacer(1, space))
     text.append(tbl)
     text.append(Spacer(1, space))
-    text.append()
     params_columns.append({"x": -4.5 * mm, "y": -170 * mm, "width": 135.5 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
     fwb.append(FrameDataCol(params_columns=params_columns))
 
