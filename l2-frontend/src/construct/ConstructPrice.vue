@@ -77,9 +77,9 @@
           >
             <td
               v-tippy
-              :title="coastResearch.research.title"
               class="research tablerow"
               style="padding-left: 6px"
+              @mouseenter="getTitle(this)"
             >
               {{ coastResearch.research.title }}
             </td>
@@ -281,6 +281,21 @@ export default {
         }
       }
     },
+    getTitle(elem) {
+      // const texts = document.getElementsByClassName('research');
+      // for (const text of texts) {
+      //   if (text.clientWidth < text.scrollWidth) {
+      //     console.log(text);
+      //   } else {
+      //     console.log(text);
+      //   }
+      const a = elem;
+      console.log(a);
+      console.log(a.clientWidth);
+      console.log(a.offsetWidth);
+      console.log(a.scrollWidth);
+    },
+
   },
 };
 </script>
