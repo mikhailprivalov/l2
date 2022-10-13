@@ -109,7 +109,7 @@
     "vue-cli-plugin-webpack": "~0.1.0",
     "vue-template-compiler": "^2.7.12",
     "webpack": "4",
-    "webpack-manifest-plugin": "^3.1.1"
+    "webpack-manifest-plugin": "~4.1.1"
   },
   "browserslist": [
     "last 2 years",
