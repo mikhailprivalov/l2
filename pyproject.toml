@@ -9,7 +9,7 @@ skip-string-normalization = true
 
 [tool.poetry]
 name = "l2"
-version = "2022.10.101424+ddfd3a"
+version = "2022.10.122148+259cc4"
 description = ""
 authors = ["Mikhail Privalov <n5250@ya.ru>"]
 license = "MIT"
@@ -45,7 +45,7 @@ pdfrw = "0.4"
 pdfminer = "20191125"
 petrovna = "1.0.2"
 Pillow = "9.2.0"
-psycopg2 = {version="^2.9.1", optional=true}
+psycopg2 = {version="^2.9.4", optional=true}
 pymorphy2 = "0.9.1"
 pymorphy2-dicts = "2.4.393442.3710985"
 pymorphy2-dicts-ru = "2.4.417127.4579844"
@@ -60,7 +60,7 @@ PyYAML = "5.4.1"
 redis = "4.3.4"
 reportlab = "3.6.11"
 requests = "2.28.1"
-requests-toolbelt = "0.9.1"
+requests-toolbelt = "0.10.0"
 selenium = "3.141.0"
 simplejson = "3.17.6"
 six = "1.16.0"
@@ -79,7 +79,7 @@ transliterate = "1.10.2"
 imgkit = "1.2.2"
 posthog = "2.1.2"
 astm = {git = "https://github.com/moodpulse/python-astm.git", rev = "v0.6"}
-psycopg2-binary = "^2.9.3"
+psycopg2-binary = "^2.9.4"
 
 [tool.poetry.extras]
 caching = ["psycopg2"]

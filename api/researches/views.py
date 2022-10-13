@@ -406,8 +406,14 @@ def researches_update(request):
         is_global_direction_params = request_data.get("is_global_direction_params", False)
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
-        uet_refferal_doc = float(request_data.get("uet_refferal_doc", 0))
-        uet_refferal_co_executor_1 = float(request_data.get("uet_refferal_co_executor_1", 0))
+        try:
+            uet_refferal_doc = float(request_data.get("uet_refferal_doc"))
+        except ValueError:
+            uet_refferal_doc = 0
+        try:
+            uet_refferal_co_executor_1 = float(request_data.get("uet_refferal_co_executor_1"))
+        except ValueError:
+            uet_refferal_co_executor_1 = 0
         spec_pk = request_data.get("speciality", -1)
         speciality = Speciality.objects.filter(pk=spec_pk).first()
         direction_current_form = request_data.get("direction_current_form", 0)
