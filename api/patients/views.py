@@ -111,7 +111,7 @@ def patients_search_card(request):
     p5 = re.compile(r'phone:.+')
     p5i = bool(re.search(p5, query))
     p_ecp = re.compile(r'ecp:\d+')
-    is_ecp_search = bool(re.search(p5, query))
+    is_ecp_search = bool(re.search(p_ecp, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
     has_phone_search = False
@@ -181,7 +181,8 @@ def patients_search_card(request):
                     | Q(card__doctorcall__phone__in=normalized_phones)
                 )
     if is_ecp_search:
-        pass
+        ecp_id = query.split(':')[1]
+        objects = Individual.objects.filter(ecp_id=ecp_id)
     elif p5i or (always_phone_search and len(query) == 11 and query.isdigit()):
         has_phone_search = True
         phone = query.replace('phone:', '')

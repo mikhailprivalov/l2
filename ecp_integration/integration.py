@@ -1,5 +1,5 @@
 import logging
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urljoin
 import requests
 
 from appconf.manager import SettingManager
