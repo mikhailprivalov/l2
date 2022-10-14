@@ -71,7 +71,7 @@
             </td>
           </tr>
           <tr
-            v-for="(coastResearch) in filteredRows"
+            v-for="(coastResearch, idx) in filteredRows"
             :key="coastResearch.id"
             class="tablerow"
           >
@@ -79,7 +79,7 @@
               v-tippy
               class="research tablerow"
               style="padding-left: 6px"
-              @mouseenter="getTitle(this)"
+              @mouseenter="getTitle($el.getElementsByClassName('research')[idx])"
             >
               {{ coastResearch.research.title }}
             </td>
@@ -282,20 +282,12 @@ export default {
       }
     },
     getTitle(elem) {
-      // const texts = document.getElementsByClassName('research');
-      // for (const text of texts) {
-      //   if (text.clientWidth < text.scrollWidth) {
-      //     console.log(text);
-      //   } else {
-      //     console.log(text);
-      //   }
-      const a = elem;
-      console.log(a);
-      console.log(a.clientWidth);
-      console.log(a.offsetWidth);
-      console.log(a.scrollWidth);
+      const el = elem;
+      if (el.scrollWidth > el.clientWidth) {
+        el.title = el.innerHTML;
+        console.log(el);
+      }
     },
-
   },
 };
 </script>
