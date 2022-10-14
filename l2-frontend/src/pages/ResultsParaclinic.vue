@@ -1648,7 +1648,7 @@
             Талон № {{ slot.data.pk }}
           </h3>
           <h5>{{ slot.data.datetime }}</h5>
-          ЕЦП person_id пациента:
+          ЕЦП ID пациента:
           <a
             :href="`/ui/directions?rmis_uid=${slot.data.patient_uid}`"
             target="_blank"
