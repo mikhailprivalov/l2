@@ -283,6 +283,7 @@ export default {
     },
     showTitle(event) {
       const element = event.target;
+      element.title = '';
       if (element.scrollWidth > element.clientWidth) {
         element.title = element.innerHTML;
       }
