@@ -67,6 +67,7 @@ def get_reserves_ecp(date, med_staff_fact_id):
                 "patientdata": data_patient[0],
             }
         )
+    search_patient_ecp_by_person_id(r['Person_id'])
     return sorted(time_table, key=lambda k: k['timeStart'])
 
 
@@ -89,3 +90,25 @@ def get_slot_ecp(person_id, slot_id):
         if d
         else {}
     )
+
+
+def search_patient_ecp_by_person_id(person_id):
+    sess_id = request_get_sess_id()
+    req = make_request_get("Person", query=f"Sess_id={sess_id}&Person_id={person_id}", sess_id=sess_id)
+    result = json.loads(req.content.decode())
+    patient = result['data'][0]
+    patient_snils = patient.get("PersonSnils_Snils", "")
+    req = make_request_get("PersonList",
+                           query=f"Sess_id={sess_id}&"
+                                 f"PersonSurName_SurName={patient['PersonSurName_SurName']}&"
+                                 f"PersonFirName_FirName={patient['PersonFirName_FirName']}&"
+                                 f"PersonBirthDay_BirthDay={patient['PersonBirthDay_BirthDay']}&PersonSnils_Snils={patient_snils}",
+                           sess_id=sess_id)
+    result = json.loads(req.content.decode())
+    individual = result['data'][0]
+    if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] == '2':
+        patient['enp'] = individual['Polis_Num']
+    return patient
+
+
+

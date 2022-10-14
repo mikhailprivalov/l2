@@ -1614,12 +1614,7 @@ def user_location(request):
 
             d = Patients.get_fake_reserves()
         else:
-            # from rmis_integration.client import Client
-            #
-            # c = Client(modules=['patients'])
-            # d = c.patients.get_reserves(date, rl)
             d = get_reserves_ecp(date, rl)
-            print(d)
 
         d = list(map(lambda x: {**x, "status": slot_status(x)}, d))
     return JsonResponse({"data": d})
