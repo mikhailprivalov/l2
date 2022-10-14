@@ -538,6 +538,92 @@ class Individual(models.Model):
         return tfoms_data
 
     @staticmethod
+    def import_from_ecp(patient_data: dict):
+        individual = Individual.objects.filter(ecp_id=patient_data['Person_id']).first()
+        snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
+        enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
+
+        if not individual:
+            if snils_type and patient_data.get('Person_Snils'):
+                individual = Individual.objects.filter(document__document_type=snils_type, document__number=patient_data['Person_Snils']).first()
+            if not individual and enp_type and patient_data.get('enp'):
+                individual = Individual.objects.filter(document__document_type=enp_type, document__number=patient_data['enp']).first()
+
+        sex = 'ж' if patient_data['Person_Sex_id'] == '2' else 'м'
+        if not individual:
+            individual = Individual(
+                ecp_id=patient_data['Person_id'],
+                family=patient_data['PersonSurName_SurName'],
+                name=patient_data['PersonFirName_FirName'],
+                patronymic=patient_data['PersonSecName_SecName'],
+                birthday=patient_data['PersonBirthDay_BirthDay'],
+                sex=sex,
+            )
+            individual.save()
+        else:
+            individual.family = patient_data['PersonSurName_SurName']
+            individual.name = patient_data['PersonFirName_FirName']
+            individual.patronymic = patient_data['PersonSecName_SecName']
+            individual.birthday = patient_data['PersonBirthDay_BirthDay']
+            individual.sex = sex
+            individual.ecp_id = patient_data['Person_id']
+            individual.save(update_fields=['family', 'name', 'patronymic', 'birthday', 'sex'])
+
+        snils_doc = None
+        if snils_type and patient_data.get('Person_Snils'):
+            snils = patient_data['Person_Snils']
+            snils = ''.join([s for s in snils if s.isdigit()])
+            if not Document.objects.filter(individual=individual, document_type=snils_type).exists():
+                snils_doc = Document(
+                    individual=individual,
+                    document_type=snils_type,
+                    number=snils,
+                )
+                snils_doc.save()
+            else:
+                snils_doc = Document.objects.filter(individual=individual, document_type=snils_type).first()
+                snils_doc.number = snils
+                snils_doc.save(update_fields=['number'])
+
+        enp_doc = None
+        if enp_type and patient_data.get('enp'):
+            enp = patient_data['enp']
+            if not Document.objects.filter(individual=individual, document_type=enp_type).exists():
+                enp_doc = Document(
+                    individual=individual,
+                    document_type=enp_type,
+                    number=enp,
+                )
+                enp_doc.save()
+            else:
+                enp_doc = Document.objects.filter(individual=individual, document_type=enp_type).first()
+                enp_doc.number = enp
+                enp_doc.save(update_fields=['number'])
+
+        if not Card.objects.filter(base__is_internal=True, individual=individual, is_archive=False).exists():
+            Card.add_l2_card(individual, polis=enp_doc, snils=snils_doc)
+        else:
+            card = Card.objects.filter(base__is_internal=True, individual=individual, is_archive=False).first()
+            if enp_doc:
+                cdu = CardDocUsage.objects.filter(card=card, document__document_type=enp_doc.document_type)
+                if not cdu.exists():
+                    if cdu:
+                        if cdu.first().document != enp_doc:
+                            cdu.first().document = enp_doc
+                            cdu.first().save(update_fields=['document'])
+                    else:
+                        CardDocUsage(card=card, document=enp_doc).save()
+            if snils_doc:
+                cdu = CardDocUsage.objects.filter(card=card, document__document_type=snils_doc.document_type)
+                if not cdu.exists():
+                    if cdu:
+                        if cdu.first().document != snils_doc:
+                            cdu.first().document = snils_doc
+                            cdu.first().save(update_fields=['document'])
+                    else:
+                        CardDocUsage(card=card, document=snils_doc).save()
+
+    @staticmethod
     def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False, need_return_card=False):
         if isinstance(data, list):
             if len(data) > 0:
@@ -1168,6 +1254,7 @@ class Card(models.Model):
         address: Union[str, None] = None,
         force=False,
         updated_data=None,
+        snils: Union['Document', None] = None,
     ):
         if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
             return None
@@ -1219,6 +1306,8 @@ class Card(models.Model):
             c.save()
             if polis:
                 CardDocUsage(card=c, document=polis).save()
+            if snils:
+                CardDocUsage(card=c, document=snils).save()
             print('Created card')  # noqa: T001
             return c
 

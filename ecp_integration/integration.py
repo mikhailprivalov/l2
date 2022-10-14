@@ -30,7 +30,7 @@ def make_request_get(path, query="", sess_id=""):
         data = requests.get(url, headers=headers)
         return data
     except Exception as e:
-        print(e)  # noqa: T001
+        logger.exception(e)
         return {}
 
 
