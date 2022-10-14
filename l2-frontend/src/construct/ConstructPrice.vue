@@ -285,7 +285,6 @@ export default {
       const el = elem;
       if (el.scrollWidth > el.clientWidth) {
         el.title = el.innerHTML;
-        console.log(el);
       }
     },
   },
