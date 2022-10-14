@@ -30,7 +30,7 @@ import directory.models as directory
 from hospitals.models import Hospitals
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya, TubesRegistration
+from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strtime, strdate
@@ -486,7 +486,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     vid = []
     has_descriptive = False
     has_doc_refferal = False
-    need_qr_code = False
+    need_qr_code = True
     for i in issledovaniya:
         rtp = i.research.reversed_type
         if rtp < -1:
@@ -510,8 +510,6 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
             vid.append(rt)
             if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
                 has_descriptive = True
-                if i.research.podrazdeleniye.can_has_pacs:
-                    need_qr_code = True
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + ", ".join(vid))
 
@@ -677,6 +675,11 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                     (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
                     title + " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])),
                 )
+
+    direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
+    for params in direction_params:
+        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, f'{params.title}: {params.value}')
+        n += 1
 
     if need_qr_code:
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
