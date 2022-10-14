@@ -79,7 +79,7 @@
               v-tippy
               class="research tablerow"
               style="padding-left: 6px"
-              @mouseover="getTitle($event)"
+              @mouseover="showTitle($event)"
             >
               {{ coastResearch.research.title }}
             </td>
@@ -281,7 +281,7 @@ export default {
         }
       }
     },
-    getTitle(event) {
+    showTitle(event) {
       const element = event.target;
       if (element.scrollWidth > element.clientWidth) {
         element.title = element.innerHTML;
