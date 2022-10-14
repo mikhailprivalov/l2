@@ -108,6 +108,3 @@ def search_patient_ecp_by_person_id(person_id):
     if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] == '2':
         patient['enp'] = individual['Polis_Num']
     return patient
-
-
-
