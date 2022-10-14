@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 
 from api.patients.common_func import get_card_control_param
 from api.patients.sql_func import get_patient_control_params
+from ecp_integration.integration import search_patient_ecp_by_person_id
 from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connections
@@ -110,6 +111,8 @@ def patients_search_card(request):
     p4i = bool(re.search(p4, query.lower()))
     p5 = re.compile(r'phone:.+')
     p5i = bool(re.search(p5, query))
+    p_ecp = re.compile(r'ecp:\d+')
+    is_ecp_search = bool(re.search(p_ecp, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
     has_phone_search = False
@@ -178,6 +181,12 @@ def patients_search_card(request):
                     | Q(card__phone__in=normalized_phones)
                     | Q(card__doctorcall__phone__in=normalized_phones)
                 )
+    if is_ecp_search:
+        ecp_id = query.split(':')[1]
+        patient_data = search_patient_ecp_by_person_id(ecp_id)
+        if patient_data and (patient_data.get('PersonSnils_Snils') or patient_data.get('enp')):
+            Individual.import_from_ecp(patient_data)
+        objects = Individual.objects.filter(ecp_id=ecp_id)
     elif p5i or (always_phone_search and len(query) == 11 and query.isdigit()):
         has_phone_search = True
         phone = query.replace('phone:', '')

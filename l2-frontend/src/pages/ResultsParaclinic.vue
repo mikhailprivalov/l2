@@ -1648,7 +1648,7 @@
             Талон № {{ slot.data.pk }}
           </h3>
           <h5>{{ slot.data.datetime }}</h5>
-          РМИС UID пациента:
+          ЕЦП ID пациента:
           <a
             :href="`/ui/directions?rmis_uid=${slot.data.patient_uid}`"
             target="_blank"
@@ -2774,9 +2774,8 @@ export default {
         await this.$store.dispatch(actions.INC_LOADING);
         const cards = await patientsPoint.searchCard({
           type: this.internal_base,
-          query: this.slot.data.patient_uid,
+          query: `ecp:${this.slot.data.patient_uid}`,
           list_all_cards: false,
-          inc_rmis: true,
         });
         const cardPk = (cards.results || [{}])[0].pk;
         const { direction } = await usersPoint.fillSlot({ slot: { ...this.slot, card_pk: cardPk } });
