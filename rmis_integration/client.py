@@ -1665,7 +1665,6 @@ def get_timetable_doctor(date, med_staff_fact_id):
     headers = {'Authorization': 'Basic sindcm6nhdlumaadaijrdeg5j8', 'Cookie': 'PHPSESSID=sindcm6nhdlumaadaijrdeg5j8'}
     req = requests.get(url, headers=headers)
     sess_id = json.loads(req.content.decode()).get("sess_id")
-    # med_staff_fact_id = 380101000019040
     time_end = f"{date} 23:00:00"
     time_start = f"{date} 06:00:00"
     url = f'http://ecp38.is-mis.ru/api/TimeTableGraf/TimeTableGrafbyMedStaffFact?Sess_id={sess_id}&MedStaffFact_id={med_staff_fact_id}&TimeTableGraf_end={time_end}&TimeTableGraf_beg={time_start}'
@@ -1678,14 +1677,20 @@ def get_timetable_doctor(date, med_staff_fact_id):
         url_patient = f"{url_patient}{r['Person_id']}"
         req = requests.get(url_patient, headers=headers)
         result = json.loads(req.content.decode())
-        print(result)
         patient_data = result.get('data')[0]
+
+        fio_parts = [
+            patient_data["PersonSurName_SurName"],
+            patient_data["PersonFirName_FirName"],
+            patient_data["PersonSecName_SecName"],
+        ]
+
+        fio = " ".join([x for x in fio_parts if x])
+
         time_table[r.get('TimeTableGraf_begTime')] = {
             'TimeTableGraf_id': r['TimeTableGraf_id'],
             'Person_id': r['Person_id'],
-            'fio': f'{patient_data["PersonSurName_SurName"]} {patient_data["PersonFirName_FirName"]} {patient_data["PersonSecName_SecName"]}',
+            'fio': fio,
         }
 
     data = sorted(time_table.keys())
-    print(data)
-    print(time_table)
