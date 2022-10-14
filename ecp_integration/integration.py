@@ -97,12 +97,14 @@ def search_patient_ecp_by_person_id(person_id):
     result = json.loads(req.content.decode())
     patient = result['data'][0]
     patient_snils = patient.get("PersonSnils_Snils", "")
-    req = make_request_get("PersonList",
-                           query=f"Sess_id={sess_id}&"
-                                 f"PersonSurName_SurName={patient['PersonSurName_SurName']}&"
-                                 f"PersonFirName_FirName={patient['PersonFirName_FirName']}&"
-                                 f"PersonBirthDay_BirthDay={patient['PersonBirthDay_BirthDay']}&PersonSnils_Snils={patient_snils}",
-                           sess_id=sess_id)
+    req = make_request_get(
+        "PersonList",
+        query=f"Sess_id={sess_id}&"
+        f"PersonSurName_SurName={patient['PersonSurName_SurName']}&"
+        f"PersonFirName_FirName={patient['PersonFirName_FirName']}&"
+        f"PersonBirthDay_BirthDay={patient['PersonBirthDay_BirthDay']}&PersonSnils_Snils={patient_snils}",
+        sess_id=sess_id,
+    )
     result = json.loads(req.content.decode())
     individual = result['data'][0]
     if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] == '2':
