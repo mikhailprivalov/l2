@@ -45,7 +45,11 @@ def get_reserves_ecp(date, med_staff_fact_id):
     sess_id = request_get_sess_id()
     time_end = f"{date} 23:00:00"
     time_start = f"{date} 06:00:00"
-    req = make_request_get("TimeTableGraf/TimeTableGrafbyMedStaffFact", query=f"Sess_id={sess_id}&MedStaffFact_id={med_staff_fact_id}&TimeTableGraf_end={time_end}&TimeTableGraf_beg={time_start}", sess_id=sess_id)
+    req = make_request_get(
+        "TimeTableGraf/TimeTableGrafbyMedStaffFact",
+        query=f"Sess_id={sess_id}&MedStaffFact_id={med_staff_fact_id}&TimeTableGraf_end={time_end}&TimeTableGraf_beg={time_start}",
+        sess_id=sess_id,
+    )
     result = json.loads(req.content.decode())
     time_table = []
     for r in result.get('data'):
@@ -57,7 +61,7 @@ def get_reserves_ecp(date, med_staff_fact_id):
             {
                 "uid": r["Person_id"],
                 "patient": fio_patient,
-                "slot":  r["TimeTableGraf_id"],
+                "slot": r["TimeTableGraf_id"],
                 "timeStart": r["TimeTableGraf_begTime"].split(" ")[1][:5],
                 "timeEnd": r["TimeTableGraf_begTime"].split(" ")[1][:5],
                 "patientdata": data_patient[0],

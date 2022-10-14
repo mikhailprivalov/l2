@@ -1683,13 +1683,9 @@ def get_timetable_doctor(date, med_staff_fact_id):
         time_table[r.get('TimeTableGraf_begTime')] = {
             'TimeTableGraf_id': r['TimeTableGraf_id'],
             'Person_id': r['Person_id'],
-            'fio': f'{patient_data["PersonSurName_SurName"]} {patient_data["PersonFirName_FirName"]} {patient_data["PersonSecName_SecName"]}'
+            'fio': f'{patient_data["PersonSurName_SurName"]} {patient_data["PersonFirName_FirName"]} {patient_data["PersonSecName_SecName"]}',
         }
 
     data = sorted(time_table.keys())
     print(data)
     print(time_table)
-
-
-
-

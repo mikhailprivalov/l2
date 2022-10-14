@@ -1608,7 +1608,7 @@ def user_location(request):
     # rl = request.user.doctorprofile.rmis_location
     rl = request.user.doctorprofile.rmis_resource_id
     if rl and SettingManager.get("l2_rmis_queue", default='false', default_type='b'):
-    # if rl and SettingManager.get("l2_ecp_queue", default='false', default_type='b'):
+        # if rl and SettingManager.get("l2_ecp_queue", default='false', default_type='b'):
         if rl == 1337 and request.user.is_superuser:
             from rmis_integration.client import Patients
 
