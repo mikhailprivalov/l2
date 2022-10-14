@@ -79,7 +79,7 @@
               v-tippy
               class="research tablerow"
               style="padding-left: 6px"
-              @mouseover="showTitle($event)"
+              @mouseover="showTitle"
             >
               {{ coastResearch.research.title }}
             </td>
