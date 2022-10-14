@@ -600,10 +600,10 @@ class Individual(models.Model):
                 enp_doc.number = enp
                 enp_doc.save(update_fields=['number'])
 
-        if not Card.objects.filter(base__is_internal=True, individual=individual, is_archive=False).exists():
+        if not Card.objects.filter(base__internal_type=True, individual=individual, is_archive=False).exists():
             Card.add_l2_card(individual, polis=enp_doc, snils=snils_doc)
         else:
-            card = Card.objects.filter(base__is_internal=True, individual=individual, is_archive=False).first()
+            card = Card.objects.filter(base__internal_type=True, individual=individual, is_archive=False).first()
             if enp_doc:
                 cdu = CardDocUsage.objects.filter(card=card, document__document_type=enp_doc.document_type)
                 if not cdu.exists():
