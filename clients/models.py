@@ -567,7 +567,7 @@ class Individual(models.Model):
             individual.birthday = patient_data['PersonBirthDay_BirthDay']
             individual.sex = sex
             individual.ecp_id = patient_data['Person_id']
-            individual.save(update_fields=['family', 'name', 'patronymic', 'birthday', 'sex'])
+            individual.save(update_fields=['family', 'name', 'patronymic', 'birthday', 'sex', 'ecp_id'])
 
         snils_doc = None
         if snils_type and patient_data.get('Person_Snils'):
