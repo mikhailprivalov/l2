@@ -67,7 +67,6 @@ def get_reserves_ecp(date, med_staff_fact_id):
                 "patientdata": data_patient[0],
             }
         )
-    search_patient_ecp_by_person_id(r['Person_id'])
     return sorted(time_table, key=lambda k: k['timeStart'])
 
 
