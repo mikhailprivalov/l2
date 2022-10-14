@@ -78,7 +78,7 @@ import PDFObject from 'pdfobject';
       localStorage.setItem('print_results_margin', String(this.margin));
     },
     plainProtocolText() {
-      localStorage.setItem('print_results_plain_protocol_text', String(this.plainProtocolText));
+      localStorage.setItem('print_results_protocol_plain_text', String(this.plainProtocolText));
     },
     medCertificate() {
       localStorage.setItem('print_results_med_certificate', String(this.medCertificate));
