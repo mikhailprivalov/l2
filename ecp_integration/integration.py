@@ -60,7 +60,7 @@ def get_reserves_ecp(date, med_staff_fact_id):
                 "slot":  r["TimeTableGraf_id"],
                 "timeStart": r["TimeTableGraf_begTime"].split(" ")[1][:5],
                 "timeEnd": r["TimeTableGraf_begTime"].split(" ")[1][:5],
-                "patientdata": data_patient[0]
+                "patientdata": data_patient[0],
             }
         )
     return sorted(time_table, key=lambda k: k['timeStart'])
