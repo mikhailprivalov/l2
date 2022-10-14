@@ -9,6 +9,7 @@ import pytz_deprecation_shim as pytz
 
 from directory.models import Researches
 from doctor_schedule.models import ScheduleResource
+from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
     SYSTEM_AS_VI,
     SOME_LINKS,
@@ -1604,17 +1605,20 @@ def user_location(request):
     request_data = json.loads(request.body)
     date = request_data["date"]
     d = {}
-    rl = request.user.doctorprofile.rmis_location
+    # rl = request.user.doctorprofile.rmis_location
+    rl = request.user.doctorprofile.rmis_resource_id
     if rl and SettingManager.get("l2_rmis_queue", default='false', default_type='b'):
+    # if rl and SettingManager.get("l2_ecp_queue", default='false', default_type='b'):
         if rl == 1337 and request.user.is_superuser:
             from rmis_integration.client import Patients
-
             d = Patients.get_fake_reserves()
         else:
-            from rmis_integration.client import Client
-
-            c = Client(modules=['patients'])
-            d = c.patients.get_reserves(date, rl)
+            # from rmis_integration.client import Client
+            #
+            # c = Client(modules=['patients'])
+            # d = c.patients.get_reserves(date, rl)
+            d = get_reserves_ecp(date, rl)
+            print(d)
 
         d = list(map(lambda x: {**x, "status": slot_status(x)}, d))
     return JsonResponse({"data": d})
@@ -1632,16 +1636,13 @@ def user_get_reserve(request):
 
             d = Patients.get_fake_slot()
         else:
-            from rmis_integration.client import Client
-
-            c = Client(modules=['patients'])
-            d = c.patients.get_slot(pk)
+            d = get_slot_ecp(patient_uid, pk)
         n = directions.Napravleniya.objects.filter(rmis_slot_id=pk).first()
         d["direction"] = n.pk if n else None
         ds = directions.Issledovaniya.objects.filter(napravleniye=n, napravleniye__isnull=False).first()
         d['direction_service'] = ds.research_id if ds else -1
         if d:
-            return JsonResponse({**d, "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'), "patient_uid": patient_uid, "pk": int(str(pk)[1:]) if str(pk).isdigit() else str(pk)})
+            return JsonResponse({**d, "datetime": d["datetime"], "patient_uid": patient_uid, "pk": int(str(pk)[1:]) if str(pk).isdigit() else str(pk)})
     return JsonResponse({})
 
 

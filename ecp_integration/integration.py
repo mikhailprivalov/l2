@@ -1,11 +1,12 @@
 import logging
-from typing import List, Optional
 from urllib.parse import urljoin, urlencode
 import requests
+
 from appconf.manager import SettingManager
 import simplejson as json
 
 from rmis_integration.client import Settings
+from utils.dates import normalize_dash_date
 
 logger = logging.getLogger(__name__)
 
@@ -40,27 +41,47 @@ def request_get_sess_id():
     return json.loads(data.content.decode()).get("sess_id")
 
 
-def get_timetable_doctor(date, med_staff_fact_id):
+def get_reserves_ecp(date, med_staff_fact_id):
     sess_id = request_get_sess_id()
-    # # med_staff_fact_id = 380101000019040
     time_end = f"{date} 23:00:00"
     time_start = f"{date} 06:00:00"
     req = make_request_get("TimeTableGraf/TimeTableGrafbyMedStaffFact", query=f"Sess_id={sess_id}&MedStaffFact_id={med_staff_fact_id}&TimeTableGraf_end={time_end}&TimeTableGraf_beg={time_start}", sess_id=sess_id)
     result = json.loads(req.content.decode())
-    print(result.get('data'))
-    # time_table = {}
-    # for r in result.get('data'):
-    #     url_patient = f"http://ecp38.is-mis.ru/api//Person?Sess_id={sess_id}&Person_id="
-    #     url_patient = f"{url_patient}{r['Person_id']}"
-    #     req = requests.get(url_patient, headers=headers)
-    #     result = json.loads(req.content.decode())
-    #     print(result)
-    #     patient_data = result.get('data')[0]
-    #     time_table[r.get('TimeTableGraf_begTime')] = {
-    #         'TimeTableGraf_id': r['TimeTableGraf_id'],
-    #         'Person_id': r['Person_id'],
-    #         'fio': f'{patient_data["PersonSurName_SurName"]} {patient_data["PersonFirName_FirName"]} {patient_data["PersonSecName_SecName"]}'
-    #     }
-    #
-    # data = sorted(time_table.keys())
-    # print(time_table)
+    time_table = []
+    for r in result.get('data'):
+        req = make_request_get("Person", query=f"Sess_id={sess_id}&Person_id={r['Person_id']}", sess_id=sess_id)
+        patient = json.loads(req.content.decode())
+        data_patient = patient.get('data')
+        fio_patient = f'{data_patient[0]["PersonSurName_SurName"]} {data_patient[0]["PersonFirName_FirName"]} {data_patient[0]["PersonSecName_SecName"]}'
+        time_table.append(
+            {
+                "uid": r["Person_id"],
+                "patient": fio_patient,
+                "slot":  r["TimeTableGraf_id"],
+                "timeStart": r["TimeTableGraf_begTime"].split(" ")[1][:5],
+                "timeEnd": r["TimeTableGraf_begTime"].split(" ")[1][:5],
+                "patientdata": data_patient[0]
+            }
+        )
+    return sorted(time_table, key=lambda k: k['timeStart'])
+
+
+def get_slot_ecp(person_id, slot_id):
+    sess_id = request_get_sess_id()
+    req = make_request_get("TimeTableGraf/TimeTableGrafStatus", query=f"Sess_id={sess_id}&Person_id={person_id}&TimeTableGraf_id={slot_id}", sess_id=sess_id)
+    req_result = json.loads(req.content.decode())
+    d = req_result['data'][0]
+    req = make_request_get("TimeTableGraf/TimeTableGrafById", query=f"Sess_id={sess_id}&TimeTableGraf_id={slot_id}", sess_id=sess_id)
+    req_result = json.loads(req.content.decode())
+    r = req_result['data'][0]
+    date_time_data = r["TimeTableGraf_begTime"].split(" ")
+    dash_date = normalize_dash_date(date_time_data[0])
+    date_time = date_time_data[1][:5]
+    return (
+        {
+            "status": d["EvnStatus_id"],
+            "datetime": f"{dash_date} {date_time}",
+        }
+        if d
+        else {}
+    )

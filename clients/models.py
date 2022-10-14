@@ -1127,7 +1127,7 @@ class Card(models.Model):
             ind_data['type_doc'] = ''
 
         # document= "снилс'
-        ind_data['snils'] = ind_documents["snils"]["num"]
+        ind_data['snils'] = ind_documents["snils"]["num"].replace("-","").replace(" ", "")
         # document= "полис ОМС"
         ind_data['oms'] = {}
         ind_data['oms']['polis_num'] = ind_documents["polis"]["num"]
