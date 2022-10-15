@@ -486,7 +486,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     vid = []
     has_descriptive = False
     has_doc_refferal = False
-    need_qr_code = True
+    need_qr_code = False
     for i in issledovaniya:
         rtp = i.research.reversed_type
         if rtp < -1:
@@ -510,6 +510,8 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
             vid.append(rt)
             if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
                 has_descriptive = True
+                if i.research.podrazdeleniye.can_has_pacs:
+                    need_qr_code = True
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + ", ".join(vid))
 
