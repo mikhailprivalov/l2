@@ -681,7 +681,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
     for params in direction_params:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, f'{params.title}: {params.value}')
-        n += 1
+        ht += 10
 
     if need_qr_code:
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
