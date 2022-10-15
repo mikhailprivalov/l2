@@ -7,6 +7,7 @@ import simplejson as json
 
 from rmis_integration.client import Settings
 from utils.dates import normalize_dash_date
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -53,18 +54,26 @@ def get_reserves_ecp(date, med_staff_fact_id):
     result = json.loads(req.content.decode())
     time_table = []
     for r in result.get('data'):
-        req = make_request_get("Person", query=f"Sess_id={sess_id}&Person_id={r['Person_id']}", sess_id=sess_id)
-        patient = json.loads(req.content.decode())
-        data_patient = patient.get('data')
-        fio_patient = f'{data_patient[0]["PersonSurName_SurName"]} {data_patient[0]["PersonFirName_FirName"]} {data_patient[0]["PersonSecName_SecName"]}'
+        cache_key = f"ecp-fio:{r['Person_id']}"
+        fio = cache.get(cache_key)
+        if not fio:
+            req = make_request_get("Person", query=f"Sess_id={sess_id}&Person_id={r['Person_id']}", sess_id=sess_id)
+            patient = json.loads(req.content.decode())
+            data_patient = patient.get('data')
+            fio_parts = [
+                data_patient[0].get('PersonSurName_SurName'),
+                data_patient[0].get('PersonFirName_FirName'),
+                data_patient[0].get('PersonSecName_SecName'),
+            ]
+            fio = " ".join([part for part in fio_parts if part])
+            cache.set(cache_key, fio, 60 * 60 * 6)
         time_table.append(
             {
                 "uid": r["Person_id"],
-                "patient": fio_patient,
+                "patient": fio,
                 "slot": r["TimeTableGraf_id"],
                 "timeStart": r["TimeTableGraf_begTime"].split(" ")[1][:5],
                 "timeEnd": r["TimeTableGraf_begTime"].split(" ")[1][:5],
-                "patientdata": data_patient[0],
             }
         )
     return sorted(time_table, key=lambda k: k['timeStart'])
