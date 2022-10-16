@@ -128,9 +128,9 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end):
     unique_date = []
     for d in doctors:
         sess_id = request_get_sess_id()
-        req = make_request_get("TimeTableGraf/TimeTableGrafFreeDate",
-                               query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}",
-                               sess_id=sess_id)
+        req = make_request_get(
+            "TimeTableGraf/TimeTableGrafFreeDate", query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}", sess_id=sess_id
+        )
         req_result = json.loads(req.content.decode())
         schedule_data = req_result['data']
         if len(schedule_data) > 0:
