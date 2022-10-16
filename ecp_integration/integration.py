@@ -149,3 +149,14 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date):
     if len(free_slots) > 0:
         return sorted(free_slots, key=lambda k: k['TimeTableGraf_begTime'])
     return []
+
+
+def register_patient_ecp_slot(slot_id, patient_ecp_id):
+    sess_id = request_get_sess_id()
+    req = make_request_get("TimeTableGraf/TimeTableGrafWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableGraf_id={slot_id}", sess_id=sess_id)
+    req_result = json.loads(req.content.decode())
+    register_result = req_result['data']
+    if req_result['error_code'] == 0 and register_result['TimeTableGraf_id'] == slot_id and patient_ecp_id == register_result['Person_id']:
+        return {'register': True}
+
+    return {'register': False}
