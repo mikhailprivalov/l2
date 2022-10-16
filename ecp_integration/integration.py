@@ -141,7 +141,7 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end):
     return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
 
 
-def get_doctors_ecp_free_slots_by_date(rmis_location, date):
+def get_doctor_ecp_free_slots_by_date(rmis_location, date):
     sess_id = request_get_sess_id()
     req = make_request_get("TimeTableGraf/TimeTableGrafFreeTime", query=f"Sess_id={sess_id}&MedStaffFact_id={rmis_location}&TimeTableGraf_begTime={date}", sess_id=sess_id)
     req_result = json.loads(req.content.decode())
