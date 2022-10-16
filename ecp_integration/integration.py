@@ -122,8 +122,8 @@ def search_patient_ecp_by_person_id(person_id):
     return patient
 
 
-def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end):
-    doctors = get_doctors_rmis_location_by_research(research_pk)
+def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, hospital_id):
+    doctors = get_doctors_rmis_location_by_research(research_pk, hospital_id)
     doctors_has_free_date = {}
     unique_date = []
     for d in doctors:
