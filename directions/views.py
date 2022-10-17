@@ -688,7 +688,6 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
             ]
         )
     )
-    )
     params_table.canv = c
     width_params_table, height_params_table = params_table.wrap(0, 0)
     params_table.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table))
