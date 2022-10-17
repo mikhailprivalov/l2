@@ -671,8 +671,15 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     for params in direction_params:
         params_data.append(
             [
-                Paragraph('<font face=\"OpenSansBold\" size=\"' + str(font_size * 0.8) + f'\">{params.title}:</font>' +
-                          '<font face=\"OpenSans\" size=\"' + str(font_size * 0.8) + f'\"> {params.value}</font>', styleSheet["BodyText"])
+                Paragraph(
+                    '<font face=\"OpenSansBold\" size=\"'
+                    + str(font_size * 0.8)
+                    + f'\">{params.title}:</font>'
+                    + '<font face=\"OpenSans\" size=\"'
+                    + str(font_size * 0.8)
+                    + f'\"> {params.value}</font>',
+                    styleSheet["BodyText"],
+                )
             ]
         )
     params_table = Table(data=params_data, colWidths=params_col)
