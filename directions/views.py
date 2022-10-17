@@ -675,17 +675,19 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                     + f'\"> {params.value}</font>',
                     styleSheet["BodyText"],
                 )
-            ] for params in direction_params]
+            ] 
+            for params in direction_params
+        ]
     params_table = Table(data=params_data, colWidths=params_col)
     params_table.setStyle(
-            TableStyle(
-                [
-                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                    ('TOPPADDING', (0, 0), (-1, -1), 0),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-                ]
-            )
+        TableStyle(
+            [
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 0),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ]
         )
+    )
     params_table.canv = c
     width_params_table, height_params_table = params_table.wrap(0, 0)
     params_table.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table))
