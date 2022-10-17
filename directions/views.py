@@ -675,7 +675,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                     + f'\"> {params.value}</font>',
                     styleSheet["BodyText"],
                 )
-            ] 
+            ]
             for params in direction_params
         ]
     params_table = Table(data=params_data, colWidths=params_col)
