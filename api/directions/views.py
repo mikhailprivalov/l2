@@ -63,7 +63,7 @@ from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplat
 from laboratory import settings, VERSION
 from laboratory import utils
 from laboratory.decorators import group_required
-from laboratory.settings import DICOM_SERVER, TIME_ZONE, REMD_ONLY_RESEARCH, REMD_EXCLUDE_RESEARCH
+from laboratory.settings import DICOM_SERVER, TIME_ZONE, REMD_ONLY_RESEARCH, REMD_EXCLUDE_RESEARCH, SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
@@ -1322,6 +1322,7 @@ def directions_paraclinic_form(request):
                 "main_diagnosis": d.client.main_diagnosis,
                 "has_snils": has_snils,
             }
+            response["showExaminationDate"] = SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE
             all_confirmed = d.is_all_confirm()
             hospital_tfoms_code = d.get_hospital_tfoms_id()
             date = strdateru(d.data_sozdaniya)
