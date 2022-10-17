@@ -660,9 +660,14 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     wt, ht = t.wrap(0, 0)
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
-    params_data = []
-    params_col = [int(tw)]
     direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
+    if len(direction_params) == 0:
+        params_data = [
+            ['']
+        ]
+    else:
+        params_data = []
+    params_col = [int(tw)]
     for params in direction_params:
         params_data.append(
             [
@@ -681,24 +686,24 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
         )
     )
     params_table.canv = c
-    wt, ht = params_table.wrap(0, 0)
-    params_table.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht - 25))
+    width_params_table, height_params_table = params_table.wrap(0, 0)
+    params_table.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table))
 
     c.setFont('OpenSans', 8)
     if not has_descriptive and not has_doc_refferal:
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 10, "Всего назначено: " + str(len(issledovaniya)))
+        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table - 10, "Всего назначено: " + str(len(issledovaniya)))
 
     if service_locations:
         n = 0 if has_descriptive or has_doc_refferal else 1
         if one_sl:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, "Место: " + list(service_locations)[0])
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table - 14 - n * 10, "Место: " + list(service_locations)[0])
         else:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, "Места оказания услуг:")
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table - 14 - n * 10, "Места оказания услуг:")
             for title in service_locations:
                 n += 1
                 c.drawString(
                     paddingx + (w / 2 * xn),
-                    (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
+                    (h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table - 14 - n * 10,
                     title + " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])),
                 )
 
