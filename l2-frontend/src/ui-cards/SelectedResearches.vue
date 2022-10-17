@@ -359,6 +359,7 @@
     <Modal
       v-show="(visible && need_update_comment.length > 0 && !hide_window_update && !simple) || show_global_direction_params"
       ref="modal"
+      min-width="90%"
       show-footer="true"
       overflow-unset="true"
       results-editor
