@@ -660,6 +660,30 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     wt, ht = t.wrap(0, 0)
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
+    params_data = []
+    params_col = [int(tw)]
+    direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
+    for params in direction_params:
+        params_data.append(
+            [
+                Paragraph('<font face=\"OpenSansBold\" size=\"' + str(font_size * 0.8) + f'\">{params.title}:</font>' +
+                          '<font face=\"OpenSans\" size=\"' + str(font_size * 0.8) + f'\"> {params.value}</font>', styleSheet["BodyText"])
+            ]
+        )
+    params_table = Table(data=params_data, colWidths=params_col)
+    params_table.setStyle(
+        TableStyle(
+            [
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 0),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+    params_table.canv = c
+    wt, ht = params_table.wrap(0, 0)
+    params_table.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht - 25))
+
     c.setFont('OpenSans', 8)
     if not has_descriptive and not has_doc_refferal:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 10, "Всего назначено: " + str(len(issledovaniya)))
@@ -677,11 +701,6 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                     (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
                     title + " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])),
                 )
-
-    direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
-    for params in direction_params:
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, f'{params.title}: {params.value}')
-        ht += 10
 
     if need_qr_code:
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
