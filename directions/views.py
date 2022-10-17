@@ -662,9 +662,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
 
     direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
     if len(direction_params) == 0:
-        params_data = [
-            ['']
-        ]
+        params_data = [['']]
     else:
         params_data = []
     params_col = [int(tw)]
