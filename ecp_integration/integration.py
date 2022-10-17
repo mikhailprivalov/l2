@@ -5,6 +5,7 @@ import requests
 from appconf.manager import SettingManager
 import simplejson as json
 
+from ecp_integration.sql_func import get_doctors_rmis_location_by_research
 from rmis_integration.client import Settings
 from utils.dates import normalize_dash_date
 from django.core.cache import cache
@@ -119,3 +120,43 @@ def search_patient_ecp_by_person_id(person_id):
     if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] == '2':
         patient['enp'] = individual['Polis_Num']
     return patient
+
+
+def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, hospital_id):
+    doctors = get_doctors_rmis_location_by_research(research_pk, hospital_id)
+    doctors_has_free_date = {}
+    unique_date = []
+    for d in doctors:
+        sess_id = request_get_sess_id()
+        req = make_request_get(
+            "TimeTableGraf/TimeTableGrafFreeDate", query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}", sess_id=sess_id
+        )
+        req_result = json.loads(req.content.decode())
+        schedule_data = req_result['data']
+        if len(schedule_data) > 0:
+            doctors_has_free_date[d.rmis_location] = {"fio": f"{d.family} {d.name} {d.patronymic}", "pk": d.id, "dates": []}
+            doctors_has_free_date[d.rmis_location]["dates"] = [s["TimeTableGraf_begTime"] for s in schedule_data]
+            unique_date.extend(doctors_has_free_date[d.rmis_location]["dates"])
+
+    return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
+
+
+def get_doctor_ecp_free_slots_by_date(rmis_location, date):
+    sess_id = request_get_sess_id()
+    req = make_request_get("TimeTableGraf/TimeTableGrafFreeTime", query=f"Sess_id={sess_id}&MedStaffFact_id={rmis_location}&TimeTableGraf_begTime={date}", sess_id=sess_id)
+    req_result = json.loads(req.content.decode())
+    free_slots = req_result['data']
+    if len(free_slots) > 0:
+        return sorted(free_slots, key=lambda k: k['TimeTableGraf_begTime'])
+    return []
+
+
+def register_patient_ecp_slot(slot_id, patient_ecp_id):
+    sess_id = request_get_sess_id()
+    req = make_request_get("TimeTableGraf/TimeTableGrafWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableGraf_id={slot_id}", sess_id=sess_id)
+    req_result = json.loads(req.content.decode())
+    register_result = req_result['data']
+    if req_result['error_code'] == 0 and register_result['TimeTableGraf_id'] == slot_id and patient_ecp_id == register_result['Person_id']:
+        return {'register': True}
+
+    return {'register': False}

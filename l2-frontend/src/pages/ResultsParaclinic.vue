@@ -994,7 +994,7 @@
                 </div>
               </div>
               <div
-                v-if="row.research.is_doc_refferal || row.research.is_gistology"
+                v-if="row.research.is_doc_refferal || needShowDateExamination(row.research)"
                 class="field"
               >
                 <div class="field-title">
@@ -2207,6 +2207,18 @@ export default {
     window.$(window).off('beforeunload', this.unload);
   },
   methods: {
+    needShowDateExamination(currentResearch) {
+      if (typeof this.data.showExaminationDate.is_gistology !== 'undefined') {
+        return currentResearch.is_gistology && this.data.showExaminationDate.is_gistology;
+      }
+      if (typeof this.data.showExaminationDate.is_paraclinic !== 'undefined') {
+        return currentResearch.is_paraclinic && this.data.showExaminationDate.is_paraclinic;
+      }
+      if (typeof this.data.showExaminationDate.is_stom !== 'undefined') {
+        return currentResearch.is_stom && this.data.showExaminationDate.is_stom;
+      }
+      return false;
+    },
     paidFinSource(currentRow, currentFinSourceList) {
       for (const s of currentFinSourceList) {
         if (s.pk === currentRow && s.title === 'Платно') {
