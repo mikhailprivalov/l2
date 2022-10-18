@@ -2,6 +2,7 @@ import datetime
 from collections import defaultdict
 
 import simplejson as json
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -314,3 +315,10 @@ def doc_call(request):
 @login_required
 def list_wait(request):
     return redirect('/ui/list-wait')
+
+
+@login_required
+def logout_view(request):
+    request.user.doctorprofile.mark_as_offline()
+    logout(request)
+    return redirect('/')

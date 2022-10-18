@@ -2,7 +2,14 @@
   <div id="app">
     <Navbar v-if="!embedded && !hideHeaderWithoutLogin && !isEmptyLayout" />
 
-    <div :class="[isNarrowLayout && 'container', isFullPageLayout && 'full-page-layout', isEmptyLayout && 'empty-layout']">
+    <div
+      :class="[
+        isNarrowLayout && 'container',
+        isFullPageLayout && 'full-page-layout',
+        isEmptyLayout && 'empty-layout',
+        isWideNarrowLayout && 'wide-narrow-layout',
+      ]"
+    >
       <router-view />
     </div>
 
@@ -35,6 +42,14 @@
     </transition>
 
     <CheckBackend />
+    <ChatsDialogs v-if="chatsEnabled" />
+
+    <audio
+      ref="notifyAudioSrc"
+      :src="notifyAudioSrc"
+      preload="auto"
+      type="audio/mpeg"
+    />
   </div>
 </template>
 
@@ -42,12 +57,16 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
+import _ from 'lodash';
 
 import Navbar from '@/components/Navbar.vue';
 import CheckBackend from '@/ui-cards/CheckBackend.vue';
+import ChatsDialogs from '@/ui-cards/Chat/ChatsDialogs.vue';
+import * as actions from '@/store/action-types';
+import notifyAudioSrc from '@/assets/notify.mp3';
 
 @Component({
-  components: { CheckBackend, Navbar },
+  components: { CheckBackend, Navbar, ChatsDialogs },
   computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
   metaInfo() {
     return {
@@ -57,11 +76,47 @@ import CheckBackend from '@/ui-cards/CheckBackend.vue';
   data() {
     return {
       embedded: false,
+      notifyAudioSrc,
     };
+  },
+  watch: {
+    $route() {
+      this.embedded = this.$route.query.embedded === 'true';
+    },
+    l2_chats() {
+      this.loadChatsDebounced();
+    },
+    authenticated() {
+      this.loadChatsDebounced();
+    },
   },
   mounted() {
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
+    if (!this.embedded) {
+      this.loadChatsDebounced();
+      this.$store.subscribeAction((action) => {
+        if (action.type === actions.CHATS_NOTIFY) {
+          if (!this.$store.getters.chatsDialogsOpened.includes(action.payload.dialogId)) {
+            const text = action.payload.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const messageParts = [
+              `<strong>Сообщение от ${action.payload.authorName}</strong>`,
+              text,
+              '',
+              '<small><strong><u>перейти к диалогу</u></strong></small>',
+            ];
+            this.$root.$emit(
+              'msg',
+              'message',
+              messageParts.join('<br>'),
+              10000,
+              action.payload.dialogId,
+            );
+          }
+          this.playNotifySound();
+        }
+      });
+    }
   },
 })
 export default class App extends Vue {
@@ -89,12 +144,48 @@ export default class App extends Vue {
     return Boolean(this?.$route?.meta?.hideHeaderWithoutLogin);
   }
 
+  get isMenuPage() {
+    return this?.$route?.name === 'menu';
+  }
+
+  get l2_chats() {
+    return this.$store.getters.modules.l2_chats;
+  }
+
+  get isWideNarrowLayout() {
+    return this.isNarrowLayout && this.isMenuPage && this.l2_chats;
+  }
+
   get system() {
     return this.$systemTitle();
   }
 
   get asVI() {
     return this.$asVI();
+  }
+
+  loadChats() {
+    if (this.embedded) {
+      return;
+    }
+    this.$store.dispatch(actions.CHATS_LOAD_DEPARTMENTS);
+    this.$store.dispatch(actions.CHATS_MESSAGES_COUNT);
+  }
+
+  loadChatsDebounced = _.debounce(this.loadChats, 100);
+
+  chatsEnabled() {
+    return this.$store.getters.chatsEnabled;
+  }
+
+  playNotifySound() {
+    if (!this.$refs.notifyAudioSrc) {
+      return;
+    }
+    const audio = this.$refs.notifyAudioSrc as HTMLAudioElement;
+    audio.play().catch(() => {
+      // ignore
+    });
   }
 }
 </script>
@@ -228,5 +319,13 @@ export default class App extends Vue {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+.wide-narrow-layout.container {
+  @media (min-width: 1200px) {
+    max-width: 1470px;
+    min-width: 1170px;
+    width: unset;
+  }
 }
 </style>

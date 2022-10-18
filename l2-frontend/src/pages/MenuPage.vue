@@ -1,147 +1,157 @@
 <template>
   <div v-frag>
-    <div class="panel panel-default panel-flt">
-      <ul class="list-group">
-        <li class="list-group-item">
-          <div class="row">
-            <div class="col-xs-12 col-md-6 col-lg-6">
-              Вход выполнен как: {{ user_data.username }}
-              <a
-                v-if="changePassword"
-                href="#"
-                class="a-under"
-                @click="modalPassword = true"
-              >сменить&nbsp;пароль</a>
-              <template v-if="changePassword">
-                <br>
-                Email:
-                <a
-                  v-if="email"
-                  v-tippy
-                  href="#"
-                  class="a-under-reversed"
-                  title="Редактировать адрес"
-                  @click="modalEmail = true"
+    <div :class="chatsEnabled && 'menu-wrapper'">
+      <div :class="chatsEnabled && 'menu-left'">
+        <div class="panel panel-default panel-flt">
+          <ul class="list-group">
+            <li class="list-group-item">
+              <div class="row">
+                <div class="col-xs-12 col-md-6 col-lg-6">
+                  Вход выполнен как: {{ user_data.username }}
+                  <a
+                    v-if="changePassword"
+                    href="#"
+                    class="a-under"
+                    @click="modalPassword = true"
+                  >сменить&nbsp;пароль</a>
+                  <template v-if="changePassword">
+                    <br>
+                    Email:
+                    <a
+                      v-if="email"
+                      v-tippy
+                      href="#"
+                      class="a-under-reversed"
+                      title="Редактировать адрес"
+                      @click="modalEmail = true"
+                    >
+                      <span class="a-internal">{{ email }}</span> <i class="fa fa-pencil" />
+                    </a>
+                    <a
+                      v-else
+                      href="#"
+                      class="a-under"
+                      @click="modalEmail = true"
+                    >установить email</a>
+                  </template>
+                </div>
+                <div class="col-xs-12 col-md-6 col-lg-6 text-right text-left-xs">
+                  {{ fio_dep }}
+                  <br>
+                  <a
+                    href="/logout"
+                    class="btn btn-blue-nb"
+                    @click="logout"
+                  >Выход</a>
+                </div>
+              </div>
+            </li>
+            <li class="list-group-item">
+              Ваши права доступа и группы:
+              <div class="row dash-buttons groups-btns">
+                <div
+                  v-for="g in user_data.groups"
+                  :key="g"
+                  class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5"
                 >
-                  <span class="a-internal">{{ email }}</span> <i class="fa fa-pencil" />
-                </a>
-                <a
-                  v-else
-                  href="#"
-                  class="a-under"
-                  @click="modalEmail = true"
-                >установить email</a>
-              </template>
-            </div>
-            <div class="col-xs-12 col-md-6 col-lg-6 text-right text-left-xs">
-              {{ fio_dep }}
-              <br>
-              <a
-                href="/logout"
-                class="btn btn-blue-nb"
-                @click="logout"
-              >Выход</a>
-            </div>
-          </div>
-        </li>
-        <li class="list-group-item">
-          Ваши права доступа и группы:
-          <div class="row dash-buttons groups-btns">
-            <div
-              v-for="g in user_data.groups"
-              :key="g"
-              class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5"
+                  <div
+                    class="label label-default bw100 btn-ell"
+                    :title="g"
+                  >
+                    {{ g }}
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li
+              v-if="user_data.specialities && user_data.specialities.length > 0"
+              class="list-group-item"
             >
+              Специальности:
               <div
-                class="label label-default bw100 btn-ell"
-                :title="g"
+                v-for="s in user_data.specialities"
+                :key="s"
+                class="row dash-buttons groups-btns"
               >
-                {{ g }}
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5">
+                  <div
+                    class="label label-default bw100 btn-ell"
+                    :title="s"
+                  >
+                    {{ s }}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </li>
-        <li
-          v-if="user_data.specialities && user_data.specialities.length > 0"
-          class="list-group-item"
-        >
-          Специальности:
+            </li>
+          </ul>
+        </div>
+        <div class="row menu dash-buttons text-center">
           <div
-            v-for="s in user_data.specialities"
-            :key="s"
-            class="row dash-buttons groups-btns"
+            v-for="b in buttons"
+            :key="b.title"
+            class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn"
           >
-            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5">
-              <div
-                class="label label-default bw100 btn-ell"
-                :title="s"
-              >
-                {{ s }}
-              </div>
+            <router-link
+              :to="b.url"
+              class="panel-body"
+              :target="b.nt && '_blank'"
+            >
+              <span>{{ b.title }}</span>
+            </router-link>
+          </div><div
+            v-if="forms_url"
+            class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn"
+          >
+            <router-link
+              :to="forms_url"
+              class="panel-body"
+              target="_blank"
+              @click="addFeedback"
+            >
+              <span><i class="fas fa-comment" /> Оставить отзыв</span>
+            </router-link>
+          </div>
+        </div>
+        <hr>
+        <div class="row dash-buttons text-center">
+          <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info">
+            <div class="panel-body">
+              <span>
+                <span>{{ system }}</span>
+                <br>
+                <span>{{ menu.version }}</span>
+              </span>
             </div>
           </div>
-        </li>
-      </ul>
-    </div>
-    <div class="row menu dash-buttons text-center">
-      <div
-        v-for="b in buttons"
-        :key="b.title"
-        class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn"
-      >
-        <router-link
-          :to="b.url"
-          class="panel-body"
-          :target="b.nt && '_blank'"
-        >
-          <span>{{ b.title }}</span>
-        </router-link>
-      </div><div
-        v-if="forms_url"
-        class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn"
-      >
-        <router-link
-          :to="forms_url"
-          class="panel-body"
-          target="_blank"
-          @click="addFeedback"
-        >
-          <span><i class="fas fa-comment" /> Оставить отзыв</span>
-        </router-link>
-      </div>
-    </div>
-    <hr>
-    <div class="row dash-buttons text-center">
-      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info">
-        <div class="panel-body">
-          <span>
-            <span>{{ system }}</span>
-            <br>
-            <span>{{ menu.version }}</span>
-          </span>
+          <div
+            v-if="menu.region === '38'"
+            class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info"
+          >
+            <a
+              href="http://l2-irk.ru"
+              target="_blank"
+              class="panel-body"
+            >
+              <span>l2-irk.ru</span>
+            </a>
+          </div>
+          <div
+            v-else-if="menu.region === 'DEMO'"
+            class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb10 dash-btn dash-info"
+          >
+            <div class="panel-body">
+              <span>
+                <span>DEMO</span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       <div
-        v-if="menu.region === '38'"
-        class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info"
+        v-if="chatsEnabled"
+        class="menu-right"
       >
-        <a
-          href="http://l2-irk.ru"
-          target="_blank"
-          class="panel-body"
-        >
-          <span>l2-irk.ru</span>
-        </a>
-      </div>
-      <div
-        v-else-if="menu.region === 'DEMO'"
-        class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb10 dash-btn dash-info"
-      >
-        <div class="panel-body">
-          <span>
-            <span>DEMO</span>
-          </span>
-        </div>
+        <ChatsBody />
       </div>
     </div>
     <MountingPortal
@@ -353,9 +363,10 @@ import Modal from '@/ui-cards/Modal.vue';
 import { Button, Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
 import { sendEvent } from '@/metrics';
+import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
 
 @Component({
-  components: { Modal },
+  components: { ChatsBody, Modal },
   data() {
     return {
       modalPassword: false,
@@ -532,6 +543,10 @@ export default class MenuPage extends Vue {
     }
   }
 
+  get chatsEnabled() {
+    return this.$store.getters.chatsEnabled;
+  }
+
   // eslint-disable-next-line class-methods-use-this
   logout() {
     window.posthog?.reset();
@@ -582,6 +597,47 @@ export default class MenuPage extends Vue {
 .a-under-reversed:not(:hover) {
   .a-internal {
     color: #000;
+  }
+}
+
+.menu-wrapper {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+
+.menu-left {
+  flex: 1;
+}
+
+.menu-right {
+  position: sticky;
+  top: 20px;
+  flex: 0 0 300px;
+  margin-left: 20px;
+  min-height: 500px;
+  height: calc(100vh - 66px);
+  border: 1px solid #A6B5AA;
+  background: #E6E9ED;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 768px) {
+  .menu-wrapper {
+    flex-direction: column;
+  }
+
+  .menu-left {
+    flex: 0 0 100%;
+  }
+
+  .menu-right {
+    position: relative;
+    flex: 0 0 100%;
+    margin-left: 0;
+    margin-top: 20px;
+    height: 500px;
   }
 }
 </style>

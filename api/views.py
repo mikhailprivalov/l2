@@ -1,4 +1,5 @@
 import logging
+import sys
 import threading
 import time
 import re
@@ -629,6 +630,7 @@ def current_user_info(request):
         "loading": False,
     }
     if ret["auth"]:
+        request.user.doctorprofile.mark_as_online()
 
         def fill_user_data():
             doctorprofile = (

@@ -1,10 +1,15 @@
 import os
+import random
+import string
 import uuid
 
 from django.contrib.auth.models import User, Group
 from django.db import models, transaction
+from django.utils import timezone
+from django.core.cache import cache
 
 from appconf.manager import SettingManager
+from laboratory.redis import get_redis_client
 from laboratory.settings import EMAIL_HOST, MEDIA_ROOT
 from podrazdeleniya.models import Podrazdeleniya
 from users.tasks import send_login, send_new_email_code, send_new_password, send_old_email_code
@@ -101,6 +106,125 @@ class DoctorProfile(models.Model):
     district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
     not_control_anketa = models.BooleanField(default=False, blank=True, help_text='Не контролировать заполнение Анкет')
     signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
+    last_online = models.DateTimeField(default=None, blank=True, null=True, help_text="Когда пользователь был в сети")
+
+    @property
+    def notify_queue_key_base(self):
+        return f"chats:notify-queues:{self.pk}"
+
+    def get_notify_queue_key(self, suffix):
+        return f"{self.notify_queue_key_base}:{suffix}"
+
+    def get_notify_queue_key_list(self, suffix):
+        return f"queue:{self.notify_queue_key_base}:{suffix}"
+
+    @property
+    def online_key(self):
+        return f"chats:online-status:{self.pk}"
+
+    @property
+    def messages_count_key(self):
+        return f"chats:messages:{self.pk}"
+
+    def create_notify_queue_token(self):
+        redis_client = get_redis_client()
+        if not redis_client:
+            return None
+        token = "".join(random.choices(string.ascii_letters + string.digits, k=16))
+        key = self.get_notify_queue_key(token)
+
+        redis_client.set(key, 1, ex=60)
+
+        return token
+
+    def update_notify_queue_token(self, token):
+        redis_client = get_redis_client()
+        if not redis_client:
+            return
+        key = self.get_notify_queue_key(token)
+        redis_client.expire(key, 60)
+
+    def check_or_make_new_notify_queue_token(self, token):
+        redis_client = get_redis_client()
+        if not redis_client:
+            return 'empty'
+        if token:
+            key = self.get_notify_queue_key(token)
+            if not redis_client.exists(key):
+                return self.create_notify_queue_token()
+            else:
+                self.update_notify_queue_token(token)
+                return token
+        token = self.create_notify_queue_token()
+        return token
+
+    def get_all_notify_queues(self):
+        redis_client = get_redis_client()
+        if not redis_client:
+            return []
+        keys = redis_client.keys(self.get_notify_queue_key("*"))
+        return [f"queue:{key.decode('utf-8')}" for key in keys]
+
+    def add_message_id_to_queues(self, message_id):
+        redis_client = get_redis_client()
+        if not redis_client:
+            return
+        for key in self.get_all_notify_queues():
+            redis_client.lpush(key, message_id)
+
+    def get_messages_from_queue_by_token(self, token):
+        redis_client = get_redis_client()
+        if not redis_client:
+            return []
+        key = self.get_notify_queue_key_list(token)
+        messages = redis_client.lrange(key, 0, -1)
+        redis_client.delete(key)
+
+        keys = self.get_all_notify_queues()
+        keys_queues = redis_client.keys(self.get_notify_queue_key_list("*"))
+        for key in keys_queues:
+            if key not in keys:
+                redis_client.delete(key)
+
+        return messages
+
+    def mark_as_online(self):
+        self.last_online = timezone.now()
+        self.save(update_fields=('last_online',))
+        cache.set(self.online_key, True, 100)
+
+    def mark_as_offline(self):
+        cache.delete(self.online_key)
+        hospital = self.get_hospital()
+
+        cache_key = f"chats:users-by-departments:{hospital.pk}"
+        cache.delete(cache_key)
+
+    def inc_messages_count(self):
+        redis_client = get_redis_client()
+        if redis_client:
+            redis_client.incr(self.messages_count_key)
+
+    def get_messages_count(self):
+        redis_client = get_redis_client()
+        if redis_client:
+            return int(redis_client.get(self.messages_count_key) or 0)
+        return 0
+
+    def get_is_online(self):
+        return cache.get(self.online_key) or False
+
+    def get_dialog_data(self):
+        is_online = self.get_is_online()
+
+        return {
+            "id": self.pk,
+            "name": self.get_full_fio(),
+            "isOnline": is_online,
+            "lastOnline": self.get_last_online(),
+            "position": self.get_position(),
+            "speciality": self.get_speciality(),
+        }
 
     def get_signature_stamp_pdf(self):
         if self.signature_stamp_pdf:
@@ -121,6 +245,12 @@ class DoctorProfile(models.Model):
         return True
 
     def register_login(self, ip: str):
+        self.mark_as_online()
+        hospital = self.get_hospital()
+
+        cache_key = f"chats:users-by-departments:{hospital.pk}"
+        cache.delete(cache_key)
+
         if not self.user or not self.email or not EMAIL_HOST:
             return
 
@@ -271,7 +401,7 @@ class DoctorProfile(models.Model):
         return self.family, self.name, self.patronymic
 
     def get_full_fio(self):
-        return " ".join(self.get_fio_parts())
+        return " ".join(self.get_fio_parts()).strip()
 
     def get_fio(self, dots=True):
         """
@@ -300,6 +430,16 @@ class DoctorProfile(models.Model):
     def get_position(self):
         if self.position:
             return self.position.title
+        return None
+
+    def get_speciality(self):
+        if self.specialities:
+            return self.specialities.title
+        return None
+
+    def get_last_online(self):
+        if self.last_online:
+            return int(self.last_online.timestamp())
         return None
 
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку

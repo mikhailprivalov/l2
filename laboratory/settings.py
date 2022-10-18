@@ -63,6 +63,7 @@ INSTALLED_APPS = (
     'doctor_schedule',
     'django_celery_results',
     'dashboards',
+    'chats.apps.ChatsConfig',
 )
 
 MIDDLEWARE = [

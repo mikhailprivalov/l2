@@ -76,7 +76,7 @@ export default (instance: Vue): void => {
     sendEvent('print', { type: 'directions_list', pks });
   });
 
-  instance.$root.$on('msg', (type, message, timeout: number | void) => {
+  instance.$root.$on('msg', (type, message, timeout: number | void | null, payload: any | void) => {
     let t = TYPE.DEFAULT;
 
     if (type === 'error') {
@@ -94,14 +94,27 @@ export default (instance: Vue): void => {
       message,
     });
 
-    instance.$toast(message, {
+    let toastOptions: any = {
       type: t,
       position: POSITION.BOTTOM_RIGHT,
       timeout: timeout || 6000,
       closeOnClick: false,
       pauseOnHover: true,
       icon: true,
-    });
+    };
+
+    if (type === 'message' && payload) {
+      toastOptions = {
+        ...toastOptions,
+        position: POSITION.BOTTOM_LEFT,
+        icon: false,
+        onClick: () => {
+          instance.$store.dispatch(actions.CHATS_OPEN_DIALOG_BY_ID, { dialogId: payload });
+        },
+      };
+    }
+
+    instance.$toast(message, toastOptions);
   });
 
   instance.$root.$on(

@@ -46,7 +46,10 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path('barcodes/', include('barcodes.urls')),
     path('reports/', include('reports.urls')),
-    path('logout/', LogoutView.as_view(), {'next_page': '/'}),
+    path('logout/', mainmenu.views.logout_view),
     path('if/', include('integration_framework.urls')),
     path('medical_certificates/', include('medical_certificates.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -48,6 +48,7 @@ const getters = {
   },
   user_hospital_title: state => state.data?.hospital_title,
   authenticated: state => Boolean(state.data?.auth),
+  currentDocPk: state => state.data?.doc_pk,
   user_groups: state => state.data?.groups || [],
   authenticateLoading: state => Boolean(state.data?.loading),
   ex_dep: state => state.data.extended_departments || [],
