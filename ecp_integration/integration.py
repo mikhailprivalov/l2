@@ -9,6 +9,7 @@ from ecp_integration.sql_func import get_doctors_rmis_location_by_research
 from rmis_integration.client import Settings
 from utils.dates import normalize_dash_date
 from django.core.cache import cache
+from laboratory.settings import RMIS_PROXY
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def make_request_get(path, query="", sess_id=""):
     try:
         url = get_url_ecp(path, query=query)
         headers = get_headers_ecp(sess_id)
-        data = requests.get(url, headers=headers)
+        data = requests.get(url, headers=headers, proxies=RMIS_PROXY)
         return data
     except Exception as e:
         logger.exception(e)
