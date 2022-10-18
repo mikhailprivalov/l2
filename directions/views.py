@@ -660,8 +660,6 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     wt, ht = t.wrap(0, 0)
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
-    params_data = [['']]
-    params_col = [int(tw)]
     direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
     if len(direction_params) > 0:
         params_data = [
@@ -678,6 +676,9 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
             ]
             for params in direction_params
         ]
+    else:
+        params_data = [['']]
+    params_col = [int(tw)]
     params_table = Table(data=params_data, colWidths=params_col)
     params_table.setStyle(
         TableStyle(
