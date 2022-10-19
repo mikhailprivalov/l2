@@ -111,7 +111,7 @@ const actions = {
       } = await api('chats/get-messages-count', {
         notifyToken: g.chatsNotifyToken,
       });
-      if (typeof totalMessages !== 'undefined' && typeof totalMessages !== 'undefined') {
+      if (typeof totalMessages !== 'undefined' && typeof unreadMessages !== 'undefined') {
         commit(mutationTypes.CHATS_SET_MESSAGES_COUNT, { unreadMessages, totalMessages, unreadDialogs });
       }
       if (notifications) {
