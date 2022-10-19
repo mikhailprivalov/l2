@@ -12,6 +12,12 @@
         class="chat-user__name"
         :class="user.isOnline && 'chat-user__name-is-online'"
       >
+        <div
+          v-if="unreadMessages > 0"
+          class="badge badge-danger"
+        >
+          {{ unreadMessages }}
+        </div>
         {{ user.name }}
       </div>
       <div
@@ -77,6 +83,11 @@ export default {
       loading: false,
     };
   },
+  computed: {
+    unreadMessages() {
+      return this.$store.getters.chatsUnreadDialogs[this.user.id] || 0;
+    },
+  },
   methods: {
     async openDialog() {
       if (this.loading) {
@@ -107,6 +118,11 @@ export default {
 
   &__name {
     font-size: 14px;
+
+    .badge {
+        font-size: 10px;
+        padding: 2px 4px;
+      }
 
     &-is-online {
       font-weight: 700;

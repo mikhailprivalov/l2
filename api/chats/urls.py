@@ -15,4 +15,5 @@ urlpatterns = [
     path('get-messages-feature', views.get_messages_feature),
     path('read-messages', views.read_messages),
     path('get-read-statuses', views.get_read_statuses),
+    path('update-is-writing', views.update_is_writing),
 ]

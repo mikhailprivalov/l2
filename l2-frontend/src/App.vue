@@ -93,24 +93,27 @@ import notifyAudioSrc from '@/assets/notify.mp3';
   mounted() {
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
-    if (!this.embedded) {
+    if (!this.embedded && !this.hideHeaderWithoutLogin && !this.isEmptyLayout) {
       this.loadChatsDebounced();
       this.$store.subscribeAction((action) => {
-        if (action.type === actions.CHATS_NOTIFY) {
+        if (action.type === actions.CHATS_NOTIFY && this.alertsEnabled) {
           if (!this.$store.getters.chatsDialogsOpened.includes(action.payload.dialogId)) {
-            const text = action.payload.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const messageParts = [
-              `<strong>Сообщение от ${action.payload.authorName}</strong>`,
-              text,
-              '',
-              '<small><strong><u>перейти к диалогу</u></strong></small>',
-            ];
+            let { text } = action.payload;
+
+            if (text.length > 100) {
+              text = `${text.substring(0, 100)}...`;
+            }
+
             this.$root.$emit(
               'msg',
               'message',
-              messageParts.join('<br>'),
+              `Сообщение от ${action.payload.authorName}`,
               10000,
-              action.payload.dialogId,
+              {
+                author: action.payload.authorName,
+                text,
+                dialogId: action.payload.dialogId,
+              },
             );
           }
           this.playNotifySound();
@@ -164,12 +167,19 @@ export default class App extends Vue {
     return this.$asVI();
   }
 
+  get docPk() {
+    return this.$store.getters.currentDocPk;
+  }
+
   loadChats() {
-    if (this.embedded) {
+    if (this.embedded || this.hideHeaderWithoutLogin || this.isEmptyLayout || !this.authenticated) {
       return;
     }
     this.$store.dispatch(actions.CHATS_LOAD_DEPARTMENTS);
     this.$store.dispatch(actions.CHATS_MESSAGES_COUNT);
+    this.$store.dispatch(actions.CHATS_SET_DISABLE_ALERTS, {
+      disableAlerts: localStorage.getItem(`chatsDisableAlerts:${this.docPk}`) === '1',
+    });
   }
 
   loadChatsDebounced = _.debounce(this.loadChats, 100);
@@ -186,6 +196,10 @@ export default class App extends Vue {
     audio.play().catch(() => {
       // ignore
     });
+  }
+
+  get alertsEnabled() {
+    return !this.$store.getters.chatsDisableAlerts;
   }
 }
 </script>

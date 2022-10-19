@@ -10123,11 +10123,6 @@ vue-property-decorator@^9.1.2:
   resolved "https://registry.yarnpkg.com/vue-property-decorator/-/vue-property-decorator-9.1.2.tgz#266a2eac61ba6527e2e68a6933cfb98fddab5457"
   integrity sha512-xYA8MkZynPBGd/w5QFJ2d/NM0z/YeegMqYTphy7NJQXbZcuU6FC6AOdUAcy4SXP+YnkerC6AfH+ldg7PDk9ESQ==
 
-vue-rcss@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/vue-rcss/-/vue-rcss-1.1.1.tgz#538a18033dba35b7913f8e1104cc87097e9673ca"
-  integrity sha512-YP2bFd+rsTk0483HMGYOybGQBFe8f0LZNvJKc5PPxzzznXzxG5iye5qjPF7FZOlzJTa9NFGodnH+dEApcZaHSA==
-
 vue-resize@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/vue-resize/-/vue-resize-1.0.1.tgz#c120bed4e09938771d622614f57dbcf58a5147ee"

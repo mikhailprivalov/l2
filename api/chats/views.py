@@ -148,7 +148,11 @@ def send_message(request):
     if request.user.doctorprofile != dialog.doctor1 and request.user.doctorprofile != dialog.doctor2:
         return status_response(False, "Forbidden")
 
+    dialog.delete_doctor_writing(request.user.doctorprofile)
+
     message = request_data.get("text")
+
+    message = message[:500]
 
     message = Dialog.add_message_text(dialog, request.user.doctorprofile, message)
 
@@ -239,6 +243,30 @@ def get_read_statuses(request):
 
     message_ids = request_data.get("messageIds")
 
-    messages = Message.objects.filter(pk__in=message_ids, is_read=True, dialog=dialog).values_list("pk", flat=True)
+    if message_ids:
+        messages = Message.objects.filter(pk__in=message_ids, is_read=True, dialog=dialog).values_list("pk", flat=True)
+    else:
+        messages = []
 
-    return JsonResponse({"statuses": list(messages)})
+    if dialog.doctor1 != dialog.doctor2:
+        other_doctor = dialog.get_other_doctor(request.user.doctorprofile)
+        is_writing = dialog.get_doctor_writing(other_doctor)
+    else:
+        is_writing = False
+
+    return JsonResponse({"statuses": list(messages), "isWriting": is_writing})
+
+
+@login_required
+def update_is_writing(request):
+    request_data = json.loads(request.body)
+    dialog_pk = request_data.get("dialogId")
+    dialog = Dialog.objects.get(pk=dialog_pk)
+
+    if request.user.doctorprofile != dialog.doctor1 and request.user.doctorprofile != dialog.doctor2:
+        return status_response(False, "Forbidden")
+
+    if dialog.doctor1 != dialog.doctor2:
+        dialog.set_doctor_writing(request.user.doctorprofile)
+
+    return status_response(True)

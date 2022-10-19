@@ -3,6 +3,7 @@ import uuid
 
 from django.db import models
 from django.db.models import Q
+from django.core.cache import cache
 
 
 class Dialog(models.Model):
@@ -69,8 +70,9 @@ class Dialog(models.Model):
         dialogs = {}
         for dialog in Dialog.objects.filter(Q(doctor1=doctor) | Q(doctor2=doctor)).prefetch_related('chat_messages'):
             cnt = dialog.chat_messages.filter(is_read=False).exclude(author=doctor).count()
+            other_doctor = dialog.get_other_doctor(doctor)
             if cnt:
-                dialogs[dialog.pk] = cnt
+                dialogs[other_doctor.pk] = cnt
         return dialogs
 
     def get_messages(self, last_message_id, limit):
@@ -82,6 +84,18 @@ class Dialog(models.Model):
 
     def get_messages_feature(self, last_message_id):
         return self.chat_messages.filter(pk__gt=last_message_id).order_by('pk')
+
+    def get_doctor_writing_key(self, doctor):
+        return f'chats:writing:{self.pk}:{doctor.pk}'
+
+    def get_doctor_writing(self, doctor):
+        return bool(cache.get(self.get_doctor_writing_key(doctor)))
+
+    def set_doctor_writing(self, doctor):
+        cache.set(self.get_doctor_writing_key(doctor), True, timeout=2)
+
+    def delete_doctor_writing(self, doctor):
+        cache.delete(self.get_doctor_writing_key(doctor))
 
 
 def get_chats_message_upload_path(instance, filename):

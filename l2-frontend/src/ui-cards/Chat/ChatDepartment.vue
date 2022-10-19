@@ -9,6 +9,12 @@
       @click="toggle"
     >
       <div class="department-title__name">
+        <div
+          v-if="unreadMessages > 0 && !forceOpened"
+          class="badge badge-danger"
+        >
+          {{ unreadMessages }}
+        </div>
         {{ department.title }} <template v-if="!forceOpened">
           ({{ onlineUsers }}/{{ totalUsers }})
         </template>
@@ -77,6 +83,14 @@ export default {
     opened() {
       return this.forceOpened || this.open;
     },
+    unreadMessages() {
+      return this.department.users.reduce((a, u) => {
+        if (this.$store.getters.chatsUnreadDialogs[u.id]) {
+          return a + this.$store.getters.chatsUnreadDialogs[u.id];
+        }
+        return a;
+      }, 0);
+    },
   },
   mounted() {
     this.open = this.department.pk === this.userDepartment;
@@ -113,6 +127,11 @@ export default {
     &__name {
       font-weight: 500;
       padding-left: 3px;
+
+      .badge {
+        font-size: 10px;
+        padding: 2px 4px;
+      }
     }
 
     &__expand {

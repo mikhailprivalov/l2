@@ -11,6 +11,8 @@ interface ChatsState {
   unreadMessages: number,
   totalMessages: number,
   notifyToken: string | null,
+  unreadDialogs: {[key: number]: number},
+  disableAlerts: boolean,
 }
 
 const stateInitial: ChatsState = {
@@ -21,6 +23,8 @@ const stateInitial: ChatsState = {
   unreadMessages: 0,
   totalMessages: 0,
   notifyToken: null,
+  unreadDialogs: {},
+  disableAlerts: false,
 };
 
 const getters = {
@@ -53,6 +57,8 @@ const getters = {
     return user.isOnline;
   },
   chatsNotifyToken: (state: ChatsState) => state.notifyToken,
+  chatsUnreadDialogs: (state: ChatsState) => state.unreadDialogs,
+  chatsDisableAlerts: (state: ChatsState) => state.disableAlerts,
 };
 
 const actions = {
@@ -81,7 +87,7 @@ const actions = {
     dispatch(actionsTypes.CHATS_LOAD_DEPARTMENTS);
   },
   async [actionsTypes.CHATS_MESSAGES_COUNT]({
-    commit, getters: g, dispatch,
+    commit, getters: g, dispatch, rootGetters,
   }) {
     if (g.chatsEnabled && !g.chatsNotifyToken) {
       await dispatch(actionsTypes.CHATS_GET_NOTIFY_TOKEN);
@@ -89,20 +95,32 @@ const actions = {
     if (!g.chatsEnabled || !g.chatsNotifyToken) {
       return;
     }
+    const lsDisabledAlerts = localStorage.getItem(`chatsDisableAlerts:${rootGetters.currentDocPk}`);
+
+    if (lsDisabledAlerts === '0' && g.chatsDisableAlerts) {
+      await dispatch(actionsTypes.CHATS_SET_DISABLE_ALERTS, { disableAlerts: false });
+    }
+
+    if (lsDisabledAlerts === '1' && !g.chatsDisableAlerts) {
+      await dispatch(actionsTypes.CHATS_SET_DISABLE_ALERTS, { disableAlerts: true });
+    }
+
     try {
       const {
-        unreadMessages, totalMessages, notifications, newToken,
+        unreadMessages, totalMessages, notifications, newToken, unreadDialogs,
       } = await api('chats/get-messages-count', {
         notifyToken: g.chatsNotifyToken,
       });
-      commit(mutationTypes.CHATS_SET_MESSAGES_COUNT, { unreadMessages, totalMessages });
+      if (typeof totalMessages !== 'undefined' && typeof totalMessages !== 'undefined') {
+        commit(mutationTypes.CHATS_SET_MESSAGES_COUNT, { unreadMessages, totalMessages, unreadDialogs });
+      }
       if (notifications) {
         for (const notification of notifications) {
           dispatch(actionsTypes.CHATS_NOTIFY, notification);
         }
       }
-      if (newToken !== g.chatsNotifyToken) {
-        commit(mutationTypes.CHATS_SET_NOTIFY_TOKEN, newToken);
+      if (newToken && newToken !== g.chatsNotifyToken) {
+        commit(mutationTypes.CHATS_SET_NOTIFY_TOKEN, { notifyToken: newToken });
       }
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -144,6 +162,10 @@ const actions = {
   [actionsTypes.CHATS_NOTIFY]() {
     // empty
   },
+  [actionsTypes.CHATS_SET_DISABLE_ALERTS]({ commit, rootGetters }, { disableAlerts }) {
+    commit(mutationTypes.CHATS_SET_DISABLE_ALERTS, { disableAlerts });
+    localStorage.setItem(`chatsDisableAlerts:${rootGetters.currentDocPk}`, disableAlerts ? '1' : '0');
+  },
 };
 
 const mutations = {
@@ -167,13 +189,19 @@ const mutations = {
     state.unreadMessages = 0;
     state.totalMessages = 0;
     state.notifyToken = null;
+    state.unreadDialogs = {};
+    state.disableAlerts = false;
   },
-  [mutationTypes.CHATS_SET_MESSAGES_COUNT](state, { unreadMessages, totalMessages }) {
+  [mutationTypes.CHATS_SET_MESSAGES_COUNT](state, { unreadMessages, totalMessages, unreadDialogs }) {
     state.unreadMessages = unreadMessages || 0;
     state.totalMessages = totalMessages || 0;
+    state.unreadDialogs = unreadDialogs || {};
   },
   [mutationTypes.CHATS_SET_NOTIFY_TOKEN](state, { notifyToken }) {
     state.notifyToken = notifyToken;
+  },
+  [mutationTypes.CHATS_SET_DISABLE_ALERTS](state, { disableAlerts }) {
+    state.disableAlerts = !!disableAlerts;
   },
 };
 

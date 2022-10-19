@@ -12,6 +12,17 @@
         >
           <i class="fa fa-search" />
         </div>
+        <div
+          v-tippy
+          class="chats-body__header-alerts"
+          :title="`Уведомления: ${alertsEnabled ? 'включены' : 'выключены'}`"
+          @click="toggleAlerts"
+        >
+          <i
+            class="fa"
+            :class="alertsEnabled ? 'fa-bell' : 'fa-bell-slash'"
+          />
+        </div>
       </div>
       <div
         v-else
@@ -53,6 +64,7 @@
 </template>
 
 <script lang="ts">
+import * as actions from '@/store/action-types';
 import ChatDepartment from '@/ui-cards/Chat/ChatDepartment.vue';
 
 export default {
@@ -71,6 +83,9 @@ export default {
     chatsLoading() {
       return this.$store.getters.chatsLoading;
     },
+    alertsEnabled() {
+      return !this.$store.getters.chatsDisableAlerts;
+    },
   },
   methods: {
     openSearch() {
@@ -78,6 +93,19 @@ export default {
       this.$nextTick(() => {
         this.$refs.searchInput.focus();
       });
+    },
+    enableAlerts() {
+      this.$store.dispatch(actions.CHATS_SET_DISABLE_ALERTS, { disableAlerts: false });
+    },
+    disableAlerts() {
+      this.$store.dispatch(actions.CHATS_SET_DISABLE_ALERTS, { disableAlerts: true });
+    },
+    toggleAlerts() {
+      if (this.alertsEnabled) {
+        this.disableAlerts();
+      } else {
+        this.enableAlerts();
+      }
     },
   },
 };
@@ -103,7 +131,7 @@ export default {
       color: #333;
     }
 
-    &-search {
+    &-search, &-alerts {
       display: inline-block;
       margin-left: 10px;
       cursor: pointer;
@@ -113,6 +141,11 @@ export default {
       &:hover {
         color: #333;
       }
+    }
+
+    &-alerts {
+      width: 20px;
+      text-align: center;
     }
 
     &-search-input {

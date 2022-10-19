@@ -126,11 +126,23 @@
               {{ message.time | unixTimestampToLocalFormattedTime }}
             </div>
           </div>
+          <div
+            class="typing"
+            :class="isWriting && 'typing--active'"
+          >
+            <div class="typing__text">
+              Собеседник печатает
+            </div>
+            <div class="typing__dot" />
+            <div class="typing__dot" />
+            <div class="typing__dot" />
+          </div>
         </div>
         <div
           class="chat-dialog__body-input"
         >
           <textarea
+            ref="input"
             v-model.trim="text"
             class="chat-dialog__body-input-textarea"
             :placeholder="
@@ -139,7 +151,9 @@
                 : 'Введите сообщение (Ctrl+Enter для отправки)'
             "
             :readonly="isSending"
+            maxlength="500"
             @keydown.ctrl.enter="sendMessage"
+            @keyup="updateWritingStatusDebounced"
           />
           <div
             class="chat-dialog__body-input-send"
@@ -153,10 +167,16 @@
               v-else
               class="fa fa-paper-plane"
             />
+            <div
+              v-if="textSymbolsLeft < 100"
+              class="chat-dialog__body-input-send-symbols-left"
+            >
+              {{ textSymbolsLeft }}
+            </div>
           </div>
         </div>
         <div
-          v-if="scrollFromBottom > 5"
+          v-if="scrollFromBottom > 25"
           class="chat-dialog__body-messages-to-bottom"
           @click="scrollToBottom"
         >
@@ -168,6 +188,8 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash';
+
 import * as actions from '@/store/action-types';
 
 export default {
@@ -180,6 +202,7 @@ export default {
   },
   data() {
     return {
+      uniqInstance: _.uniqueId(`chat-dialog-${this.dialogId}-${Math.random()}-`),
       isSending: false,
       isDragging: false,
       loaded: false,
@@ -197,6 +220,8 @@ export default {
       forceHideLoadMore: false,
       readStatusesTimer: null,
       focused: false,
+      isWriting: false,
+      lsProperty: 'chat-dialog',
     };
   },
   computed: {
@@ -234,6 +259,9 @@ export default {
         (message) => message.author === this.currentUserPk && this.dialogUser.id !== this.currentUserPk && !message.read,
       ).map((message) => message.id);
     },
+    textSymbolsLeft() {
+      return 500 - this.text.length;
+    },
   },
   watch: {
     unreadMessages() {
@@ -250,6 +278,13 @@ export default {
         }
         return message;
       });
+    },
+    text() {
+      if (this.textSymbolsLeft <= 0) {
+        this.text = this.text.slice(0, 500);
+      } else {
+        this.updateWritingStatusDebounced();
+      }
     },
   },
   mounted() {
@@ -268,8 +303,38 @@ export default {
     this.$root.$on('chat-dialog-focus', dialogId => {
       this.focused = dialogId === this.dialogId;
     });
+    window.addEventListener('storage', this.onStorageDialogEvent);
+  },
+  beforeDestroy() {
+    clearTimeout(this.readStatusesTimer);
+    window.removeEventListener('storage', this.onStorageDialogEvent);
   },
   methods: {
+    onStorageDialogEvent(e) {
+      if (!e.newValue) {
+        return;
+      }
+
+      let payload: any = {};
+
+      try {
+        payload = JSON.parse(e.newValue);
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+
+      console.log(payload);
+
+      if (
+        payload?.dialogId
+        && payload.instanceId
+        && payload.instanceId !== this.uniqInstance
+        && payload.dialogId === this.dialogId
+      ) {
+        this.loadFeatureMessages();
+      }
+    },
     onScroll() {
       this.scrollTop = this.$refs.messages.scrollTop;
       this.scrollFromBottom = this.$refs.messages.scrollHeight - this.$refs.messages.scrollTop - this.$refs.messages.clientHeight;
@@ -288,6 +353,9 @@ export default {
         this.messages = [];
         this.loading = false;
         const loadedMessages = await this.loadMoreMessages(true);
+        this.$nextTick(() => {
+          this.$refs.input.focus();
+        });
         if (loadedMessages === totalMessages) {
           this.forceHideLoadMore = true;
         }
@@ -346,12 +414,26 @@ export default {
       }
       this.isSending = true;
       try {
-        const { message } = await this.$api('chats/send-message', this, ['dialogId', 'text']);
-        this.messages.push({ ...message, addedFromClient: true });
-        this.text = '';
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
+        const { message, ok } = await this.$api('chats/send-message', this, ['dialogId', 'text']);
+        if (ok) {
+          this.messages.push({ ...message, addedFromClient: true });
+          this.text = '';
+          this.$nextTick(() => {
+            this.scrollToBottom();
+            this.$refs.input.focus();
+          });
+
+          const dataToStore = {
+            dialogId: this.dialogId,
+            instanceId: this.uniqInstance,
+          };
+          window.localStorage[this.lsProperty] = JSON.stringify(dataToStore);
+          setTimeout(() => {
+            delete window.localStorage[this.lsProperty];
+          }, 100);
+        } else {
+          this.$root.$emit('msg', 'error', 'Ошибка отправки сообщения');
+        }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
@@ -391,29 +473,33 @@ export default {
     },
     async loadFeatureMessages() {
       this.messagesLoading++;
-      const isAtBottom = this.$refs.messages.scrollHeight - this.$refs.messages.scrollTop - this.$refs.messages.clientHeight < 10;
+      if (this.$refs.messages) {
+        const isAtBottom = this.$refs.messages.scrollHeight
+          - this.$refs.messages.scrollTop
+          - this.$refs.messages.clientHeight < 20;
 
-      const messages = this.messages.filter((m) => !m.addedFromClient);
+        const messages = this.messages.filter((m) => !m.addedFromClient);
 
-      if (messages.length === 0) {
-        this.messagesLoading--;
-        return;
-      }
-      const lastMessageId = messages[messages.length - 1].id;
+        if (messages.length === 0) {
+          this.messagesLoading--;
+          return;
+        }
+        const lastMessageId = messages[messages.length - 1].id;
 
-      const { messages: ms } = await this.$api('chats/get-messages-feature', this, 'dialogId', { lastMessageId });
+        const { messages: ms } = await this.$api('chats/get-messages-feature', this, 'dialogId', { lastMessageId });
 
-      this.messages = [
-        ...messages,
-        ...ms,
-      ];
+        this.messages = [
+          ...messages,
+          ...ms,
+        ];
 
-      if (isAtBottom) {
-        this.$nextTick(() => {
-          setTimeout(() => {
-            this.$refs.messages.scrollTop = this.$refs.messages.scrollHeight - this.$refs.messages.clientHeight;
-          }, 0);
-        });
+        if (isAtBottom) {
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.$refs.messages.scrollTop = this.$refs.messages.scrollHeight - this.$refs.messages.clientHeight;
+            }, 0);
+          });
+        }
       }
       this.messagesLoading--;
     },
@@ -430,34 +516,46 @@ export default {
       this.messagesLoading--;
     },
     async loadReadStatuses() {
-      if (this.unreadOtherUserMessages.length > 0) {
-        try {
-          const { statuses } = await this.$api('chats/get-read-statuses', this, 'dialogId', {
-            messageIds: this.unreadOtherUserMessages,
-          });
+      try {
+        const { statuses, isWriting } = await this.$api('chats/get-read-statuses', this, 'dialogId', {
+          messageIds: this.unreadOtherUserMessages,
+        });
 
-          if (statuses.length !== 0) {
-            this.messages = this.messages.map((m) => {
-              const status = statuses.find((s) => s === m.id);
-              if (status) {
-                return {
-                  ...m,
-                  read: true,
-                };
-              }
-              return m;
-            });
-          }
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error(e);
+        if (statuses.length !== 0) {
+          this.messages = this.messages.map((m) => {
+            const status = statuses.find((s) => s === m.id);
+            if (status) {
+              return {
+                ...m,
+                read: true,
+              };
+            }
+            return m;
+          });
         }
+
+        this.isWriting = isWriting;
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+        this.isWriting = false;
       }
 
       this.readStatusesTimer = setTimeout(() => {
         this.loadReadStatuses();
-      }, this.userIsOnline ? 6000 : 15000);
+      }, this.userIsOnline ? 3500 : 30000);
     },
+    updateWritingStatus() {
+      try {
+        this.$api('chats/update-is-writing', this, 'dialogId');
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+      }
+    },
+    updateWritingStatusDebounced: _.debounce(function () {
+      this.updateWritingStatus();
+    }, 400, { leading: true, trailing: true }),
   },
 };
 </script>
@@ -674,6 +772,17 @@ export default {
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
+
+    &-symbols-left {
+      color: #999;
+      position: absolute;
+      bottom: 2px;
+      right: 3px;
+      left: 3px;
+      text-align: center;
+      font-size: 10px;
+      line-height: 1.1;
+    }
   }
 
   &__body-input-send:hover {
@@ -690,6 +799,68 @@ export default {
 
   &__body-input-send i {
     font-size: 20px;
+  }
+}
+
+.typing {
+  width: fit-content;
+  height: 18px;
+  position: relative;
+  padding: 6px;
+  margin: 5px;
+  background: #e6e6e6;
+  border-radius: 20px;
+  font-size: 12px;
+  overflow: visible;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+
+  &.typing--active {
+    opacity: 1;
+  }
+}
+
+.typing__text {
+  float: left;
+  color: #8d8c91;
+  font-size: 10px;
+  line-height: 18px;
+  margin-right: 8px;
+  margin-top: -7px;
+}
+
+.typing__dot {
+  float: left;
+  width: 6px;
+  height: 6px;
+  margin: 0 4px;
+  background: #8d8c91;
+  border-radius: 50%;
+  opacity: 0;
+  animation: loadingFade 1s infinite;
+}
+
+.typing__dot:nth-child(2) {
+  animation-delay: 0s;
+}
+
+.typing__dot:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.typing__dot:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loadingFade {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
   }
 }
 </style>

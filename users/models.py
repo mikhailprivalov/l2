@@ -181,7 +181,7 @@ class DoctorProfile(models.Model):
         redis_client.delete(key)
 
         keys = self.get_all_notify_queues()
-        keys_queues = redis_client.keys(self.get_notify_queue_key_list("*"))
+        keys_queues = [x.decode('utf-8') for x in redis_client.keys(self.get_notify_queue_key_list("*"))]
         for key in keys_queues:
             if key not in keys:
                 redis_client.delete(key)

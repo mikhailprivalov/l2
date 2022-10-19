@@ -2,9 +2,9 @@ import Vue from 'vue';
 import { POSITION, TYPE } from 'vue-toastification/src/ts/constants';
 
 import { sendEvent } from '@/metrics';
-
-import * as actions from './store/action-types';
-import directionsPoint from './api/directions-point';
+import ChatToast from '@/ui-cards/Chat/ChatToast.vue';
+import * as actions from '@/store/action-types';
+import directionsPoint from '@/api/directions-point';
 
 function printForm(tpl: string, pks: number[]) {
   if (!pks || !Array.isArray(pks) || pks.length === 0) {
@@ -94,27 +94,37 @@ export default (instance: Vue): void => {
       message,
     });
 
-    let toastOptions: any = {
+    if (type === 'message' && payload) {
+      instance.$toast({
+        component: ChatToast,
+        props: payload,
+        listeners: {
+          openDialog: () => {
+            instance.$store.dispatch(actions.CHATS_OPEN_DIALOG_BY_ID, { dialogId: payload.dialogId });
+          },
+        },
+      }, {
+        toastClassName: 'empty-toast',
+        position: POSITION.BOTTOM_LEFT,
+        timeout: timeout || 6000,
+        closeOnClick: false,
+        icon: false,
+        closeButton: false,
+        pauseOnHover: true,
+        hideProgressBar: true,
+      });
+      return;
+    }
+
+    instance.$toast(message, {
       type: t,
       position: POSITION.BOTTOM_RIGHT,
       timeout: timeout || 6000,
       closeOnClick: false,
       pauseOnHover: true,
+      pauseOnFocusLoss: false,
       icon: true,
-    };
-
-    if (type === 'message' && payload) {
-      toastOptions = {
-        ...toastOptions,
-        position: POSITION.BOTTOM_LEFT,
-        icon: false,
-        onClick: () => {
-          instance.$store.dispatch(actions.CHATS_OPEN_DIALOG_BY_ID, { dialogId: payload });
-        },
-      };
-    }
-
-    instance.$toast(message, toastOptions);
+    });
   });
 
   instance.$root.$on(
