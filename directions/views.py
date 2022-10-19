@@ -185,10 +185,7 @@ def gen_pdf_dir(request):
                 'issledovaniya_set',
                 queryset=Issledovaniya.objects.all().select_related('research', 'research__podrazdeleniye', 'localization', 'service_location').prefetch_related('research__fractions_set'),
             ),
-            Prefetch(
-                'directionparamsresult_set',
-                queryset=DirectionParamsResult.objects.all()
-            )
+            Prefetch('directionparamsresult_set', queryset=DirectionParamsResult.objects.all()),
         )
         .select_related(
             'client',
