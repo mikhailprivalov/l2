@@ -24,13 +24,13 @@ def get_headers_ecp(sess_id):
     return {'Authorization': f'Basic {sess_id}', 'Cookie': f'PHPSESSID={sess_id}'}
 
 
-def make_request_get(path, query="", sess_id=""):
+def make_request_get(path, query="", sess_id="", method="GET"):
     if query is None:
         query = {}
     try:
         url = get_url_ecp(path, query=query)
         headers = get_headers_ecp(sess_id)
-        data = requests.get(url, headers=headers, proxies=RMIS_PROXY)
+        data = requests.request(method, url, headers=headers, proxies=RMIS_PROXY)
         return data
     except Exception as e:
         logger.exception(e)
@@ -118,7 +118,7 @@ def search_patient_ecp_by_person_id(person_id):
     )
     result = json.loads(req.content.decode())
     individual = result['data'][0]
-    if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] == '2':
+    if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] in['2', '4']:
         patient['enp'] = individual['Polis_Num']
     return patient
 
@@ -152,12 +152,29 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date):
     return []
 
 
-def register_patient_ecp_slot(slot_id, patient_ecp_id):
+def register_patient_ecp_slot(patient_ecp_id, slot_id):
     sess_id = request_get_sess_id()
-    req = make_request_get("TimeTableGraf/TimeTableGrafWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableGraf_id={slot_id}", sess_id=sess_id)
+    req = make_request_get("TimeTableGraf/TimeTableGrafWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableGraf_id={slot_id}", sess_id=sess_id, method="POST")
     req_result = json.loads(req.content.decode())
+    print(req_result)
     register_result = req_result['data']
     if req_result['error_code'] == 0 and register_result['TimeTableGraf_id'] == slot_id and patient_ecp_id == register_result['Person_id']:
         return {'register': True}
 
     return {'register': False, "message": "Неудачная попытка записи"}
+
+
+def search_patient_ecp_by_fio(patient):
+    sess_id = request_get_sess_id()
+    req = make_request_get(
+        "PersonList",
+        query=f"Sess_id={sess_id}&"
+        f"PersonSurName_SurName={patient['family']}&"
+        f"PersonFirName_FirName={patient['name']}&"
+        f"PersonSecName_SecName={patient['patronymic']}&"
+        f"PersonBirthDay_BirthDay={patient['birthday']}&PersonSnils_Snils={patient['snils']}",
+        sess_id=sess_id,
+    )
+    result = json.loads(req.content.decode())
+    individual = result['data'][0]
+    return individual['Person_id']

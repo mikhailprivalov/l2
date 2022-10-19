@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from clients.models import Card
-from ecp_integration.integration import get_doctors_ecp_free_dates_by_research, get_doctor_ecp_free_slots_by_date, register_patient_ecp_slot
+from ecp_integration.integration import get_doctors_ecp_free_dates_by_research, get_doctor_ecp_free_slots_by_date, register_patient_ecp_slot, search_patient_ecp_by_fio
 
 
 @login_required
@@ -50,8 +50,14 @@ def fill_slot(request):
     ecp_id = card.get_ecp_id()
 
     if not ecp_id:
-        return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
-    r = register_patient_ecp_slot(ecp_id, slot_id)
+        individual_data = card.get_data_individual()
+        ecp_id = search_patient_ecp_by_fio(individual_data)
+        if not ecp_id:
+            return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
+        else:
+            card.individual.ecp_id = ecp_id
+            card.individual.save()
 
+    r = register_patient_ecp_slot(ecp_id, slot_id)
 
     return JsonResponse(r)

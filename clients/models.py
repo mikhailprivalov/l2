@@ -21,6 +21,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from clients.sql_func import last_result_researches_years
 from directory.models import Researches, ScreeningPlan, PatientControlParam
+# from ecp_integration.integration import search_patient_ecp_by_fio
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 from django.contrib.postgres.fields import ArrayField
@@ -1180,6 +1181,7 @@ class Card(models.Model):
         ind_data['name'] = self.individual.name
         ind_data['patronymic'] = self.individual.patronymic
         ind_data['born'] = self.individual.bd()
+        ind_data['birthday'] = self.individual.birthday
         ind_data['main_address'] = "____________________________________________________" if not self.main_address and not full_empty else self.main_address
         ind_data['fact_address'] = "____________________________________________________" if not self.fact_address and not full_empty else self.fact_address
         ind_data['card_num'] = self.number_with_type()
@@ -1232,7 +1234,7 @@ class Card(models.Model):
     def get_ecp_id(self):
         if self.individual.ecp_id:
             return self.individual.ecp_id
-        return "TODO"
+        return ""
 
     @staticmethod
     def next_l2_n():
