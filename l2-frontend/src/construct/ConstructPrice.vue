@@ -76,10 +76,10 @@
             class="tablerow"
           >
             <td
-              v-tippy
+              v-tippy="{onShow: showTitle}"
+              :title="coastResearch.research.title"
               class="research tablerow"
               style="padding-left: 6px"
-              @mouseover="showTitle"
             >
               {{ coastResearch.research.title }}
             </td>
@@ -281,11 +281,10 @@ export default {
         }
       }
     },
-    showTitle(event) {
-      const element = event.target;
-      element.title = '';
-      if (element.scrollWidth > element.clientWidth) {
-        element.title = element.innerHTML;
+    showTitle(element) {
+      const el = element;
+      if (el.reference.scrollWidth <= el.reference.clientWidth) {
+        el.state.visible = false;
       }
     },
   },

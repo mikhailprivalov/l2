@@ -628,6 +628,7 @@ def form_03(request_data):
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
     days_count = '__________________________'
     doc_fio = ''
+    manager_depart = ''
     if hosp_extract_data:
         if hosp_extract_data['result_hospital']:
             result_hospital = hosp_extract_data['result_hospital']
