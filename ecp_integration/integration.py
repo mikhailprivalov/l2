@@ -6,10 +6,12 @@ from appconf.manager import SettingManager
 import simplejson as json
 
 from ecp_integration.sql_func import get_doctors_rmis_location_by_research
+from laboratory.utils import current_time
 from rmis_integration.client import Settings
 from utils.dates import normalize_dash_date
 from django.core.cache import cache
 from laboratory.settings import RMIS_PROXY
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -177,3 +179,20 @@ def search_patient_ecp_by_fio(patient):
     result = json.loads(req.content.decode())
     individual = result['data'][0]
     return individual['Person_id']
+
+
+def get_ecp_time_table_list_patient(patient):
+    sess_id = request_get_sess_id()
+    current_date = current_time()
+    start_date = current_date.strftime("%y-%m-%d %H:%M:%S")
+    end_date = (current_date + timedelta(days=30)).strftime("%y-%m-%d %H:%M:%S")
+    ecp_id = patient['ecp_id']
+    if not ecp_id:
+        ecp_id = search_patient_ecp_by_fio(patient)
+    if ecp_id:
+        req = make_request_get("TimeTableListbyPatient", query=f"Sess_id={sess_id}&Person_id={patient['ecp_id']}&TimeTable_beg={start_date}&TimeTable_end={end_date}", sess_id=sess_id)
+        req_result = json.loads(req.content.decode())
+        result_tt = req_result['data']['TimeTable']
+        if len(result_tt) > 0:
+            return [{"TimeTable_begTime": i['TimeTable_begTime'], "Post_name": i['Post_name']} for i in result_tt]
+    return []

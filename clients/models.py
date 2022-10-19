@@ -1228,6 +1228,7 @@ class Card(models.Model):
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
         ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
+        ind_data['ecp_id'] = self.individual.ecp_id
 
         return ind_data
 
