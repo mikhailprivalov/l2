@@ -629,6 +629,7 @@ def current_user_info(request):
         "loading": False,
     }
     if ret["auth"]:
+        request.user.doctorprofile.mark_as_online()
 
         def fill_user_data():
             doctorprofile = (
@@ -1605,7 +1606,7 @@ def user_location(request):
     request_data = json.loads(request.body)
     date = request_data["date"]
     d = {}
-    rl = request.user.doctorprofile.rmis_resource_id
+    rl = request.user.doctorprofile.rmis_location
     if rl and SettingManager.get("l2_rmis_queue", default='false', default_type='b'):
         if rl == 1337 and request.user.is_superuser:
             from rmis_integration.client import Patients

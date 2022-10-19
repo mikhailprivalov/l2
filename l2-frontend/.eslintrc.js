@@ -47,6 +47,7 @@ module.exports = {
     'vuejs-accessibility/iframe-has-title': 'off',
     'vuejs-accessibility/no-autofocus': 'off',
     'vuejs-accessibility/alt-text': 'off',
+    'vuejs-accessibility/media-has-caption': 'off',
     'import/order': [
       'error',
       {

@@ -26,6 +26,8 @@ import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 import api from './api';
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal.vue';
 
+moment.locale('ru');
+
 export default (): void => {
   Vue.prototype.$orgTitle = () => window.ORG_TITLE;
   Vue.prototype.$asVI = () => window.SYSTEM_AS_VI;
@@ -66,6 +68,18 @@ export default (): void => {
   Vue.filter('pluralCount', (amount) => `${amount} ${plural(amount, 'штука', 'штуки', 'штук')}`);
   Vue.filter('formatDate', (s) => moment(s).format('DD.MM.YYYY'));
   Vue.filter('formatDateShort', (s) => moment(s).format('DD.MM'));
+  Vue.filter('unixTimestampToRelativeTime', (s) => {
+    if (!s) {
+      return 'неизвестно';
+    }
+    return moment(s * 1000).fromNow();
+  });
+  Vue.filter('unixTimestampToLocalFormattedTime', (s) => {
+    if (!s) {
+      return 'неизвестно';
+    }
+    return moment(s * 1000).format('DD.MM.YYYY HH:mm');
+  });
 
   Vue.directive('click-outside', {
     bind(el, binding, vnode) {

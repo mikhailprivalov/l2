@@ -16,17 +16,3 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__f
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "laboratory.settings")
 
 application = get_wsgi_application()
-
-# Нижнее до лучших времен: после разбирательств с gunicorn
-# import sentry_sdk
-# from sentry_sdk.integrations.django import DjangoIntegration
-
-# from appconf.manager import SettingManager
-# from laboratory.settings import SENTRY_DSN
-
-# sentry_sdk.init(
-#     dsn=SENTRY_DSN,
-#     integrations=[DjangoIntegration()],
-#     send_default_pii=True,
-#     environment=SettingManager.get("org_title") or "Default L2"
-# )
