@@ -147,8 +147,12 @@ export default {
     activeDate: {
       immediate: true,
       handler() {
-        this.checkDate();
-        this.checkDoctor();
+        const r = this.checkDate();
+        const r2 = this.checkDoctor();
+
+        if (r && r2) {
+          this.loadSlots();
+        }
       },
     },
     activeDoctor: {
