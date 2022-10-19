@@ -320,11 +320,10 @@ export default {
       try {
         payload = JSON.parse(e.newValue);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error(err);
         return;
       }
-
-      console.log(payload);
 
       if (
         payload?.dialogId
