@@ -96,36 +96,13 @@
           >
             Загрузить ещё
           </div>
-          <div
+          <ChatMessage
             v-for="message in messages"
             :key="message.id"
-            class="chat-dialog__body-message"
-            :class="newMessages.includes(message.id) && 'chat-dialog__body-message-new'"
-          >
-            <div
-              class="chat-dialog__body-message-author"
-              :class="message.author === currentUserPk && 'chat-dialog__body-message-author-current-user'"
-            >
-              {{ message.author === currentUserPk ? 'Вы' : dialogUserObj.name }}
-            </div>
-            <div
-              class="chat-dialog__body-message-text"
-              v-text="message.text"
-            />
-            <div
-              class="chat-dialog__body-message-time"
-            >
-              <i
-                v-if="message.read"
-                class="fa fa-check-double chat-dialog__body-message-time-read"
-              />
-              <i
-                v-else
-                class="fa fa-check chat-dialog__body-message-time-unread"
-              />
-              {{ message.time | unixTimestampToLocalFormattedTime }}
-            </div>
-          </div>
+            :message="message"
+            :dialog-user-obj="dialogUserObj"
+            :new-messages="newMessages"
+          />
           <div
             class="typing"
             :class="isWriting && 'typing--active'"
@@ -151,7 +128,7 @@
                 : 'Введите сообщение (Ctrl+Enter для отправки)'
             "
             :readonly="isSending"
-            maxlength="500"
+            maxlength="999"
             @keydown.ctrl.enter="sendMessage"
             @keyup="updateWritingStatusDebounced"
           />
@@ -191,9 +168,13 @@
 import _ from 'lodash';
 
 import * as actions from '@/store/action-types';
+import ChatMessage from '@/ui-cards/Chat/ChatMessage.vue';
 
 export default {
   name: 'ChatDialog',
+  components: {
+    ChatMessage,
+  },
   props: {
     dialogId: {
       type: Number,
@@ -260,7 +241,7 @@ export default {
       ).map((message) => message.id);
     },
     textSymbolsLeft() {
-      return 500 - this.text.length;
+      return 999 - this.text.length;
     },
   },
   watch: {
@@ -281,7 +262,7 @@ export default {
     },
     text() {
       if (this.textSymbolsLeft <= 0) {
-        this.text = this.text.slice(0, 500);
+        this.text = this.text.slice(0, 999);
       } else {
         this.updateWritingStatusDebounced();
       }
@@ -693,46 +674,6 @@ export default {
         color: #666;
         opacity: 1;
       }
-    }
-  }
-
-  &__body-message {
-    position: relative;
-    padding: 5px 5px 11px 10px;
-    border-top: 1px solid #ccc;
-
-    &-new {
-      background-color: #ecfdff;
-    }
-  }
-
-  &__body-message-text {
-    font-size: 14px;
-    padding-left: 5px;
-    white-space: pre-wrap;
-  }
-
-  &__body-message-author {
-    font-weight: 700;
-    color: #333333;
-  }
-
-  &__body-message-author-current-user {
-    color: #888888;
-  }
-
-  &__body-message-time {
-    position: absolute;
-    bottom: 2px;
-    right: 3px;
-    font-size: 12px;
-
-    &-read {
-      color: #4caf50;
-    }
-
-    &-unread {
-      color: #999;
     }
   }
 
