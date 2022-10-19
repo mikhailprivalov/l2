@@ -228,10 +228,6 @@ def directions_history(request):
         patient_card = pk
 
     if req_status == 5:
-        # contracts = PersonContract.objects.filter(patient_card_id=pk, create_at__gte=date_start, create_at__lte=date_end).order_by('-create_at')
-        # for i in contracts:
-        #     print(i.dir_list, i.pk, i.patient_card_id, i.num_contract, i.create_at)
-
         patient_contract = get_patient_contract(date_start, date_end, patient_card)
         count = 0
         last_contract = None
@@ -302,7 +298,6 @@ def directions_history(request):
         if not ecp_id:
             return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
         patient_time_table = get_ecp_time_table_list_patient(ecp_id)
-        print(patient_time_table)
         for i in patient_time_table:
             final_result.append({
                 'pk': i["time"],
