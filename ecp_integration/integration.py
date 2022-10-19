@@ -194,5 +194,5 @@ def get_ecp_time_table_list_patient(patient):
         req_result = json.loads(req.content.decode())
         result_tt = req_result['data']['TimeTable']
         if len(result_tt) > 0:
-            return [{"TimeTable_begTime": i['TimeTable_begTime'], "Post_name": i['Post_name']} for i in result_tt]
+            return [{"date": normalize_dash_date(i['TimeTable_begTime'].split(" ")[0]), "time": i['TimeTable_begTime'].split(" ")[1][:5], "Post_name": i['Post_name']} for i in result_tt]
     return []
