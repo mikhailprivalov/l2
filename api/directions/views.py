@@ -4,6 +4,7 @@ import os
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory
+from ecp_integration.integration import get_ecp_time_table_list_patient
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
@@ -290,6 +291,42 @@ def directions_history(request):
             count += 1
         final_result.append(temp_data.copy())
         res['directions'] = final_result
+
+        return JsonResponse(res)
+
+    if req_status == 6:
+        # Получить записи регистратуры по РМИС
+        card = Card.objects.get(pk=pk)
+        ecp_id = card.get_ecp_id()
+
+        if not ecp_id:
+            return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
+        patient_time_table = get_ecp_time_table_list_patient(ecp_id)
+        print(patient_time_table)
+        for i in patient_time_table:
+            final_result.append({
+                'pk': i["time"],
+                'status': "",
+                'researches': f"{i['Post_name']} - {i['TimeTable_id']}",
+                "researches_pks": "",
+                'date': i["date"],
+                'cancel': False,
+                'checked': False,
+                'pacs': False,
+                'has_hosp': False,
+                'has_descriptive': False,
+                'maybe_onco': False,
+                'is_application': False,
+                'lab': "",
+                'parent': parent_obj,
+                'is_expertise': False,
+                'expertise_status': False,
+                'person_contract_pk': "",
+                'person_contract_dirs': "",
+            })
+
+        res['directions'] = final_result
+        print(res)
 
         return JsonResponse(res)
 

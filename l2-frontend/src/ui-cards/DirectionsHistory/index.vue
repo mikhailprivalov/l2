@@ -202,7 +202,7 @@
             </td>
             <td class="button-td">
               <div
-                v-if="!row.is_application && active_type !== 5"
+                v-if="!row.is_application && active_type !== 5 && active_type !== 6"
                 class="button-td-inner"
                 :class="[
                   {
@@ -316,7 +316,7 @@
               >
                 <button
                   class="btn btn-blue-nb"
-                  @click="print_contract(row.pk, patient_pk)"
+                  @click="print_contract(patient_pk)"
                 >
                   Талон
                 </button>
