@@ -306,6 +306,7 @@ export default class LoginPage extends Vue {
         orgTitle,
         userId,
       );
+      await this.$store.dispatch(actions.CHATS_CLEAR_STATE);
       this.$toast.success(`Вы вошли как ${fio}`, {
         position: POSITION.BOTTOM_RIGHT,
         timeout: 6000,

@@ -117,6 +117,7 @@
           <li v-else>
             <span class="navbar-brand org-title"> Организация: {{ user_hospital_title || $orgTitle() }} </span>
           </li>
+          <ChatsButton v-if="chatsEnabled" />
         </ul>
       </div>
     </div>
@@ -200,6 +201,7 @@ import { sendEvent } from '@/metrics';
     OperationPlans: () => import('@/ui-cards/OperationPlans.vue'),
     LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),
     LaboratorySelector: () => import('@/ui-cards/LaboratorySelector.vue'),
+    ChatsButton: () => import('@/ui-cards/ChatsButton.vue'),
   },
 })
 export default class Navbar extends Vue {
@@ -245,6 +247,10 @@ export default class Navbar extends Vue {
 
   get metaTitle() {
     return String(this.$route?.meta?.title || '');
+  }
+
+  get chatsEnabled() {
+    return this.$store.getters.chatsEnabled;
   }
 
   // eslint-disable-next-line class-methods-use-this

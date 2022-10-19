@@ -5,6 +5,7 @@ import departments from './modules/departments';
 import cards from './modules/cards';
 import directory from './modules/directory';
 import user from './modules/user';
+import chats from './modules/chats';
 import * as actions from './action-types';
 import * as mutations from './mutation-types';
 
@@ -16,6 +17,7 @@ export default new Vuex.Store({
     cards,
     directory,
     user,
+    chats,
   },
   state: {
     globalLoadingCounter: 0,
