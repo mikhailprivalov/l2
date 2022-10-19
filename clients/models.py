@@ -1243,7 +1243,7 @@ class Card(models.Model):
                 self.individual.ecp_id = ecp_id
                 self.individual.save()
                 return self.individual.ecp_id
-        return ""
+        return None
 
     @staticmethod
     def next_l2_n():

@@ -78,11 +78,14 @@
             <th class="text-center">
               Дата
             </th>
-            <th v-if="active_type !== 5">
+            <th v-if="active_type !== 5 && active_type !== 6">
               № напр.
             </th>
-            <th v-else>
+            <th v-else-if="active_type === 5">
               № дог
+            </th>
+            <th v-else>
+              Время
             </th>
             <th>Назначения</th>
             <th
@@ -307,6 +310,17 @@
                   Договор
                 </button>
               </div>
+              <div
+                v-else-if="active_type===6"
+                class="button-td-inner button-td-inner-single"
+              >
+                <button
+                  class="btn btn-blue-nb"
+                  @click="print_contract(row.pk, patient_pk)"
+                >
+                  Талон
+                </button>
+              </div>
             </td>
             <td class="nopd">
               <input
@@ -393,6 +407,7 @@ export default {
         { pk: 2, title: 'Результаты подтверждены' },
         { pk: 4, title: 'Созданы пользователем' },
         { pk: 5, title: 'Договоры пациента' },
+        { pk: 6, title: 'Регистратура пациента' },
       ],
       active_type: 3,
       checked_obj: {},
