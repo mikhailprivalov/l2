@@ -50,13 +50,7 @@ def fill_slot(request):
     ecp_id = card.get_ecp_id()
 
     if not ecp_id:
-        individual_data = card.get_data_individual()
-        ecp_id = search_patient_ecp_by_fio(individual_data)
-        if not ecp_id:
-            return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
-        else:
-            card.individual.ecp_id = ecp_id
-            card.individual.save()
+        return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
 
     r = register_patient_ecp_slot(ecp_id, slot_id)
 
