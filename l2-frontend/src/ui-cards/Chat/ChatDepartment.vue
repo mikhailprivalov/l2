@@ -6,6 +6,7 @@
   >
     <div
       class="department-title"
+      :class="unreadMessages > 0 && 'department-title-unread'"
       @click="toggle"
     >
       <div class="department-title__name">
@@ -15,7 +16,7 @@
         >
           {{ unreadMessages }}
         </div>
-        {{ department.title }} <template v-if="!forceOpened">
+        {{ department.title }} <template v-if="!forceOpened && department.id !== -100">
           ({{ onlineUsers }}/{{ totalUsers }})
         </template>
       </div>
@@ -75,6 +76,9 @@ export default {
       });
     },
     onlineUsers() {
+      if (this.department.id === -100) {
+        return 0;
+      }
       return this.department.usersOnline;
     },
     totalUsers() {
@@ -84,6 +88,10 @@ export default {
       return this.forceOpened || this.open;
     },
     unreadMessages() {
+      if (this.department.id === -100) {
+        return this.$store.getters.chatsUnreadMessages;
+      }
+
       return this.department.users.reduce((a, u) => {
         if (this.$store.getters.chatsUnreadDialogs[u.id]) {
           return a + this.$store.getters.chatsUnreadDialogs[u.id];
@@ -123,6 +131,10 @@ export default {
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
+
+    &-unread &__name {
+      font-weight: bold;
+    }
 
     &__name {
       font-weight: 500;

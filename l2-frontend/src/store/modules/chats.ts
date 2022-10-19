@@ -58,6 +58,8 @@ const getters = {
   },
   chatsNotifyToken: (state: ChatsState) => state.notifyToken,
   chatsUnreadDialogs: (state: ChatsState) => state.unreadDialogs,
+  chatsUnreadDialogsList: (state: ChatsState) => Object.keys(state.unreadDialogs).map((k) => parseInt(k, 10)),
+  chatsUnreadDialogsUsers: (state: ChatsState, g) => g.chatsUnreadDialogsList.map((k) => g.chatsGetUser(k)),
   chatsDisableAlerts: (state: ChatsState) => state.disableAlerts,
 };
 
