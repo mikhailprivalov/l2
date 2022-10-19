@@ -184,6 +184,10 @@ def gen_pdf_dir(request):
             Prefetch(
                 'issledovaniya_set',
                 queryset=Issledovaniya.objects.all().select_related('research', 'research__podrazdeleniye', 'localization', 'service_location').prefetch_related('research__fractions_set'),
+            ),
+            Prefetch(
+                'directionparamsresult_set',
+                queryset=DirectionParamsResult.objects.all()
             )
         )
         .select_related(
@@ -660,7 +664,8 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     wt, ht = t.wrap(0, 0)
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
-    direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
+    height_params_table = 0
+    direction_params = dir.directionparamsresult_set.all()
     if len(direction_params) > 0:
         params_data = [
             [
@@ -676,22 +681,20 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
             ]
             for params in direction_params
         ]
-    else:
-        params_data = [['']]
-    params_col = [int(tw)]
-    params_table = Table(data=params_data, colWidths=params_col)
-    params_table.setStyle(
-        TableStyle(
-            [
-                ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                ('TOPPADDING', (0, 0), (-1, -1), 0),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-            ]
+        params_col = [int(tw)]
+        params_table = Table(data=params_data, colWidths=params_col)
+        params_table.setStyle(
+            TableStyle(
+                [
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('TOPPADDING', (0, 0), (-1, -1), 0),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                ]
+            )
         )
-    )
-    params_table.canv = c
-    width_params_table, height_params_table = params_table.wrap(0, 0)
-    params_table.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table))
+        params_table.canv = c
+        width_params_table, height_params_table = params_table.wrap(0, 0)
+        params_table.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table))
 
     c.setFont('OpenSans', 8)
     if not has_descriptive and not has_doc_refferal:
