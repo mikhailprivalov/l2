@@ -160,4 +160,4 @@ def register_patient_ecp_slot(slot_id, patient_ecp_id):
     if req_result['error_code'] == 0 and register_result['TimeTableGraf_id'] == slot_id and patient_ecp_id == register_result['Person_id']:
         return {'register': True}
 
-    return {'register': False}
+    return {'register': False, "message": "Неудачная попытка записи"}

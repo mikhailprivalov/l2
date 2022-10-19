@@ -115,6 +115,9 @@ def get_dialog_pk(request):
     doctor_pk = request_data.get("userId")
     doctor2 = DoctorProfile.objects.get(pk=doctor_pk)
 
+    if doctor2.get_hospital() != doctor1.get_hospital():
+        return status_response(False, 'Forbidden')
+
     dialog = Dialog.get_dialog_or_create(doctor1, doctor2)
 
     return JsonResponse({"dialogId": dialog.pk})
