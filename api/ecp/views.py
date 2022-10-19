@@ -51,7 +51,7 @@ def fill_slot(request):
 
     if not ecp_id:
         return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
-    r = register_patient_ecp_slot(ecp_id, slot_id)
 
+    r = register_patient_ecp_slot(ecp_id, slot_id)
 
     return JsonResponse(r)
