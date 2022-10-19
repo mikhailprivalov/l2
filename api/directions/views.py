@@ -298,26 +298,29 @@ def directions_history(request):
         if not ecp_id:
             return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
         patient_time_table = get_ecp_time_table_list_patient(ecp_id)
-        res['directions'] = [{
-            'pk': i["time"],
-            'status': "",
-            'researches': f"{i['Post_name']} - {i['TimeTable_id']}",
-            "researches_pks": "",
-            'date': i["date"],
-            'cancel': False,
-            'checked': False,
-            'pacs': False,
-            'has_hosp': False,
-            'has_descriptive': False,
-            'maybe_onco': False,
-            'is_application': False,
-            'lab': "",
-            'parent': parent_obj,
-            'is_expertise': False,
-            'expertise_status': False,
-            'person_contract_pk': "",
-            'person_contract_dirs': "",
-        } for i in patient_time_table]
+        res['directions'] = [
+            {
+                'pk': i["time"],
+                'status': "",
+                'researches': f"{i['Post_name']} - {i['TimeTable_id']}",
+                "researches_pks": "",
+                'date': i["date"],
+                'cancel': False,
+                'checked': False,
+                'pacs': False,
+                'has_hosp': False,
+                'has_descriptive': False,
+                'maybe_onco': False,
+                'is_application': False,
+                'lab': "",
+                'parent': parent_obj,
+                'is_expertise': False,
+                'expertise_status': False,
+                'person_contract_pk': "",
+                'person_contract_dirs': "",
+            }
+            for i in patient_time_table
+        ]
 
         return JsonResponse(res)
 
