@@ -118,7 +118,7 @@ def search_patient_ecp_by_person_id(person_id):
     )
     result = json.loads(req.content.decode())
     individual = result['data'][0]
-    if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] in['2', '4']:
+    if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] in ['2', '4']:
         patient['enp'] = individual['Polis_Num']
     return patient
 
