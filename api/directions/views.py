@@ -326,7 +326,6 @@ def directions_history(request):
             })
 
         res['directions'] = final_result
-        print(res)
 
         return JsonResponse(res)
 

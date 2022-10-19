@@ -175,15 +175,11 @@ def search_patient_ecp_by_fio(patient):
 
 
 def get_ecp_time_table_list_patient(patient_ecp_id):
-    print(patient_ecp_id)
     sess_id = request_get_sess_id()
     current_date = current_time()
     start_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
     end_date = (current_date + timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
-    print(start_date)
-    print(end_date)
     req_result = make_request_get("TimeTableListbyPatient", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTable_beg={start_date}&TimeTable_end={end_date}", sess_id=sess_id)
-    print(req_result)
     result_tt = req_result['data']['TimeTable']
     if len(result_tt) > 0:
         return [
