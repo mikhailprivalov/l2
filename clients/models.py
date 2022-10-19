@@ -1238,6 +1238,7 @@ class Card(models.Model):
         else:
             individual_data = self.get_data_individual()
             from ecp_integration.integration import search_patient_ecp_by_fio
+
             ecp_id = search_patient_ecp_by_fio(individual_data)
             if ecp_id:
                 self.individual.ecp_id = ecp_id
