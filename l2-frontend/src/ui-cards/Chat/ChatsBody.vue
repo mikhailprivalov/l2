@@ -53,11 +53,16 @@
     </div>
     <div class="chats-scroll">
       <ChatDepartment
+        v-if="unreadDepartment && !search"
+        key="unread"
+        :department="unreadDepartment"
+      />
+      <ChatDepartment
         v-for="department in chatsDepartments"
         :key="department.pk"
         :department="department"
         :force-opened="search"
-        :search="q"
+        :search="search ? q : ''"
       />
     </div>
   </div>
@@ -85,6 +90,16 @@ export default {
     },
     alertsEnabled() {
       return !this.$store.getters.chatsDisableAlerts;
+    },
+    unreadDepartment() {
+      if (this.$store.getters.chatsUnreadDialogsUsers.length === 0) {
+        return null;
+      }
+      return {
+        id: -100,
+        title: 'Непрочитанные',
+        users: this.$store.getters.chatsUnreadDialogsUsers,
+      };
     },
   },
   methods: {
