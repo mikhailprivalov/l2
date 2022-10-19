@@ -187,7 +187,7 @@ def get_ecp_time_table_list_patient(patient_ecp_id):
                 "date": normalize_dash_date(i['TimeTable_begTime'].split(" ")[0]),
                 "time": i['TimeTable_begTime'].split(" ")[1][:5],
                 "Post_name": i['Post_name'],
-                "TimeTable_id": i['TimeTable_id']
+                "TimeTable_id": i['TimeTable_id'],
             }
             for i in result_tt
         ]
