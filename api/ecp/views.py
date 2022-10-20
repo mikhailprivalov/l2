@@ -31,16 +31,6 @@ def get_available_slots(request):
 
 
 @login_required
-def get_available_slots(request):
-    request_data = json.loads(request.body)
-    slots = get_doctor_ecp_free_slots_by_date(
-        request_data['doctor_pk'],
-        request_data['date'],
-    )
-    return JsonResponse({"result": [{"pk": x['TimeTableGraf_id'], "title": datetime.datetime.strptime(x['TimeTableGraf_begTime'], '%Y-%m-%d %H:%M:%S').strftime('%H:%M')} for x in slots]})
-
-
-@login_required
 def fill_slot(request):
     request_data = json.loads(request.body)
     card_pk = request_data['card_pk']
