@@ -118,23 +118,16 @@
         <div
           class="chat-dialog__body-input"
         >
-          <textarea
+          <ChatInput
             ref="input"
-            v-model.trim="text"
-            class="chat-dialog__body-input-textarea"
-            :placeholder="
-              currentUserPk === dialogUser.id
-                ? 'Введите сообщение для отправки себе'
-                : 'Введите сообщение (Ctrl+Enter для отправки)'
-            "
-            :readonly="isSending"
-            maxlength="999"
-            @keydown.ctrl.enter="sendMessage"
-            @keyup="updateWritingStatusDebounced"
+            :self-dialog="currentUserPk === dialogUser.id"
+            :disabled="isSending"
+            @send="sendMessage"
+            @typing="updateWritingStatusDebounced"
           />
           <div
             class="chat-dialog__body-input-send"
-            @click="sendMessage"
+            @click="pressSend"
           >
             <i
               v-if="isSending"
@@ -144,12 +137,6 @@
               v-else
               class="fa fa-paper-plane"
             />
-            <div
-              v-if="textSymbolsLeft < 100"
-              class="chat-dialog__body-input-send-symbols-left"
-            >
-              {{ textSymbolsLeft }}
-            </div>
           </div>
         </div>
         <div
@@ -169,11 +156,13 @@ import _ from 'lodash';
 
 import * as actions from '@/store/action-types';
 import ChatMessage from '@/ui-cards/Chat/ChatMessage.vue';
+import ChatInput from '@/ui-cards/Chat/ChatInput.vue';
 
 export default {
   name: 'ChatDialog',
   components: {
     ChatMessage,
+    ChatInput,
   },
   props: {
     dialogId: {
@@ -190,7 +179,6 @@ export default {
       loading: false,
       dialogUser: {},
       messages: [],
-      text: '',
       top: 0,
       left: 0,
       scrollTop: 0,
@@ -240,9 +228,6 @@ export default {
         (message) => message.author === this.currentUserPk && this.dialogUser.id !== this.currentUserPk && !message.read,
       ).map((message) => message.id);
     },
-    textSymbolsLeft() {
-      return 999 - this.text.length;
-    },
   },
   watch: {
     unreadMessages() {
@@ -260,13 +245,6 @@ export default {
         return message;
       });
     },
-    text() {
-      if (this.textSymbolsLeft <= 0) {
-        this.text = this.text.slice(0, 999);
-      } else {
-        this.updateWritingStatusDebounced();
-      }
-    },
   },
   mounted() {
     this.loadDialogData();
@@ -275,10 +253,7 @@ export default {
     this.$store.subscribeAction((action) => {
       if (action.type === actions.CHATS_NOTIFY && action.payload.dialogId === this.dialogId) {
         this.loadFeatureMessages();
-        this.newMessages.push(action.payload.id);
-        setTimeout(() => {
-          this.newMessages = this.newMessages.filter((id) => id !== action.payload.id);
-        }, 3000);
+        this.addNewMessage(action.payload.id);
       }
     });
     this.$root.$on('chat-dialog-focus', dialogId => {
@@ -354,6 +329,12 @@ export default {
     closeDialog() {
       this.$store.dispatch(actions.CHATS_CLOSE_DIALOG, this.dialogId);
     },
+    addNewMessage(messageId) {
+      this.newMessages.push(messageId);
+      setTimeout(() => {
+        this.newMessages = this.newMessages.filter((id) => id !== messageId);
+      }, 3000);
+    },
     startDrag(e: MouseEvent) {
       e.preventDefault();
       this.isDragging = true;
@@ -388,20 +369,23 @@ export default {
       document.addEventListener('mousemove', mouseMove);
       document.addEventListener('mouseup', mouseUp);
     },
-    async sendMessage() {
-      if (!this.text || this.isSending) {
+    pressSend() {
+      this.$refs.input.send();
+    },
+    async sendMessage(text, onResult) {
+      if (!text || this.isSending) {
         return;
       }
       this.isSending = true;
       try {
-        const { message, ok } = await this.$api('chats/send-message', this, ['dialogId', 'text']);
+        const { message, ok } = await this.$api('chats/send-message', this, 'dialogId', { text });
         if (ok) {
           this.messages.push({ ...message, addedFromClient: true });
-          this.text = '';
+          this.addNewMessage(message.id);
           this.$nextTick(() => {
             this.scrollToBottom();
-            this.$refs.input.focus();
           });
+          onResult(true);
 
           const dataToStore = {
             dialogId: this.dialogId,
@@ -412,12 +396,14 @@ export default {
             delete window.localStorage[this.lsProperty];
           }, 100);
         } else {
+          onResult(false);
           this.$root.$emit('msg', 'error', 'Ошибка отправки сообщения');
         }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
         this.$root.$emit('msg', 'error', 'Ошибка отправки сообщения');
+        onResult(false);
       }
       this.isSending = false;
     },
@@ -687,20 +673,6 @@ export default {
     border-top: 1px solid #ccc;
   }
 
-  &__body-input-textarea {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: calc(100% - 40px);
-    height: 100%;
-    padding: 5px;
-    border: none;
-    outline: none;
-    resize: none;
-    font-size: 14px;
-    line-height: 1.1;
-  }
-
   &__body-input-send {
     position: absolute;
     top: 0;
@@ -712,17 +684,6 @@ export default {
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-
-    &-symbols-left {
-      color: #999;
-      position: absolute;
-      bottom: 2px;
-      right: 3px;
-      left: 3px;
-      text-align: center;
-      font-size: 10px;
-      line-height: 1.1;
-    }
   }
 
   &__body-input-send:hover {

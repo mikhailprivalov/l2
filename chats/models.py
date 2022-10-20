@@ -105,16 +105,12 @@ def get_chats_message_upload_path(instance, filename):
 class Message(models.Model):
     MESSAGE_TYPE_TEXT = 1
     MESSAGE_TYPE_FILE = 2
-    MESSAGE_TYPE_CARD = 3
-    MESSAGE_TYPE_DIRECTION = 4
-    MESSAGE_TYPE_RESULT = 5
+    MESSAGE_TYPE_IMAGE = 3
 
     MESSAGE_TYPE_CHOICES = (
         (MESSAGE_TYPE_TEXT, 'Текст'),
         (MESSAGE_TYPE_FILE, 'Файл'),
-        (MESSAGE_TYPE_CARD, 'Карта пациента'),
-        (MESSAGE_TYPE_DIRECTION, 'Направление'),
-        (MESSAGE_TYPE_RESULT, 'Результат'),
+        (MESSAGE_TYPE_IMAGE, 'Изображение'),
     )
 
     dialog = models.ForeignKey(Dialog, on_delete=models.CASCADE, related_name='chat_messages', db_index=True)
@@ -138,7 +134,7 @@ class Message(models.Model):
             'dialogId': self.dialog.pk,
             'author': self.author.pk,
             'authorName': self.author.get_fio(),
-            'text': self.text,
+            'text': self.text if self.type == self.MESSAGE_TYPE_TEXT else self.get_type_display(),
             'type': self.type,
             'file': self.file.url if self.file else None,
             'time': int(self.created_at.timestamp()),
