@@ -11,6 +11,7 @@ import RadioField from '@/fields/RadioField.vue';
 import {
   DIRECTION_MODE_CALL,
   DIRECTION_MODE_DIRECTION,
+  DIRECTION_MODE_ECP_REGISTRATION,
   DIRECTION_MODE_WAIT,
 } from '@/constants';
 
@@ -43,10 +44,16 @@ export default {
     l2_doc_call() {
       return this.$store.getters.modules.l2_doc_call;
     },
+    rmis_queue() {
+      return this.$store.getters.modules.l2_rmis_queue;
+    },
     DIRECTION_MODES() {
       const modes = [
         DIRECTION_MODE_DIRECTION,
       ];
+      if (this.rmis_queue) {
+        modes.push(DIRECTION_MODE_ECP_REGISTRATION);
+      }
       if (this.l2_doc_call) {
         modes.push(DIRECTION_MODE_CALL);
       }
