@@ -75,14 +75,11 @@
             :key="coastResearch.id"
             class="tablerow"
           >
-            <td
-              v-tippy="{onShow: showTitle}"
-              :title="coastResearch.research.title"
+            <VueTippyTd
               class="research tablerow"
               style="padding-left: 6px"
-            >
-              {{ coastResearch.research.title }}
-            </td>
+              :text="coastResearch.research.title"
+            />
             <td>
               <input
                 v-model="coastResearch.coast"
@@ -177,10 +174,11 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
+import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 export default {
   name: 'ConstructPrice',
-  components: { Treeselect },
+  components: { VueTippyTd, Treeselect },
   data() {
     return {
       priceList: {},
@@ -279,12 +277,6 @@ export default {
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      }
-    },
-    showTitle(element) {
-      const el = element;
-      if (el.reference.scrollWidth <= el.reference.clientWidth) {
-        el.state.visible = false;
       }
     },
   },
