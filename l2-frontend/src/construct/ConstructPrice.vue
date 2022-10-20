@@ -96,7 +96,6 @@
             >
               <button
                 v-tippy
-                :disabled="!selectedPrice.status"
                 class="btn last btn-blue-nb nbr"
                 title="Сохранить цену"
                 @click="updateCoastResearchInPrice(coastResearch)"
@@ -107,7 +106,6 @@
             <td v-if="selectedPrice.status === true">
               <button
                 v-tippy
-                :disabled="!selectedPrice.status"
                 class="btn last btn-blue-nb nbr"
                 title="Удалить исследование"
                 @click="deleteResearchInPrice(coastResearch)"

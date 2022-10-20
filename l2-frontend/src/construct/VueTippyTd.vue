@@ -8,7 +8,7 @@
   </td>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'VueTippyTd',
   props: {
@@ -19,13 +19,17 @@ export default {
   },
   data() {
     return {
-      title: '',
       show: false,
     };
   },
   methods: {
     showTitle(event) {
-      this.show = event.target.scrollWidth > event.target.clientWidth;
+      if (event.target.scrollWidth > event.target.clientWidth) {
+        this.show = true;
+      } else {
+        this.show = false;
+        event.target.removeAttribute('data-original-title');
+      }
     },
   },
 };
