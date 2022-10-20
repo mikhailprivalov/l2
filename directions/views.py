@@ -672,7 +672,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                     + f'\">{params.title}:</font>'
                     + '<font face=\"OpenSans\" size=\"'
                     + str(font_size * 0.8)
-                    + f'\"> {params.value}</font>',
+                    + f'\"> {params.string_value_normalized}</font>',
                     styleSheet["BodyText"],
                 )
             ]
