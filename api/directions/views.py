@@ -4,7 +4,7 @@ import os
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory
-from ecp_integration.integration import get_ecp_time_table_list_patient
+from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
@@ -298,6 +298,9 @@ def directions_history(request):
         if not ecp_id:
             return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
         patient_time_table = get_ecp_time_table_list_patient(ecp_id)
+        patient_direction_time_table = get_ecp_evn_direction(ecp_id)
+        patient_time_table.extend(patient_direction_time_table)
+        patient_time_table = sorted(patient_time_table, key=lambda k: k["full_time"])
         res['directions'] = [
             {
                 'pk': i["time"],
