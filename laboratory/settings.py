@@ -63,6 +63,7 @@ INSTALLED_APPS = (
     'doctor_schedule',
     'django_celery_results',
     'dashboards',
+    'chats.apps.ChatsConfig',
 )
 
 MIDDLEWARE = [
@@ -360,6 +361,7 @@ BARCODE_SIZE = "43x25"
 SEARCH_PAGE_STATISTIC_PARAMS = {}
 MEDEXAM_FIN_SOURCE_TITLE = ""
 RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION = []
+SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE = {}
 
 REFERENCE_ODLI = False
 ODII_METHODS = {}

@@ -131,17 +131,17 @@
     <div class="f gutter gutter-col gutter-column-2" />
     <div
       class="g"
-      :class="{ noMoreModules: !l2_doc_call && !l2_list_wait, onlyDocCall: l2_only_doc_call }"
+      :class="{ noMoreModules: !l2_doc_call && !l2_list_wait && !rmis_queue, onlyDocCall: l2_only_doc_call }"
     >
       <DirectAndPlanSwitcher
-        v-if="(l2_doc_call || l2_list_wait) && !l2_only_doc_call"
+        v-if="(l2_doc_call || l2_list_wait || rmis_queue) && !l2_only_doc_call"
         v-model="mode"
         :bages="modes_counts"
       />
       <div
         v-show="mode === DIRECTION_MODE_DIRECTION"
         v-if="!l2_only_doc_call"
-        :style="(l2_doc_call || l2_list_wait) && 'border-top: 1px solid #434a54'"
+        :style="(l2_doc_call || l2_list_wait || rmis_queue) && 'border-top: 1px solid #434a54'"
       >
         <SelectedResearches
           :operator="selected_card.operator"
@@ -176,6 +176,21 @@
           :visible="mode === DIRECTION_MODE_WAIT"
         />
       </div>
+      <div
+        v-if="rmis_queue && !l2_only_doc_call && mode === DIRECTION_MODE_ECP_REGISTRATION"
+      >
+        <div
+          v-if="selected_card.pk"
+          class="schedule-root"
+        >
+          <ServiceScheduleEcp
+            v-for="r in selected_researches"
+            :key="r"
+            :service-pk="r"
+            :card-id="selected_card.pk"
+          />
+        </div>
+      </div>
     </div>
     <ResultsViewer
       v-if="show_results_pk > -1"
@@ -199,8 +214,14 @@ import ResultsViewer from '@/modals/ResultsViewer.vue';
 import RmisDirectionsViewer from '@/modals/RmisDirectionsViewer.vue';
 import LastResult from '@/ui-cards/LastResult.vue';
 import DirectAndPlanSwitcher from '@/ui-cards/DirectAndPlanSwitcher.vue';
+import ServiceScheduleEcp from '@/ui-cards/ServiceScheduleEcp.vue';
 import forms from '@/forms';
-import { DIRECTION_MODE_CALL, DIRECTION_MODE_DIRECTION, DIRECTION_MODE_WAIT } from '@/constants';
+import {
+  DIRECTION_MODE_CALL,
+  DIRECTION_MODE_DIRECTION,
+  DIRECTION_MODE_ECP_REGISTRATION,
+  DIRECTION_MODE_WAIT,
+} from '@/constants';
 import CallDoctor from '@/ui-cards/CallDoctor.vue';
 import ListWaitCreator from '@/ui-cards/ListWaitCreator.vue';
 import { valuesToString } from '@/utils';
@@ -218,6 +239,7 @@ export default {
     ResultsViewer,
     RmisDirectionsViewer,
     LastResult,
+    ServiceScheduleEcp,
   },
   async beforeRouteLeave(to, from, next) {
     const msg = this.unload();
@@ -262,6 +284,7 @@ export default {
       DIRECTION_MODE_DIRECTION,
       DIRECTION_MODE_CALL,
       DIRECTION_MODE_WAIT,
+      DIRECTION_MODE_ECP_REGISTRATION,
       modes_counts: {
         [DIRECTION_MODE_CALL]: 0,
         [DIRECTION_MODE_WAIT]: 0,
@@ -309,6 +332,9 @@ export default {
     },
     l2_only_doc_call() {
       return this.$store.getters.modules.l2_only_doc_call && this.l2_doc_call;
+    },
+    rmis_queue() {
+      return this.$store.getters.modules.l2_rmis_queue;
     },
   },
   watch: {
@@ -691,6 +717,20 @@ export default {
       height: 100%;
       width: 100%;
     }
+  }
+}
+
+.schedule-root {
+  padding: 10px;
+  position: absolute;
+  top: 0 !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+
+  & > ::v-deep div {
+    margin-bottom: 15px;
   }
 }
 </style>

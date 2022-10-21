@@ -136,7 +136,7 @@ export default class CheckBackend extends Vue {
         }
       })
       .always(() => {
-        this.aliveTimer = setTimeout(() => this.check(), this.userIsIdle ? 300000 : 20000);
+        this.aliveTimer = setTimeout(() => this.check(), this.userIsIdle ? 60000 : 20000);
       });
   }
 }

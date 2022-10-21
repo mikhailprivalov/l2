@@ -76,7 +76,7 @@
             class="tablerow"
           >
             <td
-              v-tippy
+              v-tippy="{onShow: showTitle}"
               :title="coastResearch.research.title"
               class="research tablerow"
               style="padding-left: 6px"
@@ -279,6 +279,12 @@ export default {
         } else {
           this.$root.$emit('msg', 'error', message);
         }
+      }
+    },
+    showTitle(element) {
+      const el = element;
+      if (el.reference.scrollWidth <= el.reference.clientWidth) {
+        el.state.visible = false;
       }
     },
   },

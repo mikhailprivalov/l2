@@ -1,11 +1,13 @@
 all: install front mm
+all_poetry: install_prod front_poetry mm_poetry
 all_prod: install_prod front_prod mm
-all_fast: poetry_bootstrap front_fast mm_fast
+all_fast: poetry_bootstrap front_fast mm_poetry
 mm: makemigrations migrate
-mm_fast: makemigrations_fast migrate_fast
+mm_poetry: makemigrations_poetry migrate_poetry
 front: build collect
+front_poetry: build collect_poetry
 front_prod: build_prod collect
-front_fast: take_release collect_fast
+front_fast: take_release collect_poetry
 install: poetry_bootstrap npm_install
 install_prod: poetry_bootstrap npm_install
 release: update_browserlist up git_commit_up git_push
@@ -31,7 +33,7 @@ ci_lint:
 collect:
 	python manage.py collectstatic --no-input
 
-collect_fast:
+collect_poetry:
 	poetry run python manage.py collectstatic --no-input
 
 makemigrations:
@@ -40,10 +42,10 @@ makemigrations:
 migrate:
 	python manage.py migrate
 
-migrate_fast:
+migrate_poetry:
 	poetry run python manage.py migrate
 
-makemigrations_fast:
+makemigrations_poetry:
 	poetry run python manage.py makemigrations
 
 up:

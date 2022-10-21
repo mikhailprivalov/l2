@@ -1,7 +1,6 @@
 @import "~bootstrap3/dist/css/bootstrap.min.css";
 
-$img-src: "~bootflat/bootflat/img/check_flat/default.png";
-@import "~bootflat/bootflat/scss/bootflat";
+@import "./css/bootflat.css";
 
 $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
 @import "~@fortawesome/fontawesome-free/scss/fontawesome";
@@ -16,10 +15,9 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
 
 @import "~@braid/vue-formulate/themes/snow/snow.scss";
 
-@import "fonts";
-@import "legacy";
+@import "@/styles/css/fonts.css";
+@import "@/styles/legacy.css";
 @import "main";
-@import "variables";
-@import "editor";
-@import "menubar";
-@import "menububble";
+@import "@/styles/css/editor.css";
+@import "@/styles/css/menubar.css";
+@import "@/styles/css/menububble.css";

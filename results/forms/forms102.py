@@ -362,7 +362,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     tbl = gen_table("Врач-специалист, <br/>осуществляющий консультирование", data["Врач-консультант"], styleT)
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
-    date_str = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=iss.medical_examination)
+    date_str = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=iss.time_confirmation)
     fwb.append(Paragraph(f'{open_bold_tag}28. Дата проведения прижизненного патолого-анатомического исследования:{close_tag_bold} {date_str} г.', style_ml))
 
     return fwb

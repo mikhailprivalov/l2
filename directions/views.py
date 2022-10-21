@@ -30,7 +30,7 @@ import directory.models as directory
 from hospitals.models import Hospitals
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya, TubesRegistration
+from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strtime, strdate
@@ -184,7 +184,8 @@ def gen_pdf_dir(request):
             Prefetch(
                 'issledovaniya_set',
                 queryset=Issledovaniya.objects.all().select_related('research', 'research__podrazdeleniye', 'localization', 'service_location').prefetch_related('research__fractions_set'),
-            )
+            ),
+            Prefetch('directionparamsresult_set', queryset=DirectionParamsResult.objects.all()),
         )
         .select_related(
             'client',
@@ -660,21 +661,53 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     wt, ht = t.wrap(0, 0)
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
+    height_params_table = 0
+    direction_params = dir.directionparamsresult_set.all()
+    if len(direction_params) > 0:
+        params_data = [
+            [
+                Paragraph(
+                    '<font face=\"OpenSansBold\" size=\"'
+                    + str(font_size * 0.8)
+                    + f'\">{params.title}:</font>'
+                    + '<font face=\"OpenSans\" size=\"'
+                    + str(font_size * 0.8)
+                    + f'\"> {params.string_value_normalized}</font>',
+                    styleSheet["BodyText"],
+                )
+            ]
+            for params in direction_params
+        ]
+        params_col = [int(tw)]
+        params_table = Table(data=params_data, colWidths=params_col)
+        params_table.setStyle(
+            TableStyle(
+                [
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('TOPPADDING', (0, 0), (-1, -1), 0),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                ]
+            )
+        )
+        params_table.canv = c
+        width_params_table, height_params_table = params_table.wrap(0, 0)
+        params_table.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table))
+
     c.setFont('OpenSans', 8)
     if not has_descriptive and not has_doc_refferal:
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 10, "Всего назначено: " + str(len(issledovaniya)))
+        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table - 10, "Всего назначено: " + str(len(issledovaniya)))
 
     if service_locations:
         n = 0 if has_descriptive or has_doc_refferal else 1
         if one_sl:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, "Место: " + list(service_locations)[0])
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table - 14 - n * 10, "Место: " + list(service_locations)[0])
         else:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, "Места оказания услуг:")
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table - 14 - n * 10, "Места оказания услуг:")
             for title in service_locations:
                 n += 1
                 c.drawString(
                     paddingx + (w / 2 * xn),
-                    (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
+                    (h / 2 - height - 138 + m) + (h / 2) * yn - ht - height_params_table - 14 - n * 10,
                     title + " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])),
                 )
 

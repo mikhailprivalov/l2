@@ -6,13 +6,13 @@ export default class UrlData {
       window.history.pushState('', '/', window.location.pathname);
       return false;
     }
-    window.location.hash = JSON.stringify(data);
+    window.location.hash = encodeURIComponent(JSON.stringify(data));
     return true;
   }
 
   static get() {
     try {
-      const data = JSON.parse(decodeURI(window.location.hash.substring(1)) || 'null');
+      const data = JSON.parse(decodeURIComponent(window.location.hash.substring(1)) || 'null');
       // eslint-disable-next-line no-console
       console.log(data);
       return data;

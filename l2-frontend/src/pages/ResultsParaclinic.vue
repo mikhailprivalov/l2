@@ -994,7 +994,7 @@
                 </div>
               </div>
               <div
-                v-if="row.research.is_doc_refferal || row.research.is_gistology"
+                v-if="row.research.is_doc_refferal || needShowDateExamination(row.research)"
                 class="field"
               >
                 <div class="field-title">
@@ -1648,7 +1648,7 @@
             Талон № {{ slot.data.pk }}
           </h3>
           <h5>{{ slot.data.datetime }}</h5>
-          РМИС UID пациента:
+          ЕЦП ID пациента:
           <a
             :href="`/ui/directions?rmis_uid=${slot.data.patient_uid}`"
             target="_blank"
@@ -2207,6 +2207,18 @@ export default {
     window.$(window).off('beforeunload', this.unload);
   },
   methods: {
+    needShowDateExamination(currentResearch) {
+      if (typeof this.data.showExaminationDate.is_gistology !== 'undefined') {
+        return currentResearch.is_gistology && this.data.showExaminationDate.is_gistology;
+      }
+      if (typeof this.data.showExaminationDate.is_paraclinic !== 'undefined') {
+        return currentResearch.is_paraclinic && this.data.showExaminationDate.is_paraclinic;
+      }
+      if (typeof this.data.showExaminationDate.is_stom !== 'undefined') {
+        return currentResearch.is_stom && this.data.showExaminationDate.is_stom;
+      }
+      return false;
+    },
     paidFinSource(currentRow, currentFinSourceList) {
       for (const s of currentFinSourceList) {
         if (s.pk === currentRow && s.title === 'Платно') {
@@ -2774,9 +2786,8 @@ export default {
         await this.$store.dispatch(actions.INC_LOADING);
         const cards = await patientsPoint.searchCard({
           type: this.internal_base,
-          query: this.slot.data.patient_uid,
+          query: `ecp:${this.slot.data.patient_uid}`,
           list_all_cards: false,
-          inc_rmis: true,
         });
         const cardPk = (cards.results || [{}])[0].pk;
         const { direction } = await usersPoint.fillSlot({ slot: { ...this.slot, card_pk: cardPk } });

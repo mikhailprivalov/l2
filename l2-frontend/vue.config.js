@@ -26,7 +26,7 @@ module.exports = {
     },
   },
   css: {
-    sourceMap: true,
+    sourceMap: false,
   },
   chainWebpack: config => [
     config.module.rule('vue')

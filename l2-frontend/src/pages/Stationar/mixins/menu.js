@@ -1,4 +1,4 @@
-const menuItems = Object.freeze({
+export const menuItems = Object.freeze({
   'primary receptions': 'Первичные приёмы',
   laboratory: 'Лабораторные',
   paraclinical: 'Параклинические',
