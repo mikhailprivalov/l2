@@ -128,13 +128,22 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
     unique_date = []
     for d in doctors:
         sess_id = request_get_sess_id()
-        req_result = make_request_get(
-            "TimeTableGraf/TimeTableGrafFreeDate", query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}", sess_id=sess_id
-        )
+        if "@R" in d.rmis_location:
+            key_time = "TimeTableResource_begTime"
+            rmis_location_resource = d.rmis_location[:-2]
+            req_result = make_request_get(
+                "TimeTableResource/TimeTableResourceFreeDateTime",
+                query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start}&TimeTableResource_end={date_end}", sess_id=sess_id
+            )
+        else:
+            key_time = "TimeTableGraf_begTime"
+            req_result = make_request_get(
+                "TimeTableGraf/TimeTableGrafFreeDate", query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}", sess_id=sess_id
+            )
         schedule_data = req_result['data']
         if len(schedule_data) > 0:
             doctors_has_free_date[d.rmis_location] = {"fio": f"{d.family} {d.name} {d.patronymic}", "pk": d.id, "dates": []}
-            doctors_has_free_date[d.rmis_location]["dates"] = [s["TimeTableGraf_begTime"] for s in schedule_data]
+            doctors_has_free_date[d.rmis_location]["dates"] = [s[key_time] for s in schedule_data]
             unique_date.extend(doctors_has_free_date[d.rmis_location]["dates"])
 
     return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
@@ -142,10 +151,16 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
 
 def get_doctor_ecp_free_slots_by_date(rmis_location, date):
     sess_id = request_get_sess_id()
-    req_result = make_request_get("TimeTableGraf/TimeTableGrafFreeTime", query=f"Sess_id={sess_id}&MedStaffFact_id={rmis_location}&TimeTableGraf_begTime={date}", sess_id=sess_id)
+    if "@R" in rmis_location:
+        key_time = "TimeTableResource_begTime"
+        rmis_location_resource = rmis_location[:-2]
+        req_result = make_request_get("http://ecp38.is-mis.ru/api/", query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date}", sess_id=sess_id)
+    else:
+        key_time = "TimeTableGraf_begTime"
+        req_result = make_request_get("TimeTableGraf/TimeTableGrafFreeTime", query=f"Sess_id={sess_id}&MedStaffFact_id={rmis_location}&TimeTableGraf_begTime={date}", sess_id=sess_id)
     free_slots = req_result['data']
     if len(free_slots) > 0:
-        return sorted(free_slots, key=lambda k: k['TimeTableGraf_begTime'])
+        return sorted(free_slots, key=lambda k: k[key_time])
     return []
 
 
@@ -191,4 +206,13 @@ def get_ecp_time_table_list_patient(patient_ecp_id):
             }
             for i in result_tt
         ]
+    return []
+
+
+def get_resource_ecp_free_slots_by_date(rmis_location, date):
+    sess_id = request_get_sess_id()
+    req_result = make_request_get("TimeTableResource/TimeTableResourceFreeDateTime", query=f"Sess_id={sess_id}&Resource_id={rmis_location}&TimeTableResource_beg={date}", sess_id=sess_id)
+    free_slots = req_result['data']
+    if len(free_slots) > 0:
+        return sorted(free_slots, key=lambda k: k['TimeTableGraf_begTime'])
     return []
