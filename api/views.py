@@ -2509,3 +2509,25 @@ def delete_research_in_price(request):
     current_coast_research.delete()
     Log.log(data["pk"], 130001, request.user.doctorprofile, data["data_json"])
     return JsonResponse({"ok": "ok"})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_company_list(request):
+    company_data = [
+        {"id": company.pk,
+         "title": company.title,
+         "short_title": company.short_title,
+         "legal_address": company.legal_address,
+         "fact_address": company.fact_address,
+         "inn": company.inn,
+         "ogrn": company.ogrn,
+         "kpp": company.kpp,
+         "bik": company.bik,
+         "contract_id": company.contract.pk
+         }
+        for company in Company.objects.filter(active_status=True)
+    ]
+    company_data = sorted(company_data, key=lambda company: company["title"])
+    return JsonResponse({"data": company_data})
+
