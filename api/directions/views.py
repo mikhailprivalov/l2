@@ -300,6 +300,7 @@ def directions_history(request):
         patient_time_table = get_ecp_time_table_list_patient(ecp_id)
         patient_direction_time_table = get_ecp_evn_direction(ecp_id)
         patient_time_table.extend(patient_direction_time_table)
+
         patient_time_table = sorted(patient_time_table, key=lambda k: k["full_time"])
         res['directions'] = [
             {
