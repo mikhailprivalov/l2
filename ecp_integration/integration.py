@@ -112,9 +112,9 @@ def search_patient_ecp_by_person_id(person_id):
     result = make_request_get(
         "PersonList",
         query=f"Sess_id={sess_id}&"
-              f"PersonSurName_SurName={patient['PersonSurName_SurName']}&"
-              f"PersonFirName_FirName={patient['PersonFirName_FirName']}&"
-              f"PersonBirthDay_BirthDay={patient['PersonBirthDay_BirthDay']}&PersonSnils_Snils={patient_snils}",
+        f"PersonSurName_SurName={patient['PersonSurName_SurName']}&"
+        f"PersonFirName_FirName={patient['PersonFirName_FirName']}&"
+        f"PersonBirthDay_BirthDay={patient['PersonBirthDay_BirthDay']}&PersonSnils_Snils={patient_snils}",
         sess_id=sess_id,
     )
     individual = result['data'][0]
