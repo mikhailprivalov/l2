@@ -235,8 +235,9 @@ def get_ecp_evn_direction(patient_ecp_id):
     current_date = current_time()
     end_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
     start_date = (current_date - timedelta(days=60)).strftime("%Y-%m-%d %H:%M:%S")
-    req_result = make_request_get("EvnDirection", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&EvnDirection_beg={start_date}&EvnDirection_end={end_date}&DirType_id=10",
-                                  sess_id=sess_id)
+    req_result = make_request_get(
+        "EvnDirection", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&EvnDirection_beg={start_date}&EvnDirection_end={end_date}&DirType_id=10", sess_id=sess_id
+    )
     direction_time_table = []
     if req_result and len(req_result['data']) > 0:
         for i in req_result['data']:
