@@ -244,13 +244,15 @@ def get_ecp_evn_direction(patient_ecp_id):
                 if len(req_result_resource['data']) > 0:
                     date_time_resource = req_result_resource['data'][0]['TimeTableResource_begTime']
                     if date_time_resource >= end_date:
-                        direction_time_table.append({
-                            "date": normalize_dash_date(date_time_resource.split(" ")[0])[:8],
-                            "time": date_time_resource.split(" ")[1][:5],
-                            "Post_name": i['Resource_Name'],
-                            "TimeTable_id": i['TimeTableResource_id'],
-                            "full_time": date_time_resource,
-                            "rmis_location": i["Resource_id"],
-                            "type_slot": "resource"
-                        })
+                        direction_time_table.append(
+                            {
+                                "date": normalize_dash_date(date_time_resource.split(" ")[0])[:8],
+                                "time": date_time_resource.split(" ")[1][:5],
+                                "Post_name": i['Resource_Name'],
+                                "TimeTable_id": i['TimeTableResource_id'],
+                                "full_time": date_time_resource,
+                                "rmis_location": i["Resource_id"],
+                                "type_slot": "resource",
+                            }
+                        )
     return direction_time_table
