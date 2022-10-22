@@ -180,8 +180,9 @@ def register_patient_ecp_slot(patient_ecp_id, slot_id, slot_type):
     if slot_type == "TimeTableGraf_id":
         req_result = make_request_get("TimeTableGraf/TimeTableGrafWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableGraf_id={slot_id}", sess_id=sess_id, method="POST")
     elif slot_type == "TimeTableResource_id":
-        req_result = make_request_get("TimeTableResource/TimeTableResourceWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableResource_id={slot_id}", sess_id=sess_id,
-                                      method="POST")
+        req_result = make_request_get(
+            "TimeTableResource/TimeTableResourceWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableResource_id={slot_id}", sess_id=sess_id, method="POST"
+        )
     if req_result:
         register_result = req_result['data']
         if req_result['error_code'] == 0 and register_result[slot_type] == slot_id and patient_ecp_id == register_result['Person_id']:
