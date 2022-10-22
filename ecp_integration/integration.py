@@ -136,7 +136,8 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
             date_end = f"{date_end} 23:00:00"
             req_result = make_request_get(
                 "TimeTableResource/TimeTableResourceFreeDateTime",
-                query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start}&TimeTableResource_end={date_end}", sess_id=sess_id
+                query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start}&TimeTableResource_end={date_end}",
+                sess_id=sess_id,
             )
         else:
             key_time = "TimeTableGraf_begTime"
