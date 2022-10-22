@@ -3880,7 +3880,8 @@ def form_16(request_data):
             opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
         else:
             opinion.append(
-                Paragraph(f"Документ, удостоверяющий личность ({patient_data['type_doc']}): серия <u>{patient_data['passport_serial']}</u>, номер <u>{patient_data['passport_num']}</u>", styleLeft)
+                Paragraph(f"Документ, удостоверяющий личность ({patient_data['type_doc']}): серия <u>{patient_data['passport_serial']}</u>, номер <u>{patient_data['passport_num']}</u>",
+                          styleLeft)
             )
             opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']}  Кем: {person_data['passport_issued']}", styleLeft))
 
@@ -3926,8 +3927,8 @@ def form_16(request_data):
     )
     objs.append(
         Paragraph(
-            'Получив полную информацию о возможных последствиях и осложнениях в связи с применением лекарственного препарата _______________________, я подтверждаю, что мне понятен смысл всех '
-            f'терминов, на меня не оказывалось давление, и я осознанно принимаю решение о его применении {patient_status}.',
+            'Получив полную информацию о возможных последствиях и осложнениях в связи с применением лекарственного препарата _______________________, я подтверждаю, что мне понятен смысл '
+            f'всех терминов, на меня не оказывалось давление, и я осознанно принимаю решение о его применении {patient_status}.',
             style=stylePara,
         )
     )
