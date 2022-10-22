@@ -197,10 +197,10 @@ def search_patient_ecp_by_fio(patient):
     result = make_request_get(
         "PersonList",
         query=f"Sess_id={sess_id}&"
-              f"PersonSurName_SurName={patient['family']}&"
-              f"PersonFirName_FirName={patient['name']}&"
-              f"PersonSecName_SecName={patient['patronymic']}&"
-              f"PersonBirthDay_BirthDay={patient['birthday']}&PersonSnils_Snils={patient['snils']}",
+        f"PersonSurName_SurName={patient['family']}&"
+        f"PersonFirName_FirName={patient['name']}&"
+        f"PersonSecName_SecName={patient['patronymic']}&"
+        f"PersonBirthDay_BirthDay={patient['birthday']}&PersonSnils_Snils={patient['snils']}",
         sess_id=sess_id,
     )
     individual = result['data'][0]
