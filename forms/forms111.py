@@ -67,9 +67,9 @@ def form_01(request_data):
         rmis_location = f"{rmis_location}@R"
 
     doctor_data = DoctorProfile.objects.filter(rmis_location=rmis_location).first()
-    doctor_fio = ""
+    doctor_fio, cabinet = "", ""
     if doctor_data:
-        cabinet = "123"
+        cabinet = doctor_data.cabinet if doctor_data.cabinet else ""
         doctor_fio = doctor_data.get_full_fio()
 
     buffer = BytesIO()
