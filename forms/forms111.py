@@ -15,6 +15,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 
+from laboratory.utils import current_year
 from users.models import DoctorProfile
 
 
@@ -76,7 +77,7 @@ def form_01(request_data):
     p_size = A6
     col_widths = (24 * mm, 70 * mm,)
     if page_format == "P80":
-        p_size = (80*mm, 140*mm)
+        p_size = (80*mm, 130*mm)
         col_widths = (24 * mm, 46 * mm,)
 
     doc = SimpleDocTemplate(buffer, pagesize=p_size, leftMargin=3 * mm, rightMargin=5 * mm, topMargin=2 * mm, bottomMargin=3 * mm, allowSplitting=1, title="Форма {}".format("Талон80"))
@@ -144,13 +145,11 @@ def form_01(request_data):
     objs.append(tbl)
 
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph(
-        "В случае отказа от приема просим позвонить по телефону 3952546303 Время ожидания приема врача от назначенного времени до 30 мин. "
-        "(Террит. программа гос.гарантиий Иркутской области на 2023г.)",
-        style))
-
-
     phone = request_data['user'].doctorprofile.hospital.phones
+    objs.append(Paragraph(
+        f"В случае отказа от приема просим позвонить по телефону {phone} Время ожидания приема врача от назначенного времени до 30 мин."
+        f"(Террит. программа гос.гарантиий Иркутской области на {current_year()}г .)",
+        style))
 
     doc.build(objs)
     pdf = buffer.getvalue()
