@@ -161,8 +161,9 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date):
         type_slot = "TimeTableResource_id"
         rmis_location_resource = rmis_location[:-2]
         date = f"{date} 08:00:00"
-        req_result = make_request_get("TimeTableResource/TimeTableResourceFreeDateTime", query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date}",
-                                      sess_id=sess_id)
+        req_result = make_request_get(
+            "TimeTableResource/TimeTableResourceFreeDateTime", query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date}", sess_id=sess_id
+        )
     else:
         key_time = "TimeTableGraf_begTime"
         type_slot = "TimeTableGraf_id"
