@@ -72,7 +72,10 @@ def form_01(request_data):
 
     buffer = BytesIO()
     p_size = A6
-    col_widths = (24 * mm, 70 * mm,)
+    col_widths = (
+        24 * mm,
+        70 * mm,
+    )
     if page_format == "P80":
         p_size = (80 * mm, 130 * mm)
         col_widths = (24 * mm, 46 * mm,)
