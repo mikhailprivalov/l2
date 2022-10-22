@@ -78,7 +78,10 @@ def form_01(request_data):
     )
     if page_format == "P80":
         p_size = (80 * mm, 130 * mm)
-        col_widths = (24 * mm, 46 * mm,)
+        col_widths = (
+            24 * mm,
+            46 * mm,
+        )
 
     doc = SimpleDocTemplate(buffer, pagesize=p_size, leftMargin=3 * mm, rightMargin=5 * mm, topMargin=2 * mm, bottomMargin=3 * mm, allowSplitting=1, title="Форма {}".format("Талон80"))
     hospital_title = request_data['user'].doctorprofile.get_hospital_title()
