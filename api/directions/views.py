@@ -306,7 +306,7 @@ def directions_history(request):
             {
                 'pk': i["time"],
                 'status': "",
-                'researches': f"{i['Post_name']} - {i['TimeTable_id']}",
+                'researches': f"{i['Post_name']};-{i['TimeTable_id']}",
                 "researches_pks": "",
                 'date': i["date"],
                 'cancel': False,
@@ -322,6 +322,8 @@ def directions_history(request):
                 'expertise_status': False,
                 'person_contract_pk': "",
                 'person_contract_dirs': "",
+                'rmis_location': i["rmis_location"],
+                'type_slot': i["type_slot"]
             }
             for i in patient_time_table
         ]

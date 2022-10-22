@@ -215,6 +215,8 @@ def get_ecp_time_table_list_patient(patient_ecp_id):
                 "Post_name": i['Post_name'],
                 "TimeTable_id": i['TimeTable_id'],
                 "full_time": i['TimeTable_begTime'],
+                "rmis_location": i["MedStaffFact_id"],
+                "type_slot": "graf"
             }
             for i in result_tt
         ]
@@ -241,5 +243,7 @@ def get_ecp_evn_direction(patient_ecp_id):
                             "Post_name": i['Resource_Name'],
                             "TimeTable_id": i['TimeTableResource_id'],
                             "full_time": date_time_resource,
+                            "rmis_location": i["Resource_id"],
+                            "type_slot": "resource"
                          })
     return direction_time_table

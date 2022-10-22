@@ -312,13 +312,21 @@
               </div>
               <div
                 v-else-if="active_type===6"
-                class="button-td-inner button-td-inner-single"
+                class="button-td-inner"
               >
                 <button
                   class="btn btn-blue-nb"
-                  @click="print_contract(patient_pk)"
+                  @click="print_talon(row.pk, patient_pk, row.date, row.rmis_location, row.researches, 'P80',
+                                      row.type_slot)"
                 >
-                  Талон
+                  Талон-80
+                </button>
+                <button
+                  class="btn btn-blue-nb"
+                  @click="print_talon(row.pk, patient_pk, row.date, row.rmis_location, row.researches, 'A6',
+                                      row.type_slot)"
+                >
+                  Талон-А6
                 </button>
               </div>
             </td>
@@ -511,6 +519,10 @@ export default {
     },
     print_contract(pk, card) {
       window.open(`/forms/pdf?type=102.02&card_pk=${card}&contract_id=${pk}`, '_blank');
+    },
+    print_talon(time, card, date, rmisLocation, researches, pageFormat, typeSlot) {
+      // eslint-disable-next-line max-len
+      window.open(`/forms/pdf?type=111.01&card_pk=${card}&rmis_location=${rmisLocation}&date=${date}&time=${time}&researches=${researches}&pageFormat=${pageFormat}&typeSlot=${typeSlot}`, '_blank');
     },
     async load_history_safe() {
       await this.load_history(true);
