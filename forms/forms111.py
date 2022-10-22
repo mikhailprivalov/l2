@@ -146,10 +146,13 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 2 * mm))
     phone = request_data['user'].doctorprofile.hospital.phones
-    objs.append(Paragraph(
-        f"В случае отказа от приема просим позвонить по телефону {phone} Время ожидания приема врача от назначенного времени до 30 мин."
-        f"(Террит. программа гос.гарантиий Иркутской области на {current_year()}г .)",
-        style))
+    objs.append(
+        Paragraph(
+            f"В случае отказа от приема просим позвонить по телефону {phone} Время ожидания приема врача от назначенного времени до 30 мин."
+            f"(Террит. программа гос.гарантиий Иркутской области на {current_year()}г .)",
+            style,
+        )
+    )
 
     doc.build(objs)
     pdf = buffer.getvalue()
