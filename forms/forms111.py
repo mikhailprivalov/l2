@@ -67,10 +67,16 @@ def form_01(request_data):
 
     buffer = BytesIO()
     p_size = A6
-    col_widths = (24 * mm, 70 * mm,)
+    col_widths = (
+        24 * mm,
+        70 * mm,
+    )
     if page_format == "P80":
         p_size = (80 * mm, 130 * mm)
-        col_widths = (24 * mm, 46 * mm,)
+        col_widths = (
+            24 * mm,
+            46 * mm,
+        )
 
     doc = SimpleDocTemplate(buffer, pagesize=p_size, leftMargin=3 * mm, rightMargin=5 * mm, topMargin=2 * mm, bottomMargin=3 * mm, allowSplitting=1, title="Форма {}".format("Талон80"))
     hospital_title = request_data['user'].doctorprofile.get_hospital_title()
@@ -138,10 +144,13 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 2 * mm))
     phone = request_data['user'].doctorprofile.hospital.phones
-    objs.append(Paragraph(
-        f"В случае отказа от приема просим позвонить по телефону {phone} Время ожидания приема врача от назначенного времени до 30 мин."
-        f"(Террит. программа гос.гарантиий Иркутской области на {current_year()}г .)",
-        style))
+    objs.append(
+        Paragraph(
+            f"В случае отказа от приема просим позвонить по телефону {phone} Время ожидания приема врача от назначенного времени до 30 мин."
+            f"(Террит. программа гос.гарантиий Иркутской области на {current_year()}г .)",
+            style,
+        )
+    )
 
     doc.build(objs)
     pdf = buffer.getvalue()
