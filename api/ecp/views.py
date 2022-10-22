@@ -36,8 +36,6 @@ def fill_slot(request):
     card_pk = request_data['card_pk']
     slot_id = request_data['slot_id']
     type_slot = request_data['type_slot']
-    print(type_slot)
-
     card = Card.objects.get(pk=card_pk)
     ecp_id = card.get_ecp_id()
 

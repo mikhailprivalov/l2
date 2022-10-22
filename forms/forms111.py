@@ -1,11 +1,8 @@
 from copy import deepcopy
-
-from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
-
 from clients.models import Card
 from laboratory.settings import FONTS_FOLDER
 from reportlab.lib.pagesizes import A6
@@ -13,7 +10,7 @@ import os.path
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
 
 from laboratory.utils import current_year
 from users.models import DoctorProfile
@@ -77,7 +74,7 @@ def form_01(request_data):
     p_size = A6
     col_widths = (24 * mm, 70 * mm,)
     if page_format == "P80":
-        p_size = (80*mm, 130*mm)
+        p_size = (80 * mm, 130 * mm)
         col_widths = (24 * mm, 46 * mm,)
 
     doc = SimpleDocTemplate(buffer, pagesize=p_size, leftMargin=3 * mm, rightMargin=5 * mm, topMargin=2 * mm, bottomMargin=3 * mm, allowSplitting=1, title="Форма {}".format("Талон80"))
