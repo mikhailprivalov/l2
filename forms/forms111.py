@@ -30,22 +30,17 @@ def form_01(request_data):
     style.spaceAfter = 0 * mm
     style.alignment = TA_JUSTIFY
 
-    styleBold = deepcopy(style)
-    styleBold.fontName = "PTAstraSerifBold"
-    styleBoldCenter = deepcopy(styleBold)
-    styleBoldCenter.alignment = TA_CENTER
-
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
     styleCenter.fontSize = 9
     styleCenter.leading = 10
     styleCenter.spaceAfter = 0 * mm
 
-    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.fontName = "PTAstraSerifBold"
     styleCenterBold.alignment = TA_CENTER
     styleCenterBold.fontSize = 10
     styleCenterBold.leading = 10
-    styleCenterBold.face = 'PTAstraSerifBold'
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT
