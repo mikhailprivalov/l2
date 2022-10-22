@@ -40,7 +40,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory, PriceName, PriceCoast
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -2531,3 +2531,16 @@ def get_company_list(request):
     company_data = sorted(company_data, key=lambda company: company["title"])
     return JsonResponse({"data": company_data})
 
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_contract_list(request):
+    contract_data = [
+        {
+            "id": contract.pk,
+            "label": contract.title,
+        }
+        for contract in Contract.objects.filter(active_status=True)
+    ]
+    contract_data = sorted(contract_data, key=lambda contract: contract["label"])
+    return JsonResponse({"data": contract_data})
