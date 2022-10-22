@@ -220,7 +220,7 @@ def get_ecp_time_table_list_patient(patient_ecp_id):
                 "TimeTable_id": i['TimeTable_id'],
                 "full_time": i['TimeTable_begTime'],
                 "rmis_location": i["MedStaffFact_id"],
-                "type_slot": "graf"
+                "type_slot": "graf",
             }
             for i in result_tt
         ]
