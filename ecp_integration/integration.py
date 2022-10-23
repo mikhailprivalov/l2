@@ -60,7 +60,7 @@ def get_reserves_ecp(date, med_staff_fact_id):
         sess_id=sess_id,
     )
     time_table = []
-    for r in result.get('data'):
+    for r in result.get('data') or []:
         cache_key = f"ecp-fio:{r['Person_id']}"
         fio = cache.get(cache_key)
         if not fio:
@@ -203,6 +203,8 @@ def search_patient_ecp_by_fio(patient):
         f"PersonBirthDay_BirthDay={patient['birthday']}&PersonSnils_Snils={patient['snils']}",
         sess_id=sess_id,
     )
+    if not result or not result.get("data"):
+        return None
     individual = result['data'][0]
     return individual['Person_id']
 

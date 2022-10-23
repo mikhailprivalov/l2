@@ -64,7 +64,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { menuItems } from '@/pages/Stationar/mixins/menu';
 
 const fixLinkUrl = url => {
@@ -75,7 +75,7 @@ const fixLinkUrl = url => {
   return url;
 };
 
-const parseQueryString = (queryString) => {
+const parseQueryString = (queryString): Record<string, string> => {
   const query = {};
   const pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
   for (let i = 0; i < pairs.length; i += 1) {

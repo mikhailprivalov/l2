@@ -172,7 +172,7 @@ const router = new Router({
         groups: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
         module: 'paraclinic_module',
         showCreateDirection: true,
-        showRmisLinkSchedule: true,
+        showEcpSchedule: true,
         showExpertiseStatus: true,
       },
     },

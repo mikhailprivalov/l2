@@ -2477,12 +2477,19 @@ export default {
               this.$root.$emit('open-pk', data.direction.pk);
               for (let i = 0; i < 10; i++) {
                 await new Promise((r) => {
-                  setTimeout(() => r, 100);
+                  setTimeout(() => r(1), 100);
                 });
                 if (this.hasPreselectOk) {
                   break;
                 }
               }
+              await new Promise((r) => {
+                setTimeout(() => r(1), 300);
+              });
+              this.$root.$emit('preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base });
+              await new Promise((r) => {
+                setTimeout(() => r(1), 300);
+              });
               this.$root.$emit('preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base });
             }, 100);
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
@@ -2724,7 +2731,7 @@ export default {
       this.tableFieldsErrors = {};
       this.moreServices = [];
       cleanCaches();
-      this.$root.$emit('preselect-card', null);
+      this.$root.$emit('preselect-args', null);
       this.$root.$emit('open-pk', -1);
     },
     print_direction(pk) {
@@ -3141,6 +3148,10 @@ export default {
   position: relative;
   text-align: left;
   width: calc(100% - 430px);
+
+  @media (min-width: 1440px) {
+    width: calc(100% - 500px);
+  }
 }
 
 .research-right {
@@ -3150,6 +3161,10 @@ export default {
   margin-right: -5px;
   margin-bottom: -5px;
   white-space: nowrap;
+
+  @media (min-width: 1440px) {
+    width: 500px;
+  }
 
   .btn,
   ::v-deep .file-btn {
