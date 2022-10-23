@@ -230,3 +230,6 @@ class Message(models.Model):
             'time': int(self.created_at.timestamp()),
             'read': self.is_read,
         }
+
+    def print_message(self):
+        return f'{self.dialog}: {self.author}\n{self.message_json()["text"]}\nAt: {self.created_at}'
