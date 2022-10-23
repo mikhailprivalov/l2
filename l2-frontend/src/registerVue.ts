@@ -19,6 +19,8 @@ import moment from 'moment';
 import VueFormulate from '@braid/vue-formulate';
 import { ru } from '@braid/vue-formulate-i18n';
 import error2json from '@stdlib/error-to-json';
+// @ts-ignore
+import VueImg from 'v-img';
 
 import { sendEvent } from '@/metrics';
 
@@ -61,6 +63,7 @@ export default (): void => {
     plugins: [ru],
     locale: 'ru',
   });
+  Vue.use(VueImg);
   Vue.prototype.$api = api;
   Vue.filter('pluralAge', (amount) => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
   Vue.filter('pluralDays', (amount) => `${amount} ${plural(amount, 'день', 'дня', 'дней')}`);

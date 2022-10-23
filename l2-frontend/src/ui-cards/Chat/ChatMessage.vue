@@ -10,6 +10,33 @@
       {{ message.author === currentUserPk ? 'Вы' : dialogUserObj.name }}
     </div>
     <div
+      v-if="message.type === 2"
+      class="message-text message-file"
+    >
+      <div class="message-file-icon">
+        <i class="fas fa-file" />
+      </div>
+      <a
+        class="message-file-name a-under-reversed"
+        download
+        :href="message.file.url"
+      >
+        {{ message.file.name }}
+      </a>
+    </div>
+    <div
+      v-else-if="message.type === 3"
+      class="message-text message-image"
+    >
+      <img
+        v-img
+        class="message-image-img"
+        :src="message.file.url"
+        :style="{ height: `${imageSmallHeight}px`, width: `${imageSmallWidth}px` }"
+      >
+    </div>
+    <div
+      v-else
       class="message-text"
       v-html=" /* eslint-disable-line */ htmlText"
     />
@@ -117,6 +144,50 @@ const fixLinkName = url => {
   return r;
 };
 
+const markdownTextToHtml = str => {
+  const codeMultiline = str.replace(/```([^`]+)```/g, '<code class="code-newline">$1</code>');
+  const codeWithoutNewLine = codeMultiline.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  let codeFixed = codeWithoutNewLine.replace(/<code>\n/g, '<code>');
+  codeFixed = codeFixed.replace(/<code class="code-newline">\n/g, '<code class="code-newline">');
+  codeFixed = codeFixed.replace(/\n<\/code>/g, '</code>');
+
+  const tagsAtPositions = [];
+  const codeTagsReplaced = codeFixed.replace(/<code>([^<]+)<\/code>/g, (match, p1, offset) => {
+    tagsAtPositions.push({ pos: offset, text: p1, tag: 'code' });
+    return `$TAG_code_${offset}$`;
+  });
+
+  const links = codeTagsReplaced.replace(/(https?:\/\/\S+)/g, (match, url) => {
+    const fixedUrl = fixLinkUrl(url);
+    const fixedName = fixLinkName(url);
+    return `<a href="${fixedUrl}" class="a-under" target="_blank">${fixedName}</a>`;
+  });
+  const aTagsReplacedWithAnyAttributes = links.replace(/<a([^>]+)>([^<]+)<\/a>/g, (match, p1, p2, offset) => {
+    tagsAtPositions.push({
+      pos: offset,
+      text: p2,
+      tag: 'a',
+      attrs: p1,
+    });
+    return `$TAG_a_${offset}$`;
+  });
+
+  const bold = aTagsReplacedWithAnyAttributes.replace(/(?<!<code>)(\*\*([^*]+)\*\*)(?!<\/code>)/g, '<b>$2</b>');
+  const italic = bold.replace(/(?<!<code>)(\*([^*]+)\*)(?!<\/code>)/g, '<i>$2</i>');
+  const underline = italic.replace(/(?<!<code>)(__([^_]+)__)(?!<\/code>)/g, '<u>$2</u>');
+  const strikethrough = underline.replace(/(?<!<code>)(~~([^~]+)~~)(?!<\/code>)/g, '<s>$2</s>');
+
+  const nlToBr = strikethrough.replace(/\n/g, '<br />');
+
+  const tagsRestored = tagsAtPositions.reduce(
+    (acc, {
+      pos, text, tag, attrs,
+    }) => acc.replace(`$TAG_${tag}_${pos}$`, `<${tag}${attrs || ''}>${text}</${tag}>`),
+    nlToBr,
+  );
+  return tagsRestored;
+};
+
 export default {
   name: 'ChatMessage',
   props: {
@@ -138,19 +209,29 @@ export default {
       return this.$store.getters.currentDocPk;
     },
     htmlText() {
-      let text = this.message.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       // eslint-disable-next-line no-misleading-character-class
-      text = text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, '');
+      let text = this.message.text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, '');
+      text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-      text = text.replace(/(https?:\/\/\S+)/g, (match, url) => {
-        const fixedUrl = fixLinkUrl(url);
-        const fixedName = fixLinkName(url);
-        return `<a href="${fixedUrl}" class="a-under" target="_blank">${fixedName}</a>`;
-      });
-
-      text = text.replace(/(\n)/g, '<br />');
+      text = markdownTextToHtml(text);
 
       return text;
+    },
+    imageSmallWidth() {
+      return Math.min(this.message.imageDimensions.width || 1, 363);
+    },
+    imageSmallHeight() {
+      if (this.message.type !== 3) {
+        return 0;
+      }
+
+      const ratio = this.message.imageDimensions.width / this.imageSmallWidth;
+
+      if (this.message.imageDimensions.width !== this.imageSmallWidth) {
+        return Math.min(600, this.message.imageDimensions.height / ratio);
+      }
+
+      return Math.min(600, this.message.imageDimensions.height || 1);
     },
   },
   methods: {
@@ -204,6 +285,48 @@ export default {
 
     &-unread {
       color: #999;
+    }
+  }
+
+  ::v-deep .code-newline {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &-image img {
+    max-height: 600px;
+    max-width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 5px;
+  }
+
+  &-file {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    &-icon {
+      width: 30px;
+      height: 30px;
+      margin-right: 5px;
+      line-height: 30px;
+      text-align: center;
+    }
+
+    &-name {
+      font-size: 14px;
+      color: #333;
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }
