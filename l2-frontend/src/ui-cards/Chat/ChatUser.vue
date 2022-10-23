@@ -2,7 +2,7 @@
   <div
     v-tippy="{followCursor: true, delay: [500, 0]}"
     class="chat-user-wrapper"
-    title="Открыть диалог"
+    :title="forSelect ? null : 'Открыть диалог'"
     @click="openDialog"
   >
     <div
@@ -17,6 +17,19 @@
           class="badge badge-danger"
         >
           {{ unreadMessages }}
+        </div>
+        <div
+          v-else-if="forSelect"
+          class="chat-user__checker"
+        >
+          <i
+            v-if="selected"
+            class="fa fa-check-square"
+          />
+          <i
+            v-else
+            class="fa fa-square-o"
+          />
         </div>
         {{ user.name }}
       </div>
@@ -73,6 +86,10 @@ import * as actions from '@/store/action-types';
 export default {
   name: 'ChatUser',
   props: {
+    forSelect: {
+      type: Boolean,
+      default: false,
+    },
     user: {
       type: Object,
       required: true,
@@ -81,15 +98,43 @@ export default {
   data() {
     return {
       loading: false,
+      selected: false,
     };
   },
   computed: {
     unreadMessages() {
+      if (this.forSelect) {
+        return 0;
+      }
       return this.$store.getters.chatsUnreadDialogs[this.user.id] || 0;
     },
+    userDepartmentId() {
+      return this.$store.getters.chatsUserDepartment(this.user.id);
+    },
+  },
+  watch: {
+    selected: {
+      handler() {
+        this.$emit('select', this.user.id, this.selected);
+      },
+      immediate: true,
+    },
+  },
+  mounted() {
+    if (this.forSelect) {
+      this.$root.$on('chat-department-set-selected', (departmentId: number, selected: boolean) => {
+        if (this.userDepartmentId === departmentId) {
+          this.selected = !!selected;
+        }
+      });
+    }
   },
   methods: {
     async openDialog() {
+      if (this.forSelect) {
+        this.selected = !this.selected;
+        return;
+      }
       if (this.loading) {
         return;
       }
@@ -127,6 +172,11 @@ export default {
     &-is-online {
       font-weight: 700;
     }
+  }
+
+  &__checker {
+    margin-right: 5px;
+    display: inline-block;
   }
 
   &__online {

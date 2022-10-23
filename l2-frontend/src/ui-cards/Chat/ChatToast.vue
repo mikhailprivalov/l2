@@ -72,7 +72,7 @@ export default {
       margin-right: 10px;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
+      max-height: 100px;
     }
   }
 

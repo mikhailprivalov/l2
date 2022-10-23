@@ -1,9 +1,14 @@
+import datetime
 import os
 import uuid
 
-from django.db import models
+import hashlib
+from PIL import Image
+from django.db import models, transaction
 from django.db.models import Q
 from django.core.cache import cache
+
+from users.models import DoctorProfile
 
 
 class Dialog(models.Model):
@@ -21,13 +26,44 @@ class Dialog(models.Model):
 
     @staticmethod
     def add_message_text(dialog, author, text):
-        message = Message.objects.create(dialog=dialog, author=author, text=text)
-        dialog.unread_count += 1
-        dialog.save(update_fields=['unread_count'])
-        dialog.doctor1.inc_messages_count()
-        if dialog.doctor2:
-            dialog.doctor2.inc_messages_count()
-        return message
+        return Dialog.add_message(dialog, author, text=text)
+
+    @staticmethod
+    def add_message_image(dialog, author, image):
+        return Dialog.add_message(dialog, author, image=image)
+
+    @staticmethod
+    def add_message_file(dialog, author, file):
+        return Dialog.add_message(dialog, author, file=file)
+
+    @staticmethod
+    def add_message(dialog, author, text=None, image=None, file=None):
+        message_type = Message.MESSAGE_TYPE_TEXT
+        if image:
+            message_type = Message.MESSAGE_TYPE_IMAGE
+        elif file:
+            message_type = Message.MESSAGE_TYPE_FILE
+        with transaction.atomic():
+            if image or file:
+                file_to_save = image or file
+                file_hash = hashlib.sha256(f"{hashlib.sha256(file_to_save.read()).hexdigest()}-{file_to_save.name}".encode()).hexdigest()
+                file_to_save.seek(0)
+                message = Message.objects.filter(file_hash=file_hash).first()
+                if message and message.file:
+                    file_to_save = message.file
+            else:
+                file_hash = None
+                file_to_save = None
+            message = Message.objects.create(dialog=dialog, author=author, text=text or '', file=file_to_save, file_hash=file_hash, type=message_type)
+            dialog = Dialog.objects.select_for_update().get(pk=dialog.pk)
+            dialog.unread_count += 1
+            dialog.save(update_fields=['unread_count'])
+            doctor1 = DoctorProfile.objects.select_for_update().get(pk=dialog.doctor1.pk)
+            doctor1.inc_messages_count()
+            if dialog.doctor2 and dialog.doctor2 != doctor1:
+                doctor2 = DoctorProfile.objects.select_for_update().get(pk=dialog.doctor2.pk)
+                doctor2.inc_messages_count()
+            return message
 
     def get_other_doctor(self, doctor):
         if self.doctor1 == doctor:
@@ -99,22 +135,31 @@ class Dialog(models.Model):
 
 
 def get_chats_message_upload_path(instance, filename):
-    return os.path.join('doc_call_uploads', str(instance.dialog.pk), str(uuid.uuid4()), filename)
+    date_tuple_yyyy_mm_dd = [str(x) for x in datetime.datetime.now().timetuple()[:3]]
+    return os.path.join('chats', *date_tuple_yyyy_mm_dd, str(uuid.uuid4()), filename)
+
+
+def get_image_dimensions(image):
+    img = Image.open(image)
+    size = {
+        'width': img.width,
+        'height': img.height,
+    }
+
+    img.close()
+
+    return size
 
 
 class Message(models.Model):
     MESSAGE_TYPE_TEXT = 1
     MESSAGE_TYPE_FILE = 2
-    MESSAGE_TYPE_CARD = 3
-    MESSAGE_TYPE_DIRECTION = 4
-    MESSAGE_TYPE_RESULT = 5
+    MESSAGE_TYPE_IMAGE = 3
 
     MESSAGE_TYPE_CHOICES = (
         (MESSAGE_TYPE_TEXT, 'Текст'),
         (MESSAGE_TYPE_FILE, 'Файл'),
-        (MESSAGE_TYPE_CARD, 'Карта пациента'),
-        (MESSAGE_TYPE_DIRECTION, 'Направление'),
-        (MESSAGE_TYPE_RESULT, 'Результат'),
+        (MESSAGE_TYPE_IMAGE, 'Изображение'),
     )
 
     dialog = models.ForeignKey(Dialog, on_delete=models.CASCADE, related_name='chat_messages', db_index=True)
@@ -122,6 +167,9 @@ class Message(models.Model):
     text = models.TextField()
     type = models.IntegerField(choices=MESSAGE_TYPE_CHOICES, default=MESSAGE_TYPE_TEXT)
     file = models.FileField(upload_to=get_chats_message_upload_path, null=True, blank=True)
+    file_hash = models.CharField(max_length=64, null=True, blank=True)
+    image_height = models.IntegerField(null=True, blank=True)
+    image_width = models.IntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     is_read = models.BooleanField(default=False, db_index=True)
 
@@ -132,15 +180,51 @@ class Message(models.Model):
     def __str__(self):
         return f'{self.dialog} - {self.author} - {self.text}'
 
+    def get_file_name(self):
+        if not self.file:
+            return ''
+        return os.path.basename(self.file.name)
+
+    def get_image_dimensions(self):
+        if not self.file or self.type != self.MESSAGE_TYPE_IMAGE:
+            return None
+
+        if self.image_width and self.image_height:
+            return {
+                'width': self.image_width,
+                'height': self.image_height,
+            }
+
+        try:
+            sizes = get_image_dimensions(self.file)
+            self.image_width = sizes['width']
+            self.image_height = sizes['height']
+            self.save()
+            return sizes
+        except Exception:
+            return {
+                'width': 0,
+                'height': 0,
+            }
+
     def message_json(self):
         return {
             'id': self.pk,
             'dialogId': self.dialog.pk,
             'author': self.author.pk,
             'authorName': self.author.get_fio(),
-            'text': self.text,
+            'text': self.text if self.type == self.MESSAGE_TYPE_TEXT else f"{self.get_type_display()}: {self.get_file_name()}",
             'type': self.type,
-            'file': self.file.url if self.file else None,
+            'file': {
+                "url": self.file.url,
+                "name": self.get_file_name(),
+            }
+            if self.file
+            else None,
+            'imageDimensions': self.get_image_dimensions(),
             'time': int(self.created_at.timestamp()),
             'read': self.is_read,
         }
+
+    def print_message(self):
+        return f'{self.dialog}: {self.author}\n{self.message_json()["text"]}\nAt: {self.created_at}'

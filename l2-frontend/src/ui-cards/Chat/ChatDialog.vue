@@ -23,7 +23,7 @@
           class="chat-dialog__header-title"
         >
           {{ dialogUserObj.name }}
-          <template v-if="loaded">
+          <template v-if="loaded && !isMultisendDialog">
             <div
               v-if="messagesLoading === 0"
               class="chat-dialog__header-online"
@@ -42,14 +42,20 @@
               <i class="fa fa-circle-o-notch fa-spin" />
             </div>
           </template>
+          <template v-if="!loaded && isMultisendDialog && loading">
+            <div class="chat-dialog__header-online chat-dialog__header-is-online">
+              <i class="fa fa-circle-o-notch fa-spin" />
+            </div>
+          </template>
         </div>
         <div
-          v-if="dialogDepartmentTitle"
+          v-if="dialogDepartmentTitle && !isMultisendDialog"
           class="chat-dialog__header-subheader-1"
         >
           {{ dialogDepartmentTitle }}
         </div>
         <div
+          v-if="!isMultisendDialog"
           class="chat-dialog__header-subheader-2"
         >
           <div
@@ -83,7 +89,10 @@
           <i class="fa fa-times" />
         </div>
       </div>
-      <div class="chat-dialog__body">
+      <div
+        v-if="!isMultisendDialog"
+        class="chat-dialog__body"
+      >
         <div
           ref="messages"
           class="chat-dialog__body-messages"
@@ -116,48 +125,52 @@
           </div>
         </div>
         <div
-          class="chat-dialog__body-input"
-        >
-          <textarea
-            ref="input"
-            v-model.trim="text"
-            class="chat-dialog__body-input-textarea"
-            :placeholder="
-              currentUserPk === dialogUser.id
-                ? 'Введите сообщение для отправки себе'
-                : 'Введите сообщение (Ctrl+Enter для отправки)'
-            "
-            :readonly="isSending"
-            maxlength="999"
-            @keydown.ctrl.enter="sendMessage"
-            @keyup="updateWritingStatusDebounced"
-          />
-          <div
-            class="chat-dialog__body-input-send"
-            @click="sendMessage"
-          >
-            <i
-              v-if="isSending"
-              class="fa fa-spinner"
-            />
-            <i
-              v-else
-              class="fa fa-paper-plane"
-            />
-            <div
-              v-if="textSymbolsLeft < 100"
-              class="chat-dialog__body-input-send-symbols-left"
-            >
-              {{ textSymbolsLeft }}
-            </div>
-          </div>
-        </div>
-        <div
-          v-if="scrollFromBottom > 25"
+          v-if="scrollFromBottom > 40"
           class="chat-dialog__body-messages-to-bottom"
           @click="scrollToBottom"
         >
           <i class="fa fa-angle-down" />
+        </div>
+      </div>
+      <div
+        v-else
+        class="chat-dialog__body"
+      >
+        <div
+          ref="messages"
+          class="chat-dialog__body-messages"
+          @scroll="onScroll"
+        >
+          <ChatsBody
+            for-select
+            @select="onSelectChanged"
+          />
+        </div>
+      </div>
+      <div
+        class="chat-dialog__input"
+      >
+        <ChatInput
+          ref="input"
+          class="chat-dialog__input-input"
+          :self-dialog="currentUserPk === dialogUser.id"
+          :disabled="isSending"
+          @send="sendMessage"
+          @typing="updateWritingStatusDebounced"
+          @resize="onInputResize"
+        />
+        <div
+          class="chat-dialog__input-send"
+          @click="pressSend"
+        >
+          <i
+            v-if="isSending"
+            class="fa fa-spinner"
+          />
+          <i
+            v-else
+            class="fa fa-paper-plane"
+          />
         </div>
       </div>
     </div>
@@ -169,11 +182,15 @@ import _ from 'lodash';
 
 import * as actions from '@/store/action-types';
 import ChatMessage from '@/ui-cards/Chat/ChatMessage.vue';
+import ChatInput from '@/ui-cards/Chat/ChatInput.vue';
+import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
 
 export default {
   name: 'ChatDialog',
   components: {
     ChatMessage,
+    ChatInput,
+    ChatsBody,
   },
   props: {
     dialogId: {
@@ -190,11 +207,11 @@ export default {
       loading: false,
       dialogUser: {},
       messages: [],
-      text: '',
       top: 0,
       left: 0,
       scrollTop: 0,
       scrollFromBottom: 0,
+      onBottom: true,
       noMoreMessages: false,
       newMessages: [],
       messagesLoading: 0,
@@ -203,6 +220,7 @@ export default {
       focused: false,
       isWriting: false,
       lsProperty: 'chat-dialog',
+      selectedUsers: [],
     };
   },
   computed: {
@@ -213,6 +231,12 @@ export default {
       return this.$store.getters.chatsGetUserDepartmentTitle(this.dialogUser.id);
     },
     dialogUserObj() {
+      if (this.isMultisendDialog) {
+        return {
+          id: this.dialogUser.id,
+          name: this.dialogUser.name,
+        };
+      }
       return this.$store.getters.chatsGetUser(this.dialogUser.id) || {};
     },
     userIsOnline() {
@@ -240,8 +264,11 @@ export default {
         (message) => message.author === this.currentUserPk && this.dialogUser.id !== this.currentUserPk && !message.read,
       ).map((message) => message.id);
     },
-    textSymbolsLeft() {
-      return 999 - this.text.length;
+    isMultisendDialog() {
+      return this.dialogId === -1000;
+    },
+    chatsDepartments() {
+      return this.$store.getters.chatsDepartments || [];
     },
   },
   watch: {
@@ -250,47 +277,48 @@ export default {
         return;
       }
       this.markMessagesAsRead(this.unreadMessages);
-      this.messages = this.messages.map((message) => {
-        if (this.unreadMessages.includes(message.id)) {
-          return {
-            ...message,
-            read: true,
-          };
-        }
-        return message;
-      });
-    },
-    text() {
-      if (this.textSymbolsLeft <= 0) {
-        this.text = this.text.slice(0, 999);
-      } else {
-        this.updateWritingStatusDebounced();
-      }
     },
   },
   mounted() {
-    this.loadDialogData();
-    this.top = Math.floor(Math.random() * (window.innerHeight / 2 - 200));
+    if (!this.isMultisendDialog) {
+      this.loadDialogData();
+    } else {
+      this.unfocusOther();
+      this.dialogUser = {
+        id: -1000,
+        name: 'Мультисообщение',
+      };
+      this.totalMessages = 0;
+      this.loaded = true;
+      this.messages = [];
+      this.loading = false;
+      this.$nextTick(() => {
+        this.$refs.input.focus();
+      });
+      this.forceHideLoadMore = true;
+    }
+    this.top = Math.floor(Math.random() * (window.innerHeight / 2 - 250));
     this.left = Math.floor(Math.random() * (window.innerWidth / 2 - 200));
     this.$store.subscribeAction((action) => {
       if (action.type === actions.CHATS_NOTIFY && action.payload.dialogId === this.dialogId) {
         this.loadFeatureMessages();
-        this.newMessages.push(action.payload.id);
-        setTimeout(() => {
-          this.newMessages = this.newMessages.filter((id) => id !== action.payload.id);
-        }, 3000);
+        this.addNewMessage(action.payload.id);
       }
     });
     this.$root.$on('chat-dialog-focus', dialogId => {
       this.focused = dialogId === this.dialogId;
     });
     window.addEventListener('storage', this.onStorageDialogEvent);
+    this.$root.$on('chat-dialog-update', this.updateCurrentDialog);
   },
   beforeDestroy() {
     clearTimeout(this.readStatusesTimer);
     window.removeEventListener('storage', this.onStorageDialogEvent);
   },
   methods: {
+    onSelectChanged(selected) {
+      this.selectedUsers = selected;
+    },
     onStorageDialogEvent(e) {
       if (!e.newValue) {
         return;
@@ -315,10 +343,22 @@ export default {
         this.loadFeatureMessages();
       }
     },
+    updateCurrentDialog(dialogId) {
+      if (dialogId === this.dialogId) {
+        this.loadFeatureMessages();
+      }
+    },
     onScroll() {
       this.scrollTop = this.$refs.messages.scrollTop;
       this.scrollFromBottom = this.$refs.messages.scrollHeight - this.$refs.messages.scrollTop - this.$refs.messages.clientHeight;
+      this.setOnBottomDebounced();
     },
+    setOnBottom() {
+      this.onBottom = this.scrollFromBottom < 40;
+    },
+    setOnBottomDebounced: _.debounce(function () {
+      this.setOnBottom();
+    }, 100),
     unfocusOther() {
       this.$root.$emit('chat-dialog-focus', this.dialogId);
     },
@@ -351,8 +391,19 @@ export default {
         this.$refs.messages.scrollTop = this.$refs.messages.scrollHeight;
       }, 0);
     },
+    onInputResize() {
+      if (this.onBottom) {
+        this.scrollToBottom();
+      }
+    },
     closeDialog() {
       this.$store.dispatch(actions.CHATS_CLOSE_DIALOG, this.dialogId);
+    },
+    addNewMessage(messageId) {
+      this.newMessages.push(messageId);
+      setTimeout(() => {
+        this.newMessages = this.newMessages.filter((id) => id !== messageId);
+      }, 3000);
     },
     startDrag(e: MouseEvent) {
       e.preventDefault();
@@ -368,8 +419,8 @@ export default {
           if (this.top < 0) {
             this.top = 0;
           }
-          if (this.top > window.innerHeight - 400) {
-            this.top = window.innerHeight - 400;
+          if (this.top > window.innerHeight - 500) {
+            this.top = window.innerHeight - 500;
           }
           this.left = e2.clientX - offsetX;
           if (this.left < 0) {
@@ -388,20 +439,106 @@ export default {
       document.addEventListener('mousemove', mouseMove);
       document.addEventListener('mouseup', mouseUp);
     },
-    async sendMessage() {
-      if (!this.text || this.isSending) {
+    pressSend() {
+      this.$refs.input.send();
+    },
+    async multisend({ text, file, image }, onResult) {
+      if (this.selectedUsers.length === 0) {
         return;
       }
+      this.loading = true;
+      this.isSending = true;
+      await this.$store.dispatch(actions.INC_LOADING);
+      const formData = new FormData();
+
+      if (file) {
+        formData.append('file', file);
+      } else if (image) {
+        formData.append('image', image);
+      }
+
+      let resultOk = false;
+      let cnt = 0;
+      const notifyDialogs = [];
+
+      for (const userId of this.selectedUsers) {
+        try {
+          const { dialogId } = await this.$api('chats/get-dialog-id', { userId });
+
+          const { ok } = await this.$api('chats/send-message', this, [], {
+            dialogId,
+            text,
+          }, formData);
+
+          if (ok) {
+            cnt++;
+            resultOk = true;
+
+            notifyDialogs.push(dialogId);
+            this.$root.$emit('chat-dialog-update', dialogId);
+          } else {
+            onResult(false);
+            this.$root.$emit('msg', 'error', 'Ошибка отправки сообщения');
+            break;
+          }
+        } catch (e) {
+          onResult(false);
+          break;
+        }
+      }
+
+      for (const did of notifyDialogs) {
+        const dataToStore = {
+          dialogId: did,
+          instanceId: this.uniqInstance,
+        };
+        window.localStorage[this.lsProperty] = JSON.stringify(dataToStore);
+        await new Promise(r => {
+          setTimeout(() => {
+            delete window.localStorage[this.lsProperty];
+            r(1);
+          }, 1);
+        });
+      }
+
+      if (cnt > 0) {
+        this.$root.$emit('msg', 'ok', `Сообщений отправлено: ${cnt}`);
+      }
+
+      onResult(resultOk);
+
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.loading = false;
+      this.isSending = false;
+    },
+    async sendMessage({ text, file, image }, onResult) {
+      if ((!text && !file && !image) || this.isSending) {
+        return;
+      }
+
+      if (this.isMultisendDialog) {
+        this.multisend({ text, file, image }, onResult);
+        return;
+      }
+
       this.isSending = true;
       try {
-        const { message, ok } = await this.$api('chats/send-message', this, ['dialogId', 'text']);
+        const formData = new FormData();
+
+        if (file) {
+          formData.append('file', file);
+        } else if (image) {
+          formData.append('image', image);
+        }
+
+        const { message, ok } = await this.$api('chats/send-message', this, 'dialogId', { text }, formData);
         if (ok) {
           this.messages.push({ ...message, addedFromClient: true });
-          this.text = '';
+          this.addNewMessage(message.id);
           this.$nextTick(() => {
             this.scrollToBottom();
-            this.$refs.input.focus();
           });
+          onResult(true);
 
           const dataToStore = {
             dialogId: this.dialogId,
@@ -412,12 +549,14 @@ export default {
             delete window.localStorage[this.lsProperty];
           }, 100);
         } else {
+          onResult(false);
           this.$root.$emit('msg', 'error', 'Ошибка отправки сообщения');
         }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
         this.$root.$emit('msg', 'error', 'Ошибка отправки сообщения');
+        onResult(false);
       }
       this.isSending = false;
     },
@@ -456,7 +595,7 @@ export default {
       if (this.$refs.messages) {
         const isAtBottom = this.$refs.messages.scrollHeight
           - this.$refs.messages.scrollTop
-          - this.$refs.messages.clientHeight < 20;
+          - this.$refs.messages.clientHeight < 40;
 
         const messages = this.messages.filter((m) => !m.addedFromClient);
 
@@ -489,6 +628,16 @@ export default {
         await this.$api('chats/read-messages', this, 'dialogId', {
           messageIds,
         });
+        this.messages = this.messages.map((message) => {
+          if (messageIds.includes(message.id)) {
+            return {
+              ...message,
+              read: true,
+            };
+          }
+          return message;
+        });
+        await this.$store.dispatch(actions.CHATS_MESSAGES_COUNT, true);
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
@@ -526,6 +675,9 @@ export default {
       }, this.userIsOnline ? 3500 : 30000);
     },
     updateWritingStatus() {
+      if (this.isMultisendDialog) {
+        return;
+      }
       try {
         this.$api('chats/update-is-writing', this, 'dialogId');
       } catch (e) {
@@ -546,7 +698,7 @@ export default {
   top: var(--topPx);
   left: var(--leftPx);
   width: 400px;
-  height: 400px;
+  height: 500px;
   background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -605,140 +757,116 @@ export default {
     &-is-online {
       color: #4caf50;
     }
-  }
 
-  &__header-close {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 40px;
-    height: 100%;
-    line-height: 40px;
-    text-align: center;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
+    &-close {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 40px;
+      height: 100%;
+      line-height: 40px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
   }
 
   &__body {
     position: relative;
     overflow: hidden;
     flex: 1;
-    padding-bottom: 60px;
-  }
 
-  &__body-messages {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 60px;
-    left: 0;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+    &-messages {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
 
-    &-load-more {
-      height: 40px;
-      line-height: 40px;
-      text-align: center;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      color: #999;
+      &-load-more {
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #999;
 
-      &:hover {
-        color: #666;
+        &:hover {
+          color: #666;
+        }
+      }
+
+      &-to-bottom {
+        position: absolute;
+        bottom: 15px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+        color: #999;
+        opacity: 0.8;
+
+        &:hover {
+          color: #666;
+          opacity: 1;
+        }
       }
     }
+  }
 
-    &-to-bottom {
-      position: absolute;
-      bottom: 75px;
-      right: 20px;
+  &__input {
+    width: 100%;
+    background-color: #eee;
+    border-top: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+
+    &-input {
+      flex: 1;
+    }
+
+    &-send {
       width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      height: 100%;
+      text-align: center;
+      font-weight: bold;
       cursor: pointer;
+
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      font-weight: bold;
-      color: #999;
-      opacity: 0.8;
+    }
 
-      &:hover {
-        color: #666;
-        opacity: 1;
+    &-send:hover {
+      background-color: #ccc;
+
+      i {
+        color: #fff;
       }
     }
-  }
 
-  &__body-input {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    background-color: #eee;
-    border-top: 1px solid #ccc;
-  }
-
-  &__body-input-textarea {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: calc(100% - 40px);
-    height: 100%;
-    padding: 5px;
-    border: none;
-    outline: none;
-    resize: none;
-    font-size: 14px;
-    line-height: 1.1;
-  }
-
-  &__body-input-send {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 40px;
-    height: 100%;
-    line-height: 60px;
-    text-align: center;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-
-    &-symbols-left {
-      color: #999;
-      position: absolute;
-      bottom: 2px;
-      right: 3px;
-      left: 3px;
-      text-align: center;
-      font-size: 10px;
-      line-height: 1.1;
+    &-send:active {
+      background-color: #aaa;
     }
-  }
 
-  &__body-input-send:hover {
-    background-color: #ccc;
-
-    i {
-      color: #fff;
+    &-send i {
+      font-size: 20px;
     }
-  }
-
-  &__body-input-send:active {
-    background-color: #aaa;
-  }
-
-  &__body-input-send i {
-    font-size: 20px;
   }
 }
 
