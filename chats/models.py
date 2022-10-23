@@ -225,7 +225,9 @@ class Message(models.Model):
             'file': {
                 "url": self.file.url,
                 "name": self.get_file_name(),
-            } if self.file else None,
+            }
+            if self.file
+            else None,
             'imageDimensions': self.get_image_dimensions(),
             'time': int(self.created_at.timestamp()),
             'read': self.is_read,
