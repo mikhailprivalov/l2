@@ -89,8 +89,7 @@
               </div>
             </div>
             <div
-              class="col-xs-6"
-              style="padding-left: 0"
+              class="col-xs-6 left-padding"
             >
               <div
                 class="input-group"
@@ -175,8 +174,7 @@
             </div>
             <div
               v-if="modules.change_password"
-              class="col-xs-6"
-              style="padding-left: 0"
+              class="col-xs-6 left-padding"
             >
               <div class="input-group">
                 <span class="input-group-addon">Email</span>
@@ -211,8 +209,7 @@
             </div>
             <div
               v-if="modules.change_password"
-              class="col-xs-6"
-              style="padding-left: 0"
+              class="col-xs-6 left-padding"
             >
               <label class="group-input-label">
                 <input
@@ -246,8 +243,7 @@
               </div>
             </div>
             <div
-              class="col-xs-4"
-              style="padding-left: 0; padding-right: 0"
+              class="col-xs-4 left-padding right-padding"
             >
               <div
                 class="input-group"
@@ -262,8 +258,7 @@
               </div>
             </div>
             <div
-              class="col-xs-4"
-              style="padding-left: 0"
+              class="col-xs-4 left-padding"
             >
               <div
                 class="input-group"
@@ -282,8 +277,7 @@
             class="row"
           >
             <div
-              class="col-xs-4"
-              style="padding-right: 0"
+              class="col-xs-4 right-padding"
             >
               <div
                 class="input-group"
@@ -297,8 +291,7 @@
               </div>
             </div>
             <div
-              class="col-xs-4"
-              style="padding-left: 0; padding-right: 0"
+              class="col-xs-4 left-padding right-padding"
             >
               <div
                 class="input-group"
@@ -312,8 +305,7 @@
               </div>
             </div>
             <div
-              class="col-xs-4"
-              style="padding-left: 0"
+              class="col-xs-4 left-padding"
             >
               <div
                 class="input-group"
@@ -329,7 +321,7 @@
           </div>
           <div class="row">
             <div
-              class="col-xs-6"
+              class="col-xs-3"
               style="padding-right: 0"
             >
               <div
@@ -344,8 +336,21 @@
               </div>
             </div>
             <div
-              class="col-xs-6"
-              style="padding-left: 0"
+              class="col-xs-3 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Кабинет</span>
+                <input
+                  v-model="user.cabinet"
+                  class="form-control"
+                >
+              </div>
+            </div>
+            <div
+              class="col-xs-6 left-padding"
             >
               <div
                 class="input-group"
@@ -384,8 +389,7 @@
               </div>
             </div>
             <div
-              class="col-xs-6"
-              style="padding-left: 0"
+              class="col-xs-6 left-padding"
             >
               <div
                 class="input-group"
@@ -446,8 +450,7 @@
               </div>
             </div>
             <div
-              class="col-xs-2"
-              style="padding-left: 0; padding-right: 0 "
+              class="col-xs-2 left-padding right-padding"
             >
               <div
                 class="input-group"
@@ -462,8 +465,7 @@
               </div>
             </div>
             <div
-              class="col-xs-4"
-              style="padding-left: 0; padding-right: 0 "
+              class="col-xs-4 left-padding right-padding"
             >
               <div
                 class=" input-group"
@@ -485,8 +487,7 @@
               </div>
             </div>
             <div
-              class="col-xs-4"
-              style="padding-left: 0; padding-right: 0"
+              class="col-xs-4 left-padding right-padding"
             >
               <div
                 class="input-group"
@@ -542,8 +543,8 @@
               />
             </div>
             <div
-              class="col-xs-6"
-              style="height: 300px; padding-left: 0; padding-right: 0"
+              class="col-xs-6 left-padding right-padding"
+              style="height: 300px"
             >
               <SelectedResearches
                 :researches="user.restricted_to_direct"
@@ -574,8 +575,8 @@
               />
             </div>
             <div
-              class="col-xs-6"
-              style="height: 300px; padding-left: 0; padding-right: 0"
+              class="col-xs-6 left-padding right-padding"
+              style="height: 300px"
             >
               <SelectedResearches
                 :researches="user.users_services"
@@ -809,6 +810,7 @@ export default {
         rmis_password: '',
         doc_pk: -1,
         personal_code: -1,
+        cabinet: '',
         rmis_resource_id: '',
         rmis_employee_id: '',
         rmis_service_id_time_table: '',
@@ -1310,5 +1312,12 @@ li.selected {
 
 .research:last-child {
   margin-bottom: 0;
+}
+
+.left-padding {
+  padding-left: 0
+}
+.right-padding {
+  padding-right: 0
 }
 </style>

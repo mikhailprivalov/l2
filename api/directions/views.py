@@ -4,6 +4,7 @@ import os
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory
+from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
@@ -227,10 +228,6 @@ def directions_history(request):
         patient_card = pk
 
     if req_status == 5:
-        # contracts = PersonContract.objects.filter(patient_card_id=pk, create_at__gte=date_start, create_at__lte=date_end).order_by('-create_at')
-        # for i in contracts:
-        #     print(i.dir_list, i.pk, i.patient_card_id, i.num_contract, i.create_at)
-
         patient_contract = get_patient_contract(date_start, date_end, patient_card)
         count = 0
         last_contract = None
@@ -290,6 +287,46 @@ def directions_history(request):
             count += 1
         final_result.append(temp_data.copy())
         res['directions'] = final_result
+
+        return JsonResponse(res)
+
+    if req_status == 6:
+        # Получить записи регистратуры по РМИС
+        card = Card.objects.get(pk=pk)
+        ecp_id = card.get_ecp_id()
+
+        if not ecp_id:
+            return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
+        patient_time_table = get_ecp_time_table_list_patient(ecp_id)
+        patient_direction_time_table = get_ecp_evn_direction(ecp_id)
+        patient_time_table.extend(patient_direction_time_table)
+
+        patient_time_table = sorted(patient_time_table, key=lambda k: k["full_time"])
+        res['directions'] = [
+            {
+                'pk': i["time"],
+                'status': "",
+                'researches': f"{i['Post_name']};-{i['TimeTable_id']}",
+                "researches_pks": "",
+                'date': i["date"],
+                'cancel': False,
+                'checked': False,
+                'pacs': False,
+                'has_hosp': False,
+                'has_descriptive': False,
+                'maybe_onco': False,
+                'is_application': False,
+                'lab': "",
+                'parent': parent_obj,
+                'is_expertise': False,
+                'expertise_status': False,
+                'person_contract_pk': "",
+                'person_contract_dirs': "",
+                'rmis_location': i["rmis_location"],
+                'type_slot': i["type_slot"],
+            }
+            for i in patient_time_table
+        ]
 
         return JsonResponse(res)
 

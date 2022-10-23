@@ -54,7 +54,7 @@
           :key="s.pk"
           class="resource-slot"
           :class="activeSlot === s.pk && 'active'"
-          @click="selectSlot(s.pk, s.title)"
+          @click="selectSlot(s.pk, s.title, s.typeSlot)"
         >
           {{ s.title }}
         </div>
@@ -98,6 +98,7 @@ export default {
       slots: [],
       activeSlot: null,
       activeSlotTitle: null,
+      typeSlot: null,
     };
   },
   computed: {
@@ -166,9 +167,10 @@ export default {
     },
   },
   methods: {
-    selectSlot(slotPk, slotTitle) {
+    selectSlot(slotPk, slotTitle, typeSlot) {
       this.activeSlot = slotPk;
       this.activeSlotTitle = slotTitle;
+      this.typeSlot = typeSlot;
     },
     async loadSlots() {
       if (!this.activeDoctor || !this.activeDate) {
@@ -257,6 +259,7 @@ export default {
       const { register, message } = await this.$api('ecp/fill-slot', {
         slot_id: this.activeSlot,
         card_pk: this.cardId,
+        type_slot: this.typeSlot,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');
