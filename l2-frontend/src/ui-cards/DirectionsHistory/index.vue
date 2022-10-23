@@ -36,9 +36,15 @@
             style="text-align: left!important;width: 100%;"
             type="button"
           >
-            <span class="caret" /> {{ active_type_obj.title }}
+            <span
+              v-if="typesFiltered.length > 0"
+              class="caret"
+            /> {{ active_type_obj.title }}
           </button>
-          <ul class="dropdown-menu">
+          <ul
+            v-if="typesFiltered.length > 0"
+            class="dropdown-menu"
+          >
             <li
               v-for="row in typesFiltered"
               :key="row.pk"
@@ -57,7 +63,7 @@
           v-tippy
           class="btn btn-blue-nb btn-ell nbr"
           title="Обновить"
-          @click="load_history_safe"
+          @click="load_history_safe_fast"
         >
           <i class="glyphicon glyphicon-refresh" />
         </button>
@@ -312,13 +318,21 @@
               </div>
               <div
                 v-else-if="active_type===6"
-                class="button-td-inner button-td-inner-single"
+                class="button-td-inner"
               >
                 <button
                   class="btn btn-blue-nb"
-                  @click="print_contract(patient_pk)"
+                  @click="print_talon(row.pk, patient_pk, row.date, row.rmis_location, row.researches, 'P80',
+                                      row.type_slot)"
                 >
-                  Талон
+                  Талон-80
+                </button>
+                <button
+                  class="btn btn-blue-nb"
+                  @click="print_talon(row.pk, patient_pk, row.date, row.rmis_location, row.researches, 'A6',
+                                      row.type_slot)"
+                >
+                  Талон-А6
                 </button>
               </div>
             </td>
@@ -348,6 +362,7 @@
 <script lang="ts">
 import moment from 'moment';
 import { mapGetters } from 'vuex';
+import _ from 'lodash';
 
 import { Research } from '@/types/research';
 import directionsPoint from '@/api/directions-point';
@@ -391,6 +406,11 @@ export default {
       required: false,
       default: false,
     },
+    onlyType: {
+      type: Number,
+      required: false,
+      default: null,
+    },
   },
   data() {
     return {
@@ -407,9 +427,9 @@ export default {
         { pk: 2, title: 'Результаты подтверждены' },
         { pk: 4, title: 'Созданы пользователем' },
         { pk: 5, title: 'Договоры пациента' },
-        { pk: 6, title: 'Регистратура пациента' },
+        { pk: 6, title: 'Регистратура пациента', module: 'rmisQueue' },
       ],
-      active_type: 3,
+      active_type: this.onlyType || 3,
       checked_obj: {},
       is_created: false,
       directions: [],
@@ -428,7 +448,11 @@ export default {
   },
   computed: {
     typesFiltered() {
-      return this.types.filter(t => t.pk !== this.active_type);
+      return this.types.filter(
+        t => t.pk !== this.active_type
+          && (this.onlyType || !t.module || this.modules[t.module])
+          && (!this.onlyType || this.onlyType === t.pk),
+      );
     },
     role_can_use_stationar() {
       for (const g of this.$store.getters.user_data.groups || []) {
@@ -457,19 +481,24 @@ export default {
     ...mapGetters({
       researches: 'researches_obj',
     }),
+    modules() {
+      return {
+        rmisQueue: this.$store.getters.modules.l2_rmis_queue,
+      };
+    },
   },
   watch: {
     active_type() {
-      this.load_history();
+      this.load_history_debounced();
     },
     patient_pk() {
-      this.load_history();
+      this.load_history_debounced();
     },
     date_range() {
-      this.load_history();
+      this.load_history_debounced();
     },
     services() {
-      this.load_history();
+      this.load_history_debounced();
     },
     all_checked() {
       for (const row of this.directions) {
@@ -496,9 +525,13 @@ export default {
   },
   mounted() {
     this.is_created = true;
-    this.load_history();
-    this.$root.$on(`researches-picker:directions_created${this.kk}`, this.load_history);
-    this.$root.$on(`researches-picker:refresh${this.kk}`, this.load_history_safe);
+    if (this.onlyType !== 6) {
+      this.load_history();
+    } else {
+      this.load_history_safe();
+    }
+    this.$root.$on(`researches-picker:directions_created${this.kk}`, () => this.load_history_debounced());
+    this.$root.$on(`researches-picker:refresh${this.kk}`, this.load_history_safe_fast);
   },
   methods: {
     async serachDicom(pk) {
@@ -512,7 +545,14 @@ export default {
     print_contract(pk, card) {
       window.open(`/forms/pdf?type=102.02&card_pk=${card}&contract_id=${pk}`, '_blank');
     },
+    print_talon(time, card, date, rmisLocation, researches, pageFormat, typeSlot) {
+      // eslint-disable-next-line max-len
+      window.open(`/forms/pdf?type=111.01&card_pk=${card}&rmis_location=${rmisLocation}&date=${date}&time=${time}&researches=${researches}&pageFormat=${pageFormat}&typeSlot=${typeSlot}`, '_blank');
+    },
     async load_history_safe() {
+      await this.load_history_debounced(true);
+    },
+    async load_history_safe_fast() {
       await this.load_history(true);
     },
     update_so(researches: { [key: string]: Research }) {
@@ -571,7 +611,10 @@ export default {
     select_type(pk) {
       this.active_type = pk;
     },
-    async load_history(safe) {
+    load_history_debounced: _.debounce(function (safe?: boolean) {
+      this.load_history(safe);
+    }, 300),
+    async load_history(safe?: boolean) {
       if (!this.is_created) return;
       this.$root.$emit('validate-datepickers');
       this.is_created = false;

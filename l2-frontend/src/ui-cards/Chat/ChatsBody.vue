@@ -5,24 +5,41 @@
         v-if="!search"
         class="chats-body__header-title"
       >
-        L2.Сообщения
+        <template v-if="forSelect">
+          Выберите пользователей
+        </template>
+        <template v-else>
+          L2.Сообщения
+        </template>
         <div
           class="chats-body__header-search"
           @click="openSearch"
         >
           <i class="fa fa-search" />
         </div>
-        <div
-          v-tippy
-          class="chats-body__header-alerts"
-          :title="`Уведомления: ${alertsEnabled ? 'включены' : 'выключены'}`"
-          @click="toggleAlerts"
-        >
-          <i
-            class="fa"
-            :class="alertsEnabled ? 'fa-bell' : 'fa-bell-slash'"
-          />
-        </div>
+        <template v-if="!forSelect">
+          <div
+            v-tippy
+            class="chats-body__header-alerts"
+            :title="`Уведомления: ${alertsEnabled ? 'включены' : 'выключены'}`"
+            @click="toggleAlerts"
+          >
+            <i
+              class="fa"
+              :class="alertsEnabled ? 'fa-bell' : 'fa-bell-slash'"
+            />
+          </div>
+          <div
+            v-tippy
+            class="chats-body__header-multisend"
+            title="Отправить сообщение множеству пользователей"
+            @click="openMultisendDialog"
+          >
+            <i
+              class="fa fa-envelopes-bulk"
+            />
+          </div>
+        </template>
       </div>
       <div
         v-else
@@ -59,10 +76,12 @@
       />
       <ChatDepartment
         v-for="department in chatsDepartments"
-        :key="department.pk"
+        :key="department.id"
         :department="department"
         :force-opened="search"
+        :for-select="forSelect"
         :search="search ? q : ''"
+        @select="selectUsersDepartment(department.id, $event)"
       />
     </div>
   </div>
@@ -75,10 +94,18 @@ import ChatDepartment from '@/ui-cards/Chat/ChatDepartment.vue';
 export default {
   name: 'ChatsBody',
   components: { ChatDepartment },
+  props: {
+    forSelect: {
+      type: Boolean,
+      default: false,
+    },
+  },
   data() {
     return {
       search: false,
       q: '',
+      selectedUsersByDepartment: {},
+      selectedUsers: [],
     };
   },
   computed: {
@@ -92,7 +119,7 @@ export default {
       return !this.$store.getters.chatsDisableAlerts;
     },
     unreadDepartment() {
-      if (this.$store.getters.chatsUnreadDialogsUsers.length === 0) {
+      if (this.forSelect || this.$store.getters.chatsUnreadDialogsUsers.length === 0) {
         return null;
       }
       return {
@@ -100,6 +127,15 @@ export default {
         title: 'Непрочитанные',
         users: this.$store.getters.chatsUnreadDialogsUsers,
       };
+    },
+  },
+  watch: {
+    selectedUsers: {
+      handler() {
+        this.$emit('select', this.selectedUsers);
+      },
+      deep: true,
+      immediate: true,
     },
   },
   methods: {
@@ -121,6 +157,19 @@ export default {
       } else {
         this.enableAlerts();
       }
+    },
+    openMultisendDialog() {
+      this.$store.dispatch(actions.CHATS_OPEN_DIALOG_BY_ID, { dialogId: -1000 });
+    },
+    selectUsersDepartment(department, users) {
+      this.selectedUsersByDepartment[department] = users;
+
+      const userIds = [];
+      for (const departmentId of Object.keys(this.selectedUsersByDepartment)) {
+        userIds.push(...this.selectedUsersByDepartment[departmentId]);
+      }
+
+      this.selectedUsers = userIds;
     },
   },
 };
@@ -146,7 +195,7 @@ export default {
       color: #333;
     }
 
-    &-search, &-alerts {
+    &-search, &-alerts, &-multisend {
       display: inline-block;
       margin-left: 10px;
       cursor: pointer;

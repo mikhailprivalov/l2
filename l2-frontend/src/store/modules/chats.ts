@@ -60,6 +60,13 @@ const getters = {
   chatsUnreadDialogs: (state: ChatsState) => state.unreadDialogs,
   chatsUnreadDialogsList: (state: ChatsState) => Object.keys(state.unreadDialogs).map((k) => parseInt(k, 10)),
   chatsUnreadDialogsUsers: (state: ChatsState, g) => g.chatsUnreadDialogsList.map((k) => g.chatsGetUser(k)),
+  chatsUserDepartment: (state: ChatsState) => (userId: number) => {
+    const department = state.departments.find((d) => d.users.find((u) => u.id === userId));
+    if (!department) {
+      return null;
+    }
+    return department.id;
+  },
   chatsDisableAlerts: (state: ChatsState) => state.disableAlerts,
 };
 
@@ -90,7 +97,7 @@ const actions = {
   },
   async [actionsTypes.CHATS_MESSAGES_COUNT]({
     commit, getters: g, dispatch, rootGetters,
-  }) {
+  }, forced = false) {
     if (g.chatsEnabled && !g.chatsNotifyToken) {
       await dispatch(actionsTypes.CHATS_GET_NOTIFY_TOKEN);
     }
@@ -129,11 +136,13 @@ const actions = {
       console.error(e);
     }
 
-    await new Promise((resolve) => {
-      setTimeout(resolve, 8000);
-    });
+    if (!forced) {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 8000);
+      });
 
-    dispatch(actionsTypes.CHATS_MESSAGES_COUNT);
+      dispatch(actionsTypes.CHATS_MESSAGES_COUNT);
+    }
   },
   async [actionsTypes.CHATS_OPEN_DIALOG]({ commit }, userId) {
     const { dialogId } = await api('chats/get-dialog-id', { userId });

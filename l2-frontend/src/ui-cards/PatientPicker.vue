@@ -688,6 +688,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { mapGetters } from 'vuex';
 import { debounce } from 'lodash';
 
+import Modal from '@/ui-cards/Modal.vue';
 import L2CardCreate from '@/modals/L2CardCreate.vue';
 import DReg from '@/modals/DReg.vue';
 import Benefit from '@/modals/Benefit.vue';
@@ -696,8 +697,6 @@ import patientsPoint from '@/api/patients-point';
 import Vaccine from '@/modals/Vaccine.vue';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import { sendEvent } from '@/metrics';
-
-import Modal from './Modal.vue';
 
 const tfomsRe = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
@@ -983,7 +982,7 @@ export default {
     });
     this.$root.$on('select_card', (data) => {
       this.base = data.base_pk;
-      this.query = `card_pk:${data.card_pk}:${data.inc_archive}`;
+      this.query = `card_pk:${data.card_pk}:${data.inc_archive || false}`;
       this.search_after_loading = true;
       window.$(this.$refs.q).focus();
       this.emit_input();

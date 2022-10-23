@@ -100,8 +100,8 @@ import notifyAudioSrc from '@/assets/notify.mp3';
           if (!this.$store.getters.chatsDialogsOpened.includes(action.payload.dialogId)) {
             let { text } = action.payload;
 
-            if (text.length > 100) {
-              text = `${text.substring(0, 100)}...`;
+            if (text.length > 150) {
+              text = `${text.substring(0, 150)}...`;
             }
 
             this.$root.$emit(

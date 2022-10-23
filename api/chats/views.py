@@ -1,6 +1,7 @@
 import json
 from typing import List
 
+from PIL import Image
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import JsonResponse
@@ -144,7 +145,10 @@ def get_dialog_data(request):
 
 @login_required
 def send_message(request):
-    request_data = json.loads(request.body)
+    file = request.FILES.get('file')
+    image = request.FILES.get('image')
+    form = request.FILES['form'].read()
+    request_data = json.loads(form)
     dialog_pk = request_data.get("dialogId")
     dialog = Dialog.objects.get(pk=dialog_pk)
 
@@ -155,15 +159,33 @@ def send_message(request):
 
     message = request_data.get("text")
 
-    message = message[:500]
+    message_obj = None
+    if message:
+        message = message[:500]
+        message_obj = Dialog.add_message_text(dialog, request.user.doctorprofile, message)
+    elif image:
+        if image.size > 2 * 1024 * 1024:
+            return status_response(False, "Image is too big")
+        # check image is valid
+        try:
+            img = Image.open(image)
+            img.verify()
+            img.close()
+        except Exception:
+            return status_response(False, "Image is invalid")
+        message_obj = Dialog.add_message_image(dialog, request.user.doctorprofile, image)
+    elif file:
+        if file.size > 2 * 1024 * 1024:
+            return status_response(False, "File is too big")
+        message_obj = Dialog.add_message_file(dialog, request.user.doctorprofile, file)
 
-    message = Dialog.add_message_text(dialog, request.user.doctorprofile, message)
+    if message_obj:
+        doctor2 = dialog.get_other_doctor(request.user.doctorprofile)
+        if doctor2 != request.user.doctorprofile:
+            doctor2.add_message_id_to_queues(message_obj.pk)
 
-    doctor2 = dialog.get_other_doctor(request.user.doctorprofile)
-    if doctor2 != request.user.doctorprofile:
-        doctor2.add_message_id_to_queues(message.pk)
-
-    return status_response(True, data={"message": message.message_json()})
+        return status_response(True, data={"message": message_obj.message_json()})
+    return status_response(False, "Message is empty")
 
 
 @login_required
