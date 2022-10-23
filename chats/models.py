@@ -54,14 +54,7 @@ class Dialog(models.Model):
             else:
                 file_hash = None
                 file_to_save = None
-            message = Message.objects.create(
-                dialog=dialog,
-                author=author,
-                text=text or '',
-                file=file_to_save,
-                file_hash=file_hash,
-                type=message_type
-            )
+            message = Message.objects.create(dialog=dialog, author=author, text=text or '', file=file_to_save, file_hash=file_hash, type=message_type)
             dialog = Dialog.objects.select_for_update().get(pk=dialog.pk)
             dialog.unread_count += 1
             dialog.save(update_fields=['unread_count'])
