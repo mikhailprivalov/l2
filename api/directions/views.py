@@ -291,12 +291,14 @@ def directions_history(request):
         return JsonResponse(res)
 
     if req_status == 6:
-        # Получить записи регистратуры по РМИС
+        if not pk or pk == -1:
+            return JsonResponse(res)
+
         card = Card.objects.get(pk=pk)
         ecp_id = card.get_ecp_id()
 
         if not ecp_id:
-            return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
+            return JsonResponse(res)
         patient_time_table = get_ecp_time_table_list_patient(ecp_id)
         patient_direction_time_table = get_ecp_evn_direction(ecp_id)
         patient_time_table.extend(patient_direction_time_table)

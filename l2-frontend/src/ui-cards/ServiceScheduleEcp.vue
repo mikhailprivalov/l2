@@ -65,7 +65,7 @@
         :disabled="!activeSlot"
         @click="fillSlot"
       >
-        Записать пациента на выбранное время
+        Записать пациента
       </button>
     </div>
   </div>
@@ -264,6 +264,7 @@ export default {
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');
         this.activeSlot = null;
+        this.$emit('fill-slot-ok', this.servicePk);
       } else {
         this.$root.$emit('msg', 'error', message || 'Ошибка записи пациента на прием');
       }
