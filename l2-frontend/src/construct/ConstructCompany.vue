@@ -84,7 +84,7 @@
           maxlength="12"
           placeholder="Введите ИНН"
           class="form-control"
-          @input="onlyNumber($event, 'editCompanyInn')"
+          @input="getOnlyNumber($event, 'editCompanyInn')"
         >
         <label>ОГРН</label>
         <input
@@ -92,7 +92,7 @@
           maxlength="13"
           placeholder="Введите ОГРН"
           class="form-control"
-          @input="onlyNumber($event, 'editCompanyOgrn')"
+          @input="getOnlyNumber($event, 'editCompanyOgrn')"
         >
         <label>КПП</label>
         <input
@@ -100,7 +100,7 @@
           maxlength="9"
           placeholder="Введите КПП"
           class="form-control"
-          @input="onlyNumber($event, 'editCompanyKpp')"
+          @input="getOnlyNumber($event, 'editCompanyKpp')"
         >
         <label>БИК</label>
         <input
@@ -108,7 +108,7 @@
           maxlength="9"
           placeholder="Введите БИК"
           class="form-control"
-          @input="onlyNumber($event, 'editCompanyBik')"
+          @input="getOnlyNumber($event, 'editCompanyBik')"
         >
         <label>Договор</label>
         <Treeselect
@@ -252,7 +252,7 @@ export default {
       this.editCompanyBik = '';
       this.editCompanyContractId = -1;
     },
-    onlyNumber(event, vModel) {
+    getOnlyNumber(event, vModel) {
       this[vModel] = event.target.value.replace(/[^0-9.]/g, '');
     },
   },
