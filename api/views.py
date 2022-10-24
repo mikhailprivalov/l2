@@ -2560,6 +2560,7 @@ def get_current_company(request):
     }
     return JsonResponse({"data": company_data})
 
+
 @login_required
 @group_required('Конструктор: Настройка организации')
 def update_company(request):
