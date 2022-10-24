@@ -32,10 +32,10 @@
             :key="company.id"
           >
             <VueTippyTd
-              class="title rowborder"
+              class="title border"
               :text="company.title"
             />
-            <td class="rowborder">
+            <td class="border">
               <button
                 v-tippy
                 title="Редактировать"
@@ -290,7 +290,7 @@ export default {
 label {
   margin-left: 12px;
 }
-.rowborder {
+.border {
   border: 1px solid #ddd;
 }
 </style>
