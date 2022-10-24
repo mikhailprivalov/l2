@@ -107,6 +107,7 @@ class DoctorProfile(models.Model):
     not_control_anketa = models.BooleanField(default=False, blank=True, help_text='Не контролировать заполнение Анкет')
     signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
     last_online = models.DateTimeField(default=None, blank=True, null=True, help_text="Когда пользователь был в сети")
+    cabinet = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Кабинет приема")
 
     @property
     def notify_queue_key_base(self):

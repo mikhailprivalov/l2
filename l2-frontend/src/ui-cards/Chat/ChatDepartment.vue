@@ -11,10 +11,24 @@
     >
       <div class="department-title__name">
         <div
-          v-if="unreadMessages > 0 && !forceOpened"
+          v-if="unreadMessages > 0 && !forceOpened && !forSelect"
           class="badge badge-danger"
         >
           {{ unreadMessages }}
+        </div>
+        <div
+          v-else-if="forSelect"
+          class="department-title__checker"
+          @click.stop="selectTotalDepartment"
+        >
+          <i
+            v-if="isTotalDepartmentSelected"
+            class="fa fa-check-square"
+          />
+          <i
+            v-else
+            class="fa fa-square-o"
+          />
         </div>
         {{ department.title }} <template v-if="!forceOpened && department.id !== -100">
           ({{ onlineUsers }}/{{ totalUsers }})
@@ -28,13 +42,16 @@
       </div>
     </div>
     <div
-      v-if="opened"
+      v-if="opened || forSelect"
+      v-show="opened"
       class="department-body"
     >
       <ChatUser
         v-for="user in filteredUsers"
-        :key="user.pk"
+        :key="user.id"
+        :for-select="forSelect"
         :user="user"
+        @select="selectUser"
       />
     </div>
   </div>
@@ -47,6 +64,10 @@ export default {
   name: 'ChatDepartment',
   components: { ChatUser },
   props: {
+    forSelect: {
+      type: Boolean,
+      default: false,
+    },
     department: {
       type: Object,
       required: true,
@@ -63,6 +84,7 @@ export default {
   data() {
     return {
       open: false,
+      selectedUsers: [],
     };
   },
   computed: {
@@ -88,6 +110,10 @@ export default {
       return this.forceOpened || this.open;
     },
     unreadMessages() {
+      if (this.forSelect) {
+        return 0;
+      }
+
       if (this.department.id === -100) {
         return this.$store.getters.chatsUnreadMessages;
       }
@@ -99,13 +125,35 @@ export default {
         return a;
       }, 0);
     },
+    isTotalDepartmentSelected() {
+      return this.selectedUsers.length === this.department.users.length;
+    },
+  },
+  watch: {
+    selectedUsers: {
+      handler() {
+        this.$emit('select', this.selectedUsers);
+      },
+      deep: true,
+      immediate: true,
+    },
   },
   mounted() {
-    this.open = this.department.pk === this.userDepartment;
+    this.open = this.department.id === this.userDepartment && !this.forSelect;
   },
   methods: {
     toggle() {
       this.open = !this.open;
+    },
+    selectUser(userId, selected) {
+      if (selected) {
+        this.selectedUsers.push(userId);
+      } else {
+        this.selectedUsers = this.selectedUsers.filter((id) => id !== userId);
+      }
+    },
+    selectTotalDepartment() {
+      this.$root.$emit('chat-department-set-selected', this.department.id, !this.isTotalDepartmentSelected);
     },
   },
 };
@@ -131,6 +179,12 @@ export default {
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
+
+    &__checker {
+      margin-right: 5px;
+      cursor: pointer;
+      display: inline-block;
+    }
 
     &-unread &__name {
       font-weight: bold;

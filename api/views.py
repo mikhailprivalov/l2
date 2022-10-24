@@ -1403,6 +1403,7 @@ def user_view(request):
             "rmis_employee_id": '',
             "rmis_service_id_time_table": '',
             "snils": '',
+            "cabinet": '',
             "position": -1,
             "district": -1,
             "sendPassword": False,
@@ -1450,6 +1451,7 @@ def user_view(request):
             "rmis_employee_id": doc.rmis_employee_id,
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
             "snils": doc.snils,
+            "cabinet": doc.cabinet,
             "position": doc.position_id or -1,
             "district": doc.district_group_id or -1,
             "sendPassword": False,
@@ -1479,6 +1481,7 @@ def user_save_view(request):
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
     snils = ud.get("snils").strip() or ''
+    cabinet = ud.get("cabinet").strip() or ''
     email = ud.get("email").strip() or None
     position = ud.get("position", -1)
     district = ud.get("district", -1)
@@ -1570,6 +1573,7 @@ def user_save_view(request):
             doc.rmis_resource_id = rmis_resource_id
             doc.hospital_id = hospital_pk
             doc.snils = snils
+            doc.cabinet = cabinet
             doc.email = email
             doc.position_id = position
             doc.district_group_id = district

@@ -103,6 +103,12 @@
             <RmisLink is-schedule />
           </li>
         </ul>
+        <ul
+          v-if="meta.showEcpSchedule"
+          class="nav navbar-nav"
+        >
+          <EcpSchedule />
+        </ul>
         <ExpertiseStatus v-if="meta.showExpertiseStatus" />
         <ul class="nav navbar-right navbar-nav">
           <li v-if="hasNewVersion">
@@ -202,6 +208,7 @@ import { sendEvent } from '@/metrics';
     LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),
     LaboratorySelector: () => import('@/ui-cards/LaboratorySelector.vue'),
     ChatsButton: () => import('@/ui-cards/ChatsButton.vue'),
+    EcpSchedule: () => import('@/ui-cards/EcpSchedule.vue'),
   },
 })
 export default class Navbar extends Vue {

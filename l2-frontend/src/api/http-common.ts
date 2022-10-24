@@ -9,7 +9,7 @@ export const HTTP = axios.create({
 });
 
 export const smartCall = async ({
-  method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys,
+  method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys, formData = null,
 }: any): Promise<any> => {
   let data;
   if (ctx) {
@@ -29,6 +29,16 @@ export const smartCall = async ({
     let response;
     if (urlFmt) {
       response = await HTTP.get(valuesToString(urlFmt, data));
+    } else if (formData) {
+      if (data && Object.keys(data).length) {
+        const blob = new Blob([JSON.stringify(data)], {
+          type: 'application/json',
+        });
+        formData.append('form', blob);
+      }
+      response = await HTTP.post(url, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
     } else {
       response = await HTTP[method](url, data, {
         headers: {
