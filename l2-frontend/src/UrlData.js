@@ -19,6 +19,15 @@ export default class UrlData {
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
+      try {
+        const data = JSON.parse(decodeURIComponent(decodeURIComponent(window.location.hash.substring(1))) || 'null');
+        // eslint-disable-next-line no-console
+        console.log(data);
+        return data;
+      } catch (e2) {
+        // eslint-disable-next-line no-console
+        console.error(e2);
+      }
     }
     return null;
   }
