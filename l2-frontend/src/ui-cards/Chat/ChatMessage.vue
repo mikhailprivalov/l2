@@ -68,9 +68,16 @@
 import { menuItems } from '@/pages/Stationar/mixins/menu';
 
 const fixLinkUrl = url => {
-  const anchor = url.split('#')[1];
+  let anchor = url.split('#')[1];
   if (anchor) {
-    return `${url.split('#')[0]}#${encodeURIComponent(anchor.replace('%20', ' '))}`;
+    if (anchor.includes(' ')) {
+      anchor = anchor.replace(/ /g, '%20');
+    }
+
+    if (anchor === decodeURIComponent(anchor)) {
+      anchor = encodeURIComponent(anchor);
+    }
+    return `${url.split('#')[0]}#${anchor}`;
   }
   return url;
 };
