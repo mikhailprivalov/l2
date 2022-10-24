@@ -51,7 +51,7 @@
     </div>
     <div class="box card-1 card-no-hover">
       <h5 class="text-center">
-        Создание/Редактирование
+        {{ editCompanyId === -1 ? 'Добавление компании' : 'Редактирование компании' }}
       </h5>
       <div>
         <label>Наименование организации</label>
@@ -157,6 +157,8 @@ export default {
       dataCompanyList: [],
       contractList: {},
       search: '',
+      currentCompany: {},
+      dataCurrentCompany: {},
       editCompanyId: -1,
       editCompanyTitle: '',
       editCompanyShortTitle: '',
@@ -196,9 +198,11 @@ export default {
         this.$root.$emit('msg', 'error', 'Не заполнено название');
       } else if (this.editCompanyContractId === -1) {
         this.$root.$emit('msg', 'error', 'Не выбран договор');
+      } else if (this.editCompanyId === -1 && this.dataCompanyList.find((company) => company.title === this.editCompanyTitle)) {
+        this.$root.$emit('msg', 'error', 'Такая компания уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('update-company', {
+        const { ok } = await this.$api('update-company', {
           id: this.editCompanyId,
           title: this.editCompanyTitle,
           shortTitle: this.editCompanyShortTitle,
@@ -220,17 +224,21 @@ export default {
         }
       }
     },
-    editCompany(company) {
+    async editCompany(company) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.currentCompany = await this.$api('get-current-company', { id: company.id });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.dataCurrentCompany = this.currentCompany.data;
       this.editCompanyId = company.id;
       this.editCompanyTitle = company.title;
-      this.editCompanyShortTitle = company.short_title;
-      this.editCompanyLegalAddress = company.legal_address;
-      this.editCompanyFactAddress = company.fact_address;
-      this.editCompanyInn = company.inn;
-      this.editCompanyOgrn = company.ogrn;
-      this.editCompanyKpp = company.kpp;
-      this.editCompanyBik = company.bik;
-      this.editCompanyContractId = company.contract_id;
+      this.editCompanyShortTitle = this.dataCurrentCompany.short_title;
+      this.editCompanyLegalAddress = this.dataCurrentCompany.legal_address;
+      this.editCompanyFactAddress = this.dataCurrentCompany.fact_address;
+      this.editCompanyInn = this.dataCurrentCompany.inn;
+      this.editCompanyOgrn = this.dataCurrentCompany.ogrn;
+      this.editCompanyKpp = this.dataCurrentCompany.kpp;
+      this.editCompanyBik = this.dataCurrentCompany.bik;
+      this.editCompanyContractId = this.dataCurrentCompany.contract_id;
     },
     clearEditCompany() {
       this.editCompanyId = -1;

@@ -2518,14 +2518,6 @@ def get_company_list(request):
         {
             "id": company.pk,
             "title": company.title,
-            "short_title": company.short_title,
-            "legal_address": company.legal_address,
-            "fact_address": company.fact_address,
-            "inn": company.inn,
-            "ogrn": company.ogrn,
-            "kpp": company.kpp,
-            "bik": company.bik,
-            "contract_id": company.contract.pk,
         }
         for company in Company.objects.filter(active_status=True)
     ]
@@ -2546,6 +2538,23 @@ def get_contract_list(request):
     contract_data = sorted(contract_data, key=lambda contract: contract["label"])
     return JsonResponse({"data": contract_data})
 
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_current_company(request):
+    request_data = json.loads(request.body)
+    current_company = Company.objects.get(pk=request_data["id"])
+    company_data = {
+        "short_title": current_company.short_title,
+        "legal_address": current_company.legal_address,
+        "fact_address": current_company.fact_address,
+        "inn": current_company.inn,
+        "ogrn": current_company.ogrn,
+        "kpp": current_company.kpp,
+        "bik": current_company.bik,
+        "contract_id": current_company.contract.pk,
+    }
+    return JsonResponse({"data": company_data})
 
 @login_required
 @group_required('Конструктор: Настройка организации')
