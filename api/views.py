@@ -2517,16 +2517,16 @@ def get_company_list(request):
     company_data = [
         {
             "id": company.pk,
-             "title": company.title,
-             "short_title": company.short_title,
-             "legal_address": company.legal_address,
-             "fact_address": company.fact_address,
-             "inn": company.inn,
-             "ogrn": company.ogrn,
-             "kpp": company.kpp,
-             "bik": company.bik,
-             "contract_id": company.contract.pk
-         }
+            "title": company.title,
+            "short_title": company.short_title,
+            "legal_address": company.legal_address,
+            "fact_address": company.fact_address,
+            "inn": company.inn,
+            "ogrn": company.ogrn,
+            "kpp": company.kpp,
+            "bik": company.bik,
+            "contract_id": company.contract.pk,
+        }
         for company in Company.objects.filter(active_status=True)
     ]
     company_data = sorted(company_data, key=lambda company: company["title"])
@@ -2552,8 +2552,17 @@ def get_contract_list(request):
 def update_company(request):
     request_data = json.loads(request.body)
     if request_data["id"] == -1:
-        company_data = Company(title=request_data["title"], short_title=request_data["shortTitle"], legal_address=request_data["legalAddress"], fact_address=request_data["factAddress"],
-                               inn=request_data["inn"], ogrn=request_data["ogrn"], kpp=request_data["kpp"], bik=request_data["bik"], contract_id=request_data["contractId"])
+        company_data = Company(
+            title=request_data["title"],
+            short_title=request_data["shortTitle"],
+            legal_address=request_data["legalAddress"],
+            fact_address=request_data["factAddress"],
+            inn=request_data["inn"],
+            ogrn=request_data["ogrn"],
+            kpp=request_data["kpp"],
+            bik=request_data["bik"],
+            contract_id=request_data["contractId"],
+        )
         company_data.save()
         Log.log(
             company_data.pk,
@@ -2569,7 +2578,7 @@ def update_company(request):
                 "ogrn": company_data.ogrn,
                 "kpp": company_data.kpp,
                 "bik": company_data.bik,
-                "contract_id": company_data.contract.pk
+                "contract_id": company_data.contract.pk,
             },
         )
         return JsonResponse({'ok': True})
@@ -2585,7 +2594,7 @@ def update_company(request):
             "ogrn": company_data.ogrn,
             "kpp": company_data.kpp,
             "bik": company_data.bik,
-            "contract_id": company_data.contract.pk
+            "contract_id": company_data.contract.pk,
         }
         company_data.title = request_data["title"]
         company_data.short_title = request_data["shortTitle"]
@@ -2607,15 +2616,12 @@ def update_company(request):
             "ogrn": company_data.ogrn,
             "kpp": company_data.kpp,
             "bik": company_data.bik,
-            "contract_id": company_data.contract.pk
+            "contract_id": company_data.contract.pk,
         }
         Log.log(
             company_data.pk,
             130002,
             request.user.doctorprofile,
-            {
-                "old_company_data": old_company_data,
-                "new_company_data": new_company_data
-            },
+            {"old_company_data": old_company_data, "new_company_data": new_company_data},
         )
         return JsonResponse({'ok': True})
