@@ -32,10 +32,10 @@
             :key="company.id"
           >
             <VueTippyTd
-              class="title"
+              class="title rowborder"
               :text="company.title"
             />
-            <td>
+            <td class="rowborder">
               <button
                 v-tippy
                 title="Редактировать"
@@ -56,68 +56,63 @@
       <div>
         <label>Наименование организации</label>
         <input
-          v-model="companyEditor.title"
+          v-model="editCompanyTitle"
           placeholder="Введите наименование организации"
           class="form-control"
         >
         <label>Сокращенное наименование</label>
         <input
-          v-model="companyEditor.shortTitle"
+          v-model="editCompanyShortTitle"
           placeholder="Введите сокращенное наименование"
           class="form-control"
         >
         <label>Юридический адрес</label>
         <input
-          v-model="companyEditor.legalAddress"
+          v-model="editCompanyLegalAddress"
           placeholder="Введите адрес"
           class="form-control"
         >
         <label>Фактический адрес</label>
         <input
-          v-model="companyEditor.factAddress"
+          v-model="editCompanyFactAddress"
           placeholder="Введите адрес"
           class="form-control"
         >
         <label>ИНН</label>
         <input
-          v-model="companyEditor.inn"
-          type="number"
-          min="0"
+          v-model="editCompanyInn"
+          maxlength="12"
           placeholder="Введите ИНН"
           class="form-control"
-          @input="maxlength(12, companyEditor.inn)"
+          @input="onlyNumber($event, 'editCompanyInn')"
         >
         <label>ОГРН</label>
         <input
-          v-model="companyEditor.ogrn"
-          type="number"
-          min="0"
+          v-model="editCompanyOgrn"
+          maxlength="13"
           placeholder="Введите ОГРН"
           class="form-control"
-          @input="maxlength(13, companyEditor.ogrn)"
+          @input="onlyNumber($event, 'editCompanyOgrn')"
         >
         <label>КПП</label>
         <input
-          v-model="companyEditor.kpp"
-          type="number"
-          min="0"
+          v-model="editCompanyKpp"
+          maxlength="9"
           placeholder="Введите КПП"
           class="form-control"
-          @input="maxlength(9, companyEditor.kpp)"
+          @input="onlyNumber($event, 'editCompanyKpp')"
         >
         <label>БИК</label>
         <input
-          v-model="companyEditor.bik"
+          v-model="editCompanyBik"
           maxlength="9"
-          type="number"
-          min="0"
           placeholder="Введите БИК"
           class="form-control"
-          @input="maxlength(9, companyEditor.bik)"
+          @input="onlyNumber($event, 'editCompanyBik')"
         >
         <label>Договор</label>
         <Treeselect
-          v-model="companyEditor.contractId"
+          v-model="editCompanyContractId"
           :options="contractList.data"
           :clearable="false"
           style="margin-bottom: 10px"
@@ -136,7 +131,7 @@
             title="Сохранить"
             class="btn btn-blue-nb nbr"
             style="float: right"
-            @click="saveCompany"
+            @click="updateCompany"
           >
             Сохранить
           </button>
@@ -150,8 +145,8 @@
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyTd from '@/construct/VueTippyTd.vue';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'ConstructCompany',
@@ -162,18 +157,16 @@ export default {
       dataCompanyList: [],
       contractList: {},
       search: '',
-      companyEditor: {
-        id: -1,
-        title: '',
-        shortTitle: '',
-        legalAddress: '',
-        factAddress: '',
-        inn: '',
-        ogrn: '',
-        kpp: '',
-        bik: '',
-        contractId: -1,
-      },
+      editCompanyId: -1,
+      editCompanyTitle: '',
+      editCompanyShortTitle: '',
+      editCompanyLegalAddress: '',
+      editCompanyFactAddress: '',
+      editCompanyInn: '',
+      editCompanyOgrn: '',
+      editCompanyKpp: '',
+      editCompanyBik: '',
+      editCompanyContractId: -1,
     };
   },
   computed: {
@@ -198,35 +191,61 @@ export default {
     async getContractList() {
       this.contractList = await this.$api('get-contract-list');
     },
-    async saveCompany() {
-      console.log('привет');
+    async updateCompany() {
+      if (!this.editCompanyTitle) {
+        this.$root.$emit('msg', 'error', 'Не заполнено название');
+      } else if (this.editCompanyContractId === -1) {
+        this.$root.$emit('msg', 'error', 'Не выбран договор');
+      } else {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('update-company', {
+          id: this.editCompanyId,
+          title: this.editCompanyTitle,
+          shortTitle: this.editCompanyShortTitle,
+          legalAddress: this.editCompanyLegalAddress,
+          factAddress: this.editCompanyFactAddress,
+          inn: this.editCompanyInn,
+          ogrn: this.editCompanyOgrn,
+          kpp: this.editCompanyKpp,
+          bik: this.editCompanyBik,
+          contractId: this.editCompanyContractId,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+          await this.getCompanyList();
+          this.clearEditCompany();
+        } else {
+          this.$root.$emit('msg', 'error', 'Ошибка');
+        }
+      }
     },
     editCompany(company) {
-      this.companyEditor.id = company.id;
-      this.companyEditor.title = company.title;
-      this.companyEditor.shortTitle = company.short_title;
-      this.companyEditor.legalAddress = company.legal_address;
-      this.companyEditor.factAddress = company.fact_address;
-      this.companyEditor.inn = company.inn;
-      this.companyEditor.ogrn = company.ogrn;
-      this.companyEditor.kpp = company.kpp;
-      this.companyEditor.bik = company.bik;
-      this.companyEditor.contractId = company.contract_id;
+      this.editCompanyId = company.id;
+      this.editCompanyTitle = company.title;
+      this.editCompanyShortTitle = company.short_title;
+      this.editCompanyLegalAddress = company.legal_address;
+      this.editCompanyFactAddress = company.fact_address;
+      this.editCompanyInn = company.inn;
+      this.editCompanyOgrn = company.ogrn;
+      this.editCompanyKpp = company.kpp;
+      this.editCompanyBik = company.bik;
+      this.editCompanyContractId = company.contract_id;
     },
     clearEditCompany() {
-      this.companyEditor.id = -1;
-      this.companyEditor.title = '';
-      this.companyEditor.shortTitle = '';
-      this.companyEditor.legalAddress = '';
-      this.companyEditor.factAddress = '';
-      this.companyEditor.inn = '';
-      this.companyEditor.ogrn = '';
-      this.companyEditor.kpp = '';
-      this.companyEditor.bik = '';
-      this.companyEditor.contractId = -1;
+      this.editCompanyId = -1;
+      this.editCompanyTitle = '';
+      this.editCompanyShortTitle = '';
+      this.editCompanyLegalAddress = '';
+      this.editCompanyFactAddress = '';
+      this.editCompanyInn = '';
+      this.editCompanyOgrn = '';
+      this.editCompanyKpp = '';
+      this.editCompanyBik = '';
+      this.editCompanyContractId = -1;
     },
-    maxlength(maxlength, data) {
-      console.log(data, maxlength);
+    onlyNumber(event, vModel) {
+      this[vModel] = event.target.value.replace(/[^0-9.]/g, '');
     },
   },
 };
@@ -248,7 +267,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  max-height: 70%;
+  max-height: 523px;
 }
 .title {
   white-space: nowrap;
@@ -262,5 +281,8 @@ export default {
 }
 label {
   margin-left: 12px;
+}
+.rowborder {
+  border: 1px solid #ddd;
 }
 </style>

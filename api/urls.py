@@ -103,4 +103,5 @@ urlpatterns = [
     path('delete-research-in-price', views.delete_research_in_price),
     path('get-company-list', views.get_company_list),
     path('get-contract-list', views.get_contract_list),
+    path('update-company', views.update_company),
 ]
