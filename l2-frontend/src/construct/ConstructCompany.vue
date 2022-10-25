@@ -5,7 +5,7 @@
         Компании
       </h5>
       <input
-        v-model="search"
+        v-model.trim="search"
         class="form-control"
         style="margin-bottom: 20px"
         placeholder="Фильтр по названию..."
