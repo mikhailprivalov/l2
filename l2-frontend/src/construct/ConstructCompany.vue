@@ -54,88 +54,96 @@
         {{ editCompanyId === -1 ? 'Добавление компании' : 'Редактирование компании' }}
       </h5>
       <div>
-        <label>Наименование организации</label>
-        <input
-          v-model="editCompanyTitle"
-          placeholder="Введите наименование организации"
-          class="form-control"
+        <FormulateForm
+          @submit="updateCompany"
         >
-        <label>Сокращенное наименование</label>
-        <input
-          v-model="editCompanyShortTitle"
-          placeholder="Введите сокращенное наименование"
-          class="form-control"
-        >
-        <label>Юридический адрес</label>
-        <input
-          v-model="editCompanyLegalAddress"
-          placeholder="Введите адрес"
-          class="form-control"
-        >
-        <label>Фактический адрес</label>
-        <input
-          v-model="editCompanyFactAddress"
-          placeholder="Введите адрес"
-          class="form-control"
-        >
-        <label>ИНН</label>
-        <input
-          v-model="editCompanyInn"
-          maxlength="12"
-          placeholder="Введите ИНН"
-          class="form-control"
-          @input="getOnlyNumber($event, 'editCompanyInn')"
-        >
-        <label>ОГРН</label>
-        <input
-          v-model="editCompanyOgrn"
-          maxlength="13"
-          placeholder="Введите ОГРН"
-          class="form-control"
-          @input="getOnlyNumber($event, 'editCompanyOgrn')"
-        >
-        <label>КПП</label>
-        <input
-          v-model="editCompanyKpp"
-          maxlength="9"
-          placeholder="Введите КПП"
-          class="form-control"
-          @input="getOnlyNumber($event, 'editCompanyKpp')"
-        >
-        <label>БИК</label>
-        <input
-          v-model="editCompanyBik"
-          maxlength="9"
-          placeholder="Введите БИК"
-          class="form-control"
-          @input="getOnlyNumber($event, 'editCompanyBik')"
-        >
-        <label>Договор</label>
-        <Treeselect
-          v-model="editCompanyContractId"
-          :options="contractList.data"
-          :clearable="false"
-          style="margin-bottom: 10px"
-        />
-        <div style="text-align: right">
-          <button
-            v-tippy
-            title="Очистить"
-            class="btn btn-blue-nb nbr"
+          <FormulateInput
+            v-model="editCompanyTitle"
+            type="text"
+            validation-name="Полное наименование"
+            error-behavior="live"
+            label="Полное наименование"
+            required
+            validation="required:trim"
+          />
+          <FormulateInput
+            v-model="editCompanyShortTitle"
+            type="text"
+            label="Сокращенное наименование"
+          />
+          <FormulateInput
+            v-model="editCompanyLegalAddress"
+            type="text"
+            name="legalAddress"
+            label="Юридический адрес"
+          />
+          <FormulateInput
+            v-model="editCompanyFactAddress"
+            type="text"
+            label="Фактический адрес"
+          />
+          <FormulateInput
+            v-model="editCompanyInn"
+            type="text"
+            maxlength="12"
+            validation-name="ИНН"
+            error-behavior="live"
+            label="ИНН"
+            required
+            validation="required:trim|number|"
+            inputmode="numeric"
+            pattern="[0-9]*"
+          />
+          <FormulateInput
+            v-model="editCompanyOgrn"
+            type="text"
+            maxlength="13"
+            label="ОГРН"
+            validation-name="ОГРН"
+            error-behavior="live"
+            validation="number"
+            inputmode="numeric"
+            pattern="[0-9]*"
+          />
+          <FormulateInput
+            v-model="editCompanyKpp"
+            type="text"
+            maxlength="9"
+            label="КПП"
+            validation-name="ОГРН"
+            error-behavior="live"
+            validation="number"
+            inputmode="numeric"
+            pattern="[0-9]*"
+          />
+          <FormulateInput
+            v-model="editCompanyBik"
+            type="text"
+            maxlength="9"
+            label="БИК"
+            validation-name="ОГРН"
+            error-behavior="live"
+            validation="number"
+            inputmode="numeric"
+            pattern="[0-9]*"
+          />
+          <label class="labelcon">Договор</label>
+          <Treeselect
+            v-model="editCompanyContractId"
+            :options="contractList.data"
+            :clearable="false"
+            style="margin-bottom: 10px"
+          />
+          <FormulateInput
+            type="button"
+            label="Очистить"
             @click="clearEditCompany"
-          >
-            Очистить
-          </button>
-          <button
-            v-tippy
-            title="Сохранить"
-            class="btn btn-blue-nb nbr"
-            style="float: right"
-            @click="updateCompany"
-          >
-            Сохранить
-          </button>
-        </div>
+          />
+          <FormulateInput
+            type="submit"
+            label="Сохранить"
+          />
+        </FormulateForm>
       </div>
     </div>
   </div>
@@ -194,11 +202,7 @@ export default {
       this.contractList = await this.$api('get-contract-list');
     },
     async updateCompany() {
-      if (!this.editCompanyTitle) {
-        this.$root.$emit('msg', 'error', 'Не заполнено название');
-      } else if (this.editCompanyContractId === -1) {
-        this.$root.$emit('msg', 'error', 'Не выбран договор');
-      } else if (this.editCompanyId === -1 && this.dataCompanyList.find((company) => company.title === this.editCompanyTitle)) {
+      if (this.dataCompanyList.find((company) => company.title === this.editCompanyTitle) && ) {
         this.$root.$emit('msg', 'error', 'Такая компания уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
@@ -252,9 +256,6 @@ export default {
       this.editCompanyBik = '';
       this.editCompanyContractId = -1;
     },
-    getOnlyNumber(event, vModel) {
-      this[vModel] = event.target.value.replace(/[^0-9.]/g, '');
-    },
   },
 };
 </script>
@@ -266,16 +267,15 @@ export default {
   flex-basis: 350px;
   flex-grow: 1;
   border-radius: 4px;
-  max-height: 627px;
+  max-height: 723px;
 }
-
 .main {
   display: flex;
   flex-wrap: wrap;
 }
 .scroll {
   overflow-y: auto;
-  max-height: 523px;
+  max-height: 619px;
 }
 .title {
   white-space: nowrap;
@@ -287,10 +287,18 @@ export default {
   margin-bottom: 0;
   table-layout: fixed;
 }
-label {
-  margin-left: 12px;
+::v-deep .formulate-input {
+  margin-bottom: 5px;
+}
+
+::v-deep .formulate-input .formulate-input-element {
+    max-width: 100%;
 }
 .border {
   border: 1px solid #ddd;
+}
+.labelcon {
+  font-size: 0.9em;
+  font-weight: 600;
 }
 </style>
