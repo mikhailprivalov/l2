@@ -372,8 +372,7 @@
           </div>
           <div class="row">
             <div
-              class="col-xs-6"
-              style="padding-right: 0"
+              class="col-xs-4 right-padding"
             >
               <div
                 class="input-group"
@@ -384,8 +383,26 @@
                   v-model.trim="user.snils"
                   class="form-control"
                   :class="!snilsValid && 'has-error-field'"
-                  placeholder="СНИЛС в формате 12345678912"
+                  placeholder="в формате 12345678912"
                 >
+              </div>
+            </div>
+            <div
+              class="col-xs-2 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <label
+                  class="input-group-addon"
+                  style="height: 34px; text-align: left"
+                >
+                  <input
+                    v-model="user.show_infomat"
+                    type="checkbox"
+                  > На инфомат
+                </label>
               </div>
             </div>
             <div
@@ -816,6 +833,7 @@ export default {
         rmis_service_id_time_table: '',
         sendPassword: false,
         external_access: false,
+        show_infomat: false,
         date_stop_external_access: '',
         resource_schedule: [],
         notControlAnketa: false,

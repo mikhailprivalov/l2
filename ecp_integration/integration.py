@@ -125,6 +125,15 @@ def search_patient_ecp_by_person_id(person_id):
 
 def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, hospital_id):
     doctors = get_doctors_rmis_location_by_research(research_pk, hospital_id)
+    current_date = datetime.datetime.strftime(current_time(only_date=True), "%Y-%m-%d")
+    if date_start < current_date:
+        date_start = current_date
+    result = doctors_has_free_date(doctors, date_start, date_end)
+
+    return result
+
+
+def doctors_has_free_date(doctors, date_start, date_end):
     doctors_has_free_date = {}
     unique_date = []
     for d in doctors:
@@ -132,11 +141,11 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
         if "@R" in d.rmis_location:
             key_time = "TimeTableResource_begTime"
             rmis_location_resource = d.rmis_location[:-2]
-            date_start = f"{date_start} 08:00:00"
-            date_end = f"{date_end} 23:00:00"
+            date_start_ch = f"{date_start} 08:00:00"
+            date_end_ch = f"{date_end} 23:00:00"
             req_result = make_request_get(
                 "TimeTableResource/TimeTableResourceFreeDateTime",
-                query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start}&TimeTableResource_end={date_end}",
+                query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start_ch}&TimeTableResource_end={date_end_ch}",
                 sess_id=sess_id,
             )
         else:

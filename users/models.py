@@ -26,6 +26,7 @@ class Speciality(models.Model):
     spec_type = models.SmallIntegerField(choices=SPEC_TYPES, help_text='Тип специальности', default=0)
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    show_infomat = models.BooleanField(default=False, blank=True, help_text='Выводить на инфомат')
 
     def __str__(self):
         return self.title
@@ -102,6 +103,7 @@ class DoctorProfile(models.Model):
     disabled_statistic_reports = models.CharField(max_length=255, help_text='Отключить доступ к статистике категории-отчету ч/з запятую', blank=True, default="")
     disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещеные источники финансирвоания')
     external_access = models.BooleanField(default=False, blank=True, help_text='Разрешен внешний доступ')
+    show_infomat = models.BooleanField(default=False, blank=True, help_text='Выводить на инфомат')
     date_stop_external_access = models.DateField(help_text='Окончание внешнего доступа', db_index=True, default=None, blank=True, null=True)
     district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
     not_control_anketa = models.BooleanField(default=False, blank=True, help_text='Не контролировать заполнение Анкет')
