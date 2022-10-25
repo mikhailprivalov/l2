@@ -1481,7 +1481,10 @@ def user_save_view(request):
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
     snils = ud.get("snils").strip() or ''
-    cabinet = ud.get("cabinet").strip() or ''
+    try:
+        cabinet = ud.get("cabinet").strip()
+    except AttributeError:
+        cabinet = ''
     email = ud.get("email").strip() or None
     position = ud.get("position", -1)
     district = ud.get("district", -1)
