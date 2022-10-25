@@ -318,8 +318,16 @@
               </div>
               <div
                 v-else-if="active_type===6"
-                class="button-td-inner"
+                class="button-td-inner has_pacs"
               >
+                <button
+                  v-tippy
+                  class="btn btn-blue-nb"
+                  title="Удалить запись"
+                  @click="cancel_talon(row.timeTable_id)"
+                >
+                  Х
+                </button>
                 <button
                   class="btn btn-blue-nb"
                   @click="print_talon(row.pk, patient_pk, row.date, row.rmis_location, row.researches, 'P80',
@@ -551,6 +559,20 @@ export default {
     },
     async load_history_safe() {
       await this.load_history_debounced(true);
+    },
+    async cancel_talon(slotId) {
+      try {
+        await this.$dialog.confirm('Подтвердите удаление записи');
+      } catch (e) {
+        return;
+      }
+      const { result } = await this.$api('/ecp/cancel-slot', { slotId });
+      if (result) {
+        this.$root.$emit('msg', 'ok', 'Запись отменена');
+      } else {
+        this.$root.$emit('msg', 'warning', 'Не удалось удалить запись');
+      }
+      this.load_history_safe();
     },
     async load_history_safe_fast() {
       await this.load_history(true);

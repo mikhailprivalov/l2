@@ -326,6 +326,7 @@ def directions_history(request):
                 'person_contract_dirs': "",
                 'rmis_location': i["rmis_location"],
                 'type_slot': i["type_slot"],
+                'timeTable_id': i['TimeTable_id'],
             }
             for i in patient_time_table
         ]
