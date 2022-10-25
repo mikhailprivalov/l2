@@ -228,7 +228,7 @@ def get_ecp_time_table_list_patient(patient_ecp_id):
     if len(result_tt) > 0:
         return [
             {
-                "date": normalize_dash_date(i['TimeTable_begTime'].split(" ")[0])[:8],
+                "date": normalize_dash_date(i['TimeTable_begTime'].split(" ")[0], short_year=True),
                 "time": i['TimeTable_begTime'].split(" ")[1][:5],
                 "Post_name": i['Post_name'],
                 "TimeTable_id": i['TimeTable_id'],
@@ -257,9 +257,10 @@ def get_ecp_evn_direction(patient_ecp_id):
                 if len(req_result_resource['data']) > 0:
                     date_time_resource = req_result_resource['data'][0]['TimeTableResource_begTime']
                     if date_time_resource >= end_date:
+                        print(date_time_resource.split(" ")[0])
                         direction_time_table.append(
                             {
-                                "date": normalize_dash_date(date_time_resource.split(" ")[0])[:8],
+                                "date": normalize_dash_date(date_time_resource.split(" ")[0], short_year=True),
                                 "time": date_time_resource.split(" ")[1][:5],
                                 "Post_name": i['Resource_Name'],
                                 "TimeTable_id": i['TimeTableResource_id'],
@@ -269,3 +270,11 @@ def get_ecp_evn_direction(patient_ecp_id):
                             }
                         )
     return direction_time_table
+
+
+def cancel_ecp_patient_record(time_table_id, reason_cancel):
+    sess_id = request_get_sess_id()
+    del_result = make_request_get("TimeTable", query=f"Sess_id={sess_id}&TimeTable_id={time_table_id}&TimeTableSource=Graf&FailCause={reason_cancel}", sess_id=sess_id, method="DELETE")
+    if del_result.get("error_code") == 0:
+        return True
+    return False
