@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from clients.models import Card
-from ecp_integration.integration import get_doctors_ecp_free_dates_by_research, get_doctor_ecp_free_slots_by_date, register_patient_ecp_slot
+from ecp_integration.integration import get_doctors_ecp_free_dates_by_research, get_doctor_ecp_free_slots_by_date, register_patient_ecp_slot, cancel_ecp_patient_record
 
 
 @login_required
@@ -45,3 +45,11 @@ def fill_slot(request):
     r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
 
     return JsonResponse(r)
+
+
+@login_required
+def cancel_slot(request):
+    request_data = json.loads(request.body)
+    slot_id = request_data['slotId']
+    result = cancel_ecp_patient_record(slot_id)
+    return JsonResponse({"result": result})
