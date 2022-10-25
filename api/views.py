@@ -1482,7 +1482,7 @@ def user_save_view(request):
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
     snils = ud.get("snils").strip() or ''
     try:
-        cabinet = ud.get("cabinet").strip()
+        cabinet = (ud.get("cabinet") or "").strip()
     except AttributeError:
         cabinet = ''
     email = ud.get("email").strip() or None
