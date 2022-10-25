@@ -51,7 +51,7 @@
     </div>
     <div class="box card-1 card-no-hover">
       <h5 class="text-center">
-        {{ editCompanyId === -1 ? 'Добавление компании' : 'Редактирование компании' }}
+        {{ editorCompany.id ? 'Редактирование компании' : 'Добавление компании' }}
       </h5>
       <div>
         <FormulateForm
@@ -193,23 +193,12 @@ export default {
       this.contractList = await this.$api('get-contract-list');
     },
     async updateCompany() {
-      if (this.dataCompanyList.find((company) => company.title === this.editCompanyTitle
-        || company.inn === this.editCompanyInn)) {
+      if (this.dataCompanyList.find((company) => company.title === this.editorCompany.title
+        || (this.editorCompany.id == null && company.inn === this.editorCompany.inn))) {
         this.$root.$emit('msg', 'error', 'Такая компания уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok } = await this.$api('update-company', {
-          id: this.editCompanyId,
-          title: this.editCompanyTitle,
-          shortTitle: this.editCompanyShortTitle,
-          legalAddress: this.editCompanyLegalAddress,
-          factAddress: this.editCompanyFactAddress,
-          inn: this.editCompanyInn,
-          ogrn: this.editCompanyOgrn,
-          kpp: this.editCompanyKpp,
-          bik: this.editCompanyBik,
-          contractId: this.editCompanyContractId,
-        });
+        const { ok } = await this.$api('update-company', this.editorCompany);
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
@@ -222,22 +211,13 @@ export default {
     },
     async editCompany(company) {
       await this.$store.dispatch(actions.INC_LOADING);
-      this.currentCompany = await this.$api('get-current-company', { id: company.id });
+      this.currentCompany = await this.$api('get-company', { id: company.id });
       await this.$store.dispatch(actions.DEC_LOADING);
       this.dataCurrentCompany = this.currentCompany.data;
       this.editorCompany = this.dataCurrentCompany;
     },
     clearEditCompany() {
-      this.editCompanyId = -1;
-      this.editCompanyTitle = '';
-      this.editCompanyShortTitle = '';
-      this.editCompanyLegalAddress = '';
-      this.editCompanyFactAddress = '';
-      this.editCompanyInn = '';
-      this.editCompanyOgrn = '';
-      this.editCompanyKpp = '';
-      this.editCompanyBik = '';
-      this.editCompanyContractId = -1;
+      this.editorCompany = {};
     },
   },
 };
