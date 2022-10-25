@@ -7,5 +7,4 @@ urlpatterns = [
     path('available-slots', views.get_available_slots),
     path('fill-slot', views.fill_slot),
     path('cancel-slot', views.cancel_slot),
-
 ]
