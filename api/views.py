@@ -2547,6 +2547,8 @@ def get_current_company(request):
     request_data = json.loads(request.body)
     current_company = Company.objects.get(pk=request_data["id"])
     company_data = {
+        "id": current_company.pk,
+        "title": current_company.title,
         "short_title": current_company.short_title,
         "legal_address": current_company.legal_address,
         "fact_address": current_company.fact_address,

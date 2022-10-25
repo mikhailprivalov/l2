@@ -55,10 +55,11 @@
       </h5>
       <div>
         <FormulateForm
+          v-model="editorCompany"
           @submit="updateCompany"
         >
           <FormulateInput
-            v-model="editCompanyTitle"
+            name="title"
             type="text"
             validation-name="Полное наименование"
             error-behavior="live"
@@ -67,23 +68,22 @@
             validation="required:trim"
           />
           <FormulateInput
-            v-model="editCompanyShortTitle"
+            name="shortTitle"
             type="text"
             label="Сокращенное наименование"
           />
           <FormulateInput
-            v-model="editCompanyLegalAddress"
-            type="text"
             name="legalAddress"
+            type="text"
             label="Юридический адрес"
           />
           <FormulateInput
-            v-model="editCompanyFactAddress"
+            name="factAddress"
             type="text"
             label="Фактический адрес"
           />
           <FormulateInput
-            v-model="editCompanyInn"
+            name="inn"
             type="text"
             maxlength="12"
             validation-name="ИНН"
@@ -95,7 +95,7 @@
             pattern="[0-9]*"
           />
           <FormulateInput
-            v-model="editCompanyOgrn"
+            name="ogrn"
             type="text"
             maxlength="13"
             label="ОГРН"
@@ -106,18 +106,18 @@
             pattern="[0-9]*"
           />
           <FormulateInput
-            v-model="editCompanyKpp"
+            name="kpp"
             type="text"
             maxlength="9"
             label="КПП"
-            validation-name="ОГРН"
+            validation-name="КПП"
             error-behavior="live"
             validation="number"
             inputmode="numeric"
             pattern="[0-9]*"
           />
           <FormulateInput
-            v-model="editCompanyBik"
+            name="bik"
             type="text"
             maxlength="9"
             label="БИК"
@@ -129,7 +129,7 @@
           />
           <label class="labelcon">Договор</label>
           <Treeselect
-            v-model="editCompanyContractId"
+            v-model="editorCompany.contract_id"
             :options="contractList.data"
             :clearable="false"
             style="margin-bottom: 10px"
@@ -167,16 +167,7 @@ export default {
       search: '',
       currentCompany: {},
       dataCurrentCompany: {},
-      editCompanyId: -1,
-      editCompanyTitle: '',
-      editCompanyShortTitle: '',
-      editCompanyLegalAddress: '',
-      editCompanyFactAddress: '',
-      editCompanyInn: '',
-      editCompanyOgrn: '',
-      editCompanyKpp: '',
-      editCompanyBik: '',
-      editCompanyContractId: -1,
+      editorCompany: {},
     };
   },
   computed: {
@@ -234,16 +225,7 @@ export default {
       this.currentCompany = await this.$api('get-current-company', { id: company.id });
       await this.$store.dispatch(actions.DEC_LOADING);
       this.dataCurrentCompany = this.currentCompany.data;
-      this.editCompanyId = company.id;
-      this.editCompanyTitle = company.title;
-      this.editCompanyShortTitle = this.dataCurrentCompany.short_title;
-      this.editCompanyLegalAddress = this.dataCurrentCompany.legal_address;
-      this.editCompanyFactAddress = this.dataCurrentCompany.fact_address;
-      this.editCompanyInn = this.dataCurrentCompany.inn;
-      this.editCompanyOgrn = this.dataCurrentCompany.ogrn;
-      this.editCompanyKpp = this.dataCurrentCompany.kpp;
-      this.editCompanyBik = this.dataCurrentCompany.bik;
-      this.editCompanyContractId = this.dataCurrentCompany.contract_id;
+      this.editorCompany = this.dataCurrentCompany;
     },
     clearEditCompany() {
       this.editCompanyId = -1;
