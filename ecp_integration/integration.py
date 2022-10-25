@@ -257,7 +257,6 @@ def get_ecp_evn_direction(patient_ecp_id):
                 if len(req_result_resource['data']) > 0:
                     date_time_resource = req_result_resource['data'][0]['TimeTableResource_begTime']
                     if date_time_resource >= end_date:
-                        print(date_time_resource.split(" ")[0])
                         direction_time_table.append(
                             {
                                 "date": normalize_dash_date(date_time_resource.split(" ")[0], short_year=True),
