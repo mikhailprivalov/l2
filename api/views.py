@@ -2556,7 +2556,7 @@ def get_current_company(request):
         "ogrn": current_company.ogrn,
         "kpp": current_company.kpp,
         "bik": current_company.bik,
-        "contract_id": current_company.contract.pk,
+        "contract_id": current_company.contract_id,
     }
     return JsonResponse({"data": company_data})
 
