@@ -2523,9 +2523,8 @@ def get_company_list(request):
             "id": company.pk,
             "title": company.title,
         }
-        for company in Company.objects.filter(active_status=True)
+        for company in Company.objects.filter(active_status=True).order_by('title')
     ]
-    company_data = sorted(company_data, key=lambda company: company["title"])
     return JsonResponse({"data": company_data})
 
 
@@ -2537,9 +2536,8 @@ def get_contract_list(request):
             "id": contract.pk,
             "label": contract.title,
         }
-        for contract in Contract.objects.filter(active_status=True)
+        for contract in Contract.objects.filter(active_status=True).order_by('title')
     ]
-    contract_data = sorted(contract_data, key=lambda contract: contract["label"])
     return JsonResponse({"data": contract_data})
 
 

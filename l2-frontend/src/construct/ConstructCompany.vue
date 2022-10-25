@@ -202,7 +202,8 @@ export default {
       this.contractList = await this.$api('get-contract-list');
     },
     async updateCompany() {
-      if (this.dataCompanyList.find((company) => company.title === this.editCompanyTitle) && ) {
+      if (this.dataCompanyList.find((company) => company.title === this.editCompanyTitle
+        || company.inn === this.editCompanyInn)) {
         this.$root.$emit('msg', 'error', 'Такая компания уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
