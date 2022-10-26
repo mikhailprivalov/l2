@@ -127,22 +127,24 @@
             inputmode="numeric"
             pattern="[0-9]*"
           />
-          <label class="labelcon">Договор</label>
+          <label style="font-size: 0.9em; font-weight: 600">Договор</label>
           <Treeselect
-            v-model="editorCompany.contract_id"
+            v-model="editorCompany.contractId"
             :options="contractList.data"
             :clearable="false"
             style="margin-bottom: 10px"
           />
-          <FormulateInput
-            type="button"
-            label="Очистить"
-            @click="clearEditCompany"
-          />
-          <FormulateInput
-            type="submit"
-            label="Сохранить"
-          />
+          <div class="button">
+            <FormulateInput
+              type="button"
+              label="Очистить"
+              @click="clearEditCompany"
+            />
+            <FormulateInput
+              type="submit"
+              label="Сохранить"
+            />
+          </div>
         </FormulateForm>
       </div>
     </div>
@@ -194,24 +196,24 @@ export default {
     },
     async updateCompany() {
       if (this.dataCompanyList.find((company) => company.title === this.editorCompany.title
-        || (this.editorCompany.id == null && company.inn === this.editorCompany.inn))) {
-        this.$root.$emit('msg', 'error', 'Такая компания уже есть');
+        && company.id !== this.editorCompany.id)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok } = await this.$api('update-company', this.editorCompany);
+        const { ok, message } = await this.$api('update-company', this.editorCompany);
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
           await this.getCompanyList();
           this.clearEditCompany();
         } else {
-          this.$root.$emit('msg', 'error', 'Ошибка');
+          this.$root.$emit('msg', 'error', message);
         }
       }
     },
     async editCompany(company) {
       await this.$store.dispatch(actions.INC_LOADING);
-      this.currentCompany = await this.$api('get-company', { id: company.id });
+      this.currentCompany = await this.$api('get-company', company, 'id');
       await this.$store.dispatch(actions.DEC_LOADING);
       this.dataCurrentCompany = this.currentCompany.data;
       this.editorCompany = this.dataCurrentCompany;
@@ -230,7 +232,7 @@ export default {
   flex-basis: 350px;
   flex-grow: 1;
   border-radius: 4px;
-  max-height: 723px;
+  max-height: 600px;
 }
 .main {
   display: flex;
@@ -238,7 +240,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  max-height: 619px;
+  max-height: 496px;
 }
 .title {
   white-space: nowrap;
@@ -253,15 +255,15 @@ export default {
 ::v-deep .formulate-input {
   margin-bottom: 5px;
 }
-
-::v-deep .formulate-input .formulate-input-element {
+::v-deep .formulate-input-element {
     max-width: 100%;
 }
 .border {
   border: 1px solid #ddd;
 }
-.labelcon {
-  font-size: 0.9em;
-  font-weight: 600;
+.button {
+  display: flex;
+  justify-content: end;
+
 }
 </style>

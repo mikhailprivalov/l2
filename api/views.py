@@ -79,7 +79,6 @@ from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_res
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
-
 logger = logging.getLogger("API")
 
 
@@ -2556,7 +2555,7 @@ def get_company(request):
         "ogrn": current_company.ogrn,
         "kpp": current_company.kpp,
         "bik": current_company.bik,
-        "contract_id": current_company.contract_id,
+        "contractId": current_company.contract_id,
     }
     return JsonResponse({"data": company_data})
 
@@ -2565,17 +2564,68 @@ def get_company(request):
 @group_required('Конструктор: Настройка организации')
 def update_company(request):
     request_data = json.loads(request.body)
-    if request_data["id"] == -1:
+    if request_data.get('id'):
+        company_data = Company.objects.get(pk=request_data["id"])
+        if Company.objects.filter(title=request_data["title"]).exclude(pk=request_data["id"]):
+             return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+        elif Company.objects.filter(inn=request_data["inn"]).exclude(pk=request_data["id"]):
+             return JsonResponse({"ok": False, "message": "Такой ИНН уже есть"})
+        old_company_data = {
+            "pk": company_data.pk,
+            "title": company_data.title,
+            "short_title": company_data.short_title,
+            "legal_address": company_data.legal_address,
+            "fact_address": company_data.fact_address,
+            "inn": company_data.inn,
+            "ogrn": company_data.ogrn,
+            "kpp": company_data.kpp,
+            "bik": company_data.bik,
+            "contract_id": company_data.contract_id,
+        }
+        company_data.title = request_data["title"]
+        company_data.short_title = request_data["shortTitle"]
+        company_data.legal_address = request_data["legalAddress"]
+        company_data.fact_address = request_data["factAddress"]
+        company_data.inn = request_data["inn"]
+        company_data.ogrn = request_data["ogrn"]
+        company_data.kpp = request_data["kpp"]
+        company_data.bik = request_data["bik"]
+        company_data.contract_id = request_data.get("contractId") or ''
+        company_data.save()
+        new_company_data = {
+            "pk": company_data.pk,
+            "title": company_data.title,
+            "short_title": company_data.short_title,
+            "legal_address": company_data.legal_address,
+            "fact_address": company_data.fact_address,
+            "inn": company_data.inn,
+            "ogrn": company_data.ogrn,
+            "kpp": company_data.kpp,
+            "bik": company_data.bik,
+            "contract_id": company_data.contract_id,
+        }
+        Log.log(
+            company_data.pk,
+            130002,
+            request.user.doctorprofile,
+            {"old_company_data": old_company_data, "new_company_data": new_company_data},
+        )
+        return JsonResponse({"ok": True})
+    else:
+        if Company.objects.filter(title=request_data["title"]):
+            return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+        elif Company.objects.filter(inn=request_data["inn"]):
+            return JsonResponse({"ok": False, "message": "Такой ИНН уже есть"})
         company_data = Company(
             title=request_data["title"],
-            short_title=request_data["shortTitle"],
-            legal_address=request_data["legalAddress"],
-            fact_address=request_data["factAddress"],
+            short_title=request_data.get("shortTitle") or '',
+            legal_address=request_data.get("legalAddress") or '',
+            fact_address=request_data.get("factAddress") or '',
             inn=request_data["inn"],
-            ogrn=request_data["ogrn"],
-            kpp=request_data["kpp"],
-            bik=request_data["bik"],
-            contract_id=request_data["contractId"],
+            ogrn=request_data.get("ogrn") or '',
+            kpp=request_data.get("kpp") or '',
+            bik=request_data.get("bik") or '',
+            contract_id=request_data.get("contractId") or '',
         )
         company_data.save()
         Log.log(
@@ -2592,50 +2642,7 @@ def update_company(request):
                 "ogrn": company_data.ogrn,
                 "kpp": company_data.kpp,
                 "bik": company_data.bik,
-                "contract_id": company_data.contract.pk,
+                "contract_id": company_data.contract_id,
             },
-        )
-        return JsonResponse({'ok': True})
-    else:
-        company_data = Company.objects.get(pk=request_data["id"])
-        old_company_data = {
-            "pk": company_data.pk,
-            "title": company_data.title,
-            "short_title": company_data.short_title,
-            "legal_address": company_data.legal_address,
-            "fact_address": company_data.fact_address,
-            "inn": company_data.inn,
-            "ogrn": company_data.ogrn,
-            "kpp": company_data.kpp,
-            "bik": company_data.bik,
-            "contract_id": company_data.contract.pk,
-        }
-        company_data.title = request_data["title"]
-        company_data.short_title = request_data["shortTitle"]
-        company_data.legal_address = request_data["legalAddress"]
-        company_data.fact_address = request_data["factAddress"]
-        company_data.inn = request_data["inn"]
-        company_data.ogrn = request_data["ogrn"]
-        company_data.kpp = request_data["kpp"]
-        company_data.bik = request_data["bik"]
-        company_data.contract_id = request_data["contractId"]
-        company_data.save()
-        new_company_data = {
-            "pk": company_data.pk,
-            "title": company_data.title,
-            "short_title": company_data.short_title,
-            "legal_address": company_data.legal_address,
-            "fact_address": company_data.fact_address,
-            "inn": company_data.inn,
-            "ogrn": company_data.ogrn,
-            "kpp": company_data.kpp,
-            "bik": company_data.bik,
-            "contract_id": company_data.contract.pk,
-        }
-        Log.log(
-            company_data.pk,
-            130002,
-            request.user.doctorprofile,
-            {"old_company_data": old_company_data, "new_company_data": new_company_data},
         )
         return JsonResponse({'ok': True})
