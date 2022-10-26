@@ -2565,11 +2565,11 @@ def get_company(request):
 def update_company(request):
     request_data = json.loads(request.body)
     if request_data.get('id'):
-        company_data = Company.objects.get(pk=request_data["id"])
         if Company.objects.filter(title=request_data["title"]).exclude(pk=request_data["id"]):
-             return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+            return JsonResponse({"ok": False, "message": "Такое название уже есть"})
         elif Company.objects.filter(inn=request_data["inn"]).exclude(pk=request_data["id"]):
-             return JsonResponse({"ok": False, "message": "Такой ИНН уже есть"})
+            return JsonResponse({"ok": False, "message": "Такой ИНН уже есть"})
+        company_data = Company.objects.get(pk=request_data["id"])
         old_company_data = {
             "pk": company_data.pk,
             "title": company_data.title,
