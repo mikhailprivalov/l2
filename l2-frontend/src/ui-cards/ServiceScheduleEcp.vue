@@ -304,8 +304,7 @@ export default {
   }
 }
 .message_age_limit {
-  color: red;
-  padding-left: 10px;
+  float: right;
 }
 
 .unavailableDate {

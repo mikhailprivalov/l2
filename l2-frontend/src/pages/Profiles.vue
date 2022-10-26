@@ -690,7 +690,10 @@
               </button>
             </div>
           </div>
-          <div class="row">
+          <div
+            v-if="modules.limit_age_patient_registration"
+            class="row"
+          >
             <div
               class="col-xs-3"
               style="padding-right: 0"

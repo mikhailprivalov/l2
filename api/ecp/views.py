@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from clients.models import Card
-from clients.sql_func import get_individual_age
 from ecp_integration.integration import get_doctors_ecp_free_dates_by_research, get_doctor_ecp_free_slots_by_date, register_patient_ecp_slot, cancel_ecp_patient_record
 from users.models import DoctorProfile
 from slog.models import Log
@@ -46,13 +45,9 @@ def fill_slot(request):
     if not ecp_id:
         return JsonResponse({"register": False, "message": "Пациент не найден в ЕЦП"})
 
-    individual_pk = card.individual.pk
     doctor_data = DoctorProfile.objects.filter(rmis_location=doctor_pk).first()
-    age_target_patient = get_individual_age(date, individual_pk)
-    age_month = -1
-    for k in age_target_patient:
-        age_month = k.age_year * 12 + k.age_month
-        break
+    age_target_patient = card.individual.age(days_monthes_years=True, target_date=date)
+    age_month = age_target_patient[2] * 12 + age_target_patient[1]
     if doctor_data.max_age_patient_registration != -1 and (age_month > doctor_data.max_age_patient_registration):
         return JsonResponse({"register": False, "message": "Запись ограничена по возрасту до "})
     r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
