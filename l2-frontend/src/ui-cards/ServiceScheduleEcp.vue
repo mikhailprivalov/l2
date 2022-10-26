@@ -46,7 +46,7 @@
       class="resource"
     >
       <div class="resource-title">
-        Доступное время
+        Доступное время <span class="message_age_limit">{{ show_limit_message }}</span>
       </div>
       <div class="resource-slots">
         <div
@@ -134,6 +134,9 @@ export default {
     },
     serviceTitle() {
       return this.$store.getters.researches_obj[this.servicePk]?.title;
+    },
+    show_limit_message() {
+      return this.doctorsAtDate[this.activeDoctor].message_age_limit;
     },
   },
   watch: {
@@ -299,6 +302,10 @@ export default {
       background-color: rgba(#048493, 0.65);
     }
   }
+}
+.message_age_limit {
+  color: red;
+  padding-left: 10px;
 }
 
 .unavailableDate {

@@ -6,11 +6,8 @@ from django.http import JsonResponse
 from clients.models import Card
 from clients.sql_func import get_individual_age
 from ecp_integration.integration import get_doctors_ecp_free_dates_by_research, get_doctor_ecp_free_slots_by_date, register_patient_ecp_slot, cancel_ecp_patient_record
-<<<<<<< HEAD
 from users.models import DoctorProfile
-=======
 from slog.models import Log
->>>>>>> develop
 
 
 @login_required
