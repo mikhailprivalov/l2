@@ -127,3 +127,20 @@ class Company(models.Model):
     class Meta:
         verbose_name = 'Компания'
         verbose_name_plural = 'Компании'
+
+    @staticmethod
+    def as_json(company):
+        json_data = {
+            "pk": company.pk,
+            "title": company.title,
+            "shortTitle": company.short_title,
+            "legalAddress": company.legal_address,
+            "factAddress": company.fact_address,
+            "inn": company.inn,
+            "ogrn": company.ogrn,
+            "kpp": company.kpp,
+            "bik": company.bik,
+            "contractId": company.contract_id,
+        }
+        return json_data
+

@@ -138,10 +138,13 @@
             <FormulateInput
               type="button"
               label="Очистить"
+              style="border-radius: 0"
               @click="clearEditCompany"
             />
             <FormulateInput
               type="submit"
+              class="nbr"
+              style="border-radius: 0"
               label="Сохранить"
             />
           </div>
@@ -213,7 +216,7 @@ export default {
     },
     async editCompany(company) {
       await this.$store.dispatch(actions.INC_LOADING);
-      this.currentCompany = await this.$api('get-company', company, 'id');
+      this.currentCompany = await this.$api('get-company', company, 'pk');
       await this.$store.dispatch(actions.DEC_LOADING);
       this.dataCurrentCompany = this.currentCompany.data;
       this.editorCompany = this.dataCurrentCompany;
@@ -232,7 +235,7 @@ export default {
   flex-basis: 350px;
   flex-grow: 1;
   border-radius: 4px;
-  max-height: 600px;
+  max-height: 682px;
 }
 .main {
   display: flex;
@@ -240,7 +243,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  max-height: 496px;
+  max-height: 578px;
 }
 .title {
   white-space: nowrap;
@@ -263,7 +266,6 @@ export default {
 }
 .button {
   display: flex;
-  justify-content: end;
-
+  justify-content: flex-end;
 }
 </style>
