@@ -2599,8 +2599,6 @@ def update_company(request):
             company_data.pk,
             130003,
             request.user.doctorprofile,
-            {
-                "company_data": Company.as_json(company_data)
-            },
+            {"company_data": Company.as_json(company_data)},
         )
         return JsonResponse({'ok': True})
