@@ -1,4 +1,3 @@
-import datetime
 import json
 
 from django.contrib.auth.decorators import login_required
@@ -7,7 +6,11 @@ from django.http import JsonResponse
 from clients.models import Card
 from clients.sql_func import get_individual_age
 from ecp_integration.integration import get_doctors_ecp_free_dates_by_research, get_doctor_ecp_free_slots_by_date, register_patient_ecp_slot, cancel_ecp_patient_record
+<<<<<<< HEAD
 from users.models import DoctorProfile
+=======
+from slog.models import Log
+>>>>>>> develop
 
 
 @login_required
@@ -63,5 +66,10 @@ def fill_slot(request):
 def cancel_slot(request):
     request_data = json.loads(request.body)
     slot_id = request_data['slotId']
+    patent_pk = request_data['patentPk']
+    rmis_location = request_data['rmisLocation']
     result = cancel_ecp_patient_record(slot_id)
+    if result:
+        card_patient = Card.objects.filter(pk=patent_pk).first()
+        Log.log(key=patent_pk, type=140001, user=request.user.doctorprofile, body={"slot_id": slot_id, "rmis_location": rmis_location, "patient": card_patient.get_fio_w_card()})
     return JsonResponse({"result": result})

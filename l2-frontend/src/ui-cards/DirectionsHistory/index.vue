@@ -324,7 +324,7 @@
                   v-tippy
                   class="btn btn-blue-nb"
                   title="Удалить запись"
-                  @click="cancel_talon(row.timeTable_id)"
+                  @click="cancel_talon(row.timeTable_id, patient_pk, row.rmis_location)"
                 >
                   Х
                 </button>
@@ -560,13 +560,13 @@ export default {
     async load_history_safe() {
       await this.load_history_debounced(true);
     },
-    async cancel_talon(slotId) {
+    async cancel_talon(slotId, patentPk, rmisLocation) {
       try {
         await this.$dialog.confirm('Подтвердите удаление записи');
       } catch (e) {
         return;
       }
-      const { result } = await this.$api('/ecp/cancel-slot', { slotId });
+      const { result } = await this.$api('/ecp/cancel-slot', { slotId, patentPk, rmisLocation });
       if (result) {
         this.$root.$emit('msg', 'ok', 'Запись отменена');
       } else {
