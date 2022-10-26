@@ -72,3 +72,21 @@ def last_results_researches_by_time_ago(client_id, researches, date_start, date_
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_individual_age(date_target, individual_pk):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT distinct on (id)  clients_individual.id,
+                date_part('year', age(timestamp %(date_target)s, clients_individual.birthday))::int as age_year,
+                date_part('month', age(timestamp %(date_target)s, clients_individual.birthday))::int as age_month 
+                from clients_individual
+                WHERE
+                clients_individual.id = %(individual_pk)s
+            """,
+            params={'individual_pk': individual_pk, 'date_target': date_target},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

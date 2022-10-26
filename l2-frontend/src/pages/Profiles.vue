@@ -690,6 +690,24 @@
               </button>
             </div>
           </div>
+          <div class="row">
+            <div
+              class="col-xs-3"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Возраст на запись (мес.)</span>
+                <input
+                  v-model="user.max_age_patient_registration"
+                  type="number"
+                  class="form-control"
+                >
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="right-bottom">

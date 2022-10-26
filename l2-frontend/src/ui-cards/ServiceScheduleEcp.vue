@@ -260,6 +260,8 @@ export default {
         slot_id: this.activeSlot,
         card_pk: this.cardId,
         type_slot: this.typeSlot,
+        doctor_pk: this.activeDoctor,
+        date: this.activeDate,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');

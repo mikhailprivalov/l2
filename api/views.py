@@ -651,6 +651,7 @@ def current_user_info(request):
             ret["email"] = doctorprofile.email or ''
             ret["doc_pk"] = doctorprofile.pk
             ret["rmis_location"] = doctorprofile.rmis_location
+            ret["max_age_patient_registration"] = doctorprofile.max_age_patient_registration
             ret["rmis_login"] = doctorprofile.rmis_login
             ret["rmis_password"] = doctorprofile.rmis_password
             ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
@@ -1399,6 +1400,7 @@ def user_view(request):
             "rmis_password": '',
             "rmis_resource_id": '',
             "doc_pk": -1,
+            "max_age_patient_registration": -1,
             "doc_code": -1,
             "rmis_employee_id": '',
             "rmis_service_id_time_table": '',
@@ -1442,6 +1444,7 @@ def user_view(request):
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
             "rmis_location": doc.rmis_location or '',
+            "max_age_patient_registration": doc.max_age_patient_registration or -1,
             "rmis_login": doc.rmis_login or '',
             "rmis_resource_id": doc.rmis_resource_id or '',
             "rmis_password": '',
@@ -1485,6 +1488,7 @@ def user_save_view(request):
     email = ud.get("email").strip() or None
     position = ud.get("position", -1)
     district = ud.get("district", -1)
+    max_age_patient_registration = ud.get("max_age_patient_registration", -1)
     send_password = ud.get("sendPassword", False)
     external_access = ud.get("external_access", False)
     not_control_anketa = ud.get("notControlAnketa", False)
@@ -1567,6 +1571,7 @@ def user_save_view(request):
             doc.patronymic = ud["patronymic"]
             doc.fio = f'{ud["family"]} {ud["name"]} {ud["patronymic"]}'
             doc.rmis_location = rmis_location
+            doc.max_age_patient_registration = max_age_patient_registration
             doc.rmis_employee_id = rmis_employee_id
             doc.rmis_service_id_time_table = rmis_service_id_time_table
             doc.personal_code = personal_code

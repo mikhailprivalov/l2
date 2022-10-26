@@ -54,7 +54,6 @@ class Individual(models.Model):
     tfoms_enp = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ENP в ТФОМС")
     time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
     ecp_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в ЕЦП")
-
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
     def first(self):
