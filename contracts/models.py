@@ -143,4 +143,3 @@ class Company(models.Model):
             "contractId": company.contract_id,
         }
         return json_data
-
