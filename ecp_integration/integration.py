@@ -155,7 +155,7 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
                 message_parts = ['не старше']
                 letter_year = "г."
                 if years > 0:
-                    if int(str(years)[-1]) > 4:
+                    if int(str(years)[-1]) > 4 or int(str(years)[-1]) == 0:
                         letter_year = "л."
                     message_parts.append(f"{years}{letter_year}")
                 if months > 0:
