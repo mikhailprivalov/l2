@@ -159,7 +159,7 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
                         letter_year = "л."
                     message_parts.append(f"{years}{letter_year}")
                 if months > 0:
-                    message_parts.append(f"{months}м")
+                    message_parts.append(f"{months}м.")
                 message = ' '.join(message_parts)
             district = d.district_title if d.district_title else ""
             doctors_has_free_date[d.rmis_location] = {
