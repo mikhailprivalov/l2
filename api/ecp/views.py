@@ -49,7 +49,7 @@ def fill_slot(request):
     age_target_patient = card.individual.age(days_monthes_years=True, target_date=date)
     age_month = age_target_patient[2] * 12 + age_target_patient[1]
     if doctor_data.max_age_patient_registration != -1 and (age_month > doctor_data.max_age_patient_registration):
-        return JsonResponse({"register": False, "message": "Запись ограничена по возрасту до "})
+        return JsonResponse({"register": False, "message": "Запись ограничена по возрасту"})
     r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
     return JsonResponse(r)
 
