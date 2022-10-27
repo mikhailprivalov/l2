@@ -157,7 +157,12 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
                 else:
                     message = f"не старше {years}г"
             district = d.district_title if d.district_title else ""
-            doctors_has_free_date[d.rmis_location] = {"fio": f"{district} {d.family} {d.name[:1]}. {d.patronymic[:1]}. {message}".strip(), "pk": d.id, "dates": [], "message_age_limit": message}
+            doctors_has_free_date[d.rmis_location] = {
+                "fio": f"{district} {d.family} {d.name[:1]}. {d.patronymic[:1]}. {message}".strip(),
+                "pk": d.id,
+                "dates": [],
+                "message_age_limit": message,
+            }
             doctors_has_free_date[d.rmis_location]["dates"] = [s[key_time][:10] for s in schedule_data]
             unique_date.extend(doctors_has_free_date[d.rmis_location]["dates"])
     return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
