@@ -249,7 +249,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  max-height: 755px;
+  max-height: 790px;
 }
 .title {
   white-space: nowrap;
