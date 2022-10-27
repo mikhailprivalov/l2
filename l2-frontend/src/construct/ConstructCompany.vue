@@ -6,7 +6,7 @@
       </h5>
       <input
         v-model.trim="search"
-        style="margin-top: 36px; padding: 0.75rem;"
+        style="margin-top: 36px; padding-left: 0.75rem;"
         class="form-control nbr"
         placeholder="Фильтр по названию..."
       >
@@ -61,7 +61,7 @@
           <FormulateInput
             name="title"
             type="text"
-            validation-name="Полное наименование"
+            validation-name=" "
             error-behavior="live"
             label="Полное наименование"
             required
@@ -86,7 +86,7 @@
             name="inn"
             type="text"
             maxlength="12"
-            validation-name="ИНН"
+            validation-name=" "
             error-behavior="live"
             label="ИНН"
             required
@@ -99,7 +99,7 @@
             type="text"
             maxlength="13"
             label="ОГРН"
-            validation-name="ОГРН"
+            validation-name=" "
             error-behavior="live"
             validation="number"
             inputmode="numeric"
@@ -110,7 +110,7 @@
             type="text"
             maxlength="9"
             label="КПП"
-            validation-name="КПП"
+            validation-name=" "
             error-behavior="live"
             validation="number"
             inputmode="numeric"
@@ -121,13 +121,13 @@
             type="text"
             maxlength="9"
             label="БИК"
-            validation-name="ОГРН"
+            validation-name=" "
             error-behavior="live"
             validation="number"
             inputmode="numeric"
             pattern="[0-9]*"
           />
-          <label style="font-size: 0.9em; font-weight: 600">Договор</label>
+          <label>Договор</label>
           <Treeselect
             v-model="editorCompany.contractId"
             :options="contractList.data"
@@ -248,7 +248,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0.75rem;
+  padding-left: 0.75rem;
 }
 .table {
   margin-bottom: 0;
@@ -257,11 +257,22 @@ export default {
 ::v-deep .formulate-input-element {
   max-width: 100%;
 }
+::v-deep .formulate-input-label {
+  padding-left: 0.75rem;
+}
+::v-deep .formulate-input-error {
+  padding-left: 0.75rem;
+}
 .border {
   border: 1px solid #ddd;
 }
 .button {
   display: flex;
   justify-content: flex-end;
+}
+label {
+  font-size: 0.9em;
+  font-weight: 600;
+  padding-left: 0.75rem;
 }
 </style>
