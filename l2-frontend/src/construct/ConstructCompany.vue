@@ -53,6 +53,9 @@
       <h5 class="text-center">
         {{ editorCompany.pk ? 'Обновить компанию' : 'Добавить компанию' }}
       </h5>
+      <h6 class="text-center">
+        {{ originTitle }}
+      </h6>
       <div>
         <FormulateForm
           v-model="editorCompany"
@@ -132,7 +135,7 @@
             v-model="editorCompany.contractId"
             :options="contractList.data"
             :clearable="false"
-            style="margin-bottom: 10px"
+            style="margin-bottom: 40px"
           />
           <div class="button">
             <FormulateInput
@@ -144,6 +147,7 @@
             <FormulateInput
               type="submit"
               class="nbr"
+              style="margin-right: 5px"
               :label="editorCompany.pk ? 'Сохранить' : 'Добавить'"
             />
           </div>
@@ -172,6 +176,7 @@ export default {
       currentCompany: {},
       dataCurrentCompany: {},
       editorCompany: {},
+      originTitle: '',
     };
   },
   computed: {
@@ -219,9 +224,11 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       this.dataCurrentCompany = this.currentCompany.data;
       this.editorCompany = this.dataCurrentCompany;
+      this.originTitle = this.dataCurrentCompany.shortTitle;
     },
     clearEditCompany() {
       this.editorCompany = {};
+      this.originTitle = '';
     },
   },
 };
@@ -234,7 +241,7 @@ export default {
   flex-basis: 350px;
   flex-grow: 1;
   border-radius: 4px;
-  height: 777px;
+  min-height: 840px;
 }
 .main {
   display: flex;
@@ -242,7 +249,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  height: 673px;
+  max-height: 755px;
 }
 .title {
   white-space: nowrap;
