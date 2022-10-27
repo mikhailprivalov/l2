@@ -6,7 +6,7 @@
       </h5>
       <input
         v-model.trim="search"
-        style="margin-top: 35px; padding: 0.75rem;"
+        style="margin-top: 36px; padding: 0.75rem;"
         class="form-control nbr"
         placeholder="Фильтр по названию..."
       >
@@ -242,7 +242,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  height: 674px;
+  height: 673px;
 }
 .title {
   white-space: nowrap;
