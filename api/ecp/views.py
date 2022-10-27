@@ -64,6 +64,10 @@ def cancel_slot(request):
     result = cancel_ecp_patient_record(slot_id, type_slot)
     if result:
         card_patient = Card.objects.filter(pk=patent_pk).first()
-        Log.log(key=patent_pk, type=140001, user=request.user.doctorprofile,
-                body={"slot_id": slot_id, "type_slot": type_slot, "rmis_location": rmis_location, "patient": card_patient.get_fio_w_card()})
+        Log.log(
+            key=patent_pk,
+            type=140001,
+            user=request.user.doctorprofile,
+            body={"slot_id": slot_id, "type_slot": type_slot, "rmis_location": rmis_location, "patient": card_patient.get_fio_w_card()},
+        )
     return JsonResponse({"result": result})
