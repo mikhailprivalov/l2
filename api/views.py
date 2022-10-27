@@ -79,6 +79,7 @@ from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_res
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
+
 logger = logging.getLogger("API")
 
 
