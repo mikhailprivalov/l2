@@ -6,8 +6,8 @@
       </h5>
       <input
         v-model.trim="search"
-        class="form-control"
-        style="margin-bottom: 20px"
+        style="margin-top: 35px; padding: 0.75rem;"
+        class="form-control nbr"
         placeholder="Фильтр по названию..."
       >
       <div class="scroll">
@@ -51,7 +51,7 @@
     </div>
     <div class="box card-1 card-no-hover">
       <h5 class="text-center">
-        {{ editorCompany.id ? 'Редактирование компании' : 'Добавление компании' }}
+        {{ editorCompany.pk ? 'Обновить компанию' : 'Добавить компанию' }}
       </h5>
       <div>
         <FormulateForm
@@ -136,16 +136,15 @@
           />
           <div class="button">
             <FormulateInput
+              style="margin-right: 5px"
               type="button"
-              label="Очистить"
-              style="border-radius: 0"
+              :label="editorCompany.pk ? 'Отменить' : 'Очистить'"
               @click="clearEditCompany"
             />
             <FormulateInput
               type="submit"
               class="nbr"
-              style="border-radius: 0"
-              label="Сохранить"
+              :label="editorCompany.pk ? 'Сохранить' : 'Добавить'"
             />
           </div>
         </FormulateForm>
@@ -235,7 +234,7 @@ export default {
   flex-basis: 350px;
   flex-grow: 1;
   border-radius: 4px;
-  max-height: 682px;
+  height: 777px;
 }
 .main {
   display: flex;
@@ -243,23 +242,20 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  max-height: 578px;
+  height: 674px;
 }
 .title {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-left: 12px;
+  padding: 0.75rem;
 }
 .table {
   margin-bottom: 0;
   table-layout: fixed;
 }
-::v-deep .formulate-input {
-  margin-bottom: 5px;
-}
 ::v-deep .formulate-input-element {
-    max-width: 100%;
+  max-width: 100%;
 }
 .border {
   border: 1px solid #ddd;
