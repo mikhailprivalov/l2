@@ -11,7 +11,8 @@ def get_doctors_rmis_location_by_research(research_pk, hosptal_id):
             name,
             patronymic,
             rmis_location,
-            cd.title
+            users_doctorprofile.max_age_patient_registration as age_limit,
+            cd.title as district_title
             FROM users_doctorprofile
             LEFT JOIN clients_district cd ON users_doctorprofile.district_group_id = cd.id
             WHERE users_doctorprofile.id IN

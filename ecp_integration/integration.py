@@ -148,7 +148,26 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
             )
         schedule_data = req_result['data']
         if len(schedule_data) > 0:
-            doctors_has_free_date[d.rmis_location] = {"fio": f"{d.family} {d.name} {d.patronymic}", "pk": d.id, "dates": []}
+            message = ""
+            if d.age_limit > -1:
+                years = d.age_limit // 12
+                months = d.age_limit % 12
+                message_parts = ['не старше']
+                letter_year = "г."
+                if years > 0:
+                    if int(str(years)[-1]) > 4 or int(str(years)[-1]) == 0:
+                        letter_year = "л."
+                    message_parts.append(f"{years}{letter_year}")
+                if months > 0:
+                    message_parts.append(f"{months}м.")
+                message = ' '.join(message_parts)
+            district = d.district_title if d.district_title else ""
+            doctors_has_free_date[d.rmis_location] = {
+                "fio": f"{district} {d.family} {d.name[:1]}. {d.patronymic[:1]}. {message}".strip(),
+                "pk": d.id,
+                "dates": [],
+                "message_age_limit": message,
+            }
             doctors_has_free_date[d.rmis_location]["dates"] = [s[key_time][:10] for s in schedule_data]
             unique_date.extend(doctors_has_free_date[d.rmis_location]["dates"])
     return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}

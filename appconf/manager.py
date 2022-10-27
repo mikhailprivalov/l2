@@ -170,6 +170,7 @@ class SettingManager:
             "auto_clinical_examination_direct": SettingManager.get("auto_clinical_examination_direct", default='false', default_type='b'),
             "legal_authenticator": SettingManager.get("legal_authenticator", default='false', default_type='b'),
             "change_password": SettingManager.get("change_password", default='false', default_type='b'),
+            "limit_age_patient_registration": SettingManager.get("limit_age_patient_registration", default='false', default_type='b'),
             "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)

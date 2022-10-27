@@ -54,7 +54,6 @@ class Individual(models.Model):
     tfoms_enp = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ENP в ТФОМС")
     time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
     ecp_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в ЕЦП")
-
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
     def first(self):
@@ -327,21 +326,25 @@ class Individual(models.Model):
         born_date = self.birthday
         return last_date.year - born_date.year - ((last_date.month, last_date.day) < (born_date.month, born_date.day))
 
-    def age(self, iss=None, days_monthes_years=False):
+    def age(self, iss=None, days_monthes_years=False, target_date=None):
         """
         Функция подсчета возраста
         """
-
-        if (
-            iss is None
-            or (not iss.tubes.exists() and not iss.time_confirmation)
-            or ((not iss.tubes.exists() or not iss.tubes.filter(time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal)
-        ):
-            today = date.today()
-        elif iss.time_confirmation and (iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
-            today = iss.time_confirmation.date()
+        if not target_date:
+            if (
+                iss is None
+                or (not iss.tubes.exists() and not iss.time_confirmation)
+                or ((not iss.tubes.exists() or not iss.tubes.filter(time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal)
+            ):
+                today = date.today()
+            elif iss.time_confirmation and (iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
+                today = iss.time_confirmation.date()
+            else:
+                today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
         else:
-            today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
+            today = target_date
+            if isinstance(today, str):
+                today = datetime.strptime(today, "%d.%m.%Y" if '.' in today else "%Y-%m-%d").date()
         born = self.birthday
         if isinstance(born, str):
             born = datetime.strptime(born, "%d.%m.%Y" if '.' in born else "%Y-%m-%d").date()
