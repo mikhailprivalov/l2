@@ -299,7 +299,7 @@ export default {
   border-radius: 0;
 }
 .scroll {
-  max-height: 60vh;
+  max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
 .sticky {
