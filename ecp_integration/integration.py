@@ -152,10 +152,12 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
             if d.age_limit > -1:
                 years = d.age_limit // 12
                 months = d.age_limit % 12
+                message_parts = ['не старше']
+                if years > 0:
+                    message_parts.append(f"{years}г")
                 if months > 0:
-                    message = f"не старше {years}г {months} мес"
-                else:
-                    message = f"не старше {years}г"
+                    message_parts.append(f"{months}м")
+                message = ' '.join(message_parts)
             district = d.district_title if d.district_title else ""
             doctors_has_free_date[d.rmis_location] = {
                 "fio": f"{district} {d.family} {d.name[:1]}. {d.patronymic[:1]}. {message}".strip(),
