@@ -108,6 +108,7 @@ class DoctorProfile(models.Model):
     signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
     last_online = models.DateTimeField(default=None, blank=True, null=True, help_text="Когда пользователь был в сети")
     cabinet = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Кабинет приема")
+    max_age_patient_registration = models.SmallIntegerField(help_text='Ограничения возраста записи указать в месяцах', default=-1)
 
     @property
     def notify_queue_key_base(self):

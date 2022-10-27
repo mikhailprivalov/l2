@@ -46,7 +46,7 @@
       class="resource"
     >
       <div class="resource-title">
-        Доступное время
+        Доступное время <span v-if="showLimitMessage" class="messageAgeLimit">{{ showLimitMessage }}</span>
       </div>
       <div class="resource-slots">
         <div
@@ -134,6 +134,9 @@ export default {
     },
     serviceTitle() {
       return this.$store.getters.researches_obj[this.servicePk]?.title;
+    },
+    showLimitMessage() {
+      return this.doctorsAtDate[this.activeDoctor].messageAgeLimit;
     },
   },
   watch: {
@@ -260,6 +263,8 @@ export default {
         slot_id: this.activeSlot,
         card_pk: this.cardId,
         type_slot: this.typeSlot,
+        doctor_pk: this.activeDoctor,
+        date: this.activeDate,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');
@@ -297,6 +302,9 @@ export default {
       background-color: rgba(#048493, 0.65);
     }
   }
+}
+.messageAgeLimit {
+  float: right;
 }
 
 .unavailableDate {
