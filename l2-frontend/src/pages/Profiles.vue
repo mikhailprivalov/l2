@@ -702,7 +702,7 @@
                 class="input-group"
                 style="width: 100%"
               >
-                <span class="input-group-addon">Возраст на запись (мес.)</span>
+                <span class="input-group-addon">Возраст на запись (не старше мес.)</span>
                 <input
                   v-model="user.max_age_patient_registration"
                   type="number"
