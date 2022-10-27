@@ -695,7 +695,7 @@
             class="row"
           >
             <div
-              class="col-xs-3"
+              class="col-xs-4"
               style="padding-right: 0"
             >
               <div
