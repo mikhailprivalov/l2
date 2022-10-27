@@ -46,7 +46,7 @@
       class="resource"
     >
       <div class="resource-title">
-        Доступное время <span class="message_age_limit">{{ show_limit_message }}</span>
+        Доступное время <span v-if="showLimitMessage" class="messageAgeLimit">{{ showLimitMessage }}</span>
       </div>
       <div class="resource-slots">
         <div
@@ -135,8 +135,8 @@ export default {
     serviceTitle() {
       return this.$store.getters.researches_obj[this.servicePk]?.title;
     },
-    show_limit_message() {
-      return this.doctorsAtDate[this.activeDoctor].message_age_limit;
+    showLimitMessage() {
+      return this.doctorsAtDate[this.activeDoctor].messageAgeLimit;
     },
   },
   watch: {
@@ -303,7 +303,7 @@ export default {
     }
   }
 }
-.message_age_limit {
+.messageAgeLimit {
   float: right;
 }
 
