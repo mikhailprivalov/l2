@@ -215,6 +215,5 @@ def get_available_slots_of_dates(research_pk, date_start, date_end, allow_cito=F
         if slotplan.slot_id in slot_plan_busy_slot_fact or slotplan.date_char in data:
             continue
         data[slotplan.date_char] = True
-    print(data)
 
     return data
