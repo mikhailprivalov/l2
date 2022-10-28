@@ -281,9 +281,17 @@ def get_ecp_evn_direction(patient_ecp_id):
     return direction_time_table
 
 
-def cancel_ecp_patient_record(time_table_id, reason_cancel=1):
+def cancel_ecp_patient_record(time_table_id, type_slot, reason_cancel=1):
     sess_id = request_get_sess_id()
-    del_result = make_request_get("TimeTable", query=f"Sess_id={sess_id}&TimeTable_id={time_table_id}&TimeTableSource=Graf&FailCause={reason_cancel}", sess_id=sess_id, method="DELETE")
-    if del_result.get("error_code") == 0:
-        return True
+    if type_slot != "resource":
+        del_result = make_request_get("TimeTable", query=f"Sess_id={sess_id}&TimeTable_id={time_table_id}&TimeTableSource=Graf&FailCause={reason_cancel}", sess_id=sess_id, method="DELETE")
+        if del_result.get("error_code") == 0:
+            return True
+    else:
+        direction_data = make_request_get("TimeTableResourceById", query=f"Sess_id={sess_id}&TimeTableResource_id={time_table_id}", sess_id=sess_id)
+        if len(direction_data['data']) > 0:
+            evn_direction_id = direction_data['data'][0].get('EvnDirection_id', '')
+            cancel_direction = make_request_get("EvnDirectionCancel", query=f"Sess_id={sess_id}&EvnDirection_id={evn_direction_id}", sess_id=sess_id, method="PUT")
+            if cancel_direction["error_code"] == 0:
+                return True
     return False
