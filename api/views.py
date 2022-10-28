@@ -2538,7 +2538,7 @@ def get_company_list(request):
 def get_contract_list(request):
     contract_data = [
         {
-            "id": contract.pk,
+            "value": contract.pk,
             "label": contract.title,
         }
         for contract in Contract.objects.filter(active_status=True).order_by('title')

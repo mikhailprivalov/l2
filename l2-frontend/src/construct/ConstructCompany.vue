@@ -6,7 +6,7 @@
       </h5>
       <input
         v-model.trim="search"
-        style="margin-top: 36px; padding-left: 0.75rem;"
+        style="margin-top: 36px; padding-left: 9px;"
         class="form-control nbr"
         placeholder="Фильтр по названию..."
       >
@@ -53,7 +53,10 @@
       <h5 class="text-center">
         {{ editorCompany.pk ? 'Обновить компанию' : 'Добавить компанию' }}
       </h5>
-      <h6 class="text-center">
+      <h6
+        v-if="editorCompany.pk"
+        class="text-center"
+      >
         {{ originTitle }}
       </h6>
       <div>
@@ -130,12 +133,11 @@
             inputmode="numeric"
             pattern="[0-9]*"
           />
-          <label>Договор</label>
-          <Treeselect
-            v-model="editorCompany.contractId"
+          <FormulateInput
+            type="select"
             :options="contractList.data"
-            :clearable="false"
-            style="margin-bottom: 40px"
+            name="contractId"
+            label="Договор"
           />
           <div class="button">
             <FormulateInput
@@ -158,7 +160,6 @@
 </template>
 
 <script lang="ts">
-import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -166,7 +167,7 @@ import * as actions from '@/store/action-types';
 
 export default {
   name: 'ConstructCompany',
-  components: { VueTippyTd, Treeselect },
+  components: { VueTippyTd },
   data() {
     return {
       companyList: {},
@@ -174,7 +175,6 @@ export default {
       contractList: {},
       search: '',
       currentCompany: {},
-      dataCurrentCompany: {},
       editorCompany: {},
       originTitle: '',
     };
@@ -211,8 +211,8 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
-          await this.getCompanyList();
           this.clearEditCompany();
+          await this.getCompanyList();
         } else {
           this.$root.$emit('msg', 'error', message);
         }
@@ -222,9 +222,8 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       this.currentCompany = await this.$api('get-company', company, 'pk');
       await this.$store.dispatch(actions.DEC_LOADING);
-      this.dataCurrentCompany = this.currentCompany.data;
-      this.editorCompany = this.dataCurrentCompany;
-      this.originTitle = this.dataCurrentCompany.shortTitle;
+      this.editorCompany = this.currentCompany.data;
+      this.originTitle = this.this.currentCompany.data.shortTitle;
     },
     clearEditCompany() {
       this.editorCompany = {};
@@ -255,7 +254,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-left: 0.75rem;
+  padding-left: 9px;
 }
 .table {
   margin-bottom: 0;
@@ -265,10 +264,10 @@ export default {
   max-width: 100%;
 }
 ::v-deep .formulate-input-label {
-  padding-left: 0.75rem;
+  padding-left: 9px;
 }
 ::v-deep .formulate-input-error {
-  padding-left: 0.75rem;
+  padding-left: 9px;
 }
 .border {
   border: 1px solid #ddd;
@@ -276,10 +275,5 @@ export default {
 .button {
   display: flex;
   justify-content: flex-end;
-}
-label {
-  font-size: 0.9em;
-  font-weight: 600;
-  padding-left: 0.75rem;
 }
 </style>
