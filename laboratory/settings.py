@@ -373,6 +373,8 @@ REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH = []
 LEGAL_AUTH_CODE_POSITION = [334, 336, 6, 4, 335]
 REMD_FIELDS_BY_TYPE_DOCUMENT = {"ConsultationProtocol_max": []}
 
+TYPE_NUMBER_SYSTEM = []
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
@@ -429,6 +431,7 @@ if ENV_SECRET_KEY:
 
 if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
+
 
 
 # db = DATABASES.get('default', {})

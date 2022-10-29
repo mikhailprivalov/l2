@@ -40,7 +40,7 @@ from utils.dates import try_parse_range
 from django.utils.module_loading import import_string
 
 from utils.matrix import transpose
-from utils.xh import save_tmp_file
+from utils.xh import save_tmp_file, translation_number_from_decimal
 
 w, h = A4
 
@@ -434,6 +434,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     c.setFont('OpenSans', 14)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
 
+    c.setFont('OpenSans', 14)
     renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
     c.setFont('OpenSans', 20)
@@ -454,12 +455,12 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + dir.history_num)
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn, "ФИО: " + dir.client.individual.fio())
+    c.setFont('OpenSans', 18)
+    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "код " + translation_number_from_decimal(int(dir.client.number)))
+    c.setFont('OpenSans', 9)
+    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn, "д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
 
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "Пол: " + dir.client.individual.sex)
-
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn, "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
-
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {} {} {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type(), " - пол:", dir.client.individual.sex))
     diagnosis = dir.diagnos.strip()[:35]
     if not dir.imported_from_rmis:
         if diagnosis != "":

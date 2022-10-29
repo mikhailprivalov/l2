@@ -1,6 +1,7 @@
 from api.directions.sql_func import get_lab_podr
 from directions.models import Issledovaniya
 from hospitals.models import Hospitals
+from laboratory.settings import TYPE_NUMBER_SYSTEM
 from podrazdeleniya.models import Podrazdeleniya
 
 
@@ -74,3 +75,15 @@ def check_type_research(pk):
 def save_tmp_file(form, filename: str):
     with open(filename, 'wb') as f:
         f.write(form.read())
+
+
+def translation_number_from_decimal(current_num):
+    s = ''
+    if len(TYPE_NUMBER_SYSTEM) == 0:
+        return False
+    base = len(TYPE_NUMBER_SYSTEM)
+    while current_num > 0:
+        symbol = TYPE_NUMBER_SYSTEM[current_num % base]
+        s = symbol + s
+        current_num = current_num // base
+    return s
