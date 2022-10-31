@@ -1032,6 +1032,7 @@ class Card(models.Model):
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
+    work_department = models.CharField(max_length=128, blank=True, default='', help_text="Подразделение")
     mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     father = models.ForeignKey('self', related_name='father_p', help_text="Отец", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None, on_delete=models.SET_NULL)
@@ -1195,6 +1196,7 @@ class Card(models.Model):
         if not only_json_serializable:
             ind_data['work_place_db'] = self.work_place_db
         ind_data['work_position'] = self.work_position
+        ind_data['work_department'] = self.work_department
         ind_data['sex'] = self.individual.sex
 
         # document "Паспорт РФ"
