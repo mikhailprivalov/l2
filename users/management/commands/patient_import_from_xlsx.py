@@ -100,7 +100,7 @@ class Command(BaseCommand):
                 if cells[company]:
                     companies = Company.search_company(cells[company])
                     if len(companies) > 0:
-                        current_company = Company.objects.filter(companies[0]["id"]).first()
+                        current_company = Company.objects.filter(pk=companies[0]["id"]).first()
                     else:
                         cp = Company(title=cells[company], short_title=cells[company])
                         cp.save()
@@ -116,7 +116,8 @@ class Command(BaseCommand):
                             c.district = add_dist[0]
                             c.ginekolog_district = add_dist[1]
                             c.work_place_db = current_company
-                            c.save(update_fields=['number_poliklinika', 'district', 'ginekolog_district'])
+                            c.save(update_fields=['number_poliklinika', 'district', 'ginekolog_district', 'work_place_db'])
+                            print('обновлен пациент', c.number_with_type_and_fio())  # noqa: T001
                     else:
                         # создать карту L2
                         m_address = ' '.join('{}, {}, д.{}, кв.{}'.format(cells[city], cells[street], cells[house], cells[room]).strip().split())
