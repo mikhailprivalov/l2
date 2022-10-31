@@ -469,7 +469,7 @@
                 Отдел
               </div>
               <TypeAhead
-                ref="wpos"
+                ref="wdepart"
                 v-model="card.work_department"
                 :delay-time="100"
                 :get-response="getResponse"
