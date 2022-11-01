@@ -466,6 +466,24 @@
             </div>
             <div class="form-row sm-f">
               <div class="row-t">
+                Отдел
+              </div>
+              <TypeAhead
+                ref="wdepart"
+                v-model="card.work_department"
+                :delay-time="100"
+                :get-response="getResponse"
+                :highlighting="highlighting"
+                :limit="10"
+                :min-chars="1"
+                :on-hit="onHit('work_department')"
+                :select-first="true"
+                maxlength="128"
+                src="/api/autocomplete?value=:keyword&type=work_department"
+              />
+            </div>
+            <div class="form-row sm-f">
+              <div class="row-t">
                 Основной диагноз
               </div>
               <TypeAhead
@@ -1224,6 +1242,7 @@ export default {
         fact_address_full: JSON.stringify({ address: '', fias: null, details: null }),
         work_place: '',
         work_position: '',
+        work_department: '',
         family: '',
         patronymic: '',
         name: '',
@@ -1515,6 +1534,7 @@ export default {
           'work_place',
           'main_diagnosis',
           'work_position',
+          'work_department',
           'work_place_db',
           'custom_workplace',
           'district',
