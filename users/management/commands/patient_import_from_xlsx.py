@@ -117,7 +117,6 @@ class Command(BaseCommand):
                             c.ginekolog_district = add_dist[1]
                             c.work_place_db = current_company
                             c.save(update_fields=['number_poliklinika', 'district', 'ginekolog_district', 'work_place_db'])
-                            print('обновлен пациент', c.number_with_type_and_fio())  # noqa: T001
                     else:
                         # создать карту L2
                         m_address = ' '.join('{}, {}, д.{}, кв.{}'.format(cells[city], cells[street], cells[house], cells[room]).strip().split())
