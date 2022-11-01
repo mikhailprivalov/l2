@@ -32,7 +32,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
 from django.db import connections, transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, Exists, OuterRef
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
@@ -2541,7 +2541,7 @@ def get_contract_list(request):
             "value": contract.pk,
             "label": contract.title,
         }
-        for contract in Contract.objects.filter(active_status=True).order_by('title')
+        for contract in Contract.objects.filter(~Exists(Company.objects.filter(contract=OuterRef('pk'))))
     ]
     return JsonResponse({"data": contract_data})
 
@@ -2550,8 +2550,10 @@ def get_contract_list(request):
 @group_required('Конструктор: Настройка организации')
 def get_company(request):
     request_data = json.loads(request.body)
-    current_company = Company.objects.get(pk=request_data["pk"])
-    company_data = Company.as_json(company=current_company)
+    company = Company.objects.get(pk=request_data["pk"])
+    company_data = Company.as_json(company=company)
+    if company_data["contractId"]:
+        company_data["contractData"] = {"value": company.contract.pk, "label": company.contract.title}
     return JsonResponse({"data": company_data})
 
 
@@ -2574,7 +2576,7 @@ def update_company(request):
         company_data.ogrn = request_data["ogrn"]
         company_data.kpp = request_data["kpp"]
         company_data.bik = request_data["bik"]
-        company_data.contract_id = request_data.get("contractId") or ''
+        company_data.contract_id = request_data.get("contractId") or None
         company_data.save()
         new_company_data = Company.as_json(company_data)
         Log.log(
@@ -2598,7 +2600,7 @@ def update_company(request):
             ogrn=request_data.get("ogrn") or '',
             kpp=request_data.get("kpp") or '',
             bik=request_data.get("bik") or '',
-            contract_id=request_data.get("contractId") or '',
+            contract_id=request_data.get("contractId") or None,
         )
         company_data.save()
         Log.log(

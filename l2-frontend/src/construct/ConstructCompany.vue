@@ -57,7 +57,7 @@
         v-if="!isNewCompany"
         class="text-center"
       >
-        {{ originTitle }}
+        {{ originShortTitle }}
       </h6>
       <div>
         <FormulateForm
@@ -176,7 +176,7 @@ export default {
       search: '',
       currentCompany: {},
       editorCompany: {},
-      originTitle: '',
+      originShortTitle: '',
     };
   },
   computed: {
@@ -222,13 +222,18 @@ export default {
       }
     },
     async editCompany(company) {
+      await this.getContractList();
       await this.$store.dispatch(actions.INC_LOADING);
       this.currentCompany = await this.$api('get-company', company, 'pk');
       await this.$store.dispatch(actions.DEC_LOADING);
+      if (this.currentCompany.data.contractData) {
+        this.contractList.data.push({ ...this.currentCompany.data.contractData });
+      }
       this.editorCompany = this.currentCompany.data;
-      this.originTitle = this.editorCompany.shortTitle;
+      this.originShortTitle = this.editorCompany.shortTitle;
     },
     clearEditCompany() {
+      this.getContractList();
       this.editorCompany = {};
       this.originTitle = '';
     },
