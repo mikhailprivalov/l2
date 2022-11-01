@@ -631,8 +631,8 @@ def result_print(request):
                                     tmp.append(Paragraph('<font face="FreeSans" size="7">%s</font>' % prev_conf, styleSheet["BodyText"]))
                                 else:
                                     tmp.append("")
-                                if prev_date_conf != strdate(iss.time_confirmation, short_year=True):
-                                    prev_date_conf = strdate(iss.time_confirmation, short_year=True)
+                                if prev_date_conf != strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]:
+                                    prev_date_conf = strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]
                                     tmp.append(Paragraph('<font face="FreeSans" size="7">%s</font>' % prev_date_conf, styleSheet["BodyText"]))
                                 else:
                                     tmp.append("")

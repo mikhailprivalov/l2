@@ -635,6 +635,7 @@ def patients_card_save(request):
     c.district_id = request_data["district"] if request_data["district"] != -1 else None
     c.ginekolog_district_id = request_data["gin_district"] if request_data["gin_district"] != -1 else None
     c.work_position = request_data["work_position"]
+    c.work_department = request_data["work_department"]
     c.phone = request_data["phone"]
     c.harmful_factor = request_data.get("harmful", "")
     c.contact_trust_health = request_data.get("contactTrustHealth", "")
