@@ -2541,7 +2541,7 @@ def get_contract_list(request):
             "value": contract.pk,
             "label": contract.title,
         }
-        for contract in Contract.objects.filter(~Exists(Company.objects.filter(contract=OuterRef('pk'))))
+        for contract in Contract.objects.filter(~Exists(Company.objects.filter(contract=OuterRef('pk')))).order_by('title')
     ]
     return JsonResponse({"data": contract_data})
 
