@@ -51,10 +51,10 @@
     </div>
     <div class="box card-1 card-no-hover">
       <h5 class="text-center">
-        {{ editorCompany.pk ? 'Обновить компанию' : 'Добавить компанию' }}
+        {{ isNewCompany ? 'Добавить компанию' : 'Обновить компанию' }}
       </h5>
       <h6
-        v-if="editorCompany.pk"
+        v-if="!isNewCompany"
         class="text-center"
       >
         {{ originTitle }}
@@ -143,14 +143,14 @@
             <FormulateInput
               style="margin-right: 5px"
               type="button"
-              :label="editorCompany.pk ? 'Отменить' : 'Очистить'"
+              :label="isNewCompany ? 'Очистить' : 'Отменить'"
               @click="clearEditCompany"
             />
             <FormulateInput
               type="submit"
               class="nbr"
               style="margin-right: 5px"
-              :label="editorCompany.pk ? 'Сохранить' : 'Добавить'"
+              :label="isNewCompany ? 'Добавить' : 'Сохранить'"
             />
           </div>
         </FormulateForm>
@@ -188,6 +188,9 @@ export default {
         return companyTitle.includes(searchTerm);
       });
     },
+    isNewCompany() {
+      return !this.editorCompany.pk;
+    },
   },
   mounted() {
     this.getCompanyList();
@@ -223,7 +226,7 @@ export default {
       this.currentCompany = await this.$api('get-company', company, 'pk');
       await this.$store.dispatch(actions.DEC_LOADING);
       this.editorCompany = this.currentCompany.data;
-      this.originTitle = this.this.currentCompany.data.shortTitle;
+      this.originTitle = this.editorCompany.shortTitle;
     },
     clearEditCompany() {
       this.editorCompany = {};
