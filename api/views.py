@@ -1276,6 +1276,10 @@ def autocomplete(request):
             p = Card.objects.filter(work_position__istartswith=v).distinct('work_position')[:limit]
             if p.exists():
                 data = [x.work_position for x in p]
+        elif t == "work_department":
+            p = Card.objects.filter(work_department__istartswith=v).distinct('work_department')[:limit]
+            if p.exists():
+                data = [x.work_department for x in p]
         elif "who_give:" in t:
             tpk = t.split(":")[1]
             p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:limit]
