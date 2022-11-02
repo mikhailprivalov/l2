@@ -303,7 +303,7 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
             AND directions_issledovaniya.research_id IN 
             (SELECT directory_researches.id FROM directory_researches WHERE CASE 
              WHEN %(is_lab)s = TRUE THEN directory_researches.podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
-             WHEN %(is_doc_refferal)s = TRUE THEN is_doc_refferal = TRUE
+             WHEN %(is_doc_refferal)s = TRUE THEN is_doc_refferal = TRUE or is_treatment = TRUE
              WHEN %(is_paraclinic)s = TRUE THEN is_paraclinic = TRUE
              WHEN %(is_user_forms)s = TRUE THEN can_created_patient = TRUE
              END
