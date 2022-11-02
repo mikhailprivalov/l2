@@ -120,19 +120,19 @@ def form_01(request_data):
             temp_obj = [
                 Paragraph(' <u>Температура (°C)</u>', style),
                 Spacer(1, 2 * mm),
-                draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 1, 250 * mm, 27 * mm),
+                draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 10, 250 * mm, 27 * mm),
                 Spacer(1, 10 * mm),
             ]
             objs.append(KeepTogether(temp_obj))
 
-    if 'Пульс (уд/с)' in titles and 'Пульс (уд/с)' in result:
-        result_data = result['Пульс (уд/с)']
+    if 'Пульс (уд/м)' in titles and 'Пульс (уд/м)' in result:
+        result_data = result['Пульс (уд/м)']
         min_max = result_data['min_max']
         count_param = count_len_param(result_data, count_in_graph)
         for i in range(count_param):
             elements = count_graph_el(count_in_graph, result_data)
             temp_obj = [
-                Paragraph(' <u>Пульс (уд/с)</u>', style),
+                Paragraph(' <u>Пульс (уд/м)</u>', style),
                 Spacer(1, 2 * mm),
                 draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 10, 250 * mm, 27 * mm),
                 Spacer(1, 10 * mm),
@@ -140,7 +140,7 @@ def form_01(request_data):
             objs.append(KeepTogether(temp_obj))
 
     diastolic = 'Диастолическое давление (мм рт.с)'
-    systolic = 'Диастолическое давление (мм рт.с)'
+    systolic = 'Систолическое давление (мм рт.с)'
     if 'Давление' in titles and diastolic in result and systolic in result:
         result_data = {diastolic: result[diastolic], systolic: result[systolic]}
         min_max_diastolic = result_data[diastolic]['min_max']

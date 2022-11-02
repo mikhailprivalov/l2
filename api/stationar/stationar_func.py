@@ -506,7 +506,7 @@ def get_temperature_list(hosp_num_dir):
     if research_id is None:
         return {}
     final_data = {}
-    title_list = ['Температура', 'Пульс (уд/с)', 'Дата измерения', 'Время измерения', 'Систолическое давление (мм рт.с)', 'Диастолическое давление (мм рт.с)']
+    title_list = ['Температура', 'Пульс (уд/м)', 'Дата измерения', 'Время измерения', 'Систолическое давление (мм рт.с)', 'Диастолическое давление (мм рт.с)']
     a = get_result_temperature_list(tl_iss, research_id, title_list)
     data = {}
     for i in a:
