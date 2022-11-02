@@ -32,7 +32,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
 from django.db import connections, transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, Exists, OuterRef
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
@@ -40,7 +40,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory, PriceName, PriceCoast
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -2039,6 +2039,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2521,3 +2522,95 @@ def delete_research_in_price(request):
     current_coast_research.delete()
     Log.log(data["pk"], 130001, request.user.doctorprofile, data["data_json"])
     return JsonResponse({"ok": "ok"})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_company_list(request):
+    company_data = [
+        {
+            "pk": company.pk,
+            "title": company.title,
+        }
+        for company in Company.objects.filter(active_status=True).order_by('title')
+    ]
+    return JsonResponse({"data": company_data})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_contract_list(request):
+    contract_data = [
+        {
+            "value": contract.pk,
+            "label": contract.title,
+        }
+        for contract in Contract.objects.filter(~Exists(Company.objects.filter(contract=OuterRef('pk')))).order_by('title')
+    ]
+    return JsonResponse({"data": contract_data})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_company(request):
+    request_data = json.loads(request.body)
+    company = Company.objects.get(pk=request_data["pk"])
+    company_data = Company.as_json(company=company)
+    if company_data["contractId"]:
+        company_data["contractData"] = {"value": company.contract.pk, "label": company.contract.title}
+    return JsonResponse({"data": company_data})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_company(request):
+    request_data = json.loads(request.body)
+    if request_data.get('pk'):
+        if Company.objects.filter(title=request_data["title"]).exclude(pk=request_data["pk"]):
+            return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+        elif Company.objects.filter(inn=request_data["inn"]).exclude(pk=request_data["pk"]):
+            return JsonResponse({"ok": False, "message": "Такой ИНН уже есть"})
+        company_data = Company.objects.get(pk=request_data["pk"])
+        old_company_data = Company.as_json(company_data)
+        company_data.title = request_data["title"]
+        company_data.short_title = request_data["shortTitle"]
+        company_data.legal_address = request_data["legalAddress"]
+        company_data.fact_address = request_data["factAddress"]
+        company_data.inn = request_data["inn"]
+        company_data.ogrn = request_data["ogrn"]
+        company_data.kpp = request_data["kpp"]
+        company_data.bik = request_data["bik"]
+        company_data.contract_id = request_data.get("contractId") or None
+        company_data.save()
+        new_company_data = Company.as_json(company_data)
+        Log.log(
+            company_data.pk,
+            130002,
+            request.user.doctorprofile,
+            {"old_company_data": old_company_data, "new_company_data": new_company_data},
+        )
+        return JsonResponse({"ok": True})
+    else:
+        if Company.objects.filter(title=request_data["title"]):
+            return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+        elif Company.objects.filter(inn=request_data["inn"]):
+            return JsonResponse({"ok": False, "message": "Такой ИНН уже есть"})
+        company_data = Company(
+            title=request_data["title"],
+            short_title=request_data.get("shortTitle") or '',
+            legal_address=request_data.get("legalAddress") or '',
+            fact_address=request_data.get("factAddress") or '',
+            inn=request_data["inn"],
+            ogrn=request_data.get("ogrn") or '',
+            kpp=request_data.get("kpp") or '',
+            bik=request_data.get("bik") or '',
+            contract_id=request_data.get("contractId") or None,
+        )
+        company_data.save()
+        Log.log(
+            company_data.pk,
+            130003,
+            request.user.doctorprofile,
+            {"company_data": Company.as_json(company_data)},
+        )
+        return JsonResponse({'ok': True})

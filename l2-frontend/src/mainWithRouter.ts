@@ -113,6 +113,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/company',
+      name: 'construct_company',
+      component: () => import('@/construct/ConstructCompany.vue'),
+      meta: {
+        title: 'Настройка компаний',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
