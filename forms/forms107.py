@@ -120,7 +120,7 @@ def form_01(request_data):
             temp_obj = [
                 Paragraph(' <u>Температура (°C)</u>', style),
                 Spacer(1, 2 * mm),
-                draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 1, 250 * mm, 27 * mm),
+                draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 10, 250 * mm, 27 * mm),
                 Spacer(1, 10 * mm),
             ]
             objs.append(KeepTogether(temp_obj))
