@@ -176,6 +176,7 @@ export default {
       this.typeSlot = typeSlot;
     },
     async loadSlots() {
+      await this.$store.dispatch(actions.INC_LOADING);
       if (!this.activeDoctor || !this.activeDate) {
         return;
       }
@@ -188,8 +189,8 @@ export default {
       } else {
         this.slots = result;
       }
-
       this.checkSlot();
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     checkDate(forced = false) {
       if (this.displayDates.length > 0 && (forced || !this.displayDates.includes(this.activeDate))) {
@@ -231,6 +232,7 @@ export default {
       this.startDate = this.startDate.clone().add(7, 'days');
     },
     async loadAvailableDates() {
+      await this.$store.dispatch(actions.INC_LOADING);
       if (!this.startDate) {
         return;
       }
@@ -253,6 +255,7 @@ export default {
       this.loading = false;
       this.checkDate(true);
       this.checkDoctor();
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async fillSlot() {
       if (!this.activeSlot) {
