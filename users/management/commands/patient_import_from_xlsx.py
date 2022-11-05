@@ -98,13 +98,16 @@ class Command(BaseCommand):
                 ).first()
                 current_company = None
                 if cells[company]:
-                    companies = Company.search_company(cells[company])
-                    if len(companies) > 0:
-                        current_company = Company.objects.filter(pk=companies[0]["id"]).first()
+                    companies = Company.objects.filter(cells[company]).first()
+                    if companies:
+                        current_company = companies.title
                     else:
-                        cp = Company(title=cells[company], short_title=cells[company])
-                        cp.save()
-                        current_company = cp
+                        try:
+                            cp = Company(title=cells[company], short_title=cells[company])
+                            cp.save()
+                            current_company = cp
+                        except:
+                            current_company = None
 
                 if ind:
                     add_dist = get_district(cells[distict_num], cells[district_gin])
