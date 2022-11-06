@@ -19,6 +19,7 @@ from laboratory.settings import (
     TIME_ZONE,
     TITLE_REPORT_FILTER_STATTALON_FIELDS,
     SEARCH_PAGE_STATISTIC_PARAMS,
+    UNLIMIT_PERIOD_STATISTIC_GROUP,
 )
 from utils.response import status_response
 
@@ -2186,6 +2187,11 @@ def get_disabled_reports(request):
         return JsonResponse({"rows": []})
 
     return JsonResponse({"rows": list(result_disabled_statistic_reports)})
+
+
+@login_required
+def unlimit_period_statistic_groups(request):
+    return JsonResponse({"rows": UNLIMIT_PERIOD_STATISTIC_GROUP})
 
 
 @login_required

@@ -53,6 +53,7 @@ from laboratory.settings import (
     COVID_QUESTION_ID,
     RESEARCH_SPECIAL_REPORT,
     DISPANSERIZATION_SERVICE_PK,
+    UNLIMIT_PERIOD_STATISTIC_RESEARCH,
 )
 
 
@@ -98,8 +99,9 @@ def statistic_xls(request):
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
     if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"]:
+        pk = request_data.get("research")
         delta = date_end - date_start
-        if abs(delta.days) > 60:
+        if abs(delta.days) > 60 and tp == "statistics-research" and int(pk) not in UNLIMIT_PERIOD_STATISTIC_RESEARCH:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
             return JsonResponse({"error": "period max - 60 days"})
 

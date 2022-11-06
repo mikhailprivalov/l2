@@ -328,7 +328,6 @@
               > Настройки из протокола
             </label>
           </div>
-
           <a
             v-if="reportUrl"
             class="btn btn-blue-nb"
@@ -338,7 +337,7 @@
           >
             Сформировать отчёт
           </a>
-          <div v-else-if="dateRangeInvalid">
+          <div v-else-if="dateRangeInvalid && !unlimitPeridStatistic">
             <strong>Диапазон дат должен быть не больше двух месяцев</strong>
           </div>
         </div>
@@ -590,6 +589,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       companies: [],
       disabled_categories: [],
       disabled_reports: [],
+      unlimit_period_statistic_groups: [],
       purposes: [],
       specialFields: false,
       resultTreatment: [],
@@ -617,6 +617,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
     this.loadTitleReportStattalonFields();
     this.get_disabled_categories();
     this.get_disabled_reports();
+    this.getUnlimitPeriodStatisticGroups();
   },
 })
 export default class Statistics extends Vue {
@@ -648,10 +649,21 @@ export default class Statistics extends Vue {
 
   disabled_reports: any[];
 
+  unlimit_period_statistic_groups: any[];
+
   research: number | null;
 
   get userGroups() {
     return this.$store.getters.user_data.groups || [];
+  }
+
+  get unlimitPeridStatistic() {
+    for (const g of this.$store.getters.user_data.groups || []) {
+      if (this.unlimit_period_statistic_groups.includes(g)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async loadUsers() {
@@ -828,6 +840,9 @@ export default class Statistics extends Vue {
   }
 
   get dateRangeInvalid() {
+    if (this.unlimitPeridStatistic) {
+      return false;
+    }
     if (
       this.currentReport?.params.includes(this.PARAMS_TYPES.DATE_RANGE)
       && this.values.dateRange.start
@@ -852,6 +867,11 @@ export default class Statistics extends Vue {
   async get_disabled_reports() {
     const resultData = await this.$api('disabled-reports');
     this.disabled_reports = resultData.rows;
+  }
+
+  async getUnlimitPeriodStatisticGroups() {
+    const resultData = await this.$api('unlimit-period-statistic-groups');
+    this.unlimit_period_statistic_groups = resultData.rows;
   }
 }
 </script>
