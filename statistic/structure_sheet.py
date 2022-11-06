@@ -1007,8 +1007,11 @@ def statistic_research_death_data(ws1, researches, expertise_final_data):
                 is_dict = False
         if not is_dict:
             place_death_details = "-"
-
-        ws1.cell(row=r, column=26).value = place_death_details
+        try:
+            title_pace_death = place_death_details.get("address")
+        except:
+            title_pace_death = place_death_details
+        ws1.cell(row=r, column=26).value = title_pace_death
         # Название стационара
         ws1.cell(row=r, column=27).value = i.get("МО", "")
         # ДТП

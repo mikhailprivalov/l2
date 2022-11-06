@@ -69,6 +69,7 @@ urlpatterns = [
     path('disabled-forms', views.get_disabled_forms),
     path('disabled-categories', views.get_disabled_categories),
     path('disabled-reports', views.get_disabled_reports),
+    path('unlimit-period-statistic-groups', views.unlimit_period_statistic_groups),
     path('current-time', views.current_time),
     path('search-param', views.search_param),
     path('statistic-params-search', views.statistic_params_search),
