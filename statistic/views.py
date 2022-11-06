@@ -101,7 +101,7 @@ def statistic_xls(request):
     if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"]:
         pk = request_data.get("research")
         delta = date_end - date_start
-        if abs(delta.days) > 60 and (tp == "statistics-research" and (int(pk) not in UNLIMIT_PERIOD_STATISTIC_RESEARCH)):
+        if abs(delta.days) > 60 and tp == "statistics-research" and int(pk) not in UNLIMIT_PERIOD_STATISTIC_RESEARCH:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
             return JsonResponse({"error": "period max - 60 days"})
 
