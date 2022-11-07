@@ -45,6 +45,8 @@ def form_01(request_data):
     Дополнительные страницы при печати направлений
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+    p_doc_serial, p_doc_num, p_doc_start = patient_data['passport_serial'], patient_data['passport_num'], patient_data['passport_date_start']
     work_dir = json.loads(request_data["napr_id"])
     type_additional_pdf = request_data["type_additional_pdf"]
     napr = Napravleniya.objects.filter(pk__in=work_dir)
@@ -119,7 +121,6 @@ def form_01(request_data):
     styleTR = deepcopy(style)
     styleTR.alignment = TA_RIGHT
 
-    types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set()}
     objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
 
     if not os.path.join(BASE_DIR, 'forms', 'additionla_pages', type_additional_pdf):
@@ -152,8 +153,6 @@ def form_01(request_data):
                 objs.append(Paragraph(f"{section['text']} {patient_data['main_address']}", styles_obj[section['style']]))
             elif section.get('patient_document'):
                 objs.append(Paragraph(f"{section['text']} {patient_data['type_doc']} {p_doc_serial} {p_doc_num}", styles_obj[section['style']]))
-            elif section.get('executor_l2'):
-                objs.append(Paragraph(f"{section['text']} {exec_person}", styles_obj[section['style']]))
             else:
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
@@ -183,7 +182,7 @@ def form_01(request_data):
 
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
-
+    direction_data = []
     if additional_data_from_file and appendix_direction_list:
         types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set()}
         for d in dir_temp:
@@ -213,85 +212,6 @@ def form_01(request_data):
                 direction_data.extend(list(types_direction["isDocrefferal"]))
             elif section.get('isParaclinic'):
                 direction_data.extend(list(types_direction["isParaclinic"]))
-
-    def first_pages(canvas, document):
-        canvas.saveState()
-        canvas.setFont("PTAstraSerifReg", 9)
-        # вывести интерактивную форму "текст"
-        form = canvas.acroForm
-        # canvas.drawString(25, 780, '')
-        form.textfield(
-            name='comment',
-            tooltip='comment',
-            fontName='Times-Roman',
-            fontSize=10,
-            x=57,
-            y=750,
-            borderStyle='underlined',
-            borderColor=black,
-            fillColor=white,
-            width=515,
-            height=13,
-            textColor=black,
-            forceBorder=False,
-        )
-
-        # Вывести на первой странице код-номер договора
-        barcode128.drawOn(canvas, 10 * mm, 282 * mm)
-
-        # вывести внизу QR-code (ФИО, (номера направлений))
-        qr_code = qr.QrCodeWidget(qr_value)
-        qr_code.barWidth = 70
-        qr_code.barHeight = 70
-        qr_code.qrVersion = 1
-        d = Drawing()
-        d.add(qr_code)
-        renderPDF.draw(d, canvas, 90 * mm, 7)
-        # вывести атрибуты для подписей
-        canvas.setFont('PTAstraSerifReg', 10)
-        canvas.drawString(40 * mm, 10 * mm, '____________________________')
-        canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
-        canvas.setFont('Symbola', 18)
-        canvas.drawString(195 * mm, 10 * mm, '\u2713')
-
-        canvas.setFont('PTAstraSerifReg', 8)
-        canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
-        canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
-
-        # вывестии защитны вертикальный мелкий текст
-        canvas.rotate(90)
-        canvas.setFillColor(HexColor(0x4F4B4B))
-        canvas.setFont('PTAstraSerifReg', 5.2)
-        canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
-
-        canvas.restoreState()
-
-    def later_pages(canvas, document):
-        canvas.saveState()
-        # вывести внизу QR-code (ФИО, (номера направлений))
-        qr_code = qr.QrCodeWidget(qr_value)
-        qr_code.barWidth = 70
-        qr_code.barHeight = 70
-        qr_code.qrVersion = 1
-        d = Drawing()
-        d.add(qr_code)
-        renderPDF.draw(d, canvas, 90 * mm, 7)
-        # вывести атрибуты для подписей
-        canvas.setFont('PTAstraSerifReg', 10)
-        canvas.drawString(40 * mm, 10 * mm, '____________________________')
-        canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
-
-        canvas.setFont('Symbola', 18)
-        canvas.drawString(195 * mm, 10 * mm, '\u2713')
-
-        canvas.setFont('PTAstraSerifReg', 8)
-        canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
-        canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
-        canvas.rotate(90)
-        canvas.setFillColor(HexColor(0x4F4B4B))
-        canvas.setFont('PTAstraSerifReg', 5.2)
-        canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
-        canvas.restoreState()
 
     doc.build(objs)
 
