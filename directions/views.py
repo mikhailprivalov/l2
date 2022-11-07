@@ -337,33 +337,8 @@ def gen_pdf_dir(request):
                     }
                 )
                 if fc:
-                    fc_buf = BytesIO()
-                    fc_buf.write(fc)
-                    fc_buf.seek(0)
-                    buffer.seek(0)
-                    from pdfrw import PdfReader, PdfWriter
-
-                    today = datetime.now()
-                    date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
-                    date_now_str = str(n.client_id) + str(date_now1)
-                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-                    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
-                    file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
-                    save_tmp_file(buffer, filename=file_dir)
-                    save_tmp_file(fc_buf, filename=file_contract)
-                    pdf_all = BytesIO()
-                    inputs = [file_contract] if SettingManager.get("only_contract", default='False', default_type='b') else [file_dir, file_contract]
-                    writer = PdfWriter()
-                    for inpfn in inputs:
-                        writer.addpages(PdfReader(inpfn).pages)
-                    writer.write(pdf_all)
-                    pdf_out = pdf_all.getvalue()
-                    pdf_all.close()
+                    pdf_out = exteranl_add_pdf(fc, buffer, n)
                     response.write(pdf_out)
-                    buffer.close()
-                    os.remove(file_dir)
-                    os.remove(file_contract)
-                    fc_buf.close()
                     return response
 
     buffer.close()  # Закрытие буфера
@@ -371,6 +346,36 @@ def gen_pdf_dir(request):
     response.write(pdf)  # Запись PDF в ответ
 
     return response
+
+
+def exteranl_add_pdf(fc_cur, buffer_cur, n_cl):
+    fc_buf = BytesIO()
+    fc_buf.write(fc_cur)
+    fc_buf.seek(0)
+    buffer_cur.seek(0)
+    from pdfrw import PdfReader, PdfWriter
+
+    today = datetime.now()
+    date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = str(n_cl.client_id) + str(date_now1)
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
+    file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
+    save_tmp_file(buffer_cur, filename=file_dir)
+    save_tmp_file(fc_buf, filename=file_contract)
+    pdf_all = BytesIO()
+    inputs = [file_contract] if SettingManager.get("only_contract", default='False', default_type='b') else [file_dir, file_contract]
+    writer = PdfWriter()
+    for inpfn in inputs:
+        writer.addpages(PdfReader(inpfn).pages)
+    writer.write(pdf_all)
+    pdf_out_cur = pdf_all.getvalue()
+    pdf_all.close()
+    os.remove(file_dir)
+    os.remove(file_contract)
+    buffer_cur.close()
+    fc_buf.close()
+    return pdf_out_cur
 
 
 def framePage(canvas):
