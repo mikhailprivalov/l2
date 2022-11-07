@@ -32,7 +32,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE
 from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
@@ -316,8 +316,11 @@ def gen_pdf_dir(request):
     internal_type = n.client.base.internal_type
 
     fin_status = None
-    if fin_ist_set and fin_ist_set.pop().title.lower() == 'платно':
-        fin_status = True
+    fin_title = None
+    if fin_ist_set:
+        fin_title = fin_ist_set.pop().title.lower()
+        if fin_title == 'платно':
+            fin_status = True
 
     if request.GET.get("contract") and internal_type:
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
@@ -340,6 +343,22 @@ def gen_pdf_dir(request):
                     pdf_out = exteranl_add_pdf(fc, buffer, n)
                     response.write(pdf_out)
                     return response
+    if PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None):
+        type_additional_pdf = PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title)
+        from forms.forms112 import form_01 as additional_page
+        fc = additional_page(
+            request_data={
+                **dict(request.GET.items()),
+                "user": request.user,
+                "card_pk": card_pk_set.pop(),
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                "type_additional_pdf": type_additional_pdf,
+            }
+        )
+        if fc:
+            pdf_out = exteranl_add_pdf(fc, buffer, n)
+            response.write(pdf_out)
+            return response
 
     buffer.close()  # Закрытие буфера
 
