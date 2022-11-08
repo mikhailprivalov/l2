@@ -2,21 +2,13 @@ import datetime
 import locale
 import os.path
 import sys
-import zlib
 from copy import deepcopy
-from datetime import date
 from io import BytesIO
 from typing import List, Union
 
-import pytils
 import simplejson as json
-from dateutil.relativedelta import relativedelta
-from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import code128, qr
-from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
-from reportlab.lib.colors import HexColor
-from reportlab.lib.colors import white, black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, portrait
 from reportlab.lib.styles import getSampleStyleSheet
@@ -40,7 +32,7 @@ def form_01(request_data):
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
-    p_doc_serial, p_doc_num, p_doc_start = patient_data['passport_serial'], patient_data['passport_num'], patient_data['passport_date_start']
+    p_doc_serial, p_doc_num = patient_data['passport_serial'], patient_data['passport_num']
     work_dir = json.loads(request_data["napr_id"])
     fin_title = request_data["fin_title"]
     type_additional_pdf = request_data["type_additional_pdf"]
@@ -119,19 +111,15 @@ def form_01(request_data):
     objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
 
     if not os.path.join(BASE_DIR, 'forms', 'additionla_pages', type_additional_pdf):
-        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additionla_pages', "default_old")
+        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additionla_pages', "default")
     else:
-        # additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additional_pages', type_additional_pdf)
-        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additional_pages', "default_old")
+        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additional_pages', "default")
     if additional_data_from_file:
         with open(additional_data_from_file) as json_file:
             data = json.load(json_file)
-            # body_paragraphs = data['body_paragraphs']
             appendix_paragraphs = data.get('appendix_paragraphs', None)
             appendix_route_list = data.get('appendix_route_list', None)
             appendix_direction_list = data.get('appendix_direction_list', None)
-    else:
-        executor = None
 
     if additional_data_from_file and appendix_paragraphs:
         for section in appendix_paragraphs:
