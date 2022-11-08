@@ -239,4 +239,4 @@ external_system/settings/phones_org.json
 /forms/contracts/
 /forms/contract_forms/
 /forms/additional_pages/
-!/forms/additional_pages/
+!/forms/additional_pages/default.json
