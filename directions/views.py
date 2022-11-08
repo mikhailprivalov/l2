@@ -32,7 +32,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE
 from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
@@ -166,9 +166,11 @@ def gen_pdf_execlist(request):
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
+    req_from_additional_pages = False
     if direction_id == []:
         request_direction_id = json.loads(request.body)
         direction_id = request_direction_id.get("napr_id", "[]")
+        req_from_additional_pages = request_direction_id.get("from_additional_pages", False)
     if SettingManager.get("pdf_auto_print", "true", "b") and not request.GET.get('normis') and not request.GET.get('embedded'):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
@@ -316,8 +318,11 @@ def gen_pdf_dir(request):
     internal_type = n.client.base.internal_type
 
     fin_status = None
-    if fin_ist_set and fin_ist_set.pop().title.lower() == 'платно':
-        fin_status = True
+    fin_title = None
+    if fin_ist_set:
+        fin_title = fin_ist_set.pop().title.lower()
+        if fin_title == 'платно':
+            fin_status = True
 
     if request.GET.get("contract") and internal_type:
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
@@ -337,40 +342,63 @@ def gen_pdf_dir(request):
                     }
                 )
                 if fc:
-                    fc_buf = BytesIO()
-                    fc_buf.write(fc)
-                    fc_buf.seek(0)
-                    buffer.seek(0)
-                    from pdfrw import PdfReader, PdfWriter
-
-                    today = datetime.now()
-                    date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
-                    date_now_str = str(n.client_id) + str(date_now1)
-                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-                    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
-                    file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
-                    save_tmp_file(buffer, filename=file_dir)
-                    save_tmp_file(fc_buf, filename=file_contract)
-                    pdf_all = BytesIO()
-                    inputs = [file_contract] if SettingManager.get("only_contract", default='False', default_type='b') else [file_dir, file_contract]
-                    writer = PdfWriter()
-                    for inpfn in inputs:
-                        writer.addpages(PdfReader(inpfn).pages)
-                    writer.write(pdf_all)
-                    pdf_out = pdf_all.getvalue()
-                    pdf_all.close()
+                    pdf_out = exteranl_add_pdf(fc, buffer, n)
                     response.write(pdf_out)
-                    buffer.close()
-                    os.remove(file_dir)
-                    os.remove(file_contract)
-                    fc_buf.close()
                     return response
+
+    if PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None) and not req_from_additional_pages:
+        type_additional_pdf = PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title)
+        additional_page = import_string('forms.forms112.' + type_additional_pdf)
+        fc = additional_page(
+            request_data={
+                **dict(request.GET.items()),
+                "user": request.user,
+                "card_pk": card_pk_set.pop(),
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                "type_additional_pdf": type_additional_pdf,
+                "fin_title": fin_title,
+            }
+        )
+        if fc:
+            pdf_out = exteranl_add_pdf(fc, buffer, n)
+            response.write(pdf_out)
+            return response
 
     buffer.close()  # Закрытие буфера
 
     response.write(pdf)  # Запись PDF в ответ
 
     return response
+
+
+def exteranl_add_pdf(fc_cur, buffer_cur, n_cl):
+    fc_buf = BytesIO()
+    fc_buf.write(fc_cur)
+    fc_buf.seek(0)
+    buffer_cur.seek(0)
+    from pdfrw import PdfReader, PdfWriter
+
+    today = datetime.now()
+    date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = str(n_cl.client_id) + str(date_now1)
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
+    file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
+    save_tmp_file(buffer_cur, filename=file_dir)
+    save_tmp_file(fc_buf, filename=file_contract)
+    pdf_all = BytesIO()
+    inputs = [file_contract] if SettingManager.get("only_contract", default='False', default_type='b') else [file_dir, file_contract]
+    writer = PdfWriter()
+    for inpfn in inputs:
+        writer.addpages(PdfReader(inpfn).pages)
+    writer.write(pdf_all)
+    pdf_out_cur = pdf_all.getvalue()
+    pdf_all.close()
+    os.remove(file_dir)
+    os.remove(file_contract)
+    buffer_cur.close()
+    fc_buf.close()
+    return pdf_out_cur
 
 
 def framePage(canvas):
