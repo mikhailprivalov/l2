@@ -110,6 +110,7 @@ def next_result_direction(request):
     else:
         is_research = -1
     dirs, dirs_eds = None, None
+
     if only_signed == '1':
         # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
         # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
@@ -204,7 +205,7 @@ def direction_data(request):
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
     for i in iss:
-        if len(REMD_ONLY_RESEARCH) > 0 and i.pk not in REMD_ONLY_RESEARCH:
+        if len(REMD_ONLY_RESEARCH) > 0 and i.research.pk not in REMD_ONLY_RESEARCH:
             return Response({"ok": False})
 
     if not iss:
