@@ -25,17 +25,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak, Macro
 from reportlab.platypus.flowables import HRFlowable
-
 from appconf.manager import SettingManager
 from clients.models import Card
-from directions.models import Napravleniya, IstochnikiFinansirovaniya, PersonContract, Issledovaniya
-from hospitals.models import Hospitals
-from laboratory import utils
+from directions.models import Napravleniya, Issledovaniya
 from laboratory.settings import FONTS_FOLDER, BASE_DIR
 from utils.xh import save_tmp_file
-from . import forms_func
-from utils.pagenum import PageNumCanvasPartitionAll
-from .sql_func import sort_direction_by_file_name_contract
 from directions.views import gen_pdf_dir as f_print_direction
 from django.http import HttpRequest
 
@@ -48,9 +42,10 @@ def form_01(request_data):
     patient_data = ind_card.get_data_individual()
     p_doc_serial, p_doc_num, p_doc_start = patient_data['passport_serial'], patient_data['passport_num'], patient_data['passport_date_start']
     work_dir = json.loads(request_data["napr_id"])
+    fin_title = request_data["fin_title"]
     type_additional_pdf = request_data["type_additional_pdf"]
     napr = Napravleniya.objects.filter(pk__in=work_dir)
-    dir_temp = [n.pk for n in napr if n.istochnik_f_id.title.lower() == "омс" and n.client == ind_card ]
+    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title and n.client == ind_card]
     if not dir_temp:
         return False
 
@@ -124,13 +119,14 @@ def form_01(request_data):
     objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
 
     if not os.path.join(BASE_DIR, 'forms', 'additionla_pages', type_additional_pdf):
-        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additionla_pages', "default")
+        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additionla_pages', "default_old")
     else:
-        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additionla_pages', type_additional_pdf)
+        # additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additional_pages', type_additional_pdf)
+        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additional_pages', "default_old")
     if additional_data_from_file:
         with open(additional_data_from_file) as json_file:
             data = json.load(json_file)
-            body_paragraphs = data['body_paragraphs']
+            # body_paragraphs = data['body_paragraphs']
             appendix_paragraphs = data.get('appendix_paragraphs', None)
             appendix_route_list = data.get('appendix_route_list', None)
             appendix_direction_list = data.get('appendix_direction_list', None)
@@ -156,6 +152,13 @@ def form_01(request_data):
             else:
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
+    styleTB = deepcopy(style)
+    styleTB.firstLineIndent = 0
+    styleTB.fontSize = 8.5
+    styleTB.alignment = TA_CENTER
+    styleTB.fontName = "PTAstraSerifBold"
+    route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph(' Ш/к', styleTB)]]
+
     if additional_data_from_file and appendix_route_list:
         for section in appendix_route_list:
             if section.get('page_break'):
@@ -168,8 +171,23 @@ def form_01(request_data):
                 objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
             else:
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
+        styleTC = deepcopy(style)
+        styleTC.firstLineIndent = 0
+        styleTC.fontSize = 8.5
+        styleTC.alignment = TA_LEFT
 
-        tbl = Table(route_list, colWidths=(30 * mm, 58 * mm, 60 * mm, 42 * mm), hAlign='LEFT')
+        for current_dir in work_dir:
+            barcode = code128.Code128(current_dir, barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
+            iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir)
+            step = 0
+            for current_iss in iss_obj:
+                if step > 0:
+                    barcode = Paragraph('', styleTC)
+                    current_dir = ""
+                route_list.append([Paragraph(f"{current_dir}", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), barcode])
+                step += 1
+
+        tbl = Table(route_list, colWidths=(40 * mm, 78 * mm, 72 * mm), hAlign='LEFT')
         tbl.setStyle(
             TableStyle(
                 [
@@ -219,7 +237,7 @@ def form_01(request_data):
 
     if SettingManager.get("print_direction_after_contract", default='False', default_type='b') and len(direction_data) > 0:
         direction_obj = HttpRequest()
-        direction_obj._body = json.dumps({"napr_id": direction_data})
+        direction_obj._body = json.dumps({"napr_id": direction_data, "from_additional_pages": True})
         direction_obj.user = request_data['user']
         fc = f_print_direction(direction_obj)
         if fc:

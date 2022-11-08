@@ -166,9 +166,11 @@ def gen_pdf_execlist(request):
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
+    req_from_additional_pages = False
     if direction_id == []:
         request_direction_id = json.loads(request.body)
         direction_id = request_direction_id.get("napr_id", "[]")
+        req_from_additional_pages = request_direction_id.get("from_additional_pages", False)
     if SettingManager.get("pdf_auto_print", "true", "b") and not request.GET.get('normis') and not request.GET.get('embedded'):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
@@ -343,9 +345,10 @@ def gen_pdf_dir(request):
                     pdf_out = exteranl_add_pdf(fc, buffer, n)
                     response.write(pdf_out)
                     return response
-    if PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None):
+
+    if PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None) and not req_from_additional_pages:
         type_additional_pdf = PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title)
-        from forms.forms112 import form_01 as additional_page
+        additional_page = import_string('forms.forms112.' + type_additional_pdf)
         fc = additional_page(
             request_data={
                 **dict(request.GET.items()),
@@ -353,6 +356,7 @@ def gen_pdf_dir(request):
                 "card_pk": card_pk_set.pop(),
                 "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
                 "type_additional_pdf": type_additional_pdf,
+                "fin_title": fin_title,
             }
         )
         if fc:
