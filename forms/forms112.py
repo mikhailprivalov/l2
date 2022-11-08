@@ -110,8 +110,8 @@ def form_01(request_data):
 
     objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
 
-    if not os.path.join(BASE_DIR, 'forms', 'additionla_pages', type_additional_pdf):
-        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additionla_pages', "default.json")
+    if not os.path.join(BASE_DIR, 'forms', 'additional_pages', type_additional_pdf):
+        additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additional_pages', "default.json")
     else:
         additional_data_from_file = os.path.join(BASE_DIR, 'forms', 'additional_pages', type_additional_pdf)
     if additional_data_from_file:
