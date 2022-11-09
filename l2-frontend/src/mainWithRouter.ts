@@ -123,6 +123,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/patient-control-param',
+      name: 'construct_patient_control_param',
+      component: () => import('@/construct/ConstructPatientControlParam.vue'),
+      meta: {
+        title: 'Контролируемые параметры пациентов',
+        groups: ['Конструктор: Контролируемые параметры пациентов'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
