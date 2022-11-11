@@ -173,7 +173,10 @@
             </td>
             <td
               class="researches"
-              :title="row.researches"
+              :title="row.researches +
+                (row.planed_doctor !== '' ? ' Начзначен: ' + row.planed_doctor: '') +
+                (row.register_number !== '' ? ' (' + row.register_number + ')': '')
+              "
             >
               {{ row.researches }}
             </td>
@@ -188,7 +191,9 @@
                       ? ' (экспертиза БЕЗ заменчаний)'
                       : ' (экспертза С замечаниями)'
                     : '') + (row.person_contract_pk > 0 ? ' (Договор-' + row.person_contract_pk +
-                    ' (Направления: ' + row.person_contract_dirs+ ')': '')
+                    ' (Направления: ' + row.person_contract_dirs + ')': '') +
+                  (row.planed_doctor !== '' ? ' Начзначен: ' + row.planed_doctor: '') +
+                  (row.register_number !== '' ? ' (' + row.register_number + ')': '')
               "
               :class="['status-' + row.status]"
             >
