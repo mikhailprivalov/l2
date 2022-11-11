@@ -401,7 +401,6 @@ def directions_history(request):
                         'person_contract_dirs': person_contract_dirs,
                         'planed_doctor': planed_doctor,
                         'register_number': register_number,
-
                     }
                 )
                 person_contract_pk = -1
