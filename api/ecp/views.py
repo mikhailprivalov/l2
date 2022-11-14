@@ -3,6 +3,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
+from appconf.manager import SettingManager
 from clients.models import Card
 from ecp_integration.integration import get_doctors_ecp_free_dates_by_research, get_doctor_ecp_free_slots_by_date, register_patient_ecp_slot, cancel_ecp_patient_record
 from users.models import DoctorProfile
@@ -28,6 +29,7 @@ def get_available_slots(request):
         request_data['doctor_pk'],
         request_data['date'],
     )
+    print(slots)
     return JsonResponse({"result": slots})
 
 
@@ -37,6 +39,7 @@ def fill_slot(request):
     card_pk = request_data['card_pk']
     slot_id = request_data['slot_id']
     type_slot = request_data['type_slot']
+    slot_type_id = request_data.get('slot_type_id')
     doctor_pk = request_data['doctor_pk']
     date = request_data['date']
     card = Card.objects.get(pk=card_pk)
@@ -50,7 +53,15 @@ def fill_slot(request):
     age_month = age_target_patient[2] * 12 + age_target_patient[1]
     if doctor_data.max_age_patient_registration != -1 and (age_month > doctor_data.max_age_patient_registration):
         return JsonResponse({"register": False, "message": "Запись ограничена по возрасту"})
+    # allow_patient_registration = SettingManager.get("allow_patient_registration", default='true', default_type='b')
+    # if slot_type_id == "13":
+    #     return JsonResponse({"register": False, "message": "Запись на данный слот запрещена"})
+    # if slot_type_id == "10" and doctor_data != request.user.doctorprofile:
+    #     return JsonResponse({"register": False, "message": "Записать может только сам врач"})
+    # if slot_type_id == "1":
     r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+    # if slot_type_id != "1" and not allow_patient_registration:
+    #     pass
     return JsonResponse(r)
 
 

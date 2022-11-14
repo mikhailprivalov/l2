@@ -109,6 +109,7 @@ class DoctorProfile(models.Model):
     last_online = models.DateTimeField(default=None, blank=True, null=True, help_text="Когда пользователь был в сети")
     cabinet = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Кабинет приема")
     max_age_patient_registration = models.SmallIntegerField(help_text='Ограничения возраста записи указать в месяцах', default=-1)
+    available_quotas_time = models.TextField(default='', blank=True, help_text='Доступная запись для подраздлений по времени {"id-подразделения": "10:00-15:00"}')
 
     @property
     def notify_queue_key_base(self):

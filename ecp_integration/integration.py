@@ -190,9 +190,21 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date):
     free_slots = req_result['data']
     if len(free_slots) > 0:
         slots = sorted(free_slots, key=lambda k: k[key_time])
-        return [{"pk": x[type_slot], "title": datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M'), "typeSlot": type_slot} for x in slots]
+        free_slots_params = [{"pk": x[type_slot], "title": datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M'), "typeSlot": type_slot} for x in slots]
+        if type_slot == "TimeTableGraf_id":
+            for param in free_slots_params:
+                slot_type_id = get_time_table_graf_by_id(param["pk"], sess_id)
+                param["slotTypeId"] = slot_type_id
+        return free_slots_params
     return []
 
+
+def get_time_table_graf_by_id(graf_id, sess_id):
+    req_result = make_request_get("TimeTableGraf/TimeTableGrafById", query=f"Sess_id={sess_id}&TimeTableGraf_id={graf_id}", sess_id=sess_id)
+    graf_data = req_result['data']
+    if len(graf_data) > 0:
+        return graf_data[0]['TimeTableType_id']
+    return ""
 
 def register_patient_ecp_slot(patient_ecp_id, slot_id, slot_type):
     sess_id = request_get_sess_id()

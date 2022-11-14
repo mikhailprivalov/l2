@@ -46,15 +46,19 @@
       class="resource"
     >
       <div class="resource-title">
-        Доступное время <span v-if="showLimitMessage" class="messageAgeLimit">{{ showLimitMessage }}</span>
+        Доступное время <span
+          v-if="showLimitMessage"
+          class="messageAgeLimit"
+        >{{ showLimitMessage }}</span>
       </div>
       <div class="resource-slots">
         <div
           v-for="s in slots"
           :key="s.pk"
           class="resource-slot"
-          :class="activeSlot === s.pk && 'active'"
-          @click="selectSlot(s.pk, s.title, s.typeSlot)"
+          :class="[{'doctor-self-slot': s.slotTypeId === '10', 'forbidden-slot': s.slotTypeId === '14'},
+                   activeSlot === s.pk && 'active' ]"
+          @click="selectSlot(s.pk, s.title, s.typeSlot, s.slotTypeId)"
         >
           {{ s.title }}
         </div>
@@ -99,6 +103,7 @@ export default {
       activeSlot: null,
       activeSlotTitle: null,
       typeSlot: null,
+      slotTypeId: null,
     };
   },
   computed: {
@@ -170,10 +175,11 @@ export default {
     },
   },
   methods: {
-    selectSlot(slotPk, slotTitle, typeSlot) {
+    selectSlot(slotPk, slotTitle, typeSlot, slotTypeId) {
       this.activeSlot = slotPk;
       this.activeSlotTitle = slotTitle;
       this.typeSlot = typeSlot;
+      this.slotTypeId = slotTypeId;
     },
     async loadSlots() {
       await this.$store.dispatch(actions.INC_LOADING);
@@ -266,6 +272,7 @@ export default {
         slot_id: this.activeSlot,
         card_pk: this.cardId,
         type_slot: this.typeSlot,
+        slot_type_id: this.slotTypeId,
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
       });
@@ -382,4 +389,13 @@ export default {
     }
   }
 }
+
+.doctor-self-slot {
+  background: rgba(#4cae4c, 0.6);
+}
+
+.forbidden-slot {
+  background: rgba(#042693, 0.3);
+}
+
 </style>

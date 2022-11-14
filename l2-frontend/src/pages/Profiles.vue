@@ -695,8 +695,7 @@
             class="row"
           >
             <div
-              class="col-xs-4"
-              style="padding-right: 0"
+              class="col-xs-4 right-padding"
             >
               <div
                 class="input-group"
@@ -708,6 +707,28 @@
                   type="number"
                   class="form-control"
                 >
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="modules.limit_age_patient_registration"
+            class="row"
+          >
+            <div
+              class="col-xs-12"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Квоты на запись по времени для подразделений</span>
+                <textarea
+                  v-model="user.available_quotas_time"
+                  v-autosize="user.available_quotas_time"
+                  placeholder="{id-подразделения1: '10:00-15:00', id-подразделения2: '15:00-16:00'}"
+                  class="form-control noresize"
+                />
               </div>
             </div>
           </div>
