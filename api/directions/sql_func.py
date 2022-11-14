@@ -22,21 +22,21 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directory_researches.is_form,
             directory_researches.is_microbiology,
             directory_researches.podrazdeleniye_id,
-            directions_napravleniya.parent_id,
-            directions_napravleniya.data_sozdaniya,
+            directions_napravleniya.parent_id as dir_parent_id,
+            directions_napravleniya.data_sozdaniya as dir_data_sozdaniya,
             directions_napravleniya.doc_who_create_id,
             directions_issledovaniya.napravleniye_id,
-            directions_napravleniya.cancel,
+            directions_napravleniya.cancel as dir_cancel,
             directions_issledovaniya.time_confirmation, 
             directions_issledovaniya.maybe_onco,
             to_char(directions_issledovaniya.time_save AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') as ch_time_save,
             directions_issledovaniya.study_instance_uid,
-            directions_napravleniya.parent_slave_hosp_id,
+            directions_napravleniya.parent_slave_hosp_id as dir_parent_slave_hosp_id,
             directory_researches.is_application,
             directory_researches.is_expertise,
             person_contract.id as person_contract_id,
             person_contract.dir_list as contract_dirs,
-            directions_napravleniya.hospital_id
+            directions_napravleniya.hospital_id as dir_hosp
         FROM directions_issledovaniya
         LEFT JOIN directory_researches
         ON directions_issledovaniya.research_id = directory_researches.Id
@@ -72,12 +72,12 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
         
         SELECT 
             napravleniye_id, 
-            cancel, 
+            dir_cancel, 
             iss_id, 
             tubesregistration_id, 
             res_id, 
             res_title,
-            to_char(data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_create,
+            to_char(dir_data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_create,
             time_confirmation,
             to_char(time_recive AT TIME ZONE %(tz)s, 'DD.MM.YY HH24:MI:SS.US'), 
             ch_time_save, 
@@ -91,20 +91,28 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             is_doc_refferal,
             is_paraclinic,
             is_microbiology,
-            parent_id,
+            dir_parent_id,
             study_instance_uid,
-            parent_slave_hosp_id,
+            dir_parent_slave_hosp_id,
             is_form,
             is_application,
             is_expertise,
             person_contract_id,
             contract_dirs,
-            hospital_id
+            dir_hosp,
+            directions_napravleniya.additional_number as register_number,
+            ud.family,
+            ud.name,
+            ud.patronymic
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
         LEFT JOIN t_podrazdeleniye
         ON t_iss_tubes.podrazdeleniye_id = t_podrazdeleniye.podr_id
+        LEFT JOIN directions_napravleniya
+        ON directions_napravleniya.id = napravleniye_id
+        LEFT JOIN users_doctorprofile ud 
+        ON directions_napravleniya.planed_doctor_executor_id = ud.id
         WHERE
         CASE
         WHEN %(is_serv)s = TRUE THEN 
