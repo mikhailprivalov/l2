@@ -726,7 +726,7 @@
                 <textarea
                   v-model="user.available_quotas_time"
                   v-autosize="user.available_quotas_time"
-                  placeholder="{id-подразделения1: '10:00-15:00', id-подразделения2: '15:00-16:00'}"
+                  placeholder='{"id-подразделения1": "10:00-15:00", "id-подразделения2": "15:00-16:00"}'
                   class="form-control noresize"
                 />
               </div>

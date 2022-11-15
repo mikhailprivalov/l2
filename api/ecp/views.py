@@ -29,7 +29,6 @@ def get_available_slots(request):
         request_data['doctor_pk'],
         request_data['date'],
     )
-    print(slots)
     return JsonResponse({"result": slots})
 
 
@@ -40,6 +39,7 @@ def fill_slot(request):
     slot_id = request_data['slot_id']
     type_slot = request_data['type_slot']
     slot_type_id = request_data.get('slot_type_id')
+    slot_title = request_data.get('slot_title')
     doctor_pk = request_data['doctor_pk']
     date = request_data['date']
     card = Card.objects.get(pk=card_pk)
@@ -58,16 +58,22 @@ def fill_slot(request):
         return JsonResponse({"register": False, "message": "Запись на данный слот запрещена"})
     if slot_type_id == "10" and doctor_data != request.user.doctorprofile:
         return JsonResponse({"register": False, "message": "Записать может только сам врач"})
+    r = {"register": False, "message": "Ошибка - обратитесь к Администратору"}
     if slot_type_id == "1":
         r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
-    if slot_type_id == "14" and not allow_patient_registration:
+    elif slot_type_id == "8" and not allow_patient_registration:
         available_quotas_time = doctor_data.available_quotas_time
         try:
             quotas_time = json.loads(available_quotas_time)
         except Exception:
             quotas_time = {}
-        if quotas_time.get(request.user.doctorprofile.podrazdeleniye.pk):
-            times = quotas_time.get(request.user.doctorprofile.podrazdeleniye.pk)
+        if quotas_time.get(str(request.user.doctorprofile.podrazdeleniye.pk)):
+            times = quotas_time.get(str(request.user.doctorprofile.podrazdeleniye.pk))
+            data_times = times.split("-")
+            if slot_title >= data_times[0] and slot_title <= data_times[1]:
+                r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+            else:
+                return JsonResponse({"register": False, "message": "Запись на это время у вас ограничена"})
     else:
         r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
     return JsonResponse(r)

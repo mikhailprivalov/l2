@@ -56,7 +56,7 @@
           v-for="s in slots"
           :key="s.pk"
           class="resource-slot"
-          :class="[{'doctor-self-slot': s.slotTypeId === '10', 'forbidden-slot': s.slotTypeId === '14'},
+          :class="[{'doctor-self-slot': s.slotTypeId === '10', 'forbidden-slot': s.slotTypeId === '8'},
                    activeSlot === s.pk && 'active' ]"
           @click="selectSlot(s.pk, s.title, s.typeSlot, s.slotTypeId)"
         >
@@ -275,6 +275,7 @@ export default {
         slot_type_id: this.slotTypeId,
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
+        slot_title: this.activeSlotTitle,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');
