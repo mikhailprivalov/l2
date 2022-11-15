@@ -174,7 +174,7 @@
             <td
               class="researches"
               :title="row.researches +
-                (row.planed_doctor !== '' ? ' Начзначен: ' + row.planed_doctor: '') +
+                (row.planed_doctor !== '' ? ' Назначен: ' + row.planed_doctor: '') +
                 (row.register_number !== '' ? ' (' + row.register_number + ')': '')
               "
             >
@@ -192,7 +192,7 @@
                       : ' (экспертза С замечаниями)'
                     : '') + (row.person_contract_pk > 0 ? ' (Договор-' + row.person_contract_pk +
                     ' (Направления: ' + row.person_contract_dirs + ')': '') +
-                  (row.planed_doctor !== '' ? ' Начзначен: ' + row.planed_doctor: '') +
+                  (row.planed_doctor !== '' ? ' Назначен: ' + row.planed_doctor: '') +
                   (row.register_number !== '' ? ' (' + row.register_number + ')': '')
               "
               :class="['status-' + row.status]"

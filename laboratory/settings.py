@@ -374,7 +374,6 @@ REMD_FIELDS_BY_TYPE_DOCUMENT = {"ConsultationProtocol_max": []}
 UNLIMIT_PERIOD_STATISTIC_GROUP = []
 UNLIMIT_PERIOD_STATISTIC_RESEARCH = []
 PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE = {}
-SPECIAL_TYPE_SLOTS_ECP = {}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
