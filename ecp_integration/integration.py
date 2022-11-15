@@ -206,6 +206,7 @@ def get_time_table_graf_by_id(graf_id, sess_id):
         return graf_data[0]['TimeTableType_id']
     return ""
 
+
 def register_patient_ecp_slot(patient_ecp_id, slot_id, slot_type):
     sess_id = request_get_sess_id()
     req_result = None
