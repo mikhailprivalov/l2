@@ -53,15 +53,23 @@ def fill_slot(request):
     age_month = age_target_patient[2] * 12 + age_target_patient[1]
     if doctor_data.max_age_patient_registration != -1 and (age_month > doctor_data.max_age_patient_registration):
         return JsonResponse({"register": False, "message": "Запись ограничена по возрасту"})
-    # allow_patient_registration = SettingManager.get("allow_patient_registration", default='true', default_type='b')
-    # if slot_type_id == "13":
-    #     return JsonResponse({"register": False, "message": "Запись на данный слот запрещена"})
-    # if slot_type_id == "10" and doctor_data != request.user.doctorprofile:
-    #     return JsonResponse({"register": False, "message": "Записать может только сам врач"})
-    # if slot_type_id == "1":
-    r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
-    # if slot_type_id != "1" and not allow_patient_registration:
-    #     pass
+    allow_patient_registration = SettingManager.get("allow_patient_registration", default='true', default_type='b')
+    if slot_type_id == "13":
+        return JsonResponse({"register": False, "message": "Запись на данный слот запрещена"})
+    if slot_type_id == "10" and doctor_data != request.user.doctorprofile:
+        return JsonResponse({"register": False, "message": "Записать может только сам врач"})
+    if slot_type_id == "1":
+        r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+    if slot_type_id == "14" and not allow_patient_registration:
+        available_quotas_time = doctor_data.available_quotas_time
+        try:
+            quotas_time = json.loads(available_quotas_time)
+        except Exception:
+            quotas_time = {}
+        if quotas_time.get(request.user.doctorprofile.podrazdeleniye.pk):
+            times = quotas_time.get(request.user.doctorprofile.podrazdeleniye.pk)
+    else:
+        r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
     return JsonResponse(r)
 
 
