@@ -75,6 +75,7 @@ def fill_slot(request):
                 r = {"register": False, "message": "Запись на это время у вас ограничена"}
     else:
         r = register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+
     return JsonResponse(r)
 
 
