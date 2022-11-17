@@ -622,6 +622,9 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
 
       const data = await directionsPoint.cancelDirection({ pk });
+      if (data.forbidden) {
+        this.$root.$emit('msg', 'warning', 'Нет прав на отмену направлений');
+      }
 
       for (const dir of this.directions) {
         if (dir.pk === pk) {
