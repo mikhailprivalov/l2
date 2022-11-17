@@ -623,7 +623,7 @@ export default {
 
       const data = await directionsPoint.cancelDirection({ pk });
       if (data.forbidden) {
-        this.$root.$emit('msg', 'warning', 'Нет прав на отмену направлений');
+        this.$root.$emit('msg', 'warning', 'Недостаточно прав для отмены направлений');
       }
 
       for (const dir of this.directions) {
