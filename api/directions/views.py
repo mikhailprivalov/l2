@@ -628,7 +628,12 @@ def directions_cancel(request):
     response = {"cancel": False}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1)
-    if Napravleniya.objects.filter(pk=pk).exists():
+    response["forbidden"] = False
+    default_cancel_direction = SettingManager.get("default_cancel_direction", default='true', default_type='b')
+    user_groups = [str(x) for x in request.user.groups.all()]
+    if not default_cancel_direction and "Отмена направлений" not in user_groups:
+        response["forbidden"] = True
+    elif Napravleniya.objects.filter(pk=pk).exists():
         direction = Napravleniya.objects.get(pk=pk)
         direction.cancel = not direction.cancel
         direction.save()
