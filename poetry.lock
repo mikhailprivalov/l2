@@ -1143,15 +1143,14 @@ python-versions = "*"
 
 [[package]]
 name = "zeep"
-version = "4.1.0"
+version = "4.2.0"
 description = "A modern/fast Python SOAP client based on lxml / requests"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 attrs = ">=17.2.0"
-cached-property = ">=1.3.0"
 isodate = ">=0.5.4"
 lxml = ">=4.6.0"
 platformdirs = ">=1.4.0"
@@ -1161,9 +1160,9 @@ requests-file = ">=1.5.1"
 requests-toolbelt = ">=0.7.1"
 
 [package.extras]
-async = ["httpx"]
+async = ["httpx (>=0.15.0)"]
 docs = ["sphinx (>=1.4.0)"]
-test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==0.1.1)", "flake8-debugger (==3.2.1)", "flake8-imports (==0.1.1)", "freezegun (==0.3.15)", "isort (==5.3.2)", "mock (==2.0.0)", "pretend (==1.0.9)", "pytest (==6.0.1)", "pytest-asyncio", "pytest-cov (==2.8.1)", "pytest-httpx", "requests-mock (>=0.7.0)"]
+test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==0.1.1)", "flake8-debugger (==3.2.1)", "flake8-imports (==0.1.1)", "freezegun (==0.3.15)", "isort (==5.3.2)", "pretend (==1.0.9)", "pytest (==6.2.5)", "pytest-asyncio", "pytest-cov (==2.8.1)", "pytest-httpx", "requests-mock (>=0.7.0)"]
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
@@ -1172,7 +1171,7 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<4"
-content-hash = "0c14aad481a7f25aecef6a67a63dcbaf580607631614453303bec7cd515ef2d7"
+content-hash = "58c106afbf7bba973cc4b36872fd2da274abb748c9d6a4b2ec2c00da81a448bd"
 
 [metadata.files]
 amqp = [
@@ -2013,6 +2012,6 @@ xlwt = [
     {file = "xlwt-1.3.0.tar.gz", hash = "sha256:c59912717a9b28f1a3c2a98fd60741014b06b043936dcecbc113eaaada156c88"},
 ]
 zeep = [
-    {file = "zeep-4.1.0-py2.py3-none-any.whl", hash = "sha256:81c491092b71f5b276de8c63dfd452be3f322622c48a54f3a497cf913bdfb2f4"},
-    {file = "zeep-4.1.0.tar.gz", hash = "sha256:5867f2eadd6b028d9751f4155af590d3aaf9280e3a0ed5e15a53343921c956e5"},
+    {file = "zeep-4.2.0-py3-none-any.whl", hash = "sha256:e0a2f35a694c78504e48e03341ff94f8c74ac9b5ebfac5a7b47b42cb7cf5b659"},
+    {file = "zeep-4.2.0.tar.gz", hash = "sha256:c6f3540a872239954de31e692e8343be767fb3842222f98cf31f79946b6680cf"},
 ]
