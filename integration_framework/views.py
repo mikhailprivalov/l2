@@ -13,6 +13,7 @@ from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
 from clients.utils import find_patient
+from contracts.models import PriceCategory
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
@@ -1459,10 +1460,17 @@ def external_direction_create(request):
         return Response({"ok": False, 'message': 'Карта не найдена'})
 
     financing_source_title = body.get("financingSource", '')
-    if financing_source_title.lower() not in ["омс", "бюджет"]:
+    if financing_source_title.lower() not in ["омс", "бюджет", "платно"]:
         return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
 
     financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
+    financing_category_code = body.get("financingCategory", '')
+    price_category_all = PriceCategory.objects.all()
+    price_category = None
+    for pc in price_category_all:
+        if financing_category_code == pc.title.split("-")[0]:
+            price_category = pc
+            break
 
     if not financing_source:
         return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
@@ -1537,6 +1545,7 @@ def external_direction_create(request):
                 polis_n=card.polis.number if card.polis else None,
                 hospital=hospital,
                 id_in_hospital=id_in_hospital,
+                price_category=price_category,
             )
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
