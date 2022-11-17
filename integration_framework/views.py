@@ -1465,12 +1465,7 @@ def external_direction_create(request):
 
     financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
     financing_category_code = body.get("financingCategory", '')
-    price_category_all = PriceCategory.objects.all()
-    price_category = None
-    for pc in price_category_all:
-        if financing_category_code == pc.title.split("-")[0]:
-            price_category = pc
-            break
+    price_category = PriceCategory.objects.filter(title__startswith=financing_category_code).first()
 
     if not financing_source:
         return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
