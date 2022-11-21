@@ -29,7 +29,6 @@ from utils.nsi_directories import NSI
 
 
 def get_json_protocol_data(pk, is_paraclinic=False):
-    print(pk)
     result_protocol = get_paraclinic_results_by_direction(pk)
     data = {}
     document = {}
