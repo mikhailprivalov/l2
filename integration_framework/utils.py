@@ -18,7 +18,8 @@ from laboratory.settings import (
     ODII_METHODS,
     REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
     LEGAL_AUTH_CODE_POSITION,
-    REMD_FIELDS_BY_TYPE_DOCUMENT, JSON_LOADS_FIELDS_CDA,
+    REMD_FIELDS_BY_TYPE_DOCUMENT,
+    JSON_LOADS_FIELDS_CDA,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
