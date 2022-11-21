@@ -18,7 +18,7 @@ from laboratory.settings import (
     ODII_METHODS,
     REMD_RESEARCH_USE_GLOBAL_LEGAL_AUTH,
     LEGAL_AUTH_CODE_POSITION,
-    REMD_FIELDS_BY_TYPE_DOCUMENT,
+    REMD_FIELDS_BY_TYPE_DOCUMENT, JSON_LOADS_FIELDS_CDA,
 )
 
 from results.sql_func import get_paraclinic_results_by_direction, get_laboratory_results_by_directions
@@ -29,6 +29,7 @@ from utils.nsi_directories import NSI
 
 
 def get_json_protocol_data(pk, is_paraclinic=False):
+    print(pk)
     result_protocol = get_paraclinic_results_by_direction(pk)
     data = {}
     document = {}
@@ -112,7 +113,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                     result_paraclinic["заключение"] = f"{result_paraclinic.get('заключение')}; {r.value}"
         data = result_paraclinic
 
-    if iss.research.is_doc_refferal:
+    if iss.research.is_doc_refferal or iss.research.is_form:
         try:
             val = data.get("Cостояние пациента", None)
             if not val or not isinstance(val, dict):
@@ -124,18 +125,15 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             data["Состояние код"] = "1"
             data["Состояние наименование"] = "Удовлетворительное"
 
-        for i in REMD_FIELDS_BY_TYPE_DOCUMENT.get("ConsultationProtocol_max"):
+        for i in REMD_FIELDS_BY_TYPE_DOCUMENT.get(iss.research.generator_name):
             data[i] = "-"
         for r in result_protocol:
             if r.value:
                 if r.cda_title_field is None:
                     data[r.cda_title_group] = f"{data.get(r.cda_title_group)}; {r.title}:{r.value}"
                 else:
-                    data[r.cda_title_field] = f"{data.get(r.cda_title_field)}; {r.title}:{r.value}"
-                if r.cda_title_field == "Шифр по МКБ-10":
-                    diag_data = r.value.split(" ")
-                    data["Шифр по МКБ-10 код"] = diag_data.pop(0)
-                    data["Шифр по МКБ-10 наименование"] = " ".join(diag_data)
+                    data[r.cda_title_field] = f"{r.value}"
+                data = check_title_field(data, r)
         data["Код услуги"] = iss.research.code
         if not data.get("Состояние код"):
             data["Состояние код"] = "1"
@@ -172,6 +170,18 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["codeService"] = iss.research.code
 
     return document
+
+
+def check_title_field(data, r):
+    if r.cda_title_field == "Шифр по МКБ-10":
+        diag_data = r.value.split(" ")
+        data["Шифр по МКБ-10 код"] = diag_data.pop(0)
+        data["Шифр по МКБ-10 наименование"] = " ".join(diag_data)
+    if r.cda_title_field in JSON_LOADS_FIELDS_CDA:
+        tmp_data = json.loads(r.value)
+        data[f"{r.cda_title_field} код"] = tmp_data["code"]
+        data[f"{r.cda_title_field} наименование"] = tmp_data["title"]
+    return data
 
 
 def get_json_labortory_data(pk):
