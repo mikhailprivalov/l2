@@ -166,7 +166,7 @@ def gen_pdf_execlist(request):
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
-    appendix = json.loads(request.GET.get("appendix", 0))
+    appendix = request.GET.get("appendix", 0)
     req_from_additional_pages = False
     if direction_id == []:
         request_direction_id = json.loads(request.body)
@@ -365,7 +365,7 @@ def gen_pdf_dir(request):
             response.write(pdf_out)
             return response
 
-    if request.GET.get("appendix") and request.GET["appendix"] == '1' and PRINT_APPENDIX_PAGE_DIRECTION:
+    if appendix == '1' and PRINT_APPENDIX_PAGE_DIRECTION and not req_from_additional_pages:
         type_additional_pdf = PRINT_APPENDIX_PAGE_DIRECTION.get(fin_title)
         additional_page = import_string('forms.forms112.' + type_additional_pdf)
         fc = additional_page(
