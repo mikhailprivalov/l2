@@ -52,7 +52,7 @@ const menuItems = [
     },
   },
   {
-    title: 'Печать набор документов',
+    title: 'Печать набора документов',
     handler() {
       this.$root.$emit('print:directions:appendix', this.checked);
     },
