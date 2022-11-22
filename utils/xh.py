@@ -74,19 +74,3 @@ def check_type_research(pk):
 def save_tmp_file(form, filename: str):
     with open(filename, 'wb') as f:
         f.write(form.read())
-
-
-def gen_diagnoses():
-    result = []
-    for i in range(100):
-        for k in range(10):
-            if i < 10:
-                result.append(f"C0{i}.{k}")
-            else:
-                result.append(f"C{i}.{k}")
-    d_result = []
-    for i in range(10):
-        for k in range(10):
-            result.append(f"D0{i}.{k}")
-
-    print(result)
