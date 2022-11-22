@@ -41,7 +41,3 @@ def find_death_by_dignoses(start_date, end_date, diagnoses, exclude_hospital_pk)
             if code_data["code"] in diagnoses:
                 directions.add(i.napravleniye_id)
     return directions
-
-
-
-
