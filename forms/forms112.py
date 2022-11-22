@@ -121,23 +121,7 @@ def form_01(request_data):
             appendix_route_list = data.get('appendix_route_list', None)
             appendix_direction_list = data.get('appendix_direction_list', None)
     if additional_data_from_file and appendix_paragraphs:
-        for section in appendix_paragraphs:
-            if section.get('page_break'):
-                objs.append(PageBreak())
-                objs.append(Macro("canvas._pageNumber=1"))
-            elif section.get('Spacer'):
-                height_spacer = section.get('spacer_data')
-                objs.append(Spacer(1, height_spacer * mm))
-            elif section.get('HRFlowable'):
-                objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-            elif section.get('patient_fio'):
-                objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
-            elif section.get('patient_addresses'):
-                objs.append(Paragraph(f"{section['text']} {patient_data['main_address']}", styles_obj[section['style']]))
-            elif section.get('patient_document'):
-                objs.append(Paragraph(f"{section['text']} {patient_data['type_doc']} {p_doc_serial} {p_doc_num}", styles_obj[section['style']]))
-            else:
-                objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
+        objs = add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, p_doc_serial, p_doc_num)
 
     styleTB = deepcopy(style)
     styleTB.firstLineIndent = 0
@@ -147,76 +131,11 @@ def form_01(request_data):
     route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph(' Ш/к', styleTB)]]
 
     if additional_data_from_file and appendix_route_list:
-        for section in appendix_route_list:
-            if section.get('page_break'):
-                objs.append(PageBreak())
-                objs.append(Macro("canvas._pageNumber=1"))
-            elif section.get('Spacer'):
-                height_spacer = section.get('spacer_data')
-                objs.append(Spacer(1, height_spacer * mm))
-            elif section.get('patient_fio'):
-                objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
-            else:
-                objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
-        styleTC = deepcopy(style)
-        styleTC.firstLineIndent = 0
-        styleTC.fontSize = 8.5
-        styleTC.alignment = TA_LEFT
+        objs = add_route_list(objs, appendix_route_list, patient_data, styles_obj, style, work_dir, styleTB)
 
-        for current_dir in work_dir:
-            barcode = code128.Code128(current_dir, barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
-            iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir)
-            step = 0
-            for current_iss in iss_obj:
-                if step > 0:
-                    barcode = Paragraph('', styleTC)
-                    current_dir = ""
-                route_list.append([Paragraph(f"{current_dir}", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), barcode])
-                step += 1
-
-        tbl = Table(route_list, colWidths=(40 * mm, 78 * mm, 72 * mm), hAlign='LEFT')
-        tbl.setStyle(
-            TableStyle(
-                [
-                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ]
-            )
-        )
-
-        objs.append(Spacer(1, 5 * mm))
-        objs.append(tbl)
     direction_data = []
     if additional_data_from_file and appendix_direction_list:
-        types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set()}
-        for d in dir_temp:
-            iss_obj = Issledovaniya.objects.filter(napravleniye_id=d).first()
-            if iss_obj.research.is_doc_refferal:
-                types_direction["isDocrefferal"].add(d)
-            elif iss_obj.research.is_paraclinic:
-                types_direction["isParaclinic"].add(d)
-            elif iss_obj.research.is_paraclinic:
-                types_direction["isGistology"].add(d)
-            elif (
-                not iss_obj.research.is_form
-                and not iss_obj.research.is_citology
-                and not iss_obj.research.is_gistology
-                and not iss_obj.research.is_stom
-                and not iss_obj.research.is_application
-                and not iss_obj.research.is_direction_params
-                and not iss_obj.research.is_microbiology
-                and not iss_obj.research.is_treatment
-            ):
-                types_direction["islab"].add(d)
-
-        for section in appendix_direction_list:
-            if section.get('islab'):
-                direction_data.extend(list(types_direction["islab"]))
-            elif section.get('isDocrefferal'):
-                direction_data.extend(list(types_direction["isDocrefferal"]))
-            elif section.get('isParaclinic'):
-                direction_data.extend(list(types_direction["isParaclinic"]))
+        direction_data = add_appendix_direction_list(appendix_direction_list, dir_temp)
 
     doc.build(objs)
 
@@ -361,7 +280,6 @@ def form_02(request_data):
             appendix_paragraphs = data.get('appendix_paragraphs', None)
             appendix_route_list = data.get('appendix_route_list', None)
             appendix_direction_list = data.get('appendix_direction_list', None)
-            appendix_order = data.get('appendix_order', None)
 
     if additional_data_from_file and appendix_paragraphs:
         objs = add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, p_doc_serial, p_doc_num)
