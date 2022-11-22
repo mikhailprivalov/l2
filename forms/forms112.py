@@ -437,7 +437,7 @@ def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj,
     return objs
 
 
-def add_route_list(objs, appendix_route_list, patient_data, styles_obj, style, work_dir, styleTB ):
+def add_route_list(objs, appendix_route_list, patient_data, styles_obj, style, work_dir, styleTB):
     route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph(' Ш/к', styleTB)]]
     for section in appendix_route_list:
         if section.get('page_break'):
