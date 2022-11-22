@@ -357,7 +357,7 @@
           v-tippy
           class="btn btn-blue-nb top-inner-select"
           :disabled="!can_save"
-          title="Сохранить и паспечатать дополнителельные документы"
+          title="Сохранить и распечатать дополнителельные документы"
           @click="generate('complect-document')"
         >
           <span>Набор документов</span>
