@@ -32,7 +32,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE
+from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE, PRINT_APPENDIX_PAGE_DIRECTION
 from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
@@ -166,6 +166,7 @@ def gen_pdf_execlist(request):
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
+    appendix = request.GET.get("appendix", 0)
     req_from_additional_pages = False
     if direction_id == []:
         request_direction_id = json.loads(request.body)
@@ -349,25 +350,43 @@ def gen_pdf_dir(request):
     if PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None) and not req_from_additional_pages:
         type_additional_pdf = PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title)
         additional_page = import_string('forms.forms112.' + type_additional_pdf)
-        fc = additional_page(
-            request_data={
-                **dict(request.GET.items()),
-                "user": request.user,
-                "card_pk": card_pk_set.pop(),
-                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
-                "type_additional_pdf": type_additional_pdf,
-                "fin_title": fin_title,
-            }
-        )
-        if fc:
-            pdf_out = exteranl_add_pdf(fc, buffer, n)
-            response.write(pdf_out)
-            return response
+        if additional_page:
+            fc = additional_page(
+                request_data={
+                    **dict(request.GET.items()),
+                    "user": request.user,
+                    "card_pk": card_pk_set.pop(),
+                    "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                    "type_additional_pdf": type_additional_pdf,
+                    "fin_title": fin_title,
+                }
+            )
+            if fc:
+                pdf_out = exteranl_add_pdf(fc, buffer, n)
+                response.write(pdf_out)
+                return response
+
+    if appendix == '1' and PRINT_APPENDIX_PAGE_DIRECTION and not req_from_additional_pages:
+        type_additional_pdf = PRINT_APPENDIX_PAGE_DIRECTION.get(fin_title)
+        if type_additional_pdf:
+            additional_page = import_string('forms.forms112.' + type_additional_pdf)
+            fc = additional_page(
+                request_data={
+                    **dict(request.GET.items()),
+                    "user": request.user,
+                    "card_pk": card_pk_set.pop(),
+                    "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                    "type_additional_pdf": type_additional_pdf,
+                    "fin_title": fin_title,
+                }
+            )
+            if fc:
+                pdf_out = exteranl_add_pdf(fc, buffer, n)
+                response.write(pdf_out)
+                return response
 
     buffer.close()  # Закрытие буфера
-
     response.write(pdf)  # Запись PDF в ответ
-
     return response
 
 

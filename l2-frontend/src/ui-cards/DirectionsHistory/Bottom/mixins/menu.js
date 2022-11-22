@@ -51,6 +51,12 @@ const menuItems = [
       }
     },
   },
+  {
+    title: 'Печать набора документов',
+    handler() {
+      this.$root.$emit('print:directions:appendix', this.checked);
+    },
+  },
 ];
 
 export default {
