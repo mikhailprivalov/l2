@@ -315,7 +315,7 @@ def form_02(request_data):
     if additional_data_from_file and appendix_direction_list:
         direction_data = add_appendix_direction_list(appendix_direction_list, dir_temp)
 
-    if SettingManager.get("print_direction_after_contract", default='False', default_type='b') :
+    if SettingManager.get("print_direction_after_contract", default='False', default_type='b'):
         # печать дополнительных форм
         http_params = {
                 "card_pk": request_data["card_pk"],
