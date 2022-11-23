@@ -1103,7 +1103,7 @@ def result_print(request):
                         fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                     else:
                         if iss.doc_confirmation:
-                            doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
+                            doc_execute = "фельдшер" if request.user.is_authenticated and iss.doc_confirmation.has_group("Фельдшер") else "врач"
                             fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                         else:
                             fwb.append(
