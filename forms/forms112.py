@@ -20,10 +20,12 @@ from reportlab.platypus.flowables import HRFlowable
 from appconf.manager import SettingManager
 from clients.models import Card
 from directions.models import Napravleniya, Issledovaniya
+from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER, BASE_DIR
 from utils.xh import save_tmp_file
 from directions.views import gen_pdf_dir as f_print_direction
 from django.http import HttpRequest
+from django.utils.module_loading import import_string
 
 
 def form_01(request_data):
@@ -32,7 +34,6 @@ def form_01(request_data):
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
-    p_doc_serial, p_doc_num = patient_data['passport_serial'], patient_data['passport_num']
     work_dir = json.loads(request_data["napr_id"])
     fin_title = request_data["fin_title"]
     type_additional_pdf = request_data["type_additional_pdf"]
@@ -99,12 +100,18 @@ def form_01(request_data):
     styleTCenter.alignment = TA_CENTER
     styleTCenter.leading = 3.5 * mm
 
-    styleTBold = deepcopy(styleCenterBold)
-    styleTBold.fontSize = 10
-    styleTBold.alignment = TA_LEFT
+    styleTB = deepcopy(style)
+    styleTB.firstLineIndent = 0
+    styleTB.fontSize = 8.5
+    styleTB.alignment = TA_CENTER
+    styleTB.fontName = "PTAstraSerifBold"
 
-    styles_obj = {'style': style, 'styleCenter': styleCenter, 'styleAppendix': styleAppendix, "styleBoldCenter": styleBoldCenter}
+    styleTC = deepcopy(style)
+    styleTC.firstLineIndent = 0
+    styleTC.fontSize = 8.5
+    styleTC.alignment = TA_LEFT
 
+    styles_obj = {'style': style, 'styleCenter': styleCenter, 'styleAppendix': styleAppendix, "styleBoldCenter": styleBoldCenter, "styleTB": styleTB, "styleTC": styleTC}
     styleTR = deepcopy(style)
     styleTR.alignment = TA_RIGHT
 
@@ -120,18 +127,19 @@ def form_01(request_data):
             appendix_paragraphs = data.get('appendix_paragraphs', None)
             appendix_route_list = data.get('appendix_route_list', None)
             appendix_direction_list = data.get('appendix_direction_list', None)
+
+    additional_objects = {"work_dir": work_dir}
     if additional_data_from_file and appendix_paragraphs:
-        objs = add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, p_doc_serial, p_doc_num)
+        objs = add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, additional_objects)
 
     styleTB = deepcopy(style)
     styleTB.firstLineIndent = 0
     styleTB.fontSize = 8.5
     styleTB.alignment = TA_CENTER
     styleTB.fontName = "PTAstraSerifBold"
-    route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph(' Ш/к', styleTB)]]
 
     if additional_data_from_file and appendix_route_list:
-        objs = add_route_list(objs, appendix_route_list, patient_data, styles_obj, style, work_dir, styleTB)
+        objs = add_route_list(objs, appendix_route_list, patient_data, styles_obj, additional_objects)
 
     direction_data = []
     if additional_data_from_file and appendix_direction_list:
@@ -185,7 +193,6 @@ def form_02(request_data):
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
-    p_doc_serial, p_doc_num = patient_data['passport_serial'], patient_data['passport_num']
     work_dir = json.loads(request_data["napr_id"])
     fin_title = request_data["fin_title"]
     type_additional_pdf = request_data["type_additional_pdf"]
@@ -256,16 +263,21 @@ def form_02(request_data):
     styleTBold.fontSize = 10
     styleTBold.alignment = TA_LEFT
 
-    styles_obj = {'style': style, 'styleCenter': styleCenter, 'styleAppendix': styleAppendix, "styleBoldCenter": styleBoldCenter}
-
-    styleTR = deepcopy(style)
-    styleTR.alignment = TA_RIGHT
-
     styleTB = deepcopy(style)
     styleTB.firstLineIndent = 0
     styleTB.fontSize = 8.5
     styleTB.alignment = TA_CENTER
     styleTB.fontName = "PTAstraSerifBold"
+
+    styleTC = deepcopy(style)
+    styleTC.firstLineIndent = 0
+    styleTC.fontSize = 8.5
+    styleTC.alignment = TA_LEFT
+
+    styles_obj = {'style': style, 'styleCenter': styleCenter, 'styleAppendix': styleAppendix, "styleBoldCenter": styleBoldCenter, "styleTB": styleTB, "styleTC": styleTC}
+
+    styleTR = deepcopy(style)
+    styleTR.alignment = TA_RIGHT
 
     objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
 
@@ -280,60 +292,101 @@ def form_02(request_data):
             appendix_paragraphs = data.get('appendix_paragraphs', None)
             appendix_route_list = data.get('appendix_route_list', None)
             appendix_direction_list = data.get('appendix_direction_list', None)
+            appendix_orders = data.get('appendix_orders', None)
+            appendix_cards_agrees = data.get('appendix_cards_agrees', None)
 
-    if additional_data_from_file and appendix_paragraphs:
-        objs = add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, p_doc_serial, p_doc_num)
+    additional_objects = {"work_dir": work_dir}
 
-    if additional_data_from_file and appendix_route_list:
-        objs = add_route_list(objs, appendix_route_list, patient_data, styles_obj, style, work_dir, styleTB)
+    if additional_data_from_file:
+        if appendix_orders:
+            for k, v in appendix_orders.items():
+                result_form = import_string('forms.forms112.' + v)
+                objs = result_form(objs, locals()[k], patient_data, styles_obj, additional_objects)
+        else:
+            if appendix_paragraphs:
+                objs = add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, additional_objects)
+            if additional_data_from_file and appendix_route_list:
+                objs = add_route_list(objs, appendix_route_list, patient_data, styles_obj, additional_objects)
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
 
     direction_data = []
     if additional_data_from_file and appendix_direction_list:
         direction_data = add_appendix_direction_list(appendix_direction_list, dir_temp)
 
-    doc.build(objs)
+    if SettingManager.get("print_direction_after_contract", default='False', default_type='b'):
+        # печать дополнительных форм
+        http_params = {
+            "card_pk": request_data["card_pk"],
+            "user": request_data["user"],
+            "hospital": request_data["user"].doctorprofile.get_hospital() if hasattr(request_data["user"], "doctorprofile") else Hospitals.get_default_hospital(),
+            "napr_id": f'[{", ".join(str(e) for e in dir_temp)}]',
+            "from_appendix_pages": True,
+        }
+        if appendix_cards_agrees:
+            for i in appendix_cards_agrees:
+                result_join_pdf = join_two_pdf_data(import_string(i), http_params, request_data['user'], buffer, ind_card, "get")
+                buffer = BytesIO()
+                buffer.write(result_join_pdf)
 
-    pdf = buffer.getvalue()
+        # печать направлений в конце
+        if len(direction_data) > 0:
+            http_params = {"napr_id": direction_data, "from_additional_pages": True, "from_appendix_pages": True}
+            result_join_pdf = join_two_pdf_data(f_print_direction, http_params, request_data['user'], buffer, ind_card)
 
-    if SettingManager.get("print_direction_after_contract", default='False', default_type='b') and len(direction_data) > 0:
-        direction_obj = HttpRequest()
-        direction_obj._body = json.dumps({"napr_id": direction_data, "from_additional_pages": True})
-        direction_obj.user = request_data['user']
-        fc = f_print_direction(direction_obj)
-        if fc:
-            fc_buf = BytesIO()
-            fc_buf.write(fc.content)
-            fc_buf.seek(0)
-            buffer.seek(0)
-            from pdfrw import PdfReader, PdfWriter
-
-            today = datetime.datetime.now()
-            date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
-            date_now_str = str(ind_card.pk) + str(date_now1)
-            dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-            file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
-            file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
-            save_tmp_file(fc_buf, filename=file_dir)
-            save_tmp_file(buffer, filename=file_contract)
-            pdf_all = BytesIO()
-            inputs = [file_contract, file_dir]
-            writer = PdfWriter()
-            for inpfn in inputs:
-                writer.addpages(PdfReader(inpfn).pages)
-            writer.write(pdf_all)
-            pdf_out = pdf_all.getvalue()
-            pdf_all.close()
-            buffer.close()
-            os.remove(file_dir)
-            os.remove(file_contract)
-            fc_buf.close()
-            return pdf_out
+        return result_join_pdf
 
     buffer.close()
     return pdf
 
 
-def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, p_doc_serial, p_doc_num):
+def join_two_pdf_data(func_name, http_params, user_data, buffer, ind_card, type="post"):
+
+    if type == "get":
+        fc = func_name(request_data=http_params)
+        is_get = False
+    else:
+        http_obj = HttpRequest()
+        http_obj._body = json.dumps(http_params)
+        http_obj.user = user_data
+        fc = func_name(http_obj)
+        is_get = True
+    if fc:
+        fc_buf = BytesIO()
+        if is_get:
+            fc_buf.write(fc.content)
+        else:
+            fc_buf.write(fc)
+        fc_buf.seek(0)
+        buffer.seek(0)
+        from pdfrw import PdfReader, PdfWriter
+
+        today = datetime.datetime.now()
+        date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+        date_now_str = str(ind_card.pk) + str(date_now1)
+        dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+        file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
+        file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
+        save_tmp_file(fc_buf, filename=file_dir)
+        save_tmp_file(buffer, filename=file_contract)
+        pdf_all = BytesIO()
+        inputs = [file_contract, file_dir]
+        writer = PdfWriter()
+        for inpfn in inputs:
+            writer.addpages(PdfReader(inpfn).pages)
+        writer.write(pdf_all)
+        pdf_out = pdf_all.getvalue()
+        pdf_all.close()
+        buffer.close()
+        os.remove(file_dir)
+        os.remove(file_contract)
+        fc_buf.close()
+        return pdf_out
+
+
+def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, additional_objects):
+    p_doc_serial, p_doc_num = patient_data['passport_serial'], patient_data['passport_num']
     for section in appendix_paragraphs:
         if section.get('page_break'):
             objs.append(PageBreak())
@@ -355,7 +408,9 @@ def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj,
     return objs
 
 
-def add_route_list(objs, appendix_route_list, patient_data, styles_obj, style, work_dir, styleTB):
+def add_route_list(objs, appendix_route_list, patient_data, styles_obj, additional_objectsj):
+    styleTB = styles_obj["styleTB"]
+    styleTC = styles_obj["styleTC"]
     route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph(' Ш/к', styleTB)]]
     for section in appendix_route_list:
         if section.get('page_break'):
@@ -368,11 +423,8 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, style, w
             objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
         else:
             objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
-    styleTC = deepcopy(style)
-    styleTC.firstLineIndent = 0
-    styleTC.fontSize = 8.5
-    styleTC.alignment = TA_LEFT
 
+    work_dir = additional_objectsj["work_dir"]
     for current_dir in work_dir:
         barcode = code128.Code128(current_dir, barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
         iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir)
