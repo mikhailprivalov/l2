@@ -318,12 +318,12 @@ def form_02(request_data):
     if SettingManager.get("print_direction_after_contract", default='False', default_type='b'):
         # печать дополнительных форм
         http_params = {
-                "card_pk": request_data["card_pk"],
-                "user": request_data["user"],
-                "hospital": request_data["user"].doctorprofile.get_hospital() if hasattr(request_data["user"], "doctorprofile") else Hospitals.get_default_hospital(),
-                "napr_id": f'[{", ".join(str(e) for e in dir_temp)}]',
-                "from_appendix_pages": True
-            }
+            "card_pk": request_data["card_pk"],
+            "user": request_data["user"],
+            "hospital": request_data["user"].doctorprofile.get_hospital() if hasattr(request_data["user"], "doctorprofile") else Hospitals.get_default_hospital(),
+            "napr_id": f'[{", ".join(str(e) for e in dir_temp)}]',
+            "from_appendix_pages": True,
+        }
         if appendix_cards_agrees:
             step = 0
             for i in appendix_cards_agrees:
