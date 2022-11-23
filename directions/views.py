@@ -370,7 +370,6 @@ def gen_pdf_dir(request):
 
     if appendix == '1' and PRINT_APPENDIX_PAGE_DIRECTION and not req_from_appendix_pages:
         type_additional_pdf = PRINT_APPENDIX_PAGE_DIRECTION.get(fin_title)
-        print(type_additional_pdf)
         if type_additional_pdf:
             additional_page = import_string('forms.forms112.' + type_additional_pdf)
             fc = additional_page(
