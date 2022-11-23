@@ -365,8 +365,6 @@ def join_two_pdf_data(func_name, http_params, user_data, buffer, ind_card, type=
         buffer.seek(0)
         from pdfrw import PdfReader, PdfWriter
 
-
-
         date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
         date_now_str = str(ind_card.pk) + str(date_now1)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
