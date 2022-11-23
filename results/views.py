@@ -1002,8 +1002,6 @@ def result_print(request):
                         iss_title = f"{med_certificate_title}{iss.research.title}"
                     elif iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                         iss_title = "Вакцина: " + iss.research.title
-                    elif iss.doc_confirmation and iss.research.is_doc_refferal:
-                        iss_title = "Консультация(осмотр): " + iss.research.title
                     elif iss.doc_confirmation and iss.research.is_paraclinic:
                         iss_title = "Исследование: " + iss.research.title
                     else:
