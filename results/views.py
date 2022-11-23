@@ -1002,8 +1002,10 @@ def result_print(request):
                         iss_title = f"{med_certificate_title}{iss.research.title}"
                     elif iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                         iss_title = "Вакцина: " + iss.research.title
+                    elif iss.doc_confirmation and iss.research.is_paraclinic:
+                        iss_title = "Исследование: " + iss.research.title
                     else:
-                        iss_title = "Услуга: " + iss.research.title
+                        iss_title = iss.research.title
                     if not result_title_form:
                         fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
@@ -1103,7 +1105,7 @@ def result_print(request):
                         fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                     else:
                         if iss.doc_confirmation:
-                            doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
+                            doc_execute = "фельдшер" if request.user.is_authenticated and iss.doc_confirmation.has_group("Фельдшер") else "врач"
                             fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                         else:
                             fwb.append(
