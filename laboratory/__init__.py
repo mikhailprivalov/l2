@@ -1,2 +1,2 @@
-__version__ = "2022.11.210530+d4a4da"
+__version__ = "2022.11.230448+92a567"
 VERSION = __version__
