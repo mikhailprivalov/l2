@@ -364,7 +364,11 @@ def form_02(request_data):
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
-    hospital: Hospitals = request_data["hospital"]
+    if not request_data.get("hospital"):
+        hospial_data = request_data["user"].doctorprofile.get_hospital() if hasattr(request_data["user"], "doctorprofile") else Hospitals.get_default_hospital()
+    else:
+        hospial_data = request_data.get("hospital")
+    hospital: Hospitals = hospial_data
 
     hospital_name = hospital.safe_short_title
     hospital_address = hospital.safe_address

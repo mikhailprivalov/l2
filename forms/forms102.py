@@ -1069,6 +1069,7 @@ def form_02(request_data):
     """
     contract_id_param = request_data.get("contract_id", None)
     contract_id = None
+    from_appendix_pages = request_data.get("from_appendix_pages")
     if contract_id_param:
         contract_id = json.loads(request_data.get("contract_id"))
     ind_card = Card.objects.get(pk=request_data["card_pk"])
@@ -1911,7 +1912,7 @@ def form_02(request_data):
 
     pdf = buffer.getvalue()
 
-    if SettingManager.get("print_direction_after_contract", default='False', default_type='b') and len(direction_data) > 0:
+    if SettingManager.get("print_direction_after_contract", default='False', default_type='b') and len(direction_data) > 0 and not from_appendix_pages:
         direction_obj = HttpRequest()
         direction_obj._body = json.dumps({"napr_id": direction_data})
         direction_obj.user = request_data['user']

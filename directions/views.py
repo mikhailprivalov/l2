@@ -168,10 +168,12 @@ def gen_pdf_dir(request):
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
     appendix = request.GET.get("appendix", 0)
     req_from_additional_pages = False
+    req_from_appendix_pages = False
     if direction_id == []:
         request_direction_id = json.loads(request.body)
         direction_id = request_direction_id.get("napr_id", "[]")
         req_from_additional_pages = request_direction_id.get("from_additional_pages", False)
+        req_from_appendix_pages = request_direction_id.get("from_appendix_pages", False)
     if SettingManager.get("pdf_auto_print", "true", "b") and not request.GET.get('normis') and not request.GET.get('embedded'):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
@@ -342,7 +344,7 @@ def gen_pdf_dir(request):
                         "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
                     }
                 )
-                if fc:
+                if fc and not req_from_appendix_pages:
                     pdf_out = exteranl_add_pdf(fc, buffer, n)
                     response.write(pdf_out)
                     return response
@@ -366,8 +368,9 @@ def gen_pdf_dir(request):
                 response.write(pdf_out)
                 return response
 
-    if appendix == '1' and PRINT_APPENDIX_PAGE_DIRECTION and not req_from_additional_pages:
+    if appendix == '1' and PRINT_APPENDIX_PAGE_DIRECTION and not req_from_appendix_pages:
         type_additional_pdf = PRINT_APPENDIX_PAGE_DIRECTION.get(fin_title)
+        print(type_additional_pdf)
         if type_additional_pdf:
             additional_page = import_string('forms.forms112.' + type_additional_pdf)
             fc = additional_page(
