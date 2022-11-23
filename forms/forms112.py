@@ -364,6 +364,7 @@ def join_two_pdf_data(func_name, http_params, user_data, buffer, ind_card, type=
         fc_buf.seek(0)
         buffer.seek(0)
         from pdfrw import PdfReader, PdfWriter
+
         today = datetime.datetime.now()
         date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
         date_now_str = str(ind_card.pk) + str(date_now1)
