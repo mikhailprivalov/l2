@@ -313,10 +313,18 @@ def gen_pdf_dir(request):
     # Проверить, если единый источник финансирвоания у направлений и title==платно, тогода печатать контракт
     fin_ist_set = set()
     card_pk_set = set()
+    setup_print_additional_page_direction = {}
     for n in dn:
         if n.istochnik_f:
             fin_ist_set.add(n.istochnik_f)
         card_pk_set.add(n.client_id)
+        iss = Issledovaniya.objects.filter(napravleniye=n)
+        for i in iss:
+            if i.research.podrazdeleniye.print_additional_page_direction:
+                setup_print_additional_page_direction = json.loads(i.research.podrazdeleniye.print_additional_page_direction)
+            if i.research.print_additional_page_direction:
+                setup_print_additional_page_direction = json.loads(i.research.podrazdeleniye.print_additional_page_direction)
+
 
     internal_type = n.client.base.internal_type
 
@@ -349,9 +357,13 @@ def gen_pdf_dir(request):
                     response.write(pdf_out)
                     return response
 
-    if PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None) and not req_from_additional_pages:
+
+
+    if (PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None) or setup_print_additional_page_direction.get(fin_title, None)) and not req_from_additional_pages:
         type_additional_pdf = PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title)
-        additional_page = import_string('forms.forms112.' + type_additional_pdf)
+        if setup_print_additional_page_direction.get(fin_title, None):
+            type_additional_pdf = setup_print_additional_page_direction.get(fin_title)
+        additional_page = import_string('forms.forms112.' + type_additional_pdf.split(".")[0])
         if additional_page:
             fc = additional_page(
                 request_data={
@@ -359,7 +371,7 @@ def gen_pdf_dir(request):
                     "user": request.user,
                     "card_pk": card_pk_set.pop(),
                     "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
-                    "type_additional_pdf": type_additional_pdf,
+                    "type_additional_pdf": type_additional_pdf.split(".")[1],
                     "fin_title": fin_title,
                 }
             )
