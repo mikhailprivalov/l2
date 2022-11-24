@@ -356,8 +356,6 @@ def gen_pdf_dir(request):
                     response.write(pdf_out)
                     return response
 
-
-
     if (PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None) or setup_print_additional_page_direction.get(fin_title, None)) and not req_from_additional_pages:
         type_additional_pdf = PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title)
         if setup_print_additional_page_direction.get(fin_title, None):
