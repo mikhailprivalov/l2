@@ -325,7 +325,6 @@ def gen_pdf_dir(request):
             if i.research.print_additional_page_direction:
                 setup_print_additional_page_direction = json.loads(i.research.podrazdeleniye.print_additional_page_direction)
 
-
     internal_type = n.client.base.internal_type
 
     fin_status = None
