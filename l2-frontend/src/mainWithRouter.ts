@@ -617,6 +617,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/infomat',
+      name: 'infomat',
+      component: () => import('@/pages/Infomat.vue'),
+      meta: {
+        allowWithoutLogin: true,
+        emptyLayout: true,
+        title: 'Предварительный просмотр бланков результатов',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
