@@ -320,7 +320,7 @@ def gen_pdf_dir(request):
         card_pk_set.add(n.client_id)
         iss = Issledovaniya.objects.filter(napravleniye=n)
         for i in iss:
-            if i.research.podrazdeleniye.print_additional_page_direction:
+            if i.research.podrazdeleniye and i.research.podrazdeleniye.print_additional_page_direction:
                 setup_print_additional_page_direction = json.loads(i.research.podrazdeleniye.print_additional_page_direction)
             if i.research.print_additional_page_direction:
                 setup_print_additional_page_direction = json.loads(i.research.podrazdeleniye.print_additional_page_direction)
