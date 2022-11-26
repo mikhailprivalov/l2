@@ -446,9 +446,23 @@
               </td>
               <td
                 class="table-content-row"
-                colspan="3"
               >
                 <strong>{{ selected_card.medbookNumber }}</strong>
+              </td>
+              <td
+                class="cl-td"
+                colspan="2"
+              >
+                <button
+                  v-tippy="{ placement: 'bottom', arrow: true }"
+                  class="btn last btn-blue-nb nbr"
+                  style="height: 31px; float: right"
+                  type="button"
+                  title="Факторы вредности"
+                  @click="open_benefit()"
+                >
+                  <i class="fa fa-bolt" />
+                </button>
               </td>
             </tr>
             <tr v-if="!hasSnils">
@@ -821,6 +835,9 @@ export default {
     },
     l2_benefit() {
       return this.$store.getters.modules.l2_benefit;
+    },
+    l2_harmful_factor() {
+      return this.$store.getters.modules.l2_harmful_factor;
     },
     force_rmis_search() {
       return Boolean(this.$store.getters.modules.l2_force_rmis_search);
