@@ -4241,6 +4241,7 @@ def form_17(request_data):
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
 
     agent_status = False
     if ind_card.who_is_agent:
@@ -4255,20 +4256,22 @@ def form_17(request_data):
         who_patient = 'ребёнка'
 
     patient_status = ''
-    patient_status_creative_case = ''
     patient_status_genitive_case = ''
     patient_signature = ''
+    patient_status_nominative_case = ''
     if agent_status:
         person_data = p_agent.get_data_individual()
         patient_status = 'представляемому'
-        patient_status_creative_case = 'представляемым'
         patient_status_genitive_case = 'представляемого'
+        patient_status_genitive_case1 = 'его'
+        patient_status_nominative_case = 'представляемый'
         patient_signature = f"<font face='Symbola'>\u2713</font>Подпись законного представителя пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
     else:
         person_data = patient_data
         patient_status = 'мне'
-        patient_status_creative_case = 'мною'
         patient_status_genitive_case = 'меня'
+        patient_status_genitive_case1 = 'моего'
+        patient_status_nominative_case = 'я'
         patient_signature = f"<font face='Symbola'>\u2713</font>Подпись пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
 
     if sys.platform == 'win32':
@@ -4305,8 +4308,6 @@ def form_17(request_data):
 
     styleCenterMin = deepcopy(styleCenter)
     styleCenterMin.fontSize = 8
-
-    styleSignature = deepcopy(styleCenter)
 
     objs = []
     space = 3.5 * mm
@@ -4350,15 +4351,16 @@ def form_17(request_data):
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
     objs.append(Paragraph('(указать область, вид исследования)', styleCenterMin))
     objs.append(Spacer(1, space))
-    objs.append(Paragraph('<b>Я подтверждаю, что мне в доступной  и понятной форме разъяснены особенности исследования, абсолютные и относительные противопоказания, а также наличие '
+    objs.append(Paragraph('<b>Я подтверждаю, что мне в доступной и понятной форме разъяснены особенности исследования, абсолютные и относительные противопоказания, а также наличие '
                           'возможного риска при проведении исследования</b>', style))
     objs.append(Spacer(1, space))
-    objs.append(Paragraph(f'{patient_signature}', styleSignature))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
     objs.append(Spacer(1, space))
-    objs.append(Paragraph('<b>Я подтверждаю отсутствие у меня в теле любых металлических инородных тел, кардиостимулятора, ферромагнитных имплантов (протезы внутреннего уха, тазобедренного '
-                          'сустава, клипсы на кровеносных сосудах и т.д.), отсутствие беременности и подтверждаю свое согласие на выполнение мне исследования МРТ</b>', style))
+    objs.append(Paragraph(f'<b>Я подтверждаю отсутствие у {patient_status_genitive_case} в теле любых металлических инородных тел, кардиостимулятора, ферромагнитных имплантов (протезы '
+                          'внутреннего уха, тазобедренного сустава, клипсы на кровеносных сосудах и т.д.), отсутствие беременности и подтверждаю свое согласие на выполнение мне '
+                          'исследования МРТ</b>', style))
     objs.append(Spacer(1, space))
-    objs.append(Paragraph(f'{patient_signature}', styleSignature))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
     objs.append(Spacer(1, space))
     objs.append(Paragraph('<b>ПРИ НАЛИЧИИ МЕТАЛЛИЧЕСКИХ ИМПЛАНТОВ:</b>', styleLeft))
     objs.append(Paragraph('(вопрос о возможности проведения исследования решается в индивидуальном порядке врачом кабинета на основании представленной медицинской документации)', style))
@@ -4384,19 +4386,19 @@ def form_17(request_data):
     tbl.setStyle(table_style)
     objs.append(tbl)
     objs.append(Paragraph('В случае отсутствия документации на установленные импланты, либо отсутствия в представленной документации сведений о безопасности проведения МРТ с данным '
-                          'имплантом я понимаю, что назначенное мне исследование не безопасно, т.к. установленные импланты могут сместиться под воздействием магнитного поля  и/или  '
-                          'нагреться под воздействием радиочастотных импульсов. Я подтверждаю, что в доступной  и понятной форме разъяснены опасные для моего здоровья и жизни последствия, '
-                          'связанные с выполнением данного исследования, и я полностью осознаю, что целиком и полностью принимаю на себя всю ответственность за возникновение возможных '
-                          'осложнений и подтверждаю выполнение мне исследования МРТ.', style))
+                          f'имплантом я понимаю, что назначенное {patient_status} исследование не безопасно, т.к. установленные импланты могут сместиться под воздействием магнитного поля  '
+                          'и/или нагреться под воздействием радиочастотных импульсов. Я подтверждаю, что мне в доступной и понятной форме разъяснены последствия опасные для '
+                          f'{patient_status_genitive_case1} здоровья и жизни, связанные с выполнением данного исследования, и я полностью осознаю, что целиком и полностью '
+                          'принимаю на себя всю ответственность за возникновение возможных осложнений и подтверждаю выполнение мне исследования МРТ.', style))
     objs.append(Spacer(1, space))
-    objs.append(Paragraph('<b>В случае возникновения у меня осложнений после проведения исследования, претензий к учреждению иметь не буду.</b>', style))
+    objs.append(Paragraph(f'<b>В случае возникновения у {patient_status_genitive_case} осложнений после проведения исследования, претензий к учреждению иметь не буду.</b>', style))
     objs.append(Spacer(1, space))
-    objs.append(Paragraph(f'{patient_signature}', styleSignature))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
     objs.append(Paragraph('(Подпись ставится при наличии металлического импланта)', styleCenterMin))
     objs.append(Spacer(1, space))
     objs.append(Paragraph('<b>ПРИ ПРОВЕДЕНИИ МРТ С КОНТРАСТНЫМ УСИЛЕНИЕМ:</b>', styleLeft))
-    objs.append(Paragraph('Контрастные вещества считают достаточно безопасными, но могут возникать редкие реакции, которые проявляются тошнотой, рвотой, чиханием, сыпью на коже. У некоторых '
-                          'пациентов риск появления осложнений значительно выше, к ним относятся:', style))
+    objs.append(Paragraph('Контрастные вещества считают достаточно безопасными, но могут возникать редкие реакции, которые проявляются тошнотой, рвотой, чиханием, сыпью на коже. У '
+                          'некоторых пациентов риск появления осложнений значительно выше, к ним относятся:', style))
     objs.append(Paragraph('Лица, которые ранее имели осложнения при введении контрастного препарата;', style=style, bulletText='•'))
     objs.append(Paragraph('Пациенты с аллергическими реакциями, особенно страдающие бронхиальной астмой;', style=style, bulletText='•'))
     objs.append(Paragraph('Пациенты с тяжелыми заболеваниями сердца, почек;', style=style, bulletText='•'))
@@ -4406,13 +4408,222 @@ def form_17(request_data):
     objs.append(Spacer(1, space))
     objs.append(Paragraph('Абсолютными противопоказаниями к в/в введению контрастного препарата являются: Почечная недостаточность со скоростью клубочковой фильтрацией менее 30мл/мин и '
                           'состояние после трансплантации печени.', style))
-    objs.append(Paragraph('<b>Я уведомлен, что если я отношусь к одной из вышеперечисленных категорий, мне необходимо сообщить об этом врачу.</b>', style))
+    objs.append(Paragraph(f'<b>Я уведомлен, что если {patient_status_nominative_case} отношусь к одной из вышеперечисленных категорий, мне необходимо сообщить об этом врачу.</b>', style))
     objs.append(Paragraph('<b>Я подтверждаю, что мне в доступной и понятной форме разъяснены особенности исследования, а также наличие возможного риска при проведении контрастирования.</b>',
                           style))
     objs.append(Paragraph('<b>Я подтверждаю, выполнение мне МРТ исследования с контрастным веществом</b>',
                           style))
+    objs.append(Spacer(1, 2 * space))
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
     objs.append(Paragraph('(указать область, вид исследования)', styleCenterMin))
+    objs.append(Paragraph(f'<b>и даю согласие на проведение необходимых лечебных медицинских мероприятий в случае возникновения у {patient_status_genitive_case} осложнений при проведении '
+                          'исследования.</b>', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>Для уточнения состояния пациента, наличия противопоказаний к проведению МРТ, просим внимательно ознакомиться с анкетой и ответить на поставленные вопросы:</b>',
+                          style))
+    objs.append(Spacer(1, space))
+    opinion = [
+        [
+            Paragraph('Вопросы', styleCenter),
+            Paragraph('Да', styleCenter),
+            Paragraph('Нет', styleCenter)
+        ],
+        [
+            Paragraph('Проходили ли Вы ранее МРТ исследование?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Подвергались ли Вы операциям?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('У Вас когда либо были ранения глаза и/или тела металлическим объектом (металлические осколки, стружка, инородные тела и т.п.)?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Есть ли у Вас клаустрофобия (боязнь замкнутого пространства)?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Есть ли у Вас анемия или другие заболевания крови?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Имеете ли Вы диагноз «Эпилепсия» , «Инфаркт», «Инсульт», «Хроническая сердечная недостаточность»? ', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Были у Вас (или есть) онкологические заболевания?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Проходите( или проходили ранее) Вы химиотерапию, лучевую терапию?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Были ли у Вас заболевания почек, астма или аллергические реакции на какие-либо вещества? ', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Была ли у Вас когда либо реакция на контрастный препарат, применяемый при МРТ или МСКТ?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Беременны ли Вы или подозреваете беременность? Кормите ли Вы грудью?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Принимаете ли Вы оральные контрацептивные препараты, проходили ли Вы гормональное лечение?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Состоите ли Вы на учете у психиатра, психоневролога, нарколога?', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+    ]
+    tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
+    table_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
+    tbl.setStyle(table_style)
+    objs.append(tbl)
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('Укажите, есть ли у Вас что либо из нижеперечисленного:', style))
+    objs.append(Spacer(1, space))
+
+    opinion = [
+        [
+            Paragraph('Вопросы', styleCenter),
+            Paragraph('Да', styleCenter),
+            Paragraph('Нет', styleCenter)
+        ],
+        [
+            Paragraph('Водитель сердечного ритма (кардиостимулятор), протез сердечного клапана', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Имплантированный нейростимулятор', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Сосудистые клипсы любой локализации', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Имплантированный инсулиновый насос', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Металлическое устройство фиксации шеи и/или позвоночника', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Слуховой аппарат, ушной протез', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Любой тип внутрисосудистых фильтров, сеток и т.п.', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Протез орбиты/глаза', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Любой тип хирургического клипа (скрепки)', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Внутрижелудочковый шунт', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Любой имплантированный металлический объект (спица, шуруп, пластина, штифт, стент, проволока и т.п.', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Зубные протезы', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Внутриматочные средства', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('Татуировка тела, перманентный макияж глаз/губ, дермальные пластыри', style),
+            Paragraph('', style),
+            Paragraph('', style)
+        ],
+    ]
+    tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
+    table_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
+    tbl.setStyle(table_style)
+    objs.append(tbl)
+
+    opinion = [
+        [
+            Paragraph('<b>Оставить в кабинке для переодевания!</b>', styleCenter),
+        ],
+        [
+            Paragraph('<b>Магнитные карты, телефоны, монеты, ювелирные изделия, часы, ножи, очки, съемные зубные протезы, слуховой аппарат. Одежду с металлическими частями, в том числе '
+                      'бюстгальтер, металлические застежки, молнии, кнопки, заколки, ремни с металлическими частями, ручки, карандаши, обувь </b>', style),
+        ],
+    ]
+    tbl = Table(opinion, colWidths=[190 * mm], hAlign='LEFT')
+    table_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('LINEABOVE', (0, 0), (-1, 0),  0.5, colors.black),
+        ('LINEBELOW', (0, 1), (-1, -1),  0.5, colors.black),
+        ('LINEBEFORE', (0, 0), (-1, -1), 0.5, colors.black),
+        ('LINEAFTER', (0, 0), (-1, -1),  0.5, colors.black),
+    ]
+    tbl.setStyle(table_style)
+    objs.append(tbl)
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'Я даю согласие {hospital} на обработку биометрических персональных данных – томограмм, проколов (далее ПД), путем сбора, записи, систематизации, '
+                          f'накопления, хранения, уточнения (обновления, изменения) извлечения, использования, передачи любых других действий. {hospital} в праве обрабатывать '
+                          'предоставленные архивные данные как посредством хранения документов и иных материалов на бумажных носителях, так и посредством включения их в учетные '
+                          'системы/электронные базы (путем смешанной обработки).', style))
+    objs.append(Paragraph(f'Настоящее согласие выдано без ограничения срока действия с правом отзыва в любое время путем направления мной в адрес {hospital}соответствующего письменного '
+                          'заявления.', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
