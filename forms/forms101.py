@@ -4237,7 +4237,7 @@ def form_11(request_data):
 
 def form_17(request_data):
     """
-    Согласие на применение препарата "вне инструкции"
+    Согласие на проведение МРТ
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
@@ -4257,17 +4257,19 @@ def form_17(request_data):
     patient_status = ''
     patient_status_creative_case = ''
     patient_status_genitive_case = ''
+    patient_signature = ''
     if agent_status:
         person_data = p_agent.get_data_individual()
         patient_status = 'представляемому'
         patient_status_creative_case = 'представляемым'
         patient_status_genitive_case = 'представляемого'
+        patient_signature = f"<font face='Symbola'>\u2713</font>Подпись законного представителя пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
     else:
         person_data = patient_data
         patient_status = 'мне'
         patient_status_creative_case = 'мною'
         patient_status_genitive_case = 'меня'
-
+        patient_signature = f"<font face='Symbola'>\u2713</font>Подпись пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -4276,6 +4278,7 @@ def form_17(request_data):
 
     pdfmetrics.registerFont(TTFont('PTAstraSerif', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
     pdfmetrics.registerFontFamily('PTAstraSerif', normal='PTAstraSerif', bold='PTAstraSerifBold')
 
     buffer = BytesIO()
@@ -4286,6 +4289,7 @@ def form_17(request_data):
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerif"
     style.fontSize = 12
+    style.alignment = TA_JUSTIFY
 
     styleLeft = deepcopy(style)
     styleLeft.firstLineIndent = 0
@@ -4295,12 +4299,20 @@ def form_17(request_data):
     styleHeader.fontSize = 14
     styleHeader.leading = 14
     styleHeader.alignment = TA_CENTER
-    style1 = deepcopy(style)
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenterMin = deepcopy(styleCenter)
+    styleCenterMin.fontSize = 8
+
+    styleSignature = deepcopy(styleCenter)
 
     objs = []
+    space = 3.5 * mm
 
     objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА ПРОВЕДЕНИЕ МАГНИТНО-РЕЗОНАНСНОЙ ТОМОГРАФИИ (ОПРОСНОЙ ЛИСТ)</b>', style=styleHeader))
-    objs.append(Spacer(1, 5 * mm))
+    objs.append(Spacer(1, space))
 
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
     objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
@@ -4333,15 +4345,75 @@ def form_17(request_data):
 
         objs.extend(opinion)
 
-        def first_pages(canvas, document):
-            canvas.saveState()
-            canvas.restoreState()
-
-        def later_pages(canvas, document):
-            canvas.saveState()
-            canvas.restoreState()
-
-        doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
-        pdf = buffer.getvalue()
-        buffer.close()
-        return pdf
+    objs.append(Paragraph(f'{patient_status} назначена магнитно-резонансная томография (МРТ)', style))
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Paragraph('(указать область, вид исследования)', styleCenterMin))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>Я подтверждаю, что мне в доступной  и понятной форме разъяснены особенности исследования, абсолютные и относительные противопоказания, а также наличие '
+                          'возможного риска при проведении исследования</b>', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleSignature))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>Я подтверждаю отсутствие у меня в теле любых металлических инородных тел, кардиостимулятора, ферромагнитных имплантов (протезы внутреннего уха, тазобедренного '
+                          'сустава, клипсы на кровеносных сосудах и т.д.), отсутствие беременности и подтверждаю свое согласие на выполнение мне исследования МРТ</b>', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleSignature))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>ПРИ НАЛИЧИИ МЕТАЛЛИЧЕСКИХ ИМПЛАНТОВ:</b>', styleLeft))
+    objs.append(Paragraph('(вопрос о возможности проведения исследования решается в индивидуальном порядке врачом кабинета на основании представленной медицинской документации)', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'Что {patient_status} установлены следующие импланты (указать тип – стент, клипса, фиксирующая конструкция, кава-фильтр, клапан и т.д.), дату установки и '
+                          'наличие паспорта на имплант:', style))
+    opinion = [
+        [
+            Paragraph('1.', style),
+            Paragraph('', style)
+        ],
+        [
+            Paragraph('2.', style),
+            Paragraph('', style)
+        ],
+    ]
+    tbl = Table(opinion, colWidths=[3.5 * mm, 186.5 * mm], hAlign='LEFT')
+    table_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('LINEBELOW', (1, 0), (-1, -1), 0.5, colors.black)]
+    tbl.setStyle(table_style)
+    objs.append(tbl)
+    objs.append(Paragraph('В случае отсутствия документации на установленные импланты, либо отсутствия в представленной документации сведений о безопасности проведения МРТ с данным '
+                          'имплантом я понимаю, что назначенное мне исследование не безопасно, т.к. установленные импланты могут сместиться под воздействием магнитного поля  и/или  '
+                          'нагреться под воздействием радиочастотных импульсов. Я подтверждаю, что в доступной  и понятной форме разъяснены опасные для моего здоровья и жизни последствия, '
+                          'связанные с выполнением данного исследования, и я полностью осознаю, что целиком и полностью принимаю на себя всю ответственность за возникновение возможных '
+                          'осложнений и подтверждаю выполнение мне исследования МРТ.', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>В случае возникновения у меня осложнений после проведения исследования, претензий к учреждению иметь не буду.</b>', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleSignature))
+    objs.append(Paragraph('(Подпись ставится при наличии металлического импланта)', styleCenterMin))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>ПРИ ПРОВЕДЕНИИ МРТ С КОНТРАСТНЫМ УСИЛЕНИЕМ:</b>', styleLeft))
+    objs.append(Paragraph('Контрастные вещества считают достаточно безопасными, но могут возникать редкие реакции, которые проявляются тошнотой, рвотой, чиханием, сыпью на коже. У некоторых '
+                          'пациентов риск появления осложнений значительно выше, к ним относятся:', style))
+    objs.append(Paragraph('Лица, которые ранее имели осложнения при введении контрастного препарата;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты с аллергическими реакциями, особенно страдающие бронхиальной астмой;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты с тяжелыми заболеваниями сердца, почек;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты с эпилепсией, либо с повышенной судорожной готовностью;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты принимающие В-адреноблокаторы;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты с анемиями, гемоглобинопатией, печеночной недостаточностью.', style=style, bulletText='•'))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('Абсолютными противопоказаниями к в/в введению контрастного препарата являются: Почечная недостаточность со скоростью клубочковой фильтрацией менее 30мл/мин и '
+                          'состояние после трансплантации печени.', style))
+    objs.append(Paragraph('<b>Я уведомлен, что если я отношусь к одной из вышеперечисленных категорий, мне необходимо сообщить об этом врачу.</b>', style))
+    objs.append(Paragraph('<b>Я подтверждаю, что мне в доступной и понятной форме разъяснены особенности исследования, а также наличие возможного риска при проведении контрастирования.</b>',
+                          style))
+    objs.append(Paragraph('<b>Я подтверждаю, выполнение мне МРТ исследования с контрастным веществом</b>',
+                          style))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Paragraph('(указать область, вид исследования)', styleCenterMin))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
