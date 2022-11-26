@@ -126,3 +126,11 @@ class ResCardControlParam(admin.ModelAdmin):
     raw_id_fields = ('card',)
 
     search_fields = ('card__pk',)
+
+
+@admin.register(models.HarmfulFactor)
+class ResHarmfulFactor(admin.ModelAdmin):
+    autocomplete_fields = ['template']
+
+    list_display = ('title', 'description',)
+    list_display_links = ('title', 'description',)

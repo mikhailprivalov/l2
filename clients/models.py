@@ -23,7 +23,7 @@ from clients.sql_func import last_result_researches_years
 from directory.models import Researches, ScreeningPlan, PatientControlParam
 
 from laboratory.utils import localtime, current_year, strfdatetime
-from users.models import Speciality, DoctorProfile
+from users.models import Speciality, DoctorProfile, AssignmentTemplates
 from django.contrib.postgres.fields import ArrayField
 
 from utils.common import get_system_name
@@ -998,6 +998,16 @@ class District(models.Model):
         verbose_name_plural = 'Участки'
 
 
+class HarmfulFactor(models.Model):
+    title = models.CharField(max_length=255, help_text='Наименование')
+    description = models.CharField(max_length=255, help_text='Описание', blank=True, default=None, null=True)
+    template = models.ForeignKey(AssignmentTemplates, db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Фактор вредности'
+        verbose_name_plural = 'Факторы вредности'
+
+
 class Card(models.Model):
     AGENT_CHOICES = (
         ('mother', "Мать"),
@@ -1438,6 +1448,15 @@ class DispensaryReg(models.Model):
     class Meta:
         verbose_name = 'Д-учет'
         verbose_name_plural = 'Д-учет'
+
+
+class PatientHarmfullFactor(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    harmful_factor = models.ForeignKey(HarmfulFactor, default=None, blank=True, null=True, db_index=True, help_text='Фактор вредности', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Фактор вредности у пациента'
+        verbose_name_plural = 'Факторы вредности пациентов'
 
 
 class AdditionalPatientDispensaryPlan(models.Model):
