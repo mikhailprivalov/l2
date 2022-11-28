@@ -1,6 +1,17 @@
 export default [
   { url: '/forms/pdf?type=101.10&card_pk={card}', title: 'Карта для диспансеризации', type: '101.10' },
   { url: '/forms/pdf?type=101.05&card_pk={card}', title: 'История изменений данных пациента', type: '101.05' },
+  { url: '/forms/pdf?type=100.02&card_pk={card}', title: 'Титульный лист карты, 025/у', type: '100.02' },
+  {
+    isGroup: true,
+    title: 'Отказы',
+    forms: [
+      { url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.11' },
+      { url: '/forms/pdf?type=101.19&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.19' },
+    ],
+  },
+  { url: '/forms/pdf?type=100.01&card_pk={card}', title: 'Паспорт здоровья', type: '100.01' },
+  { url: '/forms/pdf?type=100.03&card_pk={card}', title: 'Титульный лист, Профосмотры', type: '100.03' },
   {
     isGroup: true,
     title: 'Согласия',
@@ -12,13 +23,13 @@ export default [
       { url: '/forms/pdf?type=101.02&card_pk={card}', title: 'Согласие на обработку персональных данных', type: '101.02' },
       { url: '/forms/pdf?type=101.14&card_pk={card}', title: 'Согласие на оперативное вмешательство', type: '101.14' },
       { url: '/forms/pdf?type=101.15&card_pk={card}', title: 'Согласие на анестезиологическое обеспечение', type: '101.15' },
-      { url: '/forms/pdf?type=101.03&card_pk={card}', title: 'Согласие на медицинское вмешательство', type: '101.03' },
+      { url: '/forms/pdf?type=101.03&card_pk={card}', title: 'Согласие на мед. вмешательство', type: '101.03' },
       { url: '/forms/pdf?type=101.16&card_pk={card}', title: 'Согласие на препарат "вне инструкции"', type: '101.16' },
-      { url: '/forms/pdf?type=101.18&card_pk={card}', title: 'Согласие на медицинское вмешательство', type: '101.18' },
-      { url: '/forms/pdf?type=101.20&card_pk={card}', title: 'Согласие на медицинское вмешательство (кт)', type: '101.20' },
+      { url: '/forms/pdf?type=101.18&card_pk={card}', title: 'Согласие на мед. вмешательство', type: '101.18' },
+      { url: '/forms/pdf?type=101.20&card_pk={card}', title: 'Согласие на мед. вмешательство (кт)', type: '101.20' },
       {
         url: '/forms/pdf?type=101.21&card_pk={card}',
-        title: 'Согласие на медицинское вмешательство (эндоскопия)',
+        title: 'Согласие на мед. вмешательство (эндоскопия)',
         type: '101.21',
       },
       {
@@ -29,17 +40,7 @@ export default [
       },
     ],
   },
-  {
-    isGroup: true,
-    title: 'Отказы',
-    forms: [
-      { url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.11' },
-      { url: '/forms/pdf?type=101.19&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.19' },
-    ],
-  },
-  { url: '/forms/pdf?type=100.01&card_pk={card}', title: 'Паспорт здоровья', type: '100.01' },
-  { url: '/forms/pdf?type=100.03&card_pk={card}', title: 'Титульный лист, Профосмотры', type: '100.03' },
-  { url: '/forms/pdf?type=100.02&card_pk={card}', title: 'Титульный лист карты, 025/у', type: '100.02' },
+
 ];
 
 export const forDirs = [
