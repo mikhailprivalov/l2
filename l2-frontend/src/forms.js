@@ -17,6 +17,11 @@ export default [
       { url: '/forms/pdf?type=101.18&card_pk={card}', title: 'Согласие на медицинское вмешательство', type: '101.18' },
       { url: '/forms/pdf?type=101.20&card_pk={card}', title: 'Согласие на медицинское вмешательство (кт)', type: '101.20' },
       {
+        url: '/forms/pdf?type=101.21&card_pk={card}',
+        title: 'Согласие на медицинское вмешательство (эндоскопия)',
+        type: '101.21',
+      },
+      {
         url: '/forms/pdf?type=101.01&individual={individual}',
         title: 'Согласие на ВИЧ-исследование',
         not_internal: true,
