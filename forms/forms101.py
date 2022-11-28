@@ -4255,22 +4255,18 @@ def form_17(request_data):
     elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
 
-    patient_status = ''
-    patient_status_genitive_case = ''
-    patient_signature = ''
-    patient_status_nominative_case = ''
     if agent_status:
         person_data = p_agent.get_data_individual()
         patient_status = 'представляемому'
         patient_status_genitive_case = 'представляемого'
-        patient_status_genitive_case1 = 'его'
+        patient_status_pronoun_genitive_case = 'его'
         patient_status_nominative_case = 'представляемый'
         patient_signature = f"<font face='Symbola'>\u2713</font>Подпись законного представителя пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
     else:
         person_data = patient_data
         patient_status = 'мне'
         patient_status_genitive_case = 'меня'
-        patient_status_genitive_case1 = 'моего'
+        patient_status_pronoun_genitive_case = 'моего'
         patient_status_nominative_case = 'я'
         patient_signature = f"<font face='Symbola'>\u2713</font>Подпись пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
 
@@ -4395,7 +4391,7 @@ def form_17(request_data):
             'В случае отсутствия документации на установленные импланты, либо отсутствия в представленной документации сведений о безопасности проведения МРТ с данным '
             f'имплантом я понимаю, что назначенное {patient_status} исследование не безопасно, т.к. установленные импланты могут сместиться под воздействием магнитного поля  '
             'и/или нагреться под воздействием радиочастотных импульсов. Я подтверждаю, что мне в доступной и понятной форме разъяснены последствия опасные для '
-            f'{patient_status_genitive_case1} здоровья и жизни, связанные с выполнением данного исследования, и я полностью осознаю, что целиком и полностью '
+            f'{patient_status_pronoun_genitive_case } здоровья и жизни, связанные с выполнением данного исследования, и я полностью осознаю, что целиком и полностью '
             'принимаю на себя всю ответственность за возникновение возможных осложнений и подтверждаю выполнение мне исследования МРТ.',
             style,
         )
@@ -4450,26 +4446,23 @@ def form_17(request_data):
         Paragraph('<b>Для уточнения состояния пациента, наличия противопоказаний к проведению МРТ, просим внимательно ознакомиться с анкетой и ответить на поставленные вопросы:</b>', style)
     )
     objs.append(Spacer(1, space))
-    opinion = [
-        [Paragraph('Вопросы', styleCenter), Paragraph('Да', styleCenter), Paragraph('Нет', styleCenter)],
-        [Paragraph('Проходили ли Вы ранее МРТ исследование?', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Подвергались ли Вы операциям?', style), Paragraph('', style), Paragraph('', style)],
-        [
-            Paragraph('У Вас когда либо были ранения глаза и/или тела металлическим объектом (металлические осколки, стружка, инородные тела и т.п.)?', style),
-            Paragraph('', style),
-            Paragraph('', style),
-        ],
-        [Paragraph('Есть ли у Вас клаустрофобия (боязнь замкнутого пространства)?', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Есть ли у Вас анемия или другие заболевания крови?', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Имеете ли Вы диагноз «Эпилепсия» , «Инфаркт», «Инсульт», «Хроническая сердечная недостаточность»? ', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Были у Вас (или есть) онкологические заболевания?', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Проходите( или проходили ранее) Вы химиотерапию, лучевую терапию?', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Были ли у Вас заболевания почек, астма или аллергические реакции на какие-либо вещества? ', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Была ли у Вас когда либо реакция на контрастный препарат, применяемый при МРТ или МСКТ?', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Беременны ли Вы или подозреваете беременность? Кормите ли Вы грудью?', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Принимаете ли Вы оральные контрацептивные препараты, проходили ли Вы гормональное лечение?', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Состоите ли Вы на учете у психиатра, психоневролога, нарколога?', style), Paragraph('', style), Paragraph('', style)],
+    questions = [
+        'Проходили ли Вы ранее МРТ исследование?',
+        'Подвергались ли Вы операциям?',
+        'У Вас когда либо были ранения глаза и/или тела металлическим объектом (металлические осколки, стружка, инородные тела и т.п.)?',
+        'Есть ли у Вас клаустрофобия (боязнь замкнутого пространства)?',
+        'Есть ли у Вас анемия или другие заболевания крови?',
+        'Имеете ли Вы диагноз «Эпилепсия» , «Инфаркт», «Инсульт», «Хроническая сердечная недостаточность»?',
+        'Были у Вас (или есть) онкологические заболевания?',
+        'Проходите( или проходили ранее) Вы химиотерапию, лучевую терапию?',
+        'Были ли у Вас заболевания почек, астма или аллергические реакции на какие-либо вещества?',
+        'Была ли у Вас когда либо реакция на контрастный препарат, применяемый при МРТ или МСКТ?',
+        'Беременны ли Вы или подозреваете беременность? Кормите ли Вы грудью?',
+        'Принимаете ли Вы оральные контрацептивные препараты, проходили ли Вы гормональное лечение?',
+        'Состоите ли Вы на учете у психиатра, психоневролога, нарколога?',
     ]
+    opinion = create_questions_list(questions=questions, styleCenter=styleCenter, style=style)
+
     tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
     table_style = [('VALIGN', (0, 0), (-1, -1), 'TOP'), ('RIGHTPADDING', (0, 0), (-1, -1), 2), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
     tbl.setStyle(table_style)
@@ -4478,23 +4471,24 @@ def form_17(request_data):
     objs.append(Paragraph('Укажите, есть ли у Вас что либо из нижеперечисленного:', style))
     objs.append(Spacer(1, space))
 
-    opinion = [
-        [Paragraph('Вопросы', styleCenter), Paragraph('Да', styleCenter), Paragraph('Нет', styleCenter)],
-        [Paragraph('Водитель сердечного ритма (кардиостимулятор), протез сердечного клапана', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Имплантированный нейростимулятор', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Сосудистые клипсы любой локализации', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Имплантированный инсулиновый насос', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Металлическое устройство фиксации шеи и/или позвоночника', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Слуховой аппарат, ушной протез', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Любой тип внутрисосудистых фильтров, сеток и т.п.', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Протез орбиты/глаза', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Любой тип хирургического клипа (скрепки)', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Внутрижелудочковый шунт', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Любой имплантированный металлический объект (спица, шуруп, пластина, штифт, стент, проволока и т.п.', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Зубные протезы', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Внутриматочные средства', style), Paragraph('', style), Paragraph('', style)],
-        [Paragraph('Татуировка тела, перманентный макияж глаз/губ, дермальные пластыри', style), Paragraph('', style), Paragraph('', style)],
+    questions = [
+        'Водитель сердечного ритма (кардиостимулятор), протез сердечного клапана',
+        'Имплантированный нейростимулятор',
+        'Сосудистые клипсы любой локализации',
+        'Имплантированный инсулиновый насос',
+        'Металлическое устройство фиксации шеи и/или позвоночника',
+        'Слуховой аппарат, ушной протез',
+        'Любой тип внутрисосудистых фильтров, сеток и т.п.',
+        'Протез орбиты/глаза',
+        'Любой тип хирургического клипа (скрепки)',
+        'Внутрижелудочковый шунт',
+        'Любой имплантированный металлический объект (спица, шуруп, пластина, штифт, стент, проволока и т.п.',
+        'Зубные протезы',
+        'Внутриматочные средства',
+        'Татуировка тела, перманентный макияж глаз/губ, дермальные пластыри',
     ]
+    opinion = create_questions_list(questions=questions, styleCenter=styleCenter, style=style)
+
     tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
     table_style = [('VALIGN', (0, 0), (-1, -1), 'TOP'), ('RIGHTPADDING', (0, 0), (-1, -1), 2), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
     tbl.setStyle(table_style)
@@ -4517,10 +4511,7 @@ def form_17(request_data):
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('RIGHTPADDING', (0, 0), (-1, -1), 2),
         ('LEFTPADDING', (0, 0), (-1, -1), 2),
-        ('LINEABOVE', (0, 0), (-1, 0), 0.5, colors.black),
-        ('LINEBELOW', (0, 1), (-1, -1), 0.5, colors.black),
-        ('LINEBEFORE', (0, 0), (-1, -1), 0.5, colors.black),
-        ('LINEAFTER', (0, 0), (-1, -1), 0.5, colors.black),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
     ]
     tbl.setStyle(table_style)
     objs.append(tbl)
@@ -4546,3 +4537,12 @@ def form_17(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
+
+def create_questions_list(questions, styleCenter, style):
+    opinion = [
+        [Paragraph('Вопросы', styleCenter), Paragraph('Да', styleCenter), Paragraph('Нет', styleCenter)],
+    ]
+    questions_data = [[Paragraph(i, style), Paragraph('', style), Paragraph('', style)] for i in questions]
+    opinion.extend(questions_data)
+    return opinion
