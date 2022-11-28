@@ -4480,7 +4480,6 @@ def form_23(request_data):
 
         objs.extend(opinion)
 
-    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     sign_fio_doc = '(Ф.И.О. медицинского работника)'
     space_symbol = '&nbsp;'
@@ -4640,7 +4639,6 @@ def form_24(request_data):
 
         objs.extend(opinion)
 
-    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     sign_fio_doc = '(Ф.И.О. медицинского работника)'
     space_symbol = '&nbsp;'
@@ -4798,7 +4796,6 @@ def form_25(request_data):
 
         objs.extend(opinion)
 
-    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     sign_fio_doc = '(Ф.И.О. медицинского работника)'
     space_symbol = '&nbsp;'
@@ -4948,7 +4945,6 @@ def form_26(request_data):
 
         objs.extend(opinion)
 
-    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     sign_fio_doc = '(Ф.И.О. медицинского работника)'
     space_symbol = '&nbsp;'
