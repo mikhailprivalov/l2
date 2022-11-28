@@ -4970,8 +4970,13 @@ def form_19(request_data):
     objs.append(Spacer(1, 2 * space))
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
     objs.append(Paragraph('(должность, фамилия, имя, отчество (при наличии) медицинского работника)', styleCenterMin))
-    objs.append(Paragraph('в доступной для меня форме мне разъяснены возможные последствия отказа от вышеуказанных видов медицинских вмешательств, в том числе вероятность развития '
-                          'осложнений заболевания (состояния) ', style))
+    objs.append(
+        Paragraph(
+            'в доступной для меня форме мне разъяснены возможные последствия отказа от вышеуказанных видов медицинских вмешательств, в том числе вероятность развития '
+            'осложнений заболевания (состояния) ',
+            style,
+        )
+    )
     objs.append(PageBreak())
     objs.append(Spacer(1, 2 * space))
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
