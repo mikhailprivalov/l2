@@ -4261,15 +4261,11 @@ def form_18(request_data):
         patient_status = 'представляемому'
         patient_status_genitive_case = 'представляемого'
         patient_status_pronoun_genitive_case = 'его'
-        patient_status_nominative_case = 'представляемый'
-        patient_signature = f"<font face='Symbola'>\u2713</font>Подпись законного представителя пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
     else:
         person_data = patient_data
         patient_status = 'мне'
         patient_status_genitive_case = 'меня'
         patient_status_pronoun_genitive_case = 'моего'
-        patient_status_nominative_case = 'я'
-        patient_signature = f"<font face='Symbola'>\u2713</font>Подпись пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
