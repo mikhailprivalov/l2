@@ -68,15 +68,19 @@ def form_01(request_data):
     ]
 
     stx = [
-        '{} года рождения, настоящим подтверждаю, что на основании представленной мне информации, свободно и без принуждения, отдавая отчет о последствиях обследования, принял решение пройти тестирование на антитела к ВИЧ. Для этой цели я соглашаюсь сдать анализ крови.<br/>'.format(  # noqa: E501
+        '{} года рождения, настоящим подтверждаю, что на основании представленной мне информации, свободно и без принуждения, отдавая отчет о последствиях обследования, принял решение пройти тестирование на антитела к ВИЧ. Для этой цели я соглашаюсь сдать анализ крови.<br/>'.format(
+            # noqa: E501
             i.bd()
         ),
         'Я подтверждаю, что мне разъяснено, почему важно пройти тестирование на ВИЧ, как проводится тест и какие последствия может иметь тестирование на ВИЧ.',
         'Я проинформирован, что:',
-        '- тестирование на ВИЧ проводится в Центре СПИД и других медицинских учреждениях. Тестирование по моему добровольному выбору может быть добровольным анонимным (без предъявления документов и указания имени) или конфиденциальным (при предъявлении паспорта, результат будет известен обследуемому и лечащему врачу). В государственных медицинских учреждениях тестирование на ВИЧ проводится бесплатно;',  # noqa: E501
-        '- доказательством наличия ВИЧ-инфекции является присутствие антител к ВИЧ в крови обследуемого лица. Вместе с тем, в период между заражением и появлением антител к ВИЧ (так называемое "серонегативное окно, обычно 3 месяца) при тестировании не обнаруживаются антитела к ВИЧ и обследуемое лицо может заразить других лиц.',  # noqa: E501
+        '- тестирование на ВИЧ проводится в Центре СПИД и других медицинских учреждениях. Тестирование по моему добровольному выбору может быть добровольным анонимным (без предъявления документов и указания имени) или конфиденциальным (при предъявлении паспорта, результат будет известен обследуемому и лечащему врачу). В государственных медицинских учреждениях тестирование на ВИЧ проводится бесплатно;',
+        # noqa: E501
+        '- доказательством наличия ВИЧ-инфекции является присутствие антител к ВИЧ в крови обследуемого лица. Вместе с тем, в период между заражением и появлением антител к ВИЧ (так называемое "серонегативное окно, обычно 3 месяца) при тестировании не обнаруживаются антитела к ВИЧ и обследуемое лицо может заразить других лиц.',
+        # noqa: E501
         '- ВИЧ-инфекция передается только тремя путями:',
-        '- парентеральный - чаще всего при употреблении наркотиков, но может передаваться также при использовании нестерильного медицинского инструментария, переливании компонентов крови, нанесении татуировок, пирсинге зараженным инструментом, использовании чужих бритвенных и маникюрных принадлежностей;',  # noqa: E501
+        '- парентеральный - чаще всего при употреблении наркотиков, но может передаваться также при использовании нестерильного медицинского инструментария, переливании компонентов крови, нанесении татуировок, пирсинге зараженным инструментом, использовании чужих бритвенных и маникюрных принадлежностей;',
+        # noqa: E501
         '- при сексуальных контактах без презерватива;',
         '- от инфицированной ВИЧ матери к ребенку во время беременности, родов и при грудном вскармливании.',
         '________________________________________________ ___________ (Подпись обследуемого на ВИЧ)',
@@ -4347,7 +4351,8 @@ def form_22(request_data):
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('Я проинформирован(а) об альтернативных данному виду методах диагностики (КТ, МРТ) и преимуществах данного исследования.', style=styleLeft))
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('Для женщин: Я подтверждаю, что на момент исследования не имею беременности, так как информирована о вредном воздействии рентгеновского излучения на развитие плода.', style=styleLeft))
+    objs.append(Paragraph('Для женщин: Я подтверждаю, что на момент исследования не имею беременности, так как информирована о вредном воздействии рентгеновского излучения на развитие '
+                          'плода.', style=styleLeft))
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('Содержание настоящего документа мною прочитано, разъяснено мне сотрудниками Клиники.', style=styleLeft))
     objs.append(Spacer(1, 2 * mm))
@@ -4538,6 +4543,166 @@ def form_23(request_data):
     return pdf
 
 
+def form_24(request_data):
+    """
+    Согласие на трансфузии (переливания)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerifReg', normal='PTAstraSerifReg', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на наркоз')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph('Информированное добровольное согласие на трансфузию (переливание) донорской крови и (или) ее компонентов или на отказ от трансфузии (переливания) донорской крови '
+                          'и (или) ее компонентов', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+    space_symbol = '&nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('настоящим подтверждаю то, что проинформирован(а)', style=style))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} {48 * space_symbol} {sign_fio_doc}', styleBottom))
+    objs.append(Paragraph('а) о том, что трансфузия -это переливание донорской крови и (или) ее компонентов реципиенту в лечебных целя;', style=style))
+    objs.append(Paragraph('б) о необходимости проведения трансфузии (переливания) донорской крови и (или) ее компонентов и о <b>наличии | отсутствии</b> возможности назначения лекарственных'
+                          ' препаратов в целях коррекции патологических состояний (анемии, нарушения свертываемости крови) в качестве возможной альтернативы трансфузиям (переливаниям) '
+                          'донорской крови и (или) ее компонентов;', style=style))
+    objs.append(Paragraph('в) о целях и методах проведения трансфузии (переливания) донорской крови и (или) ее компонентов;', style=style))
+    objs.append(Paragraph('г) о возможных реакциях и осложнениях, возникающих у реципиентов в связи с трансфузией (переливанием) донорской крови и (или) ее компонентов, таких как',
+                          style=style))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('д) о необходимости обязательного медицинского осмотра и обследования для определения медицинских показаний к трансфузии (переливанию) крови и (или) ее '
+                          'компонентов;', style=style))
+    objs.append(Paragraph('е) о проведении необходимых исследований и проб на индивидуальную совместимость перед трансфузией (переливанием) донорской крови и (или) ее компонентов;',
+                          style=style))
+    objs.append(Paragraph('ж) о выполнении предписаний медицинских работников;', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Я имел(а) возможность задавать любые вопросы и на все вопросы получил(а) исчерпывающие ответы.Получив полную информацию о необходимости проведения трансфузии '
+                          '(переливания) донорской крови и (или) ее компонентов, возможных реакциях и осложнениях, возникающих у реципиентов в связи с трансфузией (переливанием) донорской '
+                          'крови и (или) ее компонентов, я, нижеподписавшийся(аяся', style=style))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('<b>соглашаюсь на |  отказываюсь от</b> ', style=styleFCenter))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('проведение(я) трансфузии (переливания) донорской крови и (или) ее компонентов.', style=style))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
 def form_25(request_data):
     """
     Согласие на почечной терапии
@@ -4665,6 +4830,184 @@ def form_25(request_data):
     objs.append(Paragraph('Сведения о выбранных мною лицах, которым в соответствии с пунктом 5 части 5 статьи 19 Федерального закона от 21 ноября 2011 года N 323-ФЗ "Об основах охраны '
                           'здоровья граждан в Российской Федерации" может быть передана информация о состоянии моего здоровья или состоянии лица, законным представителем которого я '
                           'являюсь ', style=style))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_26(request_data):
+    """
+    Согласие на челюстно-лицевой области (в том числе полости рта)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на наркоз')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph('Информированное добровольное согласие на медицинское вмешательство челюстно-лицевой области (в том числе полости рта)', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+    space_symbol = '&nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('даю информированное добровольное согласие на вид медицинского вмешательства', style=style))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(
+        'Мне объяснен в понятной форме план стоматологического обследования, лечения, включая ожидаемые результаты, риск, пути альтернативного лечения, возможные при существующей ситуации '
+        'и данных обстоятельствах, также необходимые исследования, врачебные процедуры и манипуляции, связанные с этим. Альтернативные пути лечения обдуманы мною до принятия решения о виде'
+        ' лечения.',
+        style=style))
+    objs.append(Paragraph('Мне объяснены возможные сопутствующие явления планируемого лечения: длительность, боль, неудобство, припухлость лица, чувствительность к холоду и теплу, синяки '
+                          'на лице, под глазами, шее, долго не проходящее онемение губ, щек, подбородка. Я осведомлен(а) о возможных осложнениях во время анестезии или после ее '
+                          'проведения.', style=style))
+    objs.append(Paragraph('Я предупрежден(а) о риске возможных реакций и осложнений, которые могут возникнуть в результате применения лекарственных препаратов.', style=style))
+    objs.append(Paragraph(
+        'Я предоставил(а) врачу точную историю моего физического и психического здоровья/ здоровья лица, законным представителем которого я являюсь. Мне ясна вся важность передачи точной и достоверной информации о состоянии здоровья, а также необходимость выполнения всех полученных от врача указаний, касающихся проведения консервативного лечения, которое будет необходимо, рентгенологического контроля и визитов в указанные сроки.',
+        style=style))
+    objs.append(
+        Paragraph('В случае возникновения осложнений, требующих дополнительного вмешательства, я даю согласие на оказание медицинских услуг в том объеме, который определит лечащий врач.',
+                  style=style))
+    objs.append(Paragraph('Я даю разрешение привлекать для оказания стоматологических услуг любого медицинского работника, участие которого в моем лечении будет необходимо.', style=style))
+    objs.append(Paragraph('Я проинформировал(а) лечащего врача обо всех случаях аллергии к медикаментозным препаратам в прошлом и об аллергии в настоящее время.', style=style))
+    objs.append(
+        Paragraph('Я согласен(а) на применение местной анестезии, а также осведомлен(а) о возможных осложнениях во время местной анестезии и при приеме лекарственных средств.', style=style))
+    objs.append(Paragraph(
+        'Мне разъяснено, что применение местной анестезии может привести к аллергическим реакциям организма на медикаментозные препараты, обмороку, коллапсу, шоку, травматизации нервных окончаний и сосудов, проявляющимися потерей чувствительности, невритами, невралгиями и постинъекционными гематомами.',
+        style=style))
+    objs.append(Paragraph('Я информирован(а) также об основных преимуществах, сложностях и риске инъекционной анестезии, включая вероятность осложнений.', style=style))
+    objs.append(
+        Paragraph('При этом я информирован(а), что в ряде конкретных случаев медицинское вмешательство без анестезии невозможно. Альтернативой является отказ от лечения', style=style))
+    objs.append(Paragraph(
+        'Я согласен(а) на проведение медицинской фото- и видеосъемки при условии сохранения врачебной тайны и персональных данных. Я согласен(а) и разрешаю врачу, в случае необходимости, опубликовать информацию о моем лечении в научных и образовательных целях, в сопровождении иллюстраций и описательных текстов, при условии сохранения врачебной тайны и персональных данных.',
+        style=style))
+    objs.append(Paragraph(
+        'Я имел(а) возможность задать все интересующие меня вопросы и получил(а) ответы. Я получил(а) все рекомендации, касающиеся профессиональной гигиены полости рта. Я информирован(а) о рекомендациях по уходу за полостью рта.',
+        style=style))
+    objs.append(Paragraph(
+        'Я удостоверяю, что текст мною прочитан, полученные объяснения меня полностью удовлетворяют, мне понятно назначение данного документа. Мне также разъяснили значение системы нумерации зубов, всех терминов и слов, упомянутых в данном документе и имеющих отношение к лечению.',
+        style=style))
+    objs.append(Paragraph(
+        'Я внимательно ознакомился(лась) с данным документом и понимаю, что он является юридическим и влечет за собой все правовые последствия. При подписании данного согласия на меня не оказывалось никакого внешнего давления. У меня была и остаётся возможность либо отказаться от процедуры, либо дать свое согласие.',
+        style=style))
+    objs.append(Paragraph('Я проинформировал(а) лечащего врача обо всех случаях аллергии к медикаментозным препаратам в прошлом и об аллергии в настоящее время.', style=style))
+    objs.append(
+        Paragraph('Я согласен(а) на применение местной анестезии, а также осведомлен(а) о возможных осложнениях во время местной анестезии и при приеме лекарственных средств.', style=style))
+    objs.append(Paragraph(
+        'Мне разъяснено, что применение местной анестезии может привести к аллергическим реакциям организма на медикаментозные препараты, обмороку, коллапсу, шоку, травматизации нервных окончаний и сосудов, проявляющимися потерей чувствительности, невритами, невралгиями и постинъекционными гематомами.',
+        style=style))
+    objs.append(Paragraph('Я информирован(а) также об основных преимуществах, сложностях и риске инъекционной анестезии, включая вероятность осложнений.', style=style))
+    objs.append(
+        Paragraph('При этом я информирован(а), что в ряде конкретных случаев медицинское вмешательство без анестезии невозможно. Альтернативой является отказ от лечения.', style=style))
+    objs.append(Paragraph(
+        'Сведения о выбранных мною лицах, которым в соответствии с пунктом 5 части 5 статьи 19 Федерального закона от 21 ноября 2011 года N 323-ФЗ "Об основах охраны здоровья граждан в Российской Федерации" может быть передана информация о состоянии моего здоровья или состоянии лица, законным представителем которого я являюсь',
+        style=style))
 
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
