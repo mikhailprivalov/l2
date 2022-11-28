@@ -4545,6 +4545,7 @@ def create_questions_list(questions, styleCenter, style):
     opinion.extend(questions_data)
     return opinion
 
+
 def form_18(request_data):
     """
     Согласие на мед. вмешательство
