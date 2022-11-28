@@ -4278,7 +4278,7 @@ def form_18(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на проведение МРТ')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -4340,6 +4340,7 @@ def form_18(request_data):
 
         objs.extend(opinion)
 
+    objs.append(Spacer(1, space))
     objs.append(
         Paragraph(
             f'- Мне согласно моей воли даны полные и всесторонние разъяснения о характере, степени тяжести и возможных осложнениях {patient_status_pronoun_genitive_case} ' 'заболевания',
@@ -4497,7 +4498,7 @@ def form_19(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на проведение МРТ')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Отказ от медицинского вмешательства')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -4559,6 +4560,7 @@ def form_19(request_data):
 
         objs.extend(opinion)
 
+    objs.append(Spacer(1, space))
     objs.append(Paragraph(f'при оказании мне (представляемому лицу) медицинской помощи в {hospital_name} отказываюсь от следующих видов медицинских вмешательств, включенных в Перечень '
                           'определенных видов медицинских вмешательств, на которые граждане дают информированное добровольное согласие ', style))
     objs.append(Spacer(1, space))
@@ -4572,62 +4574,62 @@ def form_19(request_data):
         [
             Paragraph('Опрос, субъективное обследование (жалобы, анамнез)', style),
             Paragraph('', style),
-            Paragraph('Рентгенологические методы обследования', style),
+            Paragraph('Рентгенологические методы обследования', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('Осмотр, в том числе объективное обследование (пальпация, перкуссия, аускультация, определение ЧСС, ЧДД, антропометрия, термометрия, пульсометрия)', style),
             Paragraph('', style),
-            Paragraph('Эндоскопические методы исследования', style),
+            Paragraph('Эндоскопические методы исследования', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('Осмотр узкими специалистами (включая неинвазивные методы диагностики)', style),
             Paragraph('', style),
-            Paragraph('Танатологическое исследование', style),
+            Paragraph('Танатологическое исследование', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('Лабораторные методы исследования (химико-микроскопические, гематологические, цитологические, биохимические, коагулотические, иммунологические, микробиологические, '
                       'молекулярно-генетические, микробиологические, химико-токсикологические), в том числе в сторонних организациях на основе заключенных договоров.', style),
             Paragraph('', style),
-            Paragraph('Телемедицина', style),
+            Paragraph('Телемедицина', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('Функциональные методы исследования.', style),
             Paragraph('', style),
-            Paragraph('Профилактическая санация полости рта', style),
+            Paragraph('Профилактическая санация полости рта', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('Физиотерапевтическое лечение (в том числе медицинский массаж и лечебная физкультура). ', style),
             Paragraph('', style),
-            Paragraph('Гемотрансфузионная терапия', style),
+            Paragraph('Гемотрансфузионная терапия', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('Введение лекарственных препаратов (внутрь, наружно, ингаляционно, парентерально) ', style),
             Paragraph('', style),
-            Paragraph('Анестезиологическое пособие (в том числе местное обезболивание)', style),
+            Paragraph('Анестезиологическое пособие (в том числе местное обезболивание)', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('', style),
             Paragraph('', style),
-            Paragraph('Оперативное вмешательство', style),
+            Paragraph('Оперативное вмешательство', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('', style),
             Paragraph('', style),
-            Paragraph('Диализ', style),
+            Paragraph('Диализ', styleLeft),
             Paragraph('', style),
         ],
         [
             Paragraph('', style),
             Paragraph('', style),
-            Paragraph('Применения препаратов “off label USE”- Вне инструкции ', style),
+            Paragraph('Применения препаратов “off label USE”- Вне инструкции ', styleLeft),
             Paragraph('', style),
         ],
     ]
@@ -4651,6 +4653,7 @@ def form_19(request_data):
     objs.append(Paragraph('(должность, фамилия, имя, отчество (при наличии) медицинского работника)', styleCenterMin))
     objs.append(Paragraph('в доступной для меня форме мне разъяснены возможные последствия отказа от вышеуказанных видов медицинских вмешательств, в том числе вероятность развития '
                           'осложнений заболевания (состояния) ', style))
+    objs.append(PageBreak())
     objs.append(Spacer(1, 2 * space))
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
     objs.append(Paragraph('(указываются возможные последствия отказа от вышеуказанного (вышеуказанных) вида (видов) медицинского вмешательства, в том числе вероятность развития осложнений '
