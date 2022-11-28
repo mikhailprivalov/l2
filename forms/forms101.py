@@ -4466,6 +4466,8 @@ def form_19(request_data):
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
 
     agent_status = False
     if ind_card.who_is_agent:
@@ -4557,7 +4559,7 @@ def form_19(request_data):
 
         objs.extend(opinion)
 
-    objs.append(Paragraph('при оказании мне (представляемому лицу) медицинской помощи в ОГАУЗ ГИМДКБ отказываюсь от следующих видов медицинских вмешательств, включенных в Перечень '
+    objs.append(Paragraph(f'при оказании мне (представляемому лицу) медицинской помощи в {hospital_name} отказываюсь от следующих видов медицинских вмешательств, включенных в Перечень '
                           'определенных видов медицинских вмешательств, на которые граждане дают информированное добровольное согласие ', style))
     objs.append(Spacer(1, space))
     opinion = [
