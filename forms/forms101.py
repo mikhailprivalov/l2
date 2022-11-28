@@ -4466,8 +4466,6 @@ def form_19(request_data):
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
-    hospital: Hospitals = request_data["hospital"]
-    hospital_name = hospital.safe_short_title
 
     agent_status = False
     if ind_card.who_is_agent:
@@ -4483,14 +4481,8 @@ def form_19(request_data):
 
     if agent_status:
         person_data = p_agent.get_data_individual()
-        patient_status = 'представляемому'
-        patient_status_genitive_case = 'представляемого'
-        patient_status_pronoun_genitive_case = 'его'
     else:
         person_data = patient_data
-        patient_status = 'мне'
-        patient_status_genitive_case = 'меня'
-        patient_status_pronoun_genitive_case = 'моего'
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -4638,7 +4630,7 @@ def form_19(request_data):
         ],
     ]
 
-    tbl = Table(opinion, colWidths=[65 * mm, 15 * mm, 65 * mm, 15 * mm], hAlign=TA_LEFT, vAlign=TA_LEFT)
+    tbl = Table(opinion, colWidths=[73 * mm, 22 * mm, 73 * mm, 22 * mm], hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
@@ -4650,18 +4642,20 @@ def form_19(request_data):
         )
     )
     objs.append(tbl)
-    objs.append(Spacer(1, 2 * space))
-    objs.append(Paragraph("Медицинским работником:", styleCenter))
     objs.append(Spacer(1, space))
+    objs.append(Paragraph("Медицинским работником:", style))
+    objs.append(Spacer(1, 2 * space))
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
     objs.append(Paragraph('(должность, фамилия, имя, отчество (при наличии) медицинского работника)', styleCenterMin))
     objs.append(Paragraph('в доступной для меня форме мне разъяснены возможные последствия отказа от вышеуказанных видов медицинских вмешательств, в том числе вероятность развития '
                           'осложнений заболевания (состояния) ', style))
+    objs.append(Spacer(1, 2 * space))
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
     objs.append(Paragraph('(указываются возможные последствия отказа от вышеуказанного (вышеуказанных) вида (видов) медицинского вмешательства, в том числе вероятность развития осложнений '
                           'заболевания (состояния))', styleCenterMin))
     objs.append(Paragraph('Мне разъяснено, что при возникновении необходимости в осуществлении одного или нескольких видов медицинских вмешательств, в отношении которых оформлен настоящий '
                           'отказ, я имею право оформить информированное добровольное согласие на такой (такие) вид (виды) медицинского вмешательства.', style))
+
     space_bottom = ' &nbsp;'
 
     objs.append(Spacer(1, 3 * mm))
