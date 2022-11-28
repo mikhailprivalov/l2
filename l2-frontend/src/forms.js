@@ -6,6 +6,16 @@ export default [
   { url: '/forms/pdf?type=100.02&card_pk={card}', title: 'Титульный лист карты, 025/у', type: '100.02' },
   {
     isGroup: true,
+    title: 'Отказы',
+    forms: [
+      { url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.11' },
+      { url: '/forms/pdf?type=101.19&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.19' },
+    ],
+  },
+  { url: '/forms/pdf?type=100.01&card_pk={card}', title: 'Паспорт здоровья', type: '100.01' },
+  { url: '/forms/pdf?type=100.03&card_pk={card}', title: 'Титульный лист, Профосмотры', type: '100.03' },
+   {
+    isGroup: true,
     title: 'Согласия',
     forms: [
       { url: '/forms/pdf?type=101.13&card_pk={card}', title: 'Согласие на диспансеризацию', type: '101.13' },
@@ -18,7 +28,6 @@ export default [
       { url: '/forms/pdf?type=101.15&card_pk={card}', title: 'Согласие на анестезиологическое обеспечение', type: '101.15' },
       { url: '/forms/pdf?type=101.03&card_pk={card}', title: 'Согласие на медицинское вмешательство', type: '101.03' },
       { url: '/forms/pdf?type=101.16&card_pk={card}', title: 'Согласие на препарат "вне инструкции"', type: '101.16' },
-      { url: '/forms/pdf?type=101.17&card_pk={card}', title: 'Согласие на проведение МРТ', type: '101.17' },
       {
         url: '/forms/pdf?type=101.01&individual={individual}',
         title: 'Согласие на ВИЧ-исследование',
