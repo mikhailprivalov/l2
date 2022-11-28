@@ -4461,7 +4461,7 @@ def form_17(request_data):
         'Принимаете ли Вы оральные контрацептивные препараты, проходили ли Вы гормональное лечение?',
         'Состоите ли Вы на учете у психиатра, психоневролога, нарколога?',
     ]
-    opinion = create_questions_list(questions=questions, styleCenter=styleCenter, style=style)
+    opinion = create_questions_list(questions, styleCenter, style)
 
     tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
     table_style = [('VALIGN', (0, 0), (-1, -1), 'TOP'), ('RIGHTPADDING', (0, 0), (-1, -1), 2), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
@@ -4487,7 +4487,7 @@ def form_17(request_data):
         'Внутриматочные средства',
         'Татуировка тела, перманентный макияж глаз/губ, дермальные пластыри',
     ]
-    opinion = create_questions_list(questions=questions, styleCenter=styleCenter, style=style)
+    opinion = create_questions_list(questions, styleCenter, style)
 
     tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
     table_style = [('VALIGN', (0, 0), (-1, -1), 'TOP'), ('RIGHTPADDING', (0, 0), (-1, -1), 2), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
