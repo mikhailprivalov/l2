@@ -3589,9 +3589,6 @@ def form_15(request_data):
     elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
 
-    patient_status = ''
-    patient_status_creative_case = ''
-    patient_status_genitive_case = ''
     if agent_status:
         person_data = p_agent.get_data_individual()
         patient_status = 'представляемому'
