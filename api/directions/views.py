@@ -2668,12 +2668,13 @@ def last_field_result(request):
         result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=True)
     elif request_data["fieldPk"].find('%months_ago#') != -1:
         data = request_data["fieldPk"].split('#')
+        print(data, "sdsds")
         if len(data) < 3:
             result = {"value": ""}
         else:
             field_pks = [data[1]]
             logical_or = True
-            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=data[2])
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=f"{data[2]} month")
     elif request_data["fieldPk"].find('%control_param#') != -1:
         # %control_param#code#period#find_val
         data = request_data["fieldPk"].split('#')
@@ -2720,6 +2721,7 @@ def get_current_direction(current_iss):
 
 def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago='-1'):
     result, value, temp_value = None, None, None
+    print(months_ago, field_pks, client_pk, "test")
     for current_field_pk in field_pks:
         group_fields = [current_field_pk]
         logical_and_inside = logical_and
@@ -2736,6 +2738,7 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
                 else:
                     c_year = "1900-01-01 00:00:00"
                 rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
+                print(rows)
                 if rows:
                     row = rows[0]
                     value = row[5]
