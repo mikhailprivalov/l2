@@ -2720,7 +2720,6 @@ def get_current_direction(current_iss):
 
 def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago='-1'):
     result, value, temp_value = None, None, None
-    print(months_ago, field_pks, client_pk, "test")
     for current_field_pk in field_pks:
         group_fields = [current_field_pk]
         logical_and_inside = logical_and
