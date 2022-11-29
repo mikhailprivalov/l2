@@ -1,17 +1,17 @@
 export default [
+  {
+    isGroup: true,
+    title: 'Отказы',
+    forms: [
+      { url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов мед. вмешательств(101.11)', type: '101.11' },
+      { url: '/forms/pdf?type=101.19&card_pk={card}', title: 'Отказ от видов мед. вмешательств(101.19)', type: '101.19' },
+    ],
+  },
   { url: '/forms/pdf?type=101.10&card_pk={card}', title: 'Карта для диспансеризации', type: '101.10' },
   { url: '/forms/pdf?type=101.05&card_pk={card}', title: 'История изменений данных пациента', type: '101.05' },
   { url: '/forms/pdf?type=100.01&card_pk={card}', title: 'Паспорт здоровья', type: '100.01' },
   { url: '/forms/pdf?type=100.03&card_pk={card}', title: 'Титульный лист, Профосмотры', type: '100.03' },
   { url: '/forms/pdf?type=100.02&card_pk={card}', title: 'Титульный лист карты, 025/у', type: '100.02' },
-  {
-    isGroup: true,
-    title: 'Отказы',
-    forms: [
-      { url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.11' },
-      { url: '/forms/pdf?type=101.19&card_pk={card}', title: 'Отказ от видов медицинских вмешательств', type: '101.19' },
-    ],
-  },
   {
     isGroup: true,
     title: 'Согласия',
