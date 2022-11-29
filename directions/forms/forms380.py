@@ -1020,23 +1020,17 @@ def form_07(c: Canvas, dir: Napravleniya):
         renderPDF.draw(dir_code, c, 157 * mm, 259 * mm)
 
         objs = []
-        opinion = [
-            [
-                Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
-                Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: <br/>' 'Медицинская документация<br/>Учетная форма № 204/у</font>', styleT),
-            ],
-        ]
 
-        tbl = Table(opinion, 2 * [100 * mm])
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+        objs.append(Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT))
 
-        objs.append(tbl)
         objs.append(Spacer(1, 3 * mm))
         history_num = ''
+        issledovaniya = dir.issledovaniya_set.all()
+        issledovanie = issledovaniya.get(pk=dir.pk)
         if dir.parent and dir.parent.research.is_hospital:
             history_num = f"(cтационар-{str(dir.parent.napravleniye_id)})"
         objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} {history_num} ', styleCenterBold))
-        objs.append(Paragraph('патолого-анатомического вскрытия', styleCenterBold))
+        objs.append(Paragraph(f'{issledovanie.research.title}', styleCenterBold))
         objs.append(Spacer(1, 3 * mm))
         space_symbol = '&nbsp;'
         objs.append(Paragraph(f'Фамилия, Имя, Отчество: {dir.client.individual.fio()}', style))
@@ -1058,7 +1052,6 @@ def form_07(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'Адрес постоянного места жительства: {address}', style))
         objs.append(Paragraph(f'Место работы, учебы (наименование детского учреждения, школы): {dir.workplace}', style))
 
-        issledovaniya = dir.issledovaniya_set.all()
         for v in issledovaniya:
             objs.append(Paragraph(f"{v.research.title}", style))
         objs.append(Spacer(1, 5 * mm))
@@ -1067,13 +1060,34 @@ def form_07(c: Canvas, dir: Napravleniya):
 
         direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
         for dp in direction_params:
-            objs.append(Paragraph(f"{dp.title}: {dp.value}", style))
+            if dp.field_type == 24:
+                lab_value = previous_laboratory_result(dp.value)
+                if lab_value:
+                    objs.extend(lab_value)
+                    objs.append(Spacer(1, 1 * mm))
+            elif dp.field_type in [25, 26]:
+                objs = previous_doc_refferal_result(dp.value, objs)
+                objs.append(Spacer(1, 1 * mm))
+            else:
+                objs.append(Paragraph(f"{dp.title}: {dp.string_value_normalized}", style))
+                objs.append(Spacer(1, 1 * mm))
 
         objs.append(Spacer(1, 3 * mm))
         objs.append(Paragraph(f'Врач: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             objs.append(Paragraph(f'Выписал: {dir.doc_who_create.get_fio()}', style))
         objs.append(Paragraph(f'Дата направления:  {strdate(dir.data_sozdaniya)}', style))
+
+        # QR-code
+        if issledovanie.research.podrazdeleniye.can_has_pacs:
+            qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
+            qr_code = qr.QrCodeWidget(qr_value)
+            qr_code.barWidth = 80
+            qr_code.barHeight = 80
+            qr_code.qrVersion = 1
+            d = Drawing()
+            d.add(qr_code)
+            renderPDF.draw(d, c, 170 * mm, 10 * mm)
 
         gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
         gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
