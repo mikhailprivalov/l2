@@ -27,7 +27,7 @@ export default [
       { url: '/forms/pdf?type=101.02&card_pk={card}', title: 'Согласие на обработку персональных данных', type: '101.02' },
       { url: '/forms/pdf?type=101.14&card_pk={card}', title: 'Согласие на оперативное вмешательство', type: '101.14' },
       { url: '/forms/pdf?type=101.15&card_pk={card}', title: 'Согласие на анестезиологическое обеспечение', type: '101.15' },
-      { url: '/forms/pdf?type=101.03&card_pk={card}', title: 'Согласие на мед.', type: '101.03' },
+      { url: '/forms/pdf?type=101.03&card_pk={card}', title: 'Согласие на мед. вмешательство', type: '101.03' },
       { url: '/forms/pdf?type=101.16&card_pk={card}', title: 'Согласие на препарат "вне инструкции"', type: '101.16' },
       { url: '/forms/pdf?type=101.17&card_pk={card}', title: 'Согласие на проведение МРТ', type: '101.17' },
       { url: '/forms/pdf?type=101.18&card_pk={card}', title: 'Согласие на мед. вмешательство', type: '101.18' },
