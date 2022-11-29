@@ -2668,7 +2668,6 @@ def last_field_result(request):
         result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=True)
     elif request_data["fieldPk"].find('%months_ago#') != -1:
         data = request_data["fieldPk"].split('#')
-        print(data, "sdsds")
         if len(data) < 3:
             result = {"value": ""}
         else:
@@ -2738,7 +2737,6 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
                 else:
                     c_year = "1900-01-01 00:00:00"
                 rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
-                print(rows)
                 if rows:
                     row = rows[0]
                     value = row[5]
