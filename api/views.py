@@ -2438,7 +2438,8 @@ def update_coast_research_in_price(request):
 @group_required('Конструктор: Настройка организации')
 def get_research_list(request):
     researches = Researches.objects.filter(hide=False)
-    res_list = {"Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}}
+    res_list = {"Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
+                "Стоматология": {"Общие": []}}
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
@@ -2455,6 +2456,13 @@ def get_research_list(request):
             res_list["Морфология"]["Гистология"].append({"id": research.pk, "label": research.title})
         elif research.is_microbiology:
             res_list["Морфология"]["Микробиология"].append({"id": research.pk, "label": research.title})
+        elif research.is_stom:
+            if research.site_type is None:
+                res_list["Стоматология"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Стоматология"].get(research.site_type.title):
+                res_list["Стоматология"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Стоматология"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_form:
             if research.site_type is None:
                 res_list["Формы"]["Общие"].append({"id": research.pk, "label": research.title})
