@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from directory.models import Researches
+from directory.models import Researches, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
@@ -2621,3 +2621,19 @@ def update_company(request):
             {"company_data": Company.as_json(company_data)},
         )
         return JsonResponse({'ok': True})
+
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def get_params_list(request):
+    params_data = [
+        {
+            "pk": param.pk,
+            "title": param.title,
+            "code": param.code,
+            "all_patient_control": param.all_patient_contol,
+            "order": param.order
+        }
+        for param in PatientControlParam.objects.all().order_by('title')
+    ]
+    return JsonResponse({"data": params_data})

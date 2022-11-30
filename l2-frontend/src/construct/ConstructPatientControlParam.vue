@@ -1,6 +1,13 @@
 <template>
   <div>
     <h4>Контролируемые параметры пациентов</h4>
+    <div>
+      <input
+        v-model="search"
+        class="form-control search"
+        placeholder="Поиск исследования"
+      >
+    </div>
     <div class="card card1 card-no-hover">
       <div class="scroll">
         <table class="table">
@@ -9,8 +16,8 @@
             <col style="width: 200px">
             <col style="width: 108px">
             <col style="width: 100px">
+            <col style="width: 40px">
             <col style="width: 39px">
-            <col style="width: 36px">
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -38,9 +45,14 @@
               <th />
             </tr>
           </thead>
-          <tr class="border">
+          <tr
+            v-for="(param) in filteredParams"
+            :key="param.id"
+            class="border"
+          >
             <td class="td-padding">
               <input
+                v-model="param.title"
                 class="form-control"
                 style="border-bottom-right-radius: 0; border-top-right-radius: 0"
                 type="text"
@@ -48,6 +60,7 @@
             </td>
             <td class="td-padding">
               <input
+                v-model="param.code"
                 class="form-control"
                 style="border-bottom-left-radius: 0; border-top-left-radius: 0"
                 type="text"
@@ -57,12 +70,14 @@
               class="text-center td-padding"
             >
               <input
+                v-model="param.all_patient_control"
                 class="checkbox"
                 type="checkbox"
               >
             </td>
             <td class="td-padding">
               <input
+                v-model="param.order"
                 class="form-control text-right"
                 type="number"
               >
@@ -99,7 +114,29 @@ export default {
   data() {
     return {
       data: '',
+      search: '',
+      paramsList: [],
     };
+  },
+  computed: {
+    filteredParams() {
+      return this.paramsList.filter(params => {
+        const title = params.title.toLowerCase();
+        const code = params.code.toLowerCase();
+        const searchTerm = this.search.toLowerCase();
+
+        return title.includes(searchTerm) || code.includes(searchTerm);
+      });
+    },
+  },
+  mounted() {
+    this.getParamsList();
+  },
+  methods: {
+    async getParamsList() {
+      const params = await this.$api('/get-params-list');
+      this.paramsList = params.data;
+    },
   },
 };
 </script>
@@ -139,5 +176,11 @@ export default {
 }
 .table > thead > tr > th {
   border-bottom: 0;
+}
+.search {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding-left: 6px;
+  background-color: white;
 }
 </style>
