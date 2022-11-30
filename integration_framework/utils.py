@@ -138,7 +138,8 @@ def get_json_protocol_data(pk, is_paraclinic=False):
         if not data.get("Состояние код"):
             data["Состояние код"] = "1"
             data["Состояние наименование"] = "Удовлетворительное"
-
+        if not data.get("Дата осмотра"):
+            data["Дата осмотра"] = iss.medical_examination.strftime("%Y-%m-%d")
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
     for dp in direction_params_obj:
