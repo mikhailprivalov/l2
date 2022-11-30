@@ -5,80 +5,81 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col>
-            <col>
-            <col width="108">
-            <col width="100">
-            <col width="39">
-            <col width="35.8">
+            <col style="min-width: 200px">
+            <col style="width: 200px">
+            <col style="width: 108px">
+            <col style="width: 100px">
+            <col style="width: 39px">
+            <col style="width: 36px">
           </colgroup>
           <thead class="sticky">
             <tr>
               <th
                 class="text-center"
-                style="border-right: 1px solid #ddd; border-left: 1px solid #ddd"
               >
                 <strong>Название</strong>
               </th>
               <th
                 class="text-center"
-                style="border-right: 1px solid #ddd"
               >
                 <strong>Код</strong>
               </th>
               <th
-                style="border-right: 1px solid #ddd"
                 class="text-center"
               >
                 <strong>Глобальный</strong>
               </th>
               <th
-                style="border-right: 1px solid #ddd"
                 class="text-center"
               >
                 <strong>Приоритет</strong>
               </th>
               <th />
-              <th style="border-right: 1px solid #ddd" />
+              <th />
             </tr>
           </thead>
-          <tr>
-            <td class="border">
+          <tr class="border">
+            <td class="td-padding">
               <input
                 class="form-control"
+                style="border-bottom-right-radius: 0; border-top-right-radius: 0"
                 type="text"
               >
             </td>
-            <td class="border">
+            <td class="td-padding">
               <input
                 class="form-control"
+                style="border-bottom-left-radius: 0; border-top-left-radius: 0"
                 type="text"
               >
             </td>
-            <td class="text-center border">
+            <td
+              class="text-center td-padding"
+            >
               <input
+                class="checkbox"
                 type="checkbox"
               >
             </td>
-            <td class="border">
+            <td class="td-padding">
               <input
                 class="form-control text-right"
                 type="number"
               >
             </td>
-            <td class="border">
+            <td class="text-center ">
               <button
                 v-tippy
-                class="btn last btn-blue-nb nbr"
+                class="btn btn-blue-nb"
                 title="Сохранить"
               >
                 <i class="fa fa-save" />
               </button>
             </td>
-            <td class="border">
+            <td class="text-center">
               <button
                 v-tippy
-                class="btn last btn-blue-nb nbr"
+                class="btn btn-blue-nb"
                 title="Удалить"
               >
                 <i class="fa fa-times" />
@@ -124,9 +125,16 @@ export default {
 .border {
   border: 1px solid #ddd;
 }
+.checkbox {
+  height: 20px;
+  width: 100%;
+}
+.td-padding {
+  padding: 3px 2px;
+}
 ::v-deep .form-control {
-  border: none;
   padding: 6px 9px;
+  border-radius: 8px;
   background-color: transparent;
 }
 .table > thead > tr > th {
