@@ -4,7 +4,7 @@ export default [
     title: 'Отказы',
     forms: [
       { url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов мед. вмешательств (101.11)', type: '101.11' },
-      { url: '/forms/pdf?type=101.19&card_pk={card}', title: 'Отказ от видов мед. вмешательств(101.19)', type: '101.19' },
+      { url: '/forms/pdf?type=101.19&card_pk={card}', title: 'Отказ от видов мед. вмешательств (101.19)', type: '101.19' },
     ],
   },
   { url: '/forms/pdf?type=101.10&card_pk={card}', title: 'Карта для диспансеризации', type: '101.10' },
