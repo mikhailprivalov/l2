@@ -2637,3 +2637,11 @@ def get_params_list(request):
         for param in PatientControlParam.objects.all().order_by('title')
     ]
     return JsonResponse({"data": params_data})
+
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def update_param(request):
+    request_data = json.loads(request.body)
+    print(request_data)
+    return JsonResponse({"ok": False, "message": "Провал"})

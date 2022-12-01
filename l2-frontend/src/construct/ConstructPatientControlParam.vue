@@ -17,7 +17,6 @@
             <col style="width: 108px">
             <col style="width: 100px">
             <col style="width: 40px">
-            <col style="width: 39px">
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -42,9 +41,19 @@
                 <strong>Приоритет</strong>
               </th>
               <th />
-              <th />
             </tr>
           </thead>
+          <tr
+            v-if="filteredParams.length === 0"
+            class="text-center"
+          >
+            <td
+              colspan="5"
+              class="border"
+            >
+              Нет данных
+            </td>
+          </tr>
           <tr
             v-for="(param) in filteredParams"
             :key="param.id"
@@ -87,17 +96,9 @@
                 v-tippy
                 class="btn btn-blue-nb"
                 title="Сохранить"
+                @click="updateParam(param)"
               >
                 <i class="fa fa-save" />
-              </button>
-            </td>
-            <td class="text-center">
-              <button
-                v-tippy
-                class="btn btn-blue-nb"
-                title="Удалить"
-              >
-                <i class="fa fa-times" />
               </button>
             </td>
           </tr>
@@ -109,6 +110,8 @@
 
 <script>
 
+import * as actions from '../store/action-types';
+
 export default {
   name: 'ConstructPatientControlParam',
   data() {
@@ -116,6 +119,12 @@ export default {
       data: '',
       search: '',
       paramsList: [],
+      newParam: {
+        id: -1,
+        title: '',
+        code: '',
+        all_patient_control: False,
+      }
     };
   },
   computed: {
@@ -137,6 +146,21 @@ export default {
       const params = await this.$api('/get-params-list');
       this.paramsList = params.data;
     },
+    async updateParam(currentParam) {
+      if (this.paramsList.find((param) => param.title === currentParam.title
+        && param.id !== currentParam.id)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('update-param', currentParam);
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      }
+    },
   },
 };
 </script>
@@ -150,8 +174,8 @@ export default {
   table-layout: fixed;
 }
 .scroll {
-  min-height: 100px;
-  max-height: calc(100vh - 200px);
+  min-height: 119px;
+  max-height: calc(100vh - 101px);
   overflow-y: auto;
 }
 .sticky {
