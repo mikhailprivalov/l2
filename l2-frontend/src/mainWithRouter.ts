@@ -607,6 +607,17 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/infomat/schedule',
+      name: 'infomat-schedule',
+      component: () => import('@/pages/Infomat/InfomatSchedule.vue'),
+      meta: {
+        allowWithoutLogin: true,
+        hideHeaderWithoutLogin: true,
+        title: 'Экран расписания',
+        module: 'l2_infomat',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
