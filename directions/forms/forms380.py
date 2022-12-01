@@ -1089,9 +1089,9 @@ def form_07(c: Canvas, dir: Napravleniya):
             d.add(qr_code)
             renderPDF.draw(d, c, 170 * mm, 10 * mm)
 
-        gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
-        gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
-        gistology_frame.addFromList([gistology_inframe], c)
+        frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        frame.addFromList([inframe], c)
 
     printForm()
 
