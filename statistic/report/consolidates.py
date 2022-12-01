@@ -89,6 +89,8 @@ def consolidate_fill_data(ws1, result_query):
 
         if i.parent_iss:
             data = tmp_data.get(i.parent_iss)
+            if not data:
+                continue
             r += 1
             ws1.cell(row=r, column=1).value = data["patient_card_num"]
             ws1.cell(row=r, column=2).value = data["patient_age"]
