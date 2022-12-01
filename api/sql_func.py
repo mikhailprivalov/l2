@@ -106,7 +106,7 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
             AND CASE WHEN %(current_year)s != '1900-01-01 00:00:00' THEN 
                      directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > %(current_year)s
                      WHEN %(months_ago)s != '-1' THEN 
-                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > (current_date AT TIME ZONE 'ASIA/IRKUTSK'  - interval %(months_ago)s)
+                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > (current_date AT TIME ZONE 'ASIA/IRKUTSK' - interval %(months_ago)s)
                      WHEN %(current_year)s = '1900-01-01 00:00:00' THEN directions_issledovaniya.time_confirmation is not Null
                 END
             ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s
