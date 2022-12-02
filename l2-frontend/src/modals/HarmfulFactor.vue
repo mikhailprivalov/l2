@@ -24,7 +24,8 @@
         style="table-layout: fixed; font-size: 12px"
       >
         <colgroup>
-          <col width="180">
+          <col >
+          <col width="35">
         </colgroup>
         <thead>
           <tr>
@@ -39,7 +40,7 @@
             <td class="cl-td">
               <Treeselect
                 v-model="val.current_harmfull_factor"
-                class="treeselect-noborder"
+                class="treeselect-noborder treeselect-32px"
                 :multiple="false"
                 :options="researches"
                 placeholder="Не выбран"
@@ -78,18 +79,6 @@
             Добавить
           </button>
         </div>
-      </div>
-      <div
-        v-if="!readonly"
-        style="margin: 0 auto; width: 200px"
-      >
-        <button
-          class="btn btn-primary-nb btn-blue-nb"
-          type="button"
-          @click="edit(-1)"
-        >
-          <i class="fa fa-plus" /> Создать запись
-        </button>
       </div>
     </div>
     <div slot="footer">
@@ -215,6 +204,9 @@ export default {
     add_new_row() {
       const tl = this.tbData.length;
       this.tbData.push(makeDefaultRow(tl > 0 ? this.tbData[tl - 1].type : null));
+    },
+    delete_row(index) {
+      this.tbData.splice(index, 1);
     },
   },
 };

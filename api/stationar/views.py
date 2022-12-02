@@ -134,7 +134,8 @@ def hosp_services_by_type(request):
     for i in res_objs:
         print(i.pk, i.title)
     for i in Issledovaniya.objects.filter(napravleniye__pk=base_direction_pk, research__is_hospital=True):
-        for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=i.research, hide=False):
+        # for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=i.research, hide=False):
+        for hs in HospitalService.objects.filter(site_type=type_by_key, main_research__pk=534, hide=False):
             result.append(
                 {
                     "pk": hs.pk,
