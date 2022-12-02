@@ -532,6 +532,17 @@ class PatientControlParam(models.Model):
         contol_param_system = PatientControlParam.objects.filter().order_by("order")
         return [{"id": cc.pk, "title": cc.title, "purpose": ""} for cc in contol_param_system]
 
+    @staticmethod
+    def as_json(param):
+        json_data = {
+            "pk": param.pk,
+            "title": param.title,
+            "code": param.code,
+            "all_patient_control": param.all_patient_contol,
+            "order": param.order
+        }
+        return json_data
+
 
 class ParaclinicInputField(models.Model):
     TYPES = (

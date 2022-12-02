@@ -108,4 +108,5 @@ urlpatterns = [
     path('update-company', views.update_company),
     path('get-params-list', views.get_params_list),
     path('update-param', views.update_param),
+    path('add-param', views.add_param),
 ]

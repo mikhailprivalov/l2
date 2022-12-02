@@ -2627,13 +2627,7 @@ def update_company(request):
 @group_required('Конструктор: Контролируемые параметры пациентов')
 def get_params_list(request):
     params_data = [
-        {
-            "pk": param.pk,
-            "title": param.title,
-            "code": param.code,
-            "all_patient_control": param.all_patient_contol,
-            "order": param.order
-        }
+        PatientControlParam.as_json(param)
         for param in PatientControlParam.objects.all().order_by('title')
     ]
     return JsonResponse({"data": params_data})
@@ -2643,5 +2637,39 @@ def get_params_list(request):
 @group_required('Конструктор: Контролируемые параметры пациентов')
 def update_param(request):
     request_data = json.loads(request.body)
-    print(request_data)
-    return JsonResponse({"ok": False, "message": "Провал"})
+    if PatientControlParam.objects.filter(title=request_data["title"]).exclude(pk=request_data["pk"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    param_data = PatientControlParam.objects.get(pk=request_data["pk"])
+    old_param_data = PatientControlParam.as_json(param_data)
+    param_data.title = request_data["title"]
+    param_data.code = request_data["code"]
+    param_data.all_patient_contol = request_data["all_patient_control"]
+    param_data.order = request_data["order"]
+    param_data.save()
+    Log.log(
+        param_data.pk,
+        150000,
+        request.user.doctorprofile,
+        {"old_param_data": old_param_data, "new_param_data": PatientControlParam.as_json(param_data)}
+    )
+    return JsonResponse({"ok": True})
+
+
+def add_param(request):
+    request_data = json.loads(request.body)
+    if PatientControlParam.objects.filter(title=request_data["title"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    param_data = PatientControlParam(
+        title=request_data["title"],
+        code=request_data["code"],
+        all_patient_contol=request_data["all_patient_control"],
+        order=request_data["order"]
+    )
+    param_data.save()
+    Log.log(
+        param_data.pk,
+        150001,
+        request.user.doctorprofile,
+        {"param_data": PatientControlParam.as_json(param_data)},
+    )
+    return JsonResponse({'ok': True})

@@ -56,7 +56,7 @@
           </tr>
           <tr
             v-for="(param) in filteredParams"
-            :key="param.id"
+            :key="param.pk"
             class="border"
           >
             <td class="td-padding">
@@ -105,6 +105,64 @@
         </table>
       </div>
     </div>
+    <h4>Добавить параметр</h4>
+    <div>
+      <table
+        class="table"
+      >
+        <colgroup>
+          <col style="min-width: 200px">
+          <col style="width: 200px">
+          <col style="width: 108px">
+          <col style="width: 100px">
+          <col style="width: 93px">
+        </colgroup>
+        <tr>
+          <td class="td-padding">
+            <input
+              v-model="newParam.title"
+              class="form-control"
+              style="border-bottom-right-radius: 0; border-top-right-radius: 0"
+              type="text"
+            >
+          </td>
+          <td class="td-padding">
+            <input
+              v-model="newParam.code"
+              class="form-control"
+              style="border-bottom-left-radius: 0; border-top-left-radius: 0"
+              type="text"
+            >
+          </td>
+          <td
+            class="text-center td-padding"
+          >
+            <input
+              v-model="newParam.all_patient_control"
+              class="checkbox"
+              type="checkbox"
+            >
+          </td>
+          <td class="td-padding">
+            <input
+              v-model="newParam.order"
+              class="form-control text-right"
+              type="number"
+            >
+          </td>
+          <td class="text-center td-padding">
+            <button
+              v-tippy
+              class="btn btn-blue-nb"
+              title="Добавить"
+              @click="addParam"
+            >
+              Добавить
+            </button>
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -120,11 +178,11 @@ export default {
       search: '',
       paramsList: [],
       newParam: {
-        id: -1,
         title: '',
         code: '',
-        all_patient_control: False,
-      }
+        all_patient_control: false,
+        order: -1,
+      },
     };
   },
   computed: {
@@ -156,6 +214,26 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
+          await this.getParamsList();
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      }
+    },
+    async addParam() {
+      if (this.newParam.title && this.paramsList.find((param) => param.title === this.newParam.title)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('add-param', this.newParam);
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+          await this.getParamsList();
+          this.newParam.title = '';
+          this.newParam.code = '';
+          this.newParam.all_patient_control = false;
+          this.newParam.order = -1;
         } else {
           this.$root.$emit('msg', 'error', message);
         }
@@ -175,7 +253,7 @@ export default {
 }
 .scroll {
   min-height: 119px;
-  max-height: calc(100vh - 101px);
+  max-height: calc(100vh - 350px);
   overflow-y: auto;
 }
 .sticky {
