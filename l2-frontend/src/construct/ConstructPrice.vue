@@ -299,6 +299,7 @@ export default {
   border-radius: 0;
 }
 .scroll {
+  min-height: 106px;
   max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
