@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
-from directory.models import HospitalService
+from directory.models import HospitalService, Researches
 from laboratory.decorators import group_required
 from appconf.manager import SettingManager
 from django.db.models import Q
@@ -129,6 +129,10 @@ def hosp_services_by_type(request):
     r_type = data["r_type"]
     result = []
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
+    print(type_by_key)
+    res_objs = Researches.objects.filter(is_hospital=True)
+    for i in res_objs:
+        print(i.pk, i.title)
     for i in Issledovaniya.objects.filter(napravleniye__pk=base_direction_pk, research__is_hospital=True):
         for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=i.research, hide=False):
             result.append(

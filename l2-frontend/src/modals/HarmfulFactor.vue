@@ -45,9 +45,40 @@
                 placeholder="Не выбран"
               />
             </td>
+            <td class="text-center cl-td">
+              <button
+                v-tippy="{ placement: 'bottom' }"
+                class="btn btn-blue-nb"
+                title="Удалить строку"
+                @click="delete_row(index)"
+              >
+                <i class="fa fa-times" />
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
+      <div class="row">
+        <div class="col-xs-8" />
+        <div class="col-xs-2">
+          <button
+            class="btn btn-blue-nb add-row"
+            :disabled="disabledButtons"
+            @click="save_dispensary_data(tbData)"
+          >
+            Сохранить
+          </button>
+        </div>
+        <div class="col-xs-2">
+          <button
+            class="btn btn-blue-nb add-row"
+            :disabled="disabledButtons"
+            @click="add_new_row"
+          >
+            Добавить
+          </button>
+        </div>
+      </div>
       <div
         v-if="!readonly"
         style="margin: 0 auto; width: 200px"
@@ -63,7 +94,7 @@
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-10" />
+        <div class="col-xs-10"/>
         <div class="col-xs-2">
           <button
             class="btn btn-primary-nb btn-blue-nb"
@@ -87,6 +118,8 @@ import patientsPoint from '@/api/patients-point';
 import * as actions from '@/store/action-types';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
+const types = ['Услуга', 'Врач'];
+const makeDefaultRow = (type = null) => ({ type: type || types[0], is_visit: false });
 export default {
   name: 'HarmfulFactor',
   components: { Modal, Treeselect },
@@ -111,6 +144,7 @@ export default {
       rows: [],
       edit_data: {},
       edit_pk: -2,
+      tbData: [makeDefaultRow()],
     };
   },
   computed: {
@@ -162,6 +196,25 @@ export default {
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
       });
+    },
+    async save_dispensary_data(tbData) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('researches/save-dispensary-data', {
+        diagnos: this.diagnos_code,
+        tb_data: tbData,
+        typePlan: this.type_plan,
+        card_pk: this.card_pk,
+      });
+      if (ok) {
+        this.$root.$emit('msg', 'ok', message);
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    add_new_row() {
+      const tl = this.tbData.length;
+      this.tbData.push(makeDefaultRow(tl > 0 ? this.tbData[tl - 1].type : null));
     },
   },
 };
