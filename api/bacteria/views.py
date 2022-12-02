@@ -42,12 +42,6 @@ def save_culture(request):
     if types_object == 'Антибиотики':
         Antibiotic.antibiotic_save(pk, title, fsli, hide, lis)
 
-    if types_object == 'Бактерии':
-        Culture.culture_save(pk, title, fsli, hide, lis)
-    print(types_object)
-    if types_object == 'Антибиотики':
-        Antibiotic.antibiotic_save(pk, title, fsli, hide, lis)
-
     result = {"ok": True, "message": ""}
 
     return JsonResponse(result)
