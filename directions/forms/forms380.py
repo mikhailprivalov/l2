@@ -1089,9 +1089,12 @@ def form_07(c: Canvas, dir: Napravleniya):
             d.add(qr_code)
             renderPDF.draw(d, c, 170 * mm, 10 * mm)
 
-        frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
-        inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
-        frame.addFromList([inframe], c)
+        print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        for p in objs:
+            while print_frame.add(p, c) == 0:
+                print_frame.split(p, c)
+                c.showPage()
+                print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
 
     printForm()
 
