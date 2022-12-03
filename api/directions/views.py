@@ -1743,7 +1743,8 @@ def directions_anesthesia_load(request):
     row_category = {}
     if anesthesia_data:
         try:
-            result = json.loads(anesthesia_data)
+            result = json.loads(anesthesia_data.replace("'", '"'))
+
         except:
             result = None
         if isinstance(result, dict):

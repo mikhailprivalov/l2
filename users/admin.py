@@ -23,8 +23,12 @@ class ResDistrictResearchLimitAssign(admin.ModelAdmin):
     list_display_links = ('district_group', 'research', 'type_period_limit', 'limit_count')
 
 
+class ResAssignmentTemplates(admin.ModelAdmin):
+    search_fields = ('title',)
+
+
 admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке
-admin.site.register(AssignmentTemplates)
+admin.site.register(AssignmentTemplates, ResAssignmentTemplates)
 admin.site.register(AssignmentResearches)
 admin.site.register(Speciality)
 admin.site.register(Position)

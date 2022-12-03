@@ -10,6 +10,8 @@ urlpatterns = [
     path('card/save', views.patients_card_save),
     path('card/archive', views.patients_card_archive),
     path('card/unarchive', views.patients_card_unarchive),
+    path('card/harmful-factors', views.patients_harmful_factors),
+    path('card/save-harmful-factors', views.patients_save_harmful_factors),
     path('individuals/search', views.individual_search),
     path('individuals/sex', views.get_sex_by_param),
     path('individuals/edit-doc', views.edit_doc),
