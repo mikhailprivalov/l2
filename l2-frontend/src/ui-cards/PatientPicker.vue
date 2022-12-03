@@ -440,7 +440,7 @@
                 />
               </td>
             </tr>
-            <tr v-if="selected_card.medbookNumber">
+            <tr v-if="selected_card.medbookNumber || l2_harmful_factor">
               <td class="table-header-row">
                 Мед.книжка:
               </td>
