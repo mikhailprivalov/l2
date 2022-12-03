@@ -1723,11 +1723,9 @@ def get_default_for_field(field_type, default_value=None):
 def directions_anesthesia_result(request):
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
-    print(rb)
     temp_result = rb.get("temp_result", {})
     research_data = rb.get("research_data", {})
     action = rb.get("action", "add")
-    print(action)
     result = ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result, action)
     if result:
         response = {"ok": True, "message": ""}

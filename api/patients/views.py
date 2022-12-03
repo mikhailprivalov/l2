@@ -717,7 +717,6 @@ def patients_harmful_factors(request):
 def patients_save_harmful_factors(request):
     request_data = json.loads(request.body)
     tb_data = request_data.get('tb_data', '')
-    print(tb_data)
     card_pk = int(request_data.get('card_pk', -1))
     if len(tb_data) < 1:
         return JsonResponse({'message': 'Ошибка в количестве'})
