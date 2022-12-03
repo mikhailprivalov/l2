@@ -1466,15 +1466,16 @@ class PatientHarmfullFactor(models.Model):
     @staticmethod
     def get_card_harmful_factor(card):
         patient_harmful_factors = PatientHarmfullFactor.objects.filter(card=card)
-        return [{"current_harmfull_factor": p.harmful_factor.pk} for p in patient_harmful_factors]
+        return [{"factorId": p.harmful_factor.pk} for p in patient_harmful_factors]
 
     @staticmethod
     def save_card_harmful_factor(card_pk, tb_data):
         card = Card.objects.filter(pk=card_pk).first()
         PatientHarmfullFactor.objects.filter(card=card).delete()
         for t_b in tb_data:
-            harmfull = HarmfulFactor.objects.filter(pk=t_b['current_harmfull_factor']).first()
-            PatientHarmfullFactor(card=card, harmful_factor=harmfull).save()
+            harmfull = HarmfulFactor.objects.filter(pk=t_b['factorId']).first()
+            if harmfull:
+                PatientHarmfullFactor(card=card, harmful_factor=harmfull).save()
 
         return True
 

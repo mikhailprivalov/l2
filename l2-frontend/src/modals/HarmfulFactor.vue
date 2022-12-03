@@ -40,10 +40,11 @@
           >
             <td class="cl-td">
               <Treeselect
-                v-model="val.current_harmfull_factor"
+                v-model="val.factorId"
                 class="treeselect-noborder treeselect-32px"
                 :multiple="false"
                 :options="harmfulFactors"
+                @input="checkUniqueFactors"
                 placeholder="Не выбран"
               />
             </td>
@@ -114,7 +115,7 @@ import Modal from '@/ui-cards/Modal.vue';
 import * as actions from '@/store/action-types';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-const makeDefaultRow = (type = null) => ({ type });
+const makeDefaultRow = (factorId = null) => ({ factorId });
 export default {
   name: 'HarmfulFactor',
   components: { Modal, Treeselect },
@@ -133,6 +134,7 @@ export default {
       rows: [],
       tbData: [makeDefaultRow()],
       harmfulFactors: [],
+      disabledButtons: false,
     };
   },
   mounted() {
@@ -182,11 +184,16 @@ export default {
     },
     async selectResearches() {
       const rows = await this.$api('get-template-researches-pks', {
-        harmful_factor_pks: this.tbData.map((v) => v.current_harmfull_factor),
+        harmful_factor_pks: this.tbData.map((v) => v.factorId),
       });
       for (const pk of rows) {
         this.$root.$emit('researches-picker:add_research', pk);
       }
+    },
+    checkUniqueFactors() {
+      const currentHarmfullFactors = this.tbData.map((v) => v.factorId);
+      const setHarmfullFactors = new Set(currentHarmfullFactors);
+      this.disabledButtons = currentHarmfullFactors.length !== setHarmfullFactors.size;
     },
   },
 };
