@@ -1007,6 +1007,11 @@ class HarmfulFactor(models.Model):
         verbose_name = 'Фактор вредности'
         verbose_name_plural = 'Факторы вредности'
 
+    @staticmethod
+    def get_template_by_factor(factor_pks):
+        factors = HarmfulFactor.objects.filter(pk__in=factor_pks)
+        return [i.template.pk for i in factors]
+
 
 class Card(models.Model):
     AGENT_CHOICES = (

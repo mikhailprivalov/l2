@@ -2633,9 +2633,19 @@ def get_harmful_factors(request):
             "id": factor.pk,
             "label": f"{factor.title} - шаблон {factor.template.title}",
             "description": factor.description,
-            "template": factor.template_id,
+            "template_id": factor.template_id,
         } for factor in HarmfulFactor.objects.all().order_by('title')]
     return JsonResponse(rows, safe=False)
+
+
+def get_template_researches_pks(request):
+    request_data = json.loads(request.body)
+    print(request_data['harmful_factor_pks'])
+    template_pks = HarmfulFactor.get_template_by_factor(request_data['harmful_factor_pks'])
+    rows = users.AssignmentResearches.get_researches_by_template(template_pks)
+    print(rows)
+    return JsonResponse(rows, safe=False)
+
 
 
 def get_template_list(request):

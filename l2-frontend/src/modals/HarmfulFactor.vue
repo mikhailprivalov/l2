@@ -180,8 +180,11 @@ export default {
     delete_row(index) {
       this.tbData.splice(index, 1);
     },
-    selectResearches() {
-      for (const pk of pks) {
+    async selectResearches() {
+      const rows = await this.$api('get-template-researches-pks', {
+        harmful_factor_pks: this.tbData.map((v) => v.current_harmfull_factor),
+      });
+      for (const pk of rows) {
         this.$root.$emit('researches-picker:add_research', pk);
       }
     },
