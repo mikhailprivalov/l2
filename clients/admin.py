@@ -138,7 +138,15 @@ class ResHarmfulFactor(admin.ModelAdmin):
 
 @admin.register(models.PatientHarmfullFactor)
 class ResPatientHarmfullFactor(admin.ModelAdmin):
-    list_display = ('card', 'harmful_factor',)
-    list_display_links = ('card', 'harmful_factor',)
-    raw_id_fields = ('card', 'harmful_factor',)
-
+    list_display = (
+        'card',
+        'harmful_factor',
+    )
+    list_display_links = (
+        'card',
+        'harmful_factor',
+    )
+    raw_id_fields = (
+        'card',
+        'harmful_factor',
+    )
