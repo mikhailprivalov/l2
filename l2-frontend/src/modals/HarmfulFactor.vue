@@ -4,6 +4,7 @@
     margin-top
     margin-left-right="auto"
     max-width="680px"
+    height="450px"
     show-footer="true"
     white-bg="true"
     width="100%"
@@ -17,7 +18,7 @@
     <div
       slot="body"
       class="registry-body"
-      style="min-height: 200px"
+      style="min-height: 100px"
     >
       <table
         class="table table-bordered table-condensed table-sm-pd"
@@ -60,12 +61,21 @@
         </tbody>
       </table>
       <div class="row">
-        <div class="col-xs-8" />
+        <div class="col-xs-3" />
+        <div class="col-xs-2">
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="selectResearches()"
+          >
+            Выбрать
+          </button>
+        </div>
         <div class="col-xs-2">
           <button
             class="btn btn-blue-nb add-row"
             :disabled="disabledButtons"
-            @click="save_dispensary_data(tbData)"
+            @click="saveHarmfulFactors(tbData)"
           >
             Сохранить
           </button>
@@ -144,20 +154,16 @@ export default {
     },
     async load_data() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const rows = await this.$api('researches/load-research-by-diagnos', {
-        diagnos_code: this.diagnos_code,
-        typePlan: this.type_plan,
+      const rows = await this.$api('patients/card/harmful-factors', {
         card_pk: this.card_pk,
       });
       this.tbData = rows;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
-    async save_dispensary_data(tbData) {
+    async saveHarmfulFactors(tbData) {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('researches/save-dispensary-data', {
-        diagnos: this.diagnos_code,
+      const { ok, message } = await this.$api('patients/card/save-harmful-factors', {
         tb_data: tbData,
-        typePlan: this.type_plan,
         card_pk: this.card_pk,
       });
       if (ok) {
@@ -165,6 +171,7 @@ export default {
       } else {
         this.$root.$emit('msg', 'error', message);
       }
+      await this.load_data();
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     add_new_row() {
@@ -172,6 +179,11 @@ export default {
     },
     delete_row(index) {
       this.tbData.splice(index, 1);
+    },
+    selectResearches() {
+      for (const pk of pks) {
+        this.$root.$emit('researches-picker:add_research', pk);
+      }
     },
   },
 };

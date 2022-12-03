@@ -705,12 +705,26 @@ def patients_card_unarchive(request):
 
 
 @login_required
-def patients_card_harmful_factors(request):
+def patients_harmful_factors(request):
     request_data = json.loads(request.body)
     pk = request_data['card_pk']
     card = Card.objects.get(pk=pk)
     rows = PatientHarmfullFactor.get_card_harmful_factor(card)
     return JsonResponse(rows, safe=False)
+
+
+@login_required
+def patients_save_harmful_factors(request):
+    request_data = json.loads(request.body)
+    tb_data = request_data.get('tb_data', '')
+    print(tb_data)
+    card_pk = int(request_data.get('card_pk', -1))
+    if len(tb_data) < 1:
+        return JsonResponse({'message': 'Ошибка в количестве'})
+    result = PatientHarmfullFactor.save_card_harmful_factor(card_pk, tb_data)
+    if result:
+        return JsonResponse({'ok': True, 'message': 'Сохранено'})
+    return JsonResponse({'ok': False, 'message': 'ошибка'})
 
 
 def individual_search(request):

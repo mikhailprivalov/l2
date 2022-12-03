@@ -2631,7 +2631,7 @@ def get_harmful_factors(request):
     rows = [
         {
             "id": factor.pk,
-            "label": factor.title,
+            "label": f"{factor.title} - шаблон {factor.template.title}",
             "description": factor.description,
             "template": factor.template_id,
         } for factor in HarmfulFactor.objects.all().order_by('title')]
