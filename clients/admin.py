@@ -132,8 +132,14 @@ class ResCardControlParam(admin.ModelAdmin):
 class ResHarmfulFactor(admin.ModelAdmin):
     autocomplete_fields = ['template']
 
-    list_display = ('title', 'description',)
-    list_display_links = ('title', 'description',)
+    list_display = (
+        'title',
+        'description',
+    )
+    list_display_links = (
+        'title',
+        'description',
+    )
 
 
 @admin.register(models.PatientHarmfullFactor)
