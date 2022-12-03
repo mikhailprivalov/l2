@@ -39,7 +39,8 @@ from clients.models import (
     DispensaryRegPlans,
     ScreeningRegPlan,
     AdditionalPatientDispensaryPlan,
-    CardControlParam, PatientHarmfullFactor,
+    CardControlParam,
+    PatientHarmfullFactor,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
