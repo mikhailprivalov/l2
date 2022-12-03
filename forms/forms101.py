@@ -5465,7 +5465,7 @@ def form_22(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на наркоз')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на рентгенологическое исследование')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -5618,7 +5618,7 @@ def form_23(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на наркоз')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на телемедицинских консультаций')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -5798,7 +5798,7 @@ def form_24(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на наркоз')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на трансфузии (переливания)')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -5956,7 +5956,7 @@ def form_25(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на наркоз')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на почечной терапии')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -6105,7 +6105,7 @@ def form_26(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на наркоз')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на челюстно-лицевой области (в том числе полости рта)')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
