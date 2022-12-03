@@ -2648,7 +2648,9 @@ def get_harmful_factors(request):
             "label": f"{factor.title} - шаблон {factor.template.title}",
             "description": factor.description,
             "template_id": factor.template_id,
-        } for factor in HarmfulFactor.objects.all().order_by('title')]
+        }
+        for factor in HarmfulFactor.objects.all().order_by('title')
+    ]
     return JsonResponse(rows, safe=False)
 
 
