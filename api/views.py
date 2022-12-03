@@ -2654,12 +2654,9 @@ def get_harmful_factors(request):
 
 def get_template_researches_pks(request):
     request_data = json.loads(request.body)
-    print(request_data['harmful_factor_pks'])
     template_pks = HarmfulFactor.get_template_by_factor(request_data['harmful_factor_pks'])
     rows = users.AssignmentResearches.get_researches_by_template(template_pks)
-    print(rows)
     return JsonResponse(rows, safe=False)
-
 
 
 def get_template_list(request):

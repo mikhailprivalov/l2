@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
-from directory.models import HospitalService, Researches
+from directory.models import HospitalService
 from laboratory.decorators import group_required
 from appconf.manager import SettingManager
 from django.db.models import Q
