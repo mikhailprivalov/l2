@@ -121,6 +121,7 @@ class SettingManager:
                     "hosp",
                     "rmis_queue",
                     "benefit",
+                    "harmful_factor",
                     "microbiology",
                     "citology",
                     "gistology",

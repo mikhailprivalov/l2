@@ -576,6 +576,11 @@ class AssignmentResearches(models.Model):
         verbose_name = 'Исследование для шаблона назначений'
         verbose_name_plural = 'Исследования для шаблонов назначений'
 
+    @staticmethod
+    def get_researches_by_template(template_pks):
+        template_reearches = AssignmentResearches.objects.filter(template_id__in=template_pks)
+        return [i.research_id for i in template_reearches]
+
 
 class AvailableResearchByGroup(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)

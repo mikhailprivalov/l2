@@ -123,6 +123,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/harmful-factor',
+      name: 'harmful_factor',
+      component: () => import('@/construct/ConstructHarmfulFactor.vue'),
+      meta: {
+        title: 'Факторы вредности',
+        groups: ['Конструктор: Факторы вредности'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
