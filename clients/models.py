@@ -1458,6 +1458,11 @@ class PatientHarmfullFactor(models.Model):
         verbose_name = 'Фактор вредности у пациента'
         verbose_name_plural = 'Факторы вредности пациентов'
 
+    @staticmethod
+    def get_card_harmful_factor(card):
+        patient_harmful_factors = PatientHarmfullFactor.objects.filter(card=card)
+        return [{"current_harmfull_factor": p.harmful_factor.pk} for p in patient_harmful_factors]
+
 
 class AdditionalPatientDispensaryPlan(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)

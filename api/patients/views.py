@@ -39,7 +39,7 @@ from clients.models import (
     DispensaryRegPlans,
     ScreeningRegPlan,
     AdditionalPatientDispensaryPlan,
-    CardControlParam,
+    CardControlParam, PatientHarmfullFactor,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
@@ -702,6 +702,15 @@ def patients_card_unarchive(request):
         card.is_archive = False
         card.save()
     return JsonResponse({"ok": True})
+
+
+@login_required
+def patients_card_harmful_factors(request):
+    request_data = json.loads(request.body)
+    pk = request_data['card_pk']
+    card = Card.objects.get(pk=pk)
+    rows = PatientHarmfullFactor.get_card_harmful_factor(card)
+    return JsonResponse(rows, safe=False)
 
 
 def individual_search(request):

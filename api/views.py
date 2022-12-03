@@ -2627,15 +2627,15 @@ def update_company(request):
         return JsonResponse({'ok': True})
 
 
-def get_factor_list(request):
-    factor_data = [
+def get_harmful_factors(request):
+    rows = [
         {
             "id": factor.pk,
-            "title": factor.title,
+            "label": factor.title,
             "description": factor.description,
             "template": factor.template_id,
         } for factor in HarmfulFactor.objects.all().order_by('title')]
-    return JsonResponse({"data": factor_data})
+    return JsonResponse(rows, safe=False)
 
 
 def get_template_list(request):

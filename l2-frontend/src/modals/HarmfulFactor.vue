@@ -24,7 +24,7 @@
         style="table-layout: fixed; font-size: 12px"
       >
         <colgroup>
-          <col >
+          <col>
           <col width="35">
         </colgroup>
         <thead>
@@ -42,7 +42,7 @@
                 v-model="val.current_harmfull_factor"
                 class="treeselect-noborder treeselect-32px"
                 :multiple="false"
-                :options="researches"
+                :options="harmfulFactors"
                 placeholder="Не выбран"
               />
             </td>
@@ -73,7 +73,6 @@
         <div class="col-xs-2">
           <button
             class="btn btn-blue-nb add-row"
-            :disabled="disabledButtons"
             @click="add_new_row"
           >
             Добавить
@@ -83,7 +82,7 @@
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-10"/>
+        <div class="col-xs-10" />
         <div class="col-xs-2">
           <button
             class="btn btn-primary-nb btn-blue-nb"
@@ -99,16 +98,13 @@
 </template>
 
 <script lang="ts">
-import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
-import patientsPoint from '@/api/patients-point';
 import * as actions from '@/store/action-types';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-const types = ['Услуга', 'Врач'];
-const makeDefaultRow = (type = null) => ({ type: type || types[0], is_visit: false });
+const makeDefaultRow = (type = null) => ({ type });
 export default {
   name: 'HarmfulFactor',
   components: { Modal, Treeselect },
@@ -121,70 +117,40 @@ export default {
       type: Object,
       required: true,
     },
-    readonly: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
   },
   data() {
     return {
-      td: moment().format('YYYY-MM-DD'),
       rows: [],
-      edit_data: {},
-      edit_pk: -2,
       tbData: [makeDefaultRow()],
+      harmfulFactors: [],
     };
   },
-  computed: {
-    valid_reg() {
-      return this.edit_pk > -2
-          && this.edit_data.date_start !== ''
-          && this.edit_data.registration_basis !== ''
-          && (!this.edit_data.close || this.edit_data.date_end !== '');
-    },
-  },
-  created() {
-    this.load_data();
+  mounted() {
+    this.$api('get-harmful_factors').then(rows => {
+      this.harmfulFactors = rows;
+    });
+    this.$api('patients/card/harmful-factors', {
+      card_pk: this.card_pk,
+    }).then(rows => {
+      this.tbData = rows;
+    });
   },
   methods: {
-    async edit(pk) {
-      const d = await patientsPoint.loadBenefitDetail({ pk });
-      this.edit_data = {
-        ...this.edit_data,
-        ...d,
-        date_start: d.date_start || this.td,
-        date_end: d.date_end || this.td,
-      };
-      this.edit_pk = pk;
-    },
-    hide_edit() {
-      if (this.$refs.modalEdit) {
-        this.$refs.modalEdit.$el.style.display = 'none';
-      }
-      this.edit_pk = -2;
-    },
     hide_modal() {
       if (this.$refs.modal) {
         this.$refs.modal.$el.style.display = 'none';
       }
       this.$root.$emit('hide_harmful_factor');
     },
-    async save() {
+    async load_data() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await patientsPoint.saveBenefit({ card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      this.$root.$emit('msg', 'ok', 'Сохранено');
-      this.hide_edit();
-      this.load_data();
-    },
-    load_data() {
-      this.$store.dispatch(actions.INC_LOADING);
-      patientsPoint.loadBenefit(this, 'card_pk').then(({ rows }) => {
-        this.rows = rows;
-      }).finally(() => {
-        this.$store.dispatch(actions.DEC_LOADING);
+      const rows = await this.$api('researches/load-research-by-diagnos', {
+        diagnos_code: this.diagnos_code,
+        typePlan: this.type_plan,
+        card_pk: this.card_pk,
       });
+      this.tbData = rows;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async save_dispensary_data(tbData) {
       await this.$store.dispatch(actions.INC_LOADING);
@@ -202,8 +168,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     add_new_row() {
-      const tl = this.tbData.length;
-      this.tbData.push(makeDefaultRow(tl > 0 ? this.tbData[tl - 1].type : null));
+      this.tbData.push(makeDefaultRow(null));
     },
     delete_row(index) {
       this.tbData.splice(index, 1);
