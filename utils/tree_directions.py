@@ -249,7 +249,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             WHERE 
               CASE 
                WHEN %(hosp_level)s > -1 THEN 
-                    main_research_id = %(main_research)s
+                    EXISTS (SELECT id FROM r)
                WHEN %(hosp_level)s = -1 THEN 
                   EXISTS (SELECT id FROM r)
               END),
