@@ -68,6 +68,7 @@ import PDFObject from 'pdfobject';
       pks: [],
       hosp: 0,
       portion: 0,
+      sort: 0,
     };
   },
   watch: {
@@ -113,6 +114,8 @@ export default class ResultsPreview extends Vue {
 
   portion: number;
 
+  sort: number;
+
   get asVI() {
     return this.$asVI();
   }
@@ -130,6 +133,7 @@ export default class ResultsPreview extends Vue {
     url.searchParams.append('med_certificate', this.medCertificate ? '1' : '0');
     url.searchParams.append('hosp', String(this.hosp));
     url.searchParams.append('portion', String(this.portion));
+    url.searchParams.append('sort', String(this.sort));
     return url;
   }
 
@@ -157,6 +161,7 @@ export default class ResultsPreview extends Vue {
     }
     this.hosp = Number(urlParams.get('hosp') || 0);
     this.portion = Number(urlParams.get('portion') || 0);
+    this.sort = Number(urlParams.get('sort') || 0);
   }
 
   loadLocalStorage() {

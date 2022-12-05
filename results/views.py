@@ -315,6 +315,7 @@ def result_print(request):
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
         break
     portion = request.GET.get("portion", "0") == "1"
+    sort = request.GET.get("sort", "0") == "1"
     dirs = []
     if not portion:
         dirs = (
@@ -384,10 +385,18 @@ def result_print(request):
     need_qr = SettingManager.qr_check_result()
 
     direction: Napravleniya
-    if not portion:
+    if not portion and not sort:
         sorted_direction = sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk)
     else:
         sorted_direction = dirs
+
+    if sort:
+        sorted_direction_d = deepcopy(pk)
+        for d in dirs:
+            index_el = sorted_direction_d.index(d.pk)
+            sorted_direction_d[index_el] = d
+        sorted_direction = sorted_direction_d
+
     for direction in sorted_direction:
         dpk = direction.pk
 
