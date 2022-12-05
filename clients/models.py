@@ -1015,7 +1015,7 @@ class HarmfulFactor(models.Model):
     @staticmethod
     def as_json(factor):
         json = {
-            "pk": factor.pk,
+            "id": factor.pk,
             "title": factor.title,
             "description": factor.description,
             "template_id": factor.template_id,

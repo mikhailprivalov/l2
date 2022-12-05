@@ -2646,6 +2646,7 @@ def get_harmful_factors(request):
         {
             "id": factor.pk,
             "label": f"{factor.title} - шаблон {factor.template.title}",
+            "title": factor.title,
             "description": factor.description,
             "template_id": factor.template_id,
         }
@@ -2665,16 +2666,15 @@ def get_template_list(request):
     template_data = [{"id": template.pk, "label": template.title} for template in users.AssignmentTemplates.objects.all().order_by('title')]
     return JsonResponse({"data": template_data})
 
-def get_factor_list(request):
-    factor_data = [
-        HarmfulFactor.as_json(factor)
-        for factor in HarmfulFactor.objects.all().order_by('title')]
-    return JsonResponse({"data": factor_data})
-
 
 def update_factor(request):
     request_data = json.loads(request.body)
-    factor = HarmfulFactor.objects.get(pk=request_data["pk"])
+    if len(request_data["title"]) == 0:
+        return JsonResponse({"ok": False, "message": "Название не может быть пустым"})
+    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+        return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    factor = HarmfulFactor.objects.get(pk=request_data["id"])
+    old_factor_data = factor.as_json(factor)
     factor.title = request_data["title"]
     factor.description = request_data["description"]
     factor.template_id = request_data["template_id"]
@@ -2683,6 +2683,23 @@ def update_factor(request):
         factor.pk,
         160000,
         request.user.doctorprofile,
-        {"factor": HarmfulFactor.as_json(factor)},
+        {"old_factor_data": old_factor_data, "new_factor_data": factor.as_json(factor)},
+    )
+    return JsonResponse({"ok": True})
+
+
+def add_factor(request):
+    request_data = json.loads(request.body)
+    if len(request_data["title"]) == 0:
+        return JsonResponse({"ok": False, "message": "Название не может быть пустым"})
+    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+        return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    factor = HarmfulFactor(title=request_data["title"], description=request_data["description"], template_id=request_data["template_id"])
+    factor.save()
+    Log.log(
+        factor.pk,
+        160001,
+        request.user.doctorprofile,
+        {"factor": factor.as_json(factor)},
     )
     return JsonResponse({"ok": True})

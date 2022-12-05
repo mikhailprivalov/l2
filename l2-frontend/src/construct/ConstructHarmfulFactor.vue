@@ -5,7 +5,7 @@
     </h4>
     <div>
       <input
-        v-model="search"
+        v-model.trim="search"
         class="form-control search"
         placeholder="Поиск исследования"
       >
@@ -68,7 +68,7 @@
             </td>
             <td>
               <Treeselect
-                v-model="factor.template"
+                v-model="factor.template_id"
                 :options="templateList.data"
                 :disable-branch-nodes="true"
                 :append-to-body="true"
@@ -133,6 +133,7 @@
               class="btn last btn-blue-nb nbr"
               style="padding: 7px 15.4px"
               title="Добавить фактор"
+              @click="addFactor"
             >
               Добавить
             </button>
@@ -151,21 +152,21 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 
 export default {
-  name: 'ConstructPrice',
+  name: 'ConstructHarmfulFactor',
   components: { Treeselect },
   data() {
     return {
-      factorList: [],
+      factors: [],
       templateList: {},
       search: '',
       title: '',
       description: '',
-      template_id: -1,
+      template_id: null,
     };
   },
   computed: {
     filteredFactors() {
-      return this.factorList.filter(factor => {
+      return this.factors.filter(factor => {
         const title = factor.title.toLowerCase();
         const searchTerm = this.search.toLowerCase();
 
@@ -174,19 +175,18 @@ export default {
     },
   },
   mounted() {
-    this.getFactorList();
+    this.getFactors();
     this.getTemplateList();
   },
   methods: {
-    async getFactorList() {
-      const factors = await this.$api('/get-factor-list');
-      this.factorList = factors.data;
+    async getFactors() {
+      this.factors = await this.$api('/get-harmful-factors');
     },
     async getTemplateList() {
       this.templateList = await this.$api('/get-template-list');
     },
     async updateFactor(factor) {
-      if (factor.title) {
+      if (factor.title && factor.template_id) {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/update-factor', factor);
         await this.$store.dispatch(actions.DEC_LOADING);
@@ -196,7 +196,29 @@ export default {
           this.$root.$emit('msg', 'error', message);
         }
       } else {
-        this.$root.$emit('msg', 'error', 'Название не может быть пустым');
+        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
+      }
+    },
+    async addFactor() {
+      if (this.title && this.template_id) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/add-factor', {
+          title: this.title,
+          description: this.description,
+          template_id: this.template_id,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+          await this.getFactors();
+          this.title = '';
+          this.description = '';
+          this.template_id = null;
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      } else {
+        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
       }
     },
   },
