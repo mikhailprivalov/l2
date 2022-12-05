@@ -33,7 +33,9 @@
               >
                 <strong>Описание</strong>
               </th>
-              <th>
+              <th
+                class="text-center"
+              >
                 <strong>Шаблон</strong>
               </th>
               <th />
