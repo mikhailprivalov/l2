@@ -33,7 +33,9 @@
               >
                 <strong>Описание</strong>
               </th>
-              <th>Шаблон</th>
+              <th>
+                <strong>Шаблон</strong>
+              </th>
               <th />
             </tr>
           </thead>
@@ -240,7 +242,7 @@ export default {
 }
 .scroll {
   min-height: 119px;
-  max-height: calc(100vh - 400px);
+  max-height: calc(100vh - 350px);
   overflow-y: auto;
 }
 .tablerow {
