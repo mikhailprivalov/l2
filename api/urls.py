@@ -109,4 +109,6 @@ urlpatterns = [
     path('get-harmful_factors', views.get_harmful_factors),
     path('get-template-researches-pks', views.get_template_researches_pks),
     path('get-template-list', views.get_template_list),
+    path('get-factor-list', views.get_factor_list),
+    path('update-factor', views.update_factor),
 ]

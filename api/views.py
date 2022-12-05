@@ -2664,3 +2664,25 @@ def get_template_researches_pks(request):
 def get_template_list(request):
     template_data = [{"id": template.pk, "label": template.title} for template in users.AssignmentTemplates.objects.all().order_by('title')]
     return JsonResponse({"data": template_data})
+
+def get_factor_list(request):
+    factor_data = [
+        HarmfulFactor.as_json(factor)
+        for factor in HarmfulFactor.objects.all().order_by('title')]
+    return JsonResponse({"data": factor_data})
+
+
+def update_factor(request):
+    request_data = json.loads(request.body)
+    factor = HarmfulFactor.objects.get(pk=request_data["pk"])
+    factor.title = request_data["title"]
+    factor.description = request_data["description"]
+    factor.template_id = request_data["template_id"]
+    factor.save()
+    Log.log(
+        factor.pk,
+        160000,
+        request.user.doctorprofile,
+        {"factor": HarmfulFactor.as_json(factor)},
+    )
+    return JsonResponse({"ok": True})

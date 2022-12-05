@@ -1012,6 +1012,15 @@ class HarmfulFactor(models.Model):
         factors = HarmfulFactor.objects.filter(pk__in=factor_pks)
         return [i.template.pk for i in factors]
 
+    @staticmethod
+    def as_json(factor):
+        json = {
+            "pk": factor.pk,
+            "title": factor.title,
+            "description": factor.description,
+            "template_id": factor.template_id,
+        }
+        return json
 
 class Card(models.Model):
     AGENT_CHOICES = (

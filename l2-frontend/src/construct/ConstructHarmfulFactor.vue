@@ -50,18 +50,20 @@
           <tr
             v-for="(factor) in filteredFactors"
             :key="factor.pk"
-            class="td-table"
+            class="tablerow"
           >
-            <td class="td-table">
+            <td class="tablerow">
               <input
                 v-model="factor.title"
                 class="form-control"
+                style="padding-left: 6px"
               >
             </td>
-            <td class="td-table">
+            <td class="tablerow">
               <input
                 v-model="factor.description"
                 class="form-control"
+                style="padding-left: 6px"
               >
             </td>
             <td>
@@ -73,14 +75,15 @@
                 placeholder="Выберите шаблон"
               />
             </td>
-            <td>
+            <td class="tablerow">
               <button
                 v-tippy
-                style="padding: 7px 12px"
+                style="padding: 7px 42px"
                 class="btn last btn-blue-nb nbr"
                 title="Сохранить фактор"
+                @click="updateFactor(factor)"
               >
-                Сохранить
+                <i class="fa fa-save" />
               </button>
             </td>
           </tr>
@@ -99,18 +102,20 @@
           <col style="width: 99px">
         </colgroup>
         <tr>
-          <td class="td-table">
+          <td class="tablerow">
             <input
               v-model="title"
               class="form-control"
               placeholder="Название"
+              style="padding-left: 6px"
             >
           </td>
-          <td class="td-table">
+          <td class="tablerow">
             <input
               v-model="description"
               class="form-control"
               placeholder="Описание"
+              style="padding-left: 6px"
             >
           </td>
           <td>
@@ -126,7 +131,7 @@
             <button
               v-tippy
               class="btn last btn-blue-nb nbr"
-              style="padding: 7px 16px"
+              style="padding: 7px 15.4px"
               title="Добавить фактор"
             >
               Добавить
@@ -143,6 +148,7 @@
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'ConstructPrice',
@@ -179,6 +185,20 @@ export default {
     async getTemplateList() {
       this.templateList = await this.$api('/get-template-list');
     },
+    async updateFactor(factor) {
+      if (factor.title) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/update-factor', factor);
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      } else {
+        this.$root.$emit('msg', 'error', 'Название не может быть пустым');
+      }
+    },
   },
 };
 </script>
@@ -196,14 +216,14 @@ export default {
   margin-bottom: 0;
   table-layout: fixed;
 }
-.td-table {
-  border: 1px solid #ddd;
-  padding-left: 6px;
-}
 .scroll {
   min-height: 119px;
   max-height: calc(100vh - 400px);
   overflow-y: auto;
+}
+.tablerow {
+  border: 1px solid #ddd;
+  border-radius: 0;
 }
 .sticky {
   position: sticky;
