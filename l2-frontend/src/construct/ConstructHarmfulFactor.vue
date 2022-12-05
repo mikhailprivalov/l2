@@ -73,7 +73,7 @@
             <td>
               <Treeselect
                 v-model="factor.template_id"
-                :options="templateList.data"
+                :options="templates.data"
                 :disable-branch-nodes="true"
                 :append-to-body="true"
                 placeholder="Выберите шаблон"
@@ -127,7 +127,7 @@
               v-model="template_id"
               :disable-branch-nodes="true"
               :append-to-body="true"
-              :options="templateList.data"
+              :options="templates.data"
               placeholder="Выберите шаблон"
             />
           </td>
@@ -161,7 +161,7 @@ export default {
   data() {
     return {
       factors: [],
-      templateList: {},
+      templates: {},
       search: '',
       title: '',
       description: '',
@@ -187,7 +187,7 @@ export default {
       this.factors = await this.$api('/get-harmful-factors');
     },
     async getTemplates() {
-      this.templateList = await this.$api('/get-templates');
+      this.templates = await this.$api('/get-templates');
     },
     async updateFactor(factor) {
       if (factor.title && factor.template_id) {
