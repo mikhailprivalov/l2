@@ -178,14 +178,14 @@ export default {
   },
   mounted() {
     this.getFactors();
-    this.getTemplateList();
+    this.getTemplates();
   },
   methods: {
     async getFactors() {
       this.factors = await this.$api('/get-harmful-factors');
     },
-    async getTemplateList() {
-      this.templateList = await this.$api('/get-template-list');
+    async getTemplates() {
+      this.templateList = await this.$api('/get-templates');
     },
     async updateFactor(factor) {
       if (factor.title && factor.template_id) {
@@ -241,7 +241,7 @@ export default {
   table-layout: fixed;
 }
 .scroll {
-  min-height: 119px;
+  min-height: 110.5px;
   max-height: calc(100vh - 350px);
   overflow-y: auto;
 }
@@ -252,6 +252,7 @@ export default {
 .sticky {
   position: sticky;
   top: 0;
+  z-index: 1;
   background-color: white;
 }
 .table > thead > tr > th {

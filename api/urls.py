@@ -108,7 +108,7 @@ urlpatterns = [
     path('update-company', views.update_company),
     path('get-harmful-factors', views.get_harmful_factors),
     path('get-template-researches-pks', views.get_template_researches_pks),
-    path('get-template-list', views.get_template_list),
+    path('get-templates', views.get_templates),
     path('update-factor', views.update_factor),
     path('add-factor', views.add_factor),
 ]

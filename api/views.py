@@ -2662,7 +2662,7 @@ def get_template_researches_pks(request):
     return JsonResponse(rows, safe=False)
 
 
-def get_template_list(request):
+def get_templates(request):
     template_data = [{"id": template.pk, "label": template.title} for template in users.AssignmentTemplates.objects.all().order_by('title')]
     return JsonResponse({"data": template_data})
 
