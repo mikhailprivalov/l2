@@ -367,6 +367,8 @@ def researches_by_department(request):
                     "preparation": research.preparation,
                     "hide": research.hide,
                     "code": research.code,
+                    "id": research.pk,
+                    "label": research.title,
                 }
             )
     return JsonResponse(response)

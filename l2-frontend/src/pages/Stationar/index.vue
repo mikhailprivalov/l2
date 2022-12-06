@@ -821,7 +821,20 @@
         class="registry-body"
       >
         <div class="text-left">
-          <div class="content-picker">
+          <div>
+            <h6>Профиль</h6>
+            <Treeselect
+              v-model="hospResearch"
+              class="treeselect-nbr treeselect-32px"
+              :multiple="false"
+              :options="stationar_researches_change_hosp"
+              placeholder="Не выбран"
+              @input="plus(currentKey)"
+            />
+          </div>
+          <div
+            class="content-picker service-top-padding"
+          >
             <ResearchPick
               v-for="row in hosp_services"
               :key="row.pk"
@@ -1034,6 +1047,8 @@ export default {
       prev_department: '',
       change_department: false,
       tableFieldsErrors: {},
+      hospResearch: -1,
+      currentKey: -1,
     };
   },
   computed: {
@@ -1063,6 +1078,15 @@ export default {
           title: 'Не выбрано',
         },
         ...(this.stationar_researches || []).filter((r) => r.title !== this.issTitle && !r.hide),
+      ];
+    },
+    stationar_researches_change_hosp() {
+      return [
+        {
+          id: -1,
+          label: 'Не выбрано',
+        },
+        ...(this.stationar_researches || []),
       ];
     },
     bases_obj() {
@@ -1380,12 +1404,15 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async plus(key) {
+      this.currentKey = key;
+      this.direction_service = -1;
       const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar';
       if (mode === 'stationar') {
         await this.$store.dispatch(actions.INC_LOADING);
         const { data } = await stationarPoint.hospServicesByType({
           direction: this.direction,
           r_type: key,
+          hospResearch: this.hospResearch,
         });
         this.hosp_services = data;
         if (data.length === 1) {
@@ -1404,6 +1431,8 @@ export default {
       this.create_directions_data = [];
       this.hosp_services = [];
       this.direction_service = -1;
+      this.currentKey = -1;
+      this.hospResearch = -1;
 
       if (this.$refs.modalStationar?.$el) {
         this.$refs.modalStationar.$el.style.display = 'none';
@@ -2214,5 +2243,9 @@ export default {
 }
 .result-by-year {
   padding-right: 10px;
+}
+
+.service-top-padding {
+  padding-top: 10px;
 }
 </style>

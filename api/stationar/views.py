@@ -104,7 +104,7 @@ def counts(request):
 
     for i in Issledovaniya.objects.filter(napravleniye__pk__in=hosps, research__is_hospital=True).distinct():
         for k in HospitalService.TYPES_BY_KEYS:
-            hss = HospitalService.objects.filter(main_research=i.research, site_type=HospitalService.TYPES_BY_KEYS[k])
+            hss = HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS[k])
             nested = Napravleniya.objects.filter(parent=i, issledovaniya__research__in=[x.slave_research for x in hss]).distinct()
             result[k] += nested.count()
         result["laboratory"] += Napravleniya.objects.filter(parent=i, issledovaniya__research__podrazdeleniye__p_type=2).distinct().count()
@@ -130,7 +130,10 @@ def hosp_services_by_type(request):
     result = []
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
     for i in Issledovaniya.objects.filter(napravleniye__pk=base_direction_pk, research__is_hospital=True):
-        for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=i.research, hide=False):
+        hosp_research = i.research
+        if int(data['hospResearch']) > -1:
+            hosp_research = int(data['hospResearch'])
+        for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=hosp_research, hide=False):
             result.append(
                 {
                     "pk": hs.pk,
@@ -208,6 +211,7 @@ def aggregate_desc(request):
     if type_service == "diaries":
         iss = Issledovaniya.objects.get(pk=pk)
         diaries_researches = [x.slave_research for x in HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS["diaries"], main_research=iss.research)]
+        diaries_researches = [x.slave_research for x in HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS["diaries"])]
         num_dirs = [x.pk for x in Napravleniya.objects.filter(issledovaniya__research__in=diaries_researches, parent=iss, issledovaniya__time_confirmation__isnull=False)]
         result = desc_to_data(num_dirs, True)
     else:
