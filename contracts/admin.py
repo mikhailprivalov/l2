@@ -58,9 +58,7 @@ class ResCompany(admin.ModelAdmin):
 
 
 class ResCompanyDepartment(admin.ModelAdmin):
-    list_filter = (
-        'company',
-    )
+    list_filter = ('company',)
     list_display = (
         'title',
         'company',
