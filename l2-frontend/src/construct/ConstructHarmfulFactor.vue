@@ -60,7 +60,7 @@
               <input
                 v-model="factor.title"
                 class="form-control padding-left"
-                @input="onlyFactorsTitle(index, $event)"
+                @input="onlyFactorTitle(index, $event)"
               >
             </td>
             <td class="table-row">
@@ -81,7 +81,7 @@
             <td class="table-row">
               <button
                 v-tippy
-                style="padding: 7px 42px"
+                style="padding-bottom: 7px; padding-top: 7px; padding-left: 42px; padding-right: 42px"
                 class="btn last btn-blue-nb nbr"
                 title="Сохранить фактор"
                 @click="updateFactor(factor)"
@@ -110,7 +110,7 @@
               v-model="title"
               class="form-control padding-left"
               placeholder="Название"
-              @input="onlyFactorsTitle(-1, $event, 'title')"
+              @input="onlyFactorTitle(-1, $event, 'title')"
             >
           </td>
           <td class="table-row">
@@ -133,7 +133,7 @@
             <button
               v-tippy
               class="btn last btn-blue-nb nbr"
-              style="padding: 7px 15.4px"
+              style="padding-bottom: 7px; padding-top: 7px; padding-left: 15.4px; padding-right: 15.4px"
               title="Добавить фактор"
               @click="addFactor"
             >
@@ -224,7 +224,7 @@ export default {
         this.$root.$emit('msg', 'error', 'Ошибка заполнения');
       }
     },
-    onlyFactorsTitle(index, event, title) {
+    onlyFactorTitle(index, event, title) {
       if (index !== -1) {
         this.filteredFactors[index].title = event.target.value.replace(/[^0-9.]/g, '');
       } else {
