@@ -1022,6 +1022,7 @@ class HarmfulFactor(models.Model):
         }
         return json
 
+
 class Card(models.Model):
     AGENT_CHOICES = (
         ('mother', "Мать"),
