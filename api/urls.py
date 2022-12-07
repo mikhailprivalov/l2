@@ -27,6 +27,7 @@ urlpatterns = [
     path('mkb10', views.mkb10),
     path('mkb10-dict', views.mkb10_dict),
     path('companies-find', views.companies_find),
+    path('company-departments-find', views.company_departments_find),
     path('search-dicom', views.search_dicom),
     path('doctorprofile-search', views.doctorprofile_search),
     path('methods-of-taking', views.methods_of_taking),
