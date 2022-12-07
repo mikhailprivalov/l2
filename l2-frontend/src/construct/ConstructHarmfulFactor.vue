@@ -16,7 +16,7 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col style="width: 100px">
+            <col style="width: 150px">
             <col>
             <col style="width: 150px">
             <col style="width: 99px">
@@ -101,7 +101,7 @@
     <div>
       <table class="table table-bordered">
         <colgroup>
-          <col style="width: 100px">
+          <col style="width: 150px">
           <col>
           <col style="width: 150px">
           <col style="width: 99px">
