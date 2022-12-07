@@ -16,10 +16,10 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col style="width: 150px">
+            <col width="150">
             <col>
-            <col style="width: 150px">
-            <col style="width: 99px">
+            <col width="150">
+            <col width="99">
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -54,21 +54,19 @@
           <tr
             v-for="(factor, index) in filteredFactors"
             :key="factor.id"
-            class="tablerow"
+            class="table-row"
           >
-            <td class="tablerow">
+            <td class="table-row">
               <input
                 v-model="factor.title"
-                class="form-control"
-                style="padding-left: 6px"
+                class="form-control padding-left"
                 @input="onlyFactorsTitle(index, $event)"
               >
             </td>
-            <td class="tablerow">
+            <td class="table-row">
               <input
                 v-model="factor.description"
-                class="form-control"
-                style="padding-left: 6px"
+                class="form-control padding-left"
               >
             </td>
             <td>
@@ -80,7 +78,7 @@
                 placeholder="Выберите шаблон"
               />
             </td>
-            <td class="tablerow">
+            <td class="table-row">
               <button
                 v-tippy
                 style="padding: 7px 42px"
@@ -101,27 +99,25 @@
     <div>
       <table class="table table-bordered">
         <colgroup>
-          <col style="width: 150px">
+          <col width="150">
           <col>
-          <col style="width: 150px">
-          <col style="width: 99px">
+          <col width="150">
+          <col width="99px">
         </colgroup>
         <tr>
-          <td class="tablerow">
+          <td class="table-row">
             <input
               v-model="title"
-              class="form-control"
+              class="form-control padding-left"
               placeholder="Название"
-              style="padding-left: 6px"
               @input="onlyFactorsTitle(-1, $event, 'title')"
             >
           </td>
-          <td class="tablerow">
+          <td class="table-row">
             <input
               v-model="description"
-              class="form-control"
+              class="form-control padding-left"
               placeholder="Описание"
-              style="padding-left: 6px"
             >
           </td>
           <td>
@@ -257,9 +253,12 @@ export default {
   max-height: calc(100vh - 350px);
   overflow-y: auto;
 }
-.tablerow {
+.table-row {
   border: 1px solid #ddd;
   border-radius: 0;
+}
+.padding-left {
+  padding-left: 6px;
 }
 .sticky {
   position: sticky;
