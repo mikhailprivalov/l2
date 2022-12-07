@@ -16,9 +16,9 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
+            <col style="width: 100px">
             <col>
-            <col>
-            <col style="width: 300px">
+            <col style="width: 150px">
             <col style="width: 99px">
           </colgroup>
           <thead class="sticky">
@@ -52,8 +52,8 @@
             </td>
           </tr>
           <tr
-            v-for="(factor) in filteredFactors"
-            :key="factor.pk"
+            v-for="(factor, index) in filteredFactors"
+            :key="factor.id"
             class="tablerow"
           >
             <td class="tablerow">
@@ -61,6 +61,7 @@
                 v-model="factor.title"
                 class="form-control"
                 style="padding-left: 6px"
+                @input="onlyFactorsTitle(index, $event)"
               >
             </td>
             <td class="tablerow">
@@ -100,9 +101,9 @@
     <div>
       <table class="table table-bordered">
         <colgroup>
+          <col style="width: 100px">
           <col>
-          <col>
-          <col style="width: 300px">
+          <col style="width: 150px">
           <col style="width: 99px">
         </colgroup>
         <tr>
@@ -112,6 +113,7 @@
               class="form-control"
               placeholder="Название"
               style="padding-left: 6px"
+              @input="onlyFactorsTitle(-1, $event, 'title')"
             >
           </td>
           <td class="tablerow">
@@ -172,9 +174,10 @@ export default {
     filteredFactors() {
       return this.factors.filter(factor => {
         const title = factor.title.toLowerCase();
+        const description = factor.description.toLowerCase();
         const searchTerm = this.search.toLowerCase();
 
-        return title.includes(searchTerm);
+        return description.includes(searchTerm) || title.includes(searchTerm);
       });
     },
   },
@@ -223,6 +226,13 @@ export default {
         }
       } else {
         this.$root.$emit('msg', 'error', 'Ошибка заполнения');
+      }
+    },
+    onlyFactorsTitle(index, event, title) {
+      if (index !== -1) {
+        this.filteredFactors[index].title = event.target.value.replace(/[^0-9.]/g, '');
+      } else {
+        this[title] = event.target.value.replace(/[^0-9.]/g, '');
       }
     },
   },

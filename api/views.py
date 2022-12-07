@@ -2673,6 +2673,8 @@ def update_factor(request):
         return JsonResponse({"ok": False, "message": "Название не может быть пустым"})
     if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
         return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    if not re.fullmatch('^[0-9.]+$', request_data["title"]):
+        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
     factor = HarmfulFactor.objects.get(pk=request_data["id"])
     old_factor_data = factor.as_json(factor)
     factor.title = request_data["title"]
@@ -2694,6 +2696,8 @@ def add_factor(request):
         return JsonResponse({"ok": False, "message": "Название не может быть пустым"})
     if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
         return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    if not re.fullmatch('^[0-9.]+$', request_data["title"]):
+        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
     factor = HarmfulFactor(title=request_data["title"], description=request_data["description"], template_id=request_data["template_id"])
     factor.save()
     Log.log(
