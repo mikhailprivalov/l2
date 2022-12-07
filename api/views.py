@@ -41,7 +41,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract, CompanyDepartment
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -984,6 +984,12 @@ def companies_find(request):
     q = (request.GET.get("query", '') or '').strip()
     companies_data = Company.search_company(q)
     return JsonResponse({"data": companies_data})
+
+
+def company_departments_find(request):
+    request_data = json.loads(request.body)
+    company_departments = CompanyDepartment.search_departments(request_data['company_db'])
+    return JsonResponse({"data": company_departments})
 
 
 @login_required

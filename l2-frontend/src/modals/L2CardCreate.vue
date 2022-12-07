@@ -436,6 +436,7 @@
                   :cache-options="false"
                   open-direction="top"
                   :open-on-focus="true"
+                  @input="changeCompany(card.work_place_db)"
                 >
                   <div
                     slot="value-label"
@@ -468,18 +469,13 @@
               <div class="row-t">
                 Отдел
               </div>
-              <TypeAhead
-                ref="wdepart"
-                v-model="card.work_department"
-                :delay-time="100"
-                :get-response="getResponse"
-                :highlighting="highlighting"
-                :limit="10"
-                :min-chars="1"
-                :on-hit="onHit('work_department')"
-                :select-first="true"
-                maxlength="128"
-                src="/api/autocomplete?value=:keyword&type=work_department"
+              <Treeselect
+                v-model="card.work_department_db"
+                :multiple="false"
+                class="treeselect-wide treeselect-26px treeselect-nbr"
+                :z-index="5001"
+                placeholder="Укажите отдел"
+                :options="companyDepartments"
               />
             </div>
             <div class="form-row sm-f">
@@ -1257,6 +1253,7 @@ export default {
         docs_to_delete: [],
         rmis_uid: null,
         work_place_db: null,
+        work_department_db: null,
         work_place_db_title: '',
         doc_types: [],
         main_docs: {},
@@ -1305,6 +1302,7 @@ export default {
       loading: false,
       loaded: false,
       new_card_num: '',
+      companyDepartments: [],
     };
   },
   computed: {
@@ -1453,6 +1451,12 @@ export default {
     }, 100);
   },
   methods: {
+    async changeCompany(currentCompany) {
+      const { data } = await this.$api('company-departments-find', {
+        company_db: currentCompany,
+      });
+      this.companyDepartments = data;
+    },
     async loadCompanies({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
         const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
@@ -1536,6 +1540,7 @@ export default {
           'work_position',
           'work_department',
           'work_place_db',
+          'work_department_db',
           'custom_workplace',
           'district',
           'phone',
