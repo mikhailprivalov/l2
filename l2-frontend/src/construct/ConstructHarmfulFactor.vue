@@ -7,7 +7,7 @@
       <input
         v-model.trim="search"
         class="form-control search"
-        placeholder="Поиск исследования"
+        placeholder="Поиск"
       >
     </div>
     <div
@@ -18,7 +18,7 @@
           <colgroup>
             <col width="150">
             <col>
-            <col width="150">
+            <col width="200">
             <col width="99">
           </colgroup>
           <thead class="sticky">
@@ -100,7 +100,7 @@
         <colgroup>
           <col width="150">
           <col>
-          <col width="150">
+          <col width="200">
           <col width="99px">
         </colgroup>
         <tr>
