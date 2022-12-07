@@ -411,7 +411,8 @@ def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj,
 def add_route_list(objs, appendix_route_list, patient_data, styles_obj, additional_objectsj):
     styleTB = styles_obj["styleTB"]
     styleTC = styles_obj["styleTC"]
-    route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph(' Ш/к', styleTB)]]
+    route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB), Paragraph(' Ш/к', styleTB)]]
+    notation = False
     for section in appendix_route_list:
         if section.get('page_break'):
             objs.append(PageBreak())
@@ -421,6 +422,8 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
             objs.append(Spacer(1, height_spacer * mm))
         elif section.get('patient_fio'):
             objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
+        elif section.get('notation'):
+            notation = True
         else:
             objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
@@ -430,13 +433,16 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
         iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir)
         step = 0
         for current_iss in iss_obj:
+            paraclinic_info = ""
             if step > 0:
                 barcode = Paragraph('', styleTC)
                 current_dir = ""
-            route_list.append([Paragraph(f"{current_dir}", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), barcode])
+            if notation:
+                paraclinic_info = current_iss.research.paraclinic_info
+            route_list.append([Paragraph(f"{current_dir}", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), Paragraph(f"{paraclinic_info}", styleTC), barcode])
             step += 1
 
-    tbl = Table(route_list, colWidths=(40 * mm, 78 * mm, 72 * mm), hAlign='LEFT')
+    tbl = Table(route_list, colWidths=(40 * mm, 60 * mm, 50 * mm, 40 * mm), hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [

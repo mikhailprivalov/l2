@@ -279,7 +279,6 @@ export default {
       typesObject: [
         'Бактерии',
         'Антибиотики',
-        'Бактериофаги',
       ],
       typesGroups: ['Группы'],
       searchTypesObject: 'Бактерии',
