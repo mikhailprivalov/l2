@@ -5,9 +5,9 @@
     </h4>
     <div>
       <input
-        v-model="search"
+        v-model.trim="search"
         class="form-control search"
-        placeholder="Поиск исследования"
+        placeholder="Поиск"
       >
     </div>
     <div
@@ -16,10 +16,10 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
+            <col width="150">
             <col>
-            <col>
-            <col style="width: 300px">
-            <col style="width: 99px">
+            <col width="200">
+            <col width="99">
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -33,7 +33,11 @@
               >
                 <strong>Описание</strong>
               </th>
-              <th>Шаблон</th>
+              <th
+                class="text-center"
+              >
+                <strong>Шаблон</strong>
+              </th>
               <th />
             </tr>
           </thead>
@@ -48,39 +52,40 @@
             </td>
           </tr>
           <tr
-            v-for="(factor) in filteredFactors"
-            :key="factor.pk"
-            class="td-table"
+            v-for="(factor, index) in filteredFactors"
+            :key="factor.id"
+            class="table-row"
           >
-            <td class="td-table">
+            <td class="table-row">
               <input
                 v-model="factor.title"
-                class="form-control"
+                class="form-control padding-left"
+                @input="onlyFactorTitle(index, $event)"
               >
             </td>
-            <td class="td-table">
+            <td class="table-row">
               <input
                 v-model="factor.description"
-                class="form-control"
+                class="form-control padding-left"
               >
             </td>
             <td>
               <Treeselect
-                v-model="factor.template"
-                :options="templateList.data"
+                v-model="factor.template_id"
+                :options="templates.data"
                 :disable-branch-nodes="true"
                 :append-to-body="true"
                 placeholder="Выберите шаблон"
               />
             </td>
-            <td>
+            <td class="table-row">
               <button
                 v-tippy
-                style="padding: 7px 12px"
-                class="btn last btn-blue-nb nbr"
+                class="btn last btn-blue-nb nbr update-button"
                 title="Сохранить фактор"
+                @click="updateFactor(factor)"
               >
-                Сохранить
+                <i class="fa fa-save" />
               </button>
             </td>
           </tr>
@@ -93,23 +98,24 @@
     <div>
       <table class="table table-bordered">
         <colgroup>
+          <col width="150">
           <col>
-          <col>
-          <col style="width: 300px">
-          <col style="width: 99px">
+          <col width="200">
+          <col width="99px">
         </colgroup>
         <tr>
-          <td class="td-table">
+          <td class="table-row">
             <input
               v-model="title"
-              class="form-control"
+              class="form-control padding-left"
               placeholder="Название"
+              @input="onlyFactorTitle(-1, $event, 'title')"
             >
           </td>
-          <td class="td-table">
+          <td class="table-row">
             <input
               v-model="description"
-              class="form-control"
+              class="form-control padding-left"
               placeholder="Описание"
             >
           </td>
@@ -118,16 +124,16 @@
               v-model="template_id"
               :disable-branch-nodes="true"
               :append-to-body="true"
-              :options="templateList.data"
+              :options="templates.data"
               placeholder="Выберите шаблон"
             />
           </td>
           <td>
             <button
               v-tippy
-              class="btn last btn-blue-nb nbr"
-              style="padding: 7px 16px"
+              class="btn last btn-blue-nb nbr add-button"
               title="Добавить фактор"
+              @click="addFactor"
             >
               Добавить
             </button>
@@ -143,41 +149,85 @@
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '@/store/action-types';
 
 export default {
-  name: 'ConstructPrice',
+  name: 'ConstructHarmfulFactor',
   components: { Treeselect },
   data() {
     return {
-      factorList: [],
-      templateList: {},
+      factors: [],
+      templates: {},
       search: '',
       title: '',
       description: '',
-      template_id: -1,
+      template_id: null,
     };
   },
   computed: {
     filteredFactors() {
-      return this.factorList.filter(factor => {
+      return this.factors.filter(factor => {
         const title = factor.title.toLowerCase();
+        const description = factor.description.toLowerCase();
         const searchTerm = this.search.toLowerCase();
 
-        return title.includes(searchTerm);
+        return description.includes(searchTerm) || title.includes(searchTerm);
       });
     },
   },
   mounted() {
-    this.getFactorList();
-    this.getTemplateList();
+    this.getFactors();
+    this.getTemplates();
   },
   methods: {
-    async getFactorList() {
-      const factors = await this.$api('/get-factor-list');
-      this.factorList = factors.data;
+    async getFactors() {
+      this.factors = await this.$api('/get-harmful-factors');
     },
-    async getTemplateList() {
-      this.templateList = await this.$api('/get-template-list');
+    async getTemplates() {
+      this.templates = await this.$api('/get-templates');
+    },
+    async updateFactor(factor) {
+      if (factor.title && factor.template_id) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/update-factor', factor);
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      } else {
+        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
+      }
+    },
+    async addFactor() {
+      if (this.title && this.template_id) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/add-factor', {
+          title: this.title,
+          description: this.description,
+          template_id: this.template_id,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+          await this.getFactors();
+          this.title = '';
+          this.description = '';
+          this.template_id = null;
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      } else {
+        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
+      }
+    },
+    onlyFactorTitle(index, event, title) {
+      if (index !== -1) {
+        this.filteredFactors[index].title = event.target.value.replace(/[^0-9.]/g, '');
+      } else {
+        this[title] = event.target.value.replace(/[^0-9.]/g, '');
+      }
     },
   },
 };
@@ -196,18 +246,28 @@ export default {
   margin-bottom: 0;
   table-layout: fixed;
 }
-.td-table {
+.scroll {
+  min-height: 110.5px;
+  max-height: calc(100vh - 350px);
+  overflow-y: auto;
+}
+.table-row {
   border: 1px solid #ddd;
+  border-radius: 0;
+}
+.padding-left {
   padding-left: 6px;
 }
-.scroll {
-  min-height: 119px;
-  max-height: calc(100vh - 400px);
-  overflow-y: auto;
+.add-button {
+  padding: 7px 15px;
+}
+.update-button {
+  padding: 7px 42px;
 }
 .sticky {
   position: sticky;
   top: 0;
+  z-index: 1;
   background-color: white;
 }
 .table > thead > tr > th {
