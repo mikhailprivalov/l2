@@ -81,8 +81,7 @@
             <td class="table-row">
               <button
                 v-tippy
-                style="padding-bottom: 7px; padding-top: 7px; padding-left: 42px; padding-right: 42px"
-                class="btn last btn-blue-nb nbr"
+                class="btn last btn-blue-nb nbr update-button"
                 title="Сохранить фактор"
                 @click="updateFactor(factor)"
               >
@@ -132,8 +131,7 @@
           <td>
             <button
               v-tippy
-              class="btn last btn-blue-nb nbr"
-              style="padding-bottom: 7px; padding-top: 7px; padding-left: 15.4px; padding-right: 15.4px"
+              class="btn last btn-blue-nb nbr add-button"
               title="Добавить фактор"
               @click="addFactor"
             >
@@ -259,6 +257,12 @@ export default {
 }
 .padding-left {
   padding-left: 6px;
+}
+.add-button {
+  padding: 7px 15px;
+}
+.update-button {
+  padding: 7px 42px;
 }
 .sticky {
   position: sticky;
