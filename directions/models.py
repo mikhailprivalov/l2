@@ -2387,7 +2387,7 @@ class ParaclinicResult(models.Model):
         previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
         if previus_result:
             try:
-                previus_result = json.loads(previus_result)
+                previus_result = json.loads(previus_result.replace("'", '"'))
             except:
                 previus_result = None
         else:

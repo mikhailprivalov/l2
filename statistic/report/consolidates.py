@@ -30,6 +30,7 @@ def consolidate_base(ws1, d1, d2, fin_source):
         ('Основное', 15),
         ('Подчинение', 15),
         ('Цель', 15),
+        ('Категория', 25),
     ]
 
     row = 5
@@ -84,7 +85,8 @@ def consolidate_fill_data(ws1, result_query):
             ws1.cell(row=r, column=14).value = i.id_iss
             ws1.cell(row=r, column=15).value = i.parent_iss
             ws1.cell(row=r, column=16).value = i.purpose
-            for j in range(1, 17):
+            ws1.cell(row=r, column=17).value = i.category_title
+            for j in range(1, 18):
                 ws1.cell(row=r, column=j).style = style_border1
 
         if i.parent_iss:
@@ -108,8 +110,8 @@ def consolidate_fill_data(ws1, result_query):
             ws1.cell(row=r, column=14).value = i.id_iss
             ws1.cell(row=r, column=15).value = i.parent_iss
             ws1.cell(row=r, column=16).value = data["purpose"]
-
-            for j in range(1, 17):
+            ws1.cell(row=r, column=17).value = i.category_title
+            for j in range(1, 18):
                 ws1.cell(row=r, column=j).style = style_border1
 
     return ws1

@@ -65,7 +65,7 @@ export default (instance: Vue): void => {
   });
 
   instance.$root.$on('print:results', pks => {
-    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}`;
+    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}&sort=${0}`;
     printForm(url, pks);
     sendEvent('print', {
       type: 'results',

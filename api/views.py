@@ -45,7 +45,7 @@ from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Cont
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, District
+from clients.models import CardBase, Individual, Card, Document, District, HarmfulFactor
 from context_processors.utils import menu
 from directory.models import (
     Fractions,
@@ -2045,6 +2045,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2638,3 +2639,28 @@ def update_company(request):
             {"company_data": Company.as_json(company_data)},
         )
         return JsonResponse({'ok': True})
+
+
+def get_harmful_factors(request):
+    rows = [
+        {
+            "id": factor.pk,
+            "label": f"{factor.title} - шаблон {factor.template.title}",
+            "description": factor.description,
+            "template_id": factor.template_id,
+        }
+        for factor in HarmfulFactor.objects.all().order_by('title')
+    ]
+    return JsonResponse(rows, safe=False)
+
+
+def get_template_researches_pks(request):
+    request_data = json.loads(request.body)
+    template_pks = HarmfulFactor.get_template_by_factor(request_data['harmful_factor_pks'])
+    rows = users.AssignmentResearches.get_researches_by_template(template_pks)
+    return JsonResponse(rows, safe=False)
+
+
+def get_template_list(request):
+    template_data = [{"id": template.pk, "label": template.title} for template in users.AssignmentTemplates.objects.all().order_by('title')]
+    return JsonResponse({"data": template_data})
