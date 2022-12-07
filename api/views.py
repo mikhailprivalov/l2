@@ -2676,7 +2676,6 @@ def update_factor(request):
     if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
         return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
     factor = HarmfulFactor.objects.get(pk=request_data["id"])
-    old_factor_data = factor.as_json(factor)
     factor.title = request_data["title"]
     factor.description = request_data["description"]
     factor.template_id = request_data["template_id"]
@@ -2685,7 +2684,7 @@ def update_factor(request):
         factor.pk,
         160000,
         request.user.doctorprofile,
-        {"old_factor_data": old_factor_data, "new_factor_data": factor.as_json(factor)},
+        {"factor": factor.as_json(factor)},
     )
     return JsonResponse({"ok": True})
 
