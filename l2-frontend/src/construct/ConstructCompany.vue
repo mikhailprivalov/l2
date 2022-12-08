@@ -1,159 +1,215 @@
 <template>
-  <div class="main">
-    <div class="box card-1 card-no-hover">
-      <h5 class="text-center">
-        Компании
-      </h5>
-      <input
-        v-model.trim="search"
-        style="margin-top: 36px; padding-left: 9px;"
-        class="form-control nbr"
-        placeholder="Фильтр по названию..."
-      >
-      <div class="scroll">
-        <table class="table table-bordered">
-          <colgroup>
-            <col>
-            <col width="40">
-          </colgroup>
-          <tr
-            v-if="filteredCompany.length === 0"
-            class="text-center"
-          >
-            <td
-              class="title"
-              colspan="2"
-            >
-              Нет данных
-            </td>
-          </tr>
-          <tr
-            v-for="(company) in filteredCompany"
-            :key="company.id"
-          >
-            <VueTippyTd
-              class="title border"
-              :text="company.title"
-            />
-            <td class="border">
-              <button
-                v-tippy
-                title="Редактировать"
-                class="btn last btn-blue-nb nbr"
-                @click="editCompany(company)"
-              >
-                <i class="fa fa-pencil" />
-              </button>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </div>
-    <div class="box card-1 card-no-hover">
-      <h5 class="text-center">
-        {{ isNewCompany ? 'Добавить компанию' : 'Обновить компанию' }}
-      </h5>
-      <h6
-        v-if="!isNewCompany"
-        class="text-center"
-      >
-        {{ originShortTitle }}
-      </h6>
-      <div>
-        <FormulateForm
-          v-model="editorCompany"
-          @submit="updateCompany"
+  <div class="container">
+    <div class="main">
+      <div class="box card-1 card-no-hover">
+        <h5 class="text-center">
+          {{ isNewCompany ? 'Добавить компанию' : 'Обновить компанию' }}
+        </h5>
+        <h6
+          v-if="!isNewCompany"
+          class="text-center"
         >
-          <FormulateInput
-            name="title"
-            type="text"
-            validation-name=" "
-            error-behavior="live"
-            label="Полное наименование"
-            required
-            validation="required:trim"
-          />
-          <FormulateInput
-            name="shortTitle"
-            type="text"
-            label="Сокращенное наименование"
-          />
-          <FormulateInput
-            name="legalAddress"
-            type="text"
-            label="Юридический адрес"
-          />
-          <FormulateInput
-            name="factAddress"
-            type="text"
-            label="Фактический адрес"
-          />
-          <FormulateInput
-            name="inn"
-            type="text"
-            maxlength="12"
-            validation-name=" "
-            error-behavior="live"
-            label="ИНН"
-            required
-            validation="required:trim|number|"
-            inputmode="numeric"
-            pattern="[0-9]*"
-          />
-          <FormulateInput
-            name="ogrn"
-            type="text"
-            maxlength="13"
-            label="ОГРН"
-            validation-name=" "
-            error-behavior="live"
-            validation="number"
-            inputmode="numeric"
-            pattern="[0-9]*"
-          />
-          <FormulateInput
-            name="kpp"
-            type="text"
-            maxlength="9"
-            label="КПП"
-            validation-name=" "
-            error-behavior="live"
-            validation="number"
-            inputmode="numeric"
-            pattern="[0-9]*"
-          />
-          <FormulateInput
-            name="bik"
-            type="text"
-            maxlength="9"
-            label="БИК"
-            validation-name=" "
-            error-behavior="live"
-            validation="number"
-            inputmode="numeric"
-            pattern="[0-9]*"
-          />
-          <FormulateInput
-            type="select"
-            :options="contractList.data"
-            name="contractId"
-            label="Договор"
-          />
-          <div class="button">
+          {{ originShortTitle }}
+        </h6>
+        <div class="margin-right margin-left">
+          <FormulateForm
+            v-model="editorCompany"
+            @submit="updateCompany"
+          >
             <FormulateInput
-              style="margin-right: 5px"
-              type="button"
-              :label="isNewCompany ? 'Очистить' : 'Отменить'"
-              @click="clearEditCompany"
+              name="title"
+              type="text"
+              validation-name=" "
+              error-behavior="live"
+              label="Полное название"
+              required
+              validation="required:trim"
             />
             <FormulateInput
-              type="submit"
-              class="nbr"
-              style="margin-right: 5px"
-              :label="isNewCompany ? 'Добавить' : 'Сохранить'"
+              name="shortTitle"
+              type="text"
+              label="краткое название"
             />
-          </div>
-        </FormulateForm>
+            <FormulateInput
+              name="legalAddress"
+              type="text"
+              label="Юридический адрес"
+            />
+            <FormulateInput
+              name="factAddress"
+              type="text"
+              label="Фактический адрес"
+            />
+            <div class="row f-row">
+              <div class="col-xs-6">
+                <FormulateInput
+                  name="inn"
+                  type="text"
+                  maxlength="12"
+                  validation-name=" "
+                  error-behavior="live"
+                  label="ИНН"
+                  required
+                  validation="required:trim|number|"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                />
+                <FormulateInput
+                  name="ogrn"
+                  type="text"
+                  maxlength="13"
+                  label="ОГРН"
+                  validation-name=" "
+                  error-behavior="live"
+                  validation="number"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                />
+              </div>
+              <div class="col-xs-6">
+                <FormulateInput
+                  name="kpp"
+                  type="text"
+                  maxlength="9"
+                  label="КПП"
+                  validation-name=" "
+                  error-behavior="live"
+                  validation="number"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                />
+                <FormulateInput
+                  name="bik"
+                  type="text"
+                  maxlength="9"
+                  label="БИК"
+                  validation-name=" "
+                  error-behavior="live"
+                  validation="number"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                />
+              </div>
+            </div>
+            <FormulateInput
+              type="select"
+              :options="contracts.data"
+              name="contractId"
+              label="Договор"
+            />
+            <div class="button">
+              <FormulateInput
+                class="margin-right"
+                type="button"
+                :label="isNewCompany ? 'Очистить' : 'Отменить'"
+                @click="clearEditCompany"
+              />
+              <FormulateInput
+                type="submit"
+                class="nbr margin-right"
+                :label="isNewCompany ? 'Добавить' : 'Сохранить'"
+              />
+            </div>
+          </FormulateForm>
+        </div>
+      </div>
+      <div class="box card-1 card-no-hover">
+        <h5 class="text-center">
+          Компании
+        </h5>
+        <input
+          v-model.trim="searchCompany"
+          class="form-control nbr search"
+          placeholder="Фильтр по названию..."
+        >
+        <div class="scroll">
+          <table class="table table-bordered">
+            <colgroup>
+              <col>
+              <col width="40">
+            </colgroup>
+            <tr
+              v-if="filteredCompany.length === 0"
+              class="text-center"
+            >
+              <td
+                class="title"
+                colspan="2"
+              >
+                Нет данных
+              </td>
+            </tr>
+            <tr
+              v-for="(company) in filteredCompany"
+              :key="company.id"
+            >
+              <VueTippyTd
+                class="title border"
+                :text="company.title"
+              />
+              <td class="border">
+                <button
+                  v-tippy
+                  title="Редактировать"
+                  class="btn last btn-blue-nb nbr"
+                  @click="editCompany(company)"
+                >
+                  <i class="fa fa-pencil" />
+                </button>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="box card-1 card-no-hover">
+        <h5 class="text-center">
+          {{ 'Отделы компании' }}
+        </h5>
+        <input
+          v-model.trim="searchDepartment"
+          class="form-control nbr search"
+          placeholder="Фильтр по названию..."
+        >
+        <div class="scroll">
+          <table class="table table-bordered">
+            <colgroup>
+              <col>
+              <col width="50">
+            </colgroup>
+            <tr
+              v-if="filteredDepartments.length === 0"
+              class="text-center"
+            >
+              <td
+                class="title"
+                colspan="2"
+              >
+                Нет данных
+              </td>
+            </tr>
+            <tr
+              v-for="(department) in filteredDepartments"
+              :key="department.id"
+            >
+              <td>
+                <input
+                  v-model="department.label"
+                  class="form-control"
+                >
+              </td>
+              <td class="border">
+                <button
+                  v-tippy
+                  title="Сохранить"
+                  class="btn last btn-blue-nb nbr"
+                  @click="updateDepartment(department)"
+                >
+                  <i class="fa fa-save" />
+                </button>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -170,22 +226,31 @@ export default {
   components: { VueTippyTd },
   data() {
     return {
-      companyList: {},
-      dataCompanyList: [],
-      contractList: {},
-      search: '',
+      companies: [],
+      contracts: [],
+      searchCompany: '',
+      searchDepartment: '',
       currentCompany: {},
+      companyDepartments: [],
       editorCompany: {},
       originShortTitle: '',
     };
   },
   computed: {
     filteredCompany() {
-      return this.dataCompanyList.filter(company => {
+      return this.companies.filter(company => {
         const companyTitle = company.title.toLowerCase();
-        const searchTerm = this.search.toLowerCase();
+        const searchTerm = this.searchCompany.toLowerCase();
 
         return companyTitle.includes(searchTerm);
+      });
+    },
+    filteredDepartments() {
+      return this.companyDepartments.filter(department => {
+        const departmentTitle = department.label.toLowerCase();
+        const searchTerm = this.searchDepartment.toLowerCase();
+
+        return departmentTitle.includes(searchTerm);
       });
     },
     isNewCompany() {
@@ -193,19 +258,19 @@ export default {
     },
   },
   mounted() {
-    this.getCompanyList();
-    this.getContractList();
+    this.getCompanies();
+    this.getContracts();
   },
   methods: {
-    async getCompanyList() {
-      this.companyList = await this.$api('/get-company-list');
-      this.dataCompanyList = this.companyList.data;
+    async getCompanies() {
+      const companies = await this.$api('/get-companies');
+      this.companies = companies.data;
     },
-    async getContractList() {
-      this.contractList = await this.$api('get-contract-list');
+    async getContracts() {
+      this.contracts = await this.$api('get-contracts');
     },
     async updateCompany() {
-      if (this.dataCompanyList.find((company) => company.title === this.editorCompany.title
+      if (this.companies.find((company) => company.title === this.editorCompany.title
         && company.id !== this.editorCompany.id)) {
         this.$root.$emit('msg', 'error', 'Такое название уже есть');
       } else {
@@ -215,25 +280,26 @@ export default {
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
           this.clearEditCompany();
-          await this.getCompanyList();
+          await this.getContracts();
         } else {
           this.$root.$emit('msg', 'error', message);
         }
       }
     },
     async editCompany(company) {
-      await this.getContractList();
+      await this.getContracts();
       await this.$store.dispatch(actions.INC_LOADING);
       this.currentCompany = await this.$api('get-company', company, 'pk');
       await this.$store.dispatch(actions.DEC_LOADING);
       if (this.currentCompany.data.contractData) {
-        this.contractList.data.push({ ...this.currentCompany.data.contractData });
+        this.contracts.data.push({ ...this.currentCompany.data.contractData });
       }
       this.editorCompany = this.currentCompany.data;
+      this.companyDepartments = this.currentCompany.departments;
       this.originShortTitle = this.editorCompany.shortTitle;
     },
     clearEditCompany() {
-      this.getContractList();
+      this.getContracts();
       this.editorCompany = {};
       this.originTitle = '';
     },
@@ -244,11 +310,11 @@ export default {
 <style scoped>
 .box {
   background-color: #FFF;
-  margin: 10px 10px;
+  margin: 30px 10px;
   flex-basis: 350px;
   flex-grow: 1;
   border-radius: 4px;
-  min-height: 840px;
+  min-height: 390px;
 }
 .main {
   display: flex;
@@ -256,7 +322,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  max-height: 790px;
+  max-height: 596px;
 }
 .title {
   white-space: nowrap;
@@ -283,5 +349,19 @@ export default {
 .button {
   display: flex;
   justify-content: flex-end;
+}
+.margin-right {
+  margin-right: 5px;
+}
+.margin-left {
+  margin-left: 5px;
+}
+.container {
+  width: 80%;
+  margin: auto;
+}
+.search {
+  margin-top: 36px;
+  padding-left: 9px;
 }
 </style>

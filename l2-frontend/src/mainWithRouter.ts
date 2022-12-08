@@ -119,7 +119,6 @@ const router = new Router({
       meta: {
         title: 'Настройка компаний',
         groups: ['Конструктор: Настройка организации'],
-        narrowLayout: true,
       },
     },
     {

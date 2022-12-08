@@ -2557,7 +2557,7 @@ def delete_research_in_price(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_company_list(request):
+def get_companies(request):
     company_data = [
         {
             "pk": company.pk,
@@ -2570,7 +2570,7 @@ def get_company_list(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_contract_list(request):
+def get_contracts(request):
     contract_data = [
         {
             "value": contract.pk,
@@ -2586,10 +2586,11 @@ def get_contract_list(request):
 def get_company(request):
     request_data = json.loads(request.body)
     company = Company.objects.get(pk=request_data["pk"])
-    company_data = Company.as_json(company=company)
+    company_data = Company.as_json(company)
+    company_departments = CompanyDepartment.search_departments(company.pk)
     if company_data["contractId"]:
         company_data["contractData"] = {"value": company.contract.pk, "label": company.contract.title}
-    return JsonResponse({"data": company_data})
+    return JsonResponse({"data": company_data, "departments": company_departments})
 
 
 @login_required
