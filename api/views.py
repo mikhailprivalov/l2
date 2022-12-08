@@ -477,7 +477,6 @@ def endpoint(request):
 
 
 @login_required
-
 def departments(request):
     req = json.loads(request.body)
     method = req.get('method', 'GET')
