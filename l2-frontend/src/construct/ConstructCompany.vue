@@ -171,10 +171,10 @@
           placeholder="Фильтр по названию..."
         >
         <div class="scroll">
-          <table class="table table-bordered">
+          <table class="table">
             <colgroup>
               <col>
-              <col width="50">
+              <col width="38.25">
             </colgroup>
             <tr
               v-if="filteredDepartments.length === 0"
@@ -191,10 +191,10 @@
               v-for="(department) in filteredDepartments"
               :key="department.id"
             >
-              <td>
+              <td class="border">
                 <input
                   v-model="department.label"
-                  class="form-control"
+                  class="form-control padding-left noborder"
                 >
               </td>
               <td class="border">
@@ -202,9 +202,25 @@
                   v-tippy
                   title="Сохранить"
                   class="btn last btn-blue-nb nbr"
-                  @click="updateDepartment(department)"
                 >
                   <i class="fa fa-save" />
+                </button>
+              </td>
+            </tr>
+            <tr v-if="filteredDepartments.length !== 0">
+              <td class="border">
+                <input
+                  v-model="newDepartment"
+                  class="form-control padding-left noborder"
+                >
+              </td>
+              <td class="border">
+                <button
+                  v-tippy
+                  title="Добавить"
+                  class="btn last btn-blue-nb nbr"
+                >
+                  <i class="fa fa-plus" />
                 </button>
               </td>
             </tr>
@@ -232,6 +248,7 @@ export default {
       searchDepartment: '',
       currentCompany: {},
       companyDepartments: [],
+      newDepartment: '',
       editorCompany: {},
       originShortTitle: '',
     };
@@ -357,11 +374,17 @@ export default {
   margin-left: 5px;
 }
 .container {
-  width: 80%;
+  width: 90%;
   margin: auto;
+}
+.padding-left {
+  padding-left: 9px;
 }
 .search {
   margin-top: 36px;
   padding-left: 9px;
+}
+.noborder {
+  border: none;
 }
 </style>
