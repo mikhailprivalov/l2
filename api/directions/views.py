@@ -1342,8 +1342,11 @@ def directions_paraclinic_form(request):
     d = None
     if dn.exists():
         d: Napravleniya = dn[0]
+        if SettingManager.get("control_planed_fact_doctor", default=False, default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
+            if not request.user.is_superuser and not is_without_limit_paraclinic:
+                response["message"] = "Направление для другого Врача"
+                return JsonResponse(response)
         df = d.issledovaniya_set.all()
-
         if df.exists():
             response["ok"] = True
             response["has_doc_referral"] = False
