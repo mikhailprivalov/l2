@@ -107,6 +107,8 @@ urlpatterns = [
     path('get-contracts', views.get_contracts),
     path('get-company', views.get_company),
     path('update-company', views.update_company),
+    path('update-department', views.update_department),
+    path('add-department', views.add_department),
     path('get-harmful-factors', views.get_harmful_factors),
     path('get-template-researches-pks', views.get_template_researches_pks),
     path('get-templates', views.get_templates),

@@ -28,7 +28,7 @@
             <FormulateInput
               name="shortTitle"
               type="text"
-              label="краткое название"
+              label="Краткое название"
             />
             <FormulateInput
               name="legalAddress"
@@ -208,7 +208,7 @@
                 </button>
               </td>
             </tr>
-            <tr v-if="filteredDepartments.length !== 0">
+            <tr v-if="editorCompany.pk">
               <td class="border">
                 <input
                   v-model="newDepartment"
@@ -220,6 +220,7 @@
                   v-tippy
                   title="Добавить"
                   class="btn last btn-blue-nb nbr"
+                  @click="addDepartment"
                 >
                   <i class="fa fa-plus" />
                 </button>
@@ -248,7 +249,7 @@ export default {
       searchCompany: '',
       searchDepartment: '',
       currentCompany: {},
-      companyDepartments: [],
+      departments: [],
       newDepartment: '',
       editorCompany: {},
       originShortTitle: '',
@@ -264,7 +265,7 @@ export default {
       });
     },
     filteredDepartments() {
-      return this.companyDepartments.filter(department => {
+      return this.departments.filter(department => {
         const departmentTitle = department.label.toLowerCase();
         const searchTerm = this.searchDepartment.toLowerCase();
 
@@ -299,6 +300,7 @@ export default {
           this.$root.$emit('msg', 'ok', 'Сохранено');
           this.clearEditCompany();
           await this.getContracts();
+          await this.getCompanies();
         } else {
           this.$root.$emit('msg', 'error', message);
         }
@@ -312,17 +314,25 @@ export default {
       if (this.currentCompany.data.contractData) {
         this.contracts.data.push({ ...this.currentCompany.data.contractData });
       }
+      await this.getDepartments(company.pk);
       this.editorCompany = this.currentCompany.data;
-      this.companyDepartments = this.currentCompany.departments;
       this.originShortTitle = this.editorCompany.shortTitle;
     },
     clearEditCompany() {
       this.getContracts();
       this.editorCompany = {};
+      this.departments = [];
       this.originTitle = '';
+      this.newDepartment = '';
+    },
+    async getDepartments(companyId) {
+      const depart = await this.$api('company-departments-find', { company_db: companyId });
+      this.departments = depart.data;
     },
     async updateDepartment(department) {
-      if (this.companyDepartments.find((depart) => depart.label === department.label
+      if (!department.label) {
+        this.$root.$emit('msg', 'error', 'Название не заполнено');
+      } else if (this.departments.find((depart) => depart.label === department.label
         && depart.id !== department.id)) {
         this.$root.$emit('msg', 'error', 'Такое название уже есть');
       } else {
@@ -331,6 +341,27 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      }
+    },
+    async addDepartment() {
+      if (!this.newDepartment) {
+        this.$root.$emit('msg', 'error', 'Название не заполнено');
+      } else if (this.departments.find((depart) => depart.label === this.newDepartment)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('add-department', {
+          department: this.newDepartment,
+          company_id: this.editorCompany.pk,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+          await this.getDepartments(this.editorCompany.pk);
+          this.newDepartment = '';
         } else {
           this.$root.$emit('msg', 'error', message);
         }
