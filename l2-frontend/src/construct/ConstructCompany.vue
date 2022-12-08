@@ -202,6 +202,7 @@
                   v-tippy
                   title="Сохранить"
                   class="btn last btn-blue-nb nbr"
+                  @click="updateDepartment(department)"
                 >
                   <i class="fa fa-save" />
                 </button>
@@ -319,6 +320,21 @@ export default {
       this.getContracts();
       this.editorCompany = {};
       this.originTitle = '';
+    },
+    async updateDepartment(department) {
+      if (this.companyDepartments.find((depart) => depart.label === department.label
+        && depart.id !== department.id)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('update-department', department);
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      }
     },
   },
 };
