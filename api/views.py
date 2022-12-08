@@ -2557,7 +2557,7 @@ def delete_research_in_price(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_company_list(request):
+def get_companies(request):
     company_data = [
         {
             "pk": company.pk,
@@ -2570,7 +2570,7 @@ def get_company_list(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_contract_list(request):
+def get_contracts(request):
     contract_data = [
         {
             "value": contract.pk,
@@ -2586,7 +2586,7 @@ def get_contract_list(request):
 def get_company(request):
     request_data = json.loads(request.body)
     company = Company.objects.get(pk=request_data["pk"])
-    company_data = Company.as_json(company=company)
+    company_data = Company.as_json(company)
     if company_data["contractId"]:
         company_data["contractData"] = {"value": company.contract.pk, "label": company.contract.title}
     return JsonResponse({"data": company_data})
@@ -2645,6 +2645,43 @@ def update_company(request):
             {"company_data": Company.as_json(company_data)},
         )
         return JsonResponse({'ok': True})
+
+
+def update_department(request):
+    request_data = json.loads(request.body)
+    if len(request_data["label"]) == 0:
+        return JsonResponse({"ok": False, "message": "Название не заполнено"})
+    if CompanyDepartment.objects.filter(title=request_data["label"]).exclude(pk=request_data["id"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    department = CompanyDepartment.objects.get(pk=request_data["id"])
+    department.title = request_data["label"]
+    department.save()
+    Log.log(
+        department.pk,
+        130005,
+        request.user.doctorprofile,
+        {"department": department.title, "company_id": department.company_id},
+    )
+    return JsonResponse({'ok': True})
+
+
+def add_department(request):
+    request_data = json.loads(request.body)
+    if len(request_data["department"]) == 0:
+        return JsonResponse({"ok": False, "message": "Название не заполнено"})
+    if CompanyDepartment.objects.filter(title=request_data["department"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    if not Company.objects.get(pk=request_data["company_id"]):
+        return JsonResponse({"ok": False, "message": "Нет такой компании"})
+    department = CompanyDepartment(title=request_data["department"], hide=False, company_id=request_data["company_id"])
+    department.save()
+    Log.log(
+        department.pk,
+        130004,
+        request.user.doctorprofile,
+        {"department": department.title, "company_id": department.company_id},
+    )
+    return JsonResponse({'ok': True})
 
 
 def get_harmful_factors(request):
