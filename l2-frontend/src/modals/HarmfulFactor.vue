@@ -138,7 +138,7 @@ export default {
     };
   },
   mounted() {
-    this.$api('get-harmful_factors').then(rows => {
+    this.$api('get-harmful-factors').then(rows => {
       this.harmfulFactors = rows;
     });
     this.$api('patients/card/harmful-factors', {

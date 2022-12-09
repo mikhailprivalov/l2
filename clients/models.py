@@ -1012,6 +1012,16 @@ class HarmfulFactor(models.Model):
         factors = HarmfulFactor.objects.filter(pk__in=factor_pks)
         return [i.template.pk for i in factors]
 
+    @staticmethod
+    def as_json(factor):
+        json = {
+            "id": factor.pk,
+            "title": factor.title,
+            "description": factor.description,
+            "template_id": factor.template_id,
+        }
+        return json
+
 
 class Card(models.Model):
     AGENT_CHOICES = (
@@ -1047,7 +1057,8 @@ class Card(models.Model):
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
-    work_department = models.CharField(max_length=128, blank=True, default='', help_text="Подразделение")
+    work_department = models.CharField(max_length=128, blank=True, default='', help_text="Подразделение")  # DEPRECATED
+    work_department_db = models.ForeignKey('contracts.CompanyDepartment', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место отдела из базы")
     mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     father = models.ForeignKey('self', related_name='father_p', help_text="Отец", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None, on_delete=models.SET_NULL)

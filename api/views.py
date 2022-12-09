@@ -41,7 +41,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract, CompanyDepartment
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -984,6 +984,12 @@ def companies_find(request):
     q = (request.GET.get("query", '') or '').strip()
     companies_data = Company.search_company(q)
     return JsonResponse({"data": companies_data})
+
+
+def company_departments_find(request):
+    request_data = json.loads(request.body)
+    company_departments = CompanyDepartment.search_departments(request_data['company_db'])
+    return JsonResponse({"data": company_departments})
 
 
 @login_required
@@ -2551,7 +2557,7 @@ def delete_research_in_price(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_company_list(request):
+def get_companies(request):
     company_data = [
         {
             "pk": company.pk,
@@ -2564,7 +2570,7 @@ def get_company_list(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_contract_list(request):
+def get_contracts(request):
     contract_data = [
         {
             "value": contract.pk,
@@ -2580,7 +2586,7 @@ def get_contract_list(request):
 def get_company(request):
     request_data = json.loads(request.body)
     company = Company.objects.get(pk=request_data["pk"])
-    company_data = Company.as_json(company=company)
+    company_data = Company.as_json(company)
     if company_data["contractId"]:
         company_data["contractData"] = {"value": company.contract.pk, "label": company.contract.title}
     return JsonResponse({"data": company_data})
@@ -2641,11 +2647,49 @@ def update_company(request):
         return JsonResponse({'ok': True})
 
 
+def update_department(request):
+    request_data = json.loads(request.body)
+    if len(request_data["label"]) == 0:
+        return JsonResponse({"ok": False, "message": "Название не заполнено"})
+    if CompanyDepartment.objects.filter(title=request_data["label"]).exclude(pk=request_data["id"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    department = CompanyDepartment.objects.get(pk=request_data["id"])
+    department.title = request_data["label"]
+    department.save()
+    Log.log(
+        department.pk,
+        130005,
+        request.user.doctorprofile,
+        {"department": department.title, "company_id": department.company_id},
+    )
+    return JsonResponse({'ok': True})
+
+
+def add_department(request):
+    request_data = json.loads(request.body)
+    if len(request_data["department"]) == 0:
+        return JsonResponse({"ok": False, "message": "Название не заполнено"})
+    if CompanyDepartment.objects.filter(title=request_data["department"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    if not Company.objects.get(pk=request_data["company_id"]):
+        return JsonResponse({"ok": False, "message": "Нет такой компании"})
+    department = CompanyDepartment(title=request_data["department"], hide=False, company_id=request_data["company_id"])
+    department.save()
+    Log.log(
+        department.pk,
+        130004,
+        request.user.doctorprofile,
+        {"department": department.title, "company_id": department.company_id},
+    )
+    return JsonResponse({'ok': True})
+
+
 def get_harmful_factors(request):
     rows = [
         {
             "id": factor.pk,
             "label": f"{factor.title} - шаблон {factor.template.title}",
+            "title": factor.title,
             "description": factor.description,
             "template_id": factor.template_id,
         }
@@ -2661,6 +2705,45 @@ def get_template_researches_pks(request):
     return JsonResponse(rows, safe=False)
 
 
-def get_template_list(request):
+def get_templates(request):
     template_data = [{"id": template.pk, "label": template.title} for template in users.AssignmentTemplates.objects.all().order_by('title')]
     return JsonResponse({"data": template_data})
+
+
+def update_factor(request):
+    request_data = json.loads(request.body)
+    if not re.fullmatch('^[0-9.]+$', request_data["title"]):
+        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
+    if not HarmfulFactor.objects.get(pk=request_data["id"]):
+        return JsonResponse({"ok": False, "message": "Нет такого фактора"})
+    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+        return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    factor = HarmfulFactor.objects.get(pk=request_data["id"])
+    factor.title = request_data["title"]
+    factor.description = request_data["description"]
+    factor.template_id = request_data["template_id"]
+    factor.save()
+    Log.log(
+        factor.pk,
+        160000,
+        request.user.doctorprofile,
+        {"factor": factor.as_json(factor)},
+    )
+    return JsonResponse({"ok": True})
+
+
+def add_factor(request):
+    request_data = json.loads(request.body)
+    if not re.fullmatch('^[0-9.]+$', request_data["title"]):
+        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
+    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+        return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    factor = HarmfulFactor(title=request_data["title"], description=request_data["description"], template_id=request_data["template_id"])
+    factor.save()
+    Log.log(
+        factor.pk,
+        160001,
+        request.user.doctorprofile,
+        {"factor": factor.as_json(factor)},
+    )
+    return JsonResponse({"ok": True})

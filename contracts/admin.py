@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import PriceName, PriceCoast, Contract, Company, PriceCategory
+from .models import PriceName, PriceCoast, Contract, Company, PriceCategory, CompanyDepartment
 
 
 class ResPriceCoast(admin.ModelAdmin):
@@ -57,6 +57,19 @@ class ResCompany(admin.ModelAdmin):
     modifier.short_description = "Модификатор прайса"
 
 
+class ResCompanyDepartment(admin.ModelAdmin):
+    list_filter = ('company',)
+    list_display = (
+        'title',
+        'company',
+        'hide',
+    )
+    list_display_links = (
+        'title',
+        'company',
+    )
+
+
 class ResContract(admin.ModelAdmin):
     list_display = (
         'title',
@@ -77,4 +90,5 @@ admin.site.register(PriceCategory)
 admin.site.register(PriceName)
 admin.site.register(Contract, ResContract)
 admin.site.register(Company, ResCompany)
+admin.site.register(CompanyDepartment, ResCompanyDepartment)
 admin.site.register(PriceCoast, ResPriceCoast)
