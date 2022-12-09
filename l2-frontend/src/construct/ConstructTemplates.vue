@@ -71,6 +71,9 @@ export default {
     SelectPickerM,
     TemplateEditor,
   },
+  props: {
+    templateId: Number,
+  },
   data() {
     return {
       type: 1,

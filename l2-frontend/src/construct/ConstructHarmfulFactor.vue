@@ -19,7 +19,8 @@
             <col width="150">
             <col>
             <col width="200">
-            <col width="99">
+            <col width="49.5">
+            <col width="49.5">
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -38,6 +39,7 @@
               >
                 <strong>Шаблон</strong>
               </th>
+              <th />
               <th />
             </tr>
           </thead>
@@ -87,6 +89,20 @@
               >
                 <i class="fa fa-save" />
               </button>
+            </td>
+            <td class="table-row">
+              <router-link
+                :to="{ name: 'construct-templates', params: { templateId: factor.template_id }}"
+                :target="'_blank'"
+              >
+                <button
+                  v-tippy
+                  class="btn last btn-blue-nb nbr template-button"
+                  title="Перейти к шаблону"
+                >
+                  <i class="fa fa-pencil" />
+                </button>
+              </router-link>
             </td>
           </tr>
         </table>
@@ -259,10 +275,13 @@ export default {
   padding-left: 6px;
 }
 .add-button {
-  padding: 7px 15px;
+  padding: 7px 16px;
 }
 .update-button {
-  padding: 7px 42px;
+  padding: 7px 17.2px;
+}
+.template-button {
+  padding: 7px 16.3px;
 }
 .sticky {
   position: sticky;
