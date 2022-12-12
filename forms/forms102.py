@@ -1818,7 +1818,7 @@ def form_02(request_data):
                 elif ticket_section.get('Spacer'):
                     height_spacer = ticket_section.get('spacer_data')
                     objs.append(Spacer(1, height_spacer * mm))
-                elif ticket_section.get('ticket_list'):
+                elif ticket_section.get('contract_add_header'):
                     objs.extend(contract_add_header)
                 elif ticket_section.get('body_adds_paragraphs'):
                     for section in ticket_section.get('body_adds_paragraphs'):
