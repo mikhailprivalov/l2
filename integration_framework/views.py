@@ -62,7 +62,8 @@ from laboratory.settings import (
     ID_MED_DOCUMENT_TYPE_IEMK_N3,
     DEATH_RESEARCH_PK,
     REMD_EXCLUDE_RESEARCH,
-    REMD_ONLY_RESEARCH, HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION,
+    REMD_ONLY_RESEARCH,
+    HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
