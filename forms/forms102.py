@@ -1823,8 +1823,6 @@ def form_02(request_data):
                 elif ticket_section.get('body_adds_paragraphs'):
                     for section in ticket_section.get('body_adds_paragraphs'):
                         objs = check_section_param(objs, s, styles_obj, tbl, sum_research, styleTCright, section)
-                else:
-                    objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
             objs.append(Spacer(1, 2 * mm))
             objs.append(KeepTogether([Paragraph('АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), contract_add_org_contracts]))
 
