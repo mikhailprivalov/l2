@@ -1504,26 +1504,7 @@ def form_02(request_data):
         end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
         if contract_from_file:
             for section in body_paragraphs:
-                if section.get('is_price'):
-                    objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['text'], s.capitalize()), styles_obj[section['style']]))
-                elif section.get('time_pay'):
-                    objs.append(
-                        Paragraph(
-                            '{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(
-                                section['text'], end_date1
-                            ),
-                            styles_obj[section['style']],
-                        )
-                    )
-                elif section.get('is_researches'):
-                    objs.append(tbl)
-                    objs.append(Spacer(1, 1 * mm))
-                    objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
-                    objs.append(Spacer(1, 2 * mm))
-                    objs.append(Spacer(1, 3 * mm))
-
-                else:
-                    objs.append(Paragraph(section['text'], styles_obj[section['style']]))
+                objs = check_section_param(objs, s, styles_obj, tbl, sum_research, styleTCright, section)
 
         styleAtr = deepcopy(style)
         styleAtr.firstLineIndent = 0
@@ -1841,26 +1822,7 @@ def form_02(request_data):
                     objs.extend(contract_add_header)
                 elif ticket_section.get('body_adds_paragraphs'):
                     for section in ticket_section.get('body_adds_paragraphs'):
-                        if section.get('is_price'):
-                            objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['text'], s.capitalize()), styles_obj[section['style']]))
-                        elif section.get('time_pay'):
-                            objs.append(
-                                Paragraph(
-                                    '{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(
-                                        section['text'], end_date1
-                                    ),
-                                    styles_obj[section['style']],
-                                )
-                            )
-                        elif section.get('is_researches'):
-                            objs.append(tbl)
-                            objs.append(Spacer(1, 1 * mm))
-                            objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
-                            objs.append(Spacer(1, 2 * mm))
-                            objs.append(Spacer(1, 3 * mm))
-
-                        else:
-                            objs.append(Paragraph(section['text'], styles_obj[section['style']]))
+                        objs = check_section_param(objs, s, styles_obj, tbl, sum_research, styleTCright, section)
                 else:
                     objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
             objs.append(Spacer(1, 2 * mm))
@@ -1985,3 +1947,17 @@ def form_02(request_data):
 
     buffer.close()
     return pdf
+
+
+def check_section_param(objs, s, styles_obj, tbl, sum_research, styleTCright, section):
+    if section.get('is_price'):
+        objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['text'], s.capitalize()), styles_obj[section['style']]))
+    elif section.get('is_researches'):
+        objs.append(tbl)
+        objs.append(Spacer(1, 1 * mm))
+        objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
+        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 3 * mm))
+    else:
+        objs.append(Paragraph(section['text'], styles_obj[section['style']]))
+    return objs
