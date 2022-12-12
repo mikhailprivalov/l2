@@ -201,7 +201,6 @@ def form_01(request_data):
 
     objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
     barcode128 = code128.Code128(date_now_str, barHeight=6 * mm, barWidth=1.25)
-
     objs.append(Spacer(1, 11 * mm))
 
     objs.append(Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str), styleCenter))
@@ -264,7 +263,6 @@ def form_01(request_data):
             executor = data['executor']
             appendix_paragraphs = data.get('appendix_paragraphs', None)
             appendix_route_list = data.get('appendix_route_list', None)
-
     else:
         executor = None
 
@@ -1259,6 +1257,7 @@ def form_02(request_data):
                 appendix_paragraphs = data.get('appendix_paragraphs', None)
                 appendix_route_list = data.get('appendix_route_list', None)
                 appendix_direction_list = data.get('appendix_direction_list', None)
+                ticket_list = data.get('ticket_list', None)
         else:
             executor = None
 
@@ -1412,6 +1411,7 @@ def form_02(request_data):
 
         objs.append(Paragraph('{}'.format(them_contract), styleFL))
         objs.append(Spacer(1, 2 * mm))
+        contract_add_header = deepcopy(objs)
 
         objs.append(Spacer(1, 2 * mm))
         # objs.append(Paragraph('{}'.format(tr), style))
@@ -1735,7 +1735,7 @@ def form_02(request_data):
         objs.append(Spacer(1, 2 * mm))
 
         # Заголовок Адреса и реквизиты + сами реквизиты всегда вместе, если разрыв на странице
-
+        contract_add_org_contracts = deepcopy(tbl)
         objs.append(KeepTogether([Paragraph('АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), tbl]))
         objs.append(Spacer(1, 7 * mm))
 
@@ -1828,6 +1828,43 @@ def form_02(request_data):
                     direction_data.extend(list(types_direction["isDocrefferal"]))
                 elif section.get('isParaclinic'):
                     direction_data.extend(list(types_direction["isParaclinic"]))
+
+        if contract_from_file and ticket_list:
+            for ticket_section in ticket_list:
+                if ticket_section.get('page_break'):
+                    objs.append(PageBreak())
+                    objs.append(Macro("canvas._pageNumber=1"))
+                elif ticket_section.get('Spacer'):
+                    height_spacer = ticket_section.get('spacer_data')
+                    objs.append(Spacer(1, height_spacer * mm))
+                elif ticket_section.get('ticket_list'):
+                    objs.extend(contract_add_header)
+                elif ticket_section.get('body_adds_paragraphs'):
+                    for section in ticket_section.get('body_adds_paragraphs'):
+                        if section.get('is_price'):
+                            objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['text'], s.capitalize()), styles_obj[section['style']]))
+                        elif section.get('time_pay'):
+                            objs.append(
+                                Paragraph(
+                                    '{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(
+                                        section['text'], end_date1
+                                    ),
+                                    styles_obj[section['style']],
+                                )
+                            )
+                        elif section.get('is_researches'):
+                            objs.append(tbl)
+                            objs.append(Spacer(1, 1 * mm))
+                            objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
+                            objs.append(Spacer(1, 2 * mm))
+                            objs.append(Spacer(1, 3 * mm))
+
+                        else:
+                            objs.append(Paragraph(section['text'], styles_obj[section['style']]))
+                else:
+                    objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
+            objs.append(Spacer(1, 2 * mm))
+            objs.append(KeepTogether([Paragraph('АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), contract_add_org_contracts]))
 
     def first_pages(canvas, document):
         canvas.saveState()
