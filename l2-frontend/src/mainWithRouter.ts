@@ -343,7 +343,6 @@ const router = new Router({
       path: '/ui/construct/templates',
       name: 'construct-templates',
       component: () => import('@/construct/ConstructTemplates.vue'),
-      props: { default: true, templateId: false },
       meta: {
         title: 'Настройка шаблонов назначений',
         fullPageLayout: true,
