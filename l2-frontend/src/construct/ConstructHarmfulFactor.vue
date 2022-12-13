@@ -324,7 +324,7 @@ export default {
   padding-left: 6px;
 }
 .add-button {
-  padding: 7px 16px;
+  padding: 7px 15.3px;
 }
 .update-button {
   padding: 7px 17.2px;
