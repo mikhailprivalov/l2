@@ -2757,15 +2757,10 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
                 else:
                     c_year = "1900-01-01 00:00:00"
                 rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
-                if use_current_hosp:
-                    direction_id = get_current_direction(current_iss)
-                    direction_obj = Napravleniya.objects.filter(pk=direction_id).first()
-                    if rows[7] != direction_obj.parent_id:
-                        continue
-                if use_root_hosp:
-                    direction_id = get_current_direction(current_iss)
-                    if tree_directions.root_direction(direction_id) != tree_directions.root_direction(rows[7]):
-                        continue
+                if check_use_current_hosp(current_iss, rows[7]):
+                    continue
+                if check_use_root_hosp(current_iss, rows[7]):
+                    continue
                 if rows:
                     row = rows[0]
                     value = row[5]
@@ -2790,6 +2785,20 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
             break
     return result
 
+
+def check_use_root_hosp(current_iss, parent_iss):
+    direction_id = get_current_direction(current_iss)
+    if tree_directions.root_direction(direction_id) != tree_directions.root_direction(parent_iss):
+        return True
+    return False
+
+
+def check_use_current_hosp(current_iss, parent_iss):
+    direction_id = get_current_direction(current_iss)
+    direction_obj = Napravleniya.objects.filter(pk=direction_id).first()
+    if parent_iss != direction_obj.parent_id:
+        return True
+    return False
 
 def field_get_aggregate_operation_data(operations_data):
     result = None
