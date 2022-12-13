@@ -19,8 +19,7 @@
             <col width="150">
             <col>
             <col width="200">
-            <col width="49.5">
-            <col width="49.5">
+            <col width="99">
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -39,7 +38,6 @@
               >
                 <strong>Шаблон</strong>
               </th>
-              <th />
               <th />
             </tr>
           </thead>
@@ -81,24 +79,24 @@
               />
             </td>
             <td class="table-row">
-              <button
-                v-tippy
-                class="btn last btn-blue-nb nbr update-button"
-                title="Сохранить фактор"
-                @click="updateFactor(factor)"
-              >
-                <i class="fa fa-save" />
-              </button>
-            </td>
-            <td class="table-row">
-              <button
-                v-tippy
-                class="btn last btn-blue-nb nbr template-button"
-                title="Перейти к шаблону"
-                @click="showModal(factor.template_id)"
-              >
-                <i class="fa fa-pencil" />
-              </button>
+              <div class="button">
+                <button
+                  v-tippy
+                  class="btn last btn-blue-nb nbr"
+                  title="Сохранить фактор"
+                  @click="updateFactor(factor)"
+                >
+                  <i class="fa fa-save" />
+                </button>
+                <button
+                  v-tippy
+                  class="btn last btn-blue-nb nbr"
+                  title="Перейти к шаблону"
+                  @click="showModal(factor.template_id)"
+                >
+                  <i class="fa fa-pencil" />
+                </button>
+              </div>
             </td>
           </tr>
         </table>
@@ -113,7 +111,7 @@
           <col width="150">
           <col>
           <col width="200">
-          <col width="99px">
+          <col width="99">
         </colgroup>
         <tr>
           <td class="table-row">
@@ -141,14 +139,16 @@
             />
           </td>
           <td>
-            <button
-              v-tippy
-              class="btn last btn-blue-nb nbr add-button"
-              title="Добавить фактор"
-              @click="addFactor"
-            >
-              Добавить
-            </button>
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                title="Добавить фактор"
+                @click="addFactor"
+              >
+                Добавить
+              </button>
+            </div>
           </td>
         </tr>
       </table>
@@ -312,7 +312,7 @@ export default {
   table-layout: fixed;
 }
 .scroll {
-  min-height: 110.5px;
+  min-height: 111px;
   max-height: calc(100vh - 350px);
   overflow-y: auto;
 }
@@ -322,15 +322,6 @@ export default {
 }
 .padding-left {
   padding-left: 6px;
-}
-.add-button {
-  padding: 7px 15.3px;
-}
-.update-button {
-  padding: 7px 17.2px;
-}
-.template-button {
-  padding: 7px 16.3px;
 }
 .sticky {
   position: sticky;
@@ -347,4 +338,17 @@ export default {
   padding-left: 6px;
   background-color: white;
 }
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
+
 </style>
