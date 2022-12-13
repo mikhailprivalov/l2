@@ -62,7 +62,7 @@
               <input
                 v-model="factor.title"
                 class="form-control padding-left"
-                @input="onlyFactorTitle(index, $event)"
+                @input="toFactorTitle(index, $event)"
               >
             </td>
             <td class="table-row">
@@ -125,7 +125,7 @@
               v-model="title"
               class="form-control padding-left"
               placeholder="Название"
-              @input="onlyFactorTitle(-1, $event, 'title')"
+              @input="toFactorTitle(-1, $event, 'title')"
             >
           </td>
           <td class="table-row">
@@ -238,7 +238,7 @@ export default {
         this.$root.$emit('msg', 'error', 'Ошибка заполнения');
       }
     },
-    onlyFactorTitle(index, event, title) {
+    toFactorTitle(index, event, title) {
       if (index !== -1) {
         this.filteredFactors[index].title = event.target.value.replace(/[^0-9.]/g, '');
       } else {
