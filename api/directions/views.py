@@ -2739,7 +2739,9 @@ def get_current_direction(current_iss):
     return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
 
-def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, use_root_hosp=False, months_ago='-1', use_current_hosp=False, current_iss=None):
+def field_get_link_data(
+    field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, use_root_hosp=False, months_ago='-1', use_current_hosp=False, current_iss=None
+):
     result, value, temp_value = None, None, None
     for current_field_pk in field_pks:
         group_fields = [current_field_pk]
