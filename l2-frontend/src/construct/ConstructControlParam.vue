@@ -89,14 +89,16 @@
               >
             </td>
             <td class="border">
-              <button
-                v-tippy
-                class="btn btn-blue-nb update-button nbr"
-                title="Сохранить"
-                @click="updateParam(param)"
-              >
-                <i class="fa fa-save" />
-              </button>
+              <div class="button">
+                <button
+                  v-tippy
+                  class="btn btn-blue-nb nbr"
+                  title="Сохранить"
+                  @click="updateParam(param)"
+                >
+                  <i class="fa fa-save" />
+                </button>
+              </div>
             </td>
           </tr>
         </table>
@@ -144,14 +146,16 @@
             >
           </td>
           <td class="text-center border">
-            <button
-              v-tippy
-              class="btn btn-blue-nb nbr"
-              title="Добавить"
-              @click="addParam"
-            >
-              Добавить
-            </button>
+            <div class="button">
+              <button
+                v-tippy
+                class="btn btn-blue-nb nbr"
+                title="Добавить"
+                @click="addParam"
+              >
+                Добавить
+              </button>
+            </div>
           </td>
         </tr>
       </table>
@@ -198,12 +202,13 @@ export default {
       this.params = params.data;
     },
     async updateParam(currentParam) {
-      if (this.params.find((param) => param.title === currentParam.title
-        && param.id !== currentParam.id)) {
+      if (this.params.find((param) => currentParam.title === param.title && currentParam.id !== param.id)) {
         this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else if (this.params.find((param) => currentParam.code === param.code && currentParam.id !== param.id)) {
+        this.$root.$emit('msg', 'error', 'Такой код уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('update-param', currentParam);
+        const { ok, message } = await this.$api('update-control-param', currentParam);
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
@@ -216,9 +221,11 @@ export default {
     async addParam() {
       if (this.newParam.title && this.params.find((param) => param.title === this.newParam.title)) {
         this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else if (this.newParam.code && this.params.find((param) => param.code === this.newParam.code)) {
+        this.$root.$emit('msg', 'error', 'Такой код уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('add-param', this.newParam);
+        const { ok, message } = await this.$api('add-control-param', this.newParam);
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
@@ -245,7 +252,7 @@ export default {
   table-layout: fixed;
 }
 .scroll {
-  min-height: 111.5px;
+  min-height: 111px;
   max-height: calc(100vh - 350px);
   overflow-y: auto;
 }
@@ -262,9 +269,6 @@ export default {
   height: 20px;
   width: 100%;
 }
-.update-button {
-  padding: 7px 39px;
-}
 .table > thead > tr > th {
   border-bottom: 0;
 }
@@ -274,4 +278,16 @@ export default {
   padding-left: 6px;
   background-color: white;
 }
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
 </style>

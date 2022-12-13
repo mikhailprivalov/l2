@@ -2762,7 +2762,7 @@ def get_control_params(request):
 
 @login_required
 @group_required('Конструктор: Контролируемые параметры пациентов')
-def update_param(request):
+def update_control_param(request):
     request_data = json.loads(request.body)
     if PatientControlParam.objects.filter(title=request_data["title"]).exclude(pk=request_data["pk"]):
         return JsonResponse({"ok": False, "message": "Такое название уже есть"})
@@ -2782,7 +2782,7 @@ def update_param(request):
     return JsonResponse({"ok": True})
 
 
-def add_param(request):
+def add_control_param(request):
     request_data = json.loads(request.body)
     if PatientControlParam.objects.filter(title=request_data["title"]):
         return JsonResponse({"ok": False, "message": "Такое название уже есть"})

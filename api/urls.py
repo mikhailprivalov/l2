@@ -115,6 +115,6 @@ urlpatterns = [
     path('update-factor', views.update_factor),
     path('add-factor', views.add_factor),
     path('get-control-params', views.get_control_params),
-    path('update-param', views.update_param),
-    path('add-param', views.add_param),
+    path('update-control-param', views.update_control_param),
+    path('add-control-param', views.add_control_param),
 ]
