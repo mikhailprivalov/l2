@@ -296,7 +296,7 @@ def search_data_by_param(
                      and directions_issledovaniya.time_confirmation is NOT NULL
                      WHEN %(date_examination_start)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null
                 END
-                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s
+                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s or directions_napravleniya.planed_doctor_executor_id = %(doc_confirm)s
                          WHEN %(doc_confirm)s = -1 THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN %(date_registred_start)s != '1900-01-01 00:00:00' THEN

@@ -63,6 +63,7 @@ from laboratory.settings import (
     DEATH_RESEARCH_PK,
     REMD_EXCLUDE_RESEARCH,
     REMD_ONLY_RESEARCH,
+    HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -1370,6 +1371,10 @@ def external_direction_create(request):
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
         return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
 
+    is_exclude_contorl_documnets = False
+    if hospital.pk in HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION:
+        is_exclude_contorl_documnets = True
+
     patient = body.get("patient", {})
 
     enp = (patient.get("enp") or '').replace(' ', '')
@@ -1379,7 +1384,7 @@ def external_direction_create(request):
 
     snils = (patient.get("snils") or '').replace(' ', '').replace('-', '')
 
-    if not enp and not snils:
+    if not enp and not snils and not is_exclude_contorl_documnets:
         return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber'})
 
     if snils and not petrovna.validate_snils(snils):
