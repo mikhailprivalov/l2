@@ -2802,6 +2802,7 @@ def check_use_current_hosp(current_iss, parent_iss):
         return True
     return False
 
+
 def field_get_aggregate_operation_data(operations_data):
     result = None
     count = 0
