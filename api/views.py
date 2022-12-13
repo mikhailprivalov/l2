@@ -2752,7 +2752,7 @@ def add_factor(request):
 
 @login_required
 @group_required('Конструктор: Контролируемые параметры пациентов')
-def get_params_list(request):
+def get_control_params(request):
     params_data = [
         PatientControlParam.as_json(param)
         for param in PatientControlParam.objects.all().order_by('title')

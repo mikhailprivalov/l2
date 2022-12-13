@@ -114,7 +114,7 @@ urlpatterns = [
     path('get-templates', views.get_templates),
     path('update-factor', views.update_factor),
     path('add-factor', views.add_factor),
-    path('get-params-list', views.get_params_list),
+    path('get-control-params', views.get_control_params),
     path('update-param', views.update_param),
     path('add-param', views.add_param),
 ]
