@@ -63,6 +63,7 @@
 import SelectPickerM from '@/fields/SelectPickerM.vue';
 import * as actions from '@/store/action-types';
 
+import UrlData from '../UrlData';
 import TemplateEditor from './TemplateEditor.vue';
 
 export default {
@@ -99,6 +100,10 @@ export default {
     },
   },
   mounted() {
+    const storedData = UrlData.get();
+    if (storedData && typeof storedData === 'object' && storedData.pk) {
+      this.opened_id = storedData.pk;
+    }
     this.$root.$on('research-editor:cancel', this.cancel_edit);
 
     this.$store.dispatch(actions.INC_LOADING);
