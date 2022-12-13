@@ -91,18 +91,14 @@
               </button>
             </td>
             <td class="table-row">
-              <router-link
-                :to="{ name: 'construct-templates', params: { templateId: factor.template_id }}"
-                :target="'_blank'"
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr template-button"
+                title="Перейти к шаблону"
+                @click="showModal(factor.template_id)"
               >
-                <button
-                  v-tippy
-                  class="btn last btn-blue-nb nbr template-button"
-                  title="Перейти к шаблону"
-                >
-                  <i class="fa fa-pencil" />
-                </button>
-              </router-link>
+                <i class="fa fa-pencil" />
+              </button>
             </td>
           </tr>
         </table>
@@ -137,7 +133,7 @@
           </td>
           <td>
             <Treeselect
-              v-model="template_id"
+              v-model="templateId"
               :disable-branch-nodes="true"
               :append-to-body="true"
               :options="templates.data"
@@ -157,6 +153,44 @@
         </tr>
       </table>
     </div>
+    <Modal
+      v-if="modal"
+      ref="modal"
+      margin-top="30px"
+      margin-left-right="auto"
+      max-width="1500px"
+      height="700px"
+      show-footer="true"
+      white-bg="true"
+      width="100%"
+      @close="hideModal"
+    >
+      <span slot="header">Редактирование шаблона</span>
+      <div
+        slot="body"
+      >
+        <iframe
+          id="myframe"
+          width="1470"
+          height="605"
+          :src="`/ui/construct/templates#{&quot;pk&quot;:${editTemplateId}}`"
+        />
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-10" />
+          <div class="col-xs-2">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hideModal"
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -166,10 +200,11 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
+import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ConstructHarmfulFactor',
-  components: { Treeselect },
+  components: { Treeselect, Modal },
   data() {
     return {
       factors: [],
@@ -177,7 +212,9 @@ export default {
       search: '',
       title: '',
       description: '',
-      template_id: null,
+      templateId: null,
+      modal: false,
+      editTemplateId: null,
     };
   },
   computed: {
@@ -201,6 +238,18 @@ export default {
     },
     async getTemplates() {
       this.templates = await this.$api('/get-templates');
+    },
+    showModal(templateId) {
+      this.modal = true;
+      this.editTemplateId = templateId;
+    },
+    hideModal() {
+      this.modal = false;
+      this.getTemplates();
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_template_editor');
     },
     async updateFactor(factor) {
       if (factor.title && factor.template_id) {
