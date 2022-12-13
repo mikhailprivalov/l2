@@ -119,6 +119,15 @@ const router = new Router({
       meta: {
         title: 'Настройка компаний',
         groups: ['Конструктор: Настройка организации'],
+      },
+    },
+    {
+      path: '/ui/construct/harmful-factor',
+      name: 'harmful_factor',
+      component: () => import('@/construct/ConstructHarmfulFactor.vue'),
+      meta: {
+        title: 'Факторы вредности',
+        groups: ['Конструктор: Факторы вредности'],
         narrowLayout: true,
       },
     },

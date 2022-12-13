@@ -99,10 +99,10 @@ def statistic_xls(request):
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
     if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"]:
-        pk = request_data.get("research")
+        pk_research = request_data.get("research")
         delta = date_end - date_start
         if abs(delta.days) > 60 and tp == "statistics-research" and int(pk) not in UNLIMIT_PERIOD_STATISTIC_RESEARCH:
-            slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
+            slog.Log(key=tp, type=101, body=json.dumps({"pk": pk_research, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
             return JsonResponse({"error": "period max - 60 days"})
 
     if date_start_o != "" and date_end_o != "":
@@ -317,11 +317,8 @@ def statistic_xls(request):
 
     if tp == "directions_list":
         pk = json.loads(pk)
-
         dn = Napravleniya.objects.filter(pk__in=pk)
-
         cards = {}
-
         for d in dn:
             c = d.client
             if c.pk not in cards:
@@ -917,6 +914,7 @@ def statistic_xls(request):
                 ws.write(daterow + 1, col_num, row[col_num], font_style)
 
     elif tp == "lab":
+
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_{}_{}-{}.xls\"".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr)
 

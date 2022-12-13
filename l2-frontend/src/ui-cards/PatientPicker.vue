@@ -440,15 +440,29 @@
                 />
               </td>
             </tr>
-            <tr v-if="selected_card.medbookNumber">
+            <tr v-if="selected_card.medbookNumber || l2_harmful_factor">
               <td class="table-header-row">
                 Мед.книжка:
               </td>
               <td
                 class="table-content-row"
-                colspan="3"
               >
                 <strong>{{ selected_card.medbookNumber }}</strong>
+              </td>
+              <td
+                class="cl-td"
+                colspan="2"
+              >
+                <button
+                  v-tippy="{ placement: 'bottom', arrow: true }"
+                  class="btn last btn-blue-nb nbr"
+                  style="height: 31px; float: right"
+                  type="button"
+                  title="Факторы вредности"
+                  @click="open_harmful_factor()"
+                >
+                  <i class="fa fa-bolt" />
+                </button>
               </td>
             </tr>
             <tr v-if="!hasSnils">
@@ -609,6 +623,12 @@
       :card_data="selected_card"
       :readonly="false"
     />
+    <HarmfulFactor
+      v-if="harmful_factor"
+      :card_pk="selected_card.pk"
+      :card_data="selected_card"
+      :readonly="false"
+    />
     <AmbulatoryData
       v-if="ambulatory_data && selected_card.pk"
       :card_pk="selected_card.pk"
@@ -692,6 +712,7 @@ import Modal from '@/ui-cards/Modal.vue';
 import L2CardCreate from '@/modals/L2CardCreate.vue';
 import DReg from '@/modals/DReg.vue';
 import Benefit from '@/modals/Benefit.vue';
+import HarmfulFactor from '@/modals/HarmfulFactor.vue';
 import * as actions from '@/store/action-types';
 import patientsPoint from '@/api/patients-point';
 import Vaccine from '@/modals/Vaccine.vue';
@@ -709,6 +730,7 @@ export default {
     L2CardCreate,
     DReg,
     Benefit,
+    HarmfulFactor,
     AmbulatoryData,
   },
   props: {
@@ -766,6 +788,7 @@ export default {
       },
       dreg: false,
       benefit: false,
+      harmful_factor: false,
       vaccine: false,
       suggests: {
         focused: -1,
@@ -821,6 +844,9 @@ export default {
     },
     l2_benefit() {
       return this.$store.getters.modules.l2_benefit;
+    },
+    l2_harmful_factor() {
+      return this.$store.getters.modules.l2_harmful_factor;
     },
     force_rmis_search() {
       return Boolean(this.$store.getters.modules.l2_force_rmis_search);
@@ -1008,6 +1034,9 @@ export default {
     });
     this.$root.$on('hide_benefit', () => {
       this.benefit = false;
+    });
+    this.$root.$on('hide_harmful_factor', () => {
+      this.harmful_factor = false;
     });
     this.$root.$on('hide_vaccine', () => {
       this.vaccine = false;
@@ -1202,6 +1231,12 @@ export default {
     open_benefit() {
       this.benefit = true;
       sendEvent('patient-picker:open-benefit', {
+        card_pk: this.selected_card.pk,
+      });
+    },
+    open_harmful_factor() {
+      this.harmful_factor = true;
+      sendEvent('patient-picker:open-hrmfulfactor', {
         card_pk: this.selected_card.pk,
       });
     },

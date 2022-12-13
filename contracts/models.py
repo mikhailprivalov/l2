@@ -143,3 +143,23 @@ class Company(models.Model):
             "contractId": company.contract_id,
         }
         return json_data
+
+
+class CompanyDepartment(models.Model):
+    title = models.CharField(max_length=511, help_text='Наименование отдела', db_index=True)
+    hide = models.BooleanField(default=False, help_text='Скрыть', db_index=True)
+    company = models.ForeignKey(Company, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "{}".format(self.title)
+
+    @staticmethod
+    def search_departments(company_id):
+        if not company_id:
+            return []
+        company_departments = CompanyDepartment.objects.filter(company_id=company_id)
+        return [{"id": d.id, "label": d.title} for d in company_departments]
+
+    class Meta:
+        verbose_name = 'Отдел компании'
+        verbose_name_plural = 'Отделы компаний'

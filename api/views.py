@@ -41,11 +41,11 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract, CompanyDepartment
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, District
+from clients.models import CardBase, Individual, Card, Document, District, HarmfulFactor
 from context_processors.utils import menu
 from directory.models import (
     Fractions,
@@ -986,6 +986,12 @@ def companies_find(request):
     return JsonResponse({"data": companies_data})
 
 
+def company_departments_find(request):
+    request_data = json.loads(request.body)
+    company_departments = CompanyDepartment.search_departments(request_data['company_db'])
+    return JsonResponse({"data": company_departments})
+
+
 @login_required
 def search_dicom(request):
     request_data = json.loads(request.body)
@@ -1410,6 +1416,7 @@ def user_view(request):
             "rmis_employee_id": '',
             "rmis_service_id_time_table": '',
             "snils": '',
+            "available_quotas_time": '',
             "cabinet": '',
             "position": -1,
             "district": -1,
@@ -1459,6 +1466,7 @@ def user_view(request):
             "rmis_employee_id": doc.rmis_employee_id,
             "rmis_service_id_time_table": doc.rmis_service_id_time_table,
             "snils": doc.snils,
+            "available_quotas_time": doc.available_quotas_time,
             "cabinet": doc.cabinet,
             "position": doc.position_id or -1,
             "district": doc.district_group_id or -1,
@@ -1489,6 +1497,7 @@ def user_save_view(request):
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
     snils = ud.get("snils").strip() or ''
+    available_quotas_time = ud.get("available_quotas_time").strip() or ''
     cabinet = (ud.get("cabinet") or "").strip()
     email = ud.get("email").strip() or None
     position = ud.get("position", -1)
@@ -1583,6 +1592,7 @@ def user_save_view(request):
             doc.rmis_resource_id = rmis_resource_id
             doc.hospital_id = hospital_pk
             doc.snils = snils
+            doc.available_quotas_time = available_quotas_time
             doc.cabinet = cabinet
             doc.email = email
             doc.position_id = position
@@ -2041,6 +2051,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
         {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
     ]
 
@@ -2435,7 +2446,14 @@ def update_coast_research_in_price(request):
 @group_required('Конструктор: Настройка организации')
 def get_research_list(request):
     researches = Researches.objects.filter(hide=False)
-    res_list = {"Лаборатория": {}, "Параклиника": {}, "Консультации": {"Общие": []}, "Формы": {"Общие": []}, "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []}}
+    res_list = {
+        "Лаборатория": {},
+        "Параклиника": {},
+        "Консультации": {"Общие": []},
+        "Формы": {"Общие": []},
+        "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
+        "Стоматология": {"Общие": []},
+    }
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
@@ -2452,6 +2470,13 @@ def get_research_list(request):
             res_list["Морфология"]["Гистология"].append({"id": research.pk, "label": research.title})
         elif research.is_microbiology:
             res_list["Морфология"]["Микробиология"].append({"id": research.pk, "label": research.title})
+        elif research.is_stom:
+            if research.site_type is None:
+                res_list["Стоматология"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Стоматология"].get(research.site_type.title):
+                res_list["Стоматология"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Стоматология"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_form:
             if research.site_type is None:
                 res_list["Формы"]["Общие"].append({"id": research.pk, "label": research.title})
@@ -2533,7 +2558,7 @@ def delete_research_in_price(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_company_list(request):
+def get_companies(request):
     company_data = [
         {
             "pk": company.pk,
@@ -2546,7 +2571,7 @@ def get_company_list(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_contract_list(request):
+def get_contracts(request):
     contract_data = [
         {
             "value": contract.pk,
@@ -2562,7 +2587,7 @@ def get_contract_list(request):
 def get_company(request):
     request_data = json.loads(request.body)
     company = Company.objects.get(pk=request_data["pk"])
-    company_data = Company.as_json(company=company)
+    company_data = Company.as_json(company)
     if company_data["contractId"]:
         company_data["contractData"] = {"value": company.contract.pk, "label": company.contract.title}
     return JsonResponse({"data": company_data})
@@ -2621,6 +2646,108 @@ def update_company(request):
             {"company_data": Company.as_json(company_data)},
         )
         return JsonResponse({'ok': True})
+
+
+def update_department(request):
+    request_data = json.loads(request.body)
+    if len(request_data["label"]) == 0:
+        return JsonResponse({"ok": False, "message": "Название не заполнено"})
+    if CompanyDepartment.objects.filter(title=request_data["label"]).exclude(pk=request_data["id"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    department = CompanyDepartment.objects.get(pk=request_data["id"])
+    department.title = request_data["label"]
+    department.save()
+    Log.log(
+        department.pk,
+        130005,
+        request.user.doctorprofile,
+        {"department": department.title, "company_id": department.company_id},
+    )
+    return JsonResponse({'ok': True})
+
+
+def add_department(request):
+    request_data = json.loads(request.body)
+    if len(request_data["department"]) == 0:
+        return JsonResponse({"ok": False, "message": "Название не заполнено"})
+    if CompanyDepartment.objects.filter(title=request_data["department"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    if not Company.objects.get(pk=request_data["company_id"]):
+        return JsonResponse({"ok": False, "message": "Нет такой компании"})
+    department = CompanyDepartment(title=request_data["department"], hide=False, company_id=request_data["company_id"])
+    department.save()
+    Log.log(
+        department.pk,
+        130004,
+        request.user.doctorprofile,
+        {"department": department.title, "company_id": department.company_id},
+    )
+    return JsonResponse({'ok': True})
+
+
+def get_harmful_factors(request):
+    rows = [
+        {
+            "id": factor.pk,
+            "label": f"{factor.title} - шаблон {factor.template.title}",
+            "title": factor.title,
+            "description": factor.description,
+            "template_id": factor.template_id,
+        }
+        for factor in HarmfulFactor.objects.all().order_by('title')
+    ]
+    return JsonResponse(rows, safe=False)
+
+
+def get_template_researches_pks(request):
+    request_data = json.loads(request.body)
+    template_pks = HarmfulFactor.get_template_by_factor(request_data['harmful_factor_pks'])
+    rows = users.AssignmentResearches.get_researches_by_template(template_pks)
+    return JsonResponse(rows, safe=False)
+
+
+def get_templates(request):
+    template_data = [{"id": template.pk, "label": template.title} for template in users.AssignmentTemplates.objects.all().order_by('title')]
+    return JsonResponse({"data": template_data})
+
+
+def update_factor(request):
+    request_data = json.loads(request.body)
+    if not re.fullmatch('^[0-9.]+$', request_data["title"]):
+        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
+    if not HarmfulFactor.objects.get(pk=request_data["id"]):
+        return JsonResponse({"ok": False, "message": "Нет такого фактора"})
+    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+        return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    factor = HarmfulFactor.objects.get(pk=request_data["id"])
+    factor.title = request_data["title"]
+    factor.description = request_data["description"]
+    factor.template_id = request_data["template_id"]
+    factor.save()
+    Log.log(
+        factor.pk,
+        160000,
+        request.user.doctorprofile,
+        {"factor": factor.as_json(factor)},
+    )
+    return JsonResponse({"ok": True})
+
+
+def add_factor(request):
+    request_data = json.loads(request.body)
+    if not re.fullmatch('^[0-9.]+$', request_data["title"]):
+        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
+    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+        return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    factor = HarmfulFactor(title=request_data["title"], description=request_data["description"], template_id=request_data["template_id"])
+    factor.save()
+    Log.log(
+        factor.pk,
+        160001,
+        request.user.doctorprofile,
+        {"factor": factor.as_json(factor)},
+    )
+    return JsonResponse({"ok": True})
 
 
 @login_required

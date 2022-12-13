@@ -315,6 +315,7 @@ def result_print(request):
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
         break
     portion = request.GET.get("portion", "0") == "1"
+    sort = request.GET.get("sort", "0") == "1"
     dirs = []
     if not portion:
         dirs = (
@@ -384,10 +385,18 @@ def result_print(request):
     need_qr = SettingManager.qr_check_result()
 
     direction: Napravleniya
-    if not portion:
+    if not portion and not sort:
         sorted_direction = sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk)
     else:
         sorted_direction = dirs
+
+    if sort:
+        sorted_direction_d = deepcopy(pk)
+        for d in dirs:
+            index_el = sorted_direction_d.index(d.pk)
+            sorted_direction_d[index_el] = d
+        sorted_direction = sorted_direction_d
+
     for direction in sorted_direction:
         dpk = direction.pk
 
@@ -1002,8 +1011,10 @@ def result_print(request):
                         iss_title = f"{med_certificate_title}{iss.research.title}"
                     elif iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                         iss_title = "Вакцина: " + iss.research.title
+                    elif iss.doc_confirmation and iss.research.is_paraclinic:
+                        iss_title = "Исследование: " + iss.research.title
                     else:
-                        iss_title = "Услуга: " + iss.research.title
+                        iss_title = iss.research.title
                     if not result_title_form:
                         fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
@@ -1103,7 +1114,7 @@ def result_print(request):
                         fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                     else:
                         if iss.doc_confirmation:
-                            doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
+                            doc_execute = "фельдшер" if request.user.is_authenticated and iss.doc_confirmation.has_group("Фельдшер") else "врач"
                             fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                         else:
                             fwb.append(

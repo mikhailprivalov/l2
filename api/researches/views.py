@@ -367,6 +367,8 @@ def researches_by_department(request):
                     "preparation": research.preparation,
                     "hide": research.hide,
                     "code": research.code,
+                    "id": research.pk,
+                    "label": research.title,
                 }
             )
     return JsonResponse(response)
@@ -407,11 +409,11 @@ def researches_update(request):
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
         try:
-            uet_refferal_doc = float(request_data.get("uet_refferal_doc"))
+            uet_refferal_doc = float(request_data.get("uet_refferal_doc", -1))
         except ValueError:
             uet_refferal_doc = 0
         try:
-            uet_refferal_co_executor_1 = float(request_data.get("uet_refferal_co_executor_1"))
+            uet_refferal_co_executor_1 = float(request_data.get("uet_refferal_co_executor_1", -1))
         except ValueError:
             uet_refferal_co_executor_1 = 0
         spec_pk = request_data.get("speciality", -1)

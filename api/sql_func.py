@@ -91,10 +91,15 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id,   
-            directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
+            SELECT 
+            directions_napravleniya.client_id, 
+            directions_issledovaniya.napravleniye_id,   
+            directions_issledovaniya.research_id, 
+            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
-            directions_paraclinicresult.value, directions_paraclinicresult.field_id
+            directions_paraclinicresult.value, 
+            directions_paraclinicresult.field_id,
+            directions_napravleniya.parent_id
             FROM directions_issledovaniya
             LEFT JOIN directions_napravleniya 
             ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -106,7 +111,7 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
             AND CASE WHEN %(current_year)s != '1900-01-01 00:00:00' THEN 
                      directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > %(current_year)s
                      WHEN %(months_ago)s != '-1' THEN 
-                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > (current_date AT TIME ZONE 'ASIA/IRKUTSK'  - interval %(months_ago)s)
+                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > (current_date AT TIME ZONE 'ASIA/IRKUTSK' - interval %(months_ago)s)
                      WHEN %(current_year)s = '1900-01-01 00:00:00' THEN directions_issledovaniya.time_confirmation is not Null
                 END
             ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s
@@ -296,7 +301,7 @@ def search_data_by_param(
                      and directions_issledovaniya.time_confirmation is NOT NULL
                      WHEN %(date_examination_start)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null
                 END
-                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s
+                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s or directions_napravleniya.planed_doctor_executor_id = %(doc_confirm)s
                          WHEN %(doc_confirm)s = -1 THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN %(date_registred_start)s != '1900-01-01 00:00:00' THEN

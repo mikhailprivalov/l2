@@ -259,6 +259,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     text = []
     params_columns = []
 
+    text.append(Paragraph(f'{patient_data["fio"]}', style))
+    text.append(Paragraph(f'{bold_open}Часы приема:{bold_close} <br/> {protocol_data["Часы приема"]}', style))
     text.append(Paragraph('Даты прививок', style_header))
     text.append(Spacer(1, space))
     text.append(tbl)
@@ -293,6 +295,7 @@ def title_fields(iss):
         "17. Осложнения во время проведения прививок",
         "19. Какие приняты меры к продолжению прерванных прививок",
         "20. Примечание",
+        "Часы приема",
     ]
 
     result = fields_result_only_title_fields(iss, title_fields, False)

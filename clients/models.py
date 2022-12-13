@@ -23,7 +23,7 @@ from clients.sql_func import last_result_researches_years
 from directory.models import Researches, ScreeningPlan, PatientControlParam
 
 from laboratory.utils import localtime, current_year, strfdatetime
-from users.models import Speciality, DoctorProfile
+from users.models import Speciality, DoctorProfile, AssignmentTemplates
 from django.contrib.postgres.fields import ArrayField
 
 from utils.common import get_system_name
@@ -998,6 +998,31 @@ class District(models.Model):
         verbose_name_plural = 'Участки'
 
 
+class HarmfulFactor(models.Model):
+    title = models.CharField(max_length=255, help_text='Наименование')
+    description = models.CharField(max_length=255, help_text='Описание', blank=True, default=None, null=True)
+    template = models.ForeignKey(AssignmentTemplates, db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Фактор вредности'
+        verbose_name_plural = 'Факторы вредности'
+
+    @staticmethod
+    def get_template_by_factor(factor_pks):
+        factors = HarmfulFactor.objects.filter(pk__in=factor_pks)
+        return [i.template.pk for i in factors]
+
+    @staticmethod
+    def as_json(factor):
+        json = {
+            "id": factor.pk,
+            "title": factor.title,
+            "description": factor.description,
+            "template_id": factor.template_id,
+        }
+        return json
+
+
 class Card(models.Model):
     AGENT_CHOICES = (
         ('mother', "Мать"),
@@ -1032,7 +1057,8 @@ class Card(models.Model):
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
-    work_department = models.CharField(max_length=128, blank=True, default='', help_text="Подразделение")
+    work_department = models.CharField(max_length=128, blank=True, default='', help_text="Подразделение")  # DEPRECATED
+    work_department_db = models.ForeignKey('contracts.CompanyDepartment', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место отдела из базы")
     mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     father = models.ForeignKey('self', related_name='father_p', help_text="Отец", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None, on_delete=models.SET_NULL)
@@ -1438,6 +1464,31 @@ class DispensaryReg(models.Model):
     class Meta:
         verbose_name = 'Д-учет'
         verbose_name_plural = 'Д-учет'
+
+
+class PatientHarmfullFactor(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    harmful_factor = models.ForeignKey(HarmfulFactor, default=None, blank=True, null=True, db_index=True, help_text='Фактор вредности', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Фактор вредности у пациента'
+        verbose_name_plural = 'Факторы вредности пациентов'
+
+    @staticmethod
+    def get_card_harmful_factor(card):
+        patient_harmful_factors = PatientHarmfullFactor.objects.filter(card=card)
+        return [{"factorId": p.harmful_factor.pk} for p in patient_harmful_factors]
+
+    @staticmethod
+    def save_card_harmful_factor(card_pk, tb_data):
+        card = Card.objects.filter(pk=card_pk).first()
+        PatientHarmfullFactor.objects.filter(card=card).delete()
+        for t_b in tb_data:
+            harmfull = HarmfulFactor.objects.filter(pk=t_b['factorId']).first()
+            if harmfull:
+                PatientHarmfullFactor(card=card, harmful_factor=harmfull).save()
+
+        return True
 
 
 class AdditionalPatientDispensaryPlan(models.Model):

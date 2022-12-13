@@ -40,8 +40,9 @@ from clients.models import (
     ScreeningRegPlan,
     AdditionalPatientDispensaryPlan,
     CardControlParam,
+    PatientHarmfullFactor,
 )
-from contracts.models import Company
+from contracts.models import Company, CompanyDepartment
 from directions.models import Issledovaniya
 from directory.models import Researches, PatientControlParam
 from laboratory import settings
@@ -520,6 +521,7 @@ def patients_get_card_data(request, card_id):
             "custom_workplace": card.work_place != "",
             "work_place_db": card.work_place_db_id or -1,
             "work_place_db_title": card.work_place_db.title if card.work_place_db else "",
+            "work_department_db": card.work_department_db.pk if card.work_department_db else -1,
             "district": card.district_id or -1,
             "districts": [{"id": -1, "title": "НЕ ВЫБРАН"}, *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
             "ginekolog_district": card.ginekolog_district_id or -1,
@@ -632,6 +634,10 @@ def patients_card_save(request):
     else:
         c.work_place_db = Company.objects.get(pk=request_data["work_place_db"])
         c.work_place = ''
+    if not CompanyDepartment.objects.filter(pk=request_data.get("work_department_db", -1)).exists():
+        c.work_department_db = None
+    else:
+        c.work_department_db = CompanyDepartment.objects.filter(pk=request_data["work_department_db"]).first()
     c.district_id = request_data["district"] if request_data["district"] != -1 else None
     c.ginekolog_district_id = request_data["gin_district"] if request_data["gin_district"] != -1 else None
     c.work_position = request_data["work_position"]
@@ -702,6 +708,28 @@ def patients_card_unarchive(request):
         card.is_archive = False
         card.save()
     return JsonResponse({"ok": True})
+
+
+@login_required
+def patients_harmful_factors(request):
+    request_data = json.loads(request.body)
+    pk = request_data['card_pk']
+    card = Card.objects.get(pk=pk)
+    rows = PatientHarmfullFactor.get_card_harmful_factor(card)
+    return JsonResponse(rows, safe=False)
+
+
+@login_required
+def patients_save_harmful_factors(request):
+    request_data = json.loads(request.body)
+    tb_data = request_data.get('tb_data', '')
+    card_pk = int(request_data.get('card_pk', -1))
+    if len(tb_data) < 1:
+        return JsonResponse({'message': 'Ошибка в количестве'})
+    result = PatientHarmfullFactor.save_card_harmful_factor(card_pk, tb_data)
+    if result:
+        return JsonResponse({'ok': True, 'message': 'Сохранено'})
+    return JsonResponse({'ok': False, 'message': 'ошибка'})
 
 
 def individual_search(request):

@@ -40,6 +40,14 @@ export default (instance: Vue): void => {
     });
   });
 
+  instance.$root.$on('print:directions:appendix', pks => {
+    printForm('/directions/pdf?napr_id={pks}&appendix=1', pks);
+    sendEvent('print', {
+      type: 'appendix',
+      pks,
+    });
+  });
+
   instance.$root.$on('print:barcodes', pks => {
     printForm('/barcodes/tubes?napr_id={pks}', pks);
     sendEvent('print', {
@@ -57,7 +65,7 @@ export default (instance: Vue): void => {
   });
 
   instance.$root.$on('print:results', pks => {
-    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}`;
+    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}&sort=${0}`;
     printForm(url, pks);
     sendEvent('print', {
       type: 'results',
@@ -252,6 +260,8 @@ export default (instance: Vue): void => {
               } else {
                 instance.$root.$emit('print:directions', data.directions);
               }
+            } else if (type === 'complect-document') {
+              instance.$root.$emit('print:directions:appendix', data.directions);
             } else if (type === 'barcode') {
               instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}
               ${data.messageLimit}`);

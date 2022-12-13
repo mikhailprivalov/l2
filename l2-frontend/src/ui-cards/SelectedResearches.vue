@@ -333,7 +333,7 @@
           title="Сохранить и распечатать направления"
           @click="generate('direction')"
         >
-          <span>Сохранить и распечатать</span>
+          <span>Сохранить и печать</span>
         </button>
         <button
           v-tippy
@@ -342,7 +342,7 @@
           title="Сохранить и распечатать штрих-коды"
           @click="generate('barcode')"
         >
-          <span>Сохранить и распечатать штрих-коды</span>
+          <span>Сохранить и печать ш/к</span>
         </button>
         <button
           v-tippy
@@ -351,7 +351,16 @@
           title="Сохранить без печати"
           @click="generate('just-save')"
         >
-          <span>Сохранить без печати</span>
+          <span>Без печати</span>
+        </button>
+        <button
+          v-tippy
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          title="Сохранить и распечатать дополнителельные документы"
+          @click="generate('complect-document')"
+        >
+          <span>Набор документов</span>
         </button>
       </template>
     </div>
