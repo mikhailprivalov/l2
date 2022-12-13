@@ -91,10 +91,15 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id,   
-            directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
+            SELECT 
+            directions_napravleniya.client_id, 
+            directions_issledovaniya.napravleniye_id,   
+            directions_issledovaniya.research_id, 
+            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
-            directions_paraclinicresult.value, directions_paraclinicresult.field_id
+            directions_paraclinicresult.value, 
+            directions_paraclinicresult.field_id,
+            directions_napravleniya.parent_id
             FROM directions_issledovaniya
             LEFT JOIN directions_napravleniya 
             ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
