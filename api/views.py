@@ -2764,8 +2764,14 @@ def get_control_params(request):
 @group_required('Конструктор: Контролируемые параметры пациентов')
 def update_control_param(request):
     request_data = json.loads(request.body)
+    if len(request_data["title"]) == 0:
+        return JsonResponse({"ok": False, "message": "Пустое название"})
+    if not re.fullmatch('^[0-9-.]+$', request_data["code"]):
+        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
     if PatientControlParam.objects.filter(title=request_data["title"]).exclude(pk=request_data["pk"]):
         return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    if PatientControlParam.objects.filter(code=request_data["code"]).exclude(pk=request_data["pk"]):
+        return JsonResponse({"ok": False, "message": "Такой код уже есть"})
     param_data = PatientControlParam.objects.get(pk=request_data["pk"])
     old_param_data = PatientControlParam.as_json(param_data)
     param_data.title = request_data["title"]
@@ -2782,10 +2788,18 @@ def update_control_param(request):
     return JsonResponse({"ok": True})
 
 
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
 def add_control_param(request):
     request_data = json.loads(request.body)
+    if len(request_data["title"]) == 0:
+        return JsonResponse({"ok": False, "message": "Пустое название"})
+    if not re.fullmatch('^[0-9-.]+$', request_data["code"]):
+        return JsonResponse({"ok": False, "message": "Код не соответствует правилам"})
     if PatientControlParam.objects.filter(title=request_data["title"]):
         return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    if PatientControlParam.objects.filter(code=request_data["code"]):
+        return JsonResponse({"ok": False, "message": "Такой код уже есть"})
     param_data = PatientControlParam(
         title=request_data["title"],
         code=request_data["code"],

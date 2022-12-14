@@ -5,14 +5,14 @@
       <input
         v-model.trim="search"
         class="form-control search"
-        placeholder="Поиск исследования"
+        placeholder="Поиск"
       >
     </div>
     <div class="card card1 card-no-hover">
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col style="min-width: 200px">
+            <col>
             <col width="100">
             <col width="100">
             <col width="100">
@@ -55,21 +55,20 @@
             </td>
           </tr>
           <tr
-            v-for="(param) in filteredParams"
+            v-for="(param, index) in filteredParams"
             :key="param.pk"
           >
             <td class="border">
               <input
                 v-model="param.title"
                 class="form-control nba"
-                type="text"
               >
             </td>
             <td class="border">
               <input
                 v-model="param.code"
                 class="form-control nba"
-                type="text"
+                @input="toCodeFormat(index, $event)"
               >
             </td>
             <td
@@ -108,7 +107,7 @@
     <div>
       <table class="table">
         <colgroup>
-          <col style="min-width: 200px">
+          <col>
           <col width="100">
           <col width="100">
           <col width="100">
@@ -119,14 +118,15 @@
             <input
               v-model="newParam.title"
               class="form-control nba"
-              type="text"
+              placeholder="Название"
             >
           </td>
           <td class="border">
             <input
               v-model="newParam.code"
               class="form-control nba"
-              type="text"
+              placeholder="Код"
+              @input="toCodeFormat(-1, $event, 'newParam')"
             >
           </td>
           <td
@@ -202,7 +202,9 @@ export default {
       this.params = params.data;
     },
     async updateParam(currentParam) {
-      if (this.params.find((param) => currentParam.title === param.title && currentParam.id !== param.id)) {
+      if (!currentParam.title || !currentParam.code) {
+        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
+      } else if (this.params.find((param) => currentParam.title === param.title && currentParam.id !== param.id)) {
         this.$root.$emit('msg', 'error', 'Такое название уже есть');
       } else if (this.params.find((param) => currentParam.code === param.code && currentParam.id !== param.id)) {
         this.$root.$emit('msg', 'error', 'Такой код уже есть');
@@ -219,9 +221,11 @@ export default {
       }
     },
     async addParam() {
-      if (this.newParam.title && this.params.find((param) => param.title === this.newParam.title)) {
+      if (!this.newParam.title || !this.newParam.code) {
+        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
+      } else if (this.params.find((param) => param.title === this.newParam.title)) {
         this.$root.$emit('msg', 'error', 'Такое название уже есть');
-      } else if (this.newParam.code && this.params.find((param) => param.code === this.newParam.code)) {
+      } else if (this.params.find((param) => param.code === this.newParam.code)) {
         this.$root.$emit('msg', 'error', 'Такой код уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
@@ -239,6 +243,13 @@ export default {
         }
       }
     },
+    toCodeFormat(index, event, param) {
+      if (index !== -1) {
+        this.filteredParams[index].code = event.target.value.replace(/[^0-9-.]/g, '');
+      } else {
+        this[param].code = event.target.value.replace(/[^0-9-.]/g, '');
+      }
+    },
   },
 };
 </script>
@@ -253,7 +264,7 @@ export default {
 }
 .scroll {
   min-height: 111px;
-  max-height: calc(100vh - 350px);
+  max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
 .sticky {
