@@ -2710,14 +2710,18 @@ def get_templates(request):
     return JsonResponse({"data": template_data})
 
 
+@login_required
+@group_required('Конструктор: Факторы вредности')
 def update_factor(request):
     request_data = json.loads(request.body)
     if not re.fullmatch('^[0-9.]+$', request_data["title"]):
         return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
-    if not HarmfulFactor.objects.get(pk=request_data["id"]):
+    if not HarmfulFactor.objects.filter(pk=request_data["id"]):
         return JsonResponse({"ok": False, "message": "Нет такого фактора"})
-    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]):
         return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
+    if HarmfulFactor.objects.filter(title=request_data["title"]).exclude(pk=request_data["id"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
     factor = HarmfulFactor.objects.get(pk=request_data["id"])
     factor.title = request_data["title"]
     factor.description = request_data["description"]
@@ -2732,13 +2736,17 @@ def update_factor(request):
     return JsonResponse({"ok": True})
 
 
+@login_required
+@group_required('Конструктор: Факторы вредности')
 def add_factor(request):
     request_data = json.loads(request.body)
     if not re.fullmatch('^[0-9.]+$', request_data["title"]):
         return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
-    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+    if not users.AssignmentTemplates.objects.filter(pk=request_data["templateId"]):
         return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
-    factor = HarmfulFactor(title=request_data["title"], description=request_data["description"], template_id=request_data["template_id"])
+    if HarmfulFactor.objects.filter(title=request_data["title"]):
+        return JsonResponse({"ok": False, "message": "Такое название уже есть"})
+    factor = HarmfulFactor(title=request_data["title"], description=request_data["description"], template_id=request_data["templateId"])
     factor.save()
     Log.log(
         factor.pk,

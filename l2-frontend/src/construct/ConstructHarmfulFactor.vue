@@ -251,27 +251,33 @@ export default {
       }
       this.$root.$emit('hide_template_editor');
     },
-    async updateFactor(factor) {
-      if (factor.title && factor.template_id) {
+    async updateFactor(currentFactor) {
+      if (!currentFactor.title || !currentFactor.template_id) {
+        this.$root.$emit('msg', 'error', 'Данные не заполнены');
+      } else if (this.factors.find((factor) => factor.title === currentFactor.title && factor.id !== currentFactor.id)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/update-factor', factor);
+        const { ok, message } = await this.$api('/update-factor', currentFactor);
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      } else {
-        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
       }
     },
     async addFactor() {
-      if (this.title && this.template_id) {
+      if (!this.title || !this.templateId) {
+        this.$root.$emit('msg', 'error', 'Данные не заполнены');
+      } else if (this.factors.find((factor) => factor.title === this.title)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/add-factor', {
           title: this.title,
           description: this.description,
-          template_id: this.template_id,
+          templateId: this.templateId,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -279,12 +285,10 @@ export default {
           await this.getFactors();
           this.title = '';
           this.description = '';
-          this.template_id = null;
+          this.templateId = null;
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      } else {
-        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
       }
     },
     toFactorTitle(index, event, title) {
