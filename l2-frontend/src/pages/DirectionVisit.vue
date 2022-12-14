@@ -707,6 +707,7 @@ export default {
       if (this.$refs.modalProtocol) {
         this.$refs.modalProtocol.$el.style.display = 'none';
       }
+      this.focus();
     },
     cancel() {
       this.loaded_pk = -1;

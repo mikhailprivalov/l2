@@ -60,7 +60,7 @@
               <input
                 v-model="factor.title"
                 class="form-control padding-left"
-                @input="onlyFactorTitle(index, $event)"
+                @input="toFactorTitle(index, $event)"
               >
             </td>
             <td class="table-row">
@@ -79,14 +79,24 @@
               />
             </td>
             <td class="table-row">
-              <button
-                v-tippy
-                class="btn last btn-blue-nb nbr update-button"
-                title="Сохранить фактор"
-                @click="updateFactor(factor)"
-              >
-                <i class="fa fa-save" />
-              </button>
+              <div class="button">
+                <button
+                  v-tippy
+                  class="btn last btn-blue-nb nbr"
+                  title="Сохранить фактор"
+                  @click="updateFactor(factor)"
+                >
+                  <i class="fa fa-save" />
+                </button>
+                <button
+                  v-tippy
+                  class="btn last btn-blue-nb nbr"
+                  title="Перейти к шаблону"
+                  @click="showModal(factor.template_id)"
+                >
+                  <i class="fa fa-pencil" />
+                </button>
+              </div>
             </td>
           </tr>
         </table>
@@ -101,7 +111,7 @@
           <col width="150">
           <col>
           <col width="200">
-          <col width="99px">
+          <col width="99">
         </colgroup>
         <tr>
           <td class="table-row">
@@ -109,7 +119,7 @@
               v-model="title"
               class="form-control padding-left"
               placeholder="Название"
-              @input="onlyFactorTitle(-1, $event, 'title')"
+              @input="toFactorTitle(-1, $event, 'title')"
             >
           </td>
           <td class="table-row">
@@ -121,7 +131,7 @@
           </td>
           <td>
             <Treeselect
-              v-model="template_id"
+              v-model="templateId"
               :disable-branch-nodes="true"
               :append-to-body="true"
               :options="templates.data"
@@ -129,18 +139,58 @@
             />
           </td>
           <td>
-            <button
-              v-tippy
-              class="btn last btn-blue-nb nbr add-button"
-              title="Добавить фактор"
-              @click="addFactor"
-            >
-              Добавить
-            </button>
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                title="Добавить фактор"
+                @click="addFactor"
+              >
+                Добавить
+              </button>
+            </div>
           </td>
         </tr>
       </table>
     </div>
+    <Modal
+      v-if="modal"
+      ref="modal"
+      margin-top="30px"
+      margin-left-right="auto"
+      max-width="1500px"
+      height="700px"
+      show-footer="true"
+      white-bg="true"
+      width="100%"
+      @close="hideModal"
+    >
+      <span slot="header">Редактирование шаблона</span>
+      <div
+        slot="body"
+      >
+        <iframe
+          id="myframe"
+          width="1470"
+          height="605"
+          :src="`/ui/construct/templates#{&quot;pk&quot;:${editTemplateId}}`"
+        />
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-10" />
+          <div class="col-xs-2">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hideModal"
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -150,10 +200,11 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
+import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ConstructHarmfulFactor',
-  components: { Treeselect },
+  components: { Treeselect, Modal },
   data() {
     return {
       factors: [],
@@ -161,7 +212,9 @@ export default {
       search: '',
       title: '',
       description: '',
-      template_id: null,
+      templateId: null,
+      modal: false,
+      editTemplateId: null,
     };
   },
   computed: {
@@ -185,6 +238,18 @@ export default {
     },
     async getTemplates() {
       this.templates = await this.$api('/get-templates');
+    },
+    showModal(templateId) {
+      this.modal = true;
+      this.editTemplateId = templateId;
+    },
+    hideModal() {
+      this.modal = false;
+      this.getTemplates();
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_template_editor');
     },
     async updateFactor(factor) {
       if (factor.title && factor.template_id) {
@@ -222,7 +287,7 @@ export default {
         this.$root.$emit('msg', 'error', 'Ошибка заполнения');
       }
     },
-    onlyFactorTitle(index, event, title) {
+    toFactorTitle(index, event, title) {
       if (index !== -1) {
         this.filteredFactors[index].title = event.target.value.replace(/[^0-9.]/g, '');
       } else {
@@ -247,7 +312,7 @@ export default {
   table-layout: fixed;
 }
 .scroll {
-  min-height: 110.5px;
+  min-height: 111px;
   max-height: calc(100vh - 350px);
   overflow-y: auto;
 }
@@ -257,12 +322,6 @@ export default {
 }
 .padding-left {
   padding-left: 6px;
-}
-.add-button {
-  padding: 7px 15px;
-}
-.update-button {
-  padding: 7px 42px;
 }
 .sticky {
   position: sticky;
@@ -279,4 +338,17 @@ export default {
   padding-left: 6px;
   background-color: white;
 }
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
+
 </style>

@@ -10,6 +10,7 @@ from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
 
 from integration_framework.views import get_cda_data
+from utils import tree_directions
 from utils.response import status_response
 from hospitals.models import Hospitals, HospitalParams
 import operator
@@ -2678,6 +2679,22 @@ def last_field_result(request):
             field_pks = [data[1]]
             logical_or = True
             result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=f"{data[2]} month")
+    elif request_data["fieldPk"].find('%current_hosp') != -1:
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 2:
+            result = {"value": ""}
+        else:
+            field_pks = [data[1]]
+            logical_or = True
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, current_iss=request_data["iss_pk"])
+    elif request_data["fieldPk"].find('%root_hosp') != -1:
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 2:
+            result = {"value": ""}
+        else:
+            field_pks = [data[1]]
+            logical_or = True
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_root_hosp=True, current_iss=request_data["iss_pk"])
     elif request_data["fieldPk"].find('%control_param#') != -1:
         # %control_param#code#period#find_val
         data = request_data["fieldPk"].split('#')
@@ -2722,7 +2739,9 @@ def get_current_direction(current_iss):
     return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
 
-def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago='-1'):
+def field_get_link_data(
+    field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, use_root_hosp=False, months_ago='-1', use_current_hosp=False, current_iss=None
+):
     result, value, temp_value = None, None, None
     for current_field_pk in field_pks:
         group_fields = [current_field_pk]
@@ -2740,6 +2759,10 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
                 else:
                     c_year = "1900-01-01 00:00:00"
                 rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
+                if check_use_current_hosp(current_iss, rows[7]):
+                    continue
+                if check_use_root_hosp(current_iss, rows[7]):
+                    continue
                 if rows:
                     row = rows[0]
                     value = row[5]
@@ -2763,6 +2786,21 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
         if logical_group_or and temp_value or logical_or_inside and value:
             break
     return result
+
+
+def check_use_root_hosp(current_iss, parent_iss):
+    direction_id = get_current_direction(current_iss)
+    if tree_directions.root_direction(direction_id) != tree_directions.root_direction(parent_iss):
+        return True
+    return False
+
+
+def check_use_current_hosp(current_iss, parent_iss):
+    direction_id = get_current_direction(current_iss)
+    direction_obj = Napravleniya.objects.filter(pk=direction_id).first()
+    if parent_iss != direction_obj.parent_id:
+        return True
+    return False
 
 
 def field_get_aggregate_operation_data(operations_data):
