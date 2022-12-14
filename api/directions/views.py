@@ -2767,7 +2767,6 @@ def field_get_link_data(
                 rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago, parent_iss=parent_iss, use_parent_iss=use_parent_iss)
                 if rows:
                     row = rows[0]
-                    print()
                     value = row[5]
                     match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
                     if match:
