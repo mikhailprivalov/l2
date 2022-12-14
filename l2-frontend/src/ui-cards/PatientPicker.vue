@@ -789,6 +789,7 @@ export default {
       dreg: false,
       benefit: false,
       harmful_factor: false,
+      template_editor: false,
       vaccine: false,
       suggests: {
         focused: -1,
@@ -1037,6 +1038,9 @@ export default {
     });
     this.$root.$on('hide_harmful_factor', () => {
       this.harmful_factor = false;
+    });
+    this.$root.$on('hide_template_editor', () => {
+      this.template_editor = false;
     });
     this.$root.$on('hide_vaccine', () => {
       this.vaccine = false;
