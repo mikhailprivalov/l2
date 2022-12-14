@@ -121,8 +121,16 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
                 END
             ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s
             """,
-            params={'client_p': client_id, 'field_id': field_id, 'count_p': count, 'tz': TIME_ZONE, 'current_year': current_year, 'months_ago': months_ago,
-                    'parent_iss': parent_iss, 'use_parent_iss': use_parent_iss},
+            params={
+                'client_p': client_id,
+                'field_id': field_id,
+                'count_p': count,
+                'tz': TIME_ZONE,
+                'current_year': current_year,
+                'months_ago': months_ago,
+                'parent_iss': parent_iss,
+                'use_parent_iss': use_parent_iss,
+            },
         )
 
         row = cursor.fetchall()
