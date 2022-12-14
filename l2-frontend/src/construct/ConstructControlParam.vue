@@ -163,7 +163,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 
 import * as actions from '../store/action-types';
 
