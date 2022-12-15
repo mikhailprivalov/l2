@@ -171,7 +171,6 @@ export default {
   name: 'ConstructPatientControlParam',
   data() {
     return {
-      data: '',
       search: '',
       params: [],
       newParam: {
