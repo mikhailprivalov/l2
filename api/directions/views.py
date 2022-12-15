@@ -3623,8 +3623,10 @@ def eds_documents(request):
         has_main_signer_changes = (
             cert_thumbprint != direction.eds_main_signer_cert_thumbprint or cert_details != direction.eds_main_signer_cert_details
         ) and DirectionDocument.PDF == d.file_type and (cert_active_role == 'Врач' or 'Врач' not in signatures)
-
-        if has_main_signer_changes:
+            (cert_thumbprint != direction.eds_main_signer_cert_thumbprint or cert_details != direction.eds_main_signer_cert_details)
+            and DirectionDocument.PDF == d.file_type
+            and (cert_active_role == 'Врач' or 'Врач' not in signatures)
+        )
             direction.eds_main_signer_cert_thumbprint = cert_thumbprint
             direction.eds_main_signer_cert_details = cert_details
             direction.save(update_fields=['eds_main_signer_cert_thumbprint', 'eds_main_signer_cert_details'])
