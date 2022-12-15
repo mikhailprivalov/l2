@@ -70,6 +70,7 @@ pdfmetrics.registerFont(TTFont('cour', os.path.join(FONTS_FOLDER, 'cour.ttf')))
 
 logger = logging.getLogger(__name__)
 
+
 @login_required
 def enter(request):
     return redirect('/laboratory/results')
