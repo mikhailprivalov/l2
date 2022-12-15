@@ -94,7 +94,7 @@ from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
 from utils.expertise import get_expertise
-from ..patients.common_func import get_card_control_param
+from ..patients.common_func import get_card_control_param, get_vital_param_in_hosp
 
 
 @login_required
@@ -2686,7 +2686,8 @@ def last_field_result(request):
         else:
             field_pks = [data[1]]
             logical_or = True
-            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, current_iss=request_data["iss_pk"])
+            parent_iss = Napravleniya.objects.get(pk=num_dir).parent_id
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, parent_iss=(parent_iss,))
     elif request_data["fieldPk"].find('%root_hosp') != -1:
         data = request_data["fieldPk"].split('#')
         if len(data) < 2:
@@ -2694,7 +2695,9 @@ def last_field_result(request):
         else:
             field_pks = [data[1]]
             logical_or = True
-            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_root_hosp=True, current_iss=request_data["iss_pk"])
+            hosp_dirs = hosp_get_hosp_direction(num_dir)
+            parent_iss = [i['issledovaniye'] for i in hosp_dirs]
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_root_hosp=True, parent_iss=tuple(parent_iss))
     elif request_data["fieldPk"].find('%control_param#') != -1:
         # %control_param#code#period#find_val
         data = request_data["fieldPk"].split('#')
@@ -2720,6 +2723,21 @@ def last_field_result(request):
                         for d in data:
                             if d['value'].find(param_find_val) != -1:
                                 return JsonResponse({"result": {"value": "да"}})
+    elif request_data["fieldPk"].find('%vital_param#') != -1:
+        # %vital_param#code#current_hosp
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 3:
+            result = {"value": ""}
+        param_code = int(data[1])
+        search_place = data[2]
+        parent_iss = (-1,)
+        if search_place == 'current_hosp':
+            parent_iss = (Napravleniya.objects.get(pk=num_dir).parent_id,)
+        elif search_place == 'root_hosp':
+            hosp_dirs = hosp_get_hosp_direction(num_dir)
+            parent_iss = tuple([i['issledovaniye'] for i in hosp_dirs])
+        vital_result = get_vital_param_in_hosp(client_pk, parent_iss, param_code)
+        result = {"value": vital_result}
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True
@@ -2740,7 +2758,7 @@ def get_current_direction(current_iss):
 
 
 def field_get_link_data(
-    field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, use_root_hosp=False, months_ago='-1', use_current_hosp=False, current_iss=None
+    field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago='-1', use_root_hosp=False, use_current_hosp=False, parent_iss=(-1,)
 ):
     result, value, temp_value = None, None, None
     for current_field_pk in field_pks:
@@ -2758,11 +2776,10 @@ def field_get_link_data(
                     c_year = f"{c_year}-01-01 00:00:00"
                 else:
                     c_year = "1900-01-01 00:00:00"
-                rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
-                if check_use_current_hosp(current_iss, rows[7]):
-                    continue
-                if check_use_root_hosp(current_iss, rows[7]):
-                    continue
+                use_parent_iss = '-1'
+                if use_root_hosp or use_current_hosp:
+                    use_parent_iss = '1'
+                rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago, parent_iss=parent_iss, use_parent_iss=use_parent_iss)
                 if rows:
                     row = rows[0]
                     value = row[5]
@@ -2770,7 +2787,7 @@ def field_get_link_data(
                     if match:
                         value = normalize_date(value)
                     if logical_or_inside:
-                        result = {"direction": row[1], "date": row[4], "value": value}
+                        result = {"directicheck_use_current_hosp(on": row[1], "date": row[4], "value": value}
                         if value:
                             break
                     if logical_and_inside:
@@ -2786,21 +2803,6 @@ def field_get_link_data(
         if logical_group_or and temp_value or logical_or_inside and value:
             break
     return result
-
-
-def check_use_root_hosp(current_iss, parent_iss):
-    direction_id = get_current_direction(current_iss)
-    if tree_directions.root_direction(direction_id) != tree_directions.root_direction(parent_iss):
-        return True
-    return False
-
-
-def check_use_current_hosp(current_iss, parent_iss):
-    direction_id = get_current_direction(current_iss)
-    direction_obj = Napravleniya.objects.filter(pk=direction_id).first()
-    if parent_iss != direction_obj.parent_id:
-        return True
-    return False
 
 
 def field_get_aggregate_operation_data(operations_data):
