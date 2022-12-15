@@ -57,5 +57,8 @@ def get_vital_param_in_hosp(card_pk, parent_iss, code_param_id):
     control_params = tuple(data_params.keys())
     if not control_params:
         return None
-    vital_result = get_patient_control_params_to_hosp(control_params, card_pk, parent_iss)
-    print(vital_result)
+    recieve_vital_result = get_patient_control_params_to_hosp(control_params, card_pk, parent_iss)
+    if len(recieve_vital_result) > 0:
+        return recieve_vital_result[0].value
+    else:
+        return ""

@@ -2730,12 +2730,14 @@ def last_field_result(request):
             result = {"value": ""}
         param_code = int(data[1])
         search_place = data[2]
+        parent_iss = (-1,)
         if search_place == 'current_hosp':
-            parent_iss = Napravleniya.objects.get(pk=num_dir).parent_id
+            parent_iss = (Napravleniya.objects.get(pk=num_dir).parent_id,)
         elif search_place == 'root_hosp':
             hosp_dirs = hosp_get_hosp_direction(num_dir)
-            parent_iss = [i['issledovaniye'] for i in hosp_dirs]
+            parent_iss = tuple([i['issledovaniye'] for i in hosp_dirs])
         vital_result = get_vital_param_in_hosp(client_pk, parent_iss, param_code)
+        result = {"value": vital_result}
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True

@@ -72,7 +72,7 @@ def get_laboratory_patient_control_params(start_date, end_date, control_params, 
     return rows
 
 
-def get_patient_control_params_to_hosp(control_params, card_pk, parent_iss):
+def get_patient_control_params_to_hosp(control_params, card_pk, parent_iss, limit=1):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -107,9 +107,9 @@ def get_patient_control_params_to_hosp(control_params, card_pk, parent_iss):
                 df.patient_control_param_id in %(control_params)s AND
                 di.time_confirmation is not NULL AND
                 dn.parent_id in %(parent_iss)s
-            ORDER BY patient_control_param_id, time_confirmation
+            ORDER BY patient_control_param_id, time_confirmation DESC LIMIT %(limit)s
             """,
-            params={'control_params': control_params, 'card_pk': card_pk, 'tz': TIME_ZONE, 'parent_iss': parent_iss},
+            params={'control_params': control_params, 'card_pk': card_pk, 'tz': TIME_ZONE, 'parent_iss': parent_iss, 'limit': limit},
         )
 
         rows = namedtuplefetchall(cursor)
