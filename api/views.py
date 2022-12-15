@@ -2773,7 +2773,6 @@ def update_control_param(request):
     if PatientControlParam.objects.filter(code=request_data["code"]).exclude(pk=request_data["pk"]):
         return JsonResponse({"ok": False, "message": "Такой код уже есть"})
     param_data = PatientControlParam.objects.get(pk=request_data["pk"])
-    old_param_data = PatientControlParam.as_json(param_data)
     param_data.title = request_data["title"]
     param_data.code = request_data["code"]
     param_data.all_patient_contol = request_data["all_patient_control"]
@@ -2783,7 +2782,7 @@ def update_control_param(request):
         param_data.pk,
         160000,
         request.user.doctorprofile,
-        {"old_param_data": old_param_data, "new_param_data": PatientControlParam.as_json(param_data)}
+        {"param_data": PatientControlParam.as_json(param_data)}
     )
     return JsonResponse({"ok": True})
 
