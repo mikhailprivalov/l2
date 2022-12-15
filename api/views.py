@@ -2791,12 +2791,7 @@ def add_control_param(request):
         return JsonResponse({"ok": False, "message": "Такое название уже есть"})
     if PatientControlParam.objects.filter(code=request_data["code"]):
         return JsonResponse({"ok": False, "message": "Такой код уже есть"})
-    param_data = PatientControlParam(
-        title=request_data["title"],
-        code=request_data["code"],
-        all_patient_contol=request_data["all_patient_control"],
-        order=request_data["order"]
-    )
+    param_data = PatientControlParam(title=request_data["title"], code=request_data["code"], all_patient_contol=request_data["all_patient_control"], order=request_data["order"])
     param_data.save()
     Log.log(
         param_data.pk,
