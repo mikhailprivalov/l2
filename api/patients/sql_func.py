@@ -70,3 +70,47 @@ def get_laboratory_patient_control_params(start_date, end_date, control_params, 
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_patient_control_params_to_hosp(control_params, card_pk, parent_iss, limit=1):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                dp.patient_control_param_id, 
+                di.time_confirmation, 
+                value, 
+                dn.id as direction,
+                to_char(di.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm
+            FROM directions_paraclinicresult
+            LEFT JOIN directory_paraclinicinputfield dp on directions_paraclinicresult.field_id = dp.id
+            LEFT JOIN directions_issledovaniya di on directions_paraclinicresult.issledovaniye_id=di.id
+            LEFT JOIN directions_napravleniya dn on dn.id=di.napravleniye_id
+            WHERE
+                dn.client_id = %(card_pk)s AND 
+                dp.patient_control_param_id in %(control_params)s AND
+                di.time_confirmation is not NULL AND
+                dn.parent_id in %(parent_iss)s
+            UNION
+            SELECT
+                df.patient_control_param_id, 
+                di.time_confirmation, 
+                value, 
+                dn.id,
+                to_char(di.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm
+            FROM directions_result
+            LEFT JOIN directory_fractions df on directions_result.fraction_id = df.id
+            LEFT JOIN directions_issledovaniya di on directions_result.issledovaniye_id = di.id
+            LEFT JOIN directions_napravleniya dn on dn.id=di.napravleniye_id
+            WHERE
+                dn.client_id = %(card_pk)s AND 
+                df.patient_control_param_id in %(control_params)s AND
+                di.time_confirmation is not NULL AND
+                dn.parent_id in %(parent_iss)s
+            ORDER BY patient_control_param_id, time_confirmation DESC LIMIT %(limit)s
+            """,
+            params={'control_params': control_params, 'card_pk': card_pk, 'tz': TIME_ZONE, 'parent_iss': parent_iss, 'limit': limit},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
