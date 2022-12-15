@@ -23,7 +23,7 @@
 
         <input
           id="change-group-title"
-          v-model="/* eslint-disable-line vue/no-mutating-props */ group_obj.title"
+          v-model.trim="/* eslint-disable-line vue/no-mutating-props */ group_obj.title"
           class="form-control"
         >
       </div>
@@ -42,6 +42,7 @@
           <button
             type="button"
             class="btn btn-primary-nb btn-blue-nb"
+            :disabled="!group_obj.title"
             @click="updateGroup"
           >
             Сохранить
