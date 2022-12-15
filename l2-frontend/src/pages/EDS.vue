@@ -375,7 +375,7 @@
 
 <script lang="ts">
 import {
-  createDetachedSignature, createHash, getSystemInfo, getUserCertificates,
+  createDetachedSignature, createHash, getCertificate, getSystemInfo, getUserCertificates,
 } from 'crypto-pro';
 import moment from 'moment';
 import Vue from 'vue';
@@ -696,11 +696,21 @@ export default class EDS extends Vue {
     this.signingProcess.currentOperation = '';
     this.signingProcess.totalDocuments = this.rowsChecked.reduce((a, b) => a + b.documents.length, 0);
     this.signingProcess.currentDocument = 0;
+
+    const cert = await getCertificate(this.selectedCertificate);
+
     for (const r of this.rowsChecked) {
       try {
         this.signingProcess.currentOperation = `${r.pk} получение документов`;
         const { documents } = await this.$api('/directions/eds/documents', {
           pk: r.pk,
+          certActiveRole: this.selectedSignatureMode,
+          certThumbprint: this.selectedCertificate,
+          certDetails: JSON.stringify({
+            subjectName: cert.subjectName,
+            validFrom: cert.validFrom,
+            validTo: cert.validTo,
+          }),
         });
         for (const d of documents) {
           if (d.signatures[this.selectedSignatureMode]) {

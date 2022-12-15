@@ -1343,7 +1343,7 @@ def directions_paraclinic_form(request):
     d = None
     if dn.exists():
         d: Napravleniya = dn[0]
-        if SettingManager.get("control_planed_fact_doctor", default=False, default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
+        if SettingManager.get("control_planed_fact_doctor", default='false', default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
@@ -2326,6 +2326,8 @@ def directions_paraclinic_confirm_reset(request):
                 n.need_resend_amd = False
                 n.eds_total_signed = False
                 n.eds_total_signed_at = None
+                n.eds_main_signer_cert_thumbprint = None
+                n.eds_main_signer_cert_details = None
                 n.vi_id = None
                 n.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd', 'vi_id'])
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
@@ -3538,6 +3540,9 @@ def eds_required_signatures(request):
 def eds_documents(request):
     data = json.loads(request.body)
     pk = data['pk']
+    cert_active_role = data.get('certActiveRole')
+    cert_thumbprint = data.get('certThumbprint')
+    cert_details = data.get('certDetails')
     direction: Napravleniya = Napravleniya.objects.get(pk=pk)
     iss_obj = Issledovaniya.objects.filter(napravleniye=direction).first()
     doctor_data = iss_obj.doc_confirmation.dict_data if iss_obj.doc_confirmation else None
@@ -3549,13 +3554,14 @@ def eds_documents(request):
         if v in ["", None]:
             error_doctor = f"{k} - не верно;{error_doctor}"
 
-    if not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
+    if False and not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
 
     base = SettingManager.get_cda_base_url()
-    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
-    if not available:
-        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
+    if base != "empty":
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер недоступен"})
 
     if error_doctor:
         error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
@@ -3566,7 +3572,7 @@ def eds_documents(request):
         direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
         if not snils_used:
-            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "СНИЛС у пациента - Некорректный!"})
+            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "У пациента некорректный СНИЛС"})
 
     if SettingManager.l2('required_equal_hosp_for_eds', default='true') and direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
@@ -3592,7 +3598,36 @@ def eds_documents(request):
     cda_eds_data = get_cda_data(pk)
 
     for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
-        if not d.file:
+        has_main_signer_data = cert_active_role == 'Врач' and cert_thumbprint and cert_details and DirectionDocument.PDF == d.file_type
+
+        signatures = {}
+        has_signatures = DocumentSign.objects.filter(document=d)
+
+        sgn: DocumentSign
+        for sgn in has_signatures:
+            signatures[sgn.sign_type] = {
+                'pk': sgn.pk,
+                'executor': str(sgn.executor),
+                'signedAt': strfdatetime(sgn.signed_at),
+                'signValue': sgn.sign_value,
+            }
+
+            if has_main_signer_data:
+                has_main_signer_data = False
+
+        for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
+            signatures[s] = None
+
+        has_main_signer_changes = (
+            cert_thumbprint != direction.eds_main_signer_cert_thumbprint or cert_details != direction.eds_main_signer_cert_details
+        ) and DirectionDocument.PDF == d.file_type and (cert_active_role == 'Врач' or 'Врач' not in signatures)
+
+        if has_main_signer_changes:
+            direction.eds_main_signer_cert_thumbprint = cert_thumbprint
+            direction.eds_main_signer_cert_details = cert_details
+            direction.save(update_fields=['eds_main_signer_cert_thumbprint', 'eds_main_signer_cert_details'])
+
+        if not d.file or has_main_signer_data or has_main_signer_changes:
             file = None
             filename = None
             if d.file_type.lower() != d.file_type:
@@ -3608,6 +3643,7 @@ def eds_documents(request):
                         "leftnone": '0',
                         "inline": '1',
                         "protocol_plain_text": '1',
+                        'withForcedMainSigner': '1' if d.file else '0',
                     },
                     'user': request.user,
                     'plain_response': True,
@@ -3630,21 +3666,6 @@ def eds_documents(request):
                     file = None
             if file:
                 d.file.save(filename, file)
-
-        signatures = {}
-        has_signatures = DocumentSign.objects.filter(document=d)
-
-        sgn: DocumentSign
-        for sgn in has_signatures:
-            signatures[sgn.sign_type] = {
-                'pk': sgn.pk,
-                'executor': str(sgn.executor),
-                'signedAt': strfdatetime(sgn.signed_at),
-                'signValue': sgn.sign_value,
-            }
-
-        for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
-            signatures[s] = None
 
         file_content = None
 
@@ -3727,9 +3748,10 @@ def eds_to_sign(request):
 
     rows = []
     base = SettingManager.get_cda_base_url()
-    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
-    if not available:
-        return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "CDA-сервер не доступен"})
+    if base != 'empty':
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "CDA-сервер недоступен"})
 
     d_qs = Napravleniya.objects.filter(total_confirmed=True)
     if number:

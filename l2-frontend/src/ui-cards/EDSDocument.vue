@@ -138,7 +138,7 @@
 </template>
 
 <script lang="ts">
-import { createDetachedSignature, createHash } from 'crypto-pro';
+import { createDetachedSignature, createHash, getCertificate } from 'crypto-pro';
 
 import * as actions from '@/store/action-types';
 
@@ -278,6 +278,34 @@ export default {
       try {
         let body = this.d.fileContent;
         if (this.d.type === 'PDF') {
+          if (this.selectedSignatureMode === 'Врач') {
+            try {
+              const cert = await getCertificate(this.thumbprint);
+              const {
+                documents: tmpDocuments,
+              } = await this.$api('/directions/eds/documents', {
+                pk: this.direction,
+                certActiveRole: this.selectedSignatureMode,
+                certThumbprint: this.thumbprint,
+                certDetails: JSON.stringify({
+                  subjectName: cert.subjectName,
+                  validFrom: cert.validFrom,
+                  validTo: cert.validTo,
+                }),
+              });
+              if (tmpDocuments) {
+                for (const tdoc of tmpDocuments) {
+                  if (tdoc.type === 'PDF') {
+                    body = tdoc.fileContent;
+                    break;
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Ошибка загрузки документа для подписи');
+              console.error(e);
+            }
+          }
           body = Uint8Array.from(atob(body), c => c.charCodeAt(0));
         }
         const isString = typeof body === typeof '';

@@ -463,6 +463,8 @@ class Napravleniya(models.Model):
     vi_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД VI', db_index=True)
     eds_required_documents = ArrayField(models.CharField(max_length=3), verbose_name='Необходимые документы для ЭЦП', default=list, blank=True, db_index=True)
     eds_required_signature_types = ArrayField(models.CharField(max_length=32), verbose_name='Необходимые подписи для ЭЦП', default=list, blank=True, db_index=True)
+    eds_main_signer_cert_thumbprint = models.CharField(max_length=44, default=None, blank=True, null=True, verbose_name='Отпечаток сертификата основного подписывающего')
+    eds_main_signer_cert_details = models.TextField(default=None, blank=True, null=True, verbose_name='Информация из сертификата основного подписывающего')
     eds_total_signed = models.BooleanField(verbose_name='Результат полностью подписан', blank=True, default=False, db_index=True)
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
     co_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_co_executor", db_index=True, help_text='Со-исполнитель', on_delete=models.SET_NULL)

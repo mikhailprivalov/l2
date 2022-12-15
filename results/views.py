@@ -1,6 +1,7 @@
 import base64
 import collections
 import datetime
+import logging
 import operator
 import os.path
 import random
@@ -38,14 +39,14 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
 from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, BaseDocTemplate
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.platypus.flowables import HRFlowable, Macro
+from reportlab.platypus.flowables import HRFlowable, Macro, KeepInFrame
 
 import directory.models as directory
 import slog.models as slog
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
-from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
+from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
 from laboratory.settings import FONTS_FOLDER
@@ -67,6 +68,7 @@ pdfmetrics.registerFont(TTFont('Consolas', os.path.join(FONTS_FOLDER, 'consolas.
 pdfmetrics.registerFont(TTFont('Consolas-Bold', os.path.join(FONTS_FOLDER, 'Consolas-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('cour', os.path.join(FONTS_FOLDER, 'cour.ttf')))
 
+logger = logging.getLogger(__name__)
 
 @login_required
 def enter(request):
@@ -130,6 +132,7 @@ def result_print(request):
     if med_certificate:
         med_certificate_title = "Справка - "
     hosp = request.GET.get("hosp", "0") == "1"
+    with_forced_main_signer = request.GET.get("withForcedMainSigner", "0") == "1"
 
     doc = BaseDocTemplate(
         buffer,
@@ -411,6 +414,17 @@ def result_print(request):
         current_size_form = None
         temp_iss = None
         has_own_form_result = False
+        show_cert_details = direction.eds_main_signer_cert_thumbprint and direction.eds_main_signer_cert_details
+        if show_cert_details:
+            last_time_confirm = direction.last_time_confirm()
+            if not last_time_confirm:
+                show_cert_details = False
+            elif not with_forced_main_signer:
+                document_for_sign = DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm, is_archive=False, file_type=DirectionDocument.PDF).first()
+                if not document_for_sign:
+                    show_cert_details = False
+                else:
+                    show_cert_details = DocumentSign.objects.filter(document=document_for_sign, sign_type='Врач').exists()
 
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
@@ -1078,7 +1092,7 @@ def result_print(request):
 
                 # Добавить выписанные направления для стационарных дневников
                 if iss.research.is_slave_hospital:
-                    # Найти все направления где данное исследование родитель
+                    # Найти все направления, где данное исследование родитель
                     napr_child = Napravleniya.objects.filter(parent_slave_hosp=iss, cancel=False)
                     br = ""
                     if not protocol_plain_text:
@@ -1126,6 +1140,62 @@ def result_print(request):
                             fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________", style))
 
                         fwb.append(Spacer(1, 2.5 * mm))
+
+        if show_cert_details:
+            stamp_font_size = "8"
+            stamp_lines = [
+                f'<font face="FreeSansBold" size="{stamp_font_size}">ДОКУМЕНТ ПОДПИСАН ЭЛЕКТРОННОЙ ПОДПИСЬЮ</font>',
+                f'<font size="{stamp_font_size}">Сертификат {direction.eds_main_signer_cert_thumbprint}</font>',
+            ]
+            cert_details = None
+            try:
+                cert_details = json.loads(direction.eds_main_signer_cert_details)
+                if not isinstance(cert_details, dict):
+                    cert_details = None
+            except:
+                pass
+
+            if cert_details:
+                if cert_details.get("subjectName"):
+                    try:
+                        sn = cert_details["subjectName"]
+                        name_parts = ["", ""]
+                        sn = sn.split(",")
+                        for s in sn:
+                            if s.strip().startswith("SN="):
+                                name_parts[0] = s.strip()[3:]
+                            elif s.strip().startswith("G="):
+                                name_parts[1] = s.strip()[2:]
+                        name = " ".join(name_parts).strip()
+                        if name:
+                            stamp_lines.append(f"Владелец {name}")
+                    except Exception as e:
+                        logger.error("Ошибка при парсинге subjectName")
+                        logger.error(e)
+                        pass
+                if cert_details.get('validFrom') and cert_details.get('validTo'):
+                    try:
+                        valid_from = datetime.datetime.strptime(cert_details['validFrom'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                        valid_to = datetime.datetime.strptime(cert_details['validTo'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                        valid_from_date = valid_from.strftime('%d.%m.%Y')
+                        valid_to_date = valid_to.strftime('%d.%m.%Y')
+                        stamp_lines.append(f"Действителен с {valid_from_date} по {valid_to_date}")
+                    except Exception as e:
+                        logger.error("Ошибка при парсинге даты сертификата")
+                        logger.error(e)
+
+            for line in range(2, len(stamp_lines)):
+                stamp_lines[line] = f'<font size="{stamp_font_size}">{stamp_lines[line]}</font>'
+
+            style_stamp = deepcopy(style)
+            style_stamp.borderWidth = 0.5 * mm
+            style_stamp.borderColor = colors.black
+            style_stamp.borderPadding = 2 * mm
+            style_stamp.borderRadius = 2 * mm
+            par = Paragraph("<br/>".join(stamp_lines), style_stamp)
+            frame = KeepInFrame(80 * mm, 30 * mm, [par], hAlign='RIGHT')
+            fwb.append(Spacer(1, 5 * mm))
+            fwb.append(frame)
 
         if client_prev == direction.client.individual_id and not split and not is_different_form:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))

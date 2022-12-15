@@ -650,6 +650,8 @@ def reset_confirm(request):
                 iss.napravleniye.need_resend_amd = False
                 iss.napravleniye.eds_total_signed = False
                 iss.napravleniye.eds_total_signed_at = None
+                iss.napravleniye.eds_main_signer_cert_thumbprint = None
+                iss.napravleniye.eds_main_signer_cert_details = None
                 iss.napravleniye.vi_id = None
                 iss.napravleniye.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd', 'vi_id'])
             result = {"ok": True}
