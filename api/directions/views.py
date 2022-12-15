@@ -94,7 +94,7 @@ from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
 from utils.expertise import get_expertise
-from ..patients.common_func import get_card_control_param
+from ..patients.common_func import get_card_control_param, get_vital_param_in_hosp
 
 
 @login_required
@@ -2723,6 +2723,19 @@ def last_field_result(request):
                         for d in data:
                             if d['value'].find(param_find_val) != -1:
                                 return JsonResponse({"result": {"value": "да"}})
+    elif request_data["fieldPk"].find('%vital_param#') != -1:
+        # %vital_param#code#current_hosp
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 3:
+            result = {"value": ""}
+        param_code = int(data[1])
+        search_place = data[2]
+        if search_place == 'current_hosp':
+            parent_iss = Napravleniya.objects.get(pk=num_dir).parent_id
+        elif search_place == 'root_hosp':
+            hosp_dirs = hosp_get_hosp_direction(num_dir)
+            parent_iss = [i['issledovaniye'] for i in hosp_dirs]
+        vital_result = get_vital_param_in_hosp(client_pk, parent_iss, param_code)
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True
