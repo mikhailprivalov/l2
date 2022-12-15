@@ -2781,7 +2781,7 @@ def update_control_param(request):
     param_data.save()
     Log.log(
         param_data.pk,
-        150000,
+        160000,
         request.user.doctorprofile,
         {"old_param_data": old_param_data, "new_param_data": PatientControlParam.as_json(param_data)}
     )
@@ -2809,7 +2809,7 @@ def add_control_param(request):
     param_data.save()
     Log.log(
         param_data.pk,
-        150001,
+        160001,
         request.user.doctorprofile,
         {"param_data": PatientControlParam.as_json(param_data)},
     )
