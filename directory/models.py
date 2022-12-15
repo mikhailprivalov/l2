@@ -535,13 +535,7 @@ class PatientControlParam(models.Model):
 
     @staticmethod
     def as_json(param):
-        json_data = {
-            "pk": param.pk,
-            "title": param.title,
-            "code": param.code,
-            "all_patient_control": param.all_patient_contol,
-            "order": param.order
-        }
+        json_data = {"pk": param.pk, "title": param.title, "code": param.code, "all_patient_control": param.all_patient_contol, "order": param.order}
         return json_data
 
 
