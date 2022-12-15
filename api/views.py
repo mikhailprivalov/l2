@@ -2775,12 +2775,7 @@ def update_control_param(request):
     param_data.all_patient_contol = request_data["all_patient_control"]
     param_data.order = request_data["order"]
     param_data.save()
-    Log.log(
-        param_data.pk,
-        160000,
-        request.user.doctorprofile,
-        {"param_data": PatientControlParam.as_json(param_data)}
-    )
+    Log.log(param_data.pk, 160000, request.user.doctorprofile, {"param_data": PatientControlParam.as_json(param_data)})
     return JsonResponse({"ok": True})
 
 
