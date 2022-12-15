@@ -1194,7 +1194,7 @@ def result_print(request):
             style_stamp.borderPadding = 2 * mm
             style_stamp.borderRadius = 2 * mm
             par = Paragraph("<br/>".join(stamp_lines), style_stamp)
-            frame = KeepInFrame(80 * mm, 30 * mm, [par], hAlign='RIGHT')
+            frame = KeepInFrame(100 * mm, 30 * mm, [par], hAlign='RIGHT')
             fwb.append(Spacer(1, 5 * mm))
             fwb.append(frame)
 
