@@ -118,6 +118,7 @@
             <regex-format-input
               v-model="title"
               :rules="/[^0-9.]/g"
+              placeholder="Название"
               class="form-control padding-left"
             />
           </td>
