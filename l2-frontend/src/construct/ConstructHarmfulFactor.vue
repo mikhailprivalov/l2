@@ -52,16 +52,16 @@
             </td>
           </tr>
           <tr
-            v-for="(factor, index) in filteredFactors"
+            v-for="(factor) in filteredFactors"
             :key="factor.id"
             class="table-row"
           >
             <td class="table-row">
-              <input
+              <regex-format-input
                 v-model="factor.title"
+                :rules="/[^0-9.]/g"
                 class="form-control padding-left"
-                @input="toFactorTitle(index, $event)"
-              >
+              />
             </td>
             <td class="table-row">
               <input
@@ -115,12 +115,11 @@
         </colgroup>
         <tr>
           <td class="table-row">
-            <input
+            <regex-format-input
               v-model="title"
+              :rules="/[^0-9.]/g"
               class="form-control padding-left"
-              placeholder="Название"
-              @input="toFactorTitle(-1, $event, 'title')"
-            >
+            />
           </td>
           <td class="table-row">
             <input
@@ -198,13 +197,14 @@
 
 import Treeselect from '@riophae/vue-treeselect';
 
+import regexFormatInput from '@/construct/regexFormatInput.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ConstructHarmfulFactor',
-  components: { Treeselect, Modal },
+  components: { Treeselect, Modal, regexFormatInput },
   data() {
     return {
       factors: [],
@@ -289,13 +289,6 @@ export default {
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      }
-    },
-    toFactorTitle(index, event, title) {
-      if (index !== -1) {
-        this.filteredFactors[index].title = event.target.value.replace(/[^0-9.]/g, '');
-      } else {
-        this[title] = event.target.value.replace(/[^0-9.]/g, '');
       }
     },
   },
