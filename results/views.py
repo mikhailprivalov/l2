@@ -1,7 +1,6 @@
 import base64
 import collections
 import datetime
-import logging
 import operator
 import os.path
 import random
@@ -39,7 +38,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
 from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, BaseDocTemplate
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.platypus.flowables import HRFlowable, Macro, KeepInFrame
+from reportlab.platypus.flowables import HRFlowable, Macro
 
 import directory.models as directory
 import slog.models as slog
@@ -67,8 +66,6 @@ pdfmetrics.registerFont(TTFont('OpenSansLight', os.path.join(FONTS_FOLDER, 'Open
 pdfmetrics.registerFont(TTFont('Consolas', os.path.join(FONTS_FOLDER, 'consolas.ttf')))
 pdfmetrics.registerFont(TTFont('Consolas-Bold', os.path.join(FONTS_FOLDER, 'Consolas-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('cour', os.path.join(FONTS_FOLDER, 'cour.ttf')))
-
-logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -133,7 +130,7 @@ def result_print(request):
     if med_certificate:
         med_certificate_title = "Справка - "
     hosp = request.GET.get("hosp", "0") == "1"
-    with_forced_main_signer = request.GET.get("withForcedMainSigner", "0") == "1"
+    with_signature_stamps = request.GET.get("withSignatureStamps", "0") == "1"
 
     doc = BaseDocTemplate(
         buffer,
@@ -415,17 +412,6 @@ def result_print(request):
         current_size_form = None
         temp_iss = None
         has_own_form_result = False
-        show_cert_details = direction.eds_main_signer_cert_thumbprint and direction.eds_main_signer_cert_details
-        if show_cert_details:
-            last_time_confirm = direction.last_time_confirm()
-            if not last_time_confirm:
-                show_cert_details = False
-            elif not with_forced_main_signer:
-                document_for_sign = DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm, is_archive=False, file_type=DirectionDocument.PDF).first()
-                if not document_for_sign:
-                    show_cert_details = False
-                else:
-                    show_cert_details = DocumentSign.objects.filter(document=document_for_sign, sign_type='Врач').exists()
 
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
@@ -1142,61 +1128,68 @@ def result_print(request):
 
                         fwb.append(Spacer(1, 2.5 * mm))
 
-        if show_cert_details:
-            stamp_font_size = "8"
-            stamp_lines = [
-                f'<font face="FreeSansBold" size="{stamp_font_size}">ДОКУМЕНТ ПОДПИСАН ЭЛЕКТРОННОЙ ПОДПИСЬЮ</font>',
-                f'<font size="{stamp_font_size}">Сертификат {direction.eds_main_signer_cert_thumbprint}</font>',
-            ]
-            cert_details = None
-            try:
-                cert_details = json.loads(direction.eds_main_signer_cert_details)
-                if not isinstance(cert_details, dict):
-                    cert_details = None
-            except:
-                pass
+        if with_signature_stamps and direction.total_confirmed:
+            last_time_confirm = direction.last_time_confirm()
+            document_for_sign = DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm, is_archive=False, file_type=DirectionDocument.PDF).first()
+            if document_for_sign:
+                paragraphs = []
+                has_thumbprints = {}
+                for sign in DocumentSign.objects.filter(document=document_for_sign, sign_certificate__isnull=False):
+                    if sign.sign_certificate.thumbprint in has_thumbprints:
+                        continue
+                    has_thumbprints[sign.sign_certificate.thumbprint] = True
+                    stamp_font_size = "7"
+                    stamp_lines = [
+                        f'<font face="FreeSansBold" size="{stamp_font_size}">ДОКУМЕНТ ПОДПИСАН ЭЛЕКТРОННОЙ ПОДПИСЬЮ</font>',
+                        f'Сертификат: {sign.sign_certificate.thumbprint}',
+                        f'Владелец: {sign.sign_certificate.owner}',
+                        f'Действителен с {sign.sign_certificate.valid_from.strftime("%d.%m.%Y")} по {sign.sign_certificate.valid_to.strftime("%d.%m.%Y")}',
+                    ]
 
-            if cert_details:
-                if cert_details.get("subjectName"):
-                    try:
-                        sn = cert_details["subjectName"]
-                        name_parts = ["", ""]
-                        sn = sn.split(",")
-                        for s in sn:
-                            if s.strip().startswith("SN="):
-                                name_parts[0] = s.strip()[3:]
-                            elif s.strip().startswith("G="):
-                                name_parts[1] = s.strip()[2:]
-                        name = " ".join(name_parts).strip()
-                        if name:
-                            stamp_lines.append(f"Владелец {name}")
-                    except Exception as e:
-                        logger.error("Ошибка при парсинге subjectName")
-                        logger.error(e)
-                        pass
-                if cert_details.get('validFrom') and cert_details.get('validTo'):
-                    try:
-                        valid_from = datetime.datetime.strptime(cert_details['validFrom'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                        valid_to = datetime.datetime.strptime(cert_details['validTo'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                        valid_from_date = valid_from.strftime('%d.%m.%Y')
-                        valid_to_date = valid_to.strftime('%d.%m.%Y')
-                        stamp_lines.append(f"Действителен с {valid_from_date} по {valid_to_date}")
-                    except Exception as e:
-                        logger.error("Ошибка при парсинге даты сертификата")
-                        logger.error(e)
+                    for line in range(1, len(stamp_lines)):
+                        stamp_lines[line] = f'<font size="{stamp_font_size}">{stamp_lines[line]}</font>'
 
-            for line in range(2, len(stamp_lines)):
-                stamp_lines[line] = f'<font size="{stamp_font_size}">{stamp_lines[line]}</font>'
+                    style_stamp = deepcopy(style)
+                    style_stamp.borderWidth = 0.3 * mm
+                    style_stamp.borderColor = colors.black
+                    style_stamp.borderPadding = 1.3 * mm
+                    style_stamp.borderRadius = 1.5 * mm
+                    style_stamp.leading = 3.5 * mm
+                    par = Paragraph("<br/>".join(stamp_lines), style_stamp)
+                    paragraphs.append(par)
 
-            style_stamp = deepcopy(style)
-            style_stamp.borderWidth = 0.5 * mm
-            style_stamp.borderColor = colors.black
-            style_stamp.borderPadding = 2 * mm
-            style_stamp.borderRadius = 2 * mm
-            par = Paragraph("<br/>".join(stamp_lines), style_stamp)
-            frame = KeepInFrame(100 * mm, 30 * mm, [par], hAlign='RIGHT')
-            fwb.append(Spacer(1, 5 * mm))
-            fwb.append(frame)
+                if paragraphs:
+                    if len(paragraphs) == 1:
+                        paragraphs = [
+                            "",
+                            paragraphs[0],
+                        ]
+
+                    if len(paragraphs) % 2 == 1:
+                        paragraphs.append("")
+
+                    table_rows = []
+                    for i in range(0, len(paragraphs), 2):
+                        table_rows.append([paragraphs[i], paragraphs[i + 1]])
+
+                    tw = pw
+                    cw = [int(tw * 0.5), int(tw * 0.5)]
+                    cw = cw + [tw - sum(cw)]
+                    t = Table(table_rows, colWidths=cw)
+                    style_t = TableStyle(
+                        [
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                            ('LEFTPADDING', (0, 0), (-1, -1), 3 * mm),
+                            ('TOPPADDING', (0, 0), (-1, -1), 3 * mm),
+                            ('RIGHTPADDING', (0, 0), (-1, -1), 3 * mm),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                        ]
+                    )
+
+                    t.setStyle(style_t)
+                    fwb.append(Spacer(1, 2.5 * mm))
+                    fwb.append(t)
 
         if client_prev == direction.client.individual_id and not split and not is_different_form:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))

@@ -60,6 +60,7 @@ from directions.models import (
     DirectionParamsResult,
     IssledovaniyaFiles,
     IssledovaniyaResultLaborant,
+    SignatureCertificateDetails,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings, VERSION
@@ -3542,9 +3543,6 @@ def eds_required_signatures(request):
 def eds_documents(request):
     data = json.loads(request.body)
     pk = data['pk']
-    cert_active_role = data.get('certActiveRole')
-    cert_thumbprint = data.get('certThumbprint')
-    cert_details = data.get('certDetails')
     direction: Napravleniya = Napravleniya.objects.get(pk=pk)
     iss_obj = Issledovaniya.objects.filter(napravleniye=direction).first()
     doctor_data = iss_obj.doc_confirmation.dict_data if iss_obj.doc_confirmation else None
@@ -3556,7 +3554,7 @@ def eds_documents(request):
         if v in ["", None]:
             error_doctor = f"{k} - не верно;{error_doctor}"
 
-    if False and not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
+    if not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
 
     base = SettingManager.get_cda_base_url()
@@ -3600,8 +3598,6 @@ def eds_documents(request):
     cda_eds_data = get_cda_data(pk)
 
     for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
-        has_main_signer_data = cert_active_role == 'Врач' and cert_thumbprint and cert_details and DirectionDocument.PDF == d.file_type
-
         signatures = {}
         has_signatures = DocumentSign.objects.filter(document=d)
 
@@ -3614,24 +3610,10 @@ def eds_documents(request):
                 'signValue': sgn.sign_value,
             }
 
-            if has_main_signer_data:
-                has_main_signer_data = False
-
         for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
             signatures[s] = None
 
-        has_main_signer_changes = (
-            (cert_thumbprint != direction.eds_main_signer_cert_thumbprint or cert_details != direction.eds_main_signer_cert_details)
-            and DirectionDocument.PDF == d.file_type
-            and (cert_active_role == 'Врач' or 'Врач' not in signatures)
-        )
-
-        if has_main_signer_changes:
-            direction.eds_main_signer_cert_thumbprint = cert_thumbprint
-            direction.eds_main_signer_cert_details = cert_details
-            direction.save(update_fields=['eds_main_signer_cert_thumbprint', 'eds_main_signer_cert_details'])
-
-        if not d.file or has_main_signer_data or has_main_signer_changes:
+        if not d.file:
             file = None
             filename = None
             if d.file_type.lower() != d.file_type:
@@ -3647,7 +3629,6 @@ def eds_documents(request):
                         "leftnone": '0',
                         "inline": '1',
                         "protocol_plain_text": '1',
-                        'withForcedMainSigner': '1' if d.file else '0',
                     },
                     'user': request.user,
                     'plain_response': True,
@@ -3699,6 +3680,8 @@ def eds_add_sign(request):
     pk = data['pk']
     sign = data['sign']
     sign_type = data['mode']
+    cert_thumbprint = data.get('certThumbprint')
+    cert_details = data.get('certDetails')
     direction_document: DirectionDocument = DirectionDocument.objects.get(pk=pk)
     direction: Napravleniya = direction_document.direction
 
@@ -3733,7 +3716,9 @@ def eds_add_sign(request):
     if sign_type == 'Врач' and request.user.doctorprofile.pk not in executors:
         return status_response(False, 'Подтвердить может только исполнитель')
 
-    DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign)
+    sign_certificate = SignatureCertificateDetails.get_or_update(cert_thumbprint, cert_details)
+
+    DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign, sign_certificate=sign_certificate)
 
     direction.get_eds_total_signed(forced=True)
 

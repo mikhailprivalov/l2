@@ -704,13 +704,6 @@ export default class EDS extends Vue {
         this.signingProcess.currentOperation = `${r.pk} получение документов`;
         const { documents } = await this.$api('/directions/eds/documents', {
           pk: r.pk,
-          certActiveRole: this.selectedSignatureMode,
-          certThumbprint: this.selectedCertificate,
-          certDetails: JSON.stringify({
-            subjectName: cert.subjectName,
-            validFrom: cert.validFrom,
-            validTo: cert.validTo,
-          }),
         });
         for (const d of documents) {
           if (d.signatures[this.selectedSignatureMode]) {
@@ -741,6 +734,12 @@ export default class EDS extends Vue {
               pk: d.pk,
               sign,
               mode: this.selectedSignatureMode,
+              certThumbprint: this.selectedCertificate,
+              certDetails: cert ? {
+                subjectName: cert.subjectName,
+                validFrom: cert.validFrom,
+                validTo: cert.validTo,
+              } : null,
             });
 
             if (ok) {
