@@ -134,6 +134,7 @@ export default class ResultsPreview extends Vue {
     url.searchParams.append('hosp', String(this.hosp));
     url.searchParams.append('portion', String(this.portion));
     url.searchParams.append('sort', String(this.sort));
+    url.searchParams.append('withSignatureStamps', '1');
     return url;
   }
 
