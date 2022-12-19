@@ -1,4 +1,4 @@
-from api.patients.sql_func import get_patient_control_params
+from api.patients.sql_func import get_patient_control_params, get_patient_control_params_to_hosp
 from clients.models import CardControlParam
 
 
@@ -50,3 +50,15 @@ def get_card_control_param(card_pk, start_date, end_date, code_param_id=None):
         i['dates'] = final_data.copy()
         unique_month_result.append(i)
     return unique_month_result
+
+
+def get_vital_param_in_hosp(card_pk, parent_iss, code_param_id):
+    data_params = CardControlParam.get_patient_control_param(card_pk, code_param_id=code_param_id)
+    control_params = tuple(data_params.keys())
+    if not control_params:
+        return None
+    recieve_vital_result = get_patient_control_params_to_hosp(control_params, card_pk, parent_iss)
+    if len(recieve_vital_result) > 0:
+        return recieve_vital_result[0].value
+    else:
+        return ""

@@ -1,4 +1,5 @@
 import hashlib
+from typing import Optional
 
 import simplejson
 from django.core.cache import cache
@@ -35,7 +36,7 @@ class SettingManager:
         post_save.connect(save_setting, sender=appconf.Setting)
 
     @staticmethod
-    def get(key, default=None, default_type='s', rebuild=False):
+    def get(key, default: Optional[str] = None, default_type: str = 's', rebuild=False):
         no_cache = '#no-cache#' in key
         k = f'setting_manager:v{SettingManager.VERSION}:{key}'
         cv = cache.get(k) if not no_cache and not rebuild else None

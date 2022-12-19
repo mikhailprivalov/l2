@@ -103,6 +103,7 @@
 <script lang="ts">
 import { getSystemInfo, getUserCertificates } from 'crypto-pro';
 import moment from 'moment';
+import { debounce } from 'lodash/function';
 
 import * as actions from '@/store/action-types';
 import { convertSubjectNameToTitle } from '@/utils';
@@ -200,7 +201,7 @@ export default {
     this.init();
     this.$root.$on('eds:reload-document', direction => {
       if (this.directionPk === direction) {
-        this.loadStatus();
+        this.loadStatusDebounced();
       }
     });
   },
@@ -218,6 +219,9 @@ export default {
       this.message = message;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
+    loadStatusDebounced: debounce(function loadStatusDebounced() {
+      this.loadStatus();
+    }, 100),
     async addSign() {
       try {
         await this.$dialog.confirm(
@@ -265,7 +269,7 @@ export default {
       }
     },
     async init() {
-      await Promise.all([this.loadStatus(), this.getEDSStatus()]);
+      await Promise.all([this.loadStatusDebounced(), this.getEDSStatus()]);
     },
   },
 };
