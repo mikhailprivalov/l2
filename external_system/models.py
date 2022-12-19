@@ -100,12 +100,15 @@ class CdaFields(models.Model):
 
     @staticmethod
     def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract):
+        result = [{"id": -1, "label": "Пусто"}]
         if is_doc_refferal:
-            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
-        if is_treatment:
-            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_treatment=True).order_by("title")]]
-        if is_form:
-            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_form=True).order_by("title")]]
-        if is_extract:
-            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_extract=True).order_by("title")]]
-        return [{"id": -1, "label": "Пусто"}]
+            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
+        elif is_treatment:
+            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_treatment=True).order_by("title")]]
+        elif is_form:
+            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_form=True).order_by("title")]]
+        elif is_extract:
+            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_extract=True).order_by("title")]]
+
+        return result
+
