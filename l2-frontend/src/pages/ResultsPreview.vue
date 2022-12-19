@@ -91,6 +91,9 @@ import PDFObject from 'pdfobject';
     medCertificate() {
       localStorage.setItem('print_results_med_certificate', String(this.medCertificate));
     },
+    withSignatureStamps() {
+      localStorage.setItem('print_results_with_signature_stamps', String(this.withSignatureStamps));
+    },
     pdfUrlInline() {
       PDFObject.embed(this.pdfUrlInline, this.$refs.pdf, {
         fallbackLink: `<p>Невозможно отобразить PDF. <a href='${this.pdfUrlNoInline}'>Скачать файл</a></p>`,
@@ -179,6 +182,7 @@ export default class ResultsPreview extends Vue {
     this.margin = localStorage.getItem('print_results_margin') === 'true';
     this.plainProtocolText = localStorage.getItem('print_results_protocol_plain_text') === 'true';
     this.medCertificate = localStorage.getItem('print_results_med_certificate') === 'true';
+    this.withSignatureStamps = localStorage.getItem('print_results_with_signature_stamps') === 'true';
   }
 
   keyHandler(event) {
