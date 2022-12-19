@@ -60,6 +60,7 @@ from directions.models import (
     DirectionParamsResult,
     IssledovaniyaFiles,
     IssledovaniyaResultLaborant,
+    SignatureCertificateDetails,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings, VERSION
@@ -1343,7 +1344,7 @@ def directions_paraclinic_form(request):
     d = None
     if dn.exists():
         d: Napravleniya = dn[0]
-        if SettingManager.get("control_planed_fact_doctor", default=False, default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
+        if SettingManager.get("control_planed_fact_doctor", default='false', default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
@@ -2326,6 +2327,8 @@ def directions_paraclinic_confirm_reset(request):
                 n.need_resend_amd = False
                 n.eds_total_signed = False
                 n.eds_total_signed_at = None
+                n.eds_main_signer_cert_thumbprint = None
+                n.eds_main_signer_cert_details = None
                 n.vi_id = None
                 n.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd', 'vi_id'])
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
@@ -3555,9 +3558,10 @@ def eds_documents(request):
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
 
     base = SettingManager.get_cda_base_url()
-    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
-    if not available:
-        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
+    if base != "empty":
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер недоступен"})
 
     if error_doctor:
         error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
@@ -3568,7 +3572,7 @@ def eds_documents(request):
         direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
         if not snils_used:
-            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "СНИЛС у пациента - Некорректный!"})
+            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "У пациента некорректный СНИЛС"})
 
     if SettingManager.l2('required_equal_hosp_for_eds', default='true') and direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
@@ -3594,6 +3598,21 @@ def eds_documents(request):
     cda_eds_data = get_cda_data(pk)
 
     for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
+        signatures = {}
+        has_signatures = DocumentSign.objects.filter(document=d)
+
+        sgn: DocumentSign
+        for sgn in has_signatures:
+            signatures[sgn.sign_type] = {
+                'pk': sgn.pk,
+                'executor': str(sgn.executor),
+                'signedAt': strfdatetime(sgn.signed_at),
+                'signValue': sgn.sign_value,
+            }
+
+        for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
+            signatures[s] = None
+
         if not d.file:
             file = None
             filename = None
@@ -3633,21 +3652,6 @@ def eds_documents(request):
             if file:
                 d.file.save(filename, file)
 
-        signatures = {}
-        has_signatures = DocumentSign.objects.filter(document=d)
-
-        sgn: DocumentSign
-        for sgn in has_signatures:
-            signatures[sgn.sign_type] = {
-                'pk': sgn.pk,
-                'executor': str(sgn.executor),
-                'signedAt': strfdatetime(sgn.signed_at),
-                'signValue': sgn.sign_value,
-            }
-
-        for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
-            signatures[s] = None
-
         file_content = None
 
         if d.file:
@@ -3676,6 +3680,8 @@ def eds_add_sign(request):
     pk = data['pk']
     sign = data['sign']
     sign_type = data['mode']
+    cert_thumbprint = data.get('certThumbprint')
+    cert_details = data.get('certDetails')
     direction_document: DirectionDocument = DirectionDocument.objects.get(pk=pk)
     direction: Napravleniya = direction_document.direction
 
@@ -3710,7 +3716,9 @@ def eds_add_sign(request):
     if sign_type == 'Врач' and request.user.doctorprofile.pk not in executors:
         return status_response(False, 'Подтвердить может только исполнитель')
 
-    DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign)
+    sign_certificate = SignatureCertificateDetails.get_or_update(cert_thumbprint, cert_details)
+
+    DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign, sign_certificate=sign_certificate)
 
     direction.get_eds_total_signed(forced=True)
 
@@ -3729,9 +3737,10 @@ def eds_to_sign(request):
 
     rows = []
     base = SettingManager.get_cda_base_url()
-    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
-    if not available:
-        return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "CDA-сервер не доступен"})
+    if base != 'empty':
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "CDA-сервер недоступен"})
 
     d_qs = Napravleniya.objects.filter(total_confirmed=True)
     if number:
