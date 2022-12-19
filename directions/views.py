@@ -517,8 +517,11 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "код {}".format(translation_number_from_decimal(int(dir.client.number))))
 
     c.setFont('OpenSans', 9)
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
-                      "Д/р: {} ({})- {}".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir), dir.client.individual.sex))
+    c.drawRightString(
+        w / 2 * (xn + 1) - paddingx,
+        (h / 2 - height - 90) + (h / 2) * yn,
+        "Д/р: {} ({})- {}".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir), dir.client.individual.sex),
+    )
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
     diagnosis = dir.diagnos.strip()[:35]
