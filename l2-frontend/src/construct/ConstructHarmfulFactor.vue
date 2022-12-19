@@ -57,7 +57,7 @@
             class="table-row"
           >
             <td class="table-row">
-              <regex-format-input
+              <RegexFormatInput
                 v-model="factor.title"
                 :rules="/[^0-9.]/g"
                 class="form-control padding-left"
@@ -115,7 +115,7 @@
         </colgroup>
         <tr>
           <td class="table-row">
-            <regex-format-input
+            <RegexFormatInput
               v-model="title"
               :rules="/[^0-9.]/g"
               placeholder="Название"
@@ -198,14 +198,14 @@
 
 import Treeselect from '@riophae/vue-treeselect';
 
-import regexFormatInput from '@/construct/regexFormatInput.vue';
+import RegexFormatInput from '@/construct/RegexFormatInput.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ConstructHarmfulFactor',
-  components: { Treeselect, Modal, regexFormatInput },
+  components: { Treeselect, Modal, RegexFormatInput },
   data() {
     return {
       factors: [],
