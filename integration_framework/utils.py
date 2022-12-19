@@ -3,7 +3,6 @@ import datetime
 import magic
 import pytz_deprecation_shim as pytz
 
-from api.stationar.stationar_func import hosp_get_text
 from appconf.manager import SettingManager
 from external_system.models import InstrumentalResearchRefbook
 from laboratory import settings
