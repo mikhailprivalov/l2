@@ -1154,7 +1154,7 @@ def result_print(request):
                     style_stamp.borderColor = colors.black
                     style_stamp.borderPadding = 1.3 * mm
                     style_stamp.borderRadius = 1.5 * mm
-                    style_stamp.leading = 3.5 * mm
+                    style_stamp.leading = 3 * mm
                     par = Paragraph("<br/>".join(stamp_lines), style_stamp)
                     paragraphs.append(par)
 
