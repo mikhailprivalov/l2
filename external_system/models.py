@@ -111,4 +111,3 @@ class CdaFields(models.Model):
             result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_extract=True).order_by("title")]]
 
         return result
-
