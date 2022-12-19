@@ -514,7 +514,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn, "ФИО: " + dir.client.individual.fio())
 
     c.setFont('OpenSans', 14)
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "код {}".format(translation_number_from_decimal(int(dir.client.number))))
+    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "Код {}".format(translation_number_from_decimal(int(dir.client.number))))
 
     c.setFont('OpenSans', 9)
     c.drawRightString(
