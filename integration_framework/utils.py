@@ -125,7 +125,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             data["Состояние код"] = "1"
             data["Состояние наименование"] = "Удовлетворительное"
 
-        for i in REMD_FIELDS_BY_TYPE_DOCUMENT.get(iss.research.generator_name):
+        for i in REMD_FIELDS_BY_TYPE_DOCUMENT.get(iss.research.generator_name, []):
             data[i] = "-"
         for r in result_protocol:
             if r.value:
