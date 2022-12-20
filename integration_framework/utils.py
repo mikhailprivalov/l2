@@ -207,6 +207,9 @@ def add_absent_field(data, research_data):
                 data[k] = normalize_dots_date(data[k]).replace("-", "")
             elif k == "вэ-Дата выписки":
                 data[k] = data[k].replace("-", "")
+            elif k == "вэ-Проведенное лечение":
+                res_treatment = json.loads(data[k])
+                data[k] = " ".join([f"{res_t['pharmaTitle']} - {res_t['mode']};" for res_t in res_treatment])
 
     return {**data, **tmp_data}
 

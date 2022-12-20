@@ -1764,10 +1764,10 @@ def get_cda_data(pk):
     smo_title = ""
     smo_id = ""
     if insurer_full_code:
-        smo = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_code", None)['values']
-        smo_title = smo[insurer_full_code]
-        smo_ids = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id", None)['values']
-        smo_id = smo_ids[insurer_full_code]
+        smo = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_code")['values'] if NSI.get("1.2.643.5.1.13.13.99.2.183_smo_code") else ""
+        smo_title = smo.get(insurer_full_code, "")
+        smo_ids = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id", None)['values'] if NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id") else ""
+        smo_id = smo_ids.get(insurer_full_code, "")
     if p_enp:
         return {
             "title": n.get_eds_title(),
