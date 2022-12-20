@@ -55,7 +55,7 @@
             </td>
           </tr>
           <tr
-            v-for="(param, index) in filteredParams"
+            v-for="(param) in filteredParams"
             :key="param.pk"
           >
             <td class="border">
@@ -65,11 +65,11 @@
               >
             </td>
             <td class="border">
-              <input
+              <RegexFormatInput
                 v-model="param.code"
                 class="form-control nba"
-                @input="toCodeFormat(index, $event)"
-              >
+                :rules="/[^0-9-.]/g"
+              />
             </td>
             <td
               class="text-center border"
@@ -122,12 +122,12 @@
             >
           </td>
           <td class="border">
-            <input
+            <RegexFormatInput
               v-model="newParam.code"
               class="form-control nba"
               placeholder="Код"
-              @input="toCodeFormat(-1, $event, 'newParam')"
-            >
+              :rules="/[^0-9-.]/g"
+            />
           </td>
           <td
             class="text-center border"
@@ -165,10 +165,13 @@
 
 <script lang="ts">
 
+import RegexFormatInput from '@/construct/RegexFormatInput.vue';
+
 import * as actions from '../store/action-types';
 
 export default {
   name: 'ConstructPatientControlParam',
+  components: { RegexFormatInput },
   data() {
     return {
       search: '',
@@ -240,13 +243,6 @@ export default {
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      }
-    },
-    toCodeFormat(index, event, param) {
-      if (index !== -1) {
-        this.filteredParams[index].code = event.target.value.replace(/[^0-9-.]/g, '');
-      } else {
-        this[param].code = event.target.value.replace(/[^0-9-.]/g, '');
       }
     },
   },
