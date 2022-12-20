@@ -514,7 +514,6 @@ class Napravleniya(models.Model):
                 gen_name = research.generator_name
             if research.is_extract:
                 gen_name = 'DischargeSummary_min'
-
         return gen_name
 
     def required_signatures(self, fast=False, need_save=False):
