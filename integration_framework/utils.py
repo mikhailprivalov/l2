@@ -171,7 +171,6 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["odii_code_method"] = ODII_METHODS.get(nsi_res.method) if nsi_res else None
     document["codeService"] = iss.research.code
     document["oidDepartment"] = iss.doc_confirmation.podrazdeleniye.oid
-
     return document
 
 
