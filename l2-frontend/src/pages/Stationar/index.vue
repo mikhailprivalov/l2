@@ -674,12 +674,14 @@
             >
               Закрыть
             </button>
-            <EDSDirection
-              v-if="row.research.is_extract"
-              :key="`${direction}_${!!row.confirmed}`"
-              :direction-pk="direction"
-              :all_confirmed="!!row.confirmed"
-            />
+            <KeepAlive>
+              <EDSDirection
+                v-if="row.research.is_extract"
+                :key="`${direction}_${!!row.confirmed}`"
+                :direction-pk="direction"
+                :all_confirmed="!!row.confirmed"
+              />
+            </KeepAlive>
             <div
               v-if="!r(row) && !row.confirmed"
               class="status-list"
