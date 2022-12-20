@@ -875,7 +875,7 @@ class Document(models.Model):
         """
         documents = {
             'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
-            'polis': {'serial': "", 'num': "", 'issued': ""},
+            'polis': {'serial': "", 'num': "", 'issued': "", "insurer_full_code": ""},
             'snils': {'num': ""},
             'bc': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
         }
@@ -1265,7 +1265,7 @@ class Card(models.Model):
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
         ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
-        ind_data['insurer_full_code'] = (None if empty else '') if not ind_documents["polis"]["insurer_full_code"] else ind_documents["polis"]["insurer_full_code"]
+        ind_data['insurer_full_code'] = '' if not ind_documents["polis"]["insurer_full_code"] else ind_documents["polis"]["insurer_full_code"]
         ind_data['ecp_id'] = self.individual.ecp_id
 
         return ind_data
