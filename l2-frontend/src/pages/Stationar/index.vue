@@ -678,7 +678,7 @@
               <EDSDirection
                 v-if="row.research.is_extract"
                 :key="`${direction}_${!!row.confirmed}`"
-                :direction-pk="direction"
+                :direction-pk="opened_form_pk"
                 :all_confirmed="!!row.confirmed"
               />
             </KeepAlive>
