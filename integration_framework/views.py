@@ -77,6 +77,7 @@ from users.models import DoctorProfile
 from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range
+from utils.nsi_directories import NSI
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
@@ -1756,6 +1757,17 @@ def get_cda_data(pk):
     data_individual = card.get_data_individual()
     p_enp_re = re.compile(r'^[0-9]{16}$')
     p_enp = bool(re.search(p_enp_re, card.get_data_individual()['oms']['polis_num']))
+    insurer_full_code = card.get_data_individual()['insurer_full_code']
+    if not insurer_full_code:
+        card.individual.sync_with_tfoms()
+    insurer_full_code = card.get_data_individual()['insurer_full_code']
+    smo_title = ""
+    smo_id = ""
+    if insurer_full_code:
+        smo = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_code", None)['values']
+        smo_title = smo[insurer_full_code]
+        smo_ids = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id", None)['values']
+        smo_id = smo_ids[insurer_full_code]
     if p_enp:
         return {
             "title": n.get_eds_title(),
@@ -1770,7 +1782,8 @@ def get_cda_data(pk):
                     'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
                     'gender': ind.sex.lower(),
                     'birthdate': ind.birthday.strftime("%Y%m%d"),
-                    'oms': {'number': card.get_data_individual()['oms']['polis_num'], 'issueOrgName': '', 'issueOrgCode': ''},
+                    'oms': {'number': card.get_data_individual()['oms']['polis_num'], 'issueOrgName': smo_title,
+                            'issueOrgCode': insurer_full_code, 'smoId': smo_id},
                 },
                 "organization": data["organization"],
             },
