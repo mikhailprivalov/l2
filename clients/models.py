@@ -855,7 +855,7 @@ class Document(models.Model):
     who_give = models.TextField(default="", blank=True, help_text="Кто выдал")
     from_rmis = models.BooleanField(default=True, blank=True)
     rmis_uid = models.CharField(max_length=11, default=None, blank=True, null=True)
-    insurer_full_code = models.CharField(max_length=11, default=None, blank=True, null=True, help_text="Код страховой")
+    insurer_full_code = models.CharField(max_length=11, default="", blank=True, null=True, help_text="Код страховой")
 
     @property
     def date_start_local(self):
