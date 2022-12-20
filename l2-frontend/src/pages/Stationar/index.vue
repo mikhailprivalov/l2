@@ -639,7 +639,7 @@
             </div>
           </div>
           <div
-            :key="row.research.version"
+            :key="!row.confirmed && !row.forbidden_edit ? row.pk : row.research.version"
             class="control-row"
           >
             <div class="res-title">
