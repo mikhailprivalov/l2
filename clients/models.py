@@ -642,6 +642,7 @@ class Individual(models.Model):
         patronymic = data.get('patronymic', '').title().strip()
         gender = data.get('gender', '').lower().strip()
         bdate = data.get('birthdate', '').split(' ')[0]
+        insurer_full_code = data.get('insurer_full_code', '')
 
         if gender == 'm':
             gender = 'м'
@@ -698,7 +699,7 @@ class Individual(models.Model):
                 ce = Card.objects.filter(individual=i, base__internal_type=True).first()
                 if no_update and ce:
                     print('No update')  # noqa: T001
-                    polis = i.add_or_update_doc(enp_type, '', enp)
+                    polis = i.add_or_update_doc(enp_type, '', enp, insurer_full_code)
                     if polis:
                         cdu = CardDocUsage.objects.filter(card=ce, document__document_type=polis.document_type)
                         if not cdu.exists():
@@ -767,7 +768,7 @@ class Individual(models.Model):
             enp_doc = None
             if enp_type and enp:
                 print('Sync ENP')  # noqa: T001
-                enp_doc = i.add_or_update_doc(enp_type, '', enp)
+                enp_doc = i.add_or_update_doc(enp_type, '', enp, insurer_full_code)
 
             print('Sync L2 card')  # noqa: T001
             card = Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data)
@@ -786,14 +787,14 @@ class Individual(models.Model):
 
         return updated_data
 
-    def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str):
+    def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str, insurer_full_code=""):
         ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() > 1:
             ds.delete()
 
         ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() == 0:
-            d = Document(individual=self, document_type=doc_type, serial=serial, number=number)
+            d = Document(individual=self, document_type=doc_type, serial=serial, number=number, insurer_full_code=insurer_full_code)
             d.save()
         else:
             d: Document = ds.first()
@@ -806,6 +807,9 @@ class Individual(models.Model):
             if d.number != number:
                 d.number = number
                 updated.append('number')
+            if d.insurer_full_code != insurer_full_code:
+                d.insurer_full_code = insurer_full_code
+                updated.append('insurer_full_code')
 
             if updated:
                 d.save(update_fields=updated)
@@ -851,6 +855,7 @@ class Document(models.Model):
     who_give = models.TextField(default="", blank=True, help_text="Кто выдал")
     from_rmis = models.BooleanField(default=True, blank=True)
     rmis_uid = models.CharField(max_length=11, default=None, blank=True, null=True)
+    insurer_full_code = models.CharField(max_length=11, default=None, blank=True, null=True, help_text="Код страховой")
 
     @property
     def date_start_local(self):
@@ -890,6 +895,7 @@ class Document(models.Model):
                 documents["polis"]["serial"] = d.serial
                 documents["polis"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
                 documents["polis"]["issued"] = d.who_give
+                documents["polis"]["insurer_full_code"] = d.insurer_full_code
 
             if d.document_type.title == 'Свидетельство о рождении':
                 documents["bc"]["num"] = d.number
@@ -1259,6 +1265,7 @@ class Card(models.Model):
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
         ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
+        ind_data['insurer_full_code'] = (None if empty else '') if not ind_documents["polis"]["insurer_full_code"] else ind_documents["polis"]["insurer_full_code"]
         ind_data['ecp_id'] = self.individual.ecp_id
 
         return ind_data
