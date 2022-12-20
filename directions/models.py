@@ -499,7 +499,7 @@ class Napravleniya(models.Model):
 
         for i in iss:
             research: directory.Researches = i.research
-            if research.desc:
+            if research.desc or research.is_extract:
                 return research.title
         return 'Лабораторное исследование'
 
@@ -510,7 +510,7 @@ class Napravleniya(models.Model):
             research: directory.Researches = i.research
             if research.is_paraclinic:
                 return 'Instrumental'
-            if research.desc:
+            if research.desc or research.is_extract:
                 return research.generator_name
         return 'Laboratory_min'
 
