@@ -2711,43 +2711,62 @@ def get_templates(request):
     return JsonResponse({"data": template_data})
 
 
+@login_required
+@group_required('Конструктор: Факторы вредности')
 def update_factor(request):
     request_data = json.loads(request.body)
+    result = {"ok": True}
     if not re.fullmatch('^[0-9.]+$', request_data["title"]):
-        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
-    if not HarmfulFactor.objects.get(pk=request_data["id"]):
-        return JsonResponse({"ok": False, "message": "Нет такого фактора"})
-    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
-        return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
-    factor = HarmfulFactor.objects.get(pk=request_data["id"])
-    factor.title = request_data["title"]
-    factor.description = request_data["description"]
-    factor.template_id = request_data["template_id"]
-    factor.save()
-    Log.log(
-        factor.pk,
-        160000,
-        request.user.doctorprofile,
-        {"factor": factor.as_json(factor)},
-    )
-    return JsonResponse({"ok": True})
+        result["ok"] = False
+        result["message"] = "Название не соответствует правилам"
+    elif not HarmfulFactor.objects.filter(pk=request_data["id"]).exists():
+        result["ok"] = False
+        result["message"] = "Нет такого фактора"
+    elif not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
+        result["ok"] = False
+        result["message"] = "Нет такого шаблона"
+    elif HarmfulFactor.objects.filter(title=request_data["title"]).exclude(pk=request_data["id"]).exists():
+        result["ok"] = False
+        result["message"] = "Такое название уже есть"
+    if result["ok"]:
+        factor = HarmfulFactor.objects.get(pk=request_data["id"])
+        factor.title = request_data["title"]
+        factor.description = request_data["description"]
+        factor.template_id = request_data["template_id"]
+        factor.save()
+        Log.log(
+            factor.pk,
+            150000,
+            request.user.doctorprofile,
+            {"factor": factor.as_json(factor)},
+        )
+    return JsonResponse(result)
 
 
+@login_required
+@group_required('Конструктор: Факторы вредности')
 def add_factor(request):
     request_data = json.loads(request.body)
+    result = {"ok": True}
     if not re.fullmatch('^[0-9.]+$', request_data["title"]):
-        return JsonResponse({"ok": False, "message": "Название не соответствует правилам"})
-    if not users.AssignmentTemplates.objects.filter(pk=request_data["template_id"]).exists():
-        return JsonResponse({"ok": False, "message": "Нет такого шаблона"})
-    factor = HarmfulFactor(title=request_data["title"], description=request_data["description"], template_id=request_data["template_id"])
-    factor.save()
-    Log.log(
-        factor.pk,
-        160001,
-        request.user.doctorprofile,
-        {"factor": factor.as_json(factor)},
-    )
-    return JsonResponse({"ok": True})
+        result["ok"] = False
+        result["message"] = "Название не соответствует правилам"
+    elif not users.AssignmentTemplates.objects.filter(pk=request_data["templateId"]).exists():
+        result["ok"] = False
+        result["message"] = "Нет такого шаблона"
+    elif HarmfulFactor.objects.filter(title=request_data["title"]).exists():
+        result["ok"] = False
+        result["message"] = "Такое название уже есть"
+    if result["ok"]:
+        factor = HarmfulFactor(title=request_data["title"], description=request_data["description"], template_id=request_data["templateId"])
+        factor.save()
+        Log.log(
+            factor.pk,
+            150001,
+            request.user.doctorprofile,
+            {"factor": factor.as_json(factor)},
+        )
+    return JsonResponse(result)
 
 
 @login_required

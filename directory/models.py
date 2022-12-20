@@ -347,6 +347,7 @@ class Researches(models.Model):
             "isParaclinic": self.is_paraclinic,
             "isForm": self.is_form,
             "isDeathCertificate": self.pk == DEATH_RESEARCH_PK,
+            "isDischarge": self.is_extract,
         }
 
     @property

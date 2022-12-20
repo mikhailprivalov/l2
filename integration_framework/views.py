@@ -428,6 +428,8 @@ def issledovaniye_data_simple(request):
 
     if i.research.is_doc_refferal:
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_doc_refferal")
+    if i.research.is_extract:
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_extract")
 
     return Response(
         {

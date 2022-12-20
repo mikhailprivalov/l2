@@ -16,7 +16,7 @@ def get_researches_details(pk):
     response["direction_params_all"] = direction_params_all
     response["patient_control_param_all"] = PatientControlParam.get_patient_control_params()
     research = DResearches.objects.filter(pk=pk).first()
-    response["cda_options"] = CdaFields.get_cda_params(research.is_doc_refferal, research.is_treatment, research.is_form)
+    response["cda_options"] = CdaFields.get_cda_params(research.is_doc_refferal, research.is_treatment, research.is_form, research.is_extract)
     direction_expertise_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_expertise=True).order_by("title")]]
     response["direction_expertise_all"] = direction_expertise_all
     if DResearches.objects.filter(pk=pk).exists():
