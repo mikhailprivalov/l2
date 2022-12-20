@@ -674,6 +674,12 @@
             >
               Закрыть
             </button>
+            <EDSDirection
+              v-if="row.research.is_extract"
+              :key="`${direction}_${!!row.confirmed}`"
+              :direction-pk="direction"
+              :all_confirmed="!!row.confirmed"
+            />
             <div
               v-if="!r(row) && !row.confirmed"
               class="status-list"
@@ -990,6 +996,7 @@ export default {
     ResearchesPicker: () => import('@/ui-cards/ResearchesPicker.vue'),
     Modal: () => import('@/ui-cards/Modal.vue'),
     PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput.vue'),
+    EDSDirection: () => import('@/ui-cards/EDSDirection.vue'),
   },
   mixins: [menuMixin],
   data() {
