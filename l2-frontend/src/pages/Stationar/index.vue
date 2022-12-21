@@ -639,7 +639,7 @@
             </div>
           </div>
           <div
-            :key="!row.confirmed && !row.forbidden_edit ? row.pk : row.research.version"
+            :key="row.confirmed ? row.pk : row.research.version"
             class="control-row"
           >
             <div class="res-title">
@@ -678,7 +678,7 @@
               <EDSDirection
                 v-if="row.research.is_extract"
                 :key="`${direction}_${!!row.confirmed}`"
-                :direction-pk="direction"
+                :direction-pk="opened_form_pk"
                 :all_confirmed="!!row.confirmed"
               />
             </KeepAlive>
