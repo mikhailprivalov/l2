@@ -238,7 +238,7 @@ def direction_data(request):
                         "content": s.sign_value.replace('\n', ''),
                         "type": s.sign_type,
                         "executor": s.executor.uploading_data,
-                        "crc32": str(zlib.crc32(s.sign_value.replace('\n', '').encode()))
+                        "crc32": zlib.crc32(base64.b64decode(s.sign_value.replace('\n', '').encode())),
                     }
                 )
 
