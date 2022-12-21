@@ -200,6 +200,7 @@ def result_amd_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
+    only_cda = request.GET.get("onlyCDA", False)
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
     individual = card.individual
@@ -222,6 +223,8 @@ def direction_data(request):
         last_time_confirm = direction.last_time_confirm()
         for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
             if not d.file:
+                continue
+            if only_cda and d.file_type.upper() != "CDA":
                 continue
             document = {
                 'type': d.file_type.upper(),
