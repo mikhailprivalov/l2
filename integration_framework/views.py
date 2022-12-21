@@ -1,6 +1,7 @@
 import base64
 import os
 import html
+import zlib
 
 from django.test import Client as TC
 import datetime
@@ -237,6 +238,7 @@ def direction_data(request):
                         "content": s.sign_value.replace('\n', ''),
                         "type": s.sign_type,
                         "executor": s.executor.uploading_data,
+                        "crc32": str(zlib.crc32(s.sign_value.replace('\n', '')))
                     }
                 )
 
