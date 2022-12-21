@@ -1,6 +1,7 @@
 import base64
 import os
 import html
+import zlib
 
 from django.test import Client as TC
 import datetime
@@ -192,7 +193,6 @@ def result_amd_send(request):
             amd_num = data_amd[1]
             directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, amd_number=amd_num, error_amd=False)
         resp = {"ok": True}
-
     return Response(resp)
 
 
@@ -200,6 +200,7 @@ def result_amd_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
+    only_cda = request.GET.get("onlyCDA", False)
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
     individual = card.individual
@@ -223,6 +224,8 @@ def direction_data(request):
         for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
             if not d.file:
                 continue
+            if only_cda and d.file_type.upper() != "CDA":
+                continue
             document = {
                 'type': d.file_type.upper(),
                 'content': base64.b64encode(d.file.read()).decode('utf-8'),
@@ -235,6 +238,7 @@ def direction_data(request):
                         "content": s.sign_value.replace('\n', ''),
                         "type": s.sign_type,
                         "executor": s.executor.uploading_data,
+                        "crc32": str(zlib.crc32(s.sign_value.replace('\n', '').encode()))
                     }
                 )
 
