@@ -192,7 +192,6 @@ def result_amd_send(request):
             amd_num = data_amd[1]
             directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, amd_number=amd_num, error_amd=False)
         resp = {"ok": True}
-
     return Response(resp)
 
 
