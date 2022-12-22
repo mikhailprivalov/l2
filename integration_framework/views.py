@@ -559,7 +559,10 @@ def make_log(request):
     pks_to_set_vi_fail = [x for x in keys if x] if t in (60021,) else []
 
     pks_to_set_ecp = [x for x in keys if x] if t in (60022,) else []
-    pks_to_set_ecp_fail = [x for x in keys if x] if t in (60022,) else []
+    pks_to_set_ecp_fail = [x for x in keys if x] if t in (60023,) else []
+
+    pks_to_set_emdr = [x for x in keys if x] if t in (60024,) else []
+    pks_to_set_emdr_fail = [x for x in keys if x] if t in (60025,) else []
 
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
@@ -602,6 +605,12 @@ def make_log(request):
             d = directions.Napravleniya.objects.get(pk=k)
             d.n3_iemk_ok = True
             d.save(update_fields=['n3_iemk_ok'])
+
+        for k in pks_to_set_emdr_fail:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_emdr:
+            Log.log(key=k, type=t, body=body.get(k, {}))
 
         for k in pks_to_set_ecp_fail:
             Log.log(key=k, type=t, body=body.get(str(k), body.get(k, {})))
