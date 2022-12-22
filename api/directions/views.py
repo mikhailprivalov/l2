@@ -1837,6 +1837,14 @@ def directions_paraclinic_result(request):
         if not iss.research.is_expertise and (forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp)):
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
+        parent_child_data = rb.get('parent_child_data', None)
+        if parent_child_data:
+            parent = int(parent_child_data.get('parent_iss', -1))
+            child = int(parent_child_data.get('child_iss', -1))
+            current = int(parent_child_data.get('current_iss', -1))
+            if parent == child or parent == current or current == child:
+                response["message"] = "Источник и назначение перевода совпадают"
+                return JsonResponse(response)
 
         if procedure_list:
             with transaction.atomic():
@@ -2196,7 +2204,7 @@ def directions_paraclinic_result(request):
 
             parent_child_data = rb.get('parent_child_data', None)
             if parent_child_data:
-                parent = int(parent_child_data['parent_iss'])
+                parent = int(parent_child_data.get('parent_iss', -1))
                 if parent > -1:
                     parent_iss = Issledovaniya.objects.get(pk=parent)
                     Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=parent_iss, cancel=False)
