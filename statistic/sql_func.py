@@ -381,7 +381,6 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                   directions_issledovaniya.research_id=%(research_id)s
                   and directory_paraclinicinputfield.for_talon = true
                   and directions_issledovaniya.time_confirmation IS NOT NULL
-                  and directions_napravleniya.parent_id IS NULL
                 AND
                 CASE WHEN %(filter_hospital_id)s > 0 THEN
                   directions_napravleniya.hospital_id = %(filter_hospital_id)s
