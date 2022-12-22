@@ -314,6 +314,7 @@ class DoctorProfile(models.Model):
     @property
     def uploading_data(self):
         return {
+            "id": self.pk,
             "pk": self.pk,
             "n3Id": self.n3_id,
             "externalId": self.rmis_employee_id,
