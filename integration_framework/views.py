@@ -2780,7 +2780,7 @@ def amd_save(request):
             direction_id=direction_pk,
             status=status,
             message_id=message_id,
-            hospital=hospital,
+            organization=hospital,
             department=podrazdeleniye,
             message=message,
             kind=kind,
