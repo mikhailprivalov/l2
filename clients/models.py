@@ -1257,6 +1257,7 @@ class Card(models.Model):
         # document= "полис ОМС"
         ind_data['oms'] = {}
         ind_data['oms']['polis_num'] = ind_documents["polis"]["num"]
+        ind_data['oms']['number'] = ind_documents["polis"]["num"]
         ind_data['enp'] = ind_documents["polis"]["num"]
         if not ind_data['oms']['polis_num']:
             ind_data['oms']['polis_num'] = None if empty else '___________________________'
@@ -1265,7 +1266,9 @@ class Card(models.Model):
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
         ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
+        ind_data['oms']['issueOrgName'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
         ind_data['insurer_full_code'] = '' if not ind_documents["polis"]["insurer_full_code"] else ind_documents["polis"]["insurer_full_code"]
+        ind_data['oms']['issueOrgCode'] = ind_data['insurer_full_code']
         ind_data['ecp_id'] = self.individual.ecp_id
 
         return ind_data
