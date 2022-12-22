@@ -269,6 +269,7 @@ def direction_data(request):
             "issledovaniya": [x.pk for x in iss],
             "timeConfirmation": iss[iss_index].time_confirmation,
             "timeTube": iss[iss_index].material_date,
+            "oidMo": iss[iss_index].doc_confirmation.hospital.oid if iss[iss_index].doc_confirmation else None,
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
