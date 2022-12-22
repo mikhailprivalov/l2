@@ -250,6 +250,7 @@ def direction_data(request):
             "pk": pk,
             "createdAt": direction.data_sozdaniya,
             "patient": {
+                "id": card.pk,
                 **card.get_data_individual(full_empty=True, only_json_serializable=True),
                 "family": individual.family,
                 "name": individual.name,
