@@ -304,6 +304,8 @@ class DoctorProfile(models.Model):
             "snils": self.snils,
             "speciality": self.specialities.n3_id if self.specialities else None,
             "position": self.position.n3_id if self.position else None,
+            "positionCode": self.position.n3_id if self.position else None,
+            "positionName": self.position.title if self.position else None,
             "family": self.family,
             "name": self.name,
             "patronymic": self.patronymic,
@@ -312,6 +314,7 @@ class DoctorProfile(models.Model):
     @property
     def uploading_data(self):
         return {
+            "id": self.pk,
             "pk": self.pk,
             "n3Id": self.n3_id,
             "externalId": self.rmis_employee_id,
