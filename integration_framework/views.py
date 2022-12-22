@@ -235,7 +235,7 @@ def direction_data(request):
             for s in DocumentSign.objects.filter(document=d):
                 document['signatures'].append(
                     {
-                        "content": s.sign_value.replace('\n', ''),
+                        "content": s.sign_value.replace('\n', '').replace('\r', ''),
                         "type": s.sign_type,
                         "executor": s.executor.uploading_data,
                         "crc32": zlib.crc32(base64.b64decode(s.sign_value.replace('\n', '').encode())),
