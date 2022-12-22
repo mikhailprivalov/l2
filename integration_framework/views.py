@@ -257,6 +257,7 @@ def direction_data(request):
                 "birthday": individual.birthday,
                 "docs": card.get_n3_documents(),
                 "sex": individual.sex,
+                'gender': individual.sex.lower(),
                 "card": {
                     "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
                     "pk": card.pk,
