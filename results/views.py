@@ -45,7 +45,7 @@ import slog.models as slog
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
-from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
+from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
 from laboratory.settings import FONTS_FOLDER
@@ -130,6 +130,7 @@ def result_print(request):
     if med_certificate:
         med_certificate_title = "Справка - "
     hosp = request.GET.get("hosp", "0") == "1"
+    with_signature_stamps = request.GET.get("withSignatureStamps", "0") == "1"
 
     doc = BaseDocTemplate(
         buffer,
@@ -1078,7 +1079,7 @@ def result_print(request):
 
                 # Добавить выписанные направления для стационарных дневников
                 if iss.research.is_slave_hospital:
-                    # Найти все направления где данное исследование родитель
+                    # Найти все направления, где данное исследование родитель
                     napr_child = Napravleniya.objects.filter(parent_slave_hosp=iss, cancel=False)
                     br = ""
                     if not protocol_plain_text:
@@ -1126,6 +1127,69 @@ def result_print(request):
                             fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________", style))
 
                         fwb.append(Spacer(1, 2.5 * mm))
+
+        if with_signature_stamps and direction.total_confirmed:
+            last_time_confirm = direction.last_time_confirm()
+            document_for_sign = DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm, is_archive=False, file_type=DirectionDocument.PDF).first()
+            if document_for_sign:
+                paragraphs = []
+                has_thumbprints = {}
+                for sign in DocumentSign.objects.filter(document=document_for_sign, sign_certificate__isnull=False):
+                    if sign.sign_certificate.thumbprint in has_thumbprints:
+                        continue
+                    has_thumbprints[sign.sign_certificate.thumbprint] = True
+                    stamp_font_size = "7"
+                    stamp_lines = [
+                        f'<font face="FreeSansBold" size="{stamp_font_size}">ДОКУМЕНТ ПОДПИСАН ЭЛЕКТРОННОЙ ПОДПИСЬЮ</font>',
+                        f'Сертификат: {sign.sign_certificate.thumbprint}',
+                        f'Владелец: {sign.sign_certificate.owner}',
+                        f'Действителен с {sign.sign_certificate.valid_from.strftime("%d.%m.%Y")} по {sign.sign_certificate.valid_to.strftime("%d.%m.%Y")}',
+                    ]
+
+                    for line in range(1, len(stamp_lines)):
+                        stamp_lines[line] = f'<font size="{stamp_font_size}">{stamp_lines[line]}</font>'
+
+                    style_stamp = deepcopy(style)
+                    style_stamp.borderWidth = 0.3 * mm
+                    style_stamp.borderColor = colors.black
+                    style_stamp.borderPadding = 1.3 * mm
+                    style_stamp.borderRadius = 1.5 * mm
+                    style_stamp.leading = 3 * mm
+                    par = Paragraph("<br/>".join(stamp_lines), style_stamp)
+                    paragraphs.append(par)
+
+                if paragraphs:
+                    if len(paragraphs) == 1:
+                        paragraphs = [
+                            "",
+                            paragraphs[0],
+                        ]
+
+                    if len(paragraphs) % 2 == 1:
+                        paragraphs.append("")
+
+                    table_rows = []
+                    for i in range(0, len(paragraphs), 2):
+                        table_rows.append([paragraphs[i], paragraphs[i + 1]])
+
+                    tw = pw
+                    cw = [int(tw * 0.5), int(tw * 0.5)]
+                    cw = cw + [tw - sum(cw)]
+                    t = Table(table_rows, colWidths=cw)
+                    style_t = TableStyle(
+                        [
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                            ('LEFTPADDING', (0, 0), (-1, -1), 3 * mm),
+                            ('TOPPADDING', (0, 0), (-1, -1), 3 * mm),
+                            ('RIGHTPADDING', (0, 0), (-1, -1), 3 * mm),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                        ]
+                    )
+
+                    t.setStyle(style_t)
+                    fwb.append(Spacer(1, 2.5 * mm))
+                    fwb.append(t)
 
         if client_prev == direction.client.individual_id and not split and not is_different_form:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))

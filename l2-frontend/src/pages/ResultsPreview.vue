@@ -10,11 +10,17 @@
             L<sup>2</sup>
           </template>
         </div>
-        <div style="text-align: center;flex-basis: 25%">
+        <div style="text-align: center;flex-basis: 20%">
+          <label><input
+            v-model="withSignatureStamps"
+            type="checkbox"
+          > Штамп ЭЦП</label>
+        </div>
+        <div style="text-align: center;flex-basis: 20%">
           <label><input
             v-model="split"
             type="checkbox"
-          > На отдельных страницах</label>
+          > Отдельные страницы</label>
         </div>
         <div style="text-align: center;flex-basis: 20%">
           <label><input
@@ -26,7 +32,7 @@
           <label><input
             v-model="plainProtocolText"
             type="checkbox"
-          > Сплошным текстом</label>
+          > Сплошной</label>
         </div>
         <div style="text-align: center;flex-basis: 20%">
           <label><input
@@ -65,6 +71,7 @@ import PDFObject from 'pdfobject';
       margin: false,
       plainProtocolText: false,
       medCertificate: false,
+      withSignatureStamps: false,
       pks: [],
       hosp: 0,
       portion: 0,
@@ -83,6 +90,9 @@ import PDFObject from 'pdfobject';
     },
     medCertificate() {
       localStorage.setItem('print_results_med_certificate', String(this.medCertificate));
+    },
+    withSignatureStamps() {
+      localStorage.setItem('print_results_with_signature_stamps', String(this.withSignatureStamps));
     },
     pdfUrlInline() {
       PDFObject.embed(this.pdfUrlInline, this.$refs.pdf, {
@@ -108,6 +118,8 @@ export default class ResultsPreview extends Vue {
 
   medCertificate: boolean;
 
+  withSignatureStamps: boolean;
+
   pks: number[];
 
   hosp: number;
@@ -130,6 +142,7 @@ export default class ResultsPreview extends Vue {
     url.searchParams.append('split', this.split ? '1' : '0');
     url.searchParams.append('leftnone', this.margin ? '0' : '1');
     url.searchParams.append('protocol_plain_text', this.plainProtocolText ? '1' : '0');
+    url.searchParams.append('withSignatureStamps', this.withSignatureStamps ? '1' : '0');
     url.searchParams.append('med_certificate', this.medCertificate ? '1' : '0');
     url.searchParams.append('hosp', String(this.hosp));
     url.searchParams.append('portion', String(this.portion));
@@ -169,6 +182,7 @@ export default class ResultsPreview extends Vue {
     this.margin = localStorage.getItem('print_results_margin') === 'true';
     this.plainProtocolText = localStorage.getItem('print_results_protocol_plain_text') === 'true';
     this.medCertificate = localStorage.getItem('print_results_med_certificate') === 'true';
+    this.withSignatureStamps = localStorage.getItem('print_results_with_signature_stamps') === 'true';
   }
 
   keyHandler(event) {

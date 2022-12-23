@@ -138,7 +138,7 @@
 </template>
 
 <script lang="ts">
-import { createDetachedSignature, createHash } from 'crypto-pro';
+import { createDetachedSignature, createHash, getCertificate } from 'crypto-pro';
 
 import * as actions from '@/store/action-types';
 
@@ -286,10 +286,23 @@ export default {
 
         const m = await createHash(bodyEncoded);
         const sign = await createDetachedSignature(this.thumbprint, m);
+        let cert = null;
+        try {
+          cert = await getCertificate(this.thumbprint);
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.log(e);
+        }
         const { ok, message } = await this.$api('/directions/eds/add-sign', {
           pk: this.d.pk,
           sign,
           mode: this.selectedSignatureMode,
+          certThumbprint: this.thumbprint,
+          certDetails: cert ? {
+            subjectName: cert.subjectName,
+            validFrom: cert.validFrom,
+            validTo: cert.validTo,
+          } : null,
         });
 
         if (ok) {

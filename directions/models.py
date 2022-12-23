@@ -499,20 +499,22 @@ class Napravleniya(models.Model):
 
         for i in iss:
             research: directory.Researches = i.research
-            if research.desc:
+            if research.desc or research.is_extract:
                 return research.title
         return 'Лабораторное исследование'
 
     def get_eds_generator(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
-
+        gen_name = 'Laboratory_min'
         for i in iss:
             research: directory.Researches = i.research
             if research.is_paraclinic:
-                return 'Instrumental'
+                gen_name = 'Instrumental'
             if research.desc:
-                return research.generator_name
-        return 'Laboratory_min'
+                gen_name = research.generator_name
+            if research.is_extract:
+                gen_name = 'DischargeSummary_min'
+        return gen_name
 
     def required_signatures(self, fast=False, need_save=False):
         if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):
@@ -1758,12 +1760,109 @@ class DirectionDocument(models.Model):
         verbose_name_plural = 'Документы направлений'
 
 
+class SignatureCertificateDetails(models.Model):
+    """
+    Детали сертификата подписи
+    """
+
+    thumbprint = models.CharField(max_length=44, verbose_name='Отпечаток сертификата', db_index=True, unique=True)
+    owner = models.CharField(max_length=256, verbose_name='Владелец сертификата')
+    valid_from = models.DateTimeField(verbose_name='Дата и время начала действия сертификата')
+    valid_to = models.DateTimeField(verbose_name='Дата и время окончания действия сертификата')
+    details_original = models.TextField(verbose_name='Исходные данные владельца сертификата')
+
+    def __str__(self) -> str:
+        return f"{self.thumbprint} — {self.owner}"
+
+    @staticmethod
+    def parse_details(details: Union[dict, str]) -> Optional[dict]:
+        if isinstance(details, str):
+            try:
+                parsed_details = json.loads(details)
+                if not isinstance(parsed_details, dict):
+                    parsed_details = None
+            except:
+                parsed_details = None
+        elif isinstance(details, dict):
+            parsed_details = details
+        else:
+            parsed_details = None
+
+        if not parsed_details or not parsed_details.get('subjectName') or not parsed_details.get('validFrom') or not parsed_details.get('validTo'):
+            return None
+
+        try:
+            sn = parsed_details["subjectName"]
+            name_parts = ["", ""]
+            sn = sn.split(",")
+            for s in sn:
+                if s.strip().startswith("SN="):
+                    name_parts[0] = s.strip()[3:]
+                elif s.strip().startswith("G="):
+                    name_parts[1] = s.strip()[2:]
+            name = " ".join(name_parts).strip()
+        except:
+            name = None
+
+        try:
+            valid_from = datetime.datetime.strptime(parsed_details['validFrom'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            valid_to = datetime.datetime.strptime(parsed_details['validTo'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        except:
+            valid_from = None
+            valid_to = None
+
+        if not name or not valid_from or not valid_to:
+            return None
+
+        return {
+            "owner": name,
+            "valid_from": valid_from,
+            "valid_to": valid_to,
+        }
+
+    @staticmethod
+    def get_or_update(thumbprint: str, details: str) -> Optional['SignatureCertificateDetails']:
+        cert_details = SignatureCertificateDetails.objects.filter(thumbprint=thumbprint).first()
+        if cert_details:
+            if cert_details.details_original != details:
+                parsed_details = SignatureCertificateDetails.parse_details(details)
+                if not parsed_details:
+                    return None
+
+                cert_details.details_original = details
+                cert_details.owner = parsed_details["owner"]
+                cert_details.valid_from = parsed_details["valid_from"]
+                cert_details.valid_to = parsed_details["valid_to"]
+
+                cert_details.save()
+            return cert_details
+
+        parsed_details = SignatureCertificateDetails.parse_details(details)
+        if not parsed_details:
+            return None
+
+        cert_details = SignatureCertificateDetails(
+            thumbprint=thumbprint,
+            owner=parsed_details["owner"],
+            valid_from=parsed_details["valid_from"],
+            valid_to=parsed_details["valid_to"],
+            details_original=details,
+        )
+        cert_details.save()
+        return cert_details
+
+    class Meta:
+        verbose_name = 'Детали сертификата подписи'
+        verbose_name_plural = 'Детали сертификатов подписи'
+
+
 class DocumentSign(models.Model):
     document = models.ForeignKey(DirectionDocument, on_delete=models.CASCADE, db_index=True, verbose_name="Документ")
     executor = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Исполнитель подписи', on_delete=models.CASCADE)
     signed_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время подписи")
     sign_type = models.CharField(max_length=32, db_index=True, verbose_name='Тип подписи')
     sign_value = models.TextField(verbose_name="Значение подписи")
+    sign_certificate = models.ForeignKey(SignatureCertificateDetails, on_delete=models.CASCADE, verbose_name="Сертификат подписи", blank=True, null=True, default=None)
 
     def __str__(self) -> str:
         return f"{self.document} — {self.sign_type} – {self.executor}"
@@ -2687,9 +2786,9 @@ class Result(models.Model):
             v = str(v).replace(" ", "")
             for j in range(1, 9):
                 for i in range(0, 12):
-                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j * (10 ** i)))
+                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j * (10**i)))
             for i in range(0, 12):
-                v = v.replace("10<sup>%s</sup>" % str(i), str(10 ** i))
+                v = v.replace("10<sup>%s</sup>" % str(i), str(10**i))
             return v
 
         def val_normalize(v):

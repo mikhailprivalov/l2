@@ -52,16 +52,16 @@
             </td>
           </tr>
           <tr
-            v-for="(factor, index) in filteredFactors"
+            v-for="(factor) in filteredFactors"
             :key="factor.id"
             class="table-row"
           >
             <td class="table-row">
-              <input
+              <RegexFormatInput
                 v-model="factor.title"
+                :rules="/[^0-9.]/g"
                 class="form-control padding-left"
-                @input="toFactorTitle(index, $event)"
-              >
+              />
             </td>
             <td class="table-row">
               <input
@@ -115,12 +115,12 @@
         </colgroup>
         <tr>
           <td class="table-row">
-            <input
+            <RegexFormatInput
               v-model="title"
-              class="form-control padding-left"
+              :rules="/[^0-9.]/g"
               placeholder="Название"
-              @input="toFactorTitle(-1, $event, 'title')"
-            >
+              class="form-control padding-left"
+            />
           </td>
           <td class="table-row">
             <input
@@ -198,13 +198,14 @@
 
 import Treeselect from '@riophae/vue-treeselect';
 
+import RegexFormatInput from '@/construct/RegexFormatInput.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ConstructHarmfulFactor',
-  components: { Treeselect, Modal },
+  components: { Treeselect, Modal, RegexFormatInput },
   data() {
     return {
       factors: [],
@@ -251,27 +252,33 @@ export default {
       }
       this.$root.$emit('hide_template_editor');
     },
-    async updateFactor(factor) {
-      if (factor.title && factor.template_id) {
+    async updateFactor(currentFactor) {
+      if (!currentFactor.title || !currentFactor.template_id) {
+        this.$root.$emit('msg', 'error', 'Данные не заполнены');
+      } else if (this.factors.find((factor) => factor.title === currentFactor.title && factor.id !== currentFactor.id)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/update-factor', factor);
+        const { ok, message } = await this.$api('/update-factor', currentFactor);
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      } else {
-        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
       }
     },
     async addFactor() {
-      if (this.title && this.template_id) {
+      if (!this.title || !this.templateId) {
+        this.$root.$emit('msg', 'error', 'Данные не заполнены');
+      } else if (this.factors.find((factor) => factor.title === this.title)) {
+        this.$root.$emit('msg', 'error', 'Такое название уже есть');
+      } else {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/add-factor', {
           title: this.title,
           description: this.description,
-          template_id: this.template_id,
+          templateId: this.templateId,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -279,19 +286,10 @@ export default {
           await this.getFactors();
           this.title = '';
           this.description = '';
-          this.template_id = null;
+          this.templateId = null;
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      } else {
-        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
-      }
-    },
-    toFactorTitle(index, event, title) {
-      if (index !== -1) {
-        this.filteredFactors[index].title = event.target.value.replace(/[^0-9.]/g, '');
-      } else {
-        this[title] = event.target.value.replace(/[^0-9.]/g, '');
       }
     },
   },

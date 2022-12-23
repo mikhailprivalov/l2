@@ -1,6 +1,7 @@
 import base64
 import os
 import html
+import zlib
 
 from django.test import Client as TC
 import datetime
@@ -77,13 +78,14 @@ from users.models import DoctorProfile
 from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range
+from utils.nsi_directories import NSI
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
-from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get
+from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get, author_doctor
 from django.contrib.auth.models import User
 
 logger = logging.getLogger("IF")
@@ -191,7 +193,6 @@ def result_amd_send(request):
             amd_num = data_amd[1]
             directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, amd_number=amd_num, error_amd=False)
         resp = {"ok": True}
-
     return Response(resp)
 
 
@@ -199,6 +200,7 @@ def result_amd_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
+    only_cda = request.GET.get("onlyCDA", False)
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
     individual = card.individual
@@ -222,6 +224,8 @@ def direction_data(request):
         for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
             if not d.file:
                 continue
+            if only_cda and d.file_type.upper() != "CDA":
+                continue
             document = {
                 'type': d.file_type.upper(),
                 'content': base64.b64encode(d.file.read()).decode('utf-8'),
@@ -234,6 +238,7 @@ def direction_data(request):
                         "content": s.sign_value.replace('\n', ''),
                         "type": s.sign_type,
                         "executor": s.executor.uploading_data,
+                        "crc32": zlib.crc32(base64.b64decode(s.sign_value.replace('\n', '').encode())),
                     }
                 )
 
@@ -245,6 +250,7 @@ def direction_data(request):
             "pk": pk,
             "createdAt": direction.data_sozdaniya,
             "patient": {
+                "id": card.pk,
                 **card.get_data_individual(full_empty=True, only_json_serializable=True),
                 "family": individual.family,
                 "name": individual.name,
@@ -252,6 +258,7 @@ def direction_data(request):
                 "birthday": individual.birthday,
                 "docs": card.get_n3_documents(),
                 "sex": individual.sex,
+                'gender': individual.sex.lower(),
                 "card": {
                     "base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title},
                     "pk": card.pk,
@@ -289,6 +296,8 @@ def direction_data(request):
             "organizationOid": iss[iss_index].doc_confirmation.get_hospital().oid,
             "generatorName": direction.get_eds_generator(),
             "legalAuth": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
+            "author": author_doctor(iss[iss_index].doc_confirmation) if iss[iss_index].doc_confirmation else None,
+            "legalAuthenticator": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
         }
     )
 
@@ -428,6 +437,8 @@ def issledovaniye_data_simple(request):
 
     if i.research.is_doc_refferal:
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_doc_refferal")
+    if i.research.is_extract:
+        id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_extract")
 
     return Response(
         {
@@ -549,7 +560,10 @@ def make_log(request):
     pks_to_set_vi_fail = [x for x in keys if x] if t in (60021,) else []
 
     pks_to_set_ecp = [x for x in keys if x] if t in (60022,) else []
-    pks_to_set_ecp_fail = [x for x in keys if x] if t in (60022,) else []
+    pks_to_set_ecp_fail = [x for x in keys if x] if t in (60023,) else []
+
+    pks_to_set_emdr = [x for x in keys if x] if t in (60024,) else []
+    pks_to_set_emdr_fail = [x for x in keys if x] if t in (60025,) else []
 
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
@@ -592,6 +606,12 @@ def make_log(request):
             d = directions.Napravleniya.objects.get(pk=k)
             d.n3_iemk_ok = True
             d.save(update_fields=['n3_iemk_ok'])
+
+        for k in pks_to_set_emdr_fail:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_emdr:
+            Log.log(key=k, type=t, body=body.get(k, {}))
 
         for k in pks_to_set_ecp_fail:
             Log.log(key=k, type=t, body=body.get(str(k), body.get(k, {})))
@@ -1754,6 +1774,17 @@ def get_cda_data(pk):
     data_individual = card.get_data_individual()
     p_enp_re = re.compile(r'^[0-9]{16}$')
     p_enp = bool(re.search(p_enp_re, card.get_data_individual()['oms']['polis_num']))
+    insurer_full_code = card.get_data_individual()['insurer_full_code']
+    if not insurer_full_code:
+        card.individual.sync_with_tfoms()
+    insurer_full_code = card.get_data_individual()['insurer_full_code']
+    smo_title = ""
+    smo_id = ""
+    if insurer_full_code:
+        smo = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_code", {}).get('values', {})
+        smo_title = smo.get(insurer_full_code, "")
+        smo_ids = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id", {}).get('values', {})
+        smo_id = smo_ids.get(insurer_full_code, "")
     if p_enp:
         return {
             "title": n.get_eds_title(),
@@ -1768,7 +1799,7 @@ def get_cda_data(pk):
                     'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
                     'gender': ind.sex.lower(),
                     'birthdate': ind.birthday.strftime("%Y%m%d"),
-                    'oms': {'number': card.get_data_individual()['oms']['polis_num'], 'issueOrgName': '', 'issueOrgCode': ''},
+                    'oms': {'number': card.get_data_individual()['oms']['polis_num'], 'issueOrgName': smo_title, 'issueOrgCode': insurer_full_code, 'smoId': smo_id},
                 },
                 "organization": data["organization"],
             },
@@ -2749,7 +2780,7 @@ def amd_save(request):
             direction_id=direction_pk,
             status=status,
             message_id=message_id,
-            hospital=hospital,
+            organization=hospital,
             department=podrazdeleniye,
             message=message,
             kind=kind,

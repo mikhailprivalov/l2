@@ -60,6 +60,7 @@ from directions.models import (
     DirectionParamsResult,
     IssledovaniyaFiles,
     IssledovaniyaResultLaborant,
+    SignatureCertificateDetails,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings, VERSION
@@ -94,7 +95,7 @@ from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
 from utils.expertise import get_expertise
-from ..patients.common_func import get_card_control_param
+from ..patients.common_func import get_card_control_param, get_vital_param_in_hosp
 
 
 @login_required
@@ -1343,7 +1344,7 @@ def directions_paraclinic_form(request):
     d = None
     if dn.exists():
         d: Napravleniya = dn[0]
-        if SettingManager.get("control_planed_fact_doctor", default=False, default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
+        if SettingManager.get("control_planed_fact_doctor", default='false', default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
@@ -1836,6 +1837,14 @@ def directions_paraclinic_result(request):
         if not iss.research.is_expertise and (forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp)):
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
+        parent_child_data = rb.get('parent_child_data', None)
+        if parent_child_data:
+            parent = int(parent_child_data.get('parent_iss', -1))
+            child = int(parent_child_data.get('child_iss', -1))
+            current = int(parent_child_data.get('current_iss', -1))
+            if parent == child or parent == current or current == child:
+                response["message"] = "Источник и назначение перевода совпадают"
+                return JsonResponse(response)
 
         if procedure_list:
             with transaction.atomic():
@@ -2195,7 +2204,7 @@ def directions_paraclinic_result(request):
 
             parent_child_data = rb.get('parent_child_data', None)
             if parent_child_data:
-                parent = int(parent_child_data['parent_iss'])
+                parent = int(parent_child_data.get('parent_iss', -1))
                 if parent > -1:
                     parent_iss = Issledovaniya.objects.get(pk=parent)
                     Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=parent_iss, cancel=False)
@@ -2326,6 +2335,8 @@ def directions_paraclinic_confirm_reset(request):
                 n.need_resend_amd = False
                 n.eds_total_signed = False
                 n.eds_total_signed_at = None
+                n.eds_main_signer_cert_thumbprint = None
+                n.eds_main_signer_cert_details = None
                 n.vi_id = None
                 n.save(update_fields=['eds_total_signed', 'eds_total_signed_at', 'need_resend_amd', 'vi_id'])
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
@@ -2686,7 +2697,8 @@ def last_field_result(request):
         else:
             field_pks = [data[1]]
             logical_or = True
-            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, current_iss=request_data["iss_pk"])
+            parent_iss = Napravleniya.objects.get(pk=num_dir).parent_id
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, parent_iss=(parent_iss,))
     elif request_data["fieldPk"].find('%root_hosp') != -1:
         data = request_data["fieldPk"].split('#')
         if len(data) < 2:
@@ -2694,7 +2706,9 @@ def last_field_result(request):
         else:
             field_pks = [data[1]]
             logical_or = True
-            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_root_hosp=True, current_iss=request_data["iss_pk"])
+            hosp_dirs = hosp_get_hosp_direction(num_dir)
+            parent_iss = [i['issledovaniye'] for i in hosp_dirs]
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_root_hosp=True, parent_iss=tuple(parent_iss))
     elif request_data["fieldPk"].find('%control_param#') != -1:
         # %control_param#code#period#find_val
         data = request_data["fieldPk"].split('#')
@@ -2720,6 +2734,21 @@ def last_field_result(request):
                         for d in data:
                             if d['value'].find(param_find_val) != -1:
                                 return JsonResponse({"result": {"value": "да"}})
+    elif request_data["fieldPk"].find('%vital_param#') != -1:
+        # %vital_param#code#current_hosp
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 3:
+            result = {"value": ""}
+        param_code = int(data[1])
+        search_place = data[2]
+        parent_iss = (-1,)
+        if search_place == 'current_hosp':
+            parent_iss = (Napravleniya.objects.get(pk=num_dir).parent_id,)
+        elif search_place == 'root_hosp':
+            hosp_dirs = hosp_get_hosp_direction(num_dir)
+            parent_iss = tuple([i['issledovaniye'] for i in hosp_dirs])
+        vital_result = get_vital_param_in_hosp(client_pk, parent_iss, param_code)
+        result = {"value": vital_result}
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True
@@ -2740,7 +2769,7 @@ def get_current_direction(current_iss):
 
 
 def field_get_link_data(
-    field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, use_root_hosp=False, months_ago='-1', use_current_hosp=False, current_iss=None
+    field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago='-1', use_root_hosp=False, use_current_hosp=False, parent_iss=(-1,)
 ):
     result, value, temp_value = None, None, None
     for current_field_pk in field_pks:
@@ -2758,11 +2787,10 @@ def field_get_link_data(
                     c_year = f"{c_year}-01-01 00:00:00"
                 else:
                     c_year = "1900-01-01 00:00:00"
-                rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago)
-                if check_use_current_hosp(current_iss, rows[7]):
-                    continue
-                if check_use_root_hosp(current_iss, rows[7]):
-                    continue
+                use_parent_iss = '-1'
+                if use_root_hosp or use_current_hosp:
+                    use_parent_iss = '1'
+                rows = get_field_result(client_pk, int(field_pk), count=1, current_year=c_year, months_ago=months_ago, parent_iss=parent_iss, use_parent_iss=use_parent_iss)
                 if rows:
                     row = rows[0]
                     value = row[5]
@@ -2770,7 +2798,7 @@ def field_get_link_data(
                     if match:
                         value = normalize_date(value)
                     if logical_or_inside:
-                        result = {"direction": row[1], "date": row[4], "value": value}
+                        result = {"directicheck_use_current_hosp(on": row[1], "date": row[4], "value": value}
                         if value:
                             break
                     if logical_and_inside:
@@ -2786,21 +2814,6 @@ def field_get_link_data(
         if logical_group_or and temp_value or logical_or_inside and value:
             break
     return result
-
-
-def check_use_root_hosp(current_iss, parent_iss):
-    direction_id = get_current_direction(current_iss)
-    if tree_directions.root_direction(direction_id) != tree_directions.root_direction(parent_iss):
-        return True
-    return False
-
-
-def check_use_current_hosp(current_iss, parent_iss):
-    direction_id = get_current_direction(current_iss)
-    direction_obj = Napravleniya.objects.filter(pk=direction_id).first()
-    if parent_iss != direction_obj.parent_id:
-        return True
-    return False
 
 
 def field_get_aggregate_operation_data(operations_data):
@@ -3553,9 +3566,10 @@ def eds_documents(request):
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
 
     base = SettingManager.get_cda_base_url()
-    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
-    if not available:
-        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер не доступен"})
+    if base != "empty":
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер недоступен"})
 
     if error_doctor:
         error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
@@ -3566,7 +3580,7 @@ def eds_documents(request):
         direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
         if not snils_used:
-            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "СНИЛС у пациента - Некорректный!"})
+            return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "У пациента некорректный СНИЛС"})
 
     if SettingManager.l2('required_equal_hosp_for_eds', default='true') and direction.get_hospital() != request.user.doctorprofile.get_hospital():
         return status_response(False, 'Направление не в вашу организацию!')
@@ -3592,6 +3606,21 @@ def eds_documents(request):
     cda_eds_data = get_cda_data(pk)
 
     for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
+        signatures = {}
+        has_signatures = DocumentSign.objects.filter(document=d)
+
+        sgn: DocumentSign
+        for sgn in has_signatures:
+            signatures[sgn.sign_type] = {
+                'pk': sgn.pk,
+                'executor': str(sgn.executor),
+                'signedAt': strfdatetime(sgn.signed_at),
+                'signValue': sgn.sign_value,
+            }
+
+        for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
+            signatures[s] = None
+
         if not d.file:
             file = None
             filename = None
@@ -3631,21 +3660,6 @@ def eds_documents(request):
             if file:
                 d.file.save(filename, file)
 
-        signatures = {}
-        has_signatures = DocumentSign.objects.filter(document=d)
-
-        sgn: DocumentSign
-        for sgn in has_signatures:
-            signatures[sgn.sign_type] = {
-                'pk': sgn.pk,
-                'executor': str(sgn.executor),
-                'signedAt': strfdatetime(sgn.signed_at),
-                'signValue': sgn.sign_value,
-            }
-
-        for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
-            signatures[s] = None
-
         file_content = None
 
         if d.file:
@@ -3674,6 +3688,8 @@ def eds_add_sign(request):
     pk = data['pk']
     sign = data['sign']
     sign_type = data['mode']
+    cert_thumbprint = data.get('certThumbprint')
+    cert_details = data.get('certDetails')
     direction_document: DirectionDocument = DirectionDocument.objects.get(pk=pk)
     direction: Napravleniya = direction_document.direction
 
@@ -3708,7 +3724,9 @@ def eds_add_sign(request):
     if sign_type == 'Врач' and request.user.doctorprofile.pk not in executors:
         return status_response(False, 'Подтвердить может только исполнитель')
 
-    DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign)
+    sign_certificate = SignatureCertificateDetails.get_or_update(cert_thumbprint, cert_details)
+
+    DocumentSign.objects.create(document=direction_document, sign_type=sign_type, executor=request.user.doctorprofile, sign_value=sign, sign_certificate=sign_certificate)
 
     direction.get_eds_total_signed(forced=True)
 
@@ -3727,9 +3745,10 @@ def eds_to_sign(request):
 
     rows = []
     base = SettingManager.get_cda_base_url()
-    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
-    if not available:
-        return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "CDA-сервер не доступен"})
+    if base != 'empty':
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "CDA-сервер недоступен"})
 
     d_qs = Napravleniya.objects.filter(total_confirmed=True)
     if number:
@@ -4001,7 +4020,7 @@ def direction_history(request):
             data.append(d)
         for lg in Log.objects.filter(key=str(pk), type__in=(5002,)):
             data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
-        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023)):
+        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023, 60024, 60025)):
             data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
         for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dr).distinct():
             d = {"type": "Ёмкость №%s" % tube.pk, "events": []}

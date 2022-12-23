@@ -639,7 +639,7 @@
             </div>
           </div>
           <div
-            :key="row.research.version"
+            :key="row.confirmed ? row.pk : row.research.version"
             class="control-row"
           >
             <div class="res-title">
@@ -674,6 +674,14 @@
             >
               Закрыть
             </button>
+            <KeepAlive>
+              <EDSDirection
+                v-if="row.research.is_extract"
+                :key="`${direction}_${!!row.confirmed}`"
+                :direction-pk="opened_form_pk"
+                :all_confirmed="!!row.confirmed"
+              />
+            </KeepAlive>
             <div
               v-if="!r(row) && !row.confirmed"
               class="status-list"
@@ -990,6 +998,7 @@ export default {
     ResearchesPicker: () => import('@/ui-cards/ResearchesPicker.vue'),
     Modal: () => import('@/ui-cards/Modal.vue'),
     PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput.vue'),
+    EDSDirection: () => import('@/ui-cards/EDSDirection.vue'),
   },
   mixins: [menuMixin],
   data() {
