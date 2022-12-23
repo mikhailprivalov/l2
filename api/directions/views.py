@@ -1837,6 +1837,14 @@ def directions_paraclinic_result(request):
         if not iss.research.is_expertise and (forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp)):
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
+        parent_child_data = rb.get('parent_child_data', None)
+        if parent_child_data:
+            parent = int(parent_child_data.get('parent_iss', -1))
+            child = int(parent_child_data.get('child_iss', -1))
+            current = int(parent_child_data.get('current_iss', -1))
+            if parent == child or parent == current or current == child:
+                response["message"] = "Источник и назначение перевода совпадают"
+                return JsonResponse(response)
 
         if procedure_list:
             with transaction.atomic():
@@ -2196,7 +2204,7 @@ def directions_paraclinic_result(request):
 
             parent_child_data = rb.get('parent_child_data', None)
             if parent_child_data:
-                parent = int(parent_child_data['parent_iss'])
+                parent = int(parent_child_data.get('parent_iss', -1))
                 if parent > -1:
                     parent_iss = Issledovaniya.objects.get(pk=parent)
                     Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=parent_iss, cancel=False)
@@ -4012,7 +4020,7 @@ def direction_history(request):
             data.append(d)
         for lg in Log.objects.filter(key=str(pk), type__in=(5002,)):
             data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
-        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023)):
+        for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023, 60024, 60025)):
             data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
         for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dr).distinct():
             d = {"type": "Ёмкость №%s" % tube.pk, "events": []}

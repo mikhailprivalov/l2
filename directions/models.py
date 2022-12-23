@@ -499,20 +499,22 @@ class Napravleniya(models.Model):
 
         for i in iss:
             research: directory.Researches = i.research
-            if research.desc:
+            if research.desc or research.is_extract:
                 return research.title
         return 'Лабораторное исследование'
 
     def get_eds_generator(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
-
+        gen_name = 'Laboratory_min'
         for i in iss:
             research: directory.Researches = i.research
             if research.is_paraclinic:
-                return 'Instrumental'
+                gen_name = 'Instrumental'
             if research.desc:
-                return research.generator_name
-        return 'Laboratory_min'
+                gen_name = research.generator_name
+            if research.is_extract:
+                gen_name = 'DischargeSummary_min'
+        return gen_name
 
     def required_signatures(self, fast=False, need_save=False):
         if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):

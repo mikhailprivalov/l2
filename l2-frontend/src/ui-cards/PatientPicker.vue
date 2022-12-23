@@ -1368,6 +1368,8 @@ export default {
         const openEdit = params.get('open_edit') === 'true';
         const ofname = params.get('ofname');
         const ofnameDep = params.get('ofname_dep');
+        const q = params.get('q');
+
         if (rmisUid) {
           window.history.pushState('', '', window.location.href.split('?')[0]);
           let hasInternal = false;
@@ -1415,6 +1417,21 @@ export default {
             this.search_after_loading = true;
             this.open_edit_after_loading = openEdit;
           }
+        } else if (q) {
+          window.history.pushState('', '', window.location.href.split('?')[0]);
+
+          for (const b of this.bases) {
+            if (b.internal_type) {
+              this.base = b.pk;
+              break;
+            }
+          }
+
+          if (this.base === -1) {
+            this.base = this.bases[0].pk;
+          }
+          this.query = q;
+          this.search_after_loading = true;
         } else {
           this.base = this.bases[0].pk;
         }

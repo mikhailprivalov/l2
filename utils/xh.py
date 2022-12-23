@@ -62,7 +62,7 @@ def check_type_research(pk):
     lab_podr = [i[0] for i in lab_podr]
     for k in is_obj:
         research = k.research
-        if research.is_form or research.is_stom or research.is_doc_refferal or research.is_gistology:
+        if research.is_form or research.is_stom or research.is_doc_refferal or research.is_gistology or research.is_extract:
             return "is_refferal"
         if research.is_paraclinic:
             return "is_paraclinic"
@@ -74,3 +74,14 @@ def check_type_research(pk):
 def save_tmp_file(form, filename: str):
     with open(filename, 'wb') as f:
         f.write(form.read())
+
+
+def translation_number_from_decimal(current_num):
+    data = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "А", "Б", "В", "Г", "Д", "Е", "Ж", "К", "Л", "М", "Н", "П", "Р", "С", "Т", "Ф", "Х", "Ц", "Ч", "Ш", "Э"]
+    s = ''
+    base = len(data)
+    while current_num > 0:
+        symbol = data[current_num % base]
+        s = symbol + s
+        current_num = current_num // base
+    return s

@@ -113,7 +113,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                     result_paraclinic["заключение"] = f"{result_paraclinic.get('заключение')}; {r.value}"
         data = result_paraclinic
 
-    if iss.research.is_doc_refferal or iss.research.is_form:
+    if iss.research.is_doc_refferal or iss.research.is_form or iss.research.is_extract:
         try:
             val = data.get("Cостояние пациента", None)
             if not val or not isinstance(val, dict):
@@ -132,7 +132,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 if r.cda_title_field is None:
                     data[r.cda_title_group] = f"{data.get(r.cda_title_group)}; {r.title}:{r.value}"
                 else:
-                    data[r.cda_title_field] = f"{r.value}"
+                    data[r.cda_title_field] = f"{r.value.strip()}"
                 data = check_title_field(data, r)
         data["Код услуги"] = iss.research.code
         if not data.get("Состояние код"):
@@ -140,6 +140,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             data["Состояние наименование"] = "Удовлетворительное"
         if not data.get("Дата осмотра"):
             data["Дата осмотра"] = iss.medical_examination.strftime("%Y-%m-%d")
+        data = add_absent_field(data, iss.research)
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
     for dp in direction_params_obj:
@@ -169,8 +170,47 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["nsi_title"] = nsi_res.title if nsi_res else ""
     document["odii_code_method"] = ODII_METHODS.get(nsi_res.method) if nsi_res else None
     document["codeService"] = iss.research.code
-
+    document["oidDepartment"] = iss.doc_confirmation.podrazdeleniye.oid
     return document
+
+
+def add_absent_field(data, research_data):
+    tmp_data = {}
+    if research_data.is_extract:
+        for k in data.keys():
+            if k == "вэ-Состояние при выписке" and data[k] == "-":
+                tmp_data[k] = {"code": "1", "title": "Удовлетворительное"}
+            elif k == "вэ-Состояние при поступлении" and data[k] == "-":
+                tmp_data[k] = {"code": "1", "title": "Удовлетворительное"}
+            elif k == "вэ-Вид госпитализации" and data[k] == "-":
+                tmp_data[k] = {"code": "1", "title": "Плановая госпитализация"}
+            elif k == "вэ-Исход" and data[k] == "-":
+                tmp_data[k] = {"code": "1", "title": "Выписан"}
+            elif k == "вэ-Исход" and data[k] != "-":
+                out_res = NSI.get("1.2.643.5.1.13.13.11.1373")["values"]
+                for key, val in out_res.items():
+                    if val.lower() == data[k].lower():
+                        tmp_data[k] = {"code": key, "title": val}
+            elif k == "вэ-результат стационарного лечения" and data[k] == "-":
+                tmp_data[k] = {"code": "3", "title": "Без изменения"}
+            elif k == "вэ-результат стационарного лечения" and data[k] != "-":
+                out_res = NSI.get("1.2.643.5.1.13.13.11.1046")["values"]
+                for key, val in out_res.items():
+                    if val.lower() == data[k].lower():
+                        tmp_data[k] = {"code": key, "title": val}
+            elif k == "вэ-Время окончания":
+                data[k] = data[k].replace(":", "")
+            elif k == "вэ-Время начала":
+                data[k] = data[k].replace(":", "")
+            elif k == "вэ-Дата начала госпитализации":
+                data[k] = normalize_dots_date(data[k]).replace("-", "")
+            elif k == "вэ-Дата выписки":
+                data[k] = data[k].replace("-", "")
+            elif k == "вэ-Проведенное лечение":
+                res_treatment = json.loads(data[k])
+                data[k] = " ".join([f"{res_t['pharmaTitle']} - {res_t['mode']};" for res_t in res_treatment])
+
+    return {**data, **tmp_data}
 
 
 def check_title_field(data, r):
