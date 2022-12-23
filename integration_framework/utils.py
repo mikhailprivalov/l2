@@ -171,7 +171,6 @@ def get_json_protocol_data(pk, is_paraclinic=False):
     document["odii_code_method"] = ODII_METHODS.get(nsi_res.method) if nsi_res else None
     document["codeService"] = iss.research.code
     document["oidDepartment"] = iss.doc_confirmation.podrazdeleniye.oid
-
     return document
 
 
@@ -180,34 +179,25 @@ def add_absent_field(data, research_data):
     if research_data.is_extract:
         for k in data.keys():
             if k == "вэ-Состояние при выписке" and data[k] == "-":
-                tmp_data["вэ-Состояние при выписке наименование"] = "Удовлетворительное"
-                tmp_data["вэ-Состояние при выписке код"] = "1"
+                tmp_data[k] = {"code": "1", "title": "Удовлетворительное"}
             elif k == "вэ-Состояние при поступлении" and data[k] == "-":
-                tmp_data["вэ-Состояние при поступлении наименование"] = "Удовлетворительное"
-                tmp_data["вэ-Состояние при поступлении код"] = "1"
+                tmp_data[k] = {"code": "1", "title": "Удовлетворительное"}
             elif k == "вэ-Вид госпитализации" and data[k] == "-":
-                tmp_data["вэ-Вид госпитализации наименование"] = "Плановая госпитализация"
-                tmp_data["вэ-Вид госпитализации код"] = "1"
+                tmp_data[k] = {"code": "1", "title": "Плановая госпитализация"}
             elif k == "вэ-Исход" and data[k] == "-":
-                tmp_data["вэ-Исход наименование"] = "Выписан"
-                tmp_data["вэ-Исход код"] = "1"
+                tmp_data[k] = {"code": "1", "title": "Выписан"}
             elif k == "вэ-Исход" and data[k] != "-":
                 out_res = NSI.get("1.2.643.5.1.13.13.11.1373")["values"]
                 for key, val in out_res.items():
                     if val.lower() == data[k].lower():
-                        tmp_data["вэ-Исход наименование"] = val
-                        tmp_data["вэ-Исход код"] = key
+                        tmp_data[k] = {"code": key, "title": val}
             elif k == "вэ-результат стационарного лечения" and data[k] == "-":
-                tmp_data["вэ-результат стационарного лечения наименование"] = "Без изменения"
-                tmp_data["вэ-результат стационарного лечения код"] = "3"
+                tmp_data[k] = {"code": "3", "title": "Без изменения"}
             elif k == "вэ-результат стационарного лечения" and data[k] != "-":
                 out_res = NSI.get("1.2.643.5.1.13.13.11.1046")["values"]
                 for key, val in out_res.items():
                     if val.lower() == data[k].lower():
-                        tmp_data["вэ-Исход наименование"] = val
-                        tmp_data["вэ-Исход код"] = key
-                tmp_data["вэ-результат стационарного лечения наименование"] = "Без изменения"
-                tmp_data["вэ-результат стационарного лечения код"] = "3"
+                        tmp_data[k] = {"code": key, "title": val}
             elif k == "вэ-Время окончания":
                 data[k] = data[k].replace(":", "")
             elif k == "вэ-Время начала":
@@ -216,6 +206,9 @@ def add_absent_field(data, research_data):
                 data[k] = normalize_dots_date(data[k]).replace("-", "")
             elif k == "вэ-Дата выписки":
                 data[k] = data[k].replace("-", "")
+            elif k == "вэ-Проведенное лечение":
+                res_treatment = json.loads(data[k])
+                data[k] = " ".join([f"{res_t['pharmaTitle']} - {res_t['mode']};" for res_t in res_treatment])
 
     return {**data, **tmp_data}
 
