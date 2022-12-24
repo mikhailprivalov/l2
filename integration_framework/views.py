@@ -1794,7 +1794,7 @@ def get_cda_data(pk):
                 "oidMo": data["oidMo"],
                 "document": data,
                 "patient": {
-                    'id': card.number,
+                    'id': card.pk,
                     'snils': data_individual["snils"],
                     'name': {'family': ind.family, 'name': ind.name, 'patronymic': ind.patronymic},
                     'gender': ind.sex.lower(),
