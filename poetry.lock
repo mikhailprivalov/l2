@@ -841,12 +841,22 @@ python-versions = ">=3.6.8"
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
-name = "PyPDF2"
-version = "1.28.6"
+name = "pypdf2"
+version = "3.0.0"
 description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
 category = "main"
 optional = false
-python-versions = ">=2.7"
+python-versions = ">=3.6"
+
+[package.dependencies]
+typing_extensions = {version = ">=3.10.0.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+crypto = ["PyCryptodome"]
+dev = ["black", "flit", "pip-tools", "pre-commit (<2.18.0)", "pytest-cov", "wheel"]
+docs = ["myst_parser", "sphinx", "sphinx_rtd_theme"]
+full = ["Pillow", "PyCryptodome"]
+image = ["Pillow"]
 
 [[package]]
 name = "python-dateutil"
@@ -1172,7 +1182,7 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<4"
-content-hash = "9e90414eba480df4f096def3ab50415e54b3ee42cd4150a768911aa28e8295a7"
+content-hash = "47b7cf312ef5f6723338fc162dabd594b45eb941eb134aaf8f3f13c7f64ecba4"
 
 [metadata.files]
 amqp = [
@@ -1715,9 +1725,9 @@ pyparsing = [
     {file = "pyparsing-3.0.9-py3-none-any.whl", hash = "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"},
     {file = "pyparsing-3.0.9.tar.gz", hash = "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb"},
 ]
-PyPDF2 = [
-    {file = "PyPDF2-1.28.6-py3-none-any.whl", hash = "sha256:d7118f0187153257b1f906dcfcd8236608f4987b6a9999b7c5ad49114706a1ad"},
-    {file = "PyPDF2-1.28.6.tar.gz", hash = "sha256:c0840835d18357b077da05bdad1423f5e29419f318135b6a6542895930dc4905"},
+pypdf2 = [
+    {file = "PyPDF2-3.0.0.tar.gz", hash = "sha256:340dcc7fd62ad3dc4a132df13617e9c33f1c4c15379846cb95ef14aec9f106f9"},
+    {file = "pypdf2-3.0.0-py3-none-any.whl", hash = "sha256:6758cf78e913ea4bb49facbc85fb6ae78c91f1991367632a07299c9505c18714"},
 ]
 python-dateutil = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
