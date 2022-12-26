@@ -1838,12 +1838,17 @@ def directions_paraclinic_result(request):
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
         parent_child_data = rb.get('parent_child_data', None)
+        slave_reserch = HospitalService.objects.filter(slave_research=iss.research).first()
         if parent_child_data:
             parent = int(parent_child_data.get('parent_iss', -1))
             child = int(parent_child_data.get('child_iss', -1))
             current = int(parent_child_data.get('current_iss', -1))
-            if parent == child or parent == current or current == child:
-                response["message"] = "Источник и назначение перевода совпадают"
+            err_message = "Источник и назначение перевода совпадают"
+            if (parent == current or current == child) and slave_reserch.site_type == 6:
+                response["message"] = err_message
+                return JsonResponse(response)
+            if parent == child and slave_reserch.site_type == 6 and iss.research.title.lower().find('перевод') != -1 and child != -1:
+                response["message"] = err_message
                 return JsonResponse(response)
 
         if procedure_list:
