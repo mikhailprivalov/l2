@@ -1203,7 +1203,7 @@ class SetForReport(models.Model):
 
     class Meta:
         verbose_name = 'Набор для отчёта'
-        verbose_name_plural = 'Наборы для отчёта'
+        verbose_name_plural = 'Наборы для отчётов'
 
 
 class ResearchInSet(models.Model):

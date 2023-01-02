@@ -132,6 +132,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/sets-for-report',
+      name: 'sets_for_report',
+      component: () => import('@/construct/ConstuctSetsForReport.vue'),
+      meta: {
+        title: 'Наборы для отчёта',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
