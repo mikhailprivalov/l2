@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from directory.models import Researches
+from directory.models import Researches, SetForReport, ResearchInSet
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
@@ -2767,3 +2767,31 @@ def add_factor(request):
             {"factor": factor.as_json(factor)},
         )
     return JsonResponse(result)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_sets(request):
+    sets = [
+        {
+            "id": set.pk,
+            "label": set.title
+        }
+        for set in SetForReport.objects.filter(hide=False)
+    ]
+    return JsonResponse({"data": sets})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_researches_in_set(request):
+    request_data = json.loads(request.body)
+    researches = [
+        {
+            "id": i.pk,
+            "research": {"id": i.research.pk, "label": i.research.title},
+            "order": i.order,
+        }
+        for i in ResearchInSet.objects.filter(set=request_data)
+    ]
+    return JsonResponse({"data": researches})

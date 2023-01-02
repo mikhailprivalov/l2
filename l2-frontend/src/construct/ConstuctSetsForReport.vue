@@ -3,7 +3,7 @@
     <h4>Набор</h4>
     <Treeselect
       v-model="currentSet"
-      :options="sets"
+      :options="sets.data"
       :clearable="false"
       placeholder="Набор"
     />
@@ -38,7 +38,7 @@
             </tr>
           </thead>
           <tr
-            v-if="filteredResearch.length === 0"
+            v-if="filteredResearches.length === 0"
             class="text-center"
           >
             <td
@@ -48,15 +48,15 @@
             </td>
           </tr>
           <tr
-            v-for="(research) in filteredResearch"
-            :key="research.id"
+            v-for="(i) in filteredResearches"
+            :key="i.id"
             class="border"
           >
             <VueTippyTd
               class="research border padding-left"
-              :text="research.title"
+              :text="i.research.label"
             />
-            <td class="table-row">
+            <td class="border">
               <div class="button">
                 <button
                   v-tippy
@@ -71,8 +71,10 @@
         </table>
       </div>
     </div>
-    <h4>Добавить исследование в набор</h4>
-    <div>
+    <h4 v-if="setIsSelected">
+      Добавить исследование в набор
+    </h4>
+    <div v-if="setIsSelected">
       <table
         class="table-bordered"
       >
@@ -84,10 +86,10 @@
           <td>
             <Treeselect
               v-model="currentResearch"
-              :options="researches"
+              :options="researches.data"
               :disable-branch-nodes="true"
               :append-to-body="true"
-              placeholder="Выберите исследование"
+              placeholder="Исследование"
             />
           </td>
           <td>
@@ -128,9 +130,9 @@ export default {
     };
   },
   computed: {
-    filteredResearch() {
-      return this.researchesInSet.filter(research => {
-        const title = research.title.toLowerCase();
+    filteredResearches() {
+      return this.researchesInSet.filter(i => {
+        const title = i.research.label.toLowerCase();
         const searchTerm = this.search.toLowerCase();
 
         return title.includes(searchTerm);
@@ -138,6 +140,27 @@ export default {
     },
     setIsSelected() {
       return !!this.currentSet;
+    },
+  },
+  watch: {
+    currentSet() {
+      this.getResearchesInSet();
+    },
+  },
+  mounted() {
+    this.getSets();
+    this.getResearches();
+  },
+  methods: {
+    async getSets() {
+      this.sets = await this.$api('/get-sets');
+    },
+    async getResearches() {
+      this.researches = await this.$api('/get-research-list');
+    },
+    async getResearchesInSet() {
+      const researches = await this.$api('/get-researches-in-set', this.currentSet);
+      this.researchesInSet = researches.data;
     },
   },
 };
@@ -179,6 +202,11 @@ export default {
 .padding-left {
   padding-left: 6px;
 }
+.sticky {
+  position: sticky;
+  top: 0;
+  background-color: white;
+}
 .button {
   width: 100%;
   display: flex;
@@ -191,5 +219,4 @@ export default {
     flex: 1;
     padding: 7px 0;
   }
-
 </style>
