@@ -1192,3 +1192,17 @@ class AntibioticSets(models.Model):
                 set_obj.antibiotics.add(*element_ant)
 
         return elements
+
+class SetResearch(models.Model):
+    title = models.CharField(max_length=255, help_text="Название набора услуг")
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие набора', db_index=True)
+    def __str__(self):
+        return f"{self.title}"
+
+class SetOrderResearch(models.Model):
+    research = models.ForeignKey(Researches, default=None, help_text="Услуги в наборе", db_index=True, on_delete=models.CASCADE)
+    set_research = models.ForeignKey(SetResearch, default=None, help_text="Услуги в наборе", db_index=True, on_delete=models.CASCADE)
+    order = models.IntegerField(default=-1)
+
+    def __str__(self):
+        return f"{self.set_research.title} {self.research.title}"

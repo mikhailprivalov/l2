@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
+from django.db.models import Q
 
 import directory.models as directory
 from contracts.sql_func import search_companies
@@ -25,12 +26,21 @@ class PriceName(models.Model):
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
     research = models.ManyToManyField(directory.Researches, through='PriceCoast', help_text="Услуга-Прайс", blank=True)
+    company = models.ForeignKey('contracts.Company', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{}".format(self.title)
 
     def status(self):
         return self.active_status
+
+    @staticmethod
+    def get_company_price_by_date(company_id, date_start, date_end):
+        print(company_id, date_start, date_end)
+        price_company = PriceName.objects.filter(company_id=company_id).first()
+        if price_company:
+            return price_company
+        return False
 
     class Meta:
         verbose_name = 'Название прайса'
