@@ -36,7 +36,6 @@ class PriceName(models.Model):
 
     @staticmethod
     def get_company_price_by_date(company_id, date_start, date_end):
-        print(company_id, date_start, date_end)
         price_company = PriceName.objects.filter(company_id=company_id).first()
         if price_company:
             return price_company
