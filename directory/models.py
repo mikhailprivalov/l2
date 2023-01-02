@@ -1192,3 +1192,25 @@ class AntibioticSets(models.Model):
                 set_obj.antibiotics.add(*element_ant)
 
         return elements
+
+
+class SetForReport(models.Model):
+    title = models.CharField(max_length=255, help_text="Название")
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрыть', db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Набор для отчёта'
+        verbose_name_plural = 'Наборы для отчёта'
+
+
+class ResearchInSet(models.Model):
+    set = models.ForeignKey(SetForReport, help_text='Набор', on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, help_text='Исследование', on_delete=models.CASCADE)
+    order = models.IntegerField(default=-1, help_text='Порядок')
+
+    class Meta:
+        verbose_name = 'Исследование в наборе'
+        verbose_name_plural = 'Исследования в наборе'
