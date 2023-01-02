@@ -13,7 +13,7 @@ import directory.models as directory
 import slog.models as slog
 from api.directions.sql_func import get_lab_podr
 from clients.models import CardBase
-from contracts.models import PriceName
+from contracts.models import PriceName, PriceCoast
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
 from hospitals.models import Hospitals
@@ -1746,7 +1746,8 @@ def statistic_xls(request):
             def_value_data = {k: 0 for k in head_data.keys()}
             price = get_price_company(company_id, start_date, end_date)
             if price:
-                print(price)
+                research_coast = PriceCoast.get_coast_by_researches(price, list(def_value_data.keys()))
+                print(research_coast)
             else:
                 price = title_fin.contracts.price
                 print("def", price)
