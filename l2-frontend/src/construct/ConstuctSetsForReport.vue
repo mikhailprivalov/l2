@@ -49,14 +49,14 @@
               <div class="button">
                 <button
                   class="btn last btn-blue-nb nbr"
-                  :disabled="isFirstResearch(i.order)"
+                  :disabled="isFirstRow(i.order)"
                   @click="updateOrder(i, 'inc_order')"
                 >
                   <i class="glyphicon glyphicon-arrow-up" />
                 </button>
                 <button
                   class="btn last btn-blue-nb nbr"
-                  :disabled="isLastResearch(i.order)"
+                  :disabled="isLastRow(i.order)"
                   @click="updateOrder(i, 'dec_order')"
                 >
                   <i class="glyphicon glyphicon-arrow-down" />
@@ -173,10 +173,10 @@ export default {
         this.$root.$emit('msg', 'error', message);
       }
     },
-    isFirstResearch(order) {
+    isFirstRow(order) {
       return order === this.min_max_order.max;
     },
-    isLastResearch(order) {
+    isLastRow(order) {
       return order === this.min_max_order.min;
     },
     async getSets() {
@@ -221,19 +221,8 @@ export default {
   margin-bottom: 0;
   table-layout: fixed;
 }
-::v-deep .form-control {
-  border: none;
-  padding: 6px 0;
-  background-color: transparent;
-}
-.search {
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding-left: 6px;
-  background-color: white;
-}
 .scroll {
-  min-height: 106px;
+  min-height: 112px;
   max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
