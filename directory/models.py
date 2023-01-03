@@ -1194,21 +1194,21 @@ class AntibioticSets(models.Model):
         return elements
 
 
-class SetForReport(models.Model):
-    title = models.CharField(max_length=255, help_text="Название")
+class SetResearch(models.Model):
+    title = models.CharField(max_length=255, help_text="Название набора")
     hide = models.BooleanField(default=False, blank=True, help_text='Скрыть', db_index=True)
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Набор для отчёта'
-        verbose_name_plural = 'Наборы для отчётов'
+        verbose_name = 'Набор услуг'
+        verbose_name_plural = 'Наборы услуг'
 
 
-class ResearchInSet(models.Model):
-    set = models.ForeignKey(SetForReport, help_text='Набор', on_delete=models.CASCADE)
-    research = models.ForeignKey(Researches, help_text='Исследование', on_delete=models.CASCADE)
+class SetOrderResearch(models.Model):
+    set = models.ForeignKey(SetResearch, default=None, help_text='Набор', db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, default=None, help_text='Исследование', db_index=True, on_delete=models.CASCADE)
     order = models.IntegerField(help_text='Порядок')
 
     class Meta:

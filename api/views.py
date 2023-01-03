@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from directory.models import Researches, SetForReport, ResearchInSet
+from directory.models import Researches, SetResearch, SetOrderResearch
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
@@ -2777,7 +2777,7 @@ def get_sets(request):
             "id": set.pk,
             "label": set.title
         }
-        for set in SetForReport.objects.filter(hide=False).order_by("title")
+        for set in SetResearch.objects.filter(hide=False).order_by("title")
     ]
     return JsonResponse({"data": sets})
 
@@ -2792,7 +2792,7 @@ def get_researches_in_set(request):
             "research": {"id": i.research.pk, "label": i.research.title},
             "order": i.order,
         }
-        for i in ResearchInSet.objects.filter(set=request_data).order_by("-order")
+        for i in SetOrderResearch.objects.filter(set=request_data).order_by("-order")
     ]
     return JsonResponse({"data": researches})
 
@@ -2802,17 +2802,17 @@ def get_researches_in_set(request):
 def add_research_in_set(request):
     request_data = json.loads(request.body)
     result = {"ok": True}
-    if len(SetForReport.objects.filter(pk=request_data["set"])) == 0:
+    if len(SetResearch.objects.filter(pk=request_data["set"])) == 0:
         result["ok"] = False
         result["message"] = "Такого набора нет"
     elif len(Researches.objects.filter(pk=request_data["research"])) == 0:
         result["ok"] = False
         result["message"] = "Такого исследования нет"
-    elif len(ResearchInSet.objects.filter(set=request_data["set"], research_id=request_data["research"])) != 0:
+    elif len(SetOrderResearch.objects.filter(set=request_data["set"], research_id=request_data["research"])) != 0:
         result["ok"] = False
         result["message"] = "Такое исследование уже есть"
     if result["ok"]:
-        research_in_set = ResearchInSet(set_id=request_data["set"], research_id=request_data["research"], order=request_data["minOrder"]-1)
+        research_in_set = SetOrderResearch(set_id=request_data["set"], research_id=request_data["research"], order=request_data["minOrder"] - 1)
         research_in_set.save()
         Log.log(
             research_in_set.pk,
@@ -2828,20 +2828,20 @@ def add_research_in_set(request):
 def update_order(request):
     request_data = json.loads(request.body)
     result = {"ok": True}
-    if len(ResearchInSet.objects.filter(pk=request_data["id"])) == 0:
+    if len(SetOrderResearch.objects.filter(pk=request_data["id"])) == 0:
         result["ok"] = False
         result["message"] = "Такого исследования нет"
     if result["ok"] and request_data["action"] == 'inc_order':
-        research_in_set = ResearchInSet.objects.get(pk=request_data["id"])
-        next_research_in_set = ResearchInSet.objects.filter(set=request_data["set"], order=request_data["order"] + 1).first()
+        research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
+        next_research_in_set = SetOrderResearch.objects.filter(set=request_data["set"], order=request_data["order"] + 1).first()
         if (next_research_in_set):
             next_research_in_set.order -= 1
             next_research_in_set.save()
         research_in_set.order += 1
         research_in_set.save()
     elif result["ok"] and request_data["action"] == 'dec_order':
-        research_in_set = ResearchInSet.objects.get(pk=request_data["id"])
-        prev_research_in_set = ResearchInSet.objects.filter(set=request_data["set"], order=request_data["order"] - 1).first()
+        research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
+        prev_research_in_set = SetOrderResearch.objects.filter(set=request_data["set"], order=request_data["order"] - 1).first()
         if (prev_research_in_set):
             prev_research_in_set.order += 1
             prev_research_in_set.save()
