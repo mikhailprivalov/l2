@@ -2841,14 +2841,20 @@ def update_order(request):
         if (next_research_in_set):
             next_research_in_set.order -= 1
             next_research_in_set.save()
-        research_in_set.order += 1
-        research_in_set.save()
+            research_in_set.order += 1
+            research_in_set.save()
+        else:
+            result["ok"] = False
+            result["message"] = "Исследование первое в наборе"
     elif result["ok"] and request_data["action"] == 'dec_order':
         research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
         prev_research_in_set = SetOrderResearch.objects.filter(set=request_data["set"], order=request_data["order"] - 1).first()
         if (prev_research_in_set):
             prev_research_in_set.order += 1
             prev_research_in_set.save()
-        research_in_set.order -= 1
-        research_in_set.save()
+            research_in_set.order -= 1
+            research_in_set.save()
+        else:
+            result["ok"] = False
+            result["message"] = "Исследование последнее в наборе"
     return JsonResponse(result)
