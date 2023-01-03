@@ -2786,7 +2786,7 @@ def get_researches_in_set(request):
             "research": {"id": i.research.pk, "label": i.research.title},
             "order": i.order,
         }
-        for i in SetOrderResearch.objects.filter(set=request_data).order_by("-order")
+        for i in SetOrderResearch.objects.filter(set_research=request_data).order_by("-order")
     ]
     return JsonResponse({"data": researches})
 

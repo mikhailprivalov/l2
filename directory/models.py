@@ -1202,8 +1202,8 @@ class SetResearch(models.Model):
         return self.title
 
     class Meta:
-        verbose_name = 'Набор услуг'
-        verbose_name_plural = 'Наборы услуг'
+        verbose_name = 'Набор исследований'
+        verbose_name_plural = 'Наборы исследований'
 
 
 class SetOrderResearch(models.Model):
