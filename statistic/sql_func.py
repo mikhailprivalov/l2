@@ -717,65 +717,6 @@ def statistics_consolidate_research(d_s, d_e, fin_source_pk):
         rows = namedtuplefetchall(cursor)
     return rows
 
-def statistics_by_set_research(d_s, d_e, fin_source_pk, researches, company_id):
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-                SELECT 
-                    directions_issledovaniya.napravleniye_id as dir_id,
-                    directory_researches.title as research_title,
-                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
-                    directions_issledovaniya.time_confirmation,
-                    users_doctorprofile.family as doc_f,
-                    users_doctorprofile.name as doc_n,
-                    users_doctorprofile.patronymic as doc_p,
-                    users_speciality.title as doc_speciality,
-                    directions_napravleniya.client_id,
-                    directions_napravleniya.workplace as patient_workplace,
-                    directions_napravleniya.harmful_factor as dir_harmful_factor,
-                    cc.harmful_factor as patient_card_harmful_factor,
-                    cc.number as patient_card_num,
-                    cc.work_place_db as work_place_db,
-                    ci.family as patient_family,
-                    ci.name as patient_name,
-                    ci.patronymic as patient_patronymic,
-                    ci.birthday as patient_born,
-                    date_part('year', age(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, ci.birthday))::int as patient_age,
-                    directions_issledovaniya.parent_id as parent_iss,
-                    directions_issledovaniya.id as id_iss,
-                    directions_napravleniya.purpose,
-                    contracts_pricecategory.title as category_title,
-                    directions_issledovaniya.research_id as research_id
-                FROM public.directions_issledovaniya
-                LEFT JOIN directory_researches
-                ON directory_researches.id = directions_issledovaniya.research_id
-                LEFT JOIN directions_napravleniya
-                ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
-                LEFT JOIN users_doctorprofile
-                ON users_doctorprofile.id = directions_issledovaniya.doc_confirmation_id
-                LEFT JOIN users_speciality
-                ON users_doctorprofile.specialities_id = users_speciality.id
-                LEFT JOIN clients_card cc 
-                ON directions_napravleniya.client_id = cc.id
-                LEFT JOIN clients_individual ci 
-                ON ci.id = cc.individual_id
-                LEFT JOIN contracts_pricecategory
-                ON contracts_pricecategory.id = directions_issledovaniya.price_category_id
-                where time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s AND (
-                            directions_issledovaniya.fin_source_id=%(fin_source_pk)s or 
-                            directions_napravleniya.istochnik_f_id=%(fin_source_pk)s or 
-                            directions_napravleniya.istochnik_f_id is NULL 
-                        ) AND 
-                        directions_issledovaniya.research_id in %(researches)s 
-                        AND
-                        cc.work_place_db = %(company_id)s
-                ORDER BY directions_napravleniya.client_id, directions_issledovaniya.time_confirmation, directions_issledovaniya.id 
-                            """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'researches': researches, 'company_id': company_id},
-        )
-        rows = namedtuplefetchall(cursor)
-    return rows
-
 
 def disp_diagnos(diagnos, d_s, d_e):
     with connection.cursor() as cursor:

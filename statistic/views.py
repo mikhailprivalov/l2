@@ -1738,6 +1738,7 @@ def statistic_xls(request):
         title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
         set_research = int(request_data.get("set", -1))
         company_id = int(request_data.get("company", -1))
+        query = None
         if set_research > 0:
             set_research = directory.SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
             head_data = {i.research.pk: i.research.title for i in set_research}
@@ -1748,7 +1749,7 @@ def statistic_xls(request):
             else:
                 price = title_fin.contracts.price
                 research_coast = PriceCoast.get_coast_by_researches(price, list(def_value_data.keys()))
-            query = sql_func.statistics_by_set_research(start_date, end_date, type_fin, tuple(def_value_data.keys()), company_id)
+            # query = sql_func.statistics_by_set_research(start_date, end_date, type_fin, tuple(def_value_data.keys()), company_id)
         else:
             query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
         ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
