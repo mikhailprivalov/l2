@@ -1207,7 +1207,7 @@ class SetResearch(models.Model):
 
 
 class SetOrderResearch(models.Model):
-    set = models.ForeignKey(SetResearch, default=None, help_text='Набор', db_index=True, on_delete=models.CASCADE)
+    set_research = models.ForeignKey(SetResearch, default=None, help_text='Набор', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, default=None, help_text='Исследование', db_index=True, on_delete=models.CASCADE)
     order = models.IntegerField(help_text='Порядок')
 

@@ -247,10 +247,10 @@ class PhenotypeAdmin(admin.ModelAdmin):
 
 class SetOrderResearchAdmin(admin.ModelAdmin):
     list_display = (
-        'set',
+        'set_research',
         'research'
     )
-    list_filter = ('set',)
+    list_filter = ('set_research',)
     autocomplete_fields = (
         'research',
     )

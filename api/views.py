@@ -2772,7 +2772,7 @@ def add_factor(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def get_sets(request):
-    sets = [{"id": set.pk, "label": set.title} for set in SetResearch.objects.filter(hide=False).order_by("title")]
+    sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.filter(hide=False).order_by("title")]
     return JsonResponse({"data": sets})
 
 
@@ -2802,21 +2802,21 @@ def add_research_in_set(request):
     elif len(Researches.objects.filter(pk=request_data["research"])) == 0:
         result["ok"] = False
         result["message"] = "Такого исследования нет"
-    elif len(SetOrderResearch.objects.filter(set_id=request_data["set"], research_id=request_data["research"])) != 0:
+    elif len(SetOrderResearch.objects.filter(set_research_id=request_data["set"], research_id=request_data["research"])) != 0:
         result["ok"] = False
         result["message"] = "Такое исследование уже есть"
     if result["ok"]:
-        if len(SetOrderResearch.objects.filter(set_id=request_data["set"])) == 0:
+        if len(SetOrderResearch.objects.filter(set_research_id=request_data["set"])) == 0:
             offset = 0
         else:
             offset = 1
-        current_research_in_set = SetOrderResearch(set_id=request_data["set"], research_id=request_data["research"], order=request_data["maxOrder"] + offset)
+        current_research_in_set = SetOrderResearch(set_research_id=request_data["set"], research_id=request_data["research"], order=request_data["maxOrder"] + offset)
         current_research_in_set.save()
         Log.log(
             current_research_in_set.pk,
             170000,
             request.user.doctorprofile,
-            {"set": current_research_in_set.set_id, "research": current_research_in_set.research_id, "order": current_research_in_set.order},
+            {"set": current_research_in_set.set_research_id, "research": current_research_in_set.research_id, "order": current_research_in_set.order},
         )
     return JsonResponse(result)
 
@@ -2833,7 +2833,7 @@ def update_order(request):
         result["ok"] = False
         result["message"] = "Такого набора нет"
     if result["ok"] and request_data["action"] == 'inc_order':
-        next_research_in_set = SetOrderResearch.objects.filter(set=request_data["set"], order=request_data["order"] + 1).first()
+        next_research_in_set = SetOrderResearch.objects.filter(set_research=request_data["set"], order=request_data["order"] + 1).first()
         if next_research_in_set:
             current_research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
             next_research_in_set.order -= 1
@@ -2844,7 +2844,7 @@ def update_order(request):
             result["ok"] = False
             result["message"] = "Исследование первое в наборе"
     elif result["ok"] and request_data["action"] == 'dec_order':
-        prev_research_in_set = SetOrderResearch.objects.filter(set=request_data["set"], order=request_data["order"] - 1).first()
+        prev_research_in_set = SetOrderResearch.objects.filter(set_research=request_data["set"], order=request_data["order"] - 1).first()
         if prev_research_in_set:
             current_research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
             prev_research_in_set.order += 1
