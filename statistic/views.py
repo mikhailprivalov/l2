@@ -13,6 +13,7 @@ import directory.models as directory
 import slog.models as slog
 from api.directions.sql_func import get_lab_podr
 from clients.models import CardBase
+from contracts.models import PriceName, PriceCoast
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
 from hospitals.models import Hospitals
@@ -1735,7 +1736,19 @@ def statistic_xls(request):
 
         type_fin = request_data.get("fin")
         title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
-        query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
+        set_research = int(request_data.get("set", -1))
+        company_id = int(request_data.get("company", -1))
+        if set_research > 0:
+            set_research = directory.SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
+            head_data = {i.research.pk: i.research.title for i in set_research}
+            def_value_data = {k: 0 for k in head_data.keys()}
+            price = get_price_company(company_id, start_date, end_date)
+            if price:
+                research_coast = PriceCoast.get_coast_by_researches(price, list(def_value_data.keys()))
+            else:
+                price = title_fin.contracts.price
+        else:
+            query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
         ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
         ws = consolidates.consolidate_fill_data(ws, query)
 
@@ -1860,3 +1873,7 @@ def sreening_xls(request):
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
     wb.save(response)
     return response
+
+
+def get_price_company(company_id, start_date, end_date):
+    return PriceName.get_company_price_by_date(company_id, start_date.date(), end_date.date())
