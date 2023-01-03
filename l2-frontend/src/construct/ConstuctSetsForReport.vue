@@ -17,7 +17,7 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col width="60">
+            <col width="75">
             <col>
           </colgroup>
           <thead class="sticky">
@@ -46,16 +46,16 @@
             class="border"
           >
             <td>
-              <div class="ed-field-inner">
+              <div class="button">
                 <button
-                  class="btn btn-default btn-sm"
+                  class="btn last btn-blue-nb nbr"
                   :disabled="isFirstResearch(i.order)"
                   @click="updateOrder(i, 'inc_order')"
                 >
                   <i class="glyphicon glyphicon-arrow-up" />
                 </button>
                 <button
-                  class="btn btn-default btn-sm"
+                  class="btn last btn-blue-nb nbr"
                   :disabled="isLastResearch(i.order)"
                   @click="updateOrder(i, 'dec_order')"
                 >
@@ -162,7 +162,9 @@ export default {
   methods: {
     async updateOrder(research, action) {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/update-order', { id: research.id, order: research.order, action });
+      const { ok, message } = await this.$api('/update-order', {
+        id: research.id, set: this.currentSet, order: research.order, action,
+      });
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Порядок изменён');
@@ -188,19 +190,23 @@ export default {
       this.researchesInSet = researches.data;
     },
     async addResearchInSet() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/add-research-in-set', {
-        set: this.currentSet,
-        research: this.currentResearch,
-        order: this.min_max_order.min,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Исследование добавлено');
-        await this.getResearchesInSet();
-        this.currentResearch = null;
+      if (this.researchesInSet.find((i) => i.research.id === this.currentResearch)) {
+        this.$root.$emit('msg', 'error', 'Такое исследование уже есть');
       } else {
-        this.$root.$emit('msg', 'error', message);
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/add-research-in-set', {
+          set: this.currentSet,
+          research: this.currentResearch,
+          minOrder: this.min_max_order.min,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Исследование добавлено');
+          await this.getResearchesInSet();
+          this.currentResearch = null;
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
       }
     },
   },
@@ -261,9 +267,4 @@ export default {
     flex: 1;
     padding: 7px 0;
   }
-.ed-field-inner {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-}
 </style>
