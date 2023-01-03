@@ -245,10 +245,18 @@ class PhenotypeAdmin(admin.ModelAdmin):
     search_fields = ('title', 'fsli', 'lis')
 
 
-class ResearchInSetAdmin(admin.ModelAdmin):
+class SetOrderResearchAdmin(admin.ModelAdmin):
     list_display = (
         'set',
         'research'
+    )
+    list_filter = ('set',)
+    autocomplete_fields = (
+        'research',
+    )
+class SetResearchAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
     )
 
 
@@ -281,5 +289,5 @@ admin.site.register(models.Unit, UnitAdmin)
 admin.site.register(models.MethodLaboratoryAnalisis)
 admin.site.register(models.PatientControlParam, ResPatientControlParam)
 admin.site.register(models.Phenotype, PhenotypeAdmin)
-admin.site.register(models.SetResearch)
-admin.site.register(models.SetOrderResearch, ResearchInSetAdmin)
+admin.site.register(models.SetResearch, SetResearchAdmin)
+admin.site.register(models.SetOrderResearch, SetOrderResearchAdmin)
