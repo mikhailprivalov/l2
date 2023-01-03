@@ -2810,7 +2810,7 @@ def add_research_in_set(request):
             offset = 0
         else:
             offset = 1
-        current_research_in_set = SetOrderResearch(set_research_id=request_data["set"], research_id=request_data["research"], order=request_data["maxOrder"] + offset)
+        current_research_in_set = SetOrderResearch(set_research_id=request_data["set"], research_id=request_data["research"], order=request_data["minOrder"] - offset)
         current_research_in_set.save()
         Log.log(
             current_research_in_set.pk,

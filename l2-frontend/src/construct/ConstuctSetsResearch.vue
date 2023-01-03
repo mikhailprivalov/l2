@@ -196,7 +196,7 @@ export default {
         const { ok, message } = await this.$api('/add-research-in-set', {
           set: this.currentSet,
           research: this.currentResearch,
-          maxOrder: this.min_max_order.max,
+          minOrder: this.min_max_order.min,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
