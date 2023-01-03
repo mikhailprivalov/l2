@@ -132,11 +132,11 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/construct/sets-for-report',
-      name: 'sets_for_report',
-      component: () => import('@/construct/ConstuctSetsForReport.vue'),
+      path: '/ui/construct/sets-research',
+      name: 'sets_reseach',
+      component: () => import('@/construct/ConstuctSetsResearch.vue'),
       meta: {
-        title: 'Наборы для отчёта',
+        title: 'Наборы исследований',
         groups: ['Конструктор: Настройка организации'],
         narrowLayout: true,
       },

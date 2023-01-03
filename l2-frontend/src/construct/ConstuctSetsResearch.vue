@@ -140,7 +140,7 @@ export default {
       let min = 0;
       let max = 0;
       for (const row of this.researchesInSet) {
-        if (min === -1) {
+        if (min === 0) {
           min = row.order;
         } else {
           min = Math.min(min, row.order);
