@@ -2808,11 +2808,15 @@ def add_research_in_set(request):
     elif len(Researches.objects.filter(pk=request_data["research"])) == 0:
         result["ok"] = False
         result["message"] = "Такого исследования нет"
-    elif len(SetOrderResearch.objects.filter(set=request_data["set"], research_id=request_data["research"])) != 0:
+    elif len(SetOrderResearch.objects.filter(set_id=request_data["set"], research_id=request_data["research"])) != 0:
         result["ok"] = False
         result["message"] = "Такое исследование уже есть"
     if result["ok"]:
-        research_in_set = SetOrderResearch(set_id=request_data["set"], research_id=request_data["research"], order=request_data["minOrder"] - 1)
+        if len(SetOrderResearch.objects.filter(set_id=request_data["set"])) == 0:
+            offset = 0
+        else:
+            offset = 1
+        research_in_set = SetOrderResearch(set_id=request_data["set"], research_id=request_data["research"], order=request_data["maxOrder"] + offset)
         research_in_set.save()
         Log.log(
             research_in_set.pk,

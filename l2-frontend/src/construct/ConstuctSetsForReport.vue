@@ -35,7 +35,7 @@
             class="text-center"
           >
             <td
-              colspan="3"
+              colspan="2"
             >
               Нет данных
             </td>
@@ -140,7 +140,7 @@ export default {
       let min = 0;
       let max = 0;
       for (const row of this.researchesInSet) {
-        if (min === 0) {
+        if (min === -1) {
           min = row.order;
         } else {
           min = Math.min(min, row.order);
@@ -197,7 +197,7 @@ export default {
         const { ok, message } = await this.$api('/add-research-in-set', {
           set: this.currentSet,
           research: this.currentResearch,
-          minOrder: this.min_max_order.min,
+          maxOrder: this.min_max_order.max,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
