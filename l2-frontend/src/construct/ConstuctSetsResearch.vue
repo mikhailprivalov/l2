@@ -127,7 +127,6 @@ export default {
       currentSet: null,
       currentResearch: null,
       sets: [],
-      search: '',
       researchesInSet: [],
       researches: [],
     };
