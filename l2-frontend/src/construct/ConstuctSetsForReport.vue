@@ -10,13 +10,6 @@
     <h4 v-if="setIsSelected">
       Исследования
     </h4>
-    <div v-if="setIsSelected">
-      <input
-        v-model.trim="search"
-        class="form-control search"
-        placeholder="Поиск"
-      >
-    </div>
     <div
       v-if="setIsSelected"
       class="card-no-hover card card-1"
@@ -24,49 +17,56 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
+            <col width="60">
             <col>
-            <col width="100">
           </colgroup>
           <thead class="sticky">
             <tr>
+              <th />
               <th
                 class="text-center"
               >
                 <strong>Название</strong>
               </th>
-              <th />
             </tr>
           </thead>
           <tr
-            v-if="filteredResearches.length === 0"
+            v-if="researchesInSet.length === 0"
             class="text-center"
           >
             <td
-              colspan="2"
+              colspan="3"
             >
               Нет данных
             </td>
           </tr>
           <tr
-            v-for="(i) in filteredResearches"
+            v-for="(i) in researchesInSet"
             :key="i.id"
             class="border"
           >
+            <td>
+              <div class="ed-field-inner">
+                <button
+                  class="btn btn-default btn-sm"
+                  :disabled="isFirstResearch(i.order)"
+                  @click="updateOrder(i, 'inc_order')"
+                >
+                  <i class="glyphicon glyphicon-arrow-up" />
+                </button>
+                <button
+                  class="btn btn-default btn-sm"
+                  :disabled="isLastResearch(i.order)"
+                  @click="updateOrder(i, 'dec_order')"
+                >
+                  <i class="glyphicon glyphicon-arrow-down" />
+                </button>
+              </div>
+            </td>
             <VueTippyTd
               class="research border padding-left"
               :text="i.research.label"
             />
-            <td class="border">
-              <div class="button">
-                <button
-                  v-tippy
-                  class="btn last btn-blue-nb nbr"
-                  title="Удалить из набора"
-                >
-                  <i class="fa fa-times" />
-                </button>
-              </div>
-            </td>
           </tr>
         </table>
       </div>
@@ -98,6 +98,8 @@
                 v-tippy
                 class="btn last btn-blue-nb nbr"
                 title="Добавить исследование"
+                :disabled="!currentResearch"
+                @click="addResearchInSet"
               >
                 Добавить
               </button>
@@ -115,6 +117,7 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'ConstuctSetsForReport',
@@ -130,16 +133,21 @@ export default {
     };
   },
   computed: {
-    filteredResearches() {
-      return this.researchesInSet.filter(i => {
-        const title = i.research.label.toLowerCase();
-        const searchTerm = this.search.toLowerCase();
-
-        return title.includes(searchTerm);
-      });
-    },
     setIsSelected() {
       return !!this.currentSet;
+    },
+    min_max_order() {
+      let min = 0;
+      let max = 0;
+      for (const row of this.researchesInSet) {
+        if (min === 0) {
+          min = row.order;
+        } else {
+          min = Math.min(min, row.order);
+        }
+        max = Math.max(max, row.order);
+      }
+      return { min, max };
     },
   },
   watch: {
@@ -152,6 +160,23 @@ export default {
     this.getResearches();
   },
   methods: {
+    async updateOrder(research, action) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/update-order', { id: research.id, order: research.order, action });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Порядок изменён');
+        await this.getResearchesInSet();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
+    isFirstResearch(order) {
+      return order === this.min_max_order.max;
+    },
+    isLastResearch(order) {
+      return order === this.min_max_order.min;
+    },
     async getSets() {
       this.sets = await this.$api('/get-sets');
     },
@@ -161,6 +186,22 @@ export default {
     async getResearchesInSet() {
       const researches = await this.$api('/get-researches-in-set', this.currentSet);
       this.researchesInSet = researches.data;
+    },
+    async addResearchInSet() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/add-research-in-set', {
+        set: this.currentSet,
+        research: this.currentResearch,
+        order: this.min_max_order.min,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Исследование добавлено');
+        await this.getResearchesInSet();
+        this.currentResearch = null;
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
     },
   },
 };
@@ -206,6 +247,7 @@ export default {
   position: sticky;
   top: 0;
   background-color: white;
+  z-index: 1;
 }
 .button {
   width: 100%;
@@ -219,4 +261,9 @@ export default {
     flex: 1;
     padding: 7px 0;
   }
+.ed-field-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
 </style>

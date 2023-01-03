@@ -1209,7 +1209,7 @@ class SetForReport(models.Model):
 class ResearchInSet(models.Model):
     set = models.ForeignKey(SetForReport, help_text='Набор', on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, help_text='Исследование', on_delete=models.CASCADE)
-    order = models.IntegerField(default=-1, help_text='Порядок')
+    order = models.IntegerField(help_text='Порядок')
 
     class Meta:
         verbose_name = 'Исследование в наборе'
