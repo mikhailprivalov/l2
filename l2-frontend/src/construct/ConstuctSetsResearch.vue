@@ -12,7 +12,7 @@
     </h4>
     <div
       v-if="setIsSelected"
-      class="card-no-hover card card-1"
+      class="card-no-hover card-1"
     >
       <div class="scroll">
         <table class="table">
@@ -213,9 +213,6 @@ export default {
 </script>
 
 <style scoped>
-::v-deep .card {
-  margin: 1rem 0;
-}
 .table {
   margin-bottom: 0;
   table-layout: fixed;
