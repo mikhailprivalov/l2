@@ -1736,7 +1736,7 @@ def statistic_xls(request):
 
         type_fin = request_data.get("fin")
         title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
-        set_research = int(request_data.get("set", -1))
+        set_research = int(request_data.get("research-set", -1))
         company_id = int(request_data.get("company", -1))
         query = None
         if set_research > 0:
