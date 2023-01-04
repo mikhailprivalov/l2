@@ -1193,16 +1193,24 @@ class AntibioticSets(models.Model):
 
         return elements
 
+
 class SetResearch(models.Model):
-    title = models.CharField(max_length=255, help_text="Название набора услуг")
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие набора', db_index=True)
+    title = models.CharField(max_length=255, help_text="Название набора")
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрыть', db_index=True)
+
     def __str__(self):
-        return f"{self.title}"
+        return self.title
+
+    class Meta:
+        verbose_name = 'Набор исследований'
+        verbose_name_plural = 'Наборы исследований'
+
 
 class SetOrderResearch(models.Model):
-    research = models.ForeignKey(Researches, default=None, help_text="Услуги в наборе", db_index=True, on_delete=models.CASCADE)
-    set_research = models.ForeignKey(SetResearch, default=None, help_text="Услуги в наборе", db_index=True, on_delete=models.CASCADE)
-    order = models.IntegerField(default=-1)
+    set_research = models.ForeignKey(SetResearch, default=None, help_text='Набор', db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, default=None, help_text='Исследование', db_index=True, on_delete=models.CASCADE)
+    order = models.IntegerField(help_text='Порядок')
 
-    def __str__(self):
-        return f"{self.set_research.title} {self.research.title}"
+    class Meta:
+        verbose_name = 'Исследование в наборе'
+        verbose_name_plural = 'Исследования в наборе'
