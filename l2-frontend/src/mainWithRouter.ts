@@ -133,7 +133,7 @@ const router = new Router({
     },
     {
       path: '/ui/construct/sets-research',
-      name: 'sets_reseach',
+      name: 'sets_research',
       component: () => import('@/construct/ConstuctSetsResearch.vue'),
       meta: {
         title: 'Наборы исследований',
