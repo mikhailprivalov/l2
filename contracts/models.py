@@ -36,10 +36,7 @@ class PriceName(models.Model):
 
     @staticmethod
     def get_company_price_by_date(company_id, date_start, date_end):
-        price_company = PriceName.objects.filter(company_id=company_id, date_start__lte=date_start, date_end__gte=date_end).first()
-        if price_company:
-            return price_company
-        return False
+        return PriceName.objects.filter(company_id=company_id, date_start__lte=date_start, date_end__gte=date_end).first()
 
     class Meta:
         verbose_name = 'Название прайса'

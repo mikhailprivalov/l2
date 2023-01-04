@@ -29,7 +29,7 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.def_uet,
             directions_issledovaniya.co_executor_id, directions_issledovaniya.co_executor_uet, 
             directions_issledovaniya.co_executor2_id, directions_issledovaniya.co_executor2_uet,
-            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s AS datetime_confirm,
+            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as datetime_confirm,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_confirm,
             directions_issledovaniya.maybe_onco, statistics_tickets_visitpurpose.title AS purpose,
