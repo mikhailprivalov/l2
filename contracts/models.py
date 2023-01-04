@@ -35,10 +35,7 @@ class PriceName(models.Model):
 
     @staticmethod
     def get_company_price_by_date(company_id, date_start, date_end):
-        price_company = PriceName.objects.filter(company_id=company_id).first()
-        if price_company:
-            return price_company
-        return False
+        return PriceName.objects.filter(company_id=company_id, date_start__lte=date_start, date_end__gte=date_end).first()
 
     class Meta:
         verbose_name = 'Название прайса'
@@ -75,7 +72,7 @@ class PriceCoast(models.Model):
 
     @staticmethod
     def get_coast_by_researches(price, researches):
-        return {i.research.pk: i.coast for i in PriceCoast.objects.filter(price_name=price, research_id__in=researches)}
+        return {i.research_id: i.coast for i in PriceCoast.objects.filter(price_name=price, research_id__in=researches)}
 
     class Meta:
         unique_together = ('price_name', 'research')
