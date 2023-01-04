@@ -72,7 +72,7 @@ class PriceCoast(models.Model):
 
     @staticmethod
     def get_coast_by_researches(price, researches):
-        return {i.research.pk: i.coast for i in PriceCoast.objects.filter(price_name=price, research_id__in=researches)}
+        return {i.research_id: i.coast for i in PriceCoast.objects.filter(price_name=price, research_id__in=researches)}
 
     class Meta:
         unique_together = ('price_name', 'research')
