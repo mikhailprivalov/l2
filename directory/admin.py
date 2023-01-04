@@ -248,9 +248,9 @@ class PhenotypeAdmin(admin.ModelAdmin):
 class SetOrderResearchAdmin(admin.ModelAdmin):
     list_display = ('set_research', 'research')
     list_filter = ('set_research',)
-    autocomplete_fields = (
-        'research',
-    )
+    autocomplete_fields = ('research',)
+
+
 class SetResearchAdmin(admin.ModelAdmin):
     list_display = (
         'title',
