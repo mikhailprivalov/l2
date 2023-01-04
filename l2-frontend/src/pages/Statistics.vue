@@ -143,24 +143,6 @@
               />
             </div>
           </div>
-
-          <div
-            v-if="checkReportParam(PARAMS_TYPES.COMPANY)"
-            :key="PARAMS_TYPES.COMPANY"
-            class="input-group"
-          >
-            <span class="input-group-addon">Компания:</span>
-            <treeselect
-              v-model="values.company"
-              class="treeselect-noborder treeselect-wide"
-              :multiple="false"
-              :disable-branch-nodes="true"
-              :options="companies"
-              :clearable="true"
-              placeholder="Компания не выбана"
-            />
-          </div>
-
           <div
             v-if="checkReportParam(PARAMS_TYPES.FIN_SOURCE)"
             :key="PARAMS_TYPES.FIN_SOURCE"
@@ -189,7 +171,22 @@
               </optgroup>
             </select>
           </div>
-
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.COMPANY)"
+            :key="PARAMS_TYPES.COMPANY"
+            class="input-group"
+          >
+            <span class="input-group-addon">Компания:</span>
+            <treeselect
+              v-model="values.company"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="companies"
+              :clearable="true"
+              placeholder="Компания не выбана"
+            />
+          </div>
           <div
             v-if="checkReportParam(PARAMS_TYPES.MONTH_YEAR)"
             :key="PARAMS_TYPES.MONTH_YEAR"
@@ -461,8 +458,9 @@ const STATS_CATEGORIES = {
       consolidate: {
         groups: ['Статистика-профосмотры'],
         title: 'Сводный',
-        params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
-        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>',
+        params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
+        // eslint-disable-next-line max-len
+        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&company=<company>',
       },
     },
   },
@@ -820,7 +818,7 @@ export default class Statistics extends Vue {
 
       if (this.PARAMS_TYPES.COMPANY === p) {
         if (_.isNil(this.values.company)) {
-          return null;
+          url = url.replace('<company>', -1);
         }
 
         url = url.replace('<company>', this.values.company);
