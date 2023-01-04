@@ -226,6 +226,9 @@ export default {
   border: 1px solid #ddd;
   border-radius: 0;
 }
+.table > thead > tr > th {
+  border-bottom: 0;
+}
 .research {
   white-space: nowrap;
   overflow: hidden;
