@@ -4,9 +4,42 @@
     <Treeselect
       v-model="currentSet"
       :options="sets.data"
-      :clearable="false"
       placeholder="Набор"
     />
+    <h4 v-if="!setIsSelected">
+      Добавить набор
+    </h4>
+    <div v-if="!setIsSelected">
+      <table
+        class="table table-bordered"
+      >
+        <colgroup>
+          <col>
+          <col width="100">
+        </colgroup>
+        <tr>
+          <td>
+            <input
+              v-model.trim="newSet"
+              class="form-control"
+            >
+          </td>
+          <td>
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                title="Добавить набор"
+                :disabled="!newSet"
+                @click="addSet()"
+              >
+                Добавить
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
     <h4 v-if="setIsSelected">
       Исследования
     </h4>
@@ -127,6 +160,7 @@ export default {
       currentSet: null,
       currentResearch: null,
       sets: [],
+      newSet: '',
       researchesInSet: [],
       researches: [],
     };
@@ -208,11 +242,26 @@ export default {
         }
       }
     },
+    async addSet() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/add-set', { newSet: this.newSet });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Набор добавлен');
+        await this.getSets();
+        this.newSet = '';
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
   },
 };
 </script>
 
 <style scoped>
+::v-deep .form-control {
+  border: none;
+}
 .table {
   margin-bottom: 0;
   table-layout: fixed;

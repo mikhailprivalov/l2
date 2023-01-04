@@ -2835,3 +2835,12 @@ def update_order(request):
         else:
             return status_response(False, 'Исследование последнее в наборе')
     return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def add_set(request):
+    request_data = json.loads(request.body)
+    new_set = SetResearch(title=request_data["newSet"])
+    new_set.save()
+    return status_response(True)
