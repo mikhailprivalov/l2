@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 from django.db import models
-from django.db.models import Q
 
 import directory.models as directory
 from contracts.sql_func import search_companies

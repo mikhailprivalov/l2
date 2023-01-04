@@ -254,6 +254,8 @@ class SetOrderResearchAdmin(admin.ModelAdmin):
     autocomplete_fields = (
         'research',
     )
+    
+
 class SetResearchAdmin(admin.ModelAdmin):
     list_display = (
         'title',
