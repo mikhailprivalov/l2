@@ -2052,7 +2052,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
-        {"url": "/ui/construct/sets-research", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
