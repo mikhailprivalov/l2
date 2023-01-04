@@ -252,9 +252,7 @@ class SetOrderResearchAdmin(admin.ModelAdmin):
 
 
 class SetResearchAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
+    list_display = ('title',)
 
 
 admin.site.register(models.ResearchSite, RefSiteType)
