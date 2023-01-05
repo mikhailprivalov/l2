@@ -176,7 +176,7 @@
             :key="PARAMS_TYPES.COMPANY"
             class="input-group"
           >
-            <span class="input-group-addon">Компания:</span>
+            <span class="input-group-addon">Контрагент:</span>
             <treeselect
               v-model="values.company"
               class="treeselect-noborder treeselect-wide"
@@ -832,7 +832,7 @@ export default class Statistics extends Vue {
       }
 
       if (this.PARAMS_TYPES.RESEARCH_SETS === p) {
-        if (_.isNil(this.values.research)) {
+        if (_.isNil(this.values.researchSet)) {
           url = url.replace('<research-set>', -1);
         }
         url = url.replace('<research-set>', this.values.researchSet);
