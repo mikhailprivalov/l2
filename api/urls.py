@@ -118,4 +118,5 @@ urlpatterns = [
     path('get-researches-in-set', views.get_researches_in_set),
     path('add-research-in-set', views.add_research_in_set),
     path('update-order', views.update_order),
+    path('add-set', views.add_set),
 ]
