@@ -1914,8 +1914,7 @@ def sreening_xls(request):
 
     # АSCUS
     pass_pap_ascus_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID),
-        tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "ASCUS"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "ASCUS"
     )
     screening_data['pass_pap_ascus_result_value'] = pass_pap_ascus_result_value[0].count
 
