@@ -110,8 +110,7 @@ def statistic_xls(request):
             return JsonResponse({"error": "period max - 60 days"})
 
     if date_start_o != "" and date_end_o != "":
-        slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
-                 user=request.user.doctorprofile).save()
+        slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
 
     # Отчет по динамике анализов
     if tp == "directions_list_dynamic":
