@@ -1548,8 +1548,7 @@ def statistic_xls(request):
         all = 0
         for lab in labs:
             row_num += 1
-            c = Issledovaniya.objects.filter(research__podrazdeleniye=lab, time_confirmation__isnull=False,
-                                             time_confirmation__range=(date_start_o, date_end_o)).count()
+            c = Issledovaniya.objects.filter(research__podrazdeleniye=lab, time_confirmation__isnull=False, time_confirmation__range=(date_start_o, date_end_o)).count()
             row = [lab.title, c]
             all += c
             for col_num in range(len(row)):
