@@ -1116,8 +1116,7 @@ def statistic_xls(request):
                         ws_pat.write(row_num, col_num, row[col_num], style=style)
                     rows = []
                     ok = otds_pat.get(otdd.pk, otds_pat.get("external-{}".format(otdd.pk), {}))
-                    for obj in directory.Researches.objects.filter(
-                            pk__in=[x for x in otds_pat.get(otdd.pk, ok.keys())]):
+                    for obj in directory.Researches.objects.filter(pk__in=[x for x in otds_pat.get(otdd.pk, ok.keys())]):
                         row = [
                             obj.title,
                             ok[obj.pk],
