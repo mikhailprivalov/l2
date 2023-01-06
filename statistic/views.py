@@ -1591,13 +1591,9 @@ def statistic_xls(request):
         all_lost = 0
         for tube in Tubes.objects.all():
             row_num += 1
-            c_get = TubesRegistration.objects.filter(type__tube=tube, time_get__isnull=False,
-                                                     time_get__range=(date_start_o, date_end_o)).count()
-            c_rec = TubesRegistration.objects.filter(type__tube=tube, time_recive__isnull=False, notice="",
-                                                     time_get__range=(date_start_o, date_end_o)).count()
-            c_nrec = TubesRegistration.objects.filter(type__tube=tube, time_get__isnull=False,
-                                                      time_get__range=(date_start_o, date_end_o)).exclude(
-                notice="").count()
+            c_get = TubesRegistration.objects.filter(type__tube=tube, time_get__isnull=False, time_get__range=(date_start_o, date_end_o)).count()
+            c_rec = TubesRegistration.objects.filter(type__tube=tube, time_recive__isnull=False, notice="", time_get__range=(date_start_o, date_end_o)).count()
+            c_nrec = TubesRegistration.objects.filter(type__tube=tube, time_get__isnull=False, time_get__range=(date_start_o, date_end_o)).exclude(notice="").count()
             str1 = ""
             str2 = ""
             if c_nrec > 0:
