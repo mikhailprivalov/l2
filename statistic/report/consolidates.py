@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
@@ -148,5 +150,62 @@ def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_t
         ws1.column_dimensions[get_column_letter(step)].width = k[1]
         ws1.cell(row=row, column=step).style = style_border
         ws1.cell(row=row + 1, column=step).style = style_border
+
+    return (ws1, len(columns) + 1,)
+
+
+def consolidate_research_sets_fill_data(ws1, query, def_value_data):
+    style_border1 = NamedStyle(name="style_border1")
+    bd = Side(style='thin', color="000000")
+    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border1.font = Font(bold=False, size=11)
+    style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    last_patient = None
+    step = 0
+    base_step = 0
+    current_patient_researh_data = deepcopy(def_value_data)
+    current_department_id = None
+    current_department_title = ""
+    last_patient_fio = ""
+    last_patient_card = ""
+    row = 7
+    for i in query:
+        if last_patient != i.client_id and base_step != 0:
+            row += 1
+            ws1.cell(row=row, column=1).value = current_department_title
+            ws1.cell(row=row, column=2).value = last_patient_card
+            ws1.cell(row=row, column=3).value = last_patient_fio
+            column = 4
+            for k in current_patient_researh_data.values():
+                ws1.cell(row=row, column=column).value = k
+                column += 1
+            step += 1
+            current_patient_researh_data = deepcopy(def_value_data)
+        else:
+            pass
+        current_patient_researh_data[i.research_id] = 1
+
+        if current_department_id != i.department_id:
+            step = 0
+        current_department_id = i.department_id
+        current_department_title = i.department_title
+        last_patient = i.client_id
+        last_patient_fio = f"{i.patient_family} {i.patient_name} {i.patient_patronymic}"
+        last_patient_card = i.patient_card_num
+        base_step += 1
+
+    row += 1
+    ws1.cell(row=row, column=1).value = current_department_title
+    ws1.cell(row=row, column=2).value = last_patient_card
+    ws1.cell(row=row, column=3).value = last_patient_fio
+    column = 3
+    for k in current_patient_researh_data.values():
+        column += 1
+        ws1.cell(row=row, column=column).value = k
+
+    for m in range(row - base_step, row + 1):
+        for n in range(1, len(def_value_data) + 4):
+            ws1.cell(row=m, column=n).style = style_border1
 
     return ws1
