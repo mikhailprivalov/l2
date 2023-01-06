@@ -829,8 +829,7 @@ def statistic_xls(request):
             "11": "Декабрь",
         }
         date_values["month_title"] = monthes[date_values["month"]]
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Забор_биоматериала.xls\"",
-                                                        tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Забор_биоматериала.xls\"", tr)
         font_style = xlwt.XFStyle()
         font_style.alignment.wrap = 1
         font_style.borders = borders
