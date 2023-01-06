@@ -168,9 +168,7 @@ def statistic_xls(request):
                 dict_research_fraction = OrderedDict()
                 research_iss = i.research_id
                 dict_research_fraction = {
-                    p: str(t) + ',' + str(u) for p, t, u in
-                    directory.Fractions.objects.values_list('pk', 'title', 'units').filter(
-                        research=i.research).order_by("sort_weight")
+                    p: str(t) + ',' + str(u) for p, t, u in directory.Fractions.objects.values_list('pk', 'title', 'units').filter(research=i.research).order_by("sort_weight")
                 }
 
                 if depart_fraction.get(department_id) is not None:
@@ -194,16 +192,13 @@ def statistic_xls(request):
         for type_lab, l_napr in depart_napr.items():
             a = [
                 [p, r, n, datetime.datetime.strftime(utils.localtime(t), "%d.%m.%y")]
-                for p, r, n, t in
-                Issledovaniya.objects.values_list('pk', 'research_id', 'napravleniye_id', 'time_confirmation').filter(
-                    napravleniye_id__in=l_napr)
+                for p, r, n, t in Issledovaniya.objects.values_list('pk', 'research_id', 'napravleniye_id', 'time_confirmation').filter(napravleniye_id__in=l_napr)
             ]
             obj.append(a)
 
         for i in obj:
             for j in i:
-                result_k = {fr_id: val for fr_id, val in
-                            Result.objects.values_list('fraction', 'value').filter(issledovaniye_id=j[0])}
+                result_k = {fr_id: val for fr_id, val in Result.objects.values_list('fraction', 'value').filter(issledovaniye_id=j[0])}
                 j.append(result_k)
 
         finish_obj = []
@@ -261,8 +256,8 @@ def statistic_xls(request):
                     tmp_dict = {}
                     for d in finish_obj:
                         if key_tuple != (
-                                d[1],
-                                d[2],
+                            d[1],
+                            d[2],
                         ):
                             for k, v in fract_dict.items():
                                 val_dict[k] = ''
@@ -417,8 +412,7 @@ def statistic_xls(request):
         ).order_by("visit_date")
 
         if t == "sum":
-            response['Content-Disposition'] = str.translate(
-                "attachment; filename=\"Суммарный отчёт по посещениям.xls\"", tr)
+            response['Content-Disposition'] = str.translate("attachment; filename=\"Суммарный отчёт по посещениям.xls\"", tr)
             font_style = xlwt.XFStyle()
             font_style.alignment.wrap = 1
             font_style.borders = borders
@@ -465,8 +459,7 @@ def statistic_xls(request):
             row_num += 1
             iss = {}
             for d in dirs:
-                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by(
-                        "napravleniye__istochnik_f"):
+                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by("napravleniye__istochnik_f"):
                     rt = i.research.title
                     istf = i.napravleniye.istochnik_f.base.title + " - " + i.napravleniye.fin_title
                     if rt not in iss:
@@ -514,11 +507,11 @@ def statistic_xls(request):
         row_num += 1
 
         for i in Issledovaniya.objects.filter(
-                research__podrazdeleniye__vaccine=True,
-                time_confirmation__range=(
-                        date_start,
-                        date_end,
-                ),
+            research__podrazdeleniye__vaccine=True,
+            time_confirmation__range=(
+                date_start,
+                date_end,
+            ),
         ).order_by("time_confirmation"):
             if i.napravleniye:
                 row = [
@@ -758,8 +751,7 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_death_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_death_data(ws, data_death, expertise_final_data)
 
-            reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date,
-                                                                                         end_date, hospital_id)
+            reserved_researches_sql = sql_func.statistics_reserved_number_death_research(research_id, start_date, end_date, hospital_id)
             data_death_reserved = death_form_result_parse(reserved_researches_sql, reserved=True)
             ws2 = wb.create_sheet("Номера в резерве")
             ws2 = structure_sheet.statistic_reserved_research_death_base(ws2, d1, d2, research_title[0])
@@ -786,16 +778,14 @@ def statistic_xls(request):
                 ws3 = wb.create_sheet("По людям")
                 ws3 = structure_sheet.statistic_research_death_base_card(ws3, d1, d2, research_title[0])
                 ws3 = structure_sheet.statistic_research_death_data_card(ws3, data_death_card)
-        elif research_id in [RESEARCH_SPECIAL_REPORT.get("weapon_research_pk", -1),
-                             RESEARCH_SPECIAL_REPORT.get("driver_research", -1)]:
+        elif research_id in [RESEARCH_SPECIAL_REPORT.get("weapon_research_pk", -1), RESEARCH_SPECIAL_REPORT.get("driver_research", -1)]:
             researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date, hospital_id)
             data = weapon_form_result_parse(researches_sql, reserved=False)
             ws = structure_sheet.statistic_research_wepon_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_weapon_data(ws, data)
         elif is_purpose == 1:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
-            researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose,
-                                                          purposes)
+            researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id)
@@ -886,10 +876,8 @@ def statistic_xls(request):
                 day1 = day2 = timezone.now()
 
             iss_list = (
-                Issledovaniya.objects.filter(tubes__doc_get=user_row, tubes__time_get__isnull=False,
-                                             tubes__time_get__range=(day1, day2))
-                .order_by("napravleniye__client__individual__patronymic", "napravleniye__client__individual__name",
-                          "napravleniye__client__individual__family")
+                Issledovaniya.objects.filter(tubes__doc_get=user_row, tubes__time_get__isnull=False, tubes__time_get__range=(day1, day2))
+                .order_by("napravleniye__client__individual__patronymic", "napravleniye__client__individual__name", "napravleniye__client__individual__family")
                 .distinct()
             )
             patients = {}
@@ -897,9 +885,7 @@ def statistic_xls(request):
                 k = iss.napravleniye.client.individual_id
                 if k not in patients:
                     client = iss.napravleniye.client.individual
-                    patients[k] = {"fio": client.fio(short=True, dots=True),
-                                   "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": [],
-                                   "cards": []}
+                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": [], "cards": []}
                 if iss.napravleniye_id not in patients[k]["directions"]:
                     patients[k]["directions"].append(iss.napravleniye_id)
                 kn = iss.napravleniye.client.number_with_type()
@@ -931,9 +917,7 @@ def statistic_xls(request):
     elif tp == "lab":
 
         lab = Podrazdeleniya.objects.get(pk=int(pk))
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Лаборатория_{}_{}-{}.xls\"".format(lab.title.replace(" ", "_"),
-                                                                                  date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_{}_{}-{}.xls\"".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr)
 
         import directions.models as d
         from operator import itemgetter
@@ -997,12 +981,10 @@ def statistic_xls(request):
                         )
                     elif card_base:
                         iss_list = Issledovaniya.objects.filter(
-                            research__pk=obj.pk, time_confirmation__isnull=False,
-                            time_confirmation__range=(date_start, date_end), napravleniye__istochnik_f__base=card_base
+                            research__pk=obj.pk, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end), napravleniye__istochnik_f__base=card_base
                         )
                     else:
-                        iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
-                                                                time_confirmation__range=(date_start, date_end))
+                        iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end))
 
                     iss_list = iss_list.filter(napravleniye__isnull=False)
 
@@ -1156,8 +1138,7 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
         ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
     elif tp == "statistics-dispanserization":
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Диспасеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспасеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Диспансеризация")
@@ -1172,14 +1153,12 @@ def statistic_xls(request):
         query = sql_func.statistics_dispanserization(tuple(services), start_date, end_date)
         doctors = dispanserization.get_doctors_dispanserization(query)
         doctors_count_pass_patient = sql_func.doctors_pass_count_patient_by_date(tuple(doctors), start_date, end_date)
-        result_dates = dispanserization.dispanserization_data(query, services_start, service_end,
-                                                              doctors_count_pass_patient)
+        result_dates = dispanserization.dispanserization_data(query, services_start, service_end, doctors_count_pass_patient)
 
         ws = dispanserization.dispanserization_base(ws, d1, d2, result_dates)
         ws = dispanserization.dispanserization_fill_data(ws, result_dates)
     elif tp == "disp-plan":
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Дисп-учет")
@@ -1213,8 +1192,7 @@ def statistic_xls(request):
             result = dispensary_data.handle_query(query, query_diagnoses_pk)
             ws = dispensary_data.dispansery_plan_fill_data(ws, result)
     elif tp == "disp-registered":
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Дисп-учет зарегистрирвоано")
@@ -1233,8 +1211,7 @@ def statistic_xls(request):
         ws = dispensary_data.dispansery_reg_count_base(ws, d1)
         ws = dispensary_data.dispansery_reg_count_fill_data(ws, result)
     elif tp == "covid_sum":
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Кол-во по Ковид")
@@ -1267,21 +1244,17 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_research_by_covid_data(ws, result_patient, patient_docs)
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
-        researches = list(
-            directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by(
-                "sort_weight").order_by("direction_id"))
+        researches = list(directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by("sort_weight").order_by("direction_id"))
         pods = list(Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title"))
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls\"".format(
-                lab.title.replace(" ", "_"), date_start_o, date_end_o), tr
+            "attachment; filename=\"Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls\"".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr
         )
 
         import directions.models as d
         from operator import itemgetter
 
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
-        iss = Issledovaniya.objects.filter(research__podrazdeleniye=lab, time_confirmation__isnull=False,
-                                           time_confirmation__range=(date_start, date_end))
+        iss = Issledovaniya.objects.filter(research__podrazdeleniye=lab, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end))
 
         font_style_wrap = xlwt.XFStyle()
         font_style_wrap.alignment.wrap = 1
@@ -1295,9 +1268,7 @@ def statistic_xls(request):
         def nl(v):
             return v + ("" if len(v) > 19 else "\n")
 
-        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"),
-                                                     podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by(
-            "fio").distinct():
+        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"), podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by("fio").distinct():
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.get_fio(dots=False) + " " + str(executor.pk))
@@ -1334,17 +1305,14 @@ def statistic_xls(request):
                     if research.title not in cnt_itogo.keys():
                         cnt_itogo[research.title] = 0
 
-                    for i in iss.filter(doc_confirmation=executor, napravleniye__doc__podrazdeleniye=pod,
-                                        research=research):
+                    for i in iss.filter(doc_confirmation=executor, napravleniye__doc__podrazdeleniye=pod, research=research):
                         isadd = False
                         allempty = True
                         for r in Result.objects.filter(issledovaniye=i):
                             value = r.value.lower().strip()
                             if value != "":
                                 allempty = False
-                                n = any([y in value for y in
-                                         ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало",
-                                          "недостаточно", "реактив"]])
+                                n = any([y in value for y in ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало", "недостаточно", "реактив"]])
                                 if not n:
                                     isadd = True
 
@@ -1371,9 +1339,7 @@ def statistic_xls(request):
             row_num += 1
     elif tp == "otd":
         otd = Podrazdeleniya.objects.get(pk=int(pk))
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Отделение_{0}_{1}-{2}.xls\"".format(otd.title.replace(" ", "_"),
-                                                                                   date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Отделение_{0}_{1}-{2}.xls\"".format(otd.title.replace(" ", "_"), date_start_o, date_end_o), tr)
 
         ws = wb.add_sheet("Выписано направлений")
 
@@ -1399,8 +1365,7 @@ def statistic_xls(request):
         row_num += 1
         row = [
             (u"Всего выписано", 6000),
-            (str(Napravleniya.objects.filter(doc__podrazdeleniye=otd,
-                                             data_sozdaniya__range=(date_start_o, date_end_o)).count()), 3000),
+            (str(Napravleniya.objects.filter(doc__podrazdeleniye=otd, data_sozdaniya__range=(date_start_o, date_end_o)).count()), 3000),
         ]
 
         for col_num in range(len(row)):
@@ -1408,9 +1373,7 @@ def statistic_xls(request):
             ws.col(col_num).width = row[col_num][1]
 
         row_num += 1
-        researches = Issledovaniya.objects.filter(napravleniye__doc__podrazdeleniye=otd,
-                                                  napravleniye__data_sozdaniya__range=(date_start_o, date_end_o),
-                                                  time_confirmation__isnull=False)
+        researches = Issledovaniya.objects.filter(napravleniye__doc__podrazdeleniye=otd, napravleniye__data_sozdaniya__range=(date_start_o, date_end_o), time_confirmation__isnull=False)
         naprs = len(set([v.napravleniye_id for v in researches]))
         row = [u"Завершенных", str(naprs)]
 
@@ -1426,8 +1389,7 @@ def statistic_xls(request):
             has = False
             for u in DoctorProfile.objects.filter(podrazdeleniye=p).exclude(user__username="admin").order_by("fio"):
                 has = True
-                row = [("ID отделения %s" % p.pk, 9000), (p.title, 9000), ("ID пользователя %s" % u.pk, 9000),
-                       (u.user.username, 5000), (u.fio, 10000)]
+                row = [("ID отделения %s" % p.pk, 9000), (p.title, 9000), ("ID пользователя %s" % u.pk, 9000), (u.user.username, 5000), (u.fio, 10000)]
                 for col_num in range(len(row)):
                     ws.write(row_num, col_num, row[col_num][0], font_style)
                     ws.col(col_num).width = row[col_num][1]
@@ -1675,10 +1637,8 @@ def statistic_xls(request):
                     ws.write(row_num, col_num, row[col_num], font_style)
 
     elif tp == "uets":
-        usrs = DoctorProfile.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by(
-            "podrazdeleniye__title")
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_УЕТс_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
+        usrs = DoctorProfile.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by("podrazdeleniye__title")
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_УЕТс_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
 
         ws = wb.add_sheet("УЕТы")
 
@@ -1707,25 +1667,19 @@ def statistic_xls(request):
         font_style = xlwt.XFStyle()
         for usr in usrs:
             researches_uets = {}
-            researches = Issledovaniya.objects.filter(doc_save=usr, time_save__isnull=False,
-                                                      time_save__range=(date_start_o, date_end_o))
+            researches = Issledovaniya.objects.filter(doc_save=usr, time_save__isnull=False, time_save__range=(date_start_o, date_end_o))
             for issledovaniye in researches:
                 if usr.labtype == 1:
-                    uet_tmp = sum(
-                        [v.uet_doc for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
+                    uet_tmp = sum([v.uet_doc for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
                 else:
-                    uet_tmp = sum(
-                        [v.uet_lab for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
+                    uet_tmp = sum([v.uet_lab for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
                 researches_uets[issledovaniye.pk] = {"uet": uet_tmp}
-            researches = Issledovaniya.objects.filter(doc_confirmation=usr, time_confirmation__isnull=False,
-                                                      time_confirmation__range=(date_start_o, date_end_o))
+            researches = Issledovaniya.objects.filter(doc_confirmation=usr, time_confirmation__isnull=False, time_confirmation__range=(date_start_o, date_end_o))
             for issledovaniye in researches:
                 if usr.labtype == 1:
-                    uet_tmp = sum(
-                        [v.uet_doc for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
+                    uet_tmp = sum([v.uet_doc for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
                 else:
-                    uet_tmp = sum(
-                        [v.uet_lab for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
+                    uet_tmp = sum([v.uet_lab for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
                 researches_uets[issledovaniye.pk] = {"uet": uet_tmp}
             uets = sum([researches_uets[v]["uet"] for v in researches_uets.keys()])
             row_num += 1
@@ -1747,9 +1701,7 @@ def statistic_xls(request):
         if not any_hospital:
             filters['pk'] = request.user.doctorprofile.get_hospital_id()
 
-        response['Content-Disposition'] = str.translate(
-            f"attachment; filename=\"Обращения {date_start_o.replace('.', '')} {date_end_o.replace('.', '')} {filters['pk']}.xlsx\"",
-            tr)
+        response['Content-Disposition'] = str.translate(f"attachment; filename=\"Обращения {date_start_o.replace('.', '')} {date_end_o.replace('.', '')} {filters['pk']}.xlsx\"", tr)
 
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
@@ -1768,12 +1720,10 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_message_ticket_data(ws, message_ticket_sql, styles_obj[3])
         ws = wb.create_sheet("Итоги-Обращения")
         message_total_purpose_sql = sql_func.message_ticket_purpose_total(rows_hosp, start_date, end_date)
-        ws = structure_sheet.statistic_message_purpose_total_data(ws, message_total_purpose_sql, date_start_o,
-                                                                  date_end_o, styles_obj[3])
+        ws = structure_sheet.statistic_message_purpose_total_data(ws, message_total_purpose_sql, date_start_o, date_end_o, styles_obj[3])
 
     elif tp == "statistics-consolidate":
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Свод пациенты-услуги_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Свод пациенты-услуги_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Сводный")
@@ -1797,8 +1747,7 @@ def statistic_xls(request):
             else:
                 price = title_fin.contracts.price
                 research_coast = PriceCoast.get_coast_by_researches(price, list(def_value_data.keys()))
-            query = sql_func.statistics_by_research_sets_company(start_date, end_date, type_fin,
-                                                                 tuple(def_value_data.keys()), company_id)
+            query = sql_func.statistics_by_research_sets_company(start_date, end_date, type_fin, tuple(def_value_data.keys()), company_id)
             if company_id > 0:
                 company = Company.objects.get(pk=company_id)
                 company_title = company.title
@@ -1847,8 +1796,7 @@ def sreening_xls(request):
     # из них подлежащих при диспансеризации (кол-во)
     # получить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
     # далее првоерить в DispensaryRouteSheet пары
-    count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(year, month,
-                                                                                                f'{year}-12-31')
+    count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(year, month, f'{year}-12-31')
     screening_data['count_dispensarization_from_screening'] = count_dispensarization_from_screening[0].count
 
     # Число женщин 30-65 лет, прошедших скрининг
@@ -1856,33 +1804,28 @@ def sreening_xls(request):
     screening_data['pass_screening'] = pass_screening[0].count
 
     # Число женщин 30-65 лет, прошедших скрининг из них при диспансеризации
-    pass_screening_in_dispensarization = sql_pass_screening_in_dispensarization(year, month, datetime_start,
-                                                                                datetime_end, f'{year}-12-31')
+    pass_screening_in_dispensarization = sql_pass_screening_in_dispensarization(year, month, datetime_start, datetime_end, f'{year}-12-31')
     screening_data['pass_screening_in_dispensarization'] = pass_screening_in_dispensarization[0].count
 
     # кто прошел тест папаниколау
-    pass_pap_analysis = sql_pass_pap_analysis_count(datetime_start, datetime_end, sreening_people_cards,
-                                                    tuple(PAP_ANALYSIS_ID))
+    pass_pap_analysis = sql_pass_pap_analysis_count(datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID))
     screening_data['pass_pap_analysis'] = pass_pap_analysis[0].count
 
     # адекватных
     pass_pap_adequate_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID),
-        tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "^адекватный"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "^адекватный"
     )
     screening_data['pass_pap_adequate_result_value'] = pass_pap_adequate_result_value[0].count
 
     # недостаточно адекватный
     pass_pap_not_enough_adequate_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID),
-        tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "^недостаточно"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "^недостаточно"
     )
     screening_data['pass_pap_not_enough_adequate_result_value'] = pass_pap_not_enough_adequate_result_value[0].count
 
     # неадекватный
     pass_pap_not_adequate_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID),
-        tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный"
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный"
     )
     screening_data['pass_pap_not_adequate_result_value'] = pass_pap_not_adequate_result_value[0].count
 
