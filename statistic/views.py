@@ -1498,8 +1498,7 @@ def statistic_xls(request):
             ws.col(col_num).width = row[col_num][1]
         row_num += 1
 
-        for tube in directory.Tubes.objects.filter(
-                releationsft__fractions__research__podrazdeleniye=lab).distinct().order_by("title"):
+        for tube in directory.Tubes.objects.filter(releationsft__fractions__research__podrazdeleniye=lab).distinct().order_by("title"):
             row = [tube.title]
             for pod in pods:
                 gets = (
