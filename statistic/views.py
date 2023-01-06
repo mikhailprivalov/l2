@@ -1446,8 +1446,7 @@ def statistic_xls(request):
     elif tp == "lab-receive":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Принято_емкостей_{0}_{1}-{2}.xls\"".format(lab.title.replace(" ", "_"),
-                                                                                          date_start_o, date_end_o), tr
+            "attachment; filename=\"Статистика_Принято_емкостей_{0}_{1}-{2}.xls\"".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr
         )
 
         import directions.models as d
