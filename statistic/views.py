@@ -818,7 +818,7 @@ def statistic_xls(request):
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name',
                                                                                  flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if (access_to_all or (
-                    x.isdigit() and int(x) == request.user.doctorprofile.pk)) and DoctorProfile.objects.filter(
+                x.isdigit() and int(x) == request.user.doctorprofile.pk)) and DoctorProfile.objects.filter(
             pk=x).exists()]
         date_values = json.loads(date_values_o)
         monthes = {
@@ -1319,7 +1319,7 @@ def statistic_xls(request):
 
         for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"),
                                                      podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by(
-                "fio").distinct():
+            "fio").distinct():
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.get_fio(dots=False) + " " + str(executor.pk))
