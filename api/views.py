@@ -2772,7 +2772,7 @@ def add_factor(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def get_sets(request):
-    sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.filter(hide=False).order_by("title")]
+    sets = [{"id": set_research.id, "label": set_research.title} for set_research in SetResearch.objects.filter(hide=False).order_by("title")]
     return JsonResponse({"data": sets})
 
 
@@ -2782,8 +2782,8 @@ def get_researches_in_set(request):
     request_data = json.loads(request.body)
     researches = [
         {
-            "id": i.pk,
-            "research": {"id": i.research.pk, "label": i.research.title},
+            "id": i.id,
+            "research": {"id": i.research_id, "label": i.research.title},
             "order": i.order,
         }
         for i in SetOrderResearch.objects.filter(set_research=request_data).order_by("-order")
