@@ -1019,9 +1019,7 @@ def statistic_xls(request):
                         n = False
                         for x in d.Result.objects.filter(issledovaniye=researches):
                             x = x.value.lower().strip()
-                            n = any([y in x for y in
-                                     ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало",
-                                      "недостаточно", "реактив"]]) or x == "-"
+                            n = any([y in x for y in ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало", "недостаточно", "реактив"]]) or x == "-"
                             if n:
                                 break
                         if n:
