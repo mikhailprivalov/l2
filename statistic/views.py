@@ -1146,8 +1146,7 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_research_by_sum_lab_base(ws, d1, d2, "Кол-во по лабораториям")
         ws = structure_sheet.statistic_research_by_sum_lab_data(ws, researches_by_sum)
     elif tp == "lab_details":
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Лаборатория_детали_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_детали_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Детали по лаборатории")
