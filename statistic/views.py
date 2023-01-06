@@ -1503,9 +1503,7 @@ def statistic_xls(request):
             row = [tube.title]
             for pod in pods:
                 gets = (
-                    d.TubesRegistration.objects.filter(issledovaniya__research__podrazdeleniye=lab, type__tube=tube,
-                                                       time_recive__range=(date_start, date_end),
-                                                       doc_get__podrazdeleniye=pod)
+                    d.TubesRegistration.objects.filter(issledovaniya__research__podrazdeleniye=lab, type__tube=tube, time_recive__range=(date_start, date_end), doc_get__podrazdeleniye=pod)
                     .filter(Q(notice="") | Q(notice__isnull=True))
                     .distinct()
                 )
