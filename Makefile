@@ -1,6 +1,6 @@
-all: install front mm
+all: deprecation_make_all_warning continue_confirmation install front mm
 all_poetry: install_prod front_poetry mm_poetry
-all_prod: install_prod front_prod mm
+all_prod: deprecation_make_all_prod_warning continue_confirmation install_prod front_prod mm
 all_fast: poetry_bootstrap front_fast mm_poetry
 mm: makemigrations migrate
 mm_poetry: makemigrations_poetry migrate_poetry
@@ -13,6 +13,16 @@ install_prod: poetry_bootstrap npm_install
 release: update_browserlist up git_commit_up git_push
 version_updater: update_browserlist up
 fast: checkout_last all_fast
+
+deprecation_make_all_warning:
+	@echo "Make all is deprecated, use make all instead for development purposes"
+
+deprecation_make_all_prod_warning:
+	@echo "Make all_prod is deprecated, use make all_fast instead for production purposes"
+
+continue_confirmation:
+	@echo "Are you sure you want to continue? [y/N]"
+	@read ans; if [ "$$ans" != "y" ]; then exit 1; fi
 
 watch:
 	yarn --cwd l2-frontend serve
