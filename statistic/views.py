@@ -1045,9 +1045,9 @@ def statistic_xls(request):
                 otd_local_keys = [x for x in otds.keys() if isinstance(x, int)]
                 otd_external_keys = [int(x.replace("external-", "")) for x in otds.keys() if isinstance(x, str) and "external-" in x and x != "external-None"]
                 for otdd in (
-                        list(Podrazdeleniya.objects.filter(pk=pki))
-                        + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki]))
-                        + list(RMISOrgs.objects.filter(pk__in=otd_external_keys))
+                    list(Podrazdeleniya.objects.filter(pk=pki))
+                    + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki]))
+                    + list(RMISOrgs.objects.filter(pk__in=otd_external_keys))
                 ):
                     row_num += 2
                     row = [
