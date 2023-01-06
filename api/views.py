@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from directory.models import Researches
+from directory.models import Researches, SetResearch, SetOrderResearch
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
@@ -2052,6 +2052,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
+        {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2766,3 +2767,80 @@ def add_factor(request):
             {"factor": factor.as_json(factor)},
         )
     return JsonResponse(result)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_research_sets(request):
+    sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.filter(hide=False).order_by("title")]
+    return JsonResponse({"data": sets})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_researches_in_set(request):
+    request_data = json.loads(request.body)
+    researches = [
+        {
+            "id": i.pk,
+            "research": {"id": i.research_id, "label": i.research.title},
+            "order": i.order,
+        }
+        for i in SetOrderResearch.objects.filter(set_research=request_data).order_by("-order")
+    ]
+    return JsonResponse({"data": researches})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def add_research_in_set(request):
+    request_data = json.loads(request.body)
+    if not SetOrderResearch.objects.filter(set_research_id=request_data["set"]).exists():
+        offset = 0
+    else:
+        offset = 1
+    current_research_in_set = SetOrderResearch(set_research_id=request_data["set"], research_id=request_data["research"], order=request_data["minOrder"] - offset)
+    current_research_in_set.save()
+    Log.log(
+        current_research_in_set.pk,
+        170000,
+        request.user.doctorprofile,
+        {"set": current_research_in_set.set_research_id, "research": current_research_in_set.research_id, "order": current_research_in_set.order},
+    )
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_order_in_set(request):
+    request_data = json.loads(request.body)
+    if request_data["action"] == 'inc_order':
+        next_research_in_set = SetOrderResearch.objects.filter(set_research=request_data["set"], order=request_data["order"] + 1).first()
+        if next_research_in_set:
+            current_research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
+            next_research_in_set.order -= 1
+            current_research_in_set.order += 1
+            next_research_in_set.save()
+            current_research_in_set.save()
+        else:
+            return status_response(False, 'Исследование первое в наборе')
+    elif request_data["action"] == 'dec_order':
+        prev_research_in_set = SetOrderResearch.objects.filter(set_research=request_data["set"], order=request_data["order"] - 1).first()
+        if prev_research_in_set:
+            current_research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
+            prev_research_in_set.order += 1
+            current_research_in_set.order -= 1
+            prev_research_in_set.save()
+            current_research_in_set.save()
+        else:
+            return status_response(False, 'Исследование последнее в наборе')
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def add_research_set(request):
+    request_data = json.loads(request.body)
+    new_set = SetResearch(title=request_data["newSet"])
+    new_set.save()
+    return status_response(True)
