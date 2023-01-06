@@ -1838,8 +1838,10 @@ def statistic_xls(request):
                                                                  tuple(def_value_data.keys()), company_id)
             if company_id > 0:
                 company = Company.objects.get(pk=company_id)
-            ws = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company.title)
-            # ws = consolidates.consolidate_research_sets_data(ws, query)
+                company_title = company.title
+            else:
+                company_title = ""
+            ws = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title)
         else:
             query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
             ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
