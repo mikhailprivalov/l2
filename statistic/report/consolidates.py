@@ -117,7 +117,7 @@ def consolidate_fill_data(ws1, result_query):
     return ws1
 
 
-def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_title):
+def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_title, coast_data):
     style_border = NamedStyle(name="style_border_ca5")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -136,12 +136,17 @@ def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_t
     ]
 
     custom_columns = [(i, 13) for i in head_data.values()]
+    coast_data_column = [*[("", 10) for k in range(len(columns))], *[(i, 13) for i in coast_data.values()]]
     columns.extend(custom_columns)
 
     row = 6
-    for idx, column in enumerate(columns, 1):
-        ws1.cell(row=row, column=idx).value = column[0]
-        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
-        ws1.cell(row=row, column=idx).style = style_border
+    step = 0
+    for k, j in zip(columns, coast_data_column):
+        step += 1
+        ws1.cell(row=row, column=step).value = k[0]
+        ws1.cell(row=row + 1, column=step).value = j[0]
+        ws1.column_dimensions[get_column_letter(step)].width = k[1]
+        ws1.cell(row=row, column=step).style = style_border
+        ws1.cell(row=row + 1, column=step).style = style_border
 
     return ws1
