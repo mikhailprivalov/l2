@@ -14,8 +14,7 @@ import slog.models as slog
 from api.directions.sql_func import get_lab_podr
 from clients.models import CardBase
 from contracts.models import PriceName, PriceCoast, Company
-from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, \
-    ParaclinicResult
+from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
 from hospitals.models import Hospitals
 from laboratory import settings
