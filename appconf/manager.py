@@ -10,7 +10,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-6"
+    VERSION = f"{laboratory.VERSION}-7"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -158,6 +158,7 @@ class SettingManager:
                     "employee_job",
                     "send_orgs_email_results",
                     "chats",
+                    "dynamic_directories",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

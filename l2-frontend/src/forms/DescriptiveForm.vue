@@ -78,6 +78,7 @@
                       28: 1,
                       30: 1,
                       39: 1,
+                      40: 1,
                     }[field.field_type]
                 "
                 :pk="field.pk"
@@ -468,6 +469,16 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 40"
+                class="field-value"
+              >
+                <RelationalTableField
+                  v-model="field.value"
+                  :variants="field.values_to_input"
+                  :disabled="confirmed"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -531,6 +542,7 @@ export default {
     DoctorProfileTreeselectField: () => import('@/fields/DoctorProfileTreeselectField.vue'),
     ProcedureListResult: () => import('@/fields/ProcedureListResult.vue'),
     DynamicDirectoryField: () => import('@/fields/DynamicDirectoryField.vue'),
+    RelationalTableField: () => import('@/fields/RelationalTableField.vue'),
   },
   props: {
     research: {

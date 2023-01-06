@@ -710,6 +710,8 @@ def form_05(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
                 laboratory_value = param.value
             if param.field_type == 27:
                 table_value = param.value
+            if param.field_type == 40:
+                table_value = param.value
             if param.field_type in [26, 25]:
                 descriptive_values.append(param.value)
             if param.title == 'Цель':

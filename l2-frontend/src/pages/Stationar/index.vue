@@ -1692,7 +1692,7 @@ export default {
     append_fields_values(row, data) {
       for (const g of row.research.groups) {
         for (const f of g.fields) {
-          if (![1, 3, 16, 17, 20, 13, 14, 11, 32, 33, 36, 27, 28, 29, 30, 37, 35].includes(f.field_type) && data[f.pk]) {
+          if (![1, 3, 16, 17, 20, 13, 14, 11, 32, 33, 36, 27, 28, 29, 30, 37, 35, 40].includes(f.field_type) && data[f.pk]) {
             this.append_value(f, data[f.pk]);
           }
         }

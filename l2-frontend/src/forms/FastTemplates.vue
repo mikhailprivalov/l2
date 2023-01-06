@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="values.length > 0 && !confirmed && ![10, 12, 18, 19, 21, 24, 25, 26, 27, 28, 39].includes(field_type)"
+    v-if="values.length > 0 && !confirmed && ![10, 12, 18, 19, 21, 24, 25, 26, 27, 28, 39, 40].includes(field_type)"
     class="field-inputs"
   >
     <div class="input-values-wrap">

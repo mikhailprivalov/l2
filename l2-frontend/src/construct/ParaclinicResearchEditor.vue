@@ -733,6 +733,9 @@
                   <div v-else-if="row.field_type === 27">
                     <strong>Таблица:</strong>
                   </div>
+                  <div v-else-if="row.field_type === 40">
+                    <strong>Таблица: пользователи по подразделению × даты</strong>
+                  </div>
                   <div v-else-if="row.field_type === 39">
                     <strong>Справочник:</strong>
                     <br>
@@ -754,7 +757,7 @@
                     :permanent_directories_keys="permanent_directories_keys"
                     :permanent_directories="permanent_directories"
                   />
-                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
+                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27, 40].includes(row.field_type)">
                     <div
                       v-collapse-toggle
                       class="header"
@@ -776,7 +779,7 @@
                         Мин, Макс, Шаг, Единицы измерения
                       </a>
                       <a
-                        v-else-if="row.field_type === 27"
+                        v-else-if="row.field_type === 27 || row.field_type === 40"
                         href="#"
                         class="a-under"
                         @click.prevent
@@ -796,6 +799,10 @@
                     >
                       <TableConstructor
                         v-if="row.field_type === 27"
+                        :row="row"
+                      />
+                      <RelationalTableConstructor
+                        v-else-if="row.field_type === 40"
                         :row="row"
                       />
                       <template v-else>
@@ -974,7 +981,7 @@
                       <option value="26">Результаты консультаций</option>
                       <option value="38">Результаты процедурного листа</option>
                       <option value="27">Таблица</option>
-                      <option value="40">Реляционная таблица</option>
+                      <option value="40">Таблица: пользователи по подразделению × даты</option>
                       <option value="28">НСИ-справочник</option>
                       <option value="29">Адрес по ФИАС</option>
                       <option
@@ -1090,6 +1097,7 @@ export default {
     NumberField,
     RichTextEditor: () => import('@/fields/RichTextEditor.vue'),
     TableConstructor: () => import('@/construct/TableConstructor.vue'),
+    RelationalTableConstructor: () => import('@/construct/RelationalTableConstructor.vue'),
     FastTemplatesEditor,
     ConfigureAnesthesiaField,
     Treeselect,

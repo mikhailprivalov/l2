@@ -685,6 +685,7 @@ def current_user_info(request):
             ret["rmis_enabled"] = SettingManager.get("rmis_enabled", default='false', default_type='b')
             ret["directions_params_org_form_default_pk"] = SettingManager.get("directions_params_org_form_default_pk", default='', default_type='s')
             ret["priceCategories"] = [{"pk": -1, "title": " – Не выбрано"}, *[{"pk": x.pk, "title": x.title} for x in PriceCategory.objects.filter(hide=False).order_by('title')]]
+            ret["totalGroups"] = [{"pk": x.pk, "title": x.name} for x in Group.objects.all().order_by('name')]
 
             en = SettingManager.en()
             ret["extended_departments"] = {}

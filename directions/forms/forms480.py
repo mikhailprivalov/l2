@@ -129,6 +129,8 @@ def form_01(c: Canvas, dir: Napravleniya):
                 laboratory_value = param.value
             elif param.field_type == 27:
                 table_value = param.value
+            elif param.field_type == 40:
+                table_value = param.value
             elif param.field_type in [26, 25]:
                 descriptive_values.append(param.value)
             elif param.title == 'Цель':

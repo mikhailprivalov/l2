@@ -50,6 +50,7 @@ const getters = {
   authenticated: state => Boolean(state.data?.auth),
   currentDocPk: state => state.data?.doc_pk,
   user_groups: state => state.data?.groups || [],
+  totalGroups: state => state.data?.totalGroups || [],
   authenticateLoading: state => Boolean(state.data?.loading),
   ex_dep: state => state.data.extended_departments || [],
   directive_from: state => state.directive_from,
