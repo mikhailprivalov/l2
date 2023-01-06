@@ -763,8 +763,7 @@ def statistics_by_research_sets_company(d_s, d_e, fin_source_pk, researches, com
                     directions_napravleniya.client_id, 
                     directions_issledovaniya.time_confirmation
                             """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk,
-                    'researches': researches, 'company_id': company_id},
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'researches': researches, 'company_id': company_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows
