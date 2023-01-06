@@ -1921,8 +1921,7 @@ def sreening_xls(request):
 
     # CIN-I
     pass_pap_cin_i_result_value = sql_pass_pap_fraction_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID),
-        tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "дисплазии CIN-I$", "", count_param=1
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "дисплазии CIN-I$", "", count_param=1
     )
     screening_data['pass_pap_cin_i_result_value'] = pass_pap_cin_i_result_value[0].count
 
