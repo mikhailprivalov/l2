@@ -1826,7 +1826,7 @@ def statistic_xls(request):
         query = None
         if set_research > 0:
             set_research = directory.SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
-            head_data = {i.research.pk: i.research.title for i in set_research}
+            head_data = {i.research_id: i.research.title for i in set_research}
             def_value_data = {k: 0 for k in head_data.keys()}
             price = get_price_company(company_id, start_date, end_date)
             if price:
