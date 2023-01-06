@@ -1905,8 +1905,7 @@ def sreening_xls(request):
 
     # карты с недостаточно адекватный и неадекватным результатом к-рым дважды взяли мазок
     pass_pap_not_not_enough_adequate_result_value = sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
-        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID),
-        tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный", "недостаточно адекватный", count_param=2
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный", "недостаточно адекватный", count_param=2
     )
     # people_cards_not_not_enough_adequate = tuple([i.client_id for i in pass_pap_not_not_enough_adequate_result_value])
     count_people_dublicate = len(pass_pap_not_not_enough_adequate_result_value)
