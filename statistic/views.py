@@ -1517,8 +1517,7 @@ def statistic_xls(request):
 
     elif tp == "all-labs":
         labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Все_Лаборатории_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Все_Лаборатории_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
         ws = wb.add_sheet("Выполненых анализов")
 
         font_style = xlwt.XFStyle()
