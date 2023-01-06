@@ -31,8 +31,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, \
-    consolidates
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
