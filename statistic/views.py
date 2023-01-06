@@ -1603,7 +1603,6 @@ def statistic_xls(request):
             all_nrec = 0
             all_lost = 0
             for tube in Tubes.objects.all():
-
                 row_num += 1
                 c_get = TubesRegistration.objects.filter(
                     issledovaniya__research__podrazdeleniye=lab, type__tube=tube, time_get__isnull=False, time_get__range=(date_start_o, date_end_o)
