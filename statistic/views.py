@@ -1104,8 +1104,7 @@ def statistic_xls(request):
                         ws_pat.write_merge(row_num, row_num, col_num, col_num + 1, row[col_num], style=font_style)
 
                 otd_local_keys = [x for x in otds_pat.keys() if isinstance(x, int)]
-                otd_external_keys = [int(x.replace("external-", "")) for x in otds_pat.keys() if
-                                     isinstance(x, str) and "external-" in x]
+                otd_external_keys = [int(x.replace("external-", "")) for x in otds_pat.keys() if isinstance(x, str) and "external-" in x]
 
                 for otdd in (
                         list(Podrazdeleniya.objects.filter(pk=pki))
