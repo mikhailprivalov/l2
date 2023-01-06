@@ -15,10 +15,10 @@ version_updater: update_browserlist up
 fast: checkout_last all_fast
 
 deprecation_make_all_warning:
-	@echo "Make all is deprecated, use make all instead for development purposes"
+	@echo "\033[1mmake all is deprecated, use make all_poetry instead for development purposes\033[0m"
 
 deprecation_make_all_prod_warning:
-	@echo "Make all_prod is deprecated, use make all_fast instead for production purposes"
+	@echo "\033[1mmake all_prod is deprecated, use make all_fast instead for production purposes\033[0m"
 
 continue_confirmation:
 	@echo "Are you sure you want to continue? [y/N]"
