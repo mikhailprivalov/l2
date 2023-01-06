@@ -1023,8 +1023,7 @@ def statistic_xls(request):
                         if n:
                             continue
                         if researches.napravleniye:
-                            otd_pk = "external-" + str(
-                                researches.napravleniye.imported_org_id) if not researches.napravleniye.doc else researches.napravleniye.doc.podrazdeleniye_id
+                            otd_pk = "external-" + str(researches.napravleniye.imported_org_id) if not researches.napravleniye.doc else researches.napravleniye.doc.podrazdeleniye_id
                         else:
                             otd_pk = "empty"
                         if otd_pk not in otds:
