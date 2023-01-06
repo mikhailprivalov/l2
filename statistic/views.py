@@ -1131,8 +1131,7 @@ def statistic_xls(request):
                     ws_pat.sheet_visible = False
 
     elif tp == "lab_sum":
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_Колво_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Кол-во по лаборатории")
