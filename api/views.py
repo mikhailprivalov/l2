@@ -2771,7 +2771,7 @@ def add_factor(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_sets(request):
+def get_research_sets(request):
     sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.filter(hide=False).order_by("title")]
     return JsonResponse({"data": sets})
 
@@ -2812,7 +2812,7 @@ def add_research_in_set(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def update_order(request):
+def update_order_in_set(request):
     request_data = json.loads(request.body)
     if request_data["action"] == 'inc_order':
         next_research_in_set = SetOrderResearch.objects.filter(set_research=request_data["set"], order=request_data["order"] + 1).first()
@@ -2839,7 +2839,7 @@ def update_order(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def add_set(request):
+def add_research_set(request):
     request_data = json.loads(request.body)
     new_set = SetResearch(title=request_data["newSet"])
     new_set.save()
