@@ -1554,9 +1554,7 @@ def statistic_xls(request):
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
     elif tp == "tubes-using":
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename=\"Статистика_Использование_Емкостей_{0}-{1}.xls\"".format(date_start_o, date_end_o),
-            tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Использование_Емкостей_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
 
         per = "{0} - {1}".format(date_start_o, date_end_o)
 
