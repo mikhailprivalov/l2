@@ -998,8 +998,7 @@ def statistic_xls(request):
                 for obj in directory.Researches.objects.filter(podrazdeleniye__pk=lab.pk):
                     if finsource is not False:
                         iss_list = Issledovaniya.objects.filter(
-                            research__pk=obj.pk, time_confirmation__isnull=False,
-                            time_confirmation__range=(date_start, date_end), napravleniye__istochnik_f=finsource
+                            research__pk=obj.pk, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end), napravleniye__istochnik_f=finsource
                         )
                     elif card_base:
                         iss_list = Issledovaniya.objects.filter(
