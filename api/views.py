@@ -2783,7 +2783,7 @@ def get_researches_in_set(request):
     researches = [
         {
             "id": i.pk,
-            "research": {"id": i.research.pk, "label": i.research.title},
+            "research": {"id": i.research_id, "label": i.research.title},
             "order": i.order,
         }
         for i in SetOrderResearch.objects.filter(set_research=request_data).order_by("-order")

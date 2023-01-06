@@ -115,3 +115,33 @@ def consolidate_fill_data(ws1, result_query):
                 ws1.cell(row=r, column=j).style = style_border1
 
     return ws1
+
+
+def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_title):
+    style_border = NamedStyle(name="style_border_ca5")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=1).value = f'Сводный: {fin_source}'
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+    ws1.cell(row=4, column=1).value = f'Контрагент: {company_title}'
+
+    columns = [
+        ('Отдел', 20),
+        ('Карта', 15),
+        ('ФИО', 48),
+    ]
+
+    custom_columns = [(i, 13) for i in head_data.values()]
+    columns.extend(custom_columns)
+
+    row = 6
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=row, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=row, column=idx).style = style_border
+
+    return ws1
