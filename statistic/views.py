@@ -1658,8 +1658,7 @@ def statistic_xls(request):
 
                 row_num += 1
                 c_get = TubesRegistration.objects.filter(
-                    issledovaniya__research__podrazdeleniye=lab, type__tube=tube, time_get__isnull=False,
-                    time_get__range=(date_start_o, date_end_o)
+                    issledovaniya__research__podrazdeleniye=lab, type__tube=tube, time_get__isnull=False, time_get__range=(date_start_o, date_end_o)
                 ).count()
                 c_rec = TubesRegistration.objects.filter(
                     issledovaniya__research__podrazdeleniye=lab, type__tube=tube, time_recive__isnull=False, notice="", time_get__range=(date_start_o, date_end_o)
