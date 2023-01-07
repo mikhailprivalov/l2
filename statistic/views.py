@@ -1747,12 +1747,13 @@ def statistic_xls(request):
                 price = title_fin.contracts.price
                 research_coast = PriceCoast.get_coast_by_researches(price, list(def_value_data.keys()))
             query = sql_func.statistics_by_research_sets_company(start_date, end_date, type_fin, tuple(def_value_data.keys()), company_id)
+            head_data_coast = {k: research_coast.get(k, "") for k, v in head_data.items()}
             if company_id > 0:
                 company = Company.objects.get(pk=company_id)
                 company_title = company.title
             else:
                 company_title = ""
-            ws = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title)
+            ws = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title, head_data_coast)
         else:
             query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
             ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
