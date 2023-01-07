@@ -174,12 +174,15 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
     row, price_row = 7, 7
     start_row = 0
     current_sum_columns = {}
+    total_sum_rows = []
     fill_rows = {}
+    count_patient_in_department = 0
     for i in query:
         if last_patient != i.client_id and base_step != 0:
             row += 1
+            count_patient_in_department += 1
             ws1.cell(row=row, column=1).value = current_department_title
-            ws1.cell(row=row, column=2).value = ""
+            ws1.cell(row=row, column=2).value = count_patient_in_department
             ws1.cell(row=row, column=3).value = last_patient_card
             ws1.cell(row=row, column=4).value = last_patient_fio
             column = start_research_column
@@ -189,19 +192,21 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
                 ws1.cell(row=row, column=column).value = k
                 current_sum_columns[column] = f'=SUM({get_column_letter(column)}{start_row}:{get_column_letter(column)}{row})'
                 column += 1
-            step += 1
+
             current_patient_researh_data = deepcopy(def_value_data)
         else:
             pass
         current_patient_researh_data[i.research_id] = 1
 
-        if current_department_id != i.department_id and step != 0:
+        if current_department_id != i.department_id and base_step != 0:
+            count_patient_in_department = 0
             start_row = 0
             row += 1
             ws1.cell(row=row, column=1).value = f'Итого кол-во {current_department_title}'
             for col, val in current_sum_columns.items():
                 ws1.cell(row=row, column=col).value = val
                 ws1.cell(row=row + 1, column=col).value = f'={get_column_letter(col)}{price_row}*{get_column_letter(col)}{row}'
+            total_sum_rows.append(row)
             row += 1
             ws1.cell(row=row, column=1).value = f'Итого сумма {current_department_title}'
             fill_rows[row] = col
@@ -214,8 +219,9 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
         base_step += 1
 
     row += 1
+    count_patient_in_department += 1
     ws1.cell(row=row, column=1).value = current_department_title
-    ws1.cell(row=row, column=2).value = ""
+    ws1.cell(row=row, column=2).value = count_patient_in_department
     ws1.cell(row=row, column=3).value = last_patient_card
     ws1.cell(row=row, column=4).value = last_patient_fio
     column = start_research_column
@@ -226,29 +232,45 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
         current_sum_columns[column] = f'=SUM({get_column_letter(column)}{start_row}:{get_column_letter(column)}{row})'
         column += 1
 
-    for m in range(row - base_step + 1, row + 1):
-        for n in range(1, len(def_value_data) + start_research_column):
-            ws1.cell(row=m, column=n).style = style_border1
-
     row += 1
     ws1.cell(row=row, column=1).value = f'Итого кол-во {current_department_title}'
     for col, val in current_sum_columns.items():
         ws1.cell(row=row, column=col).value = val
         ws1.cell(row=row + 1, column=col).value = f'={get_column_letter(col)}{price_row}*{get_column_letter(col)}{row}'
-
+    total_sum_rows.append(row)
     row += 1
     ws1.cell(row=row, column=1).value = f'Итого сумма {current_department_title}'
     fill_rows[row] = col
 
     row += 1
     ws1.cell(row=row, column=1).value = 'Итого кол-во всего'
+    total_sum_end = ""
+    for total_col in range(start_research_column, col + 1):
+        step = 0
+        for total_research in total_sum_rows:
+            if step != 0:
+                total_sum_end = f'{total_sum_end} + {get_column_letter(total_col)}{total_research}'
+            else:
+                total_sum_end = f'{get_column_letter(total_col)}{total_research}'
+            step += 1
+        ws1.cell(row=row, column=total_col).value = f"={total_sum_end}"
+        total_sum_end = ""
+
     row += 1
     ws1.cell(row=row, column=1).value = 'Итого сумма всего'
+    for total_col in range(start_research_column, col + 1):
+        ws1.cell(row=row, column=total_col).value = f'={get_column_letter(total_col)}{price_row}*{get_column_letter(total_col)}{row-1}'
+
+    for m in range(row - base_step, row + 1):
+        for n in range(1, len(def_value_data) + start_research_column):
+            ws1.cell(row=m, column=n).style = style_border1
 
     total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='ffcc66', end_color='ffcc66')
     for k, v in fill_rows.items():
         fill_cells(ws1[f'A{k}:{get_column_letter(v)}{k}'], total_fill)
         fill_cells(ws1[f'A{k - 1}:{get_column_letter(v)}{k - 1}'], total_fill)
+
+
 
     return ws1
 
