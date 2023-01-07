@@ -164,14 +164,14 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
     style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
     last_patient = None
-    step = 0
     base_step = 0
     current_patient_researh_data = deepcopy(def_value_data)
     current_department_id = None
     current_department_title = ""
     last_patient_fio = ""
     last_patient_card = ""
-    row, price_row = 7, 7
+    row = 7
+    price_row = row
     start_row = 0
     current_sum_columns = {}
     total_sum_rows = []
@@ -269,8 +269,6 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
     for k, v in fill_rows.items():
         fill_cells(ws1[f'A{k}:{get_column_letter(v)}{k}'], total_fill)
         fill_cells(ws1[f'A{k - 1}:{get_column_letter(v)}{k - 1}'], total_fill)
-
-
 
     return ws1
 
