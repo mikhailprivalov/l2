@@ -197,8 +197,7 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
                 column += 1
 
             current_patient_researh_data = deepcopy(def_value_data)
-        else:
-            pass
+
         current_patient_researh_data[i.research_id] = 1
 
         if current_department_id != i.department_id and base_step != 0:
