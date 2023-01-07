@@ -1,6 +1,7 @@
 from copy import deepcopy
 
-from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
+import openpyxl
+from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle, PatternFill
 from openpyxl.utils import get_column_letter
 
 
@@ -133,9 +134,11 @@ def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_t
 
     columns = [
         ('Отдел', 20),
+        ('№ п/п.', 20),
         ('Карта', 15),
         ('ФИО', 48),
     ]
+    start_column_research = len(columns) + 1
 
     custom_columns = [(i, 13) for i in head_data.values()]
     coast_data_column = [*[("", 10) for k in range(len(columns))], *[(i, 13) for i in coast_data.values()]]
@@ -150,11 +153,10 @@ def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_t
         ws1.column_dimensions[get_column_letter(step)].width = k[1]
         ws1.cell(row=row, column=step).style = style_border
         ws1.cell(row=row + 1, column=step).style = style_border
+    return (ws1, start_column_research,)
 
-    return (ws1, len(columns) + 1,)
 
-
-def consolidate_research_sets_fill_data(ws1, query, def_value_data):
+def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_research_column):
     style_border1 = NamedStyle(name="style_border1")
     bd = Side(style='thin', color="000000")
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -169,16 +171,23 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data):
     current_department_title = ""
     last_patient_fio = ""
     last_patient_card = ""
-    row = 7
+    row, price_row = 7, 7
+    start_row = 0
+    current_sum_columns = {}
+    fill_rows = {}
     for i in query:
         if last_patient != i.client_id and base_step != 0:
             row += 1
             ws1.cell(row=row, column=1).value = current_department_title
-            ws1.cell(row=row, column=2).value = last_patient_card
-            ws1.cell(row=row, column=3).value = last_patient_fio
-            column = 4
+            ws1.cell(row=row, column=2).value = ""
+            ws1.cell(row=row, column=3).value = last_patient_card
+            ws1.cell(row=row, column=4).value = last_patient_fio
+            column = start_research_column
+            if start_row == 0:
+                start_row = row
             for k in current_patient_researh_data.values():
                 ws1.cell(row=row, column=column).value = k
+                current_sum_columns[column] = f'=SUM({get_column_letter(column)}{start_row}:{get_column_letter(column)}{row})'
                 column += 1
             step += 1
             current_patient_researh_data = deepcopy(def_value_data)
@@ -186,8 +195,17 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data):
             pass
         current_patient_researh_data[i.research_id] = 1
 
-        if current_department_id != i.department_id:
-            step = 0
+        if current_department_id != i.department_id and step != 0:
+            start_row = 0
+            row += 1
+            ws1.cell(row=row, column=1).value = f'Итого кол-во {current_department_title}'
+            for col, val in current_sum_columns.items():
+                ws1.cell(row=row, column=col).value = val
+                ws1.cell(row=row + 1, column=col).value = f'={get_column_letter(col)}{price_row}*{get_column_letter(col)}{row}'
+            row += 1
+            ws1.cell(row=row, column=1).value = f'Итого сумма {current_department_title}'
+            fill_rows[row] = col
+            current_sum_columns = {}
         current_department_id = i.department_id
         current_department_title = i.department_title
         last_patient = i.client_id
@@ -197,15 +215,45 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data):
 
     row += 1
     ws1.cell(row=row, column=1).value = current_department_title
-    ws1.cell(row=row, column=2).value = last_patient_card
-    ws1.cell(row=row, column=3).value = last_patient_fio
-    column = 3
+    ws1.cell(row=row, column=2).value = ""
+    ws1.cell(row=row, column=3).value = last_patient_card
+    ws1.cell(row=row, column=4).value = last_patient_fio
+    column = start_research_column
     for k in current_patient_researh_data.values():
-        column += 1
+        if start_row == 0:
+            start_row = row
         ws1.cell(row=row, column=column).value = k
+        current_sum_columns[column] = f'=SUM({get_column_letter(column)}{start_row}:{get_column_letter(column)}{row})'
+        column += 1
 
-    for m in range(row - base_step, row + 1):
-        for n in range(1, len(def_value_data) + 4):
+    for m in range(row - base_step + 1, row + 1):
+        for n in range(1, len(def_value_data) + start_research_column):
             ws1.cell(row=m, column=n).style = style_border1
 
+    row += 1
+    ws1.cell(row=row, column=1).value = f'Итого кол-во {current_department_title}'
+    for col, val in current_sum_columns.items():
+        ws1.cell(row=row, column=col).value = val
+        ws1.cell(row=row + 1, column=col).value = f'={get_column_letter(col)}{price_row}*{get_column_letter(col)}{row}'
+
+    row += 1
+    ws1.cell(row=row, column=1).value = f'Итого сумма {current_department_title}'
+    fill_rows[row] = col
+
+    row += 1
+    ws1.cell(row=row, column=1).value = 'Итого кол-во всего'
+    row += 1
+    ws1.cell(row=row, column=1).value = 'Итого сумма всего'
+
+    total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='ffcc66', end_color='ffcc66')
+    for k, v in fill_rows.items():
+        fill_cells(ws1[f'A{k}:{get_column_letter(v)}{k}'], total_fill)
+        fill_cells(ws1[f'A{k - 1}:{get_column_letter(v)}{k - 1}'], total_fill)
+
     return ws1
+
+
+def fill_cells(rows_fill, total_fill):
+    for row_f in rows_fill:
+        for cell in row_f:
+            cell.fill = total_fill
