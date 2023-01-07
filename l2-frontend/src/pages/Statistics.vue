@@ -706,7 +706,7 @@ export default class Statistics extends Vue {
 
   async loadResearchSets() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { data } = await this.$api('/get-sets');
+    const { data } = await this.$api('/get-research-sets');
     this.researchSets = data;
     await this.$store.dispatch(actions.DEC_LOADING);
   }

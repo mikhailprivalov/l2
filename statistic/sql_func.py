@@ -734,9 +734,8 @@ def statistics_by_research_sets_company(d_s, d_e, fin_source_pk, researches, com
                     ci.patronymic as patient_patronymic,
                     ci.birthday as patient_born,
                     date_part('year', age(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, ci.birthday))::int as patient_age,
-                    directions_issledovaniya.parent_id as parent_iss,
-                    directions_issledovaniya.id as id_iss,
-                    contracts_companydepartment.title,
+                    contracts_companydepartment.title as department_title,
+                    contracts_companydepartment.id as department_id,
                     contracts_company.title as company_title,
                     directions_issledovaniya.coast
                 FROM directions_issledovaniya
