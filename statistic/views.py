@@ -1753,8 +1753,6 @@ def statistic_xls(request):
                 company_title = company.title
             else:
                 company_title = ""
-            for i in query:
-                print(i)
             ws, start_research_column = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title, head_data_coast)
             ws = consolidates.consolidate_research_sets_fill_data(ws, query, def_value_data, start_research_column)
         else:
