@@ -6,10 +6,42 @@
       <h4 class="text-center">
         Исследования в {{ setIsSelected ? currentSet.label : '' }}
       </h4>
-      <div class="scroll">
+      <div v-if="setIsSelected">
         <table class="table">
           <colgroup>
-            <col width="">
+            <col>
+            <col width="50">
+          </colgroup>
+          <tr>
+            <td class="not-bottom-border">
+              <input
+                v-model.trim="currentSet.label"
+                class="form-control padding-left"
+              >
+            </td>
+            <td class="not-bottom-border">
+              <div class="button">
+                <button
+                  v-tippy
+                  class="btn last btn-blue-nb nbr"
+                  title="Сохранить"
+                  :disabled="!currentSet.label"
+                  @click="updateSet"
+                >
+                  <i class="fa fa-save" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div
+        v-if="setIsSelected"
+        class="scroll"
+      >
+        <table class="table">
+          <colgroup>
+            <col width="85">
             <col>
           </colgroup>
           <tr
@@ -25,9 +57,8 @@
           <tr
             v-for="(i) in researchesInSet"
             :key="i.id"
-            class="border"
           >
-            <td>
+            <td class="border">
               <div class="button">
                 <button
                   class="btn last btn-blue-nb nbr"
@@ -128,6 +159,7 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Скрыть"
+                  @click="hideSet(i.id)"
                 >
                   <i class="fa fa-times" />
                 </button>
@@ -276,6 +308,37 @@ export default {
         this.$root.$emit('msg', 'error', message);
       }
     },
+    async updateSet() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/update-research-set', this.currentSet);
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Набор изменён');
+        await this.getSets();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
+    async hideSet(id) {
+      try {
+        await this.$dialog.confirm('Подтвердите скрытие набора');
+      } catch (_) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/hide-research-set', id);
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Набор скрыт');
+        if (id === this.currentSet.id) {
+          this.currentSet = null;
+          this.researchesInSet = [];
+        }
+        await this.getSets();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
   },
 };
 </script>
@@ -314,6 +377,12 @@ export default {
   border-left: 1px solid #ddd;
   border-right: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
+  border-radius: 0;
+}
+.not-bottom-border {
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  border-top: 1px solid #ddd;
   border-radius: 0;
 }
 .table > thead > tr > th {
