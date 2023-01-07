@@ -153,7 +153,10 @@ def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_t
         ws1.column_dimensions[get_column_letter(step)].width = k[1]
         ws1.cell(row=row, column=step).style = style_border
         ws1.cell(row=row + 1, column=step).style = style_border
-    return (ws1, start_column_research,)
+    return (
+        ws1,
+        start_column_research,
+    )
 
 
 def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_research_column):
