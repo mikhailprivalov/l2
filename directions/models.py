@@ -467,6 +467,7 @@ class Napravleniya(models.Model):
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
     co_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_co_executor", db_index=True, help_text='Со-исполнитель', on_delete=models.SET_NULL)
     register_number = models.CharField(db_column='additional_number', max_length=24, blank=True, default='', help_text="Дополнительный номер при регистрации направления", db_index=True)
+    register_number_year = models.SmallIntegerField(blank=True, default=None, null=True, help_text="Год при регистрации направления", db_index=True)
     planed_doctor_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="planed_doctor", db_index=True, help_text='Планируемый врач', on_delete=models.SET_NULL)
     total_confirmed = models.BooleanField(verbose_name='Результат полностью подтверждён', blank=True, default=False, db_index=True)
     last_confirmed_at = models.DateTimeField(help_text='Дата и время последнего подтверждения', db_index=True, blank=True, default=None, null=True)
