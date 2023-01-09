@@ -197,6 +197,49 @@ export default {
         }
       }
     },
+    async addSet() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/add-research-set', { newSet: this.newSet });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Набор добавлен');
+        await this.getSets();
+        this.newSet = '';
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
+    async updateSet() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/update-research-set', this.currentSet);
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Набор изменён');
+        await this.getSets();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
+    async hideSet(id) {
+      try {
+        await this.$dialog.confirm('Подтвердите скрытие набора');
+      } catch (_) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/hide-research-set', id);
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Набор скрыт');
+        if (id === this.currentSet) {
+          this.currentSet = null;
+          this.researchesInSet = [];
+        }
+        await this.getSets();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
   },
 };
 </script>
