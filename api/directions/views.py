@@ -879,6 +879,7 @@ def directions_services(request):
                 "priceCategory": "" if not n.price_category else n.price_category.title,
                 "coExecutor": n.co_executor_id,
                 "additionalNumber": n.register_number,
+                "additionalNumberYear": n.register_number_year,
                 "planedDoctorExecutor": n.planed_doctor_executor_id,
             }
             response["researches"] = researches
@@ -1010,10 +1011,11 @@ def clear_register_number(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1)
     register_number = request_data.get("additionalNumber", '')
+    register_number_year = request_data.get("additionalNumberYear", None)
     dn = Napravleniya.objects.filter(pk=pk)
     if dn.exists():
         n = dn[0]
-        if n.register_number == register_number:
+        if n.register_number == register_number and n.register_number_year == register_number_year:
             n.register_number = ""
             n.save()
             response["message"] = f'Номер "{register_number}" освобожден'
@@ -1304,9 +1306,9 @@ def directions_paraclinic_form(request):
         else:
             pk = -1
     elif search_mode == 'additional':
-        register_year = request_data.get("registerYear", False)
+        register_year = request_data.get("year")
         if Napravleniya.objects.filter(register_number=pk, register_number_year=register_year).exists():
-            pk = Napravleniya.objects.filter(register_number=pk)[0].pk
+            pk = Napravleniya.objects.filter(register_number=pk, register_number_year=register_year)[0].pk
         else:
             pk = -1
     dn = (
@@ -1400,6 +1402,7 @@ def directions_paraclinic_form(request):
                 "priceCategory": "" if not d.price_category else d.price_category.title,
                 "priceCategoryId": "" if not d.price_category else d.price_category.pk,
                 "additionalNumber": d.register_number,
+                "additionalNumberYear": d.register_number_year,
                 "timeGistologyReceive": strdatetimeru(d.time_gistology_receive),
                 "coExecutor": d.co_executor_id,
                 "tube": None,

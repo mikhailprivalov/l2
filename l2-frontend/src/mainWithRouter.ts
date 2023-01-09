@@ -210,7 +210,7 @@ const router = new Router({
       name: 'search',
       component: () => import('@/pages/Search.vue'),
       meta: {
-        title: 'Поиск описательнх результатов',
+        title: 'Поиск описательных результатов',
         groups: ['Лечащий врач', 'Оператор лечащего врача', 'Врач консультаций', 'Врач стационара'],
         module: 'paraclinic_module',
       },
