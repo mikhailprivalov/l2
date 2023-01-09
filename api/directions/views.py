@@ -908,7 +908,9 @@ def directions_mark_visit(request):
     co_executor = request_data.get("coExecutor", None)
     planed_doctor_executor = request_data.get("planedDoctorExecutor", None)
     register_number = request_data.get("additionalNumber", '')
-    register_number_year = request_data.get("additionalNumberYear",)
+    register_number_year = request_data.get(
+        "additionalNumberYear",
+    )
     gistology_receive_time = request_data.get("gistologyReceiveTime") or None
     visit_date = request_data.get("visitDate") or None
     if visit_date:
