@@ -428,6 +428,21 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
             objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
     work_dir = additional_objectsj["work_dir"]
+    dir_by_profile = {'not_profile': []}
+    for current_dir in work_dir:
+        iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir).first()
+        if iss_obj.research.speciality:
+            if not dir_by_profile.get(iss_obj.research.speciality.title):
+                dir_by_profile[iss_obj.research.speciality.title] = [current_dir]
+            else:
+                dir_by_profile[iss_obj.research.speciality.title].append(current_dir)
+        else:
+            dir_by_profile['not_profile'].append(current_dir)
+
+    work_dir = []
+    for v in dir_by_profile.values():
+        work_dir.extend(v)
+
     for current_dir in work_dir:
         barcode = code128.Code128(current_dir, barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
         iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir)
