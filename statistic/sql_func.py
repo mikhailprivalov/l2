@@ -391,7 +391,7 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                 CASE WHEN %(is_form)s > 0 THEN
                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
                 WHEN %(is_form)s = -1 THEN
-                     directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                    directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
                 END                
                 order by directions_issledovaniya.napravleniye_id
             """,

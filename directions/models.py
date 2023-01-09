@@ -510,9 +510,9 @@ class Napravleniya(models.Model):
             research: directory.Researches = i.research
             if research.is_paraclinic:
                 gen_name = 'Instrumental'
-            if research.desc:
+            elif research.desc:
                 gen_name = research.generator_name
-            if research.is_extract:
+            elif research.is_extract:
                 gen_name = 'DischargeSummary_min'
         return gen_name
 
