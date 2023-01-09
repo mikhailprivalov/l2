@@ -448,8 +448,6 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
         iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir)
         step = 0
         for current_iss in iss_obj:
-            if current_iss.research.speciality:
-                print(current_iss.research.speciality.title)
             paraclinic_info = ""
             if step > 0:
                 barcode = Paragraph('', styleTC)
