@@ -245,9 +245,6 @@ export default {
 </script>
 
 <style scoped>
-::v-deep .form-control {
-  border: none;
-}
 .table {
   margin-bottom: 0;
   table-layout: fixed;
