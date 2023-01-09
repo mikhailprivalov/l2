@@ -908,6 +908,7 @@ def directions_mark_visit(request):
     co_executor = request_data.get("coExecutor", None)
     planed_doctor_executor = request_data.get("planedDoctorExecutor", None)
     register_number = request_data.get("additionalNumber", '')
+    register_number_year = request_data.get("additionalNumberYear",)
     gistology_receive_time = request_data.get("gistologyReceiveTime") or None
     visit_date = request_data.get("visitDate") or None
     if visit_date:
@@ -918,11 +919,12 @@ def directions_mark_visit(request):
     if dn.exists():
         n = dn[0]
         if register_number and n.register_number != register_number:
-            if Napravleniya.objects.filter(register_number=register_number).exclude(pk=pk).exists():
+            if Napravleniya.objects.filter(register_number=register_number, register_number_year=register_number_year).exclude(pk=pk).exists():
                 response["message"] = f'Номер "{register_number}" уже занят'
                 return JsonResponse(response)
             n.register_number = register_number
-            n.save(update_fields=['register_number'])
+            n.register_number_year = register_number_year
+            n.save(update_fields=['register_number', 'register_number_year'])
         if co_executor and n.co_executor_id != co_executor:
             n.co_executor_id = co_executor
             n.save(update_fields=['co_executor_id'])
@@ -992,6 +994,7 @@ def directions_mark_visit(request):
             "Посещение": "отмена" if cancel else "да",
             "Дата и время": response["visit_date"],
             "Дополнительный номер": register_number,
+            "год": register_number_year,
             "Со-исполнитель": co_executor,
         }
         Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
@@ -1301,7 +1304,8 @@ def directions_paraclinic_form(request):
         else:
             pk = -1
     elif search_mode == 'additional':
-        if Napravleniya.objects.filter(register_number=pk).exists():
+        register_year = request_data.get("registerYear", False)
+        if Napravleniya.objects.filter(register_number=pk, register_number_year=register_year).exists():
             pk = Napravleniya.objects.filter(register_number=pk)[0].pk
         else:
             pk = -1
