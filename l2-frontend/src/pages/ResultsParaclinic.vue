@@ -43,7 +43,10 @@
             placeholder="номер"
             @keyup.enter="load()"
           >
-          <span v-if="selectedModeNeedYear" class="input-group-btn">
+          <span
+            v-if="selectedModeNeedYear"
+            class="input-group-btn"
+          >
             <button
               class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
               type="button"
