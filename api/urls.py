@@ -97,6 +97,7 @@ urlpatterns = [
     path('health/', include('api.health.urls')),
     path('chats/', include('api.chats.urls')),
     path('ecp/', include('api.ecp.urls')),
+    path('employees/', include('api.employees.urls')),
     path('get-price-list', views.get_price_list),
     path('get-current-coast-researches-in-price', views.get_current_coast_researches_in_price),
     path('update-coast-research-in-price', views.update_coast_research_in_price),

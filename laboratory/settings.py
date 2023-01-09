@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'django_celery_results',
     'dashboards',
     'chats.apps.ChatsConfig',
+    'employees.apps.EmployeesConfig',
 )
 
 MIDDLEWARE = [

@@ -103,6 +103,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/employees',
+      name: 'construct_employees',
+      component: () => import('@/construct/ConstructEmployees.vue'),
+      meta: {
+        title: 'Управление сотрудниками',
+        groups: ['Конструктор: Настройка организации'],
+      },
+    },
+    {
       path: '/ui/construct/price',
       name: 'construct_price',
       component: () => import('@/construct/ConstructPrice.vue'),
@@ -729,7 +738,7 @@ router.beforeEach(async (to, from, next) => {
       next(nextPath || { name: 'menu' });
     } else if (
       toMatched.some((r) => r.meta.groups)
-      && toMatched.every((r) => !r.meta.groups || !r.meta.groups.find((g) => getters.user_groups.includes(g)))
+      && toMatched.every((r) => !r.meta.groups?.find((g) => getters.user_groups.includes(g)))
       && !getters.user_groups.includes('Admin')
     ) {
       router.app.$toast.warning('Нет доступа.', {

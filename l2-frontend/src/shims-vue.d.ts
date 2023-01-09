@@ -23,3 +23,9 @@ declare module '*.mp3' {
   const src: string;
   export default src;
 }
+
+declare module '@riophae/vue-treeselect' {
+  export default V;
+
+  export const ASYNC_SEARCH: any;
+}

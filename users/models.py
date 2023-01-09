@@ -35,12 +35,14 @@ class Speciality(models.Model):
         verbose_name_plural = 'Специальности'
 
 
-def add_dots_if_not_digit(w: str, dots):
+def add_dots_if_not_digit(w: str, dots, with_space=False):
     w = w.strip()
     if not w:
         return ''
     if not w.isdigit() and len(w) > 0:
         w = w[0] + ("." if dots else "")
+    if with_space:
+        w += " "
     return w
 
 
@@ -409,7 +411,7 @@ class DoctorProfile(models.Model):
     def get_full_fio(self):
         return " ".join(self.get_fio_parts()).strip()
 
-    def get_fio(self, dots=True):
+    def get_fio(self, dots=True, with_space=True):
         """
         Функция формирования фамилии и инициалов (Иванов И.И.)
         :param dots:
@@ -417,7 +419,7 @@ class DoctorProfile(models.Model):
         """
         fio_parts = self.get_fio_parts()
 
-        return f"{fio_parts[0]} {add_dots_if_not_digit(fio_parts[1], dots)} {add_dots_if_not_digit(fio_parts[2], dots)}".strip()
+        return f"{fio_parts[0]} {add_dots_if_not_digit(fio_parts[1], dots, with_space)}{add_dots_if_not_digit(fio_parts[2], dots)}".strip()
 
     def is_member(self, groups: list) -> bool:
         """

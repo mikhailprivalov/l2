@@ -728,7 +728,7 @@ export default class AddressFiasField extends Vue {
 
   async loadData() {
     this.loadedData = true;
-    if (!this.address || !this.address.startsWith('%')) {
+    if (!this.address?.startsWith('%')) {
       return;
     }
 

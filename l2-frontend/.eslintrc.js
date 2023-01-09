@@ -13,6 +13,7 @@ module.exports = {
   plugins: [
     'sort-imports-es6-autofix',
   ],
+  parser: 'vue-eslint-parser',
   parserOptions: {
     ecmaVersion: 2020,
   },
