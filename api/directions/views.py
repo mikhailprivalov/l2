@@ -995,7 +995,7 @@ def directions_mark_visit(request):
             "Посещение": "отмена" if cancel else "да",
             "Дата и время": response["visit_date"],
             "Дополнительный номер": register_number,
-            "год": register_number_year,
+            "Год": register_number_year,
             "Со-исполнитель": co_executor,
         }
         Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
