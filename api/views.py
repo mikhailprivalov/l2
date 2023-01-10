@@ -2286,6 +2286,7 @@ def search_param(request):
     data = json.loads(request.body)
     year_period = data.get('year_period') or -1
     research_id = data.get('research_id') or -1
+    profile_research_id = data.get('profile_research_id') or -1
     date_create_start = f"{year_period}-01-01 00:00:00"
     date_create_end = f"{year_period}-12-31 23:59:59"
     case_number = data.get('case_number') or '-1'
@@ -2324,6 +2325,11 @@ def search_param(request):
     user_groups = [str(x) for x in request.user.groups.all()]
     if created_document_only_user_hosp and "Направления-все МО" not in user_groups:
         hospital_id = request.user.doctorprofile.hospital_id
+    research_id = (research_id,)
+    if profile_research_id > 0:
+        data_researches = Researches.objects.values_list('pk', flat=True).filter(speciality_id=profile_research_id)
+        research_id = tuple(data_researches)
+
     if not search_stationar:
         result = search_data_by_param(
             date_create_start,
