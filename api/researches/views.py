@@ -841,6 +841,13 @@ def descriptive_research(request):
 
 
 @login_required
+def profiles_research(request):
+    rows = Speciality.objects.filter(hide=False).order_by('title').values('pk', 'title')
+    rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
+    return JsonResponse(rows, safe=False)
+
+
+@login_required
 def research_dispensary(request):
     rows = DResearches.objects.filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title').values('pk', 'title')
     rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
