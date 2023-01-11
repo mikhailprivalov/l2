@@ -9,6 +9,32 @@
       :clearable="false"
       placeholder="Выберите набор"
     />
+    <div>
+      <table class="table">
+        <colgroup>
+          <col>
+          <col width="100">
+        </colgroup>
+        <tr>
+          <td>
+            <input v-model="titleSet">
+          </td>
+          <td>
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                title="Добавить исследование"
+                :disabled="!currentResearch"
+                @click="setIsSelected ? updateSet : addSet"
+              >
+                {{ setIsSelected ? 'Сохранить' : 'Добавить' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
     <h4 v-if="setIsSelected">
       Исследования
     </h4>
@@ -116,6 +142,7 @@ export default {
       currentSet: null,
       currentResearch: null,
       sets: [],
+      titleSet: '',
       researchesInSet: [],
       researches: [],
     };
@@ -199,7 +226,7 @@ export default {
     },
     async addSet() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/add-research-set', { newSet: this.newSet });
+      const { ok, message } = await this.$api('/add-research-set', { newSet: this.titleSet });
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Набор добавлен');
