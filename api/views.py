@@ -2877,3 +2877,15 @@ def hide_research_set(request):
         {"pk": current_set.pk, "title": current_set.title, "hide": True},
     )
     return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def check_hiding_set(request):
+    request_data = json.loads(request.body)
+    current_set = SetResearch.objects.get(pk=request_data)
+    if current_set.hide:
+        return status_response(True)
+    else:
+        return status_response(False)
+

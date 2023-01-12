@@ -14,7 +14,7 @@
         <colgroup>
           <col>
           <col width="40">
-          <col width="100">
+          <col v-if="!setIsHidden" width="100">
         </colgroup>
         <tr>
           <td class="border">
@@ -28,15 +28,18 @@
               <button
                 v-tippy
                 class="btn last btn-blue-nb nbr"
-                title="Скрыть набор"
+                :title="setIsHidden ? 'Показать набор' : 'Скрыть набор'"
                 :disabled="!setIsSelected"
-                @click="hideSet"
+                @click="hideSet()"
               >
-                <i class="fa fa-times" />
+                <i :class="setIsHidden ?'fa fa-eye' : 'fa fa-times'" />
               </button>
             </div>
           </td>
-          <td class="border">
+          <td
+            v-if="!setIsHidden"
+            class="border"
+          >
             <div class="button">
               <button
                 v-tippy
@@ -62,7 +65,10 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col width="85">
+            <col
+              v-if="!setIsHidden"
+              width="85"
+            >
             <col>
           </colgroup>
           <tr
@@ -79,7 +85,10 @@
             v-for="(i) in researchesInSet"
             :key="i.id"
           >
-            <td class="border">
+            <td
+              v-if="!setIsHidden"
+              class="border"
+            >
               <div class="button">
                 <button
                   class="btn last btn-blue-nb nbr"
@@ -105,10 +114,10 @@
         </table>
       </div>
     </div>
-    <h4 v-if="setIsSelected">
+    <h4 v-if="setIsSelected && !setIsHidden">
       Добавить исследование в набор
     </h4>
-    <div v-if="setIsSelected">
+    <div v-if="setIsSelected && !setIsHidden">
       <table>
         <colgroup>
           <col>
@@ -161,6 +170,7 @@ export default {
       currentResearch: null,
       sets: [],
       titleSet: '',
+      hideStatus: false,
       researchesInSet: [],
       researches: [],
     };
@@ -170,7 +180,7 @@ export default {
       return !!this.currentSet;
     },
     setIsHidden() {
-      return this.checkHidingSet();
+      return this.hideStatus.ok;
     },
     min_max_order() {
       let min = 0;
@@ -191,6 +201,7 @@ export default {
       if (!this.currentSet) {
         this.titleSet = '';
       } else {
+        this.checkHidingSet();
         this.getResearchesInSet();
         this.titleSet = this.currentSet.label;
       }
@@ -202,8 +213,9 @@ export default {
   },
   methods: {
     async checkHidingSet() {
-      const ok = await this.$api('/check-hiding-set', this.currentSet.id);
-      return !!ok;
+      if (this.setIsSelected) {
+        this.hideStatus = await this.$api('/check-hiding-set', this.currentSet.id);
+      }
     },
     async updateOrder(research, action) {
       await this.$store.dispatch(actions.INC_LOADING);
@@ -284,14 +296,14 @@ export default {
         }
       }
     },
-    async hideSet() {
+    async updateSetHiding() {
       try {
         await this.$dialog.confirm('Подтвердите скрытие набора');
       } catch (_) {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/hide-research-set', this.currentSet.id);
+      const { ok, message } = await this.$api('/update-set-hiding', this.currentSet.id);
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Набор скрыт');
@@ -338,6 +350,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  height: 37px;
 }
 .padding-left {
   padding-left: 6px;
