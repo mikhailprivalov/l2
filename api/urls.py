@@ -119,6 +119,6 @@ urlpatterns = [
     path('add-research-in-set', views.add_research_in_set),
     path('update-order-in-set', views.update_order_in_set),
     path('update-research-set', views.update_research_set),
-    path('hide-research-set', views.hide_research_set),
-    path('check-hiding-set', views.check_hiding_set),
+    path('update-set-hiding', views.update_set_hiding),
+    path('check-set-hidden', views.check_set_hidden),
 ]

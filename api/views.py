@@ -2865,7 +2865,7 @@ def update_research_set(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def hide_research_set(request):
+def update_set_hiding(request):
     request_data = json.loads(request.body)
     current_set = SetResearch.objects.get(pk=request_data)
     current_set.hide = True
@@ -2881,7 +2881,7 @@ def hide_research_set(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def check_hiding_set(request):
+def check_set_hidden(request):
     request_data = json.loads(request.body)
     current_set = SetResearch.objects.get(pk=request_data)
     if current_set.hide:

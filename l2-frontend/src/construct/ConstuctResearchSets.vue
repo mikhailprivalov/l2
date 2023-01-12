@@ -212,9 +212,9 @@ export default {
     this.getResearches();
   },
   methods: {
-    async checkHidingSet() {
+    async checkSetHidden() {
       if (this.setIsSelected) {
-        this.hideStatus = await this.$api('/check-hiding-set', this.currentSet.id);
+        this.hideStatus = await this.$api('/check-set-hidden', this.currentSet.id);
       }
     },
     async updateOrder(research, action) {
@@ -312,9 +312,6 @@ export default {
       } else {
         this.$root.$emit('msg', 'error', message);
       }
-    },
-    async clear() {
-      this.currentSet = { id: -1, label: 'Выберите набор' };
     },
   },
 };
