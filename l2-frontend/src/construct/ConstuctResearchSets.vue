@@ -6,27 +6,44 @@
     <Treeselect
       v-model="currentSet"
       :options="sets.data"
-      :clearable="false"
       placeholder="Выберите набор"
+      value-format="object"
     />
-    <div>
+    <div class="title-set">
       <table class="table">
         <colgroup>
           <col>
+          <col width="40">
           <col width="100">
         </colgroup>
         <tr>
-          <td>
-            <input v-model="titleSet">
+          <td class="border">
+            <input
+              v-model.trim="titleSet"
+              class="form-control b"
+            >
           </td>
-          <td>
+          <td class="border">
             <div class="button">
               <button
                 v-tippy
                 class="btn last btn-blue-nb nbr"
-                title="Добавить исследование"
-                :disabled="!currentResearch"
-                @click="setIsSelected ? updateSet : addSet"
+                title="Скрыть набор"
+                :disabled="!setIsSelected"
+                @click="hideSet"
+              >
+                <i class="fa fa-times" />
+              </button>
+            </div>
+          </td>
+          <td class="border">
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                :title="setIsSelected ? 'Сохранить набор' : 'Добавить набор'"
+                :disabled="!titleSet"
+                @click="updateSet"
               >
                 {{ setIsSelected ? 'Сохранить' : 'Добавить' }}
               </button>
@@ -40,7 +57,7 @@
     </h4>
     <div
       v-if="setIsSelected"
-      class="card-no-hover card-1"
+      class="card-no-hover card card-1"
     >
       <div class="scroll">
         <table class="table">
@@ -105,6 +122,7 @@
               :disable-branch-nodes="true"
               :append-to-body="true"
               placeholder="Исследование"
+              class="nbr"
             />
           </td>
           <td>
@@ -151,6 +169,9 @@ export default {
     setIsSelected() {
       return !!this.currentSet;
     },
+    setIsHidden() {
+      return this.checkHidingSet();
+    },
     min_max_order() {
       let min = 0;
       let max = 0;
@@ -167,7 +188,12 @@ export default {
   },
   watch: {
     currentSet() {
-      this.getResearchesInSet();
+      if (!this.currentSet) {
+        this.titleSet = '';
+      } else {
+        this.getResearchesInSet();
+        this.titleSet = this.currentSet.label;
+      }
     },
   },
   mounted() {
@@ -175,10 +201,14 @@ export default {
     this.getResearches();
   },
   methods: {
+    async checkHidingSet() {
+      const ok = await this.$api('/check-hiding-set', this.currentSet.id);
+      return !!ok;
+    },
     async updateOrder(research, action) {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('/update-order-in-set', {
-        id: research.id, set: this.currentSet, order: research.order, action,
+        id: research.id, set: this.currentSet.id, order: research.order, action,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
@@ -201,7 +231,7 @@ export default {
       this.researches = await this.$api('/get-research-list');
     },
     async getResearchesInSet() {
-      const researches = await this.$api('/get-researches-in-set', this.currentSet);
+      const researches = await this.$api('/get-researches-in-set', this.currentSet.id);
       this.researchesInSet = researches.data;
     },
     async addResearchInSet() {
@@ -210,7 +240,7 @@ export default {
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('/add-research-in-set', {
-          set: this.currentSet,
+          set: this.currentSet.id,
           research: this.currentResearch,
           minOrder: this.min_max_order.min,
         });
@@ -224,54 +254,70 @@ export default {
         }
       }
     },
-    async addSet() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/add-research-set', { newSet: this.titleSet });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Набор добавлен');
-        await this.getSets();
-        this.newSet = '';
-      } else {
-        this.$root.$emit('msg', 'error', message);
-      }
-    },
     async updateSet() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/update-research-set', this.currentSet);
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Набор изменён');
-        await this.getSets();
+      if (this.setIsSelected) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/update-research-set', {
+          id: this.currentSet.id,
+          label: this.titleSet,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Набор изменён');
+          await this.getSets();
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
       } else {
-        this.$root.$emit('msg', 'error', message);
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/update-research-set', {
+          id: -1,
+          label: this.titleSet,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Набор добавлен');
+          await this.getSets();
+          this.titleSet = '';
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
       }
     },
-    async hideSet(id) {
+    async hideSet() {
       try {
         await this.$dialog.confirm('Подтвердите скрытие набора');
       } catch (_) {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/hide-research-set', id);
+      const { ok, message } = await this.$api('/hide-research-set', this.currentSet.id);
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Набор скрыт');
-        if (id === this.currentSet) {
-          this.currentSet = null;
-          this.researchesInSet = [];
-        }
         await this.getSets();
+        this.titleSet = '';
       } else {
         this.$root.$emit('msg', 'error', message);
       }
+    },
+    async clear() {
+      this.currentSet = { id: -1, label: 'Выберите набор' };
     },
   },
 };
 </script>
 
 <style scoped>
+::v-deep .form-control {
+  border: 0;
+}
+::v-deep .card {
+  margin: 0;
+}
+.title-set {
+  margin: 10px 0;
+}
 .table {
   margin-bottom: 0;
   table-layout: fixed;

@@ -2772,7 +2772,7 @@ def add_factor(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def get_research_sets(request):
-    sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.filter(hide=False).order_by("title")]
+    sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.all().order_by("title")]
     return JsonResponse({"data": sets})
 
 
@@ -2839,32 +2839,27 @@ def update_order_in_set(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def add_research_set(request):
-    request_data = json.loads(request.body)
-    new_set = SetResearch(title=request_data["newSet"])
-    new_set.save()
-    Log.log(
-        new_set.pk,
-        170001,
-        request.user.doctorprofile,
-        {"pk": new_set.pk, "title": new_set.title},
-    )
-    return status_response(True)
-
-
-@login_required
-@group_required('Конструктор: Настройка организации')
 def update_research_set(request):
     request_data = json.loads(request.body)
-    current_set = SetResearch.objects.get(pk=request_data["id"])
-    current_set.title = request_data["label"]
-    current_set.save()
-    Log.log(
-        current_set.pk,
-        170002,
-        request.user.doctorprofile,
-        {"pk": current_set.pk, "title": current_set.title},
-    )
+    if request_data["id"] == -1:
+        current_set = SetResearch(title=request_data["label"])
+        current_set.save()
+        Log.log(
+            current_set.pk,
+            170001,
+            request.user.doctorprofile,
+            {"pk": current_set.pk, "title": current_set.title},
+        )
+    else:
+        current_set = SetResearch.objects.get(pk=request_data["id"])
+        current_set.title = request_data["label"]
+        current_set.save()
+        Log.log(
+            current_set.pk,
+            170002,
+            request.user.doctorprofile,
+            {"pk": current_set.pk, "title": current_set.title},
+        )
     return status_response(True)
 
 
