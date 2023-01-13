@@ -2893,7 +2893,5 @@ def update_set_hiding(request):
 def check_set_hidden(request):
     request_data = json.loads(request.body)
     current_set = SetResearch.objects.get(pk=request_data)
-    if current_set.hide:
-        return status_response(True)
-    else:
-        return status_response(False)
+    return status_response(current_set.hide)
+
