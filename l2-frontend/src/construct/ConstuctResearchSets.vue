@@ -38,7 +38,6 @@
                 v-tippy
                 class="btn last btn-blue-nb nbr"
                 :title="setIsHidden ? 'Отменить скрытие' : 'Скрыть набор'"
-                :disabled="!setIsSelected"
                 @click="updateSetHiding"
               >
                 <i :class="setIsHidden ?'fa fa-eye' : 'fa fa-times'" />
