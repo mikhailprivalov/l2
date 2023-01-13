@@ -411,7 +411,7 @@ def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj,
 def add_route_list(objs, appendix_route_list, patient_data, styles_obj, additional_objectsj):
     styleTB = styles_obj["styleTB"]
     styleTC = styles_obj["styleTC"]
-    route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB), Paragraph(' Ш/к', styleTB)]]
+    route_list = [[Paragraph('Направление', styleTB), Paragraph('Пройдено', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB), Paragraph(' Ш/к', styleTB)]]
     notation = False
     for section in appendix_route_list:
         if section.get('page_break'):
@@ -454,10 +454,12 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
                 current_dir = ""
             if notation:
                 paraclinic_info = current_iss.research.paraclinic_info
-            route_list.append([Paragraph(f"{current_dir}", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), Paragraph(f"{paraclinic_info}", styleTC), barcode])
+            route_list.append(
+                [Paragraph(f"{current_dir}", styleTC), Paragraph("", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), Paragraph(f"{paraclinic_info}", styleTC), barcode]
+            )
             step += 1
 
-    tbl = Table(route_list, colWidths=(40 * mm, 60 * mm, 50 * mm, 40 * mm), hAlign='LEFT')
+    tbl = Table(route_list, colWidths=(25 * mm, 28 * mm, 47 * mm, 45 * mm, 45 * mm), rowHeights=15 * mm, hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
