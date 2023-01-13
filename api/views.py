@@ -2868,7 +2868,10 @@ def update_research_set(request):
 def update_set_hiding(request):
     request_data = json.loads(request.body)
     current_set = SetResearch.objects.get(pk=request_data)
-    current_set.hide = True
+    if current_set.hide:
+        current_set.hide = False
+    else:
+        current_set.hide = True
     current_set.save()
     Log.log(
         current_set.pk,

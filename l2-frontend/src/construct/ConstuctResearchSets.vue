@@ -13,8 +13,14 @@
       <table class="table">
         <colgroup>
           <col>
-          <col width="40">
-          <col v-if="!setIsHidden" width="100">
+          <col
+            v-if="setIsSelected"
+            width="40"
+          >
+          <col
+            v-if="!setIsHidden"
+            width="100"
+          >
         </colgroup>
         <tr>
           <td class="border">
@@ -23,14 +29,17 @@
               class="form-control b"
             >
           </td>
-          <td class="border">
+          <td
+            v-if="setIsSelected"
+            class="border"
+          >
             <div class="button">
               <button
                 v-tippy
                 class="btn last btn-blue-nb nbr"
-                :title="setIsHidden ? 'Показать набор' : 'Скрыть набор'"
+                :title="setIsHidden ? 'Отменить скрытие' : 'Скрыть набор'"
                 :disabled="!setIsSelected"
-                @click="hideSet()"
+                @click="updateSetHiding"
               >
                 <i :class="setIsHidden ?'fa fa-eye' : 'fa fa-times'" />
               </button>
@@ -201,7 +210,7 @@ export default {
       if (!this.currentSet) {
         this.titleSet = '';
       } else {
-        this.checkHidingSet();
+        this.checkSetHidden();
         this.getResearchesInSet();
         this.titleSet = this.currentSet.label;
       }
@@ -297,18 +306,23 @@ export default {
       }
     },
     async updateSetHiding() {
-      try {
-        await this.$dialog.confirm('Подтвердите скрытие набора');
-      } catch (_) {
-        return;
+      if (!this.setIsHidden) {
+        try {
+          await this.$dialog.confirm('Подтвердите скрытие набора');
+        } catch (_) {
+          return;
+        }
       }
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('/update-set-hiding', this.currentSet.id);
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
-        this.$root.$emit('msg', 'ok', 'Набор скрыт');
-        await this.getSets();
-        this.titleSet = '';
+        if (!this.setIsHidden) {
+          this.$root.$emit('msg', 'ok', 'Набор скрыт');
+        } else {
+          this.$root.$emit('msg', 'ok', 'Скрытие отменено');
+        }
+        await this.checkSetHidden();
       } else {
         this.$root.$emit('msg', 'error', message);
       }
