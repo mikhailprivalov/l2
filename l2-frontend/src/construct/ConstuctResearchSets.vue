@@ -139,7 +139,7 @@
               :disable-branch-nodes="true"
               :append-to-body="true"
               placeholder="Исследование"
-              class="nbr"
+              class="nba"
             />
           </td>
           <td>
