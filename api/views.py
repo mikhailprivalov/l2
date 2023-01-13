@@ -2897,4 +2897,3 @@ def check_set_hidden(request):
         return status_response(True)
     else:
         return status_response(False)
-
