@@ -302,6 +302,9 @@ export default {
   padding: 6px 0;
   background-color: transparent;
 }
+::v-deep .vue-treeselect__control {
+  border: 0;
+}
 ::v-deep .card {
   margin: 1rem 0;
 }
