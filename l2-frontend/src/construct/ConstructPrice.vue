@@ -9,11 +9,76 @@
       :clearable="false"
       placeholder="Выберите прайс"
       value-format="object"
+      class="select-price"
     />
+    <div
+      v-if="selectedPrice.status === true"
+      class="edit-price"
+    >
+      <table class="table">
+        <colgroup>
+          <col>
+          <col width="120">
+          <col width="120">
+          <col width="200">
+          <col width="100">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="text-center">
+              <strong>Название</strong>
+            </th>
+            <th class="text-center">
+              <strong>Дата начала</strong>
+            </th>
+            <th class="text-center">
+              <strong>Дата конца</strong>
+            </th>
+            <th class="text-center">
+              <strong>Компания</strong>
+            </th>
+            <th />
+          </tr>
+        </thead>
+        <tr>
+          <td class="border">
+            <input class="form-control">
+          </td>
+          <td class="border">
+            <input>
+          </td>
+          <td class="border">
+            <input>
+          </td>
+          <td class="border">
+            <Treeselect
+              placeholder="Выберите компанию"
+            />
+          </td>
+          <td class="border">
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                style="padding: 7px 12px;"
+                title="Добавить исследование"
+                :disabled="!selectedResearch"
+                @click="updateResearchListInPrice"
+              >
+                Добавить
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
     <h4 v-if="selectedPrice.id !== -1">
       Исследования
     </h4>
-    <div v-if="selectedPrice.id !== -1">
+    <div
+      v-if="selectedPrice.id !== -1"
+      class="margin-bottom"
+    >
       <input
         v-model="search"
         class="form-control search"
@@ -31,31 +96,24 @@
             <col width="100">
             <col
               v-if="selectedPrice.status === true"
-              width="39"
-            >
-            <col
-              v-if="selectedPrice.status === true"
-              width="35.8"
+              width="100"
             >
           </colgroup>
           <thead class="sticky">
             <tr>
               <th
-                class="text-center"
-                style="border-right: 1px solid #ddd; border-left: 1px solid #ddd"
+                :class="filteredRows.length === 0 ? 'text-center' : 'text-center border-left'"
               >
                 <strong>Название</strong>
               </th>
               <th
-                class="text-center"
-                style="border-right: 1px solid #ddd"
+                :class="selectedPrice.status === false ? 'text-center border-right' : 'text-center'"
               >
                 <strong>Цена</strong>
               </th>
-              <th v-if="selectedPrice.status === true" />
               <th
                 v-if="selectedPrice.status === true"
-                style="border-right: 1px solid #ddd"
+                :class="filteredRows.length === 0 ? '' : 'border-right'"
               />
             </tr>
           </thead>
@@ -64,8 +122,7 @@
             class="text-center"
           >
             <td
-              colspan="4"
-              style="border-top: 1px solid #ddd"
+              colspan="3"
             >
               Нет данных
             </td>
@@ -73,14 +130,13 @@
           <tr
             v-for="(coastResearch) in filteredRows"
             :key="coastResearch.id"
-            class="tablerow"
           >
             <VueTippyTd
-              class="research tablerow"
+              class="research border"
               style="padding-left: 6px"
               :text="coastResearch.research.title"
             />
-            <td>
+            <td class="border">
               <input
                 v-model="coastResearch.coast"
                 :disabled="!selectedPrice.status"
@@ -92,26 +148,26 @@
             </td>
             <td
               v-if="selectedPrice.status === true"
-              class="tablerow"
+              class="border"
             >
-              <button
-                v-tippy
-                class="btn last btn-blue-nb nbr"
-                title="Сохранить цену"
-                @click="updateCoastResearchInPrice(coastResearch)"
-              >
-                <i class="fa fa-save" />
-              </button>
-            </td>
-            <td v-if="selectedPrice.status === true">
-              <button
-                v-tippy
-                class="btn last btn-blue-nb nbr"
-                title="Удалить исследование"
-                @click="deleteResearchInPrice(coastResearch)"
-              >
-                <i class="fa fa-times" />
-              </button>
+              <div class="button">
+                <button
+                  v-tippy
+                  class="btn last btn-blue-nb nbr"
+                  title="Сохранить цену"
+                  @click="updateCoastResearchInPrice(coastResearch)"
+                >
+                  <i class="fa fa-save" />
+                </button>
+                <button
+                  v-tippy
+                  class="btn last btn-blue-nb nbr"
+                  title="Удалить исследование"
+                  @click="deleteResearchInPrice(coastResearch)"
+                >
+                  <i class="fa fa-times" />
+                </button>
+              </div>
             </td>
           </tr>
         </table>
@@ -121,16 +177,14 @@
       Добавить исследование в прайс
     </h4>
     <div v-if="selectedPrice.status === true">
-      <table
-        class="table-bordered"
-      >
+      <table>
         <colgroup>
           <col>
-          <col width="99">
-          <col width="92">
+          <col width="100">
+          <col width="100">
         </colgroup>
         <tr>
-          <td>
+          <td class="border">
             <Treeselect
               v-model="selectedResearch"
               :options="researchList.data"
@@ -139,7 +193,7 @@
               placeholder="Выберите исследование"
             />
           </td>
-          <td>
+          <td class="border">
             <input
               v-model="coast"
               type="number"
@@ -149,16 +203,18 @@
               placeholder="Цена"
             >
           </td>
-          <td>
-            <button
-              v-tippy
-              class="btn last btn-blue-nb nbr"
-              style="padding: 7px 12px;"
-              title="Добавить исследование"
-              @click="updateResearchListInPrice"
-            >
-              Добавить
-            </button>
+          <td class="border">
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                title="Добавить исследование"
+                :disabled="!selectedResearch"
+                @click="updateResearchListInPrice"
+              >
+                Добавить
+              </button>
+            </div>
           </td>
         </tr>
       </table>
@@ -284,28 +340,41 @@ export default {
 <style scoped>
 ::v-deep .form-control {
   border: none;
-  padding: 6px 0;
+  padding: 6px 6px;
   background-color: transparent;
 }
 ::v-deep .card {
-  margin: 1rem 0;
+  margin: 0;
 }
 .table {
   margin-bottom: 0;
   table-layout: fixed;
 }
-.tablerow {
+.margin-bottom {
+  margin-bottom: 20px;
+}
+.border {
   border: 1px solid #ddd;
-  border-radius: 0;
+}
+.select-price {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+::v-deep .vue-treeselect__control {
+  border: 0;
+}
+.edit-price {
+  margin: 20px 0;
 }
 .scroll {
   min-height: 106px;
-  max-height: calc(100vh - 400px);
+  max-height: calc(100vh - 500px);
   overflow-y: auto;
 }
 .sticky {
   position: sticky;
   top: 0;
+  z-index: 1;
   background-color: white;
 }
 .table > thead > tr > th {
@@ -316,10 +385,28 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.border-left {
+  border-left: 1px solid #ddd;
+}
+.border-right {
+  border-right: 1px solid #ddd;
+}
 .search {
   border: 1px solid #ddd;
   border-radius: 5px;
   padding-left: 6px;
   background-color: white;
 }
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
 </style>
