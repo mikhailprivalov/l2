@@ -143,24 +143,6 @@
               />
             </div>
           </div>
-
-          <div
-            v-if="checkReportParam(PARAMS_TYPES.COMPANY)"
-            :key="PARAMS_TYPES.COMPANY"
-            class="input-group"
-          >
-            <span class="input-group-addon">Компания:</span>
-            <treeselect
-              v-model="values.company"
-              class="treeselect-noborder treeselect-wide"
-              :multiple="false"
-              :disable-branch-nodes="true"
-              :options="companies"
-              :clearable="true"
-              placeholder="Компания не выбана"
-            />
-          </div>
-
           <div
             v-if="checkReportParam(PARAMS_TYPES.FIN_SOURCE)"
             :key="PARAMS_TYPES.FIN_SOURCE"
@@ -189,7 +171,38 @@
               </optgroup>
             </select>
           </div>
-
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.COMPANY)"
+            :key="PARAMS_TYPES.COMPANY"
+            class="input-group"
+          >
+            <span class="input-group-addon">Контрагент:</span>
+            <treeselect
+              v-model="values.company"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="companies"
+              :clearable="true"
+              placeholder="Компания не выбана"
+            />
+          </div>
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.RESEARCH_SETS)"
+            :key="PARAMS_TYPES.RESEARCH_SETS"
+            class="input-group"
+          >
+            <span class="input-group-addon">Набор услуг:</span>
+            <treeselect
+              v-model="values.researchSet"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="researchSets"
+              :clearable="true"
+              placeholder="Набор услуг для отчета"
+            />
+          </div>
           <div
             v-if="checkReportParam(PARAMS_TYPES.MONTH_YEAR)"
             :key="PARAMS_TYPES.MONTH_YEAR"
@@ -370,6 +383,7 @@ const PARAMS_TYPES = {
   USERS: 'USERS',
   USER_OR_DEP: 'USER_OR_DEP',
   FIN_SOURCE: 'FIN_SOURCE',
+  RESEARCH_SETS: 'RESEARCH_SETS',
   RESEARCH: 'RESEARCH',
   COMPANY: 'COMPANY',
   MONTH_YEAR: 'MONTH_YEAR',
@@ -461,8 +475,9 @@ const STATS_CATEGORIES = {
       consolidate: {
         groups: ['Статистика-профосмотры'],
         title: 'Сводный',
-        params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
-        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>',
+        params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.RESEARCH_SETS, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
+            + 'company=<company>&research-set=<research-set>',
       },
     },
   },
@@ -551,6 +566,7 @@ const getVaues = () => ({
   dateValues: null,
   users: [],
   finSource: -1,
+  researchSet: null,
   user: null,
   dep: null,
   research: null,
@@ -587,6 +603,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       },
       users: [],
       companies: [],
+      researchSets: [],
       disabled_categories: [],
       disabled_reports: [],
       unlimit_period_statistic_groups: [],
@@ -612,6 +629,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
   mounted() {
     this.loadUsers();
     this.loadCompanies();
+    this.loadResearchSets();
     this.loadPurposes();
     this.loadResultTreatment();
     this.loadTitleReportStattalonFields();
@@ -636,6 +654,8 @@ export default class Statistics extends Vue {
   users: any[];
 
   companies: any[];
+
+  researchSets: any[];
 
   purposes: any[];
 
@@ -681,6 +701,13 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { rows } = await this.$api('companies');
     this.companies = rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadResearchSets() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { data } = await this.$api('/get-research-sets');
+    this.researchSets = data;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -804,6 +831,13 @@ export default class Statistics extends Vue {
         url = url.replace('<fin-source>', this.values.finSource);
       }
 
+      if (this.PARAMS_TYPES.RESEARCH_SETS === p) {
+        if (_.isNil(this.values.researchSet)) {
+          url = url.replace('<research-set>', -1);
+        }
+        url = url.replace('<research-set>', this.values.researchSet);
+      }
+
       if (this.PARAMS_TYPES.RESEARCH === p) {
         if (_.isNil(this.values.research)) {
           return null;
@@ -820,7 +854,7 @@ export default class Statistics extends Vue {
 
       if (this.PARAMS_TYPES.COMPANY === p) {
         if (_.isNil(this.values.company)) {
-          return null;
+          url = url.replace('<company>', -1);
         }
 
         url = url.replace('<company>', this.values.company);

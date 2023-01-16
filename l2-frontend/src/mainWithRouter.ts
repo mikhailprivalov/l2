@@ -132,6 +132,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/research-sets',
+      name: 'research_sets',
+      component: () => import('@/construct/ConstuctResearchSets.vue'),
+      meta: {
+        title: 'Наборы исследований',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/patient-control-param',
       name: 'construct_patient_control_param',
       component: () => import('@/construct/ConstructControlParam.vue'),
@@ -210,7 +220,7 @@ const router = new Router({
       name: 'search',
       component: () => import('@/pages/Search.vue'),
       meta: {
-        title: 'Поиск описательнх результатов',
+        title: 'Поиск описательных результатов',
         groups: ['Лечащий врач', 'Оператор лечащего врача', 'Врач консультаций', 'Врач стационара'],
         module: 'paraclinic_module',
       },

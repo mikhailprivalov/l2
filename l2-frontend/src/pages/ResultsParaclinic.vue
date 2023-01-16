@@ -43,6 +43,33 @@
             placeholder="номер"
             @keyup.enter="load()"
           >
+          <span
+            v-if="selectedModeNeedYear"
+            class="input-group-btn"
+          >
+            <button
+              class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
+              type="button"
+              data-toggle="dropdown"
+            >
+              <span class="caret" />
+              {{ selectedYear }}
+            </button>
+            <ul
+              class="dropdown-menu"
+              style="margin-top: 1px"
+            >
+              <li
+                v-for="y in years"
+                :key="y"
+              >
+                <a
+                  href="#"
+                  @click.prevent="selectedYear = y"
+                >{{ y }}</a>
+              </li>
+            </ul>
+          </span>
           <span class="input-group-btn">
             <button
               class="btn last btn-blue-nb nbr"
@@ -1266,7 +1293,10 @@
               >
                 <label class="field-title">Дополнительный номер</label>
                 <div class="field-value simple-value">
-                  {{ data.direction.additionalNumber }}
+                  <code>{{ data.direction.additionalNumber }}</code>
+                  <small v-if="data.direction.additionalNumberYear">
+                    {{ data.direction.additionalNumberYear }} год
+                  </small>
                 </div>
               </div>
               <div
@@ -1787,6 +1817,8 @@ const SEARCH_MODES = [
   },
 ];
 
+const EMPTY_YEAR = 'без года';
+
 export default {
   name: 'ResultsParaclinic',
   components: {
@@ -1891,9 +1923,15 @@ export default {
       workFromHistory: [],
       moreServices: [],
       usersLoading: false,
+      selectedYear: moment().format('YYYY'),
+      currentDate: moment().format('YYYY-MM-DD'),
+      currentDateInterval: null,
     };
   },
   computed: {
+    currentYear() {
+      return moment(this.currentDate).format('YYYY');
+    },
     l2_decriptive_coexecutor() {
       return this.$store.getters.modules.l2_decriptive_coexecutor;
     },
@@ -2077,6 +2115,28 @@ export default {
         })
         .filter(Boolean);
     },
+    selectedModeNeedYear() {
+      return this.searchMode === 'additional';
+    },
+    years() {
+      const currentYear = Number(this.currentYear);
+      const years = [];
+
+      for (let i = currentYear; i >= 2022; i--) {
+        years.push(i);
+      }
+
+      years.push(EMPTY_YEAR);
+
+      return years;
+    },
+    selectedYearValue() {
+      if (this.selectedYear === EMPTY_YEAR) {
+        return null;
+      }
+
+      return Number(this.selectedYear);
+    },
   },
   watch: {
     date() {
@@ -2202,11 +2262,24 @@ export default {
 
     this.$store.dispatch(actions.LOAD_REQUIRED_STATTALON_FIELDS);
     this.$store.dispatch(actions.LOAD_RESEARCHES_PK_REQUIRED_STATTALON_FIELDS);
+
+    this.getCurrentTime();
+
+    this.currentDateInterval = setInterval(() => {
+      this.getCurrentTime();
+    }, 60000);
   },
   beforeDestroy() {
     window.$(window).off('beforeunload', this.unload);
+    clearInterval(this.currentDateInterval);
   },
   methods: {
+    async getCurrentTime() {
+      const { date } = await this.$api('current-time');
+      if (date) {
+        this.currentDate = date;
+      }
+    },
     needShowDateExamination(currentResearch) {
       if (typeof this.data.showExaminationDate.is_gistology !== 'undefined') {
         return currentResearch.is_gistology && this.data.showExaminationDate.is_gistology;
@@ -2450,10 +2523,15 @@ export default {
         }
         this.clear(true);
       }
-      this.$store.dispatch(actions.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.getCurrentTime();
       await directionsPoint
-        .getParaclinicForm({ pk: this.pk_c, searchMode: this.searchMode, withoutIssledovaniye })
-        .then((data) => {
+        .getParaclinicForm({
+          pk: this.pk_c,
+          searchMode: this.searchMode,
+          withoutIssledovaniye,
+          year: this.selectedYearValue,
+        }).then((data) => {
           if (withoutIssledovaniye) {
             this.data.researches = [...this.data.researches, ...data.researches];
             return;
