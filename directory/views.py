@@ -85,7 +85,16 @@ def directory_researches(request):
         i = 0
         for research in researches:
             i += 1
-            resdict = {"pk": research.pk, "title": research.title, "shortTitle": research.get_title(), "tubes": {}, "tubes_c": 0, "readonly": False, "hide": research.hide, "sort_weight": research.sort_weight}
+            resdict = {
+                "pk": research.pk,
+                "title": research.title,
+                "shortTitle": research.get_title(),
+                "tubes": {},
+                "tubes_c": 0,
+                "readonly": False,
+                "hide": research.hide,
+                "sort_weight": research.sort_weight,
+            }
             if directions.Issledovaniya.objects.filter(research=research).exists():
                 resdict["readonly"] = True
             fractions = Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
