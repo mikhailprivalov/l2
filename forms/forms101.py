@@ -6386,7 +6386,7 @@ def form_27(request_data):
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Даю согласие на отправление моему работодателю', style=style))
     objs.append(Spacer(1, 6 * mm))
-    work_title, work_email,work_address = "", "", ""
+    work_title, work_email, work_address = "", "", ""
     if ind_card.work_place_db:
         work_title = ind_card.work_place_db.title
         work_email = ind_card.work_place_db.email
