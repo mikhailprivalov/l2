@@ -472,3 +472,33 @@ def get_confirm_direction_by_hospital(hospitals, d_start, d_end):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_meta_data_directions_to_print_plan(directions):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.napravleniye_id,
+                    directions_issledovaniya.research_id,
+                    dr.title,
+                    dr.podrazdeleniye_id,
+                    dr.is_paraclinic,
+                    dr.is_doc_refferal,
+                    dr.is_stom,
+                    dr.is_slave_hospital,
+                    dr.is_microbiology,
+                    dr.is_gistology,
+                    dr.is_form,
+                    dh.site_type,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as ch_time_confirm
+                FROM directions_issledovaniya
+                LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
+                LEFT JOIN directory_hospitalservice dh on dr.id = dh.slave_research_id
+                WHERE directions_issledovaniya.napravleniye_id in %(directions)s
+                ORDER BY directions_issledovaniya.napravleniye_id
+            """,
+            params={'directions': directions, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
