@@ -43,13 +43,7 @@ class PriceName(models.Model):
 
     @staticmethod
     def as_json(price):
-        json_data = {
-            "id": price.id,
-            "title": price.title,
-            "start": price.date_start,
-            "end": price.date_end,
-            "company": price.company_id
-        }
+        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": price.company_id}
         return json_data
 
 
