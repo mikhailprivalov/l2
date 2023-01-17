@@ -1282,6 +1282,7 @@ def form_02(request_data):
                 ]
             )
         )
+        date_tbl = tbl
 
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
@@ -1502,9 +1503,10 @@ def form_02(request_data):
         s = pytils.numeral.rubles(float(sum_research_decimal))
         end_date = date.today() + relativedelta(days=+10)
         end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
+        tbl_price = tbl
         if contract_from_file:
             for section in body_paragraphs:
-                objs = check_section_param(objs, s, styles_obj, tbl, sum_research, styleTCright, section)
+                objs = check_section_param(objs, s, styles_obj, sum_research, styleTCright, section, tbl_price)
 
         styleAtr = deepcopy(style)
         styleAtr.firstLineIndent = 0
@@ -1822,7 +1824,7 @@ def form_02(request_data):
                     objs.extend(contract_add_header)
                 elif ticket_section.get('body_adds_paragraphs'):
                     for section in ticket_section.get('body_adds_paragraphs'):
-                        objs = check_section_param(objs, s, styles_obj, tbl, sum_research, styleTCright, section)
+                        objs = check_section_param(objs, s, styles_obj, sum_research, styleTCright, section, tbl_price, date_tbl)
             objs.append(Spacer(1, 2 * mm))
             objs.append(KeepTogether([Paragraph('АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), contract_add_org_contracts]))
 
@@ -1947,15 +1949,22 @@ def form_02(request_data):
     return pdf
 
 
-def check_section_param(objs, s, styles_obj, tbl, sum_research, styleTCright, section):
+def check_section_param(objs, s, styles_obj, sum_research, styleTCright, section, tbl_price, date_tbl=None):
     if section.get('is_price'):
         objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['text'], s.capitalize()), styles_obj[section['style']]))
     elif section.get('is_researches'):
-        objs.append(tbl)
+        objs.append(tbl_price)
         objs.append(Spacer(1, 1 * mm))
         objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
         objs.append(Spacer(1, 2 * mm))
         objs.append(Spacer(1, 3 * mm))
+    elif section.get('Spacer'):
+        height_spacer = section.get('spacer_data')
+        objs.append(Spacer(1, height_spacer * mm))
+    elif section.get('Date'):
+        objs.append(Spacer(1, 2 * mm))
+        objs.append(date_tbl)
+        objs.append(Spacer(1, 2 * mm))
     else:
         objs.append(Paragraph(section['text'], styles_obj[section['style']]))
     return objs
