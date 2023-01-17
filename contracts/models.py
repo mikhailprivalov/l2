@@ -115,6 +115,7 @@ class Company(models.Model):
     kpp = models.CharField(max_length=9, default='', blank=True)
     bik = models.CharField(max_length=9, default='', blank=True)
     contract = models.ForeignKey(Contract, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+    email = models.CharField(max_length=128, blank=True, default='', help_text="email")
 
     def __str__(self):
         return "{}".format(self.title)
