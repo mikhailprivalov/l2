@@ -52,6 +52,7 @@ class PriceName(models.Model):
         }
         return json_data
 
+
 class PriceCoast(models.Model):
     price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, db_index=True)
     research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING, db_index=True)
