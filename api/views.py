@@ -2414,7 +2414,7 @@ def get_prices(request):
 def get_price_data(request):
     request_data = json.loads(request.body)
     current_price = PriceName.objects.get(pk=request_data)
-    price_data = {"title": current_price.title, "start": current_price.date_start, "end": current_price.date_end, "company": current_price.company_id}
+    price_data = current_price.as_json(current_price)
     return JsonResponse({"data": price_data})
 
 
@@ -2423,15 +2423,27 @@ def get_price_data(request):
 def update_price(request):
     request_data = json.loads(request.body)
     if request_data["id"] == -1:
-        price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
-        price.save()
+        current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
+        current_price.save()
+        Log.log(
+            current_price.pk,
+            130007,
+            request.user.doctorprofile,
+            current_price.as_json(current_price),
+        )
     else:
-        price = PriceName.objects.get(pk=request_data["id"])
-        price.title = request_data["title"]
-        price.date_start = request_data["start"]
-        price.date_end = request_data["end"]
-        price.company_id = request_data["company"]
-        price.save()
+        current_price = PriceName.objects.get(pk=request_data["id"])
+        current_price.title = request_data["title"]
+        current_price.date_start = request_data["start"]
+        current_price.date_end = request_data["end"]
+        current_price.company_id = request_data["company"]
+        current_price.save()
+        Log.log(
+            current_price.pk,
+            130006,
+            request.user.doctorprofile,
+            current_price.as_json(current_price),
+        )
     return status_response(True)
 
 

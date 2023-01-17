@@ -41,6 +41,16 @@ class PriceName(models.Model):
         verbose_name = 'Название прайса'
         verbose_name_plural = 'Названия прайса'
 
+    @staticmethod
+    def as_json(price):
+        json_data = {
+            "id": price.id,
+            "title": price.title,
+            "start": price.date_start,
+            "end": price.date_end,
+            "company": price.company_id
+        }
+        return json_data
 
 class PriceCoast(models.Model):
     price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, db_index=True)
