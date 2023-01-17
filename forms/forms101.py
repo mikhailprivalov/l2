@@ -6382,7 +6382,6 @@ def form_27(request_data):
 
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     space_symbol = '&nbsp;'
-
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Даю согласие на отправление моему работодателю', style=style))
     objs.append(Spacer(1, 6 * mm))
@@ -6396,7 +6395,6 @@ def form_27(request_data):
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(Paragraph('наименование работодателя, адрес /электронная почта  работодателя', style=styleFCenterMin))
     objs.append(Spacer(1, 6 * mm))
-
     objs.append(Paragraph('«Заключения врачебной комиссии по обязательному психиатрическому освидетельствованию работников, осуществляющих отдельные виды деятельности»', style=style))
     objs.append(Paragraph('от ________________(дата заключения )', style=style))
     objs.append(Spacer(1, 5 * mm))
@@ -6414,13 +6412,11 @@ def form_27(request_data):
     objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
-
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph(f'{date_now} г.', style))
     objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
-
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
