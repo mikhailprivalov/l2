@@ -88,7 +88,8 @@ from .sql_func import (
     get_confirm_direction_patient_year,
     get_patient_contract,
     get_directions_by_user,
-    get_confirm_direction_by_hospital, get_meta_data_directions_to_print_plan,
+    get_confirm_direction_by_hospital,
+    get_meta_data_directions_to_print_plan,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
