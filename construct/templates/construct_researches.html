@@ -506,17 +506,21 @@
             const row = $("<div class='row'></div>").appendTo($(form));
             const cloumn1 = $("<div class='col-md-6'></div>").appendTo($(row));
             let group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
-            $('<span class="input-group-addon" style="min-width: 110px">Название</span>').appendTo($(group));
+            $('<span class="input-group-addon" style="min-width: 157px">Название (полное)</span>').appendTo($(group));
             $("<input class='form-control' id='research_title' />").appendTo($(group));
 
+            group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
+            $('<span class="input-group-addon" style="min-width: 157px">Название (краткое)</span>').appendTo($(group));
+            $("<input class='form-control' id='research_short_title' />").appendTo($(group));
+
             group = $("<div class=\"input-group\"></div>").appendTo($(cloumn1));
-            $('<span class="input-group-addon" style="min-width: 110px">Код по НМУ</span>').appendTo($(group));
+            $('<span class="input-group-addon" style="min-width: 157px">Код по НМУ</span>').appendTo($(group));
             $("<input class='form-control' value='' id='nmu' />").appendTo($(group));
 
             const cloumn3 = $("<div class='col-md-6'></div>").appendTo($(row));
             group = $("<div class=\"input-group\"></div>").appendTo($(cloumn3));
             $('<span class="input-group-addon">Подготовка</span>').appendTo($(group));
-            $('<textarea class="form-control" id="preparation" rows="3"></textarea>').appendTo($(group));
+            $('<textarea class="form-control" id="preparation" rows="5"></textarea>').appendTo($(group));
             $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn" onclick="tune_research(' + resid + '); return false;" class="btn btn-default btn-blue2-nb"><i class="glyphicon glyphicon-cog"></i> Видимость фракций, референсы и доп. параметры</a></span>');
             $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn-ng" onclick="tune_research(' + resid + ', true); return false;" class="btn btn-default btn-blue2-nb"><i class="fa fa-wrench"></i> Коды ФСЛИ</a></span>');
             $(form).append('<span style="float: right;padding-top:15px"><a href="#" onclick="showref(); return false;" class="btn btn-default btn-blue2-nb" id="refhidden">Развернуть референсы</a><a href="#" onclick="hideref(); return false;" class="btn btn-default btn-blue2-nb" id="refshowed">Свернуть референсы</a></span>');
@@ -552,6 +556,7 @@
             if (resid > -1) {
                 $.ajax({url: "/directory/research?id=" + id, method: "GET"}).done(function (data) {
                     $("#research_title").val(data.title);
+                    $("#research_short_title").val(data.shortTitle);
                     lab_r = data.lab;
                     $("#nmu").val(data.nmu);
                     $("#preparation").val(data.preparation);
@@ -1005,7 +1010,7 @@
                     $(g).attr("pk", v.pk);
                     $(g).append('<div class="btn btn-default flex-05 up" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></div>'.f(v.pk))
                     $(g).append('<div class="btn btn-default flex-05 down" pk="{0}"><i class="glyphicon glyphicon-arrow-down"></i></div>'.f(v.pk))
-                    $(g).append('<div class="btn btn-default research-title" style="z-index:0;" class="{1}">{0}</div>'.f(v.title))
+                    $(g).append('<div class="btn btn-default research-title" style="z-index:0;" class="{1}">{0}</div>'.f(v.shortTitle))
                     //  $(g).append('<div class="btn btn-default col-md-1" onclick="copy({0});" title="Копия">Коп.</div>'.f(v.pk));
                     $(g).append(`<div class="btn btn-default flex-1" id='hide-bth-${v.pk}' onclick="toggle_hide(${v.pk});" title="Скрыть/показать">${v.hide ? 'Пок.' : 'Скр.'}</div>`)
                     $(g).append('<div class="btn btn-default flex-1" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk))
@@ -1081,9 +1086,10 @@
             let research = {
                 id: resid,
                 lab: $("#select-lab option:selected").val(),
-                title: $("#research_title").val(),
+                title: $("#research_title").val().trim(),
+                shortTitle: $("#research_short_title").val().trim(),
                 nmu: $("#nmu").val(),
-                preparation: $("#preparation").val(),
+                preparation: $("#preparation").val().trim(),
                 fraction: lfractions
             };
             console.log(research);
