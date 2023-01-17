@@ -2459,8 +2459,10 @@ def check_price_active(request):
 @group_required('Конструктор: Настройка организации')
 def get_coasts_researches_in_price(request):
     request_data = json.loads(request.body)
-    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__str__()}
-                      for data in PriceCoast.objects.filter(price_name_id=request_data).order_by('research__title')]
+    coast_research = [
+        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__str__()}
+        for data in PriceCoast.objects.filter(price_name_id=request_data).order_by('research__title')
+    ]
     return JsonResponse({"data": coast_research})
 
 
