@@ -5,23 +5,21 @@
     </h4>
     <Treeselect
       v-model="selectedPrice"
-      :options="priceList.data"
-      :clearable="false"
+      :options="prices.data"
       placeholder="Выберите прайс"
-      value-format="object"
       class="select-price"
     />
-    <div
-      v-if="selectedPrice.status === true"
-      class="edit-price"
-    >
+    <div class="edit-price">
       <table class="table">
         <colgroup>
           <col>
           <col width="120">
           <col width="120">
           <col width="200">
-          <col width="100">
+          <col
+            v-if="priceIsActive"
+            width="100"
+          >
         </colgroup>
         <thead>
           <tr>
@@ -37,46 +35,66 @@
             <th class="text-center">
               <strong>Компания</strong>
             </th>
-            <th />
+            <th v-if="priceIsActive" />
           </tr>
         </thead>
         <tr>
           <td class="border">
-            <input class="form-control">
+            <input
+              v-model.trim="priceData.title"
+              class="form-control"
+              :disabled="!priceIsActive"
+            >
           </td>
           <td class="border">
-            <input>
+            <input
+              v-model="priceData.start"
+              type="date"
+              class="form-control"
+              :disabled="!priceIsActive"
+            >
           </td>
           <td class="border">
-            <input>
+            <input
+              v-model="priceData.end"
+              type="date"
+              class="form-control"
+              :disabled="!priceIsActive"
+            >
           </td>
           <td class="border">
             <Treeselect
+              v-model="priceData.company"
+              :options="companies.data"
+              :normalizer="normalizer"
               placeholder="Выберите компанию"
+              :disabled="!priceIsActive"
             />
           </td>
-          <td class="border">
+          <td
+            v-if="priceIsActive"
+            class="border"
+          >
             <div class="button">
               <button
                 v-tippy
                 class="btn last btn-blue-nb nbr"
-                style="padding: 7px 12px;"
-                title="Добавить исследование"
-                :disabled="!selectedResearch"
-                @click="updateResearchListInPrice"
+                :title="priceIsSelected ? 'Сохранить прайс' : 'Добавить прайс'"
+                :disabled="!priceIsActive"
+                @click="updatePrice"
               >
-                Добавить
+                {{ priceIsSelected ? 'Сохранить' : 'Добавить' }}
               </button>
             </div>
           </td>
         </tr>
       </table>
     </div>
-    <h4 v-if="selectedPrice.id !== -1">
+    <h4 v-if="priceIsSelected">
       Исследования
     </h4>
     <div
-      v-if="selectedPrice.id !== -1"
+      v-if="priceIsSelected"
       class="margin-bottom"
     >
       <input
@@ -86,7 +104,7 @@
       >
     </div>
     <div
-      v-if="selectedPrice.id !== -1"
+      v-if="priceIsSelected"
       class="card-no-hover card card-1"
     >
       <div class="scroll">
@@ -95,25 +113,25 @@
             <col>
             <col width="100">
             <col
-              v-if="selectedPrice.status === true"
+              v-if="priceIsActive"
               width="100"
             >
           </colgroup>
           <thead class="sticky">
-            <tr>
+            <tr class="border-no-top">
               <th
-                :class="filteredRows.length === 0 ? 'text-center' : 'text-center border-left'"
+                class="text-center border-right"
               >
                 <strong>Название</strong>
               </th>
               <th
-                :class="selectedPrice.status === false ? 'text-center border-right' : 'text-center'"
+                class="text-center border-right"
               >
                 <strong>Цена</strong>
               </th>
               <th
-                v-if="selectedPrice.status === true"
-                :class="filteredRows.length === 0 ? '' : 'border-right'"
+                v-if="priceIsActive"
+                class="border-right"
               />
             </tr>
           </thead>
@@ -123,6 +141,7 @@
           >
             <td
               colspan="3"
+              class="border-top"
             >
               Нет данных
             </td>
@@ -132,14 +151,13 @@
             :key="coastResearch.id"
           >
             <VueTippyTd
-              class="research border"
-              style="padding-left: 6px"
+              class="research border padding-left"
               :text="coastResearch.research.title"
             />
             <td class="border">
               <input
                 v-model="coastResearch.coast"
-                :disabled="!selectedPrice.status"
+                :disabled="!priceIsActive"
                 type="number"
                 min="0.01"
                 step="0.01"
@@ -147,7 +165,7 @@
               >
             </td>
             <td
-              v-if="selectedPrice.status === true"
+              v-if="priceIsActive"
               class="border"
             >
               <div class="button">
@@ -173,10 +191,10 @@
         </table>
       </div>
     </div>
-    <h4 v-if="selectedPrice.status === true">
+    <h4 v-if="priceIsActive && priceIsSelected">
       Добавить исследование в прайс
     </h4>
-    <div v-if="selectedPrice.status === true">
+    <div v-if="priceIsActive && priceIsSelected">
       <table>
         <colgroup>
           <col>
@@ -210,7 +228,7 @@
                 class="btn last btn-blue-nb nbr"
                 title="Добавить исследование"
                 :disabled="!selectedResearch"
-                @click="updateResearchListInPrice"
+                @click="addResearchInPrice"
               >
                 Добавить
               </button>
@@ -235,45 +253,116 @@ export default {
   components: { VueTippyTd, Treeselect },
   data() {
     return {
-      priceList: {},
-      selectedPrice: { id: -1, label: 'Выберите прайс', status: false },
+      prices: {},
+      priceData: {},
+      activeStatus: {
+        ok: true,
+      },
+      selectedPrice: null,
       selectedResearch: null,
       coast: '',
       researchList: {},
       search: '',
       coastResearches: [],
-      originalCoastResearch: [],
+      companies: [],
+      normalizer(node) {
+        return {
+          id: node.pk,
+          label: node.title,
+        };
+      },
     };
   },
   computed: {
     filteredRows() {
-      return this.originalCoastResearch.filter(coastResearch => {
+      return this.coastResearches.filter(coastResearch => {
         const research = coastResearch.research.title.toLowerCase();
         const searchTerm = this.search.toLowerCase();
 
         return research.includes(searchTerm);
       });
     },
+    priceIsActive() {
+      return this.activeStatus.ok;
+    },
+    priceIsSelected() {
+      return !!this.selectedPrice;
+    },
   },
   watch: {
     selectedPrice() {
-      this.getCurrentCoastResearchesInPrice();
+      if (!this.selectedPrice) {
+        this.priceData = {
+          title: '',
+          start: '',
+          end: '',
+          company: null,
+        };
+      } else {
+        this.getCoastsResearchesInPrice();
+        this.checkPriceHidden();
+        this.getPriceData();
+      }
     },
   },
   mounted() {
-    this.getPriceList();
+    this.getPrices();
     this.getResearchList();
+    this.getCompanies();
   },
   methods: {
-    async getPriceList() {
-      this.priceList = await this.$api('/get-price-list');
+    async getPrices() {
+      this.prices = await this.$api('/get-prices');
+    },
+    async updatePrice() {
+      if (this.priceIsSelected) {
+        const { ok, message } = await this.$api('update-price', {
+          id: this.selectedPrice,
+          title: this.priceData.title,
+          start: this.priceData.start,
+          end: this.priceData.end,
+          company: this.priceData.company,
+        });
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Прайс обновлен');
+          await this.getPrices();
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      } else {
+        const { ok, message } = await this.$api('update-price', {
+          id: -1,
+          title: this.priceData.title,
+          start: this.priceData.start,
+          end: this.priceData.end,
+          company: this.priceData.company,
+        });
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Прайс добавлен');
+          await this.getPrices();
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
+      }
+    },
+    async checkPriceHidden() {
+      if (this.selectedPrice) {
+        this.activeStatus = await this.$api('/check-price-active', this.selectedPrice);
+      }
+    },
+    async getPriceData() {
+      const price = await this.$api('/get-price-data', this.selectedPrice);
+      this.priceData = price.data;
     },
     async getResearchList() {
       this.researchList = await this.$api('/get-research-list');
     },
-    async getCurrentCoastResearchesInPrice() {
-      this.coastResearches = await this.$api('/get-current-coast-researches-in-price', this.selectedPrice);
-      this.originalCoastResearch = this.coastResearches.data;
+    async getCompanies() {
+      this.companies = await this.$api('/get-companies');
+    },
+    async getCoastsResearchesInPrice() {
+      const coast = await this.$api('/get-coasts-researches-in-price', this.selectedPrice);
+      this.coastResearches = coast.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
       if (Number(coastResearch.coast) > 0) {
@@ -303,29 +392,29 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Исследование удалено');
-        await this.getCurrentCoastResearchesInPrice();
+        await this.getCoastsResearchesInPrice();
       } else {
         this.$root.$emit('msg', 'error', message);
       }
     },
-    async updateResearchListInPrice() {
-      if (!(this.selectedResearch && this.coast && this.selectedPrice.id !== -1)) {
+    async addResearchInPrice() {
+      if (!(this.selectedResearch && this.coast && this.selectedPrice)) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
-      } else if (this.coastResearches.data.find((i) => i.research.id === this.selectedResearch)) {
+      } else if (this.coastResearches.find((i) => i.research.id === this.selectedResearch)) {
         this.$root.$emit('msg', 'error', 'Исследование уже есть в прайсе');
       } else if (Number(this.coast) <= 0) {
         this.$root.$emit('msg', 'error', 'Неверная цена');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/update-research-list-in-price', {
-          priceId: this.selectedPrice.id,
+        const { ok, message } = await this.$api('/add-research-in-price', {
+          priceId: this.selectedPrice,
           researchId: this.selectedResearch,
           coast: this.coast,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Исследование добавлено');
-          await this.getCurrentCoastResearchesInPrice();
+          await this.getCoastsResearchesInPrice();
           this.selectedResearch = null;
           this.coast = '';
         } else {
@@ -385,11 +474,19 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.border-left {
-  border-left: 1px solid #ddd;
-}
 .border-right {
   border-right: 1px solid #ddd;
+}
+.border-top {
+  border-top: 1px solid #ddd;
+}
+.border-no-top {
+  border-right: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+.padding-left {
+  padding-left: 6px;
 }
 .search {
   border: 1px solid #ddd;

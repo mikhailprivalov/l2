@@ -2404,20 +2404,51 @@ def statistic_params_search(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_price_list(request):
-    price_data = PriceName.objects.all()
-    data = [{"id": price.pk, "label": price.title, "status": price.active_status} for price in price_data]
-    data = sorted(data, key=lambda d: d["label"])
-    return JsonResponse({"data": data})
+def get_prices(request):
+    prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.all().order_by('title')]
+    return JsonResponse({"data": prices})
 
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_current_coast_researches_in_price(request):
+def get_price_data(request):
     request_data = json.loads(request.body)
-    coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["id"])
-    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__str__()} for data in coast_researches_data]
-    coast_research = sorted(coast_research, key=lambda d: d['research']['title'])
+    current_price = PriceName.objects.get(pk=request_data)
+    price_data = {"title": current_price.title, "start": current_price.date_start, "end": current_price.date_end, "company": current_price.company_id}
+    return JsonResponse({"data": price_data})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_price(request):
+    request_data = json.loads(request.body)
+    if request_data["id"] == -1:
+        price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
+        price.save()
+    else:
+        price = PriceName.objects.get(pk=request_data["id"])
+        price.title = request_data["title"]
+        price.date_start = request_data["start"]
+        price.date_end = request_data["end"]
+        price.company_id = request_data["company"]
+        price.save()
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def check_price_active(request):
+    request_data = json.loads(request.body)
+    current_price = PriceName.objects.get(pk=request_data)
+    return status_response(current_price.active_status)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_coasts_researches_in_price(request):
+    request_data = json.loads(request.body)
+    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__str__()}
+                      for data in PriceCoast.objects.filter(price_name_id=request_data).order_by('research__title')]
     return JsonResponse({"data": coast_research})
 
 
@@ -2519,7 +2550,7 @@ def get_research_list(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def update_research_list_in_price(request):
+def add_research_in_price(request):
     request_data = json.loads(request.body)
     if not PriceName.objects.get(pk=request_data["priceId"]).active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
