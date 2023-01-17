@@ -361,7 +361,7 @@ export default {
       this.companies = await this.$api('/get-companies');
     },
     async getCoastsResearchesInPrice() {
-      const coast = await this.$api('/get-coasts-researches-in-price', this.selectedPrice);
+      const coast = await this.$api('/get-coasts-researches-in-price', {id: this.selectedPrice});
       this.coastResearches = coast.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
