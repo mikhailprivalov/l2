@@ -6397,7 +6397,7 @@ def form_27(request_data):
     objs.append(Paragraph('наименование работодателя, адрес /электронная почта  работодателя', style=styleFCenterMin))
     objs.append(Spacer(1, 6 * mm))
 
-    objs.append(Paragraph('«Заключения врачебной комиссии по обязательному психиатрическому освидетельствованию работников, осуществляющих отдельные виды деятельности»',style=style))
+    objs.append(Paragraph('«Заключения врачебной комиссии по обязательному психиатрическому освидетельствованию работников, осуществляющих отдельные виды деятельности»', style=style))
     objs.append(Paragraph('от ________________(дата заключения )', style=style))
     objs.append(Spacer(1, 5 * mm))
     objs.append(Paragraph(
