@@ -458,7 +458,7 @@ export default {
 }
 .scroll {
   min-height: 106px;
-  max-height: calc(100vh - 500px);
+  max-height: calc(100vh - 600px);
   overflow-y: auto;
 }
 .sticky {
