@@ -298,6 +298,7 @@ export default {
           end: '',
           company: null,
         };
+        this.activeStatus.ok = true;
       } else {
         this.getCoastsResearchesInPrice();
         this.checkPriceHidden();
@@ -347,11 +348,11 @@ export default {
     },
     async checkPriceHidden() {
       if (this.selectedPrice) {
-        this.activeStatus = await this.$api('/check-price-active', this.selectedPrice);
+        this.activeStatus = await this.$api('/check-price-active', { id: this.selectedPrice });
       }
     },
     async getPriceData() {
-      const price = await this.$api('/get-price-data', this.selectedPrice);
+      const price = await this.$api('/get-price-data', { id: this.selectedPrice });
       this.priceData = price.data;
     },
     async getResearchList() {
@@ -361,7 +362,7 @@ export default {
       this.companies = await this.$api('/get-companies');
     },
     async getCoastsResearchesInPrice() {
-      const coast = await this.$api('/get-coasts-researches-in-price', {id: this.selectedPrice});
+      const coast = await this.$api('/get-coasts-researches-in-price', { id: this.selectedPrice });
       this.coastResearches = coast.data;
     },
     async updateCoastResearchInPrice(coastResearch) {
