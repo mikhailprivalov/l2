@@ -7,36 +7,27 @@ from laboratory.decorators import group_required
 from employees.models import Department, Position, Employee, EmployeePosition
 from utils.response import status_response
 
-
-# views for departments_list
-# departments_add
-# departments_edit
-# departments_treeselect
-# departments_get
-# positions_list
-# positions_add
-# positions_edit
-# positions_treeselect
-# positions_get
-# employees_search
-# employees_add
-# employees_edit
-# employees_get
-
 @login_required
 def departments_list(request):
     request_data = json.loads(request.body)
     hospital_id = request.user.doctorprofile.get_hospital_id()
 
     only_active = request_data.get('onlyActive', True)
+    return_total_rows = request_data.get('returnTotalRows', False)
     page = request_data.get('page', 1)
     per_page = request_data.get('perPage', 30)
     sort_column = request_data.get('sortColumn')
     sort_direction = request_data.get('sortDirection')
     q_filter = request_data.get('filter')
 
-    rows = Department.get_json_list(hospital_id, only_active, page, per_page, sort_column, sort_direction, q_filter)
-    return JsonResponse(rows, safe=False)
+    import time
+    time.sleep(5)
+
+    rows, pages = Department.get_json_list(hospital_id, only_active, page, per_page, sort_column, sort_direction, q_filter, return_total_rows=return_total_rows)
+    return JsonResponse({
+        "rows": rows,
+        "pages": pages,
+    })
 
 
 @login_required

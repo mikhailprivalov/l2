@@ -24,6 +24,7 @@
 
 .left, .right {
   height: 100%;
+  position: relative;
 }
 
 .left {

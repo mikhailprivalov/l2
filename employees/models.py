@@ -217,7 +217,7 @@ class Department(models.Model):
             return None
 
     @staticmethod
-    def get_json_list(hospital_id, only_active=True, page=1, per_page=30, sort_column=None, sort_direction=None, filter=None):
+    def get_json_list(hospital_id, only_active=True, page=1, per_page=30, sort_column=None, sort_direction=None, filter=None, return_total_rows=False):
         departments = Department.objects.filter(hospital_id=hospital_id)
         if only_active:
             departments = departments.filter(is_active=True)
@@ -227,8 +227,15 @@ class Department(models.Model):
             filter = filter.strip()
         if filter:
             departments = departments.filter(models.Q(name__istartswith=filter))
-        paginator = Paginator(departments, per_page)
-        return [department.json for department in paginator.get_page(page)]
+
+        rows = departments
+        total_pages = 1
+        if not return_total_rows:
+            paginator = Paginator(departments, per_page)
+            rows = paginator.get_page(page)
+            total_pages = paginator.num_pages
+
+        return [department.json for department in rows], total_pages
 
     @staticmethod
     def add(hospital_id, name, who_created):

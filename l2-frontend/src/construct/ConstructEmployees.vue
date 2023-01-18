@@ -1,22 +1,13 @@
 <template>
   <TwoSidedLayout>
     <template #left>
-      <div class="counter__title">
-        <h2>Counter</h2>
-      </div>
-      <div class="counter__value">
-        <h2>{{ count }}</h2>
-      </div>
+      <DataList
+        v-model="selectedDepartmentId"
+        source="employees/departments/list"
+      />
     </template>
     <template #right>
-      <div class="counter__buttons">
-        <button @click="increment">
-          Increment
-        </button>
-        <button @click="decrement">
-          Decrement
-        </button>
-      </div>
+      TODO
     </template>
   </TwoSidedLayout>
 </template>
@@ -25,16 +16,9 @@
 import { ref } from 'vue';
 
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
+import DataList from '@/components/DataList.vue';
 
-const count = ref(0);
-
-const increment = () => {
-  count.value++;
-};
-
-const decrement = () => {
-  count.value--;
-};
+const selectedDepartmentId = ref<number | string | null>(null);
 </script>
 
 <style lang="scss" scoped>
