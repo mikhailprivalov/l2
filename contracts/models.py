@@ -22,8 +22,8 @@ class PriceCategory(models.Model):
 class PriceName(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text='Наименование Прайса', db_index=True)
     active_status = models.BooleanField(default=True, help_text='Статус активности', db_index=True)
-    date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
-    date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
+    date_start = models.DateField(help_text="Дата начала действия документа", blank=True, null=True)
+    date_end = models.DateField(help_text="Дата окончания действия документа", blank=True, null=True)
     research = models.ManyToManyField(directory.Researches, through='PriceCoast', help_text="Услуга-Прайс", blank=True)
     company = models.ForeignKey('contracts.Company', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
 
