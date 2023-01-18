@@ -340,6 +340,14 @@
                 type="checkbox"
               > Настройки из протокола
             </label>
+            <span style="padding-left: 30px">
+              <label >
+                <input
+                  v-model="values.medicalExam"
+                  type="checkbox"
+                > По дате осмотра
+              </label>
+            </span>
           </div>
           <a
             v-if="reportUrl"
@@ -452,7 +460,8 @@ const STATS_CATEGORIES = {
         title: 'По услуге',
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
-          + 'purposes=<purposes>&special-fields=<special-fields>&date-start=<date-start>&date-end=<date-end>',
+          + 'purposes=<purposes>&special-fields=<special-fields>&medical-exam=<medical-exam>'
+          + '&date-start=<date-start>&date-end=<date-end>',
       },
       dispanserization: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
@@ -576,6 +585,7 @@ const getVaues = () => ({
   purposes: [],
   resultTreatment: [],
   specialFields: false,
+  medicalExam: false,
 });
 
 const formatDate = (date: Date) => moment(date).format('DD.MM.YYYY');
@@ -609,6 +619,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       unlimit_period_statistic_groups: [],
       purposes: [],
       specialFields: false,
+      medicalExam: false,
       resultTreatment: [],
       titleReportStattalonFields: [],
     };
@@ -660,6 +671,8 @@ export default class Statistics extends Vue {
   purposes: any[];
 
   specialFields: boolean;
+
+  medicalExam: boolean;
 
   resultTreatment: any[];
 
@@ -845,6 +858,7 @@ export default class Statistics extends Vue {
 
         url = url.replace('<research>', this.values.research);
         url = url.replace('<special-fields>', this.values.specialFields);
+        url = url.replace('<medical-exam>', this.values.medicalExam);
         if (this.values.purposes.length > 0) {
           url = url.replace('<purposes>', this.values.purposes);
         } else {
