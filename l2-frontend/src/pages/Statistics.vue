@@ -340,8 +340,8 @@
                 type="checkbox"
               > Настройки из протокола
             </label>
-            <span style="padding-left: 30px">
-              <label >
+            <span class="mediacl-exam-padding">
+              <label>
                 <input
                   v-model="values.medicalExam"
                   type="checkbox"
@@ -1045,5 +1045,9 @@ $colwidths: 300px;
 .row-v-header {
   font-weight: bold;
   margin-bottom: 3px;
+}
+
+.mediacl-exam-padding {
+  padding-left: 30px;
 }
 </style>
