@@ -1,25 +1,19 @@
 <template>
   <div>
     <h4>Контролируемые параметры пациентов</h4>
-    <div>
-      <input
-        v-model.trim="search"
-        class="form-control search"
-        placeholder="Поиск"
-      >
-    </div>
     <div class="card card1 card-no-hover">
       <div class="scroll">
         <table class="table">
           <colgroup>
+            <col width="85">
             <col>
             <col width="100">
             <col width="100">
             <col width="100">
-            <col width="93">
           </colgroup>
           <thead class="sticky">
             <tr>
+              <th />
               <th
                 class="text-center"
               >
@@ -35,16 +29,11 @@
               >
                 <strong>Глобальный</strong>
               </th>
-              <th
-                class="text-center"
-              >
-                <strong>Приоритет</strong>
-              </th>
               <th />
             </tr>
           </thead>
           <tr
-            v-if="filteredParams.length === 0"
+            v-if="params.length === 0"
             class="text-center"
           >
             <td
@@ -55,9 +44,27 @@
             </td>
           </tr>
           <tr
-            v-for="(param) in filteredParams"
+            v-for="(param) in params"
             :key="param.pk"
           >
+            <td class="border">
+              <div class="button">
+                <button
+                  class="btn last btn-blue-nb nbr"
+                  :disabled="isFirstRow(param.order)"
+                  @click="updateOrder(param, 'inc_order')"
+                >
+                  <i class="glyphicon glyphicon-arrow-up" />
+                </button>
+                <button
+                  class="btn last btn-blue-nb nbr"
+                  :disabled="isLastRow(param.order)"
+                  @click="updateOrder(param, 'dec_order')"
+                >
+                  <i class="glyphicon glyphicon-arrow-down" />
+                </button>
+              </div>
+            </td>
             <td class="border">
               <input
                 v-model="param.title"
@@ -78,13 +85,6 @@
                 v-model="param.all_patient_control"
                 class="checkbox"
                 type="checkbox"
-              >
-            </td>
-            <td class="border">
-              <input
-                v-model="param.order"
-                class="form-control text-right nba"
-                type="number"
               >
             </td>
             <td class="border">
@@ -111,7 +111,6 @@
           <col width="100">
           <col width="100">
           <col width="100">
-          <col width="93">
         </colgroup>
         <tr>
           <td class="border">
@@ -133,16 +132,9 @@
             class="text-center border"
           >
             <input
-              v-model="newParam.all_patient_control"
+              v-model="newParam.allPatientControl"
               class="checkbox"
               type="checkbox"
-            >
-          </td>
-          <td class="border">
-            <input
-              v-model="newParam.order"
-              class="form-control text-right nba"
-              type="number"
             >
           </td>
           <td class="text-center border">
@@ -179,20 +171,24 @@ export default {
       newParam: {
         title: '',
         code: '',
-        all_patient_control: false,
+        allPatientControl: false,
         order: -1,
       },
     };
   },
   computed: {
-    filteredParams() {
-      return this.params.filter(params => {
-        const title = params.title.toLowerCase();
-        const code = params.code.toLowerCase();
-        const searchTerm = this.search.toLowerCase();
-
-        return title.includes(searchTerm) || code.includes(searchTerm);
-      });
+    min_max_order() {
+      let min = 0;
+      let max = 0;
+      for (const row of this.params) {
+        if (min === 0) {
+          min = row.order;
+        } else {
+          min = Math.min(min, row.order);
+        }
+        max = Math.max(max, row.order);
+      }
+      return { min, max };
     },
   },
   mounted() {
@@ -231,7 +227,12 @@ export default {
         this.$root.$emit('msg', 'error', 'Такой код уже есть');
       } else {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('add-control-param', this.newParam);
+        const { ok, message } = await this.$api('add-control-param', {
+          title: this.newParam.title,
+          code: this.newParam.code,
+          allPatientControl: this.newParam.allPatientControl,
+          minOrder: this.min_max_order.min,
+        });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Сохранено');
@@ -243,6 +244,25 @@ export default {
         } else {
           this.$root.$emit('msg', 'error', message);
         }
+      }
+    },
+    isFirstRow(order) {
+      return order === this.min_max_order.max;
+    },
+    isLastRow(order) {
+      return order === this.min_max_order.min;
+    },
+    async updateOrder(param, action) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('/update-order-param', {
+        id: param.pk, order: param.order, action,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Порядок изменён');
+        await this.getParams();
+      } else {
+        this.$root.$emit('msg', 'error', message);
       }
     },
   },

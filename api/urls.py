@@ -124,4 +124,5 @@ urlpatterns = [
     path('get-control-params', views.get_control_params),
     path('update-control-param', views.update_control_param),
     path('add-control-param', views.add_control_param),
+    path('update-order-param', views.update_order_param),
 ]
