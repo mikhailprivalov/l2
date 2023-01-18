@@ -317,6 +317,7 @@ export default {
     },
     async updatePrice() {
       if (this.priceIsSelected) {
+        await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('update-price', {
           id: this.selectedPrice,
           title: this.priceData.title,
@@ -324,6 +325,7 @@ export default {
           end: this.priceData.end,
           company: this.priceData.company,
         });
+        await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Прайс обновлен');
           await this.getPrices();
@@ -331,6 +333,7 @@ export default {
           this.$root.$emit('msg', 'error', message);
         }
       } else {
+        await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('update-price', {
           id: -1,
           title: this.priceData.title,
@@ -338,6 +341,7 @@ export default {
           end: this.priceData.end,
           company: this.priceData.company,
         });
+        await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Прайс добавлен');
           await this.getPrices();
