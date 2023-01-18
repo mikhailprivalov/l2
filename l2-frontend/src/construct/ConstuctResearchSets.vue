@@ -1,47 +1,82 @@
 <template>
-  <div class="main">
-    <div
-      class="box card-no-hover card-1"
-    >
-      <h4 class="text-center">
-        Исследования в {{ setIsSelected ? currentSet.label : '' }}
-      </h4>
-      <div v-if="setIsSelected">
-        <table class="table">
-          <colgroup>
-            <col>
-            <col width="50">
-          </colgroup>
-          <tr>
-            <td class="not-bottom-border">
-              <input
-                v-model.trim="currentSet.label"
-                class="form-control padding-left"
+  <div>
+    <h4>
+      Наборы
+    </h4>
+    <Treeselect
+      v-model="currentSet"
+      :options="sets.data"
+      placeholder="Выберите набор"
+      value-format="object"
+    />
+    <div class="title-set">
+      <table class="table">
+        <colgroup>
+          <col>
+          <col
+            v-if="setIsSelected"
+            width="40"
+          >
+          <col
+            v-if="!setIsHidden"
+            width="100"
+          >
+        </colgroup>
+        <tr>
+          <td class="border">
+            <input
+              v-model.trim="titleSet"
+              class="form-control b"
+            >
+          </td>
+          <td
+            v-if="setIsSelected"
+            class="border"
+          >
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                :title="setIsHidden ? 'Отменить скрытие' : 'Скрыть набор'"
+                @click="updateSetHiding"
               >
-            </td>
-            <td class="not-bottom-border">
-              <div class="button">
-                <button
-                  v-tippy
-                  class="btn last btn-blue-nb nbr"
-                  title="Сохранить"
-                  :disabled="!currentSet.label"
-                  @click="updateSet"
-                >
-                  <i class="fa fa-save" />
-                </button>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </div>
-      <div
-        v-if="setIsSelected"
-        class="scroll"
-      >
+                <i :class="setIsHidden ?'fa fa-eye' : 'fa fa-times'" />
+              </button>
+            </div>
+          </td>
+          <td
+            v-if="!setIsHidden"
+            class="border"
+          >
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                :title="setIsSelected ? 'Сохранить набор' : 'Добавить набор'"
+                :disabled="!titleSet"
+                @click="updateSet"
+              >
+                {{ setIsSelected ? 'Сохранить' : 'Добавить' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <h4 v-if="setIsSelected">
+      Исследования
+    </h4>
+    <div
+      v-if="setIsSelected"
+      class="card-no-hover card card-1"
+    >
+      <div class="scroll">
         <table class="table">
           <colgroup>
-            <col width="85">
+            <col
+              v-if="!setIsHidden"
+              width="85"
+            >
             <col>
           </colgroup>
           <tr
@@ -58,7 +93,10 @@
             v-for="(i) in researchesInSet"
             :key="i.id"
           >
-            <td class="border">
+            <td
+              v-if="!setIsHidden"
+              class="border"
+            >
               <div class="button">
                 <button
                   class="btn last btn-blue-nb nbr"
@@ -83,120 +121,42 @@
           </tr>
         </table>
       </div>
-      <div v-if="setIsSelected">
-        <table>
-          <colgroup>
-            <col>
-            <col width="100">
-          </colgroup>
-          <tr>
-            <td>
-              <Treeselect
-                v-model="currentResearch"
-                :options="researches.data"
-                :disable-branch-nodes="true"
-                :append-to-body="true"
-                placeholder="Исследование"
-              />
-            </td>
-            <td>
-              <div class="button">
-                <button
-                  v-tippy
-                  class="btn last btn-blue-nb nbr"
-                  title="Добавить исследование"
-                  :disabled="!currentResearch"
-                  @click="addResearchInSet"
-                >
-                  Добавить
-                </button>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </div>
     </div>
-    <div class="box card-no-hover card-1">
-      <h4 class="text-center">
-        Наборы
-      </h4>
-      <div class="scroll">
-        <table class="table">
-          <colgroup>
-            <col>
-            <col width="100">
-          </colgroup>
-          <tr
-            v-if="sets.length === 0"
-            class="text-center"
-          >
-            <td
-              colspan="2"
-            >
-              Нет данных
-            </td>
-          </tr>
-          <tr
-            v-for="(i) in sets.data"
-            :key="i.id"
-            class="border"
-          >
-            <VueTippyTd
-              class="research border padding-left"
-              :text="i.label"
+    <h4 v-if="setIsSelected && !setIsHidden">
+      Добавить исследование в набор
+    </h4>
+    <div v-if="setIsSelected && !setIsHidden">
+      <table>
+        <colgroup>
+          <col>
+          <col width="100">
+        </colgroup>
+        <tr>
+          <td>
+            <Treeselect
+              v-model="currentResearch"
+              :options="researches.data"
+              :disable-branch-nodes="true"
+              :append-to-body="true"
+              placeholder="Исследование"
+              class="nba"
             />
-            <td>
-              <div class="button">
-                <button
-                  v-tippy
-                  class="btn last btn-blue-nb nbr"
-                  title="Редактировать"
-                  @click="getResearchesInSet(i)"
-                >
-                  <i class="fa fa-pencil" />
-                </button>
-                <button
-                  v-tippy
-                  class="btn last btn-blue-nb nbr"
-                  title="Скрыть"
-                  @click="hideSet(i.id)"
-                >
-                  <i class="fa fa-times" />
-                </button>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </div>
-      <div>
-        <table class="table">
-          <colgroup>
-            <col>
-            <col width="100">
-          </colgroup>
-          <tr>
-            <td class="add-border">
-              <input
-                v-model.trim="newSet"
-                class="form-control padding-left"
+          </td>
+          <td>
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                title="Добавить исследование"
+                :disabled="!currentResearch"
+                @click="addResearchInSet"
               >
-            </td>
-            <td class="add-border">
-              <div class="button">
-                <button
-                  v-tippy
-                  class="btn last btn-blue-nb nbr"
-                  title="Добавить"
-                  :disabled="!newSet"
-                  @click="addSet"
-                >
-                  Добавить
-                </button>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </div>
+                Добавить
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
     </div>
   </div>
 </template>
@@ -217,8 +177,8 @@ export default {
       currentSet: null,
       currentResearch: null,
       sets: [],
-      newSet: '',
-      setTitle: '',
+      titleSet: '',
+      hideStatus: false,
       researchesInSet: [],
       researches: [],
     };
@@ -226,6 +186,9 @@ export default {
   computed: {
     setIsSelected() {
       return !!this.currentSet;
+    },
+    setIsHidden() {
+      return this.hideStatus.ok;
     },
     min_max_order() {
       let min = 0;
@@ -241,11 +204,27 @@ export default {
       return { min, max };
     },
   },
+  watch: {
+    currentSet() {
+      if (!this.currentSet) {
+        this.titleSet = '';
+      } else {
+        this.checkSetHidden();
+        this.getResearchesInSet();
+        this.titleSet = this.currentSet.label;
+      }
+    },
+  },
   mounted() {
     this.getSets();
     this.getResearches();
   },
   methods: {
+    async checkSetHidden() {
+      if (this.setIsSelected) {
+        this.hideStatus = await this.$api('/check-set-hidden', this.currentSet.id);
+      }
+    },
     async updateOrder(research, action) {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('/update-order-in-set', {
@@ -254,7 +233,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Порядок изменён');
-        await this.getResearchesInSet(this.currentSet);
+        await this.getResearchesInSet();
       } else {
         this.$root.$emit('msg', 'error', message);
       }
@@ -271,10 +250,9 @@ export default {
     async getResearches() {
       this.researches = await this.$api('/get-research-list');
     },
-    async getResearchesInSet(currentSet) {
-      const researches = await this.$api('/get-researches-in-set', currentSet.id);
+    async getResearchesInSet() {
+      const researches = await this.$api('/get-researches-in-set', this.currentSet.id);
       this.researchesInSet = researches.data;
-      this.currentSet = currentSet;
     },
     async addResearchInSet() {
       if (this.researchesInSet.find((i) => i.research.id === this.currentResearch)) {
@@ -289,52 +267,61 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Исследование добавлено');
-          await this.getResearchesInSet(this.currentSet);
+          await this.getResearchesInSet();
           this.currentResearch = null;
         } else {
           this.$root.$emit('msg', 'error', message);
         }
       }
     },
-    async addSet() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/add-research-set', { newSet: this.newSet });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Набор добавлен');
-        await this.getSets();
-        this.newSet = '';
-      } else {
-        this.$root.$emit('msg', 'error', message);
-      }
-    },
     async updateSet() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/update-research-set', this.currentSet);
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Набор изменён');
-        await this.getSets();
+      if (this.setIsSelected) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/update-research-set', {
+          id: this.currentSet.id,
+          label: this.titleSet,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Набор изменён');
+          await this.getSets();
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
       } else {
-        this.$root.$emit('msg', 'error', message);
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { ok, message } = await this.$api('/update-research-set', {
+          id: -1,
+          label: this.titleSet,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Набор добавлен');
+          await this.getSets();
+          this.titleSet = '';
+        } else {
+          this.$root.$emit('msg', 'error', message);
+        }
       }
     },
-    async hideSet(id) {
-      try {
-        await this.$dialog.confirm('Подтвердите скрытие набора');
-      } catch (_) {
-        return;
+    async updateSetHiding() {
+      if (!this.setIsHidden) {
+        try {
+          await this.$dialog.confirm('Подтвердите скрытие набора');
+        } catch (_) {
+          return;
+        }
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/hide-research-set', id);
+      const { ok, message } = await this.$api('/update-set-hiding', this.currentSet.id);
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
-        this.$root.$emit('msg', 'ok', 'Набор скрыт');
-        if (id === this.currentSet.id) {
-          this.currentSet = null;
-          this.researchesInSet = [];
+        if (!this.setIsHidden) {
+          this.$root.$emit('msg', 'ok', 'Набор скрыт');
+        } else {
+          this.$root.$emit('msg', 'ok', 'Скрытие отменено');
         }
-        await this.getSets();
+        await this.checkSetHidden();
       } else {
         this.$root.$emit('msg', 'error', message);
       }
@@ -344,21 +331,14 @@ export default {
 </script>
 
 <style scoped>
-.box {
-  background-color: #FFF;
-  margin: 10px;
-  flex-basis: 350px;
-  flex-grow: 1;
-  border-radius: 4px;
-  height: calc(100vh - 200px);
-  min-height: 250px;
-}
-.main {
-  display: flex;
-  flex-wrap: wrap;
-}
 ::v-deep .form-control {
-  border: none;
+  border: 0;
+}
+::v-deep .card {
+  margin: 0;
+}
+.title-set {
+  margin: 10px 0;
 }
 .table {
   margin-bottom: 0;
@@ -366,23 +346,11 @@ export default {
 }
 .scroll {
   min-height: 112px;
-  max-height: calc(100vh - 300px);
+  max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
 .border {
   border: 1px solid #ddd;
-  border-radius: 0;
-}
-.add-border {
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  border-radius: 0;
-}
-.not-bottom-border {
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  border-top: 1px solid #ddd;
   border-radius: 0;
 }
 .table > thead > tr > th {
@@ -392,6 +360,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  height: 37px;
 }
 .padding-left {
   padding-left: 6px;
