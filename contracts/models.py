@@ -25,12 +25,17 @@ class PriceName(models.Model):
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
     research = models.ManyToManyField(directory.Researches, through='PriceCoast', help_text="Услуга-Прайс", blank=True)
+    company = models.ForeignKey('contracts.Company', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{}".format(self.title)
 
     def status(self):
         return self.active_status
+
+    @staticmethod
+    def get_company_price_by_date(company_id, date_start, date_end):
+        return PriceName.objects.filter(company_id=company_id, date_start__lte=date_start, date_end__gte=date_end).first()
 
     class Meta:
         verbose_name = 'Название прайса'
@@ -64,6 +69,10 @@ class PriceCoast(models.Model):
                 return value
 
         return value
+
+    @staticmethod
+    def get_coast_by_researches(price, researches):
+        return {i.research_id: i.coast for i in PriceCoast.objects.filter(price_name=price, research_id__in=researches)}
 
     class Meta:
         unique_together = ('price_name', 'research')
@@ -101,6 +110,7 @@ class Company(models.Model):
     kpp = models.CharField(max_length=9, default='', blank=True)
     bik = models.CharField(max_length=9, default='', blank=True)
     contract = models.ForeignKey(Contract, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+    email = models.CharField(max_length=128, blank=True, default='', help_text="email")
 
     def __str__(self):
         return "{}".format(self.title)

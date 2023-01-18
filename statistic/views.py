@@ -13,6 +13,7 @@ import directory.models as directory
 import slog.models as slog
 from api.directions.sql_func import get_lab_podr
 from clients.models import CardBase
+from contracts.models import PriceName, PriceCoast, Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
 from hospitals.models import Hospitals
@@ -691,6 +692,7 @@ def statistic_xls(request):
         data_date = json.loads(data_date)
         purposes = request_data.get("purposes", "")
         special_fields = request_data.get("special-fields", "false")
+        medical_exam = request_data.get("medical-exam", "false")
         is_purpose = 0
         if purposes != "-1":
             purposes = tuple(purposes.split(","))
@@ -787,7 +789,7 @@ def statistic_xls(request):
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
         elif special_fields == "true":
-            researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id)
+            researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
             result = custom_research.custom_research_data(researches_sql)
             ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
             ws = custom_research.custom_research_fill_data(ws, result)
@@ -992,8 +994,6 @@ def statistic_xls(request):
                         for x in d.Result.objects.filter(issledovaniye=researches):
                             x = x.value.lower().strip()
                             n = any([y in x for y in ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало", "недостаточно", "реактив"]]) or x == "-"
-                            if n:
-                                break
                         if n:
                             continue
                         if researches.napravleniye:
@@ -1604,7 +1604,6 @@ def statistic_xls(request):
             all_nrec = 0
             all_lost = 0
             for tube in Tubes.objects.all():
-
                 row_num += 1
                 c_get = TubesRegistration.objects.filter(
                     issledovaniya__research__podrazdeleniye=lab, type__tube=tube, time_get__isnull=False, time_get__range=(date_start_o, date_end_o)
@@ -1735,9 +1734,32 @@ def statistic_xls(request):
 
         type_fin = request_data.get("fin")
         title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
-        query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
-        ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
-        ws = consolidates.consolidate_fill_data(ws, query)
+        set_research = int(request_data.get("research-set", -1))
+        company_id = int(request_data.get("company", -1))
+        query = None
+        if set_research > 0:
+            set_research = directory.SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
+            head_data = {i.research_id: i.research.title for i in set_research}
+            def_value_data = {k: 0 for k in head_data.keys()}
+            price = get_price_company(company_id, start_date, end_date)
+            if price:
+                research_coast = PriceCoast.get_coast_by_researches(price, list(def_value_data.keys()))
+            else:
+                price = title_fin.contracts.price
+                research_coast = PriceCoast.get_coast_by_researches(price, list(def_value_data.keys()))
+            query = sql_func.statistics_by_research_sets_company(start_date, end_date, type_fin, tuple(def_value_data.keys()), company_id)
+            head_data_coast = {k: research_coast.get(k, "") for k, v in head_data.items()}
+            if company_id > 0:
+                company = Company.objects.get(pk=company_id)
+                company_title = company.title
+            else:
+                company_title = ""
+            ws, start_research_column = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title, head_data_coast)
+            ws = consolidates.consolidate_research_sets_fill_data(ws, query, def_value_data, start_research_column)
+        else:
+            query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
+            ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
+            ws = consolidates.consolidate_fill_data(ws, query)
 
     wb.save(response)
     return response
@@ -1860,3 +1882,7 @@ def sreening_xls(request):
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
     wb.save(response)
     return response
+
+
+def get_price_company(company_id, start_date, end_date):
+    return PriceName.get_company_price_by_date(company_id, start_date.date(), end_date.date())
