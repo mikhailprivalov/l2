@@ -2897,7 +2897,6 @@ def check_set_hidden(request):
     return status_response(current_set.hide)
 
 
-
 @login_required
 @group_required('Конструктор: Контролируемые параметры пациентов')
 def get_control_params(request):
