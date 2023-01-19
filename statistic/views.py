@@ -692,6 +692,7 @@ def statistic_xls(request):
         data_date = json.loads(data_date)
         purposes = request_data.get("purposes", "")
         special_fields = request_data.get("special-fields", "false")
+        medical_exam = request_data.get("medical-exam", "false")
         is_purpose = 0
         if purposes != "-1":
             purposes = tuple(purposes.split(","))
@@ -788,7 +789,7 @@ def statistic_xls(request):
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
         elif special_fields == "true":
-            researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id)
+            researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
             result = custom_research.custom_research_data(researches_sql)
             ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
             ws = custom_research.custom_research_fill_data(ws, result)
