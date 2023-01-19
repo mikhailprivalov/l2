@@ -7,6 +7,7 @@
       animation: 'fade',
       duration: 0,
       theme: 'light',
+      interactive: true,
       placement: 'bottom',
       popperOptions: {
         modifiers: {
@@ -36,6 +37,12 @@
     >
       {{ direction.researches_short[0] || direction.researches[0] }}
     </div>
+    <div
+      v-if="idInPlanQueueParam"
+      style="float: right"
+    >
+      <i class="fa-solid fa-layer-group" />
+    </div>
 
     <div
       :id="`tp-${direction.pk}`"
@@ -55,15 +62,49 @@
             {{ r }}
           </li>
         </ul>
+        <div
+          v-if="direction.confirm"
+          class="padding-plan-queue"
+        >
+          <a
+            v-if="!idInPlanQueueParam"
+            href="#"
+            style="float: right"
+            @click.prevent="addIdToPlan"
+          >В очередь печати</a>
+          <a
+            v-if="idInPlanQueueParam"
+            href="#"
+            style="float: right"
+            @click.prevent="delIdFromPlan"
+          >Удалить из очереди</a>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { addIdToPlanQueue, checkIdInPlanQueue, deleteIdFromPlanQueue } from '@/printQueue';
+
 export default {
   name: 'DisplayDirection',
   props: ['direction'],
+  data() {
+    return {
+      idInPlanQueueParam: null,
+    };
+  },
+  methods: {
+    addIdToPlan() {
+      addIdToPlanQueue(this.direction.pk);
+      this.idInPlanQueueParam = checkIdInPlanQueue(this.direction.pk);
+    },
+    delIdFromPlan(id) {
+      deleteIdFromPlanQueue(id);
+      this.idInPlanQueueParam = checkIdInPlanQueue(id);
+    },
+  },
 };
 </script>
 
@@ -105,5 +146,9 @@ export default {
 .t-right {
   display: inline-block;
   vertical-align: top;
+}
+
+.padding-plan-queue {
+  padding-top: 10px;
 }
 </style>
