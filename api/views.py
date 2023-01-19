@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from directory.models import Researches, SetResearch, SetOrderResearch
+from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
@@ -2053,6 +2053,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
         {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2895,3 +2896,68 @@ def check_set_hidden(request):
     current_set = SetResearch.objects.get(pk=request_data)
     return status_response(current_set.hide)
 
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def get_control_params(request):
+    params_data = [PatientControlParam.as_json(param) for param in PatientControlParam.objects.all().order_by("order")]
+    return JsonResponse({"data": params_data})
+
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def update_control_param(request):
+    request_data = json.loads(request.body)
+    param_data = PatientControlParam.objects.get(pk=request_data["pk"])
+    param_data.title = request_data["title"]
+    param_data.code = request_data["code"]
+    param_data.all_patient_contol = request_data["all_patient_control"]
+    param_data.save()
+    Log.log(param_data.pk, 160000, request.user.doctorprofile, {"param_data": PatientControlParam.as_json(param_data)})
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def add_control_param(request):
+    request_data = json.loads(request.body)
+    if not PatientControlParam.objects.all().exists():
+        offset = 0
+    else:
+        offset = 1
+    param_data = PatientControlParam(title=request_data["title"], code=request_data["code"], all_patient_contol=request_data["allPatientControl"], order=request_data["maxOrder"] + offset)
+    param_data.save()
+    Log.log(
+        param_data.pk,
+        160001,
+        request.user.doctorprofile,
+        {"param_data": PatientControlParam.as_json(param_data)},
+    )
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def update_order_param(request):
+    request_data = json.loads(request.body)
+    if request_data["action"] == 'inc_order':
+        next_param = PatientControlParam.objects.filter(order=request_data["order"] + 1).first()
+        if next_param:
+            current_param = PatientControlParam.objects.get(pk=request_data["id"])
+            next_param.order -= 1
+            current_param.order += 1
+            next_param.save()
+            current_param.save()
+        else:
+            return status_response(False, 'Параметр первый')
+    elif request_data["action"] == 'dec_order':
+        prev_param = PatientControlParam.objects.filter(order=request_data["order"] - 1).first()
+        if prev_param:
+            current_param = PatientControlParam.objects.get(pk=request_data["id"])
+            prev_param.order += 1
+            current_param.order -= 1
+            prev_param.save()
+            current_param.save()
+        else:
+            return status_response(False, 'Параметр последний')
+    return status_response(True)

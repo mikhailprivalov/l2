@@ -121,4 +121,8 @@ urlpatterns = [
     path('update-research-set', views.update_research_set),
     path('update-set-hiding', views.update_set_hiding),
     path('check-set-hidden', views.check_set_hidden),
+    path('get-control-params', views.get_control_params),
+    path('update-control-param', views.update_control_param),
+    path('add-control-param', views.add_control_param),
+    path('update-order-param', views.update_order_param),
 ]
