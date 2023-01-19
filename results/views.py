@@ -1950,7 +1950,6 @@ def get_day_results(request):
 
     if otd == -1:
         for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2), issledovaniya__research_id__in=researches).order_by("client__pk"):
-
             if dir.pk not in directions[dir.get_doc_podrazdeleniye_title()]:
                 directions[dir.get_doc_podrazdeleniye_title()].append(dir.pk)
     else:
