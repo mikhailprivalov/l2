@@ -4,9 +4,8 @@
       <a
         href="#"
         @click.prevent="load"
-      ><i class="fa-solid fa-layer-group" />
-        Очередь печати</a>
-      <span class="badge badge-light">{{ data.length }}</span>
+      >
+        Очередь печати <span class="badge badge-light">{{ data.length }}</span></a>
     </li>
   </ul>
 </template>

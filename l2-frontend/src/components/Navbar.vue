@@ -66,7 +66,6 @@
         <CardReader v-if="meta.showCardReader" />
         <Favorites v-if="meta.showHospFavorites" />
         <OperationPlans v-if="meta.showOperationPlans" />
-<!--        <PrintQueue />-->
         <LaboratoryHeader v-if="meta.showLaboratoryHeader" />
         <HelpLinkField v-if="meta.showHelpLinkField" />
         <ul
@@ -111,6 +110,7 @@
           <EcpSchedule />
         </ul>
         <ExpertiseStatus v-if="meta.showExpertiseStatus" />
+        <PrintQueue />
         <ul class="nav navbar-right navbar-nav">
           <li v-if="hasNewVersion">
             <button
@@ -204,6 +204,7 @@ import { sendEvent } from '@/metrics';
     ExpertiseStatus: () => import('@/ui-cards/ExpertiseStatus.vue'),
     RmisLink: () => import('@/ui-cards/RmisLink.vue'),
     Favorites: () => import('@/ui-cards/Favorites.vue'),
+    PrintQueue: () => import('@/ui-cards/PrintQueue.vue'),
     HelpLinkField: () => import('@/ui-cards/HelpLinkField.vue'),
     OperationPlans: () => import('@/ui-cards/OperationPlans.vue'),
     LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),
