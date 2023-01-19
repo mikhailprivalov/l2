@@ -682,6 +682,22 @@
                 :all_confirmed="!!row.confirmed"
               />
             </KeepAlive>
+            <div v-if="row.confirmed">
+              <button
+                v-if="!idInPlanQueueParam"
+                class="btn btn-blue-nb"
+                @click="addIdToPlan(direction)"
+              >
+                В очередь печати
+              </button>
+              <button
+                v-if="idInPlanQueueParam"
+                class="btn btn-blue-nb"
+                @click="delIdFromPlan(direction)"
+              >
+                Удалить из очереди
+              </button>
+            </div>
             <div
               v-if="!r(row) && !row.confirmed"
               class="status-list"
@@ -965,6 +981,7 @@ import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import RadioField from '@/fields/RadioField.vue';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
+import { addIdToPlanQueue, checkIdInPlanQueue, deleteIdFromPlanQueue } from '@/printQueue';
 
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
@@ -1058,6 +1075,7 @@ export default {
       tableFieldsErrors: {},
       hospResearch: -1,
       currentKey: -1,
+      idInPlanQueueParam: null,
     };
   },
   computed: {
@@ -1200,6 +1218,14 @@ export default {
     });
   },
   methods: {
+    addIdToPlan(id) {
+      addIdToPlanQueue(id);
+      this.idInPlanQueueParam = checkIdInPlanQueue(id);
+    },
+    delIdFromPlan(id) {
+      deleteIdFromPlanQueue(id);
+      this.idInPlanQueueParam = checkIdInPlanQueue(id);
+    },
     getDepartmentTitle(pk) {
       return this.departments.find((d) => d.id === pk)?.label || '';
     },
