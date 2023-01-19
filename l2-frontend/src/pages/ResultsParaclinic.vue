@@ -1383,6 +1383,22 @@
               :direction-pk="data.direction.pk"
               :all_confirmed="data.direction.all_confirmed"
             />
+            <div v-if="row.confirmed">
+              <button
+                v-if="!idInPlanQueueParam"
+                class="btn btn-blue-nb"
+                @click="addIdToPlan(data.direction.pk)"
+              >
+                В очередь печати
+              </button>
+              <button
+                v-if="idInPlanQueueParam"
+                class="btn btn-blue-nb"
+                @click="delIdFromPlan(data.direction.pk)"
+              >
+                Удалить из очереди
+              </button>
+            </div>
             <div
               v-if="(!r(row) || needFillWorkBy(row)) && !row.confirmed"
               class="status-list"
@@ -1796,6 +1812,7 @@ import ScreeningButton from '@/ui-cards/ScreeningButton.vue';
 import LastResult from '@/ui-cards/LastResult.vue';
 import IssStatus from '@/ui-cards/IssStatus.vue';
 import MedicalCertificates from '@/ui-cards/MedicalCertificates.vue';
+import { addIdToPlanQueue, checkIdInPlanQueue, deleteIdFromPlanQueue } from '@/printQueue';
 
 import DescriptiveForm from '../forms/DescriptiveForm.vue';
 import BacMicroForm from '../forms/BacMicroForm.vue';
@@ -1926,6 +1943,7 @@ export default {
       selectedYear: moment().format('YYYY'),
       currentDate: moment().format('YYYY-MM-DD'),
       currentDateInterval: null,
+      idInPlanQueueParam: null,
     };
   },
   computed: {
@@ -2198,6 +2216,7 @@ export default {
     },
   },
   mounted() {
+    this.idInPlanQueueParam = checkIdInPlanQueue(this.data.direction.pk);
     this.load_history();
     this.$root.$on('hide_dreg', () => {
       this.load_dreg_rows();
@@ -2274,6 +2293,14 @@ export default {
     clearInterval(this.currentDateInterval);
   },
   methods: {
+    addIdToPlan(id) {
+      addIdToPlanQueue(id);
+      this.idInPlanQueueParam = checkIdInPlanQueue(id);
+    },
+    delIdFromPlan(id) {
+      deleteIdFromPlanQueue(id);
+      this.idInPlanQueueParam = checkIdInPlanQueue(id);
+    },
     async getCurrentTime() {
       const { date } = await this.$api('current-time');
       if (date) {
