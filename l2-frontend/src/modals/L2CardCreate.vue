@@ -835,7 +835,7 @@
             </button>
           </div>
           <input
-            v-model="new_card_num"
+            v-model.trim="new_card_num"
             type="text"
             class="form-control"
             placeholder="Введите номер карты"
