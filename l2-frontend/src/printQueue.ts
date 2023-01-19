@@ -1,14 +1,14 @@
 function getPlanQueue() {
-  return JSON.parse(window.localStorage.getItem('planPrint'));
+  return JSON.parse(window.localStorage.getItem('planQueue'));
 }
 
 export const addIdToPlanQueue = (id) => {
   const currentPrintQueue = getPlanQueue();
   if (currentPrintQueue === null) {
-    window.localStorage.setItem('planPrint', JSON.stringify([id]));
+    window.localStorage.setItem('planQueue', JSON.stringify([id]));
   } else if (!currentPrintQueue.includes(id)) {
     currentPrintQueue.push(id);
-    window.localStorage.setItem('planPrint', JSON.stringify(currentPrintQueue));
+    window.localStorage.setItem('planQueue', JSON.stringify(currentPrintQueue));
   }
 };
 
@@ -17,7 +17,7 @@ export const deleteIdFromPlanQueue = (id) => {
   const i = currentPrintQueue.indexOf(id);
   if (i >= 0) {
     currentPrintQueue.splice(i, 1);
-    window.localStorage.setItem('planPrint', JSON.stringify(currentPrintQueue));
+    window.localStorage.setItem('planQueue', JSON.stringify(currentPrintQueue));
   }
 };
 
@@ -27,4 +27,8 @@ export const checkIdInPlanQueue = (id) => {
     return false;
   }
   return currentPrintQueue.includes(id);
+};
+
+export const flushPlanQueue = () => {
+  window.localStorage.removeItem('planQueue');
 };
