@@ -682,22 +682,6 @@
                 :all_confirmed="!!row.confirmed"
               />
             </KeepAlive>
-            <div v-if="row.confirmed">
-              <button
-                v-if="!idInPlanQueueParam"
-                class="btn btn-blue-nb"
-                @click="addIdToPlan(direction)"
-              >
-                В очередь печати
-              </button>
-              <button
-                v-if="idInPlanQueueParam"
-                class="btn btn-blue-nb"
-                @click="delIdFromPlan(direction)"
-              >
-                Удалить из очереди
-              </button>
-            </div>
             <div
               v-if="!r(row) && !row.confirmed"
               class="status-list"
@@ -1075,7 +1059,6 @@ export default {
       tableFieldsErrors: {},
       hospResearch: -1,
       currentKey: -1,
-      idInPlanQueueParam: null,
     };
   },
   computed: {
@@ -1218,14 +1201,6 @@ export default {
     });
   },
   methods: {
-    addIdToPlan(id) {
-      addIdToPlanQueue(id);
-      this.idInPlanQueueParam = checkIdInPlanQueue(id);
-    },
-    delIdFromPlan(id) {
-      deleteIdFromPlanQueue(id);
-      this.idInPlanQueueParam = checkIdInPlanQueue(id);
-    },
     getDepartmentTitle(pk) {
       return this.departments.find((d) => d.id === pk)?.label || '';
     },
@@ -1322,6 +1297,7 @@ export default {
       } else {
         this.show_results_pk = d.pk;
       }
+      this.idInPlanQueueParam = checkIdInPlanQueue(d.pk);
     },
     close_form() {
       this.hide_results();

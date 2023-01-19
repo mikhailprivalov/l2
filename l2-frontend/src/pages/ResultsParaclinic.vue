@@ -2216,7 +2216,6 @@ export default {
     },
   },
   mounted() {
-    this.idInPlanQueueParam = checkIdInPlanQueue(this.data.direction.pk);
     this.load_history();
     this.$root.$on('hide_dreg', () => {
       this.load_dreg_rows();
@@ -2607,6 +2606,7 @@ export default {
         })
         .finally(() => {
           this.$store.dispatch(actions.DEC_LOADING);
+          this.idInPlanQueueParam = checkIdInPlanQueue(this.data.direction.pk);
         });
     },
     hide_modal_create_directions() {

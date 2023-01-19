@@ -1,6 +1,4 @@
-function getPlanQueue() {
-  return JSON.parse(window.localStorage.getItem('planQueue'));
-}
+export const getPlanQueue = () => JSON.parse(window.localStorage.getItem('planQueue'));
 
 export const addIdToPlanQueue = (id) => {
   const currentPrintQueue = getPlanQueue();
@@ -13,10 +11,13 @@ export const addIdToPlanQueue = (id) => {
 };
 
 export const deleteIdFromPlanQueue = (id) => {
+  console.log(id);
   const currentPrintQueue = getPlanQueue();
   const i = currentPrintQueue.indexOf(id);
+  console.log(currentPrintQueue.indexOf(id));
   if (i >= 0) {
     currentPrintQueue.splice(i, 1);
+    console.log(currentPrintQueue);
     window.localStorage.setItem('planQueue', JSON.stringify(currentPrintQueue));
   }
 };

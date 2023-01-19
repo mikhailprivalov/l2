@@ -95,14 +95,17 @@ export default {
       idInPlanQueueParam: null,
     };
   },
+  mounted() {
+    this.idInPlanQueueParam = checkIdInPlanQueue(this.direction.pk);
+  },
   methods: {
     addIdToPlan() {
       addIdToPlanQueue(this.direction.pk);
       this.idInPlanQueueParam = checkIdInPlanQueue(this.direction.pk);
     },
-    delIdFromPlan(id) {
-      deleteIdFromPlanQueue(id);
-      this.idInPlanQueueParam = checkIdInPlanQueue(id);
+    delIdFromPlan() {
+      deleteIdFromPlanQueue(this.direction.pk);
+      this.idInPlanQueueParam = checkIdInPlanQueue(this.direction.pk);
     },
   },
 };

@@ -66,6 +66,7 @@
         <CardReader v-if="meta.showCardReader" />
         <Favorites v-if="meta.showHospFavorites" />
         <OperationPlans v-if="meta.showOperationPlans" />
+<!--        <PrintQueue />-->
         <LaboratoryHeader v-if="meta.showLaboratoryHeader" />
         <HelpLinkField v-if="meta.showHelpLinkField" />
         <ul
