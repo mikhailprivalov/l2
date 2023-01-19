@@ -166,7 +166,6 @@ export default {
   components: { RegexFormatInput },
   data() {
     return {
-      search: '',
       params: [],
       newParam: {
         title: '',
@@ -234,7 +233,7 @@ export default {
           await this.getParams();
           this.newParam.title = '';
           this.newParam.code = '';
-          this.newParam.all_patient_control = false;
+          this.newParam.allPatientControl = false;
         } else {
           this.$root.$emit('msg', 'error', message);
         }
