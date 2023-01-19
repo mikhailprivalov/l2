@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from directory.models import Researches
+from directory.models import Researches, SetResearch, SetOrderResearch
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
@@ -2052,6 +2052,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
+        {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2285,6 +2286,7 @@ def search_param(request):
     data = json.loads(request.body)
     year_period = data.get('year_period') or -1
     research_id = data.get('research_id') or -1
+    profile_research_id = data.get('profile_research_id') or -1
     date_create_start = f"{year_period}-01-01 00:00:00"
     date_create_end = f"{year_period}-12-31 23:59:59"
     case_number = data.get('case_number') or '-1'
@@ -2323,6 +2325,11 @@ def search_param(request):
     user_groups = [str(x) for x in request.user.groups.all()]
     if created_document_only_user_hosp and "Направления-все МО" not in user_groups:
         hospital_id = request.user.doctorprofile.hospital_id
+    research_id = (research_id,)
+    if profile_research_id > 0:
+        data_researches = Researches.objects.values_list('pk', flat=True).filter(speciality_id=profile_research_id)
+        research_id = tuple(data_researches)
+
     if not search_stationar:
         result = search_data_by_param(
             date_create_start,
@@ -2766,3 +2773,125 @@ def add_factor(request):
             {"factor": factor.as_json(factor)},
         )
     return JsonResponse(result)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_research_sets(request):
+    sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.all().order_by("title")]
+    return JsonResponse({"data": sets})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_researches_in_set(request):
+    request_data = json.loads(request.body)
+    researches = [
+        {
+            "id": i.pk,
+            "research": {"id": i.research_id, "label": i.research.title},
+            "order": i.order,
+        }
+        for i in SetOrderResearch.objects.filter(set_research=request_data).order_by("-order")
+    ]
+    return JsonResponse({"data": researches})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def add_research_in_set(request):
+    request_data = json.loads(request.body)
+    if not SetOrderResearch.objects.filter(set_research_id=request_data["set"]).exists():
+        offset = 0
+    else:
+        offset = 1
+    current_research_in_set = SetOrderResearch(set_research_id=request_data["set"], research_id=request_data["research"], order=request_data["minOrder"] - offset)
+    current_research_in_set.save()
+    Log.log(
+        current_research_in_set.pk,
+        170000,
+        request.user.doctorprofile,
+        {"set": current_research_in_set.set_research_id, "research": current_research_in_set.research_id, "order": current_research_in_set.order},
+    )
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_order_in_set(request):
+    request_data = json.loads(request.body)
+    if request_data["action"] == 'inc_order':
+        next_research_in_set = SetOrderResearch.objects.filter(set_research=request_data["set"], order=request_data["order"] + 1).first()
+        if next_research_in_set:
+            current_research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
+            next_research_in_set.order -= 1
+            current_research_in_set.order += 1
+            next_research_in_set.save()
+            current_research_in_set.save()
+        else:
+            return status_response(False, 'Исследование первое в наборе')
+    elif request_data["action"] == 'dec_order':
+        prev_research_in_set = SetOrderResearch.objects.filter(set_research=request_data["set"], order=request_data["order"] - 1).first()
+        if prev_research_in_set:
+            current_research_in_set = SetOrderResearch.objects.get(pk=request_data["id"])
+            prev_research_in_set.order += 1
+            current_research_in_set.order -= 1
+            prev_research_in_set.save()
+            current_research_in_set.save()
+        else:
+            return status_response(False, 'Исследование последнее в наборе')
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_research_set(request):
+    request_data = json.loads(request.body)
+    if request_data["id"] == -1:
+        current_set = SetResearch(title=request_data["label"])
+        current_set.save()
+        Log.log(
+            current_set.pk,
+            170001,
+            request.user.doctorprofile,
+            {"pk": current_set.pk, "title": current_set.title},
+        )
+    else:
+        current_set = SetResearch.objects.get(pk=request_data["id"])
+        current_set.title = request_data["label"]
+        current_set.save()
+        Log.log(
+            current_set.pk,
+            170002,
+            request.user.doctorprofile,
+            {"pk": current_set.pk, "title": current_set.title},
+        )
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_set_hiding(request):
+    request_data = json.loads(request.body)
+    current_set = SetResearch.objects.get(pk=request_data)
+    if current_set.hide:
+        current_set.hide = False
+    else:
+        current_set.hide = True
+    current_set.save()
+    Log.log(
+        current_set.pk,
+        170002,
+        request.user.doctorprofile,
+        {"pk": current_set.pk, "title": current_set.title, "hide": True},
+    )
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def check_set_hidden(request):
+    request_data = json.loads(request.body)
+    current_set = SetResearch.objects.get(pk=request_data)
+    return status_response(current_set.hide)
+

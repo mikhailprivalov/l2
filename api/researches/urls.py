@@ -18,6 +18,7 @@ urlpatterns = [
     path('field-title', views.field_title),
     path('fields-and-groups-titles', views.fields_and_groups_titles),
     path('descriptive-research', views.descriptive_research),
+    path('profiles-research', views.profiles_research),
     path('research-dispensary', views.research_dispensary),
     path('research-specialities', views.research_specialities),
     path('save-dispensary-data', views.save_dispensary_data),

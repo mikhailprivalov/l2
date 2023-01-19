@@ -879,6 +879,7 @@ def directions_services(request):
                 "priceCategory": "" if not n.price_category else n.price_category.title,
                 "coExecutor": n.co_executor_id,
                 "additionalNumber": n.register_number,
+                "additionalNumberYear": n.register_number_year,
                 "planedDoctorExecutor": n.planed_doctor_executor_id,
             }
             response["researches"] = researches
@@ -908,6 +909,7 @@ def directions_mark_visit(request):
     co_executor = request_data.get("coExecutor", None)
     planed_doctor_executor = request_data.get("planedDoctorExecutor", None)
     register_number = request_data.get("additionalNumber", '')
+    register_number_year = request_data.get("additionalNumberYear") or None
     gistology_receive_time = request_data.get("gistologyReceiveTime") or None
     visit_date = request_data.get("visitDate") or None
     if visit_date:
@@ -918,11 +920,12 @@ def directions_mark_visit(request):
     if dn.exists():
         n = dn[0]
         if register_number and n.register_number != register_number:
-            if Napravleniya.objects.filter(register_number=register_number).exclude(pk=pk).exists():
+            if Napravleniya.objects.filter(register_number=register_number, register_number_year=register_number_year).exclude(pk=pk).exists():
                 response["message"] = f'Номер "{register_number}" уже занят'
                 return JsonResponse(response)
             n.register_number = register_number
-            n.save(update_fields=['register_number'])
+            n.register_number_year = register_number_year
+            n.save(update_fields=['register_number', 'register_number_year'])
         if co_executor and n.co_executor_id != co_executor:
             n.co_executor_id = co_executor
             n.save(update_fields=['co_executor_id'])
@@ -992,6 +995,7 @@ def directions_mark_visit(request):
             "Посещение": "отмена" if cancel else "да",
             "Дата и время": response["visit_date"],
             "Дополнительный номер": register_number,
+            "Год": register_number_year,
             "Со-исполнитель": co_executor,
         }
         Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
@@ -1007,10 +1011,11 @@ def clear_register_number(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1)
     register_number = request_data.get("additionalNumber", '')
+    register_number_year = request_data.get("additionalNumberYear", None)
     dn = Napravleniya.objects.filter(pk=pk)
     if dn.exists():
         n = dn[0]
-        if n.register_number == register_number:
+        if n.register_number == register_number and n.register_number_year == register_number_year:
             n.register_number = ""
             n.save()
             response["message"] = f'Номер "{register_number}" освобожден'
@@ -1301,8 +1306,9 @@ def directions_paraclinic_form(request):
         else:
             pk = -1
     elif search_mode == 'additional':
-        if Napravleniya.objects.filter(register_number=pk).exists():
-            pk = Napravleniya.objects.filter(register_number=pk)[0].pk
+        register_year = request_data.get("year")
+        if Napravleniya.objects.filter(register_number=pk, register_number_year=register_year).exists():
+            pk = Napravleniya.objects.filter(register_number=pk, register_number_year=register_year)[0].pk
         else:
             pk = -1
     dn = (
@@ -1396,6 +1402,7 @@ def directions_paraclinic_form(request):
                 "priceCategory": "" if not d.price_category else d.price_category.title,
                 "priceCategoryId": "" if not d.price_category else d.price_category.pk,
                 "additionalNumber": d.register_number,
+                "additionalNumberYear": d.register_number_year,
                 "timeGistologyReceive": strdatetimeru(d.time_gistology_receive),
                 "coExecutor": d.co_executor_id,
                 "tube": None,

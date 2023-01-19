@@ -25,7 +25,7 @@
           margin-left-right="auto"
           @close="open = false"
         >
-          <span slot="header">Ваши шалоны поля {{ `${group.title} ${field.title}`.trim() }}</span>
+          <span slot="header">Ваши шаблоны поля {{ `${group.title} ${field.title}`.trim() }}</span>
           <div
             slot="body"
             class="popup-body"

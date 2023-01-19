@@ -29,7 +29,7 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.def_uet,
             directions_issledovaniya.co_executor_id, directions_issledovaniya.co_executor_uet, 
             directions_issledovaniya.co_executor2_id, directions_issledovaniya.co_executor2_uet,
-            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s AS datetime_confirm,
+            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as datetime_confirm,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_confirm,
             directions_issledovaniya.maybe_onco, statistics_tickets_visitpurpose.title AS purpose,
@@ -331,7 +331,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
     return row
 
 
-def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
+def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medical_exam):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
@@ -387,15 +387,17 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                   WHEN %(filter_hospital_id)s = -1 THEN
                     directions_issledovaniya.napravleniye_id IS NOT NULL
                   END
-                AND 
+                AND                
                 CASE WHEN %(is_form)s > 0 THEN
                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                WHEN %(is_form)s = -1 THEN
-                     directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                WHEN %(is_form)s = -1 and %(medical_exam)s = 'true' THEN
+                    directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s     
+                WHEN %(is_form)s = -1 and %(medical_exam)s = 'false' THEN
+                    directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
                 END                
                 order by directions_issledovaniya.napravleniye_id
             """,
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'filter_hospital_id': filter_hospital_id, 'is_form': is_form},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'filter_hospital_id': filter_hospital_id, 'is_form': is_form, 'medical_exam': medical_exam},
         )
 
         rows = namedtuplefetchall(cursor)
@@ -713,6 +715,56 @@ def statistics_consolidate_research(d_s, d_e, fin_source_pk):
                 ORDER BY directions_napravleniya.client_id, directions_issledovaniya.time_confirmation, directions_issledovaniya.id 
                             """,
             params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def statistics_by_research_sets_company(d_s, d_e, fin_source_pk, researches, company_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.napravleniye_id as dir_id,
+                    directions_issledovaniya.research_id,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
+                    directions_issledovaniya.time_confirmation,
+                    directions_napravleniya.client_id,
+                    cc.number as patient_card_num,
+                    ci.family as patient_family,
+                    ci.name as patient_name,
+                    ci.patronymic as patient_patronymic,
+                    ci.birthday as patient_born,
+                    date_part('year', age(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, ci.birthday))::int as patient_age,
+                    contracts_companydepartment.title as department_title,
+                    contracts_companydepartment.id as department_id,
+                    contracts_company.title as company_title,
+                    directions_issledovaniya.coast
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya
+                ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN clients_card cc
+                ON directions_napravleniya.client_id = cc.id
+                LEFT JOIN clients_individual ci 
+                ON ci.id = cc.individual_id
+                LEFT JOIN contracts_company
+                ON cc.work_place_db_id = contracts_company.id
+                LEFT JOIN contracts_companydepartment
+                ON cc.work_department_db_id = contracts_companydepartment.id
+                WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+                        AND (
+                            directions_issledovaniya.fin_source_id=%(fin_source_pk)s or 
+                            directions_napravleniya.istochnik_f_id=%(fin_source_pk)s or 
+                            directions_napravleniya.istochnik_f_id is NULL
+                        ) 
+                        AND cc.work_place_db_id = %(company_id)s
+                        AND directions_issledovaniya.research_id in %(researches)s
+                ORDER BY 
+                    contracts_companydepartment.id, 
+                    directions_napravleniya.client_id, 
+                    directions_issledovaniya.time_confirmation
+                            """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'researches': researches, 'company_id': company_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows

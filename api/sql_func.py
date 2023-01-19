@@ -299,7 +299,7 @@ def search_data_by_param(
                 LEFT JOIN directory_paraclinicinputfield on directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
                 
                 WHERE 
-                    directions_issledovaniya.research_id=%(research_id)s 
+                    directions_issledovaniya.research_id in %(research_id)s 
                     and (directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s)
                 AND CASE WHEN %(case_number)s != '-1' THEN directions_napravleniya.additional_number = %(case_number)s 
                          WHEN %(case_number)s = '-1' THEN directions_napravleniya.cancel is not Null 

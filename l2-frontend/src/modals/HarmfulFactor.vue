@@ -44,8 +44,8 @@
                 class="treeselect-noborder treeselect-32px"
                 :multiple="false"
                 :options="harmfulFactors"
-                @input="checkUniqueFactors"
                 placeholder="Не выбран"
+                @input="checkUniqueFactors"
               />
             </td>
             <td class="text-center cl-td">

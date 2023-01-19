@@ -411,7 +411,7 @@ def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj,
 def add_route_list(objs, appendix_route_list, patient_data, styles_obj, additional_objectsj):
     styleTB = styles_obj["styleTB"]
     styleTC = styles_obj["styleTC"]
-    route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB), Paragraph(' Ш/к', styleTB)]]
+    route_list = [[Paragraph('Направление', styleTB), Paragraph('Пройдено', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB), Paragraph(' Ш/к', styleTB)]]
     notation = False
     for section in appendix_route_list:
         if section.get('page_break'):
@@ -428,6 +428,21 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
             objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
     work_dir = additional_objectsj["work_dir"]
+    dir_by_profile = {'not_profile': []}
+    for current_dir in work_dir:
+        iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir).first()
+        if iss_obj.research.speciality:
+            if not dir_by_profile.get(iss_obj.research.speciality.title):
+                dir_by_profile[iss_obj.research.speciality.title] = [current_dir]
+            else:
+                dir_by_profile[iss_obj.research.speciality.title].append(current_dir)
+        else:
+            dir_by_profile['not_profile'].append(current_dir)
+
+    work_dir = []
+    for v in dir_by_profile.values():
+        work_dir.extend(v)
+
     for current_dir in work_dir:
         barcode = code128.Code128(current_dir, barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
         iss_obj = Issledovaniya.objects.filter(napravleniye_id=current_dir)
@@ -439,10 +454,12 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
                 current_dir = ""
             if notation:
                 paraclinic_info = current_iss.research.paraclinic_info
-            route_list.append([Paragraph(f"{current_dir}", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), Paragraph(f"{paraclinic_info}", styleTC), barcode])
+            route_list.append(
+                [Paragraph(f"{current_dir}", styleTC), Paragraph("", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), Paragraph(f"{paraclinic_info}", styleTC), barcode]
+            )
             step += 1
 
-    tbl = Table(route_list, colWidths=(40 * mm, 60 * mm, 50 * mm, 40 * mm), hAlign='LEFT')
+    tbl = Table(route_list, colWidths=(25 * mm, 28 * mm, 47 * mm, 45 * mm, 45 * mm), rowHeights=15 * mm, hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
