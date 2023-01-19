@@ -4710,7 +4710,7 @@ def form_18(request_data):
     objs.append(Spacer(1, 2 * space))
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
     objs.append(Spacer(1, space))
-    objs.append(Paragraph('- Разрешаю посещение в лечебном учреждении представляемого ребенка следующим гражданам:', style))
+    objs.append(Paragraph('- Разрешаю посещение в лечебном учреждении представляемого ребенка следующим гражданам: ', style))
     objs.append(Spacer(1, 2 * space))
     objs.append(HRFlowable(width=190 * mm, color=colors.black))
     objs.append(Spacer(1, 2 * space))
