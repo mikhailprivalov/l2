@@ -331,7 +331,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
     return row
 
 
-def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
+def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medical_exam):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
@@ -387,15 +387,17 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                   WHEN %(filter_hospital_id)s = -1 THEN
                     directions_issledovaniya.napravleniye_id IS NOT NULL
                   END
-                AND 
+                AND                
                 CASE WHEN %(is_form)s > 0 THEN
                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                WHEN %(is_form)s = -1 THEN
+                WHEN %(is_form)s = -1 and %(medical_exam)s = 'true' THEN
+                    directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s     
+                WHEN %(is_form)s = -1 and %(medical_exam)s = 'false' THEN
                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
                 END                
                 order by directions_issledovaniya.napravleniye_id
             """,
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'filter_hospital_id': filter_hospital_id, 'is_form': is_form},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'filter_hospital_id': filter_hospital_id, 'is_form': is_form, 'medical_exam': medical_exam},
         )
 
         rows = namedtuplefetchall(cursor)
