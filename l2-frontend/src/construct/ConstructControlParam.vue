@@ -52,14 +52,14 @@
                 <button
                   class="btn last btn-blue-nb nbr"
                   :disabled="isFirstRow(param.order)"
-                  @click="updateOrder(param, 'inc_order')"
+                  @click="updateOrder(param, 'dec_order')"
                 >
                   <i class="glyphicon glyphicon-arrow-up" />
                 </button>
                 <button
                   class="btn last btn-blue-nb nbr"
                   :disabled="isLastRow(param.order)"
-                  @click="updateOrder(param, 'dec_order')"
+                  @click="updateOrder(param, 'inc_order')"
                 >
                   <i class="glyphicon glyphicon-arrow-down" />
                 </button>
@@ -172,7 +172,6 @@ export default {
         title: '',
         code: '',
         allPatientControl: false,
-        order: -1,
       },
     };
   },
@@ -181,11 +180,7 @@ export default {
       let min = 0;
       let max = 0;
       for (const row of this.params) {
-        if (min === 0) {
-          min = row.order;
-        } else {
-          min = Math.min(min, row.order);
-        }
+        min = Math.min(min, row.order);
         max = Math.max(max, row.order);
       }
       return { min, max };
@@ -231,7 +226,7 @@ export default {
           title: this.newParam.title,
           code: this.newParam.code,
           allPatientControl: this.newParam.allPatientControl,
-          minOrder: this.min_max_order.min,
+          maxOrder: this.min_max_order.max,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -240,17 +235,16 @@ export default {
           this.newParam.title = '';
           this.newParam.code = '';
           this.newParam.all_patient_control = false;
-          this.newParam.order = -1;
         } else {
           this.$root.$emit('msg', 'error', message);
         }
       }
     },
     isFirstRow(order) {
-      return order === this.min_max_order.max;
+      return order === this.min_max_order.min;
     },
     isLastRow(order) {
-      return order === this.min_max_order.min;
+      return order === this.min_max_order.max;
     },
     async updateOrder(param, action) {
       await this.$store.dispatch(actions.INC_LOADING);
@@ -297,12 +291,6 @@ export default {
 }
 .table > thead > tr > th {
   border-bottom: 0;
-}
-.search {
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding-left: 6px;
-  background-color: white;
 }
 .button {
   width: 100%;

@@ -2900,7 +2900,7 @@ def check_set_hidden(request):
 @login_required
 @group_required('Конструктор: Контролируемые параметры пациентов')
 def get_control_params(request):
-    params_data = [PatientControlParam.as_json(param) for param in PatientControlParam.objects.all().order_by("-order")]
+    params_data = [PatientControlParam.as_json(param) for param in PatientControlParam.objects.all().order_by("order")]
     return JsonResponse({"data": params_data})
 
 
@@ -2925,7 +2925,7 @@ def add_control_param(request):
         offset = 0
     else:
         offset = 1
-    param_data = PatientControlParam(title=request_data["title"], code=request_data["code"], all_patient_contol=request_data["allPatientControl"], order=request_data["minOrder"] - offset)
+    param_data = PatientControlParam(title=request_data["title"], code=request_data["code"], all_patient_contol=request_data["allPatientControl"], order=request_data["maxOrder"] + offset)
     param_data.save()
     Log.log(
         param_data.pk,
