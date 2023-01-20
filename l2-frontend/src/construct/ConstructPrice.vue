@@ -98,7 +98,7 @@
       class="margin-bottom"
     >
       <input
-        v-model="search"
+        v-model.trim="search"
         class="form-control search"
         placeholder="Поиск исследования"
       >
@@ -320,7 +320,7 @@ export default {
     },
     async updatePrice() {
       if (!this.priceDataIsFilled) {
-        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
+        this.$root.$emit('msg', 'error', 'Данные не заполнены');
       } else if (new Date(this.priceData.end) <= new Date(this.priceData.start)) {
         this.$root.$emit('msg', 'error', 'Дата конца раньше даты начала');
       } else if (this.priceIsSelected) {
