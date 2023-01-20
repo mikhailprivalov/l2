@@ -80,7 +80,7 @@
                 v-tippy
                 class="btn last btn-blue-nb nbr"
                 :title="priceIsSelected ? 'Сохранить прайс' : 'Добавить прайс'"
-                :disabled="!priceIsActive"
+                :disabled="!priceDataIsFilled"
                 @click="updatePrice"
               >
                 {{ priceIsSelected ? 'Сохранить' : 'Добавить' }}
@@ -265,12 +265,6 @@ export default {
       search: '',
       coastResearches: [],
       companies: [],
-      normalizer(node) {
-        return {
-          id: node.pk,
-          label: node.title,
-        };
-      },
     };
   },
   computed: {
@@ -287,6 +281,9 @@ export default {
     },
     priceIsSelected() {
       return !!this.selectedPrice;
+    },
+    priceDataIsFilled() {
+      return !(!this.priceData.title || !this.priceData.start || !this.priceData.end || !this.priceData.company);
     },
   },
   watch: {
@@ -312,11 +309,21 @@ export default {
     this.getCompanies();
   },
   methods: {
+    normalizer(node) {
+      return {
+        id: node.pk,
+        label: node.title,
+      };
+    },
     async getPrices() {
       this.prices = await this.$api('/get-prices');
     },
     async updatePrice() {
-      if (this.priceIsSelected) {
+      if (!this.priceDataIsFilled) {
+        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
+      } else if (new Date(this.priceData.end) <= new Date(this.priceData.start)) {
+        this.$root.$emit('msg', 'error', 'Дата конца раньше даты начала');
+      } else if (this.priceIsSelected) {
         await this.$store.dispatch(actions.INC_LOADING);
         const { ok, message } = await this.$api('update-price', {
           id: this.selectedPrice,
@@ -345,6 +352,12 @@ export default {
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Прайс добавлен');
           await this.getPrices();
+          this.priceData = {
+            title: '',
+            start: '',
+            end: '',
+            company: null,
+          };
         } else {
           this.$root.$emit('msg', 'error', message);
         }
