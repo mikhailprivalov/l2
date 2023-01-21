@@ -3,14 +3,18 @@ import { setLocalStorageDataJson } from '@/utils';
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 
+const stateInitial = {
+  currentPrintQueue: [],
+};
+
 const getters = {
   printQueueCount: (state) => state.currentPrintQueue.length || 0,
   idInQueue: state => id => state.currentPrintQueue.includes(id),
 };
 
 const actions = {
-  async [actionsTypes.PRINT_QUEUE_INITIAL]({ commit }) {
-    commit(mutationTypes.PRINT_QUEUE_INITIAL);
+  async [actionsTypes.PRINT_QUEUE_INIT]({ commit }) {
+    commit(mutationTypes.PRINT_QUEUE_INIT);
   },
   async [actionsTypes.PRINT_QUEUE_ADD_ELEMENT]({ commit }, { id }) {
     commit(mutationTypes.PRINT_QUEUE_ADD_ELEMENT, { id });
@@ -27,7 +31,7 @@ const actions = {
 };
 
 const mutations = {
-  [mutationTypes.PRINT_QUEUE_INITIAL](state) {
+  [mutationTypes.PRINT_QUEUE_INIT](state) {
     try {
       const queue = JSON.parse(localStorage.getItem('queue'));
       if (Array.isArray(queue)) {
@@ -62,6 +66,7 @@ const mutations = {
 };
 
 export default {
+  state: stateInitial,
   getters,
   mutations,
   actions,
