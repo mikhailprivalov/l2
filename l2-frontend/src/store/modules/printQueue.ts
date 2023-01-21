@@ -22,12 +22,6 @@ const actions = {
   async [actionsTypes.PRINT_QUEUE_DEL_ELEMENT]({ commit }, { id }) {
     commit(mutationTypes.PRINT_QUEUE_DEL_ELEMENT, { id });
   },
-  async [actionsTypes.PRINT_QUEUE_FLUSH]({ commit }) {
-    commit(mutationTypes.PRINT_QUEUE_FLUSH);
-  },
-  async [actionsTypes.PRINT_QUEUE_CHANGE_VAL]({ commit }, { values }) {
-    commit(mutationTypes.PRINT_QUEUE_CHANGE_VAL, { values });
-  },
 };
 
 const mutations = {
