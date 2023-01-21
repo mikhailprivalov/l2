@@ -20,6 +20,9 @@ const actions = {
   async [actionsTypes.PRINT_QUEUE_FLUSH]({ commit }) {
     commit(mutationTypes.PRINT_QUEUE_FLUSH);
   },
+  async [actionsTypes.PRINT_QUEUE_CHANGE_VAL]({ commit }, { values }) {
+    commit(mutationTypes.PRINT_QUEUE_CHANGE_VAL, { values });
+  },
 };
 
 const mutations = {
@@ -41,6 +44,10 @@ const mutations = {
   [mutationTypes.PRINT_QUEUE_FLUSH](state) {
     state.currentPrintQueue = [];
     window.localStorage.removeItem('planQueue');
+  },
+  [mutationTypes.PRINT_QUEUE_CHANGE_VAL](state, { values }) {
+    state.currentPrintQueue = values;
+    window.localStorage.setItem('planQueue', JSON.stringify(state.currentPrintQueue));
   },
 };
 
