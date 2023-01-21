@@ -7,6 +7,7 @@ const stateInitial = {
 
 const getters = {
   statusPrintQueue: (state) => state.currentPrintQueue || [],
+  printQueueCount: (state) => state.currentPrintQueue.length || 0,
 };
 
 const actions = {

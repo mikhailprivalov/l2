@@ -5,7 +5,7 @@
         href="#"
         @click.prevent="load"
       >
-        Очередь печати <span class="badge badge-light">{{ data.length }}</span></a>
+        Очередь печати <span class="badge badge-light">{{ printQueueCount }}</span></a>
     </li>
   </ul>
 </template>
@@ -14,17 +14,9 @@
 
 export default {
   name: 'PrintQueue',
-  data() {
-    return {
-      data: [],
-    };
-  },
-  mounted() {
-    this.load();
-  },
-  methods: {
-    load() {
-      this.data = [1, 2];
+  computed: {
+    printQueueCount() {
+      return this.$store.getters.printQueueCount;
     },
   },
 };
