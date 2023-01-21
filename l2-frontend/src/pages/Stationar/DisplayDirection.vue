@@ -38,7 +38,7 @@
       {{ direction.researches_short[0] || direction.researches[0] }}
     </div>
     <div
-      v-if="idInPlanQueue || idInPlanQueueStatus"
+      v-if="idInPrintQueue || idInPrintQueueStatus"
       style="float: right"
     >
       <i class="fa-solid fa-layer-group" />
@@ -67,13 +67,13 @@
           class="padding-plan-queue"
         >
           <a
-            v-if="!idInPlanQueue"
+            v-if="!idInPrintQueue"
             href="#"
             style="float: right"
             @click.prevent="addIdToPlan"
           >В очередь печати</a>
           <a
-            v-if="idInPlanQueue || idInPlanQueueStatus"
+            v-if="idInPrintQueue || idInPrintQueueStatus"
             href="#"
             style="float: right"
             @click.prevent="delIdFromPlan"
@@ -93,12 +93,12 @@ export default {
   props: ['direction'],
   data() {
     return {
-      idInPlanQueue: false,
+      idInPrintQueue: null,
     };
   },
   computed: {
-    idInPlanQueueStatus() {
-      return this.$store.getters.statusPrintQueue.includes(this.direction.pk);
+    idInPrintQueueStatus() {
+      return this.$store.getters.idInQueue(this.direction.pk);
     },
   },
   mounted() {
@@ -106,17 +106,17 @@ export default {
   },
   methods: {
     loadStatus() {
-      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(this.direction.pk);
+      this.idInPrintQueue = this.$store.getters.idInQueue(this.direction.pk);
     },
     addIdToPlan() {
       const id = this.direction.pk;
       this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
-      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(this.direction.pk);
+      this.idInPrintQueue = this.$store.getters.idInQueue(this.direction.pk);
     },
     delIdFromPlan() {
       const id = this.direction.pk;
       this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
-      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(this.direction.pk);
+      this.idInPrintQueue = this.$store.getters.idInQueue(this.direction.pk);
     },
   },
 };

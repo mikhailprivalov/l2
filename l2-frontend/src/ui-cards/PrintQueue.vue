@@ -5,35 +5,19 @@
         href="#"
         @click.prevent="load"
       >
-        Очередь печати <span class="badge badge-light">{{ printQueueCount || statusPrintQueueCount }}</span></a>
+        Очередь печати <span class="badge badge-light">{{ printQueueCount }}</span></a>
     </li>
   </ul>
 </template>
 
 <script lang="ts">
 
-import { PRINT_QUEUE_CHANGE_VAL } from '@/store/action-types';
-
 export default {
   name: 'PrintQueue',
-  data() {
-    return {
-      statusPrintQueueCount: 0,
-    };
-  },
   computed: {
     printQueueCount() {
       return this.$store.getters.printQueueCount;
     },
-  },
-  created() {
-    window.addEventListener('storage', event => {
-      if (event.key === 'planQueue') {
-        const values = JSON.parse(event.newValue);
-        this.$store.dispatch(PRINT_QUEUE_CHANGE_VAL, { values });
-        this.statusPrintQueueCount = this.$store.getters.printQueueCount;
-      }
-    });
   },
 };
 

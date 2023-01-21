@@ -6,7 +6,7 @@ import cards from './modules/cards';
 import directory from './modules/directory';
 import user from './modules/user';
 import chats from './modules/chats';
-import planqueue from './modules/planqueue';
+import printQueue from './modules/printQueue';
 import * as actions from './action-types';
 import * as mutations from './mutation-types';
 
@@ -19,7 +19,7 @@ export default new Vuex.Store({
     directory,
     user,
     chats,
-    planqueue,
+    printQueue,
   },
   state: {
     globalLoadingCounter: 0,

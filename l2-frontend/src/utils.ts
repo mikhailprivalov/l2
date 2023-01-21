@@ -412,3 +412,7 @@ export const selectFile = (contentType: string | null): Promise<File> => new Pro
 
   input.click();
 });
+
+export const setLocalStorageDataJson = (name, value) => {
+  window.localStorage.setItem(name, JSON.stringify(value));
+};

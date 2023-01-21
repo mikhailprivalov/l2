@@ -1,16 +1,17 @@
+import { setLocalStorageDataJson } from '@/utils';
+
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
 
-const stateInitial = {
-  currentPrintQueue: JSON.parse(localStorage.getItem('planQueue')),
-};
-
 const getters = {
-  statusPrintQueue: (state) => state.currentPrintQueue || [],
   printQueueCount: (state) => state.currentPrintQueue.length || 0,
+  idInQueue: state => id => state.currentPrintQueue.includes(id),
 };
 
 const actions = {
+  async [actionsTypes.PRINT_QUEUE_INITIAL]({ commit }) {
+    commit(mutationTypes.PRINT_QUEUE_INITIAL);
+  },
   async [actionsTypes.PRINT_QUEUE_ADD_ELEMENT]({ commit }, { id }) {
     commit(mutationTypes.PRINT_QUEUE_ADD_ELEMENT, { id });
   },
@@ -26,33 +27,41 @@ const actions = {
 };
 
 const mutations = {
-  [mutationTypes.PRINT_QUEUE_ADD_ELEMENT](state, { id }) {
-    if (state.currentPrintQueue === null) {
-      state.currentPrintQueue = [id];
-    } else if (!state.currentPrintQueue.includes(id)) {
-      state.currentPrintQueue = [...state.currentPrintQueue, id];
+  [mutationTypes.PRINT_QUEUE_INITIAL](state) {
+    try {
+      const queue = JSON.parse(localStorage.getItem('queue'));
+      if (Array.isArray(queue)) {
+        state.currentPrintQueue = queue;
+      }
+    } catch (e) {
+      state.currentPrintQueue = [];
+      setLocalStorageDataJson('queue', state.currentPrintQueue);
     }
-    window.localStorage.setItem('planQueue', JSON.stringify(state.currentPrintQueue));
+  },
+  [mutationTypes.PRINT_QUEUE_ADD_ELEMENT](state, { id }) {
+    if (!getters.idInQueue(id)) {
+      state.currentPrintQueue = [...state.currentPrintQueue, id];
+      setLocalStorageDataJson('queue', state.currentPrintQueue);
+    }
   },
   [mutationTypes.PRINT_QUEUE_DEL_ELEMENT](state, { id }) {
     const i = state.currentPrintQueue.indexOf(id);
     if (i >= 0) {
       state.currentPrintQueue.splice(i, 1);
-      window.localStorage.setItem('planQueue', JSON.stringify(state.currentPrintQueue));
+      setLocalStorageDataJson('queue', state.currentPrintQueue);
     }
   },
   [mutationTypes.PRINT_QUEUE_FLUSH](state) {
     state.currentPrintQueue = [];
-    window.localStorage.removeItem('planQueue');
+    window.localStorage.removeItem('queue');
   },
   [mutationTypes.PRINT_QUEUE_CHANGE_VAL](state, { values }) {
     state.currentPrintQueue = values;
-    window.localStorage.setItem('planQueue', JSON.stringify(state.currentPrintQueue));
+    setLocalStorageDataJson('queue', state.currentPrintQueue);
   },
 };
 
 export default {
-  state: stateInitial,
   getters,
   mutations,
   actions,
