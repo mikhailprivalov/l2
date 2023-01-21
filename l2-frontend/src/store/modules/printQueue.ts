@@ -55,10 +55,7 @@ const mutations = {
     }
   },
   [mutationTypes.PRINT_QUEUE_DEL_ELEMENT](state, { id }) {
-    const i = state.currentPrintQueue.indexOf(id);
-    if (i >= 0) {
-      state.currentPrintQueue.splice(i, 1);
-    }
+    state.currentPrintQueue = state.currentPrintQueue.filter(el => el !== id);
   },
 };
 
