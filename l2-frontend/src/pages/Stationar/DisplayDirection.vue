@@ -38,7 +38,7 @@
       {{ direction.researches_short[0] || direction.researches[0] }}
     </div>
     <div
-      v-if="idInPrintQueue || idInPrintQueueStatus"
+      v-if="idInPrintQueueStatus"
       style="float: right"
     >
       <i class="fa-solid fa-layer-group" />
@@ -67,13 +67,13 @@
           class="padding-plan-queue"
         >
           <a
-            v-if="!idInPrintQueue"
+            v-if="!idInPrintQueueStatus"
             href="#"
             style="float: right"
             @click.prevent="addIdToPlan"
           >В очередь печати</a>
           <a
-            v-if="idInPrintQueue || idInPrintQueueStatus"
+            v-if="idInPrintQueueStatus"
             href="#"
             style="float: right"
             @click.prevent="delIdFromPlan"
@@ -91,32 +91,19 @@ import { PRINT_QUEUE_ADD_ELEMENT, PRINT_QUEUE_DEL_ELEMENT } from '@/store/action
 export default {
   name: 'DisplayDirection',
   props: ['direction'],
-  data() {
-    return {
-      idInPrintQueue: null,
-    };
-  },
   computed: {
     idInPrintQueueStatus() {
       return this.$store.getters.idInQueue(this.direction.pk);
     },
   },
-  mounted() {
-    this.loadStatus();
-  },
   methods: {
-    loadStatus() {
-      this.idInPrintQueue = this.$store.getters.idInQueue(this.direction.pk);
-    },
     addIdToPlan() {
       const id = this.direction.pk;
       this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
-      this.idInPrintQueue = this.$store.getters.idInQueue(this.direction.pk);
     },
     delIdFromPlan() {
       const id = this.direction.pk;
       this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
-      this.idInPrintQueue = this.$store.getters.idInQueue(this.direction.pk);
     },
   },
 };

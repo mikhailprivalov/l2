@@ -30,6 +30,8 @@ const mutations = {
       const queue = JSON.parse(localStorage.getItem('queue'));
       if (Array.isArray(queue)) {
         state.currentPrintQueue = queue;
+      } else {
+        setLocalStorageDataJson('queue', state.currentPrintQueue);
       }
     } catch (e) {
       state.currentPrintQueue = [];

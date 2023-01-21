@@ -1383,22 +1383,6 @@
               :direction-pk="data.direction.pk"
               :all_confirmed="data.direction.all_confirmed"
             />
-            <div v-if="row.confirmed">
-              <button
-                v-if="!idInPlanQueue"
-                class="btn btn-blue-nb"
-                @click="addIdToPlan(data.direction.pk)"
-              >
-                В очередь печати
-              </button>
-              <button
-                v-if="idInPlanQueue"
-                class="btn btn-blue-nb"
-                @click="delIdFromPlan(data.direction.pk)"
-              >
-                Удалить из очереди
-              </button>
-            </div>
             <div
               v-if="(!r(row) || needFillWorkBy(row)) && !row.confirmed"
               class="status-list"
@@ -2293,16 +2277,11 @@ export default {
     clearInterval(this.currentDateInterval);
   },
   methods: {
-    loadStatus() {
-      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(this.data.direction.pk);
-    },
     addIdToPlan(id) {
       this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
-      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(id);
     },
     delIdFromPlan(id) {
       this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
-      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(id);
     },
     async getCurrentTime() {
       const { date } = await this.$api('current-time');
