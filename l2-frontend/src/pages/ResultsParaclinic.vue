@@ -1796,7 +1796,6 @@ import ScreeningButton from '@/ui-cards/ScreeningButton.vue';
 import LastResult from '@/ui-cards/LastResult.vue';
 import IssStatus from '@/ui-cards/IssStatus.vue';
 import MedicalCertificates from '@/ui-cards/MedicalCertificates.vue';
-import { PRINT_QUEUE_ADD_ELEMENT, PRINT_QUEUE_DEL_ELEMENT } from '@/store/action-types';
 
 import DescriptiveForm from '../forms/DescriptiveForm.vue';
 import BacMicroForm from '../forms/BacMicroForm.vue';
@@ -1927,7 +1926,6 @@ export default {
       selectedYear: moment().format('YYYY'),
       currentDate: moment().format('YYYY-MM-DD'),
       currentDateInterval: null,
-      idInPlanQueue: null,
     };
   },
   computed: {
@@ -2277,12 +2275,6 @@ export default {
     clearInterval(this.currentDateInterval);
   },
   methods: {
-    addIdToPlan(id) {
-      this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
-    },
-    delIdFromPlan(id) {
-      this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
-    },
     async getCurrentTime() {
       const { date } = await this.$api('current-time');
       if (date) {
