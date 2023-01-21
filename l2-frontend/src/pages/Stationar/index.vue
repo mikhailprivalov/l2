@@ -965,7 +965,6 @@ import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import RadioField from '@/fields/RadioField.vue';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
-import { addIdToPlanQueue, checkIdInPlanQueue, deleteIdFromPlanQueue } from '@/printQueue';
 
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
@@ -1297,7 +1296,6 @@ export default {
       } else {
         this.show_results_pk = d.pk;
       }
-      this.idInPlanQueueParam = checkIdInPlanQueue(d.pk);
     },
     close_form() {
       this.hide_results();

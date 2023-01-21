@@ -38,7 +38,7 @@
       {{ direction.researches_short[0] || direction.researches[0] }}
     </div>
     <div
-      v-if="idInPlanQueueParam"
+      v-if="idInPlanQueue || idInPlanQueueStatus"
       style="float: right"
     >
       <i class="fa-solid fa-layer-group" />
@@ -67,13 +67,13 @@
           class="padding-plan-queue"
         >
           <a
-            v-if="!idInPlanQueueParam"
+            v-if="!idInPlanQueue"
             href="#"
             style="float: right"
             @click.prevent="addIdToPlan"
           >В очередь печати</a>
           <a
-            v-if="idInPlanQueueParam"
+            v-if="idInPlanQueue || idInPlanQueueStatus"
             href="#"
             style="float: right"
             @click.prevent="delIdFromPlan"
@@ -85,27 +85,38 @@
 </template>
 
 <script lang="ts">
-import { addIdToPlanQueue, checkIdInPlanQueue, deleteIdFromPlanQueue } from '@/printQueue';
+
+import { PRINT_QUEUE_ADD_ELEMENT, PRINT_QUEUE_DEL_ELEMENT } from '@/store/action-types';
 
 export default {
   name: 'DisplayDirection',
   props: ['direction'],
   data() {
     return {
-      idInPlanQueueParam: null,
+      idInPlanQueue: false,
     };
   },
+  computed: {
+    idInPlanQueueStatus() {
+      return this.$store.getters.statusPrintQueue.includes(this.direction.pk);
+    },
+  },
   mounted() {
-    this.idInPlanQueueParam = checkIdInPlanQueue(this.direction.pk);
+    this.loadStatus();
   },
   methods: {
+    loadStatus() {
+      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(this.direction.pk);
+    },
     addIdToPlan() {
-      addIdToPlanQueue(this.direction.pk);
-      this.idInPlanQueueParam = checkIdInPlanQueue(this.direction.pk);
+      const id = this.direction.pk;
+      this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
+      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(this.direction.pk);
     },
     delIdFromPlan() {
-      deleteIdFromPlanQueue(this.direction.pk);
-      this.idInPlanQueueParam = checkIdInPlanQueue(this.direction.pk);
+      const id = this.direction.pk;
+      this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
+      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(this.direction.pk);
     },
   },
 };

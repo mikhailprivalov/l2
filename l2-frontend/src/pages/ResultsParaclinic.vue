@@ -1385,14 +1385,14 @@
             />
             <div v-if="row.confirmed">
               <button
-                v-if="!idInPlanQueueParam"
+                v-if="!idInPlanQueue"
                 class="btn btn-blue-nb"
                 @click="addIdToPlan(data.direction.pk)"
               >
                 В очередь печати
               </button>
               <button
-                v-if="idInPlanQueueParam"
+                v-if="idInPlanQueue"
                 class="btn btn-blue-nb"
                 @click="delIdFromPlan(data.direction.pk)"
               >
@@ -1812,7 +1812,7 @@ import ScreeningButton from '@/ui-cards/ScreeningButton.vue';
 import LastResult from '@/ui-cards/LastResult.vue';
 import IssStatus from '@/ui-cards/IssStatus.vue';
 import MedicalCertificates from '@/ui-cards/MedicalCertificates.vue';
-import { addIdToPlanQueue, checkIdInPlanQueue, deleteIdFromPlanQueue } from '@/printQueue';
+import { PRINT_QUEUE_ADD_ELEMENT, PRINT_QUEUE_DEL_ELEMENT } from '@/store/action-types';
 
 import DescriptiveForm from '../forms/DescriptiveForm.vue';
 import BacMicroForm from '../forms/BacMicroForm.vue';
@@ -1943,7 +1943,7 @@ export default {
       selectedYear: moment().format('YYYY'),
       currentDate: moment().format('YYYY-MM-DD'),
       currentDateInterval: null,
-      idInPlanQueueParam: null,
+      idInPlanQueue: null,
     };
   },
   computed: {
@@ -2216,6 +2216,7 @@ export default {
     },
   },
   mounted() {
+    this.loadStatus();
     this.load_history();
     this.$root.$on('hide_dreg', () => {
       this.load_dreg_rows();
@@ -2292,13 +2293,16 @@ export default {
     clearInterval(this.currentDateInterval);
   },
   methods: {
+    loadStatus() {
+      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(this.data.direction.pk);
+    },
     addIdToPlan(id) {
-      addIdToPlanQueue(id);
-      this.idInPlanQueueParam = checkIdInPlanQueue(id);
+      this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
+      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(id);
     },
     delIdFromPlan(id) {
-      deleteIdFromPlanQueue(id);
-      this.idInPlanQueueParam = checkIdInPlanQueue(id);
+      this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
+      this.idInPlanQueue = this.$store.getters.statusPrintQueue.includes(id);
     },
     async getCurrentTime() {
       const { date } = await this.$api('current-time');
@@ -2606,7 +2610,6 @@ export default {
         })
         .finally(() => {
           this.$store.dispatch(actions.DEC_LOADING);
-          this.idInPlanQueueParam = checkIdInPlanQueue(this.data.direction.pk);
         });
     },
     hide_modal_create_directions() {

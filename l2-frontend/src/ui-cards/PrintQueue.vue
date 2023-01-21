@@ -11,7 +11,6 @@
 </template>
 
 <script lang="ts">
-import { getPlanQueue } from '@/printQueue';
 
 export default {
   name: 'PrintQueue',
@@ -25,7 +24,7 @@ export default {
   },
   methods: {
     load() {
-      this.data = getPlanQueue();
+      this.data = [1, 2];
     },
   },
 };
