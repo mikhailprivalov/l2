@@ -8,7 +8,7 @@ const stateInitial = {
 };
 
 const getters = {
-  printQueueCount: (state) => state.currentPrintQueue.length || 0,
+  printQueueCount: (state) => state.currentPrintQueue.length,
   idInQueue: state => id => state.currentPrintQueue.includes(id),
 };
 
@@ -54,14 +54,6 @@ const mutations = {
       state.currentPrintQueue.splice(i, 1);
       setLocalStorageDataJson('queue', state.currentPrintQueue);
     }
-  },
-  [mutationTypes.PRINT_QUEUE_FLUSH](state) {
-    state.currentPrintQueue = [];
-    window.localStorage.removeItem('queue');
-  },
-  [mutationTypes.PRINT_QUEUE_CHANGE_VAL](state, { values }) {
-    state.currentPrintQueue = values;
-    setLocalStorageDataJson('queue', state.currentPrintQueue);
   },
 };
 
