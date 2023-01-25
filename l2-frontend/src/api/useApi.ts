@@ -12,6 +12,7 @@ type CallParams = {
 
 interface Options {
   defaultData?: any,
+  validateRequestData?: Record<string, (param: any) => boolean>
 }
 
 // eslint-disable-next-line no-shadow
@@ -19,7 +20,8 @@ export const enum ApiStatus {
   IDLE = 'idle',
   LOADING = 'loading',
   SUCCESS = 'success',
-  ERROR = 'error',
+  REQUEST_ERROR = 'requestError',
+  VALIDATION_ERROR = 'validationError',
 }
 
 const EMPTY = {};
@@ -37,6 +39,15 @@ export default function useApi<T>(params: CallParams, options?: Options) {
   } = params;
 
   const call = async () => {
+    if (options?.validateRequestData) {
+      for (const key of Object.keys(options.validateRequestData)) {
+        if (!requestData || !options.validateRequestData[key](requestData[key])) {
+          status.value = ApiStatus.VALIDATION_ERROR;
+          return;
+        }
+      }
+    }
+
     status.value = ApiStatus.LOADING;
     try {
       data.value = await smartCall({
@@ -47,7 +58,7 @@ export default function useApi<T>(params: CallParams, options?: Options) {
       });
       status.value = ApiStatus.SUCCESS;
     } catch (e) {
-      status.value = ApiStatus.ERROR;
+      status.value = ApiStatus.REQUEST_ERROR;
       throw e;
     }
   };

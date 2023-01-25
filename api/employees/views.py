@@ -3,9 +3,11 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
+from hospitals.models import Hospitals
 from laboratory.decorators import group_required
 from employees.models import Department, Position, Employee, EmployeePosition
 from utils.response import status_response
+
 
 @login_required
 def departments_list(request):
@@ -19,9 +21,6 @@ def departments_list(request):
     sort_column = request_data.get('sortColumn')
     sort_direction = request_data.get('sortDirection')
     q_filter = request_data.get('filter')
-
-    import time
-    time.sleep(5)
 
     rows, pages = Department.get_json_list(hospital_id, only_active, page, per_page, sort_column, sort_direction, q_filter, return_total_rows=return_total_rows)
     return JsonResponse({
@@ -60,6 +59,46 @@ def departments_edit(request):
         return status_response(False, message=str(e))
     else:
         return status_response(True, data={"value": department})
+
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def departments_form_info(request):
+    request_data = json.loads(request.body)
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+    department_id = request_data.get('id')
+    department = Department.get_by_id(hospital.pk, department_id) if department_id is not None else None
+
+    return JsonResponse({
+        "formFields": [
+            {
+                "type": "hidden",
+                "key": "id",
+                "defaultValue": department_id,
+            },
+            {
+                "type": "info",
+                "key": "organization",
+                "label": "Организация",
+                "defaultValue": hospital.safe_short_title
+            },
+            {
+                "type": "text",
+                "key": "name",
+                "label": "Название отдела",
+                "isRequired": True,
+                "defaultValue": department.name if department else ""
+            },
+            {
+                "type": "checkbox",
+                "key": "isActive",
+                "label": "Отдел активен",
+                "isHiddenForCreation": True,
+                "defaultValue": department.is_active if department else True,
+            },
+        ],
+        "formTitle": f"Редактирование отдела {department.name}" if department else "Добавление нового отдела",
+    })
 
 
 @login_required

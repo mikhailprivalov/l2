@@ -2,6 +2,7 @@ from django.db import models
 from django.core.paginator import Paginator
 
 from hospitals.models import Hospitals
+from laboratory.utils import strfdatetime
 from slog.models import Log
 
 
@@ -29,6 +30,9 @@ class Employee(models.Model):
             'name': self.name,
             'patronymic': self.patronymic,
             'hospitalId': self.hospital_id,
+            'isActive': self.is_active,
+            'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
+            'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
 
     @staticmethod
@@ -122,6 +126,9 @@ class Position(models.Model):
             'id': self.id,
             'name': self.name,
             'hospitalId': self.hospital_id,
+            'isActive': self.is_active,
+            'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
+            'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
 
     @staticmethod
@@ -207,14 +214,24 @@ class Department(models.Model):
             'id': self.id,
             'name': self.name,
             'hospitalId': self.hospital_id,
+            'isActive': self.is_active,
+            'childrenElementsCount': EmployeePosition.objects.filter(department=self, is_active=True).count(),
+            'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
+            'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
 
     @staticmethod
-    def get_json_by_id(hospital_id, object_id):
+    def get_by_id(hospital_id, object_id):
         try:
-            return Department.objects.get(id=object_id, hospital_id=hospital_id).json
+            return Department.objects.get(id=object_id, hospital_id=hospital_id)
         except Department.DoesNotExist:
             return None
+
+    @staticmethod
+    def get_json_by_id(hospital_id, object_id):
+        department = Department.get_by_id(hospital_id, object_id)
+
+        return department.json if department else None
 
     @staticmethod
     def get_json_list(hospital_id, only_active=True, page=1, per_page=30, sort_column=None, sort_direction=None, filter=None, return_total_rows=False):
@@ -308,6 +325,9 @@ class EmployeePosition(models.Model):
             'positionId': self.position_id,
             'departmentId': self.department_id,
             'rate': self.rate,
+            'isActive': self.is_active,
+            'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
+            'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
 
     @staticmethod

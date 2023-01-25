@@ -6,6 +6,7 @@ urlpatterns = [
     path('departments/list', views.departments_list),
     path('departments/add', views.departments_add),
     path('departments/edit', views.departments_edit),
+    path('departments/form-info', views.departments_form_info),
     path('departments/treeselect', views.departments_treeselect),
     path('departments/get', views.departments_get),
     path('positions/list', views.positions_list),
