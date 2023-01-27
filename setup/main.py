@@ -3,7 +3,6 @@ import datetime
 import json
 import sys
 import tempfile
-import time
 import traceback
 import os
 import shutil
@@ -59,17 +58,17 @@ def upload_folder_to_s3(s3, dn, s3p):
                 dest_path = path.replace(dn, "")
                 __s3file = os.path.normpath(s3p + '/' + dest_path + '/' + file)
                 __local_file = os.path.join(path, file)
-                print("Uploading:", __local_file, "to Target:", __s3file, end="")
+                print("Uploading:", __local_file, "to Target:", __s3file, end="")  # noqa: T001
                 s3.upload_file(__local_file, L2_SETUPS_S3_BUCKET, __s3file)
-                print(" ...Success")
+                print(" ...Success")  # noqa: T001
     except Exception as e:
-        print("S3 Failed")
-        print(e)
+        print("S3 Failed")  # noqa: T001
+        print(e)  # noqa: T001
         raise e
 
 
 def get_s3_content(s3):
-    print('Getting', L2_SETUPS_S3_BUCKET, 'directories')
+    print('Getting', L2_SETUPS_S3_BUCKET, 'directories')  # noqa: T001
     c = s3.list_objects_v2(Bucket=L2_SETUPS_S3_BUCKET, Prefix='l2-config_', Delimiter='/')
     for v in c.get('CommonPrefixes', []):
         yield str(v['Prefix']).rstrip('/')
@@ -77,25 +76,25 @@ def get_s3_content(s3):
 
 def get_s3_file(s3, config, file):
     k = f"{config}/{file}"
-    print("Getting", k, 'from S3')
+    print("Getting", k, 'from S3')  # noqa: T001
     get_object_response = s3.get_object(Bucket=L2_SETUPS_S3_BUCKET, Key=k)
     return get_object_response['Body'].read()
 
 
 def get_s3_objects(s3, prefix):
-    print('Getting', L2_SETUPS_S3_BUCKET + '/' + prefix, 'files')
+    print('Getting', L2_SETUPS_S3_BUCKET + '/' + prefix, 'files')  # noqa: T001
     c = s3.list_objects_v2(Bucket=L2_SETUPS_S3_BUCKET, Prefix=prefix + '/')['Contents']
     for v in c:
         yield v['Key']
 
 
 def get_tool_path(tool, output_check, check_args='--version'):
-    print(f'Checking {tool}...')
+    print(f'Checking {tool}...')  # noqa: T001
 
     tool_path = which_tool(tool)
 
     if tool_path:
-        print(tool, 'is ok!')
+        print(tool, 'is ok!')  # noqa: T001
     else:
         tool_is_ok = False
         while not tool_is_ok:
@@ -106,14 +105,14 @@ def get_tool_path(tool, output_check, check_args='--version'):
                 result = result.stdout.decode('utf-8')
                 tool_is_ok = result.startswith(output_check)
             except Exception as e:
-                print(e)
+                print(e)  # noqa: T001
 
             if not tool_is_ok:
                 try_again = yes_no_dialog(title=f'{tool} executable not found', text=f'{tool_path}\nDo you want to try again?').run()
 
                 if not try_again:
                     sys.exit()
-            print('Custom', tool, 'path is ok', tool_path)
+            print('Custom', tool, 'path is ok', tool_path)  # noqa: T001
 
     return tool_path
 
@@ -128,16 +127,14 @@ def enter():
         ],
     ).run()
 
-    boto_session = None
     s3 = None
 
-    print('Selected mode:', mode)
+    print('Selected mode:', mode)  # noqa: T001
 
     if mode in ('setup', 'save-config'):
         is_s3_ok = False
         s3_id = ''
         s3_secret = ''
-        s3_bucket = None
 
         while not is_s3_ok:
             s3_id = input_dialog(title='S3 settings', text='Enter access_key_id:', ok_text='Next', default=s3_id).run()
@@ -174,8 +171,8 @@ def enter():
 
                     is_s3_ok = True
             except Exception as e:
-                print(e)
-                print(traceback.format_exc())
+                print(e)  # noqa: T001
+                print(traceback.format_exc())  # noqa: T001
 
             if not is_s3_ok:
                 try_again = yes_no_dialog(title='Credentials is invalid', text='Do you want to try again?').run()
@@ -214,20 +211,20 @@ def enter():
                 text='\n'.join([f'{x[0]}: {x[1]}' for x in lines]),
             ).run()
 
-            print('Checking DB connection')
+            print('Checking DB connection')  # noqa: T001
 
             try:
                 with psycopg2.connect(host=DB_HOST, port=DB_PORT, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD) as conn:
                     with conn.cursor() as cursor:
                         cursor.execute('SELECT VERSION()')
                         row = cursor.fetchone()
-                        print(row[0])
+                        print(row[0])  # noqa: T001
 
                         with tempfile.TemporaryDirectory(suffix='_l2_setup') as dn:
-                            print('Copying local_settings.py')
+                            print('Copying local_settings.py')  # noqa: T001
                             shutil.copyfile(os.path.join(ROOT_DIR, 'laboratory', 'local_settings.py'), os.path.join(dn, 'local_settings.py'))
 
-                            print('Searching applications...')
+                            print('Searching applications...')  # noqa: T001
                             applications = []
                             for a in l2_settings.INSTALLED_APPS:
                                 if not a.startswith('django.'):
@@ -235,7 +232,7 @@ def enter():
                                     p = os.path.join(ROOT_DIR, n)
                                     if os.path.isdir(p):
                                         applications.append((n, p))
-                                        print(n, p)
+                                        print(n, p)  # noqa: T001
 
                             migrations_to_copy = []
 
@@ -260,7 +257,7 @@ def enter():
                                         shutil.rmtree(os.path.join(pmd, 'migrations', '__pycache__'))
                                     except OSError:
                                         pass
-                            print('Dump postgresql database', DB_NAME)
+                            print('Dump postgresql database', DB_NAME)  # noqa: T001
                             pg_dump_path = get_tool_path('pg_dump', 'pg_dump (PostgreSQL)')
 
                             command_for_dumping = (
@@ -271,16 +268,16 @@ def enter():
                                 f'--no-password '
                                 f' | gzip > {os.path.join(dn, "dump.sql.gz")} '
                             )
-                            print('Starting pg_dump...')
-                            print(command_for_dumping)
+                            print('Starting pg_dump...')  # noqa: T001
+                            print(command_for_dumping)  # noqa: T001
                             dump_success = False
                             try:
                                 proc = subprocess.Popen(command_for_dumping, shell=True, env={'PGPASSWORD': DB_PASSWORD or ''})
                                 proc.communicate()
                                 dump_success = True
                             except Exception as e:
-                                print('Exception happened during dump')
-                                print(e)
+                                print('Exception happened during dump')  # noqa: T001
+                                print(e)  # noqa: T001
 
                             if not dump_success:
                                 sys.exit()
@@ -297,16 +294,16 @@ def enter():
                             with open(os.path.join(dn, 'config.json'), 'w', encoding='utf-8') as f:
                                 json.dump(cfg, f, ensure_ascii=False, indent=4)
 
-                            print('Saving to S3...')
+                            print('Saving to S3...')  # noqa: T001
 
                             upload_folder_to_s3(s3, dn, config_name)
 
-                            print()
-                            print('Config')
-                            print(json.dumps(cfg, ensure_ascii=False, indent=4))
-                            print()
+                            print()  # noqa: T001
+                            print('Config')  # noqa: T001
+                            print(json.dumps(cfg, ensure_ascii=False, indent=4))  # noqa: T001
+                            print()  # noqa: T001
             except Exception as e:
-                print(e)
+                print(e)  # noqa: T001
         elif mode == 'setup':
             values = list(get_s3_content(s3))
             values.sort(reverse=True)
@@ -345,7 +342,7 @@ def enter():
                 if go_to_next:
                     ok = True
 
-            print('Checking out version', cfg['version'])
+            print('Checking out version', cfg['version'])  # noqa: T001
 
             proc = subprocess.Popen(f"{ROOT_DIR}/checkout_version.sh {cfg['version']}", shell=True)
             proc.communicate()
@@ -353,7 +350,7 @@ def enter():
             checkout_result = exit_code == 0
 
             if not checkout_result:
-                print('Version checkout error')
+                print('Version checkout error')  # noqa: T001
                 go_to_next = yes_no_dialog(
                     title=f'Version {cfg["version"]} checkout error',
                     text='Do you want to continue without checking out the version?\nThis may not work correctly!\nYour migrations and local_settings.py files will be replaced with setup!',
@@ -406,13 +403,13 @@ def enter():
 
                         copy_and_overwrite(f, dst)
 
-                print('Starting configuring database connections')
+                print('Starting configuring database connections')  # noqa: T001
 
                 if not local_settings_path and os.path.isfile(os.path.join(ROOT_DIR, 'laboratory', 'local_settings.py')):
                     local_settings_path = os.path.join(ROOT_DIR, 'laboratory', 'local_settings.py')
 
                 if not local_settings_path:
-                    print('local_settings.py not found!')
+                    print('local_settings.py not found!')  # noqa: T001
                     sys.exit()
 
                 db_content_lines = []
@@ -449,13 +446,13 @@ def enter():
 
                 if db_content_lines:
                     db_content = ast.literal_eval('\n'.join(db_content_lines).lstrip('DATABASES = '))
-                    print('Current DB settings:')
+                    print('Current DB settings:')  # noqa: T001
                     print(db_content)
 
                     for k in DB:
                         DB[k] = db_content.get('default', {}).get(k)
                 else:
-                    print('DATABASE not found in local_settings.py')
+                    print('DATABASE not found in local_settings.py')  # noqa: T001
 
                 db_is_ok = False
                 while not db_is_ok:
@@ -481,10 +478,10 @@ def enter():
                             with conn.cursor() as cursor:
                                 cursor.execute('SELECT VERSION()')
                                 row = cursor.fetchone()
-                                print('Postgresql version:', row[0])
+                                print('Postgresql version:', row[0])  # noqa: T001
                     except Exception as e:
                         m = str(e)
-                        print(m)
+                        print(m)  # noqa: T001
 
                         if f'database "{DB["NAME"]}" does not exist' in m:
                             go_to_next = yes_no_dialog(
@@ -495,7 +492,7 @@ def enter():
                             if not go_to_next:
                                 sys.exit()
 
-                            print('Connecting to default db...')
+                            print('Connecting to default db...')  # noqa: T001
                             try:
                                 connection = psycopg2.connect(host=DB['HOST'], port=DB['PORT'], user=DB['USER'], password=DB['PASSWORD'] or None)
                                 connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -506,10 +503,10 @@ def enter():
                                     with conn.cursor() as cursor:
                                         cursor.execute('SELECT VERSION()')
                                         row = cursor.fetchone()
-                                        print('Postgresql version:', row[0])
-                                        print('Database successfully created!')
+                                        print('Postgresql version:', row[0])  # noqa: T001
+                                        print('Database successfully created!')  # noqa: T001
                             except Exception as e:
-                                print(e)
+                                print(e)  # noqa: T001
                                 db_is_ok = False
                                 go_to_next = yes_no_dialog(
                                     title='Failed to create database',
@@ -532,7 +529,7 @@ def enter():
                                 sys.exit()
 
                 psql_path = get_tool_path('psql', 'psql (PostgreSQL)')
-                print(psql_path)
+                print(psql_path)  # noqa: T001
 
                 pv = which_tool('pv')
                 pv_retry = not pv
@@ -549,7 +546,7 @@ def enter():
                 zcat = which_tool('zcat')
 
                 if not gunzip and not zcat:
-                    print('gunzip or zcat not found in system')
+                    print('gunzip or zcat not found in system')  # noqa: T001
                     sys.exit()
 
                 if zcat:
@@ -560,20 +557,20 @@ def enter():
                     unzip_command = f'{pv} {sql_backup_file} | {zcat or gunzip}'
 
                 command_for_restoring = f'{unzip_command} | {psql_path} {DB["NAME"]} -P pager=off --host={DB["HOST"]} --port={DB["PORT"]} --username={DB["USER"]} --no-password'
-                print('Starting pg_dump...')
-                print(command_for_restoring)
+                print('Starting pg_dump...')  # noqa: T001
+                print(command_for_restoring)  # noqa: T001
                 restore_success = False
                 try:
                     proc = subprocess.Popen(command_for_restoring, shell=True, env={'PGPASSWORD': DB['PASSWORD'] or ''})
                     proc.communicate()
                     restore_success = True
                 except Exception as e:
-                    print('Exception happened during restoring')
-                    print(e)
+                    print('Exception happened during restoring')  # noqa: T001
+                    print(e)  # noqa: T001
 
                 if not restore_success:
                     sys.exit()
-                print('Saving database config to local_settings.py')
+                print('Saving database config to local_settings.py')  # noqa: T001
                 settings_lines.append('')
                 settings_lines.append('DATABASES = {')
                 settings_lines.append("    'default': {")
