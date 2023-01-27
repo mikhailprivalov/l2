@@ -1,22 +1,161 @@
 <template>
   <ul class="nav navbar-nav">
-    <li>
+    <li class="dropdown">
       <a
+        v-tippy="{
+          html: '#print-queue-view',
+          reactive: true,
+          interactive: true,
+          arrow: true,
+          animation: 'fade',
+          duration: 0,
+          theme: 'light',
+          placement: 'bottom',
+          trigger: 'click mouseenter',
+          popperOptions: {
+            modifiers: {
+              preventOverflow: {
+                boundariesElement: 'window',
+              },
+              hide: {
+                enabled: false,
+              },
+            },
+          },
+        }"
         href="#"
-        @click.prevent="load"
+        class="dropdown-toggle"
+        @click.prevent
+        @show="load"
       >
         Очередь печати <span class="badge badge-light">{{ printQueueCount }}</span></a>
+      <div
+        id="print-queue-view"
+        class="tp"
+      >
+        <a
+          class="a-btn"
+          href="#"
+          @click.prevent="print"
+        >Печать</a>
+        <table class="table table-condensed table-bordered">
+          <colgroup>
+            <col style="width: 70px">
+            <col style="width: 100px">
+            <col style="width: 120px">
+            <col style="width: 90px">
+            <col style="width: 300px">
+            <col style="width: 40px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Порядок</th>
+              <th>Номер</th>
+              <th>Тип</th>
+              <th>Дата</th>
+              <th>Услуга</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(row, index) in dataDirections"
+              :key="index"
+            >
+              <td class="td-align">
+                <a
+                  href="#"
+                  @click.prevent="updateOrder('up', index)"
+                >
+                  <i class="fa-solid fa-arrow-up" />
+                </a>
+                <a
+                  style="padding-left: 10px"
+                  href="#"
+                  @click.prevent="updateOrder('down', index)"
+                >
+                  <i class="fa-solid fa-arrow-down" />
+                </a>
+              </td>
+              <td>
+                <ResultDetails
+                  :direction="row.direction"
+                  :is-lab="row.isLab"
+                  :is-doc-referral="row.isDocReferral"
+                  :is-paraclinic="row.isParaclinic"
+                />
+              </td>
+              <td>
+                {{ row.type }}
+              </td>
+              <td>
+                {{ row.timeConfirm }}
+              </td>
+              <td class="researches">
+                {{ row.researches }}
+              </td>
+              <td class="td-align">
+                <a
+                  v-tippy
+                  title="Удалить из очереди"
+                  href="#"
+                  @click.prevent="delIdFromPlan(row.direction)"
+                >
+                  <i class="fa fa-times" />
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </li>
   </ul>
 </template>
 
 <script lang="ts">
 
+import { PRINT_QUEUE_CHANGE_ORDER, PRINT_QUEUE_DEL_ELEMENT } from '@/store/action-types';
+
+import ResultDetails from './PatientResults/ResultDetails.vue';
+
 export default {
   name: 'PrintQueue',
+  components: { ResultDetails },
+  data() {
+    return {
+      dataDirections: [],
+    };
+  },
   computed: {
     printQueueCount() {
       return this.$store.getters.printQueueCount;
+    },
+    currentPrintQueue() {
+      return this.$store.getters.stateCurrentPrintQueue;
+    },
+  },
+  mounted() {
+    this.load();
+  },
+  methods: {
+    async load() {
+      const { rows } = await this.$api('directions/print-queu', { directions: this.currentPrintQueue });
+      this.dataDirections = rows;
+    },
+    print() {
+      window.open(`results/preview?pk=[${this.currentPrintQueue}]&hosp=1&sort=1`, '_blank');
+    },
+    delIdFromPlan(id) {
+      this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
+      this.load();
+    },
+    updateOrder(typeOrder, index) {
+      if (((index === 0) && (typeOrder !== 'up'))
+          || ((index === this.dataDirections.length - 1) && (typeOrder !== 'down'))
+          || ((index !== 0) && (index !== this.dataDirections.length - 1))) {
+        this.$store.dispatch(PRINT_QUEUE_CHANGE_ORDER, { typeOrder, index });
+        this.load();
+      }
     },
   },
 };
@@ -24,53 +163,43 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .cancel-row {
-    td, th {
-      opacity: .6;
-      text-decoration: line-through;
-    }
+i {
+  vertical-align: middle;
+  display: inline-block;
+  margin-right: 3px;
+}
 
-    &:hover {
-      td, th {
-        opacity: 1;
-        text-decoration: none;
-      }
-    }
+.tp {
+  min-height: 350px;
+  text-align: left;
+  line-height: 1.1;
+  padding: 5px;
+
+  table {
+    margin: 0;
+    table-layout: fixed;
   }
+  max-height: 600px;
+  overflow-y: auto;
+  max-width: 800px;
+}
 
-  .size-btn {
-    width: 50px;
-  }
+.researches {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .fv {
-    cursor: pointer;
-
-    &:hover span {
-      text-shadow: 0 0 3px rgba(#049372, .4);
-      color: #049372;
-    }
-  }
-
-  i {
-    vertical-align: middle;
-    display: inline-block;
-    margin-right: 3px;
-  }
-
-  .inFavorite i {
-    color: #93046d;
-  }
-
-  .tp {
-    text-align: left;
-    line-height: 1.1;
-    padding: 5px;
-
-    table {
-      margin: 0;
-    }
-
-    max-height: 600px;
-    overflow-y: auto;
-  }
+.td-align {
+  text-align: center;
+}
+a {
+  color: grey;
+}
+.a-btn {
+  color: #3BAFDA;
+  float: right;
+  padding-bottom: 15px;
+  padding-top: 5px
+}
 </style>

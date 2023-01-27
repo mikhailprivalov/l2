@@ -2198,7 +2198,6 @@ export default {
     },
   },
   mounted() {
-    this.loadStatus();
     this.load_history();
     this.$root.$on('hide_dreg', () => {
       this.load_dreg_rows();

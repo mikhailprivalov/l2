@@ -1,7 +1,9 @@
 import { setLocalStorageDataJson } from '@/utils';
+import api from '@/api';
 
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
+import { PRINT_QUEUE_CHANGE_ORDER } from '../action-types';
 
 const PRINT_QUEUE_LS_KEY = 'printQueue';
 
@@ -12,6 +14,7 @@ const stateInitial = {
 const getters = {
   printQueueCount: (state) => state.currentPrintQueue.length,
   idInQueue: state => id => state.currentPrintQueue.includes(id),
+  stateCurrentPrintQueue: stata => stata.currentPrintQueue,
 };
 
 const actions = {
@@ -33,9 +36,14 @@ const actions = {
     commit(mutationTypes.PRINT_QUEUE_DEL_ELEMENT, { id });
     dispatch(actionsTypes.PRINT_QUEUE_SAVE_LS);
   },
+  async [actionsTypes.PRINT_QUEUE_CHANGE_ORDER]({ commit, dispatch }, { typeOrder, index }) {
+    commit(mutationTypes.PRINT_QUEUE_CHANGE_ORDER, { typeOrder, index });
+    dispatch(actionsTypes.PRINT_QUEUE_SAVE_LS);
+  },
   async [actionsTypes.PRINT_QUEUE_SAVE_LS]({ state }) {
     setLocalStorageDataJson(PRINT_QUEUE_LS_KEY, state.currentPrintQueue);
   },
+
 };
 
 const mutations = {
@@ -52,6 +60,17 @@ const mutations = {
   [mutationTypes.PRINT_QUEUE_ADD_ELEMENT](state, { id }) {
     if (!getters.idInQueue(state)(id)) {
       state.currentPrintQueue = [...state.currentPrintQueue, id];
+    }
+  },
+  [mutationTypes.PRINT_QUEUE_CHANGE_ORDER](state, { typeOrder, index }) {
+    const tmp = state.currentPrintQueue[index];
+    console.log(typeOrder, index);
+    if (typeOrder === 'down') {
+      state.currentPrintQueue[index] = state.currentPrintQueue[index + 1];
+      state.currentPrintQueue[index + 1] = tmp;
+    } else {
+      state.currentPrintQueue[index] = state.currentPrintQueue[index - 1];
+      state.currentPrintQueue[index - 1] = tmp;
     }
   },
   [mutationTypes.PRINT_QUEUE_DEL_ELEMENT](state, { id }) {
