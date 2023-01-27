@@ -27,6 +27,7 @@ from users.models import Speciality, DoctorProfile, AssignmentTemplates
 from django.contrib.postgres.fields import ArrayField
 
 from utils.common import get_system_name
+from utils.age import plural_age, MODE_DAYS, MODE_MONTHES, MODE_YEARS
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -387,20 +388,7 @@ class Individual(models.Model):
             if ages.exists():
                 r = ages[0].s
             else:
-                import pymorphy2
-
-                morph = pymorphy2.MorphAnalyzer()
-                if age == 0:
-                    _let = morph.parse("лет ")[0]
-                elif age < 5:
-                    _let = morph.parse("год")[0]
-                elif age <= 20:
-                    _let = morph.parse("лет ")[0]
-                elif 5 > age % 10 > 0:
-                    _let = morph.parse("год")[0]
-                else:
-                    _let = morph.parse("лет ")[0]
-                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                r = plural_age(age, mode=MODE_YEARS)
                 AgeCache(n=age, t=0, s=r).save()
         elif monthes > 0:
             age = monthes
@@ -409,18 +397,7 @@ class Individual(models.Model):
             if ages.exists():
                 r = ages[0].s
             else:
-                import pymorphy2
-
-                morph = pymorphy2.MorphAnalyzer()
-                if age == 0:
-                    _let = morph.parse("месяцев ")[0]
-                elif age == 1:
-                    _let = morph.parse("месяц ")[0]
-                elif age < 5:
-                    _let = morph.parse("месяца ")[0]
-                else:
-                    _let = morph.parse("месяцев ")[0]
-                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                r = plural_age(age, mode=MODE_MONTHES)
                 AgeCache(n=age, t=1, s=r).save()
         else:
             age = days
@@ -429,22 +406,7 @@ class Individual(models.Model):
             if ages.exists():
                 r = ages[0].s
             else:
-                import pymorphy2
-
-                morph = pymorphy2.MorphAnalyzer()
-                if age == 0:
-                    _let = morph.parse("дней ")[0]
-                elif age == 1:
-                    _let = morph.parse("день ")[0]
-                elif age < 5:
-                    _let = morph.parse("дня ")[0]
-                elif age <= 20:
-                    _let = morph.parse("дней ")[0]
-                elif 5 > age % 10 > 0:
-                    _let = morph.parse("день")[0]
-                else:
-                    _let = morph.parse("дней ")[0]
-                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                r = plural_age(age, mode=MODE_DAYS)
                 AgeCache(n=age, t=2, s=r).save()
         return r
 

@@ -498,29 +498,6 @@ files = [
 ]
 
 [[package]]
-name = "DAWG-Patched"
-version = "0.9.1"
-description = "Fast and memory efficient DAWG (DAFSA) for Python"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "DAWG-Patched-0.9.1.tar.gz", hash = "sha256:954e990044322b8dd17a6c44e38d8ab17930e93a2c53a55898d8cf71a0ab96a4"},
-]
-
-[[package]]
-name = "DAWG-Python"
-version = "0.7.2"
-description = "Pure-python reader for DAWGs (DAFSAs) created by dawgdic C++ library or DAWG Python extension."
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "DAWG-Python-0.7.2.tar.gz", hash = "sha256:4a5e3286e6261cca02f205cfd5516a7ab10190fa30c51c28d345808f595e3421"},
-    {file = "DAWG_Python-0.7.2-py2.py3-none-any.whl", hash = "sha256:4941d5df081b8d6fcb4597e073a9f60d5c1ccc9d17cd733e8744d7ecfec94ef3"},
-]
-
-[[package]]
 name = "defusedxml"
 version = "0.7.1"
 description = "XML bomb protection for Python stdlib modules"
@@ -625,17 +602,6 @@ files = [
 [package.dependencies]
 django = ">=3.0"
 pytz = "*"
-
-[[package]]
-name = "docopt"
-version = "0.6.2"
-description = "Pythonic argument parser, that will make you smile"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "docopt-0.6.2.tar.gz", hash = "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"},
-]
 
 [[package]]
 name = "EasyProcess"
@@ -1342,51 +1308,6 @@ files = [
 ]
 
 [[package]]
-name = "pymorphy2"
-version = "0.9.1"
-description = "Morphological analyzer (POS tagger + inflection engine) for Russian language."
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pymorphy2-0.9.1-py3-none-any.whl", hash = "sha256:a5224ec153cd6920a33961ae636793ad5185143bc8045b3f9a9f8bd62ecacf68"},
-    {file = "pymorphy2-0.9.1.tar.gz", hash = "sha256:86c447157dee2eb2341efbe4538e1281a754756ba1aa32da77a89614c58b560c"},
-]
-
-[package.dependencies]
-dawg-python = ">=0.7.1"
-docopt = ">=0.6"
-pymorphy2-dicts-ru = ">=2.4,<3.0"
-
-[package.extras]
-fast = ["DAWG (>=0.8)"]
-
-[[package]]
-name = "pymorphy2-dicts"
-version = "2.4.393442.3710985"
-description = "OpenCorpora.org dictionaries pre-compiled for pymorphy2"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pymorphy2-dicts-2.4.393442.3710985.tar.bz2", hash = "sha256:d563f2c7673fc28583550780e21440764eb0168b57d498ec07e346da70ce0b3c"},
-    {file = "pymorphy2-dicts-2.4.393442.3710985.tar.gz", hash = "sha256:be7c6402b5f0919c1c942f07f89a7f53c70f6266a035fa0a561b23807ac79e4a"},
-    {file = "pymorphy2_dicts-2.4.393442.3710985-py2.py3-none-any.whl", hash = "sha256:70d3e33fa28108a2dfcded787c7a5946c6ab88bb669b3afb20f8c447aadec924"},
-]
-
-[[package]]
-name = "pymorphy2-dicts-ru"
-version = "2.4.417127.4579844"
-description = "Russian dictionaries for pymorphy2"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pymorphy2-dicts-ru-2.4.417127.4579844.tar.gz", hash = "sha256:78cad03adca605021abd387a3b2eb515c851b86e94682a1ef2354a2c74fcc196"},
-    {file = "pymorphy2_dicts_ru-2.4.417127.4579844-py2.py3-none-any.whl", hash = "sha256:9a322a6ee78fd4a5dceead0545c24b9a91687ad5df95cbac1b36f6c36cbb498a"},
-]
-
-[[package]]
 name = "PyPDF2"
 version = "1.28.6"
 description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
@@ -1964,4 +1885,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "d5803070b75d299c6f6df00a1dfe7ce485c70e444da478bc750e8441067bbdf3"
+content-hash = "8361f7cf3c7b462d21507ac7944484cce1230befe8b91301d0ef4e5b34fa57a5"
