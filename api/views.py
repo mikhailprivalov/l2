@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from directory.models import Researches, SetResearch, SetOrderResearch
+from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
@@ -2055,6 +2055,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
         {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2406,20 +2407,65 @@ def statistic_params_search(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_price_list(request):
-    price_data = PriceName.objects.all()
-    data = [{"id": price.pk, "label": price.title, "status": price.active_status} for price in price_data]
-    data = sorted(data, key=lambda d: d["label"])
-    return JsonResponse({"data": data})
+def get_prices(request):
+    prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.all().order_by('title')]
+    return JsonResponse({"data": prices})
 
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def get_current_coast_researches_in_price(request):
+def get_price_data(request):
     request_data = json.loads(request.body)
-    coast_researches_data = PriceCoast.objects.filter(price_name_id=request_data["id"])
-    coast_research = [{"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": data.coast.__str__()} for data in coast_researches_data]
-    coast_research = sorted(coast_research, key=lambda d: d['research']['title'])
+    current_price = PriceName.objects.get(pk=request_data["id"])
+    price_data = current_price.as_json(current_price)
+    return JsonResponse({"data": price_data})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def update_price(request):
+    request_data = json.loads(request.body)
+    if request_data["id"] == -1:
+        current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
+        current_price.save()
+        Log.log(
+            current_price.pk,
+            130007,
+            request.user.doctorprofile,
+            current_price.as_json(current_price),
+        )
+    else:
+        current_price = PriceName.objects.get(pk=request_data["id"])
+        current_price.title = request_data["title"]
+        current_price.date_start = request_data["start"]
+        current_price.date_end = request_data["end"]
+        current_price.company_id = request_data["company"]
+        current_price.save()
+        Log.log(
+            current_price.pk,
+            130006,
+            request.user.doctorprofile,
+            current_price.as_json(current_price),
+        )
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def check_price_active(request):
+    request_data = json.loads(request.body)
+    current_price = PriceName.objects.get(pk=request_data["id"])
+    return status_response(current_price.active_status)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_coasts_researches_in_price(request):
+    request_data = json.loads(request.body)
+    coast_research = [
+        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f'{data.coast}'}
+        for data in PriceCoast.objects.filter(price_name_id=request_data["id"]).prefetch_related('research').order_by('research__title')
+    ]
     return JsonResponse({"data": coast_research})
 
 
@@ -2521,7 +2567,7 @@ def get_research_list(request):
 
 @login_required
 @group_required('Конструктор: Настройка организации')
-def update_research_list_in_price(request):
+def add_research_in_price(request):
     request_data = json.loads(request.body)
     if not PriceName.objects.get(pk=request_data["priceId"]).active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
@@ -2897,3 +2943,68 @@ def check_set_hidden(request):
     current_set = SetResearch.objects.get(pk=request_data)
     return status_response(current_set.hide)
 
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def get_control_params(request):
+    params_data = [PatientControlParam.as_json(param) for param in PatientControlParam.objects.all().order_by("order")]
+    return JsonResponse({"data": params_data})
+
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def update_control_param(request):
+    request_data = json.loads(request.body)
+    param_data = PatientControlParam.objects.get(pk=request_data["pk"])
+    param_data.title = request_data["title"]
+    param_data.code = request_data["code"]
+    param_data.all_patient_contol = request_data["all_patient_control"]
+    param_data.save()
+    Log.log(param_data.pk, 160000, request.user.doctorprofile, {"param_data": PatientControlParam.as_json(param_data)})
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def add_control_param(request):
+    request_data = json.loads(request.body)
+    if not PatientControlParam.objects.all().exists():
+        offset = 0
+    else:
+        offset = 1
+    param_data = PatientControlParam(title=request_data["title"], code=request_data["code"], all_patient_contol=request_data["allPatientControl"], order=request_data["maxOrder"] + offset)
+    param_data.save()
+    Log.log(
+        param_data.pk,
+        160001,
+        request.user.doctorprofile,
+        {"param_data": PatientControlParam.as_json(param_data)},
+    )
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Контролируемые параметры пациентов')
+def update_order_param(request):
+    request_data = json.loads(request.body)
+    if request_data["action"] == 'inc_order':
+        next_param = PatientControlParam.objects.filter(order=request_data["order"] + 1).first()
+        if next_param:
+            current_param = PatientControlParam.objects.get(pk=request_data["id"])
+            next_param.order -= 1
+            current_param.order += 1
+            next_param.save()
+            current_param.save()
+        else:
+            return status_response(False, 'Параметр первый')
+    elif request_data["action"] == 'dec_order':
+        prev_param = PatientControlParam.objects.filter(order=request_data["order"] - 1).first()
+        if prev_param:
+            current_param = PatientControlParam.objects.get(pk=request_data["id"])
+            prev_param.order += 1
+            current_param.order -= 1
+            prev_param.save()
+            current_param.save()
+        else:
+            return status_response(False, 'Параметр последний')
+    return status_response(True)
