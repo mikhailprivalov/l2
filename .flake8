@@ -2,3 +2,5 @@
 max-line-length = 190
 exclude = .git,__pycache__,l2-frontend,l2-ws,venv,venv2,*/migrations/*
 ignore = W,E722,E231,E203
+per-file-ignores =
+    setup/*:BLK999,T201
