@@ -1,9 +1,7 @@
 import { setLocalStorageDataJson } from '@/utils';
-import api from '@/api';
 
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
-import { PRINT_QUEUE_CHANGE_ORDER } from '../action-types';
 
 const PRINT_QUEUE_LS_KEY = 'printQueue';
 
@@ -64,7 +62,6 @@ const mutations = {
   },
   [mutationTypes.PRINT_QUEUE_CHANGE_ORDER](state, { typeOrder, index }) {
     const tmp = state.currentPrintQueue[index];
-    console.log(typeOrder, index);
     if (typeOrder === 'down') {
       state.currentPrintQueue[index] = state.currentPrintQueue[index + 1];
       state.currentPrintQueue[index + 1] = tmp;
