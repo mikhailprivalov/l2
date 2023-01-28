@@ -70,7 +70,7 @@
                   <i class="fa-solid fa-arrow-up" />
                 </a>
                 <a
-                  style="padding-left: 10px"
+                  class="a-left-padding"
                   href="#"
                   @click.prevent="updateOrder('down', index)"
                 >
@@ -202,4 +202,9 @@ a {
   padding-bottom: 15px;
   padding-top: 5px
 }
+
+.a-left-padding {
+  padding-left: 10px;
+}
+
 </style>
