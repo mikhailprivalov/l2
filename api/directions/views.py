@@ -4178,9 +4178,7 @@ def get_directions_by_hospital_sent(request):
 @login_required
 def get_directions_data_to_print_queue(request):
     request_data = json.loads(request.body)
-    print(request_data)
     res_direction = tuple(list(request_data["directions"]))
-    print(res_direction)
     result = get_directions_to_print_queue(res_direction)
     lab_podr = get_lab_podr()
     lab_podr = [i[0] for i in lab_podr]
