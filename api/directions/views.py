@@ -89,6 +89,7 @@ from .sql_func import (
     get_patient_contract,
     get_directions_by_user,
     get_confirm_direction_by_hospital,
+    get_directions_meta_info,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -4172,3 +4173,58 @@ def get_directions_by_hospital_sent(request):
             }
         )
     return JsonResponse({"rows": rows})
+
+
+@login_required
+def meta_info(request):
+    request_data = json.loads(request.body)
+    res_direction = tuple(list(request_data["directions"]))
+    result = get_directions_meta_info(res_direction)
+    lab_podr = get_lab_podr()
+    lab_podr = [i[0] for i in lab_podr]
+    type_slave_research = dict(HospitalService.TYPES)
+
+    data_directions = []
+    tmp_direction = {}
+    last_direction = None
+
+    for i in result:
+        if last_direction != i.napravleniye_id and len(tmp_direction) > 0:
+            data_directions.append(tmp_direction.copy())
+            tmp_direction = {}
+        tmp_direction["direction"] = i.napravleniye_id
+        tmp_direction["researches"] = f"{tmp_direction.get('researches', '')} {i.title}"
+        if i.is_paraclinic:
+            tmp_direction["type"] = "Диагностика"
+        elif i.is_doc_refferal:
+            tmp_direction["type"] = "Консультация"
+        elif i.is_stom:
+            tmp_direction["type"] = "Стоматология"
+        elif i.is_microbiology:
+            tmp_direction["type"] = "Бак.исследование"
+        elif i.is_gistology:
+            tmp_direction["type"] = "Гистология"
+        elif i.is_form:
+            tmp_direction["type"] = "Произвольный протокол"
+
+        if i.is_slave_hospital:
+            tmp_direction["type"] = type_slave_research.get(i.site_type)
+        tmp_direction["timeConfirm"] = i.ch_time_confirm
+        last_direction = i.napravleniye_id
+
+        tmp_direction["isLab"] = False
+        tmp_direction["isDocReferral"] = True
+        tmp_direction["isParaclinic"] = True
+
+        if i.podrazdeleniye_id in lab_podr:
+            tmp_direction["type"] = "Лаборатория"
+            tmp_direction["isLab"] = True
+            tmp_direction["isDocReferral"] = False
+            tmp_direction["isParaclinic"] = False
+
+    data_directions.append(tmp_direction.copy())
+    sort_result = [{} for k in range(len(res_direction))]
+    for i in data_directions:
+        index_num = res_direction.index(i['direction'])
+        sort_result[index_num] = i
+    return JsonResponse({"rows": sort_result})

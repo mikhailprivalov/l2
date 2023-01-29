@@ -91,6 +91,7 @@ import notifyAudioSrc from '@/assets/notify.mp3';
     },
   },
   mounted() {
+    this.$store.dispatch(actions.PRINT_QUEUE_INIT);
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
     if (!this.embedded && !this.hideHeaderWithoutLogin && !this.isEmptyLayout) {
