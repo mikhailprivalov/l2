@@ -474,7 +474,7 @@ def get_confirm_direction_by_hospital(hospitals, d_start, d_end):
     return rows
 
 
-def get_directions_to_print_queue(directions):
+def get_directions_meta_info(directions):
     with connection.cursor() as cursor:
         cursor.execute(
             """

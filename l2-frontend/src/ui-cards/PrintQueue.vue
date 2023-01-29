@@ -139,7 +139,7 @@ export default {
   },
   methods: {
     async load() {
-      const { rows } = await this.$api('directions/print-queu', { directions: this.currentPrintQueue });
+      const { rows } = await this.$api('directions/meta-info', { directions: this.currentPrintQueue });
       this.dataDirections = rows;
     },
     print() {

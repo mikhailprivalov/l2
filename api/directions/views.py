@@ -89,7 +89,7 @@ from .sql_func import (
     get_patient_contract,
     get_directions_by_user,
     get_confirm_direction_by_hospital,
-    get_directions_to_print_queue,
+    get_directions_meta_info,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -4176,10 +4176,10 @@ def get_directions_by_hospital_sent(request):
 
 
 @login_required
-def get_directions_data_to_print_queue(request):
+def meta_info(request):
     request_data = json.loads(request.body)
     res_direction = tuple(list(request_data["directions"]))
-    result = get_directions_to_print_queue(res_direction)
+    result = get_directions_meta_info(res_direction)
     lab_podr = get_lab_podr()
     lab_podr = [i[0] for i in lab_podr]
     type_slave_research = dict(HospitalService.TYPES)
