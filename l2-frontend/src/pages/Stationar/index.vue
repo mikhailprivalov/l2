@@ -314,6 +314,10 @@
             class="top-right fa fa-times"
             @click="close_list_directions"
           />
+          <i
+            class="top-left fa-solid fa-layer-group"
+            @click="addIdToPlan"
+          />
         </div>
         <div
           v-for="d in list_directions"
@@ -965,6 +969,7 @@ import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import RadioField from '@/fields/RadioField.vue';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
+import { PRINT_QUEUE_ADD_ELEMENT } from '@/store/action-types';
 
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
@@ -1386,6 +1391,10 @@ export default {
       }
       this.$root.$emit('current_history_direction', { history_num: this.direction, patient: this.patient });
       await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    addIdToPlan() {
+      const id = this.list_directions.filter((d) => d.confirm).map((d) => d.pk);
+      this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
     },
     print_all_list() {
       this.$root.$emit(
@@ -1898,6 +1907,18 @@ export default {
         position: absolute;
         top: 0;
         right: 0;
+        padding: 3px;
+        color: lightgray;
+        cursor: pointer;
+
+        &:hover {
+          color: #000;
+        }
+      }
+      .top-left {
+        position: absolute;
+        top: 0;
+        left: 0;
         padding: 3px;
         color: lightgray;
         cursor: pointer;

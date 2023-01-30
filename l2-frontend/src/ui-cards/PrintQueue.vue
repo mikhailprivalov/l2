@@ -34,10 +34,15 @@
         class="tp"
       >
         <a
-          class="a-btn"
+          class="a-btn a-left-padding"
           href="#"
           @click.prevent="print"
         >Печать</a>
+        <a
+          class="a-btn"
+          href="#"
+          @click.prevent="flushPlan"
+        >Очистить</a>
         <table class="table table-condensed table-bordered">
           <colgroup>
             <col style="width: 70px">
@@ -114,7 +119,7 @@
 
 <script lang="ts">
 
-import { PRINT_QUEUE_CHANGE_ORDER, PRINT_QUEUE_DEL_ELEMENT } from '@/store/action-types';
+import { PRINT_QUEUE_CHANGE_ORDER, PRINT_QUEUE_DEL_ELEMENT, PRINT_QUEUE_FLUSH } from '@/store/action-types';
 
 import ResultDetails from './PatientResults/ResultDetails.vue';
 
@@ -147,6 +152,10 @@ export default {
     },
     delIdFromPlan(id) {
       this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
+      this.load();
+    },
+    flushPlan() {
+      this.$store.dispatch(PRINT_QUEUE_FLUSH);
       this.load();
     },
     updateOrder(typeOrder, index) {
@@ -198,9 +207,9 @@ a {
 }
 .a-btn {
   color: #3BAFDA;
-  float: right;
   padding-bottom: 15px;
-  padding-top: 5px
+  padding-top: 5px;
+  float: right;
 }
 
 .a-left-padding {
