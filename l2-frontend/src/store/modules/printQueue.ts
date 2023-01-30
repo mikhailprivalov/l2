@@ -38,6 +38,10 @@ const actions = {
     commit(mutationTypes.PRINT_QUEUE_CHANGE_ORDER, { typeOrder, index });
     dispatch(actionsTypes.PRINT_QUEUE_SAVE_LS);
   },
+  async [actionsTypes.PRINT_QUEUE_FLUSH]({ commit, dispatch }) {
+    commit(mutationTypes.PRINT_QUEUE_FLUSH);
+    dispatch(actionsTypes.PRINT_QUEUE_SAVE_LS);
+  },
   async [actionsTypes.PRINT_QUEUE_SAVE_LS]({ state }) {
     setLocalStorageDataJson(PRINT_QUEUE_LS_KEY, state.currentPrintQueue);
   },
@@ -56,9 +60,13 @@ const mutations = {
     }
   },
   [mutationTypes.PRINT_QUEUE_ADD_ELEMENT](state, { id }) {
-    if (!getters.idInQueue(state)(id)) {
-      state.currentPrintQueue = [...state.currentPrintQueue, id];
+    const addsIds = [];
+    for (const el of id) {
+      if (!getters.idInQueue(state)(el)) {
+        addsIds.push(el);
+      }
     }
+    state.currentPrintQueue = [...state.currentPrintQueue, ...addsIds];
   },
   [mutationTypes.PRINT_QUEUE_CHANGE_ORDER](state, { typeOrder, index }) {
     const tmp = state.currentPrintQueue[index];
@@ -72,6 +80,9 @@ const mutations = {
   },
   [mutationTypes.PRINT_QUEUE_DEL_ELEMENT](state, { id }) {
     state.currentPrintQueue = state.currentPrintQueue.filter(el => el !== id);
+  },
+  [mutationTypes.PRINT_QUEUE_FLUSH](state) {
+    state.currentPrintQueue = [];
   },
 };
 

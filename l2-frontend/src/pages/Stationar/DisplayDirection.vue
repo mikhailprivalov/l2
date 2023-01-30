@@ -98,7 +98,7 @@ export default {
   },
   methods: {
     addIdToPlan() {
-      const id = this.direction.pk;
+      const id = [this.direction.pk];
       this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
     },
     delIdFromPlan() {
