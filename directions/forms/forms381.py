@@ -988,7 +988,6 @@ def form_03(c: Canvas, dir: Napravleniya):
     # СПИД направление на ВИЧ
     def printForm():
         hospital_name = dir.hospital_short_title
-        hospital_address = SettingManager.get("org_address")
 
         if sys.platform == 'win32':
             locale.setlocale(locale.LC_ALL, 'rus_rus')
