@@ -96,10 +96,11 @@ class Room(models.Model):
 
 
 class WardDepartment(models.Model):
-    '''Модель палаты отделения'''
     department = models.ForeignKey(Podrazdeleniya, verbose_name='Подразделение', on_delete=models.CASCADE)
     title = models.CharField(max_length=20, verbose_name='Номер палаты')
-    note = models.CharField(max_length=250, verbose_name='Примечание', blank=True)
+
+    def __str__(self):
+        return f'{self.department}. Палата {self.title}'
 
     class Meta:
         verbose_name = 'Палата'
@@ -107,12 +108,9 @@ class WardDepartment(models.Model):
 
 
 class BedDepartment(models.Model):
-    '''Модель койки отделения'''
-
     ward = models.ForeignKey(WardDepartment, verbose_name='Палата', on_delete=models.CASCADE)
     bed_number = models.PositiveSmallIntegerField(verbose_name='Номер койки')
 
     class Meta:
         verbose_name = 'Койка'
         verbose_name_plural = 'Койки'
-
