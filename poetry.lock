@@ -1101,14 +1101,14 @@ test = ["appdirs (==1.4.4)", "pytest (>=6)", "pytest-cov (>=2.7)", "pytest-mock 
 
 [[package]]
 name = "posthog"
-version = "2.1.2"
+version = "2.2.0"
 description = "Integrate PostHog into any python application."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "posthog-2.1.2-py2.py3-none-any.whl", hash = "sha256:c86d4bc128bd3f452a1bd2b75a8ddbfa1af249f0dd274f482355c2eea6223345"},
-    {file = "posthog-2.1.2.tar.gz", hash = "sha256:44fcf5f911530044973fafaf479011bc9a9a1f8c853b847f90d09b65bbec9a68"},
+    {file = "posthog-2.2.0-py2.py3-none-any.whl", hash = "sha256:cf3561a23d6770991f0b890fbe09e20c488e54efe65f9202ffd4e37dd6a90f8a"},
+    {file = "posthog-2.2.0.tar.gz", hash = "sha256:1f450a20f7bed217874ded234f6ffc24ae73da37a16aa5bf76335249b34a9f60"},
 ]
 
 [package.dependencies]
@@ -1885,4 +1885,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "8361f7cf3c7b462d21507ac7944484cce1230befe8b91301d0ef4e5b34fa57a5"
+content-hash = "d0f787912c26e3af83ec20c81368a6d7ca2633ac1525bbb7f67662b4a55e1fbb"
