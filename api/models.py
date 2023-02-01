@@ -3,6 +3,8 @@ from typing import Union
 import uuid
 
 from django.db import models
+from django.contrib.auth.models import User
+from users.models import DoctorProfile
 
 import directory.models as directory_models
 
@@ -124,13 +126,25 @@ class Analyzer(models.Model):
     mode = models.IntegerField(choices=MODES, help_text="Режим")
     connection_string = models.TextField(help_text="Строка подключения")
     applications = models.ManyToManyField(Application, help_text="Приложения анализатора", blank=True, default=None)
-    # test restart_analyzer
+
     def __str__(self):
         return self.title
 
     class Meta:
         verbose_name = 'Анализатор'
         verbose_name_plural = 'Анализаторы'
+
+
+class ManageDocProfileAnalyzer(models.Model):
+    docprofile = models.ForeignKey(DoctorProfile, help_text="Пользователь, который принадлежит к этому анализатору", on_delete=models.CASCADE)
+    analyzer = models.ForeignKey(Analyzer, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.docprofile
+
+    class Meta:
+        verbose_name = 'Управление анализатором'
+        verbose_name_plural = 'Управление анализаторами'
 
 
 class RelationCultureASTM(models.Model):
