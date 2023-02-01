@@ -124,7 +124,7 @@ class Analyzer(models.Model):
     mode = models.IntegerField(choices=MODES, help_text="Режим")
     connection_string = models.TextField(help_text="Строка подключения")
     applications = models.ManyToManyField(Application, help_text="Приложения анализатора", blank=True, default=None)
-    # restart_analyzer
+    # test restart_analyzer
     def __str__(self):
         return self.title
 
