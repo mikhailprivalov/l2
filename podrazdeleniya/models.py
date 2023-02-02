@@ -93,3 +93,29 @@ class Room(models.Model):
         verbose_name = 'Кабинет'
         verbose_name_plural = 'Кабинеты'
         ordering = ['-id']
+
+
+class Ward(models.Model):
+    department = models.ForeignKey(Podrazdeleniya, verbose_name='Подразделение', on_delete=models.CASCADE)
+    title = models.CharField(max_length=10, verbose_name='Палата')
+    hide = models.BooleanField(default=False, verbose_name='Скрыть')
+
+    def __str__(self):
+        return f'Палата {self.title}. {self.department}. '
+
+    class Meta:
+        verbose_name = 'Палата'
+        verbose_name_plural = 'Палаты'
+
+
+class Bed(models.Model):
+    ward = models.ForeignKey(Ward, verbose_name='Палата', on_delete=models.CASCADE)
+    bed_number = models.PositiveSmallIntegerField(verbose_name='Номер койки')
+    hide = models.BooleanField(default=False, verbose_name='Скрыть')
+
+    def __str__(self):
+        return f'{self.bed_number} койка. {self.ward}'
+
+    class Meta:
+        verbose_name = 'Койка'
+        verbose_name_plural = 'Койки'
