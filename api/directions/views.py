@@ -4179,6 +4179,8 @@ def get_directions_by_hospital_sent(request):
 def meta_info(request):
     request_data = json.loads(request.body)
     res_direction = tuple(list(request_data["directions"]))
+    if not res_direction:
+        return JsonResponse({"rows": [{}]})
     result = get_directions_meta_info(res_direction)
     lab_podr = get_lab_podr()
     lab_podr = [i[0] for i in lab_podr]
