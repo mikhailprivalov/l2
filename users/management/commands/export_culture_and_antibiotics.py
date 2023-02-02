@@ -33,5 +33,5 @@ class Command(BaseCommand):
             "antibiotics": antibiotics
         }
         dir_tmp = SettingManager.get("dir_param")
-        with open(f'{dir_tmp}/bacteria_and_antibiotics.json', 'w') as fp:
+        with open(f'{dir_tmp}/culture_and_antibiotics.json', 'w') as fp:
             json.dump(data, fp)
