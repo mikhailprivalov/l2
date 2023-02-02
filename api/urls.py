@@ -3,6 +3,7 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
+    path('manage-analyze', views.get_manage_analyzer),
     path('send', views.send),
     path('endpoint', views.endpoint),
     path('departments', views.departments),

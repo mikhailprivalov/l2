@@ -122,6 +122,7 @@ class Analyzer(models.Model):
     MODES = ((0, "TCP Connection"),)
 
     title = models.CharField(max_length=60, help_text="Название")
+    service_name = models.CharField(max_length=60, help_text="Название службы Systemd", null=True)
     protocol = models.IntegerField(choices=PROTOCOLS, help_text="Поддерживаемый протокол")
     mode = models.IntegerField(choices=MODES, help_text="Режим")
     connection_string = models.TextField(help_text="Строка подключения")
@@ -136,11 +137,11 @@ class Analyzer(models.Model):
 
 
 class ManageDocProfileAnalyzer(models.Model):
-    docprofile = models.ForeignKey(DoctorProfile, help_text="Пользователь, который принадлежит к этому анализатору", on_delete=models.CASCADE)
+    doc_prof = models.ForeignKey(DoctorProfile, help_text="Пользователь, который принадлежит к этому анализатору", on_delete=models.CASCADE)
     analyzer = models.ForeignKey(Analyzer, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.docprofile
+        return str(self.doc_prof)
 
     class Meta:
         verbose_name = 'Управление анализатором'

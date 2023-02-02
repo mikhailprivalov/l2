@@ -16,9 +16,9 @@ admin.site.register(models.RelationCultureASTM)
 
 @admin.register(models.Analyzer)
 class AnalyzerAdmin(AjaxSelectAdmin):
-    list_display = ('__str__', 'protocol', 'mode', 'connection_string')
+    list_display = ('__str__', 'service_name', 'protocol', 'mode', 'connection_string')
 
 
 @admin.register(models.ManageDocProfileAnalyzer)
 class ManageDocProfileAnalyzerAdmin(AjaxSelectAdmin):
-    list_display = ('__str__', 'docprofile', 'analyzer')
+    list_display = ('__str__', 'analyzer')

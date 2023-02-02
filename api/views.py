@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
+from api.models import Analyzer
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
@@ -3006,3 +3007,13 @@ def update_order_param(request):
         else:
             return status_response(False, 'Параметр последний')
     return status_response(True)
+
+
+def get_manage_analyzer(request):
+    req = json.loads(request.body)
+    name = Analyzer.objects.get(service_name=req["service_name"])
+    if req["key"] == "Restart" and name.service_name == req["service_name"]:
+        print(f'Service {name.service_name} restarted!!!')
+    else:
+        print(f"Dont found {name.service_name} service")
+    return JsonResponse(req)
