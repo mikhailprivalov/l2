@@ -21,15 +21,19 @@ class Command(BaseCommand):
                 for culture in group["culture_in_group"]:
                     culture_in_group = Culture(title=culture["title"], group_culture=culture_group, fsli=culture["fsli"], lis=culture["lis"])
                     culture_in_group.save()
+            self.stdout.write(f"Группы культур импортированы")
             for culture in data["culture_without_group"]:
                 culture_without_group = Culture(title=culture["title"], group_culture=None, fsli=culture["fsli"], lis=culture["lis"])
                 culture_without_group.save()
+            self.stdout.write("Культуры без групп импортированы")
             for group in data["antibiotic_group"]:
                 antibiotic_group = GroupAntibiotic(title=group["title"])
                 antibiotic_group.save()
                 for antibiotic in group["antibiotic_in_group"]:
                     antibiotic_in_group = Antibiotic(title=antibiotic["title"], group_antibiotic=antibiotic_group, fsli=antibiotic["fsli"], lis=antibiotic["lis"])
                     antibiotic_in_group.save()
+            self.stdout.write("Группы антибиотиков импортированы")
             for antibiotic in data["antibiotic_without_group"]:
                 antibiotic_withou_group = Antibiotic(title=antibiotic["title"], group_antibiotic=None, fsli=antibiotic["fsli"], lis=antibiotic["lis"])
                 antibiotic_withou_group.save()
+            self.stdout.write("Антибиотики без группы импортированы")
