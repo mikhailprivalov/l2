@@ -2930,7 +2930,7 @@ def update_set_hiding(request):
         current_set.pk,
         170002,
         request.user.doctorprofile,
-        {"pk": current_set.pk, "title": current_set.title, "hide": True},
+        {"pk": current_set.pk, "title": current_set.title, "hide": current_set.hide},
     )
     return status_response(True)
 
