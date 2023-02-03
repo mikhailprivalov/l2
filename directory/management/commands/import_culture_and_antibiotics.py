@@ -34,4 +34,3 @@ class Command(BaseCommand):
             for antibiotic in data["antibiotic_without_group"]:
                 antibiotic_withou_group = Antibiotic(title=antibiotic["title"], group_antibiotic=None, fsli=antibiotic["fsli"], lis=antibiotic["lis"])
                 antibiotic_withou_group.save()
-
