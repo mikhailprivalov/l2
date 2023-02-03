@@ -10,15 +10,13 @@ class Command(BaseCommand):
         for group in GroupCulture.objects.all():
             culture_in_group = []
             for culture in Culture.objects.filter(group_culture=group):
-                culture_in_group.append({
-                    "title": culture.title,
-                    "fsli": culture.fsli,
-                    "lis": culture.lis
-                })
-            culture_groups.append({
-                "title": group.title,
-                "culture_in_group": culture_in_group,
-            })
+                culture_in_group.append({"title": culture.title, "fsli": culture.fsli, "lis": culture.lis})
+            culture_groups.append(
+                {
+                    "title": group.title,
+                    "culture_in_group": culture_in_group,
+                }
+            )
         culture_without_group = []
         for culture in Culture.objects.filter(group_culture=None):
             culture_without_group.append({
