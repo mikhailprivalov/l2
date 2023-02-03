@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from directory.models import GroupCulture, Culture, GroupAntibiotic, Antibiotic
 import json
+from appconf.manager import SettingManager
 
 
 class Command(BaseCommand):
