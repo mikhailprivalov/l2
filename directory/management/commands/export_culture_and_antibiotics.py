@@ -24,15 +24,8 @@ class Command(BaseCommand):
         for group in GroupAntibiotic.objects.all():
             antibiotic_in_group = []
             for antibiotic in Antibiotic.objects.filter(group_antibiotic=group):
-                antibiotic_in_group.append({
-                    "title": antibiotic.title,
-                    "fsli": antibiotic.fsli,
-                    "lis": antibiotic.lis
-                })
-            antibiotic_groups.append({
-                "title": group.title,
-                "antibiotic_in_group": antibiotic_in_group
-            })
+                antibiotic_in_group.append({"title": antibiotic.title, "fsli": antibiotic.fsli, "lis": antibiotic.lis})
+            antibiotic_groups.append({"title": group.title, "antibiotic_in_group": antibiotic_in_group})
         antibiotic_without_group = []
         for antibiotic in Antibiotic.objects.filter(group_antibiotic=None):
             antibiotic_without_group.append({
