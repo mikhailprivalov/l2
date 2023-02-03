@@ -21,18 +21,18 @@ class Command(BaseCommand):
         culture_without_group = []
         for culture in Culture.objects.filter(group_culture=None):
             culture_without_group.append({"title": culture.title, "fsli": culture.fsli, "lis": culture.lis})
-        self.stdout.write(f"Культуры без групп экспортированы")
+        self.stdout.write("Культуры без групп экспортированы")
         antibiotic_groups = []
         for group in GroupAntibiotic.objects.all():
             antibiotic_in_group = []
             for antibiotic in Antibiotic.objects.filter(group_antibiotic=group):
                 antibiotic_in_group.append({"title": antibiotic.title, "fsli": antibiotic.fsli, "lis": antibiotic.lis})
             antibiotic_groups.append({"title": group.title, "antibiotic_in_group": antibiotic_in_group})
-        self.stdout.write(f"Группы антибиотиков экспортированы")
+        self.stdout.write("Группы антибиотиков экспортированы")
         antibiotic_without_group = []
         for antibiotic in Antibiotic.objects.filter(group_antibiotic=None):
             antibiotic_without_group.append({"title": antibiotic.title, "fsli": antibiotic.fsli, "lis": antibiotic.lis})
-        self.stdout.write(f"Антибиотики без групп экспортированы")
+        self.stdout.write("Антибиотики без групп экспортированы")
         data = {
             "culture_group": culture_groups,
             "culture_without_group": culture_without_group,

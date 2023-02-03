@@ -21,7 +21,7 @@ class Command(BaseCommand):
                 for culture in group["culture_in_group"]:
                     culture_in_group = Culture(title=culture["title"], group_culture=culture_group, fsli=culture["fsli"], lis=culture["lis"])
                     culture_in_group.save()
-            self.stdout.write(f"Группы культур импортированы")
+            self.stdout.write("Группы культур импортированы")
             for culture in data["culture_without_group"]:
                 culture_without_group = Culture(title=culture["title"], group_culture=None, fsli=culture["fsli"], lis=culture["lis"])
                 culture_without_group.save()
