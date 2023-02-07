@@ -34,6 +34,8 @@ def consolidate_base(ws1, d1, d2, fin_source):
         ('Подчинение', 15),
         ('Цель', 15),
         ('Категория', 25),
+        ('Леч врач', 25),
+        ('Кто создал', 25),
     ]
 
     row = 5
@@ -89,7 +91,9 @@ def consolidate_fill_data(ws1, result_query):
             ws1.cell(row=r, column=15).value = i.parent_iss
             ws1.cell(row=r, column=16).value = i.purpose
             ws1.cell(row=r, column=17).value = i.category_title
-            for j in range(1, 18):
+            ws1.cell(row=r, column=18).value = f"{i.user_doc_f} {i.user_doc_n} {i.user_doc_p}"
+            ws1.cell(row=r, column=19).value = f"{i.doc_who_create_f} {i.doc_who_create_n} {i.doc_who_create_p}"
+            for j in range(1, 20):
                 ws1.cell(row=r, column=j).style = style_border1
 
         if i.parent_iss:
@@ -114,7 +118,9 @@ def consolidate_fill_data(ws1, result_query):
             ws1.cell(row=r, column=15).value = i.parent_iss
             ws1.cell(row=r, column=16).value = data["purpose"]
             ws1.cell(row=r, column=17).value = i.category_title
-            for j in range(1, 18):
+            ws1.cell(row=r, column=18).value = f"{i.user_doc_f} {i.user_doc_n} {i.user_doc_p}"
+            ws1.cell(row=r, column=19).value = f"{i.doc_who_create_f} {i.doc_who_create_n} {i.doc_who_create_p}"
+            for j in range(1, 20):
                 ws1.cell(row=r, column=j).style = style_border1
 
     return ws1

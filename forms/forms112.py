@@ -453,7 +453,7 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
                 barcode = Paragraph('', styleTC)
                 current_dir = ""
             if notation:
-                paraclinic_info = current_iss.research.paraclinic_info
+                paraclinic_info = current_iss.research.paraclinic_info[0:40].replace('<', '').replace('>', '')
             route_list.append(
                 [Paragraph(f"{current_dir}", styleTC), Paragraph("", styleTC), Paragraph(f"{current_iss.research.title}", styleTC), Paragraph(f"{paraclinic_info}", styleTC), barcode]
             )
