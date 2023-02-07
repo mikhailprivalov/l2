@@ -665,7 +665,7 @@ def statistics_details_research_by_lab(podrazdeleniye: tuple, d_s: object, d_e: 
     return rows
 
 
-def statistics_consolidate_research(d_s, d_e, fin_source_pk, is_research_set=-1, researches_id=None ):
+def statistics_consolidate_research(d_s, d_e, fin_source_pk, is_research_set=-1, researches_id=None):
     with connection.cursor() as cursor:
         cursor.execute(
             """
