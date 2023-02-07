@@ -665,7 +665,7 @@ def statistics_details_research_by_lab(podrazdeleniye: tuple, d_s: object, d_e: 
     return rows
 
 
-def statistics_consolidate_research(d_s, d_e, fin_source_pk):
+def statistics_consolidate_research(d_s, d_e, fin_source_pk, is_research_set=-1, researches_id=None ):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -691,7 +691,15 @@ def statistics_consolidate_research(d_s, d_e, fin_source_pk):
                     directions_issledovaniya.parent_id as parent_iss,
                     directions_issledovaniya.id as id_iss,
                     directions_napravleniya.purpose,
-                    contracts_pricecategory.title as category_title
+                    contracts_pricecategory.title as category_title,
+                    directions_napravleniya.doc_who_create_id,
+                    directions_napravleniya.doc_id,
+                    user_doc.family as user_doc_f,
+                    user_doc.name as user_doc_n,
+                    user_doc.patronymic as user_doc_p,
+                    doc_who_create.family as doc_who_create_f,
+                    doc_who_create.name as doc_who_create_n,
+                    doc_who_create.patronymic as doc_who_create_p
                 FROM public.directions_issledovaniya
                 LEFT JOIN directory_researches
                 ON directory_researches.id = directions_issledovaniya.research_id
@@ -699,6 +707,10 @@ def statistics_consolidate_research(d_s, d_e, fin_source_pk):
                 ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN users_doctorprofile
                 ON users_doctorprofile.id = directions_issledovaniya.doc_confirmation_id
+                LEFT JOIN users_doctorprofile doc_who_create
+                ON doc_who_create.id = directions_napravleniya.doc_who_create_id
+                LEFT JOIN users_doctorprofile user_doc
+                ON user_doc.id = directions_napravleniya.doc_id
                 LEFT JOIN users_speciality
                 ON users_doctorprofile.specialities_id = users_speciality.id
                 LEFT JOIN clients_card cc 
@@ -712,9 +724,15 @@ def statistics_consolidate_research(d_s, d_e, fin_source_pk):
                             directions_napravleniya.istochnik_f_id=%(fin_source_pk)s or 
                             directions_napravleniya.istochnik_f_id is NULL
                         )
+                      AND  
+                      CASE WHEN %(is_research_set)s > 0 THEN
+                          directory_researches.id in %(researches_id)s
+                      WHEN %(is_research_set)s = -1 THEN
+                        directions_issledovaniya.napravleniye_id IS NOT NULL
+                      END
                 ORDER BY directions_napravleniya.client_id, directions_issledovaniya.time_confirmation, directions_issledovaniya.id 
                             """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk},
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'is_research_set': is_research_set, 'researches_id': researches_id },
         )
         rows = namedtuplefetchall(cursor)
     return rows
