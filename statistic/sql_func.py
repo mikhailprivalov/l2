@@ -732,7 +732,7 @@ def statistics_consolidate_research(d_s, d_e, fin_source_pk, is_research_set=-1,
                       END
                 ORDER BY directions_napravleniya.client_id, directions_issledovaniya.time_confirmation, directions_issledovaniya.id 
                             """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'is_research_set': is_research_set, 'researches_id': researches_id },
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'is_research_set': is_research_set, 'researches_id': researches_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows
