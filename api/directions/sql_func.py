@@ -103,7 +103,9 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_napravleniya.additional_number as register_number,
             ud.family,
             ud.name,
-            ud.patronymic
+            ud.patronymic,
+            directions_napravleniya.visit_date,
+            directions_napravleniya.time_microbiology_receive
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
