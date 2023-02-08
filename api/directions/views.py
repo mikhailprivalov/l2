@@ -445,7 +445,7 @@ def directions_history(request):
 
         status_val = 0
         has_descriptive = False
-        if i[8] or i[9] or i[33] or i[34]:
+        if i[8] or i[9] or i[33] or i[34] or i[35]:
             status_val = 1
         if i[7] or i[24]:
             status_val = 2
