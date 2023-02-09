@@ -693,14 +693,15 @@ def check_enp(request):
             return Response({"ok": True, 'patient_data': tfoms_data})
         else:
             params = json.dumps(
-                {"type": CardBase.objects.get(internal_type=True).pk,
-                 "extendedSearch": True,
-                 "form": {
-                     "enp_n": enp,
-                     "archive": False,
-                 },
-                 "limit": 1,
-                 }
+                {
+                    "type": CardBase.objects.get(internal_type=True).pk,
+                    "extendedSearch": True,
+                    "form": {
+                        "enp_n": enp,
+                        "archive": False,
+                    },
+                    "limit": 1,
+                }
             )
             request_obj = HttpRequest()
             request_obj._body = params
