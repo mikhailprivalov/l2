@@ -1393,7 +1393,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     addIdToPlan() {
-      const id = this.list_directions.filter((d) => d.confirm).map((d) => d.pk);
+      const id = this.list_directions.filter((d) => d.confirm).map((d) => d.pk).reverse();
       this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
     },
     print_all_list() {

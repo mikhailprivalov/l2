@@ -1476,7 +1476,8 @@ def form_02(request_data):
                 barcode = code128.Code128(example_template[i][1], barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
             else:
                 barcode = Paragraph('', styleTC)
-            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC), Paragraph(example_template[i][8][0:40], styleTC), barcode])
+            comment_strip = example_template[i][8][0:40].replace('<', '').replace('>', '')
+            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC), Paragraph(comment_strip, styleTC), barcode])
 
         opinion.extend(list_g)
 
