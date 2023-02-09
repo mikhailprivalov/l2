@@ -688,7 +688,6 @@ def check_enp(request):
 
     if enp_mode == 'l2-enp':
         tfoms_data = match_enp(enp)
-        tfoms_data = False
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
         else:
