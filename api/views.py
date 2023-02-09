@@ -2,6 +2,7 @@ import logging
 import threading
 import time
 import re
+import subprocess
 from collections import defaultdict
 from typing import Optional, Union
 
@@ -3014,6 +3015,8 @@ def get_manage_analyzer(request):
     name = Analyzer.objects.get(service_name=req["service_name"])
     if req["key"] == "Restart" and name.service_name == req["service_name"]:
         print(f'Service {name.service_name} restarted!!!')
+        restart_service = subprocess.Popen(["systemctl", "--user", "restart", name.service_name])
+        restart_service.wait()
     else:
         print(f"Dont found {name.service_name} service")
     return JsonResponse(req)
