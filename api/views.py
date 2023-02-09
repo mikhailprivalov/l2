@@ -2743,7 +2743,7 @@ def get_harmful_factors(request):
     rows = [
         {
             "id": factor.pk,
-            "label": f"{factor.title} - шаблон {factor.template.title}",
+            "label": f"{factor.title}",
             "title": factor.title,
             "description": factor.description,
             "template_id": factor.template_id,
