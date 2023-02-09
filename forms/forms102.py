@@ -1477,7 +1477,8 @@ def form_02(request_data):
             else:
                 barcode = Paragraph('', styleTC)
             comment_strip = example_template[i][8][0:40].replace('<', '').replace('>', '')
-            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC), Paragraph(comment_strip, styleTC), barcode])
+            research_title = example_template[i][9] if example_template[i][9] else example_template[i][2]
+            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(research_title, styleTC), Paragraph(comment_strip, styleTC), barcode])
 
         opinion.extend(list_g)
 
