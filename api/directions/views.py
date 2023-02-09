@@ -445,7 +445,7 @@ def directions_history(request):
 
         status_val = 0
         has_descriptive = False
-        if i[8] or i[9]:
+        if i[8] or i[9] or i[33] or i[34] or i[35]:
             status_val = 1
         if i[7] or i[24]:
             status_val = 2
@@ -4179,6 +4179,8 @@ def get_directions_by_hospital_sent(request):
 def meta_info(request):
     request_data = json.loads(request.body)
     res_direction = tuple(list(request_data["directions"]))
+    if not res_direction:
+        return JsonResponse({"rows": [{}]})
     result = get_directions_meta_info(res_direction)
     lab_podr = get_lab_podr()
     lab_podr = [i[0] for i in lab_podr]

@@ -1737,9 +1737,13 @@ def statistic_xls(request):
         set_research = int(request_data.get("research-set", -1))
         company_id = int(request_data.get("company", -1))
         query = None
+        is_research_set = -1
+        head_data = {}
         if set_research > 0:
-            set_research = directory.SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
-            head_data = {i.research_id: i.research.title for i in set_research}
+            set_research_d = directory.SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
+            head_data = {i.research_id: i.research.title for i in set_research_d}
+            is_research_set = 1
+        if company_id > 0:
             def_value_data = {k: 0 for k in head_data.keys()}
             price = get_price_company(company_id, start_date, end_date)
             if price:
@@ -1757,7 +1761,8 @@ def statistic_xls(request):
             ws, start_research_column = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title, head_data_coast)
             ws = consolidates.consolidate_research_sets_fill_data(ws, query, def_value_data, start_research_column)
         else:
-            query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
+            def_value_data = {k: 0 for k in head_data.keys()}
+            query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin, is_research_set, tuple(def_value_data.keys()))
             ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
             ws = consolidates.consolidate_fill_data(ws, query)
 
