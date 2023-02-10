@@ -1355,6 +1355,19 @@ def directions_paraclinic_form(request):
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
+        all_confirmed = d.is_all_confirm()
+        if (
+            SettingManager.get("control_visit_gistology", default='false', default_type='b')
+            and not all_confirmed
+            and d.research().is_gistology
+            and (d.visit_date is None or d.register_number is None)
+        ):
+            response["message"] = "Отсутствует дата регистрации"
+            return JsonResponse(response)
+        if SettingManager.get("control_time_gistology_receive", default='false', default_type='b') and not all_confirmed and d.research().is_gistology and d.time_gistology_receive is None:
+            response["message"] = "Отсутствует дата приема"
+            return JsonResponse(response)
+
         df = d.issledovaniya_set.all()
         if df.exists():
             response["ok"] = True
@@ -1390,7 +1403,7 @@ def directions_paraclinic_form(request):
                 "has_snils": has_snils,
             }
             response["showExaminationDate"] = SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE
-            all_confirmed = d.is_all_confirm()
+
             hospital_tfoms_code = d.get_hospital_tfoms_id()
             date = strdateru(d.data_sozdaniya)
             response["direction"] = {
