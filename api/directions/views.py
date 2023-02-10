@@ -1356,10 +1356,12 @@ def directions_paraclinic_form(request):
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
         all_confirmed = d.is_all_confirm()
-        if SettingManager.get("control_visit_gistology", default='false', default_type='b') \
-                and not all_confirmed \
-                and d.research().is_gistology \
-                and (d.visit_date is None or d.register_number is None):
+        if (
+            SettingManager.get("control_visit_gistology", default='false', default_type='b')
+            and not all_confirmed
+            and d.research().is_gistology
+            and (d.visit_date is None or d.register_number is None)
+        ):
             response["message"] = "Отсутствует дата регистрации"
             return JsonResponse(response)
         if SettingManager.get("control_time_gistology_receive", default='false', default_type='b') and not all_confirmed and d.research().is_gistology and d.time_gistology_receive is None:
