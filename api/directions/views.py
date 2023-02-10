@@ -1355,6 +1355,13 @@ def directions_paraclinic_form(request):
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
+        if SettingManager.get("control_visit_gistology", default='false', default_type='b') and d.research().is_gistology and (d.visit_date is None or d.register_number is None):
+            response["message"] = "Отсутствует дата регистрации"
+            return JsonResponse(response)
+        if SettingManager.get("control_time_gistology_receive", default='false', default_type='b') and d.research().is_gistology and d.time_gistology_receive is None:
+            response["message"] = "Отсутствует дата приема"
+            return JsonResponse(response)
+
         df = d.issledovaniya_set.all()
         if df.exists():
             response["ok"] = True
