@@ -4,7 +4,7 @@ import os
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory
-from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction
+from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
@@ -179,6 +179,7 @@ def directions_generate(request):
             for pk in result["directions"]:
                 d: Napravleniya = Napravleniya.objects.get(pk=pk)
                 d.fill_acsn()
+                fill_slot_ecp_free_nearest(d)
     return JsonResponse(result)
 
 
