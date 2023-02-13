@@ -32,7 +32,7 @@ import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals, HospitalsGroup
-from laboratory.utils import strdate, localtime, current_time, strdatetime, strfdatetime, current_year, current_month, start_end_year
+from laboratory.utils import strdate, localtime, current_time, strdatetime, strfdatetime, current_year, current_month, start_end_year, strdateru, TZ
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
