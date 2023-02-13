@@ -503,7 +503,7 @@ def researches_update(request):
                     return JsonResponse(response)
                 res.title = title
                 res.short_title = short_title
-                res.auto_register_on_rmis_location=auto_register_on_rmis_location
+                res.auto_register_on_rmis_location = auto_register_on_rmis_location
                 res.schedule_title = schedule_title
                 res.podrazdeleniye = department
                 res.code = code
