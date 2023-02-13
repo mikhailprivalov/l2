@@ -314,7 +314,7 @@ def cancel_ecp_patient_record(time_table_id, type_slot, reason_cancel=1):
     return False
 
 
-def fill_slot_ecp_nearest(direction):
+def fill_slot_ecp_free_nearest(direction):
     slots = []
     for i in direction.issledovaniya_set.all():
         if i.research.auto_register_on_rmis_location:
