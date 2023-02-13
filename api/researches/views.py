@@ -404,6 +404,7 @@ def researches_update(request):
         department_pk = request_data.get("department")
         title = request_data.get("title", "").strip()
         short_title = request_data.get("short_title", "").strip()
+        auto_register_on_rmis_location = request_data.get("autoRegisterRmisLocation", "")
         schedule_title = request_data.get("schedule_title", "").strip()
         is_global_direction_params = request_data.get("is_global_direction_params", False)
         code = request_data.get("code", "").strip()
@@ -458,6 +459,7 @@ def researches_update(request):
                 res = DResearches(
                     title=title,
                     short_title=short_title,
+                    auto_register_on_rmis_location=auto_register_on_rmis_location,
                     schedule_title=schedule_title,
                     podrazdeleniye=department,
                     code=code,
@@ -501,6 +503,7 @@ def researches_update(request):
                     return JsonResponse(response)
                 res.title = title
                 res.short_title = short_title
+                res.auto_register_on_rmis_location=auto_register_on_rmis_location
                 res.schedule_title = schedule_title
                 res.podrazdeleniye = department
                 res.code = code
