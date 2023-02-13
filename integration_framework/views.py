@@ -741,7 +741,7 @@ def check_enp(request):
                     "block": "",
                     "flat": "",
                     "idt": "",
-                    "insurer_full_code": ""
+                    "insurer_full_code": "",
                 }
                 return Response({"ok": True, 'patient_data': patient_data})
     elif enp_mode == 'l2-enp-ud':
