@@ -7,7 +7,7 @@ from appconf.manager import SettingManager
 import simplejson as json
 
 from ecp_integration.sql_func import get_doctors_rmis_location_by_research
-from laboratory.utils import current_time, TZ, strdateru, strdatetimeru
+from laboratory.utils import current_time, TZ, strdatetimeru
 from rmis_integration.client import Settings
 from utils.dates import normalize_dash_date, normalize_dots_date
 from django.core.cache import cache
