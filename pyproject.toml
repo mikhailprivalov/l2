@@ -75,7 +75,7 @@ imgkit = "1.2.2"
 posthog = "2.1.2"
 astm = {git = "https://github.com/moodpulse/python-astm.git", rev = "v0.6"}
 psycopg2-binary = "^2.9.4"
-boto3 = "^1.26.56"
+boto3 = "^1.26.71"
 prompt-toolkit = "^3.0.36"
 
 [tool.poetry.extras]
