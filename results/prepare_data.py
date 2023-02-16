@@ -676,8 +676,7 @@ def microbiology_result(iss, fwb, doc):
     culture: MicrobiologyResultCulture
     for culture in q:
         fwb.append(Spacer(1, 3 * mm))
-        if culture.culture:
-            fwb.append(Paragraph("<font face=\"FreeSansBold\">Культура:</font> " + culture.culture.get_full_title(), style))
+        fwb.append(Paragraph("<font face=\"FreeSansBold\">Культура:</font> " + culture.culture.get_full_title(), style))
         if culture.koe:
             fwb.append(Paragraph("<font face=\"FreeSansBold\">КОЕ:</font> " + culture.koe, style))
 
