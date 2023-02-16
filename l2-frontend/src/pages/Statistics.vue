@@ -204,6 +204,22 @@
             />
           </div>
           <div
+            v-if="checkReportParam(PARAMS_TYPES.TYPE_DEPARTMENT)"
+            :key="PARAMS_TYPES.TYPE_DEPARTMENT"
+            class="input-group"
+          >
+            <span class="input-group-addon">Тип подразделения:</span>
+            <treeselect
+              v-model="values.typeDepartment"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="typeDepartment"
+              :clearable="true"
+              placeholder="Тип подразделения"
+            />
+          </div>
+          <div
             v-if="checkReportParam(PARAMS_TYPES.MONTH_YEAR)"
             :key="PARAMS_TYPES.MONTH_YEAR"
             class="input-group"
@@ -396,6 +412,7 @@ const PARAMS_TYPES = {
   COMPANY: 'COMPANY',
   MONTH_YEAR: 'MONTH_YEAR',
   SPECIAL_FIELDS: 'SPECIAL_FIELDS',
+  TYPE_DEPARTMENT: 'TYPE_DEPARTMENT',
 };
 
 const STATS_CATEGORIES = {
@@ -484,7 +501,8 @@ const STATS_CATEGORIES = {
       consolidate: {
         groups: ['Статистика-профосмотры'],
         title: 'Сводный',
-        params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.RESEARCH_SETS, PARAMS_TYPES.DATE_RANGE],
+        params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.RESEARCH_SETS,
+          PARAMS_TYPES.TYPE_DEPARTMENT, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
             + 'company=<company>&research-set=<research-set>',
       },
@@ -576,6 +594,7 @@ const getVaues = () => ({
   users: [],
   finSource: -1,
   researchSet: null,
+  typeDepartment: null,
   user: null,
   dep: null,
   research: null,
@@ -614,6 +633,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       users: [],
       companies: [],
       researchSets: [],
+      typeDepartment: [],
       disabled_categories: [],
       disabled_reports: [],
       unlimit_period_statistic_groups: [],
@@ -641,6 +661,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
     this.loadUsers();
     this.loadCompanies();
     this.loadResearchSets();
+    this.loadTypeDepartments();
     this.loadPurposes();
     this.loadResultTreatment();
     this.loadTitleReportStattalonFields();
@@ -667,6 +688,8 @@ export default class Statistics extends Vue {
   companies: any[];
 
   researchSets: any[];
+
+  typeDepartment: any[];
 
   purposes: any[];
 
@@ -724,6 +747,13 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
+  async loadTypeDepartments() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { data } = await this.$api('/get-type-departments');
+    this.typeDepartment = data;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
   async loadPurposes() {
     await this.$store.dispatch(actions.INC_LOADING);
     const { rows } = await this.$api('purposes');
@@ -778,7 +808,12 @@ export default class Statistics extends Vue {
   }
 
   get bases() {
-    return (this.$store.getters.bases || []).filter(b => !b.hide);
+    const bsesUpdate = this.$store.getters.bases;
+    for (const b of bsesUpdate) {
+      b.fin_sources.push({ pk: 0, title: 'Все', default_diagnos: '' });
+    }
+    // return (this.$store.getters.bases || []).filter(b => !b.hide);
+    return (bsesUpdate || []).filter(b => !b.hide);
   }
 
   checkReportParam(...params) {
