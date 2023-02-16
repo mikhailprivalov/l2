@@ -1463,7 +1463,7 @@ def form_02(request_data):
         # используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
         for i in range(len(example_template)):
             list_t = []
-            for j in range(len(example_template[i]) - 1):
+            for j in range(len(example_template[i]) - 2):
                 if j in (3, 5, 7):
                     s = styleTCright
                 elif j in (4, 6):

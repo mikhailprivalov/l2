@@ -963,7 +963,7 @@ class Culture(models.Model):
         return self.title
 
     def get_full_title(self):
-        return f'{self.group_culture.title} {self.title}'.strip()
+        return f'{self.title}'.strip()
 
     class Meta:
         verbose_name = 'Культура'
