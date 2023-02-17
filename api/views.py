@@ -2503,6 +2503,7 @@ def get_research_list(request):
         "Параклиника": {},
         "Консультации": {"Общие": []},
         "Формы": {"Общие": []},
+        "Лечение": {"Общие": []},
         "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
         "Стоматология": {"Общие": []},
     }
@@ -2536,6 +2537,13 @@ def get_research_list(request):
                 res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
             else:
                 res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
+        elif research.is_treatment:
+            if research.site_type is None:
+                res_list["Лечение"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Лечение"].get(research.site_type.title):
+                res_list["Лечение"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Лечение"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_paraclinic:
             if research.podrazdeleniye is None:
                 pass

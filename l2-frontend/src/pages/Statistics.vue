@@ -214,7 +214,7 @@
               class="treeselect-noborder treeselect-wide"
               :multiple="false"
               :disable-branch-nodes="true"
-              :options="typeDepartment"
+              :options="typeDepartments"
               :clearable="true"
               placeholder="Тип подразделения"
             />
@@ -489,7 +489,7 @@ const STATS_CATEGORIES = {
     },
   },
   prof: {
-    title: 'Профосмотры',
+    title: 'Профосмотры (своды)',
     groups: ['Статистика-профосмотры'],
     reports: {
       contragents: {
@@ -501,10 +501,16 @@ const STATS_CATEGORIES = {
       consolidate: {
         groups: ['Статистика-профосмотры'],
         title: 'Сводный',
-        params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.RESEARCH_SETS,
-          PARAMS_TYPES.TYPE_DEPARTMENT, PARAMS_TYPES.DATE_RANGE],
+        params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.RESEARCH_SETS, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
             + 'company=<company>&research-set=<research-set>',
+      },
+      typeDepartments: {
+        groups: ['Статистика-профосмотры'],
+        title: 'По подразделениям',
+        params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.TYPE_DEPARTMENT, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
+            + 'type-department=<type-department>',
       },
     },
   },
@@ -595,6 +601,7 @@ const getVaues = () => ({
   finSource: -1,
   researchSet: null,
   typeDepartment: null,
+  depByType: null,
   user: null,
   dep: null,
   research: null,
@@ -633,7 +640,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       users: [],
       companies: [],
       researchSets: [],
-      typeDepartment: [],
+      typeDepartments: [],
       disabled_categories: [],
       disabled_reports: [],
       unlimit_period_statistic_groups: [],
@@ -689,7 +696,7 @@ export default class Statistics extends Vue {
 
   researchSets: any[];
 
-  typeDepartment: any[];
+  typeDepartments: any[];
 
   purposes: any[];
 
@@ -750,7 +757,7 @@ export default class Statistics extends Vue {
   async loadTypeDepartments() {
     await this.$store.dispatch(actions.INC_LOADING);
     const { data } = await this.$api('/get-type-departments');
-    this.typeDepartment = data;
+    this.typeDepartments = data;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -884,6 +891,13 @@ export default class Statistics extends Vue {
           url = url.replace('<research-set>', -1);
         }
         url = url.replace('<research-set>', this.values.researchSet);
+      }
+
+      if (this.PARAMS_TYPES.TYPE_DEPARTMENT === p) {
+        if (_.isNil(this.values.typeDepartments)) {
+          url = url.replace('<type-department>', -1);
+        }
+        url = url.replace('<type-department>', this.values.typeDepartment);
       }
 
       if (this.PARAMS_TYPES.RESEARCH === p) {
