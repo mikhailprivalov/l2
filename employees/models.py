@@ -57,16 +57,18 @@ class Employee(models.Model):
         return [employee.json for employee in paginator.get_page(page)]
 
     @staticmethod
-    def add(hospital_id, family, name, patronymic, who_created):
+    def add(hospital_id, family, name, patronymic, who_created, as_object=False):
         family, name, patronymic = Employee.normalize_values(family, name, patronymic)
         Employee.validate_values(hospital_id, family, name, patronymic)
         employee = Employee(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic, doctorprofile_created=who_created)
         employee.save()
         Log.log(employee.pk, 121104, who_created, employee.json)
+        if as_object:
+            return employee
         return employee.json
 
     @staticmethod
-    def edit(hospital_id, employee_id, family, name, patronymic, is_active, who_updated):
+    def edit(hospital_id, employee_id, family, name, patronymic, is_active, who_updated, as_object=False):
         family, name, patronymic = Employee.normalize_values(family, name, patronymic)
         employee = Employee.objects.get(id=employee_id, hospital_id=hospital_id)
         Employee.validate_values(employee.hospital_id, family, name, patronymic, current_id=employee_id)
@@ -77,6 +79,8 @@ class Employee(models.Model):
         employee.doctorprofile_updated = who_updated
         employee.save()
         Log.log(employee.pk, 121105, who_updated, employee.json)
+        if as_object:
+            return employee
         return employee.json
 
     @staticmethod

@@ -1,32 +1,169 @@
 <template>
-  <TwoSidedLayout>
-    <template #left>
-      <DataList
-        v-model="selectedDepartmentId"
-        base-source="employees/departments"
-        :list-request-params="DEPARTMENTS_REQUEST_PARAMS"
-        loading-text="загрузка отделов..."
-        with-creating
-      />
-    </template>
-    <template #right>
-      TODO
-    </template>
-  </TwoSidedLayout>
+  <PageInnerLayout>
+    <TwoSidedLayout>
+      <template #left>
+        <EditableList
+          v-model="activeSection"
+          :rows="sections"
+          selectable
+        />
+      </template>
+      <template #right>
+        <TwoSidedLayout
+          v-if="activeSection === 'positions'"
+          key="positions"
+        >
+          <template #left>
+            <EditFormList
+              form-type="employeePosition"
+              loading-text="загрузка должностей..."
+              add-text="Добавить должность"
+              with-creating
+              with-name-filter
+            />
+          </template>
+        </TwoSidedLayout>
+        <TwoSidedLayout
+          v-else-if="activeSection === 'people'"
+          key="people"
+        >
+          <template #left>
+            <EditFormList
+              form-type="employeeEmployee"
+              loading-text="загрузка сотрудников..."
+              add-text="Добавить сотрудника"
+              with-creating
+              with-name-filter
+            />
+          </template>
+        </TwoSidedLayout>
+        <TwoSidedLayout
+          v-else-if="activeSection === 'departments'"
+          key="departments"
+        >
+          <template #left>
+            <EditFormList
+              v-model="selectedDepartmentId"
+              form-type="employeeDepartment"
+              loading-text="загрузка подразделений..."
+              add-text="Добавить подразделение"
+              with-creating
+              with-name-filter
+              selectable
+            />
+          </template>
+          <template #right>
+            <ContentCenterLayout v-if="selectedDepartmentId === null">
+              <span :class="$style.notSelected">подразделение не выбрано</span>
+            </ContentCenterLayout>
+            <TopBottomLayout
+              v-else
+              :top-height-px="80"
+            >
+              <template #top>
+                <FetchComponent
+                  :id="selectedDepartmentId"
+                  v-slot="slotProps"
+                  form-type="employeeDepartment"
+                  with-loader
+                >
+                  <div
+                    v-if="slotProps.data"
+                    :class="$style.departmentHeader"
+                  >
+                    <div class="row">
+                      <div class="col-xs-6">
+                        <div>Подразделение: {{ slotProps.data.name }}</div>
+                        <div>Сотрудников: {{ slotProps.data.childrenElementsCount }}</div>
+                        <div>
+                          Скрыто: {{ slotProps.data.isActive ? 'нет' : 'да' }}
+                        </div>
+                      </div>
+                      <div class="col-xs-6">
+                        <div>
+                          Создано: {{ slotProps.data.createdAt }}<span v-if="slotProps.data.whoCreate">,
+                            {{ slotProps.data.whoCreate }}</span>
+                        </div>
+                        <div
+                          v-if="
+                            slotProps.data.whoUpdate
+                              || (slotProps.data.updatedAt && slotProps.data.updatedAt !== slotProps.data.createdAt)
+                          "
+                        >
+                          Обновлено: {{ slotProps.data.updatedAt }}<span v-if="slotProps.data.whoUpdate">,
+                            {{ slotProps.data.whoUpdate }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </FetchComponent>
+              </template>
+              <template #bottom>
+                <EditFormTable
+                  form-type="employeeEmployeePosition"
+                  :filters="employeeEmployeePositionFilters"
+                />
+              </template>
+            </TopBottomLayout>
+          </template>
+        </TwoSidedLayout>
+      </template>
+    </TwoSidedLayout>
+  </PageInnerLayout>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
-import DataList from '@/components/DataList.vue';
+import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
+import ContentCenterLayout from '@/layouts/ContentCenterLayout.vue';
+import TopBottomLayout from '@/layouts/TopBottomLayout.vue';
+import EditFormList from '@/components/EditFormList.vue';
+import FetchComponent from '@/components/FetchComponent.vue';
+import EditFormTable from '@/components/EditFormTable.vue';
+import EditableList, { IdOptional, ListElement } from '@/components/EditableList.vue';
 
-const selectedDepartmentId = ref<number | string | null>(null);
+const selectedDepartmentId = ref<IdOptional>(null);
 
-const DEPARTMENTS_REQUEST_PARAMS = {
-  onlyActive: false,
-};
+const activeSection = ref<IdOptional>(null);
+
+const sections = ref<ListElement[]>([
+  {
+    id: 'positions',
+    name: 'Должности',
+    createdAt: null,
+    updatedAt: null,
+    isActive: true,
+  },
+  {
+    id: 'people',
+    name: 'Люди',
+    createdAt: null,
+    updatedAt: null,
+    isActive: true,
+  },
+  {
+    id: 'departments',
+    name: 'Подразделения и сотрудники',
+    createdAt: null,
+    updatedAt: null,
+    isActive: true,
+  },
+]);
+
+const employeeEmployeePositionFilters = computed(() => ({
+  department_id: selectedDepartmentId.value,
+}));
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" module>
+.notSelected {
+  color: gray;
+}
+
+.departmentHeader {
+  padding: 5px;
+  overflow-x: hidden;
+}
 </style>

@@ -43,6 +43,7 @@
 
     <CheckBackend />
     <ChatsDialogs v-if="chatsEnabled" />
+    <ModalForm />
 
     <audio
       ref="notifyAudioSrc"
@@ -60,13 +61,16 @@ import { mapGetters } from 'vuex';
 import _ from 'lodash';
 
 import Navbar from '@/components/Navbar.vue';
+import ModalForm from '@/components/ModalForm.vue';
 import CheckBackend from '@/ui-cards/CheckBackend.vue';
 import ChatsDialogs from '@/ui-cards/Chat/ChatsDialogs.vue';
 import * as actions from '@/store/action-types';
 import notifyAudioSrc from '@/assets/notify.mp3';
 
 @Component({
-  components: { CheckBackend, Navbar, ChatsDialogs },
+  components: {
+    CheckBackend, Navbar, ChatsDialogs, ModalForm,
+  },
   computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
   metaInfo() {
     return {
@@ -130,6 +134,8 @@ export default class App extends Vue {
   authenticated: boolean;
 
   embedded: boolean;
+
+  notifyAudioSrc: string;
 
   get isEmptyLayout() {
     return !!this.$route?.meta?.emptyLayout;

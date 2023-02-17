@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue';
+import { Ref, ref, watch } from 'vue';
 
 import { smartCall } from './http-common';
 
@@ -6,7 +6,7 @@ type CallParams = {
   path: string;
   data?: Record<string, any>,
   disableReactiveRequest?: boolean,
-  disableRaiseError?: boolean,
+  enableRaiseError?: boolean,
   onReject?: any,
 }
 
@@ -26,24 +26,16 @@ export const enum ApiStatus {
 
 const EMPTY = {};
 
-export default function useApi<T>(params: CallParams, options?: Options) {
-  const data = ref<T>(options?.defaultData ?? null);
+export default function useApi<T>(params: Ref<CallParams>, options?: Options) {
+  const data = ref(options?.defaultData ?? null) as Ref<T> | Ref<null>;
   const status = ref<ApiStatus>(ApiStatus.IDLE);
 
-  const {
-    path,
-    data: requestData,
-    disableReactiveRequest,
-    disableRaiseError,
-    onReject = EMPTY,
-  } = params;
-
-  const call = async () => {
+  const call = async (): Promise<T | null> => {
     if (options?.validateRequestData) {
       for (const key of Object.keys(options.validateRequestData)) {
-        if (!requestData || !options.validateRequestData[key](requestData[key])) {
+        if (!params.value.data || !options.validateRequestData[key](params.value.data[key])) {
           status.value = ApiStatus.VALIDATION_ERROR;
-          return;
+          return options?.defaultData ?? null;
         }
       }
     }
@@ -51,30 +43,38 @@ export default function useApi<T>(params: CallParams, options?: Options) {
     status.value = ApiStatus.LOADING;
     try {
       data.value = await smartCall({
-        url: path,
-        ctx: requestData,
-        raiseError: !disableRaiseError,
-        onReject,
-      });
+        url: params.value.path,
+        ctx: params.value.data,
+        raiseError: params.value.enableRaiseError,
+        onReject: params.value.onReject ?? options?.defaultData ?? EMPTY,
+      }) as T | null;
       status.value = ApiStatus.SUCCESS;
+
+      return data.value;
     } catch (e) {
       status.value = ApiStatus.REQUEST_ERROR;
       throw e;
     }
   };
 
+  const reset = () => {
+    status.value = ApiStatus.IDLE;
+    data.value = options?.defaultData ?? null;
+  };
+
   watch(() => params, async () => {
-    if (!disableReactiveRequest) {
+    if (!params.value.disableReactiveRequest) {
       await call();
     }
   }, {
     deep: true,
-    immediate: !disableReactiveRequest,
+    immediate: !params.value.disableReactiveRequest,
   });
 
   return {
     data,
     status,
     call,
+    reset,
   };
 }

@@ -21,6 +21,7 @@ import { ru } from '@braid/vue-formulate-i18n';
 import error2json from '@stdlib/error-to-json';
 // @ts-ignore
 import VueImg from 'v-img';
+import { veLoading } from 'vue-easytable';
 
 import { sendEvent } from '@/metrics';
 
@@ -35,6 +36,7 @@ export default (): void => {
   Vue.prototype.$asVI = () => window.SYSTEM_AS_VI;
   Vue.prototype.$systemTitle = () => (Vue.prototype.$asVI() ? 'VI' : 'L2');
   Vue.prototype.$l2LogoClass = () => window.L2_LOGO_CLASS;
+  Vue.prototype.$veLoading = veLoading;
   Vue.prototype.$api = api;
 
   const VueInputMask = {

@@ -9802,6 +9802,16 @@ vue-demi@*:
   resolved "https://registry.yarnpkg.com/vue-demi/-/vue-demi-0.13.11.tgz#7d90369bdae8974d87b1973564ad390182410d99"
   integrity sha512-IR8HoEEGM65YY3ZJYAjMlKygDQn25D5ajNFNoKh9RSDMQtlzCxtfQjdQgv9jjK+m3377SsJXY8ysq8kLCZL25A==
 
+vue-easytable@^2.21.11:
+  version "2.21.11"
+  resolved "https://registry.yarnpkg.com/vue-easytable/-/vue-easytable-2.21.11.tgz#96d8076e4788bd03468f97ea093bab0e07ff9e3a"
+  integrity sha512-LwoyJi+/HL8EIE293e2c9Id+hrbyO3yzbhXAYDEatAyLB8lqUKut82C/BMVSeerk1iN1/J63pQH9690j9XmzrQ==
+  dependencies:
+    lodash "^4.17.20"
+    resize-observer-polyfill "^1.5.1"
+    vue "^2.6.12"
+    vue-template-compiler "^2.6.11"
+
 vue-eslint-parser@^8.0.0:
   version "8.3.0"
   resolved "https://registry.yarnpkg.com/vue-eslint-parser/-/vue-eslint-parser-8.3.0.tgz#5d31129a1b3dd89c0069ca0a1c88f970c360bd0d"
@@ -9940,7 +9950,7 @@ vue-style-loader@^4.1.0, vue-style-loader@^4.1.3:
     hash-sum "^1.0.2"
     loader-utils "^1.0.2"
 
-vue-template-compiler@^2.4.2:
+vue-template-compiler@^2.4.2, vue-template-compiler@^2.6.11:
   version "2.7.14"
   resolved "https://registry.yarnpkg.com/vue-template-compiler/-/vue-template-compiler-2.7.14.tgz#4545b7dfb88090744c1577ae5ac3f964e61634b1"
   integrity sha512-zyA5Y3ArvVG0NacJDkkzJuPQDF8RFeRlzV2vLeSnhSpieO6LK2OVbdLPi5MPPs09Ii+gMO8nY4S3iKQxBxDmWQ==
@@ -9990,7 +10000,7 @@ vue2-typeahead@1.3.1:
     core-js "^3.4.4"
     vue "^2.6.10"
 
-vue@^2.0.0, vue@^2.1.10, vue@^2.2.1, vue@^2.4.2, vue@^2.5.17, vue@^2.6.10, vue@^2.6.11, vue@^2.7.12:
+vue@^2.0.0, vue@^2.1.10, vue@^2.2.1, vue@^2.4.2, vue@^2.5.17, vue@^2.6.10, vue@^2.6.11, vue@^2.6.12, vue@^2.7.12:
   version "2.7.14"
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.7.14.tgz#3743dcd248fd3a34d421ae456b864a0246bafb17"
   integrity sha512-b2qkFyOM0kwqWFuQmgd4o+uHGU7T+2z3T+WQp8UBjADfEv2n4FEMffzBmCKNP0IGzOEEfYjvtcC62xaSKeQDrQ==
