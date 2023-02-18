@@ -324,9 +324,8 @@ def fill_slot_ecp_free_nearest(direction):
                 date_find = date_find_start + relativedelta(days=d, minutes=1)
                 normal_data = strdatetimeru(date_find).split(' ')
                 date_find = normalize_dots_date(normal_data[0])
-                if step > 0:
-                    time_find = '08:00:00'
-                else:
+                time_find = '08:00:00'
+                if step == 0:
                     time_find = normal_data[1]
                 slots = get_doctor_ecp_free_slots_by_date(i.research.auto_register_on_rmis_location, date_find, time_find)
                 step += 1
