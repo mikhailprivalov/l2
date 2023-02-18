@@ -319,17 +319,25 @@ def fill_slot_ecp_free_nearest(direction):
     for i in direction.issledovaniya_set.all():
         if i.research.auto_register_on_rmis_location:
             date_find_start = current_time().astimezone(TZ)
+            step = 0
             for d in range(7):
                 date_find = date_find_start + relativedelta(days=d, minutes=1)
                 normal_data = strdatetimeru(date_find).split(' ')
                 date_find = normalize_dots_date(normal_data[0])
-                time_find = normal_data[1]
+                if step > 0:
+                    time_find = '08:00:00'
+                else:
+                    time_find = normal_data[1]
                 slots = get_doctor_ecp_free_slots_by_date(i.research.auto_register_on_rmis_location, date_find, time_find)
+                step += 1
                 if len(slots) > 0:
                     break
-            slot_id = slots[0].get('pk')
-            type_slot = slots[0].get('typeSlot')
-            ecp_id = direction.client.get_ecp_id()
+            if len(slots) > 0:
+                slot_id = slots[0].get('pk', None)
+                type_slot = slots[0].get('typeSlot', None)
+                ecp_id = None
+                if slot_id and type_slot:
+                    ecp_id = direction.client.get_ecp_id()
 
-            if ecp_id and slot_id and type_slot:
-                register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+                if ecp_id:
+                    register_patient_ecp_slot(ecp_id, slot_id, type_slot)
