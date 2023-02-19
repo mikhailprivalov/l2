@@ -714,7 +714,6 @@ def check_enp(request):
                 for d in docs_patinet:
                     if d['type_title'] == 'СНИЛС':
                         snils = d['number']
-                        break
                 patient_data = {
                     "family": data_patient['family'],
                     "given": data_patient['name'],
