@@ -749,7 +749,7 @@ def check_enp(request):
                     "idt": "",
                     "insurer_full_code": "",
                 }
-                return Response({"ok": True, 'patient_data': patient_data, '1': results_json['results'] })
+                return Response({"ok": True, 'patient_data': patient_data, '1': results_json['results']})
     elif enp_mode == 'l2-enp-ud':
         tfoms_data = get_ud_info_by_enp(enp)
         if tfoms_data:
