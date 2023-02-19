@@ -19,7 +19,7 @@ from laboratory.settings import (
     TIME_ZONE,
     TITLE_REPORT_FILTER_STATTALON_FIELDS,
     SEARCH_PAGE_STATISTIC_PARAMS,
-    UNLIMIT_PERIOD_STATISTIC_GROUP,
+    UNLIMIT_PERIOD_STATISTIC_GROUP, TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
 )
 from utils.response import status_response
 
@@ -1969,8 +1969,9 @@ def result_of_treatment(request):
 
 @login_required
 def title_report_filter_stattalon_fields(request):
-    rows = TITLE_REPORT_FILTER_STATTALON_FIELDS
-    return JsonResponse({'rows': rows})
+    has_stattalon_filter = TITLE_REPORT_FILTER_STATTALON_FIELDS
+    has_all_fin_source = TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE
+    return JsonResponse({'hasStattalonFilter': has_stattalon_filter, 'allFinSource': has_all_fin_source})
 
 
 @login_required

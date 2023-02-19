@@ -649,6 +649,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       medicalExam: false,
       resultTreatment: [],
       titleReportStattalonFields: [],
+      titleReportAllFinSourceNeed: [],
     };
   },
   watch: {
@@ -716,6 +717,8 @@ export default class Statistics extends Vue {
 
   research: number | null;
 
+  titleReportAllFinSourceNeed: any[];
+
   get userGroups() {
     return this.$store.getters.user_data.groups || [];
   }
@@ -777,8 +780,9 @@ export default class Statistics extends Vue {
 
   async loadTitleReportStattalonFields() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows } = await this.$api('title-report-filter-stattalon-fields');
-    this.titleReportStattalonFields = rows;
+    const rows = await this.$api('title-report-filter-stattalon-fields');
+    this.titleReportStattalonFields = rows.hasStattalonFilter;
+    this.titleReportAllFinSourceNeed = rows.allFinSource;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -815,11 +819,12 @@ export default class Statistics extends Vue {
   }
 
   get bases() {
-    const bsesUpdate = this.$store.getters.bases;
+    const bsesUpdate = JSON.parse(JSON.stringify(this.$store.getters.bases));
     for (const b of bsesUpdate) {
-      b.fin_sources.push({ pk: 0, title: 'Все', default_diagnos: '' });
+      if (this.titleReportAllFinSourceNeed.includes(this.currentReport.title)) {
+        b.fin_sources.push({ pk: 0, title: 'Все', default_diagnos: '' });
+      }
     }
-    // return (this.$store.getters.bases || []).filter(b => !b.hide);
     return (bsesUpdate || []).filter(b => !b.hide);
   }
 
