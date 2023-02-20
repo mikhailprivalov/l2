@@ -709,6 +709,11 @@ def check_enp(request):
             results_json = json.loads(data.content.decode('utf-8'))
             if len(results_json['results']) > 0:
                 data_patient = results_json['results'][0]
+                docs_patinet = data_patient['docs']
+                snils = ""
+                for d in docs_patinet:
+                    if d['type_title'] == 'СНИЛС':
+                        snils = d['number']
                 patient_data = {
                     "family": data_patient['family'],
                     "given": data_patient['name'],
@@ -724,7 +729,7 @@ def check_enp(request):
                     "polis_dognumber": "",
                     "polis_dogdate": "",
                     "polis_datebegin": "",
-                    "snils": "",
+                    "snils": snils,
                     "status_code": "",
                     "status_name": "",
                     "unit_code": "",
@@ -743,7 +748,7 @@ def check_enp(request):
                     "idt": "",
                     "insurer_full_code": "",
                 }
-                return Response({"ok": True, 'patient_data': patient_data})
+                return Response({"ok": True, 'patient_data': patient_data, '1': results_json['results']})
     elif enp_mode == 'l2-enp-ud':
         tfoms_data = get_ud_info_by_enp(enp)
         if tfoms_data:
