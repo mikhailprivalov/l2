@@ -822,7 +822,7 @@ export default class Statistics extends Vue {
     const bsesUpdate = JSON.parse(JSON.stringify(this.$store.getters.bases));
     for (const b of bsesUpdate) {
       if (this.titleReportAllFinSourceNeed.includes(this.currentReport.title)) {
-        b.fin_sources.push({ pk: 0, title: 'Все', default_diagnos: '' });
+        b.fin_sources.push({ pk: -100, title: 'Все', default_diagnos: '' });
       }
     }
     return (bsesUpdate || []).filter(b => !b.hide);
