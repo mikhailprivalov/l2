@@ -818,14 +818,19 @@ export default class Statistics extends Vue {
     return this.currentCategory.reports[this.selectedReport];
   }
 
-  get bases() {
-    const bsesUpdate = JSON.parse(JSON.stringify(this.$store.getters.bases));
-    for (const b of bsesUpdate) {
-      if (this.titleReportAllFinSourceNeed.includes(this.currentReport.title)) {
-        b.fin_sources.push({ pk: -100, title: 'Все', default_diagnos: '' });
-      }
+  makeBaseWithAllSource(base) {
+    if (this.titleReportAllFinSourceNeed.includes(this.currentReport.title)) {
+      const finSources = [...base.fin_sources, { pk: -100, title: 'Все', default_diagnos: '' }];
+      const tmpRes = { ...base };
+      tmpRes.fin_sources = finSources;
+      return { ...tmpRes };
     }
-    return (bsesUpdate || []).filter(b => !b.hide);
+    return { ...base };
+  }
+
+  get bases() {
+    const bsesUpdate = this.$store.getters.bases.map(base => this.makeBaseWithAllSource(base));
+    return (bsesUpdate || []).filter(b => !b.hide && b.internal_type);
   }
 
   checkReportParam(...params) {
