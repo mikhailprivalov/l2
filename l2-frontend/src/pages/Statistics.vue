@@ -820,10 +820,7 @@ export default class Statistics extends Vue {
 
   makeBaseWithAllSource(base) {
     if (this.titleReportAllFinSourceNeed.includes(this.currentReport.title)) {
-      const finSources = [...base.fin_sources, { pk: -100, title: 'Все', default_diagnos: '' }];
-      const tmpRes = { ...base };
-      tmpRes.fin_sources = finSources;
-      return { ...tmpRes };
+      return { ...base, fin_sources: [...base.fin_sources, { pk: -100, title: 'Все', default_diagnos: '' }] };
     }
     return { ...base };
   }
