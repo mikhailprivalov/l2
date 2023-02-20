@@ -826,8 +826,8 @@ export default class Statistics extends Vue {
   }
 
   get bases() {
-    const bsesUpdate = this.$store.getters.bases.map(base => this.makeBaseWithAllSource(base));
-    return (bsesUpdate || []).filter(b => !b.hide && b.internal_type);
+    const basesUpdate = this.$store.getters.bases.map(base => this.makeBaseWithAllSource(base));
+    return (basesUpdate || []).filter(b => !b.hide && b.internal_type);
   }
 
   checkReportParam(...params) {
