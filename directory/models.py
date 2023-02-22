@@ -277,6 +277,7 @@ class Researches(models.Model):
     uet_refferal_doc = models.FloatField(default=0, verbose_name='УЕТы врача', blank=True)
     uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
+    auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
 
     @staticmethod
     def filter_type(t):
@@ -962,7 +963,7 @@ class Culture(models.Model):
         return self.title
 
     def get_full_title(self):
-        return f'{self.group_culture.title} {self.title}'.strip()
+        return f'{self.title}'.strip()
 
     class Meta:
         verbose_name = 'Культура'

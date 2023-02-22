@@ -296,7 +296,23 @@
             v-model="info"
             v-autosize="info"
             class="form-control noresize"
+            rows="1"
           />
+        </div>
+        <div class="row">
+          <div
+            class="col-xs-12"
+            style="padding-right: 0"
+          >
+            <div class="input-group">
+              <span class="input-group-addon nbr">Ресурс ЕЦП</span>
+              <input
+                v-model="autoRegisterRmisLocation"
+                type="text"
+                class="form-control f-code"
+              >
+            </div>
+          </div>
         </div>
         <div class="row">
           <div
@@ -1199,6 +1215,7 @@ export default {
       type_period: null,
       cda_options: [],
       dynamicDirectories: [],
+      autoRegisterRmisLocation: '',
     };
   },
   computed: {
@@ -1467,6 +1484,7 @@ export default {
     load() {
       this.title = '';
       this.short_title = '';
+      this.autoRegisterRmisLocation = '';
       this.schedule_title = '';
       this.is_global_direction_params = false;
       this.code = '';
@@ -1488,6 +1506,7 @@ export default {
           .then(data => {
             this.title = data.title;
             this.short_title = data.short_title;
+            this.autoRegisterRmisLocation = data.autoRegisterRmisLocation;
             this.schedule_title = data.schedule_title;
             this.is_global_direction_params = data.is_global_direction_params;
             this.code = data.code;
@@ -1545,6 +1564,7 @@ export default {
         'department',
         'title',
         'short_title',
+        'autoRegisterRmisLocation',
         'schedule_title',
         'is_global_direction_params',
         'code',

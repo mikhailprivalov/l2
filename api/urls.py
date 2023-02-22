@@ -119,6 +119,7 @@ urlpatterns = [
     path('update-factor', views.update_factor),
     path('add-factor', views.add_factor),
     path('get-research-sets', views.get_research_sets),
+    path('get-type-departments', views.get_type_departments),
     path('get-researches-in-set', views.get_researches_in_set),
     path('add-research-in-set', views.add_research_in_set),
     path('update-order-in-set', views.update_order_in_set),
