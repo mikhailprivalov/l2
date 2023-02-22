@@ -110,7 +110,7 @@
           <EcpSchedule />
         </ul>
         <ExpertiseStatus v-if="meta.showExpertiseStatus" />
-        <PrintQueue />
+        <PrintQueue v-if="meta.showPrintQueue" />
         <ul class="nav navbar-right navbar-nav">
           <li v-if="hasNewVersion">
             <button

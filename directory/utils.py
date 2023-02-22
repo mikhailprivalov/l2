@@ -39,6 +39,7 @@ def get_researches_details(pk):
         response["department"] = res.podrazdeleniye_id or (-2 if not res.is_hospital else -1)
         response["title"] = res.title
         response["short_title"] = res.short_title
+        response["autoRegisterRmisLocation"] = res.auto_register_on_rmis_location
         response["schedule_title"] = res.schedule_title
         response["code"] = res.code
         response["info"] = res.paraclinic_info or ""

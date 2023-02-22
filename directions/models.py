@@ -2045,7 +2045,7 @@ class Issledovaniya(models.Model):
         )
 
     def __str__(self):
-        return "%s %s" % (str(self.napravleniye), self.research.title)
+        return f"{self.pk} - {self.napravleniye.pk}-{self.napravleniye.client.get_fio_w_card()}"
 
     def is_get_material(self):
         """

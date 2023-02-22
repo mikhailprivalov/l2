@@ -23,6 +23,7 @@ from laboratory.settings import (
     TITLE_REPORT_FILTER_STATTALON_FIELDS,
     SEARCH_PAGE_STATISTIC_PARAMS,
     UNLIMIT_PERIOD_STATISTIC_GROUP,
+    TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
 )
 from utils.response import status_response
 
@@ -1979,8 +1980,9 @@ def result_of_treatment(request):
 
 @login_required
 def title_report_filter_stattalon_fields(request):
-    rows = TITLE_REPORT_FILTER_STATTALON_FIELDS
-    return JsonResponse({'rows': rows})
+    has_stattalon_filter = TITLE_REPORT_FILTER_STATTALON_FIELDS
+    has_all_fin_source = TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE
+    return JsonResponse({'hasStattalonFilter': has_stattalon_filter, 'allFinSource': has_all_fin_source})
 
 
 @login_required
@@ -2513,6 +2515,7 @@ def get_research_list(request):
         "Параклиника": {},
         "Консультации": {"Общие": []},
         "Формы": {"Общие": []},
+        "Лечение": {"Общие": []},
         "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
         "Стоматология": {"Общие": []},
     }
@@ -2546,6 +2549,13 @@ def get_research_list(request):
                 res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
             else:
                 res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
+        elif research.is_treatment:
+            if research.site_type is None:
+                res_list["Лечение"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Лечение"].get(research.site_type.title):
+                res_list["Лечение"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Лечение"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_paraclinic:
             if research.podrazdeleniye is None:
                 pass
@@ -2751,7 +2761,7 @@ def get_harmful_factors(request):
     rows = [
         {
             "id": factor.pk,
-            "label": f"{factor.title} - шаблон {factor.template.title}",
+            "label": f"{factor.title}",
             "title": factor.title,
             "description": factor.description,
             "template_id": factor.template_id,
@@ -2836,6 +2846,13 @@ def add_factor(request):
 def get_research_sets(request):
     sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.all().order_by("title")]
     return JsonResponse({"data": sets})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_type_departments(request):
+    res = [{"id": t[0], "label": t[1]} for t in Podrazdeleniya.TYPES if t[0] < 5 and t[0] > 1]
+    return JsonResponse({"data": res})
 
 
 @login_required

@@ -14,4 +14,5 @@ class Command(BaseCommand):
                 for r in researches:
                     if r.short_title == "":
                         r.short_title = r.title
+                        r.save()
                         print(f"{r.podrazdeleniye.title}@ {r.title}@ {r.short_title}")  # noqa: T001
