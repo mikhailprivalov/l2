@@ -112,7 +112,7 @@ def get_final_data(research_price_loc):
     tmp_napr = []
     for k, v in research_price_loc.items():
         # research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
-        research_attr = [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')]
+        research_attr = [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code', 'short_title')]
         research_attr_list = [list(z) for z in research_attr]
         for research_id, research_coast in v.items():
             h = []
@@ -141,6 +141,7 @@ def get_final_data(research_price_loc):
                     h.append(res_obj.paraclinic_info)
                     h[0], h[1] = h[1], h[0]
                     total_sum += research_sum
+                    h.append(j[3])
                     research_attr_list.remove(j)
                     tmp_data.append(h)
                     if h[1]:

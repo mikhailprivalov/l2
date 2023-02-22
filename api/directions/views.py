@@ -4,7 +4,7 @@ import os
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory
-from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction
+from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
@@ -179,6 +179,7 @@ def directions_generate(request):
             for pk in result["directions"]:
                 d: Napravleniya = Napravleniya.objects.get(pk=pk)
                 d.fill_acsn()
+                fill_slot_ecp_free_nearest(d)
     return JsonResponse(result)
 
 
@@ -1355,6 +1356,19 @@ def directions_paraclinic_form(request):
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
+        all_confirmed = d.is_all_confirm()
+        if (
+            SettingManager.get("control_visit_gistology", default='false', default_type='b')
+            and not all_confirmed
+            and d.research().is_gistology
+            and (d.visit_date is None or d.register_number is None)
+        ):
+            response["message"] = "Отсутствует дата регистрации"
+            return JsonResponse(response)
+        if SettingManager.get("control_time_gistology_receive", default='false', default_type='b') and not all_confirmed and d.research().is_gistology and d.time_gistology_receive is None:
+            response["message"] = "Отсутствует дата приема"
+            return JsonResponse(response)
+
         df = d.issledovaniya_set.all()
         if df.exists():
             response["ok"] = True
@@ -1390,7 +1404,7 @@ def directions_paraclinic_form(request):
                 "has_snils": has_snils,
             }
             response["showExaminationDate"] = SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE
-            all_confirmed = d.is_all_confirm()
+
             hospital_tfoms_code = d.get_hospital_tfoms_id()
             date = strdateru(d.data_sozdaniya)
             response["direction"] = {

@@ -11,6 +11,7 @@ import pytz_deprecation_shim as pytz
 from django.utils.module_loading import import_string
 
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
+from api.patients.views import patients_search_card
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
 from clients.utils import find_patient
@@ -33,7 +34,7 @@ import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.db.models import Prefetch, Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
@@ -41,7 +42,7 @@ from rest_framework.response import Response
 
 import directions.models as directions
 from appconf.manager import SettingManager
-from clients.models import Individual, Card
+from clients.models import Individual, Card, CardBase
 from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT, HospitalService, ParaclinicInputGroups, ParaclinicInputField
 from doctor_call.models import DoctorCall
@@ -77,7 +78,7 @@ from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, matc
 from users.models import DoctorProfile
 from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
-from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range
+from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range, normalize_dots_date
 from utils.nsi_directories import NSI
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
@@ -689,6 +690,65 @@ def check_enp(request):
         tfoms_data = match_enp(enp)
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
+        else:
+            params = json.dumps(
+                {
+                    "type": CardBase.objects.get(internal_type=True).pk,
+                    "extendedSearch": True,
+                    "form": {
+                        "enp_n": enp,
+                        "archive": False,
+                    },
+                    "limit": 1,
+                }
+            )
+            request_obj = HttpRequest()
+            request_obj._body = params
+            request_obj.user = request.user
+            data = patients_search_card(request_obj)
+            results_json = json.loads(data.content.decode('utf-8'))
+            if len(results_json['results']) > 0:
+                data_patient = results_json['results'][0]
+                docs_patinet = data_patient['docs']
+                snils = ""
+                for d in docs_patinet:
+                    if d['type_title'] == 'СНИЛС':
+                        snils = d['number']
+                patient_data = {
+                    "family": data_patient['family'],
+                    "given": data_patient['name'],
+                    "patronymic": data_patient['twoname'],
+                    "gender": data_patient['sex'],
+                    "birthdate": normalize_dots_date(data_patient['birthday']),
+                    "enp": enp,
+                    "birthyear": f"{normalize_dots_date(data_patient['birthday']).split('-')[0]}",
+                    "country": "RUS",
+                    "polis_seria": "",
+                    "polis_number": "",
+                    "polis_type": "",
+                    "polis_dognumber": "",
+                    "polis_dogdate": "",
+                    "polis_datebegin": "",
+                    "snils": snils,
+                    "status_code": "",
+                    "status_name": "",
+                    "unit_code": "",
+                    "unit_name": "",
+                    "unit_date": "",
+                    "document_type": "",
+                    "document_seria": "",
+                    "document_number": "",
+                    "insurer_code": "",
+                    "insurer_name": "",
+                    "address": "",
+                    "codestreet": "",
+                    "house": "",
+                    "block": "",
+                    "flat": "",
+                    "idt": "",
+                    "insurer_full_code": "",
+                }
+                return Response({"ok": True, 'patient_data': patient_data, '1': results_json['results']})
     elif enp_mode == 'l2-enp-ud':
         tfoms_data = get_ud_info_by_enp(enp)
         if tfoms_data:
