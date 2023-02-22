@@ -4,6 +4,9 @@ from . import views
 
 urlpatterns = [
     path('manage-analyze', views.get_manage_analyzer),
+    path('manage-profile-analyzer', views.manage_profile_analyzer),
+    path('status-analyzer', views.status_analyzer),
+    path('restart-analyze', views.restart_analyzer),
     path('send', views.send),
     path('endpoint', views.endpoint),
     path('departments', views.departments),

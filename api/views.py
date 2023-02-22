@@ -9,6 +9,7 @@ from typing import Optional, Union
 import pytz_deprecation_shim as pytz
 
 from api.models import Analyzer
+from api.models import ManageDocProfileAnalyzer
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
@@ -1486,10 +1487,12 @@ def user_view(request):
 @group_required("Создание и редактирование пользователей")
 def user_save_view(request):
     request_data = json.loads(request.body)
+    group_analyzer = request_data["groupsAnalyzer"]
     pk = request_data["pk"]
     ok = True
     message = ""
     ud = request_data["user_data"]
+    # print(ud)
     username = ud["username"]
     rmis_location = str(ud["rmis_location"]).strip() or None
     rmis_employee_id = str(ud["rmis_employee_id"]).strip() or None
@@ -1567,6 +1570,11 @@ def user_save_view(request):
             for g in ud["groups"]:
                 group = Group.objects.get(pk=g)
                 doc.user.groups.add(group)
+
+            ManageDocProfileAnalyzer.objects.filter(doc_prof_id=doc.pk).delete()
+            for g in group_analyzer:
+                analizator = Analyzer.objects.get(pk=g)
+                ManageDocProfileAnalyzer(analyzer_id=analizator.pk, doc_prof_id=doc.pk).save()
             doc.user.save()
 
             doc.restricted_to_direct.clear()
@@ -3011,12 +3019,49 @@ def update_order_param(request):
 
 
 def get_manage_analyzer(request):
-    req = json.loads(request.body)
-    name = Analyzer.objects.get(service_name=req["service_name"])
-    if req["key"] == "Restart" and name.service_name == req["service_name"]:
-        print(f'Service {name.service_name} restarted!!!')
-        restart_service = subprocess.Popen(["systemctl", "--user", "restart", name.service_name])
-        restart_service.wait()
-    else:
-        print(f"Dont found {name.service_name} service")
-    return JsonResponse(req)
+    analyzers = [{"label": analyzerList.title,
+                  "pk": analyzerList.id} for analyzerList in Analyzer.objects.all().order_by('title', 'id')]
+    return JsonResponse({"data": analyzers})
+
+
+def restart_analyzer(request):
+    request_data = json.loads(request.body)
+    name = [{"service": g.analyzer.service_name} for g in ManageDocProfileAnalyzer.objects.filter(analyzer_id=request_data["pk"]).order_by('analyzer')]
+    restart_service = subprocess.Popen(["systemctl", "--user", "restart", name[0]["service"]])
+    restart_service.wait()
+    result = get_status_analyzer(request_data["pk"])
+    return JsonResponse({"data": result})
+
+
+def manage_profile_analyzer(request):
+    current_user = request.user
+    filter_analyze = [{"label": g.analyzer.title,
+                       "pk": g.analyzer_id} for g in ManageDocProfileAnalyzer.objects.filter(doc_prof_id=current_user.id).order_by('analyzer', 'id')]
+    return JsonResponse({"data": filter_analyze})
+
+
+def status_analyzer(request):
+    request_data = json.loads(request.body)
+    result = get_status_analyzer(request_data["pk"])
+    return JsonResponse({"data": result})
+
+
+def get_status_analyzer(arg):
+    port = Analyzer.objects.values_list('ports', flat=True).get(id=arg)
+    lsof_command = f'lsof -i :{port}'.split()
+    process = subprocess.Popen(lsof_command, stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    res = output.decode().replace(' ', ',')
+    res = res.split('\n')
+    result = []
+    step = 0
+    for i in res:
+        tmp_res = i.split(',')
+        tmp_res = [x for x in tmp_res if x]
+        if len(tmp_res) != 0:
+            if step != 0:
+                a = [tmp_res[1], tmp_res[-1], tmp_res[-2]]
+                result.append(a)
+            step += 1
+    return result
+
