@@ -178,6 +178,7 @@
           >
             <span class="input-group-addon">Контрагент:</span>
             <treeselect
+              v-if="!l2_company_statistic_async_search"
               v-model="values.company"
               class="treeselect-noborder treeselect-wide"
               :multiple="false"
@@ -186,6 +187,32 @@
               :clearable="true"
               placeholder="Компания не выбана"
             />
+            <Treeselect
+              v-else
+              v-model="values.company"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              class="treeselect-wide treeselect-nbr"
+              :async="true"
+              :append-to-body="true"
+              :clearable="true"
+              :z-index="10001"
+              placeholder="Укажите организацию"
+              :load-options="loadCompaniesAsyncSearch"
+              loading-text="Загрузка"
+              no-results-text="Не найдено"
+              search-prompt-text="Начните писать для поиска"
+              :cache-options="false"
+              open-direction="top"
+              :open-on-focus="true"
+            >
+              <div
+                slot="value-label"
+                slot-scope="{ node }"
+              >
+                {{ node.raw.label || card.work_place_db_title }}
+              </div>
+            </Treeselect>
           </div>
           <div
             v-if="checkReportParam(PARAMS_TYPES.RESEARCH_SETS)"
@@ -390,7 +417,7 @@ import moment from 'moment';
 import _ from 'lodash';
 // @ts-ignore
 import DatePicker from 'v-calendar/lib/components/date-picker.umd';
-import Treeselect from '@riophae/vue-treeselect';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import LaboratoryPicker from '@/fields/LaboratoryPicker.vue';
@@ -739,6 +766,16 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
+  async loadCompaniesAsyncSearch({ action, searchQuery, callback }) {
+    if (action === ASYNC_SEARCH) {
+      const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
+      callback(
+        null,
+        data.map(d => ({ id: `${d.id}`, label: `${d.title}` })),
+      );
+    }
+  }
+
   get deps() {
     return this.users.map(d => ({ id: d.id, label: d.label }));
   }
@@ -791,6 +828,10 @@ export default class Statistics extends Vue {
       .filter(id => this.STATS_CATEGORIES[id].groups.some(g => this.userGroups.includes(g)
         && !this.disabled_categories.includes(this.STATS_CATEGORIES[id].title)))
       .map(id => ({ id, label: this.STATS_CATEGORIES[id].title }));
+  }
+
+  get l2_company_statistic_async_search() {
+    return this.$store.getters.modules.l2_company_statistic_async_search;
   }
 
   get categoryReport() {

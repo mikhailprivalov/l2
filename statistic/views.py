@@ -1762,9 +1762,13 @@ def statistic_xls(request):
             ws = consolidates.consolidate_research_sets_fill_data(ws, query, def_value_data, start_research_column)
         else:
             def_value_data = {k: 0 for k in head_data.keys()}
-            query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin, is_research_set, tuple(def_value_data.keys()))
+            researche_ids = (-1,)
+            if is_research_set == 1:
+                researche_ids = tuple(def_value_data.keys())
+            query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin, is_research_set, researche_ids)
             ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
             ws = consolidates.consolidate_fill_data(ws, query)
+
 
     wb.save(response)
     return response
