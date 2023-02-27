@@ -20,7 +20,7 @@ from laboratory.settings import (
     TITLE_REPORT_FILTER_STATTALON_FIELDS,
     SEARCH_PAGE_STATISTIC_PARAMS,
     UNLIMIT_PERIOD_STATISTIC_GROUP,
-    TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
+    TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE, STATISTIC_TYPE_DEPARTMENT,
 )
 from utils.response import status_response
 
@@ -2841,7 +2841,7 @@ def get_research_sets(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def get_type_departments(request):
-    res = [{"id": t[0], "label": t[1]} for t in Podrazdeleniya.TYPES if t[0] < 5 and t[0] > 1]
+    res = [{"id": t[0], "label": t[1]} for t in Podrazdeleniya.TYPES if t[0] in STATISTIC_TYPE_DEPARTMENT]
     return JsonResponse({"data": res})
 
 

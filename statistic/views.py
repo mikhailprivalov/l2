@@ -1768,7 +1768,33 @@ def statistic_xls(request):
             query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin, is_research_set, researche_ids)
             ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
             ws = consolidates.consolidate_fill_data(ws, query)
+    elif tp == "consolidate-type-department":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Свод пациенты-услуги_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Врачи-сводный по подразделению")
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
 
+        type_fin = int(request_data.get("fin", -1))
+        if type_fin == -100:
+            type_fin = tuple(IstochnikiFinansirovaniya.objects.values_list('id', flat=True).filter(base__internal_type=True))
+        else:
+            type_fin = (type_fin,)
+        type_department = int(request_data.get("type-department", -1))
+        doctors = tuple(DoctorProfile.objects.values_list('id', flat=True).filter(podrazdeleniye__p_type=type_department, position__title__icontains="врач"))
+        middle_staf = tuple(DoctorProfile.objects.values_list('id', flat=True).filter(Q(podrazdeleniye__p_type=type_department) & ~Q(position__title__icontains="врач")))
+        fin_source_data_doctors = IstochnikiFinansirovaniya.objects.values_list('id', 'title').filter(id__in=type_fin).order_by('order_weight')
+        fin_source_data = {}
+        for i in fin_source_data_doctors:
+            fin_source_data[i[0]] = i[1]
+        query_doctors = sql_func.consolidate_doctors_by_type_department(start_date, end_date, type_fin, doctors)
+        query_middle_staff = sql_func.consolidate_doctors_by_type_department(start_date, end_date, type_fin, middle_staf)
+        ws_and_finish_order = consolidates.consolidate_base_doctors_by_type_department(ws, d1, d2, fin_source_data)
+        ws = ws_and_finish_order[0]
+        ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
 
     wb.save(response)
     return response

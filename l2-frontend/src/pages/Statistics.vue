@@ -536,7 +536,7 @@ const STATS_CATEGORIES = {
         groups: ['Статистика-профосмотры'],
         title: 'По подразделениям',
         params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.TYPE_DEPARTMENT, PARAMS_TYPES.DATE_RANGE],
-        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
+        url: '/statistic/xls?type=consolidate-type-department&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
             + 'type-department=<type-department>',
       },
     },
@@ -861,7 +861,7 @@ export default class Statistics extends Vue {
 
   makeBaseWithAllSource(base) {
     if (this.titleReportAllFinSourceNeed.includes(this.currentReport.title)) {
-      return { ...base, fin_sources: [...base.fin_sources, { pk: -1, title: 'Все', default_diagnos: '' }] };
+      return { ...base, fin_sources: [...base.fin_sources, { pk: -100, title: 'Все', default_diagnos: '' }] };
     }
     return { ...base };
   }
@@ -930,7 +930,9 @@ export default class Statistics extends Vue {
         if (this.values.finSource === -1) {
           return null;
         }
+        if (this.values.finSource === -100) {
 
+        }
         url = url.replace('<fin-source>', this.values.finSource);
       }
 
@@ -942,9 +944,6 @@ export default class Statistics extends Vue {
       }
 
       if (this.PARAMS_TYPES.TYPE_DEPARTMENT === p) {
-        if (_.isNil(this.values.typeDepartments)) {
-          url = url.replace('<type-department>', -1);
-        }
         url = url.replace('<type-department>', this.values.typeDepartment);
       }
 
