@@ -3081,4 +3081,3 @@ def get_status_analyzer(arg):
                 result.append(a)
             step += 1
     return result
-

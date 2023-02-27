@@ -4,16 +4,17 @@
       {{ data.label }}
     </td>
     <td>
-      <li
-        v-for="g in status"
-        class="list"
-        :key="g.id"
-      >
-        {{ g }}
-      </li>
+      <ul style="padding-left: 0; list-style-type: none;">
+        <li
+          v-for="g in status"
+          :key="g.id"
+        >
+          {{ g }}
+        </li>
+      </ul>
     </td>
     <td>
-      <div class=main-data>
+      <div class="main-data">
         <button
           v-tippy
           class="btn btn-blue-nb"
@@ -27,7 +28,7 @@
           class="btn btn-blue-nb"
           :value="data"
           style="position: absolute;"
-          @click=getStatus(data)
+          @click="getStatus(data)"
         >
           Cтатус
         </button>
@@ -84,18 +85,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.form-control.wbr {
-  border-right: 1px solid #646d78;
-}
 .main-data {
-    margin: 0px;
+    margin: 0;
   button {
     border-radius: 0;
     width: 125px;
-    margin: 0px;
+    margin: 0;
   }
-}
-.list{
-  list-style-type: none;
 }
 </style>

@@ -19,10 +19,11 @@
         </tr>
       </thead>
       <tbody>
-        <Row v-for="row in analyzers"
-             :key="row.pk"
-             :value="row.pk"
-             :data="row"
+        <Row
+          v-for="row in analyzers"
+          :key="row.pk"
+          :value="row.pk"
+          :data="row"
         />
         <tr v-if="analyzers.length === 0">
           <td colspan="3">

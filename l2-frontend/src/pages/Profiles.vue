@@ -732,7 +732,7 @@
               </div>
             </div>
           </div>
-          <div class = "more-title">
+          <div class="more-title">
             Анализаторы:
             <button
               class="btn btn-blue-nb sidebar-btn"
