@@ -1493,7 +1493,6 @@ def user_save_view(request):
     ok = True
     message = ""
     ud = request_data["user_data"]
-    # print(ud)
     username = ud["username"]
     rmis_location = str(ud["rmis_location"]).strip() or None
     rmis_employee_id = str(ud["rmis_employee_id"]).strip() or None
