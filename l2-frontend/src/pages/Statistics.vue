@@ -930,9 +930,6 @@ export default class Statistics extends Vue {
         if (this.values.finSource === -1) {
           return null;
         }
-        if (this.values.finSource === -100) {
-
-        }
         url = url.replace('<fin-source>', this.values.finSource);
       }
 

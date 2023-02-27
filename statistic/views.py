@@ -1791,7 +1791,6 @@ def statistic_xls(request):
         for i in fin_source_data_doctors:
             fin_source_data[i[0]] = i[1]
         query_doctors = sql_func.consolidate_doctors_by_type_department(start_date, end_date, type_fin, doctors)
-        query_middle_staff = sql_func.consolidate_doctors_by_type_department(start_date, end_date, type_fin, middle_staf)
         ws_and_finish_order = consolidates.consolidate_base_doctors_by_type_department(ws, d1, d2, fin_source_data)
         ws = ws_and_finish_order[0]
         ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
