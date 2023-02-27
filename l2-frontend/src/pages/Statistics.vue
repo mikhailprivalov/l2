@@ -178,6 +178,7 @@
           >
             <span class="input-group-addon">Контрагент:</span>
             <treeselect
+              v-if="!l2_company_statistic_async_search"
               v-model="values.company"
               class="treeselect-noborder treeselect-wide"
               :multiple="false"
@@ -186,6 +187,32 @@
               :clearable="true"
               placeholder="Компания не выбана"
             />
+            <Treeselect
+              v-else
+              v-model="values.company"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              class="treeselect-wide treeselect-nbr"
+              :async="true"
+              :append-to-body="true"
+              :clearable="true"
+              :z-index="10001"
+              placeholder="Укажите организацию"
+              :load-options="loadCompaniesAsyncSearch"
+              loading-text="Загрузка"
+              no-results-text="Не найдено"
+              search-prompt-text="Начните писать для поиска"
+              :cache-options="false"
+              open-direction="top"
+              :open-on-focus="true"
+            >
+              <div
+                slot="value-label"
+                slot-scope="{ node }"
+              >
+                {{ node.raw.label || card.work_place_db_title }}
+              </div>
+            </Treeselect>
           </div>
           <div
             v-if="checkReportParam(PARAMS_TYPES.RESEARCH_SETS)"
@@ -390,7 +417,7 @@ import moment from 'moment';
 import _ from 'lodash';
 // @ts-ignore
 import DatePicker from 'v-calendar/lib/components/date-picker.umd';
-import Treeselect from '@riophae/vue-treeselect';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import LaboratoryPicker from '@/fields/LaboratoryPicker.vue';
@@ -509,7 +536,7 @@ const STATS_CATEGORIES = {
         groups: ['Статистика-профосмотры'],
         title: 'По подразделениям',
         params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.TYPE_DEPARTMENT, PARAMS_TYPES.DATE_RANGE],
-        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
+        url: '/statistic/xls?type=consolidate-type-department&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
             + 'type-department=<type-department>',
       },
     },
@@ -739,6 +766,16 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
+  async loadCompaniesAsyncSearch({ action, searchQuery, callback }) {
+    if (action === ASYNC_SEARCH) {
+      const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
+      callback(
+        null,
+        data.map(d => ({ id: `${d.id}`, label: `${d.title}` })),
+      );
+    }
+  }
+
   get deps() {
     return this.users.map(d => ({ id: d.id, label: d.label }));
   }
@@ -793,6 +830,10 @@ export default class Statistics extends Vue {
       .map(id => ({ id, label: this.STATS_CATEGORIES[id].title }));
   }
 
+  get l2_company_statistic_async_search() {
+    return this.$store.getters.modules.l2_company_statistic_async_search;
+  }
+
   get categoryReport() {
     return Object.fromEntries(
       Object.keys(this.currentCategory.reports)
@@ -820,7 +861,7 @@ export default class Statistics extends Vue {
 
   makeBaseWithAllSource(base) {
     if (this.titleReportAllFinSourceNeed.includes(this.currentReport.title)) {
-      return { ...base, fin_sources: [...base.fin_sources, { pk: -1, title: 'Все', default_diagnos: '' }] };
+      return { ...base, fin_sources: [...base.fin_sources, { pk: -100, title: 'Все', default_diagnos: '' }] };
     }
     return { ...base };
   }
@@ -889,7 +930,6 @@ export default class Statistics extends Vue {
         if (this.values.finSource === -1) {
           return null;
         }
-
         url = url.replace('<fin-source>', this.values.finSource);
       }
 
@@ -901,9 +941,6 @@ export default class Statistics extends Vue {
       }
 
       if (this.PARAMS_TYPES.TYPE_DEPARTMENT === p) {
-        if (_.isNil(this.values.typeDepartments)) {
-          url = url.replace('<type-department>', -1);
-        }
         url = url.replace('<type-department>', this.values.typeDepartment);
       }
 
