@@ -349,8 +349,9 @@ def attach_patient_ecp(person_id, lpu_region_id, date_begin, lpu_id, lpu_region_
     result = make_request_get(
         "PersonCard",
         query=f"Sess_id={sess_id}&LpuRegion_id={lpu_region_id}&PersonCard_begDate={date_begin}&Person_id={person_id}&Lpu_id={lpu_id}&"
-              f"LpuAttachType_id=1&PersonCard_IsAttachCondit=0&LpuRegionType_id={lpu_region_type_id}",
-        sess_id=sess_id, method="POST"
+        f"LpuAttachType_id=1&PersonCard_IsAttachCondit=0&LpuRegionType_id={lpu_region_type_id}",
+        sess_id=sess_id,
+        method="POST",
     )
     if not result or not result.get("PersonCard_id"):
         return None
