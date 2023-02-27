@@ -1785,7 +1785,6 @@ def statistic_xls(request):
             type_fin = (type_fin,)
         type_department = int(request_data.get("type-department", -1))
         doctors = tuple(DoctorProfile.objects.values_list('id', flat=True).filter(podrazdeleniye__p_type=type_department, position__title__icontains="врач"))
-        middle_staf = tuple(DoctorProfile.objects.values_list('id', flat=True).filter(Q(podrazdeleniye__p_type=type_department) & ~Q(position__title__icontains="врач")))
         fin_source_data_doctors = IstochnikiFinansirovaniya.objects.values_list('id', 'title').filter(id__in=type_fin).order_by('order_weight')
         fin_source_data = {}
         for i in fin_source_data_doctors:
