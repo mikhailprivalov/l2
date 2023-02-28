@@ -333,8 +333,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     start_row = row + 1
     old_doctor, old_department, current_doctor, current_department_title = "", "", "", ""
     step = 0
-    min_col_val = min(fin_source_order.values())
-    max_col_val = max(fin_source_order.values()) + 2
+    min_col_val, max_col_val = min(fin_source_order.values()), max(fin_source_order.values()) + 2
     sum_current_department = []
     for i in query:
         row += 1
