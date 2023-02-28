@@ -405,10 +405,9 @@ def count_sum_from_data_cells(ws2, start_col, end_col, data_rows, purpose_row):
     return ws2
 
 
-def doctor_summary(ws2, star_col, end_col, star_current_row, purpose_row, fill_param):
+def doctor_summary(ws2, star_col, end_col, start_current_row, purpose_row, fill_param):
     for k in range(star_col, end_col):
-        ws2.cell(row=purpose_row, column=k).value = f'=SUM({get_column_letter(k)}{star_current_row}:{get_column_letter(k)}{purpose_row - 1})'
-    ws2.row_dimensions.group(star_current_row, purpose_row - 1, hidden=True)
+        ws2.cell(row=purpose_row, column=k).value = f'=SUM({get_column_letter(k)}{start_current_row}:{get_column_letter(k)}{purpose_row - 1})'
+    ws2.row_dimensions.group(start_current_row, purpose_row - 1, hidden=True)
     fill_cells(ws2[f'A{purpose_row}:{get_column_letter(end_col + 1)}{purpose_row}'], fill_param)
     return ws2
-
