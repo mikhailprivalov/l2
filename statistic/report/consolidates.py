@@ -294,7 +294,7 @@ def consolidate_base_doctors_by_type_department(ws1, d1, d2, fin_source_data):
     style_border.font = Font(bold=True, size=11)
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-    ws1.cell(row=1, column=1).value = f'Сводный:'
+    ws1.cell(row=1, column=1).value = 'Сводный:'
     ws1.cell(row=2, column=1).value = 'Период:'
     ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
 
