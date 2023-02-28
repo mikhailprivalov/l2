@@ -331,8 +331,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
     row = 5
     start_row = row + 1
-    old_doctor, old_department = "", ""
-    current_doctor, current_department_title = "", ""
+    old_doctor, old_department, current_doctor, current_department_title = "", "", "", ""
     step = 0
     min_col_val = min(fin_source_order.values())
     max_col_val = max(fin_source_order.values()) + 2
@@ -377,12 +376,10 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
 
     ws1.row_dimensions.group(start_row, row - 1, hidden=True)
     fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val + 1)}{row}'], total_fill)
-
     sum_current_department.append(row)
     row += 1
     ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
     ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
-
     ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
     ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
 
