@@ -1345,7 +1345,6 @@ def form_11(request_data):
     type_med_examination_padeg = "", ""
     dispensary_group = ""
 
-
     title_fields = [
         "Место работы",
         "Должность",
