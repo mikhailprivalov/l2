@@ -294,6 +294,10 @@ def consolidate_base_doctors_by_type_department(ws1, d1, d2, fin_source_data):
     style_border.font = Font(bold=True, size=11)
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
+    ws1.cell(row=1, column=1).value = f'Сводный:'
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+
     columns = [
         ('Подразделение', 20),
         ('Сотрудник', 30),
@@ -344,14 +348,14 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
                 ws1.cell(row=row, column=k).value = f'=SUM({get_column_letter(k)}{start_row}:{get_column_letter(k)}{row - 1})'
                 fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val+1)}{row}'], total_fill)
             sum_current_department.append(row)
-            ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
-            ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
             ws1.row_dimensions.group(start_row, row - 1, hidden=True)
             if old_department != current_department_title:
                 row += 1
                 ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
                 ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
                 sum_current_department = []
+            ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
+            ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
             row += 1
             start_row = row
         ws1.cell(row=row, column=1).value = current_department_title
@@ -370,8 +374,10 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     ws1.cell(row=row, column=2).value = f"Итого: {current_doctor}"
     for k in range(min_col_val, max_col_val):
         ws1.cell(row=row, column=k).value = f'=SUM({get_column_letter(k)}{start_row}:{get_column_letter(k)}{row - 1})'
+
     ws1.row_dimensions.group(start_row, row - 1, hidden=True)
     fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val + 1)}{row}'], total_fill)
+
     sum_current_department.append(row)
     row += 1
     ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
