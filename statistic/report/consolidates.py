@@ -324,7 +324,6 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border1.font = Font(bold=False, size=11)
     style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
-    # total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='ffcc66', end_color='ffcc66')
     total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
     row = 5
     start_row = row + 1
@@ -333,6 +332,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     step = 0
     min_col_val = min(fin_source_order.values())
     max_col_val = max(fin_source_order.values()) + 2
+    sum_current_department = []
     for i in query:
         row += 1
         current_department_title = i.department_title
@@ -343,9 +343,15 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
             for k in range(min_col_val, max_col_val):
                 ws1.cell(row=row, column=k).value = f'=SUM({get_column_letter(k)}{start_row}:{get_column_letter(k)}{row - 1})'
                 fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val+1)}{row}'], total_fill)
+            sum_current_department.append(row)
             ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
             ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
             ws1.row_dimensions.group(start_row, row - 1, hidden=True)
+            if old_department != current_department_title:
+                row += 1
+                ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
+                ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
+                sum_current_department = []
             row += 1
             start_row = row
         ws1.cell(row=row, column=1).value = current_department_title
@@ -364,11 +370,15 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     ws1.cell(row=row, column=2).value = f"Итого: {current_doctor}"
     for k in range(min_col_val, max_col_val):
         ws1.cell(row=row, column=k).value = f'=SUM({get_column_letter(k)}{start_row}:{get_column_letter(k)}{row - 1})'
+    ws1.row_dimensions.group(start_row, row - 1, hidden=True)
+    fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val + 1)}{row}'], total_fill)
+    sum_current_department.append(row)
+    row += 1
+    ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
+    ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
 
     ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
     ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
-    ws1.row_dimensions.group(start_row, row - 1, hidden=True)
-    fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val+1)}{row}'], total_fill)
 
     return ws1
 
@@ -385,4 +395,19 @@ def count_sum_by_custom_cells(ws2, start_row, end_row, start_col, end_col):
                 sum_column = f"{sum_column}{get_column_letter(k)}{s}"
         sum_column = f"{sum_column})"
         ws2.cell(row=s, column=end_col).value = f'{sum_column}'
+    return ws2
+
+
+def count_sum_from_data_cells(ws2, start_col, end_col, data_rows, purpose_row):
+    for purpose_col in range(start_col, end_col):
+        step_sum = 0
+        sum_column = '=SUM('
+        for current_row in data_rows:
+            if step_sum != 0:
+                sum_column = f'{sum_column}, {get_column_letter(purpose_col)}{current_row}'
+            else:
+                sum_column = f'{sum_column}{get_column_letter(purpose_col)}{current_row}'
+            step_sum += 1
+        sum_column = f"{sum_column})"
+        ws2.cell(row=purpose_row, column=purpose_col).value = f"={sum_column}"
     return ws2
