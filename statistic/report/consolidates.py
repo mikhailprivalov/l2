@@ -360,8 +360,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
         ws1.cell(row=row, column=2).value = current_doctor
         ws1.cell(row=row, column=3).value = i.research_title
         ws1.cell(row=row, column=4).value = f"{i.patient_family} {i.patient_name} {i.patient_patronymic}; карта-{i.patient_card_num}; напр-{i.dir_id}; {i.date_confirm}"
-        col = fin_source_order.get(i.istochnik_f_id)
-        col = 20 if col is None else col
+        col = fin_source_order.get(i.istochnik_f_id) if fin_source_order.get(i.istochnik_f_id) else 50
         ws1.cell(row=row, column=col).value = 1
         ws1.cell(row=row, column=col + 1).value = i.uet_refferal_doc
         old_doctor, old_department = current_doctor, current_department_title
