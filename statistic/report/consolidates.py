@@ -411,4 +411,3 @@ def doctor_summary(ws2, star_col, end_col, star_current_row, purpose_row, fill_p
     ws2.row_dimensions.group(star_current_row, purpose_row - 1, hidden=True)
     fill_cells(ws2[f'A{purpose_row}:{get_column_letter(end_col + 1)}{purpose_row}'], fill_param)
     return ws2
-
