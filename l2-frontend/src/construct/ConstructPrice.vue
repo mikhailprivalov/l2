@@ -78,7 +78,7 @@
               no-results-text="Не найдено"
               search-prompt-text="Начните писать для поиска"
               :cache-options="false"
-              open-direction="top"
+              open-direction="bottom"
               :open-on-focus="true"
               :disabled="!priceIsActive"
             >
