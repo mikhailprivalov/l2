@@ -342,11 +342,8 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
         if (old_doctor != current_doctor) and (step != 0):
             ws1.cell(row=row, column=1).value = old_department
             ws1.cell(row=row, column=2).value = f"Итого: {old_doctor}"
-            for k in range(min_col_val, max_col_val):
-                ws1.cell(row=row, column=k).value = f'=SUM({get_column_letter(k)}{start_row}:{get_column_letter(k)}{row - 1})'
-                fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val+1)}{row}'], total_fill)
+            ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
             sum_current_department.append(row)
-            ws1.row_dimensions.group(start_row, row - 1, hidden=True)
             if old_department != current_department_title:
                 row += 1
                 ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
@@ -368,10 +365,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     row += 1
     ws1.cell(row=row, column=1).value = current_department_title
     ws1.cell(row=row, column=2).value = f"Итого: {current_doctor}"
-    for k in range(min_col_val, max_col_val):
-        ws1.cell(row=row, column=k).value = f'=SUM({get_column_letter(k)}{start_row}:{get_column_letter(k)}{row - 1})'
-    ws1.row_dimensions.group(start_row, row - 1, hidden=True)
-    fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val + 1)}{row}'], total_fill)
+    ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
     sum_current_department.append(row)
     row += 1
     ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
@@ -409,3 +403,12 @@ def count_sum_from_data_cells(ws2, start_col, end_col, data_rows, purpose_row):
         sum_column = f"{sum_column})"
         ws2.cell(row=purpose_row, column=purpose_col).value = f"={sum_column}"
     return ws2
+
+
+def doctor_summary(ws2, star_col, end_col, star_current_row, purpose_row, fill_param):
+    for k in range(star_col, end_col):
+        ws2.cell(row=purpose_row, column=k).value = f'=SUM({get_column_letter(k)}{star_current_row}:{get_column_letter(k)}{purpose_row - 1})'
+    ws2.row_dimensions.group(star_current_row, purpose_row - 1, hidden=True)
+    fill_cells(ws2[f'A{purpose_row}:{get_column_letter(end_col + 1)}{purpose_row}'], fill_param)
+    return ws2
+
