@@ -65,11 +65,30 @@
           <td class="border">
             <Treeselect
               v-model="priceData.company"
-              :options="companies.data"
-              :normalizer="normalizer"
-              placeholder="Выберите компанию"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              class="treeselect-wide treeselect-nbr"
+              :async="true"
+              :append-to-body="true"
+              :clearable="true"
+              :z-index="10001"
+              placeholder="Укажите организацию"
+              :load-options="loadCompaniesAsyncSearch"
+              loading-text="Загрузка"
+              no-results-text="Не найдено"
+              search-prompt-text="Начните писать для поиска"
+              :cache-options="false"
+              open-direction="top"
+              :open-on-focus="true"
               :disabled="!priceIsActive"
-            />
+            >
+              <div
+                slot="value-label"
+                slot-scope="{ node }"
+              >
+                {{ node.raw.label || priceData.companyTitle }}
+              </div>
+            </Treeselect>
           </td>
           <td
             v-if="priceIsActive"
@@ -242,7 +261,7 @@
 
 <script lang="ts">
 
-import Treeselect from '@riophae/vue-treeselect';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
@@ -264,7 +283,6 @@ export default {
       researchList: {},
       search: '',
       coastResearches: [],
-      companies: [],
     };
   },
   computed: {
@@ -306,7 +324,6 @@ export default {
   mounted() {
     this.getPrices();
     this.getResearchList();
-    this.getCompanies();
   },
   methods: {
     normalizer(node) {
@@ -375,8 +392,14 @@ export default {
     async getResearchList() {
       this.researchList = await this.$api('/get-research-list');
     },
-    async getCompanies() {
-      this.companies = await this.$api('/get-companies');
+    async loadCompaniesAsyncSearch({ action, searchQuery, callback }) {
+      if (action === ASYNC_SEARCH) {
+        const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
+        callback(
+          null,
+          data.map(d => ({ id: `${d.id}`, label: `${d.title}` })),
+        );
+      }
     },
     async getCoastsResearchesInPrice() {
       const coast = await this.$api('/get-coasts-researches-in-price', { id: this.selectedPrice });
