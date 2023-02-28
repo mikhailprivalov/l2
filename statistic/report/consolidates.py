@@ -365,15 +365,13 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
         col = 20 if col is None else col
         ws1.cell(row=row, column=col).value = 1
         ws1.cell(row=row, column=col + 1).value = i.uet_refferal_doc
-        old_doctor = current_doctor
-        old_department = current_department_title
+        old_doctor, old_department = current_doctor, current_department_title
         step += 1
     row += 1
     ws1.cell(row=row, column=1).value = current_department_title
     ws1.cell(row=row, column=2).value = f"Итого: {current_doctor}"
     for k in range(min_col_val, max_col_val):
         ws1.cell(row=row, column=k).value = f'=SUM({get_column_letter(k)}{start_row}:{get_column_letter(k)}{row - 1})'
-
     ws1.row_dimensions.group(start_row, row - 1, hidden=True)
     fill_cells(ws1[f'A{row}:{get_column_letter(max_col_val + 1)}{row}'], total_fill)
     sum_current_department.append(row)
@@ -382,7 +380,6 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
     ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
     ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
-
     return ws1
 
 
