@@ -1333,6 +1333,7 @@ def form_11(request_data):
 
     patient = Napravleniya.objects.get(pk=direction)
     fio = patient.client.individual.fio()
+    sex = "мужской" if patient.client.individual.sex == "м" else "женский"
     fio_short = patient.client.individual.fio(short=True, dots=True)
     born = patient.client.individual.bd()
 
@@ -1342,6 +1343,7 @@ def form_11(request_data):
 
     work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department = ("", "", "", "", "", "", "", "")
     type_med_examination_padeg = "", ""
+    dispensary_group = ""
 
     title_fields = [
         "Место работы",
@@ -1352,6 +1354,7 @@ def form_11(request_data):
         "Заключение по приказу N29н",
         "Дата осмотра",
         "Цех, участок ОПУ",
+        "Диспансерная группа",
     ]
     result = fields_result_only_title_fields(iss, title_fields)
     for i in result:
@@ -1375,27 +1378,33 @@ def form_11(request_data):
             date = i["value"]
         elif i["title"] == "Цех, участок ОПУ":
             department = i["value"]
+        elif i["title"] == "Диспансерная группа":
+            dispensary_group = i["value"]
 
     fwb.append(Paragraph('Заключение по результатам', styleCenterBold))
     fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) № {direction}', styleCenterBold))
     fwb.append(Spacer(1, 8 * mm))
     fwb.append(Paragraph(f'1. Ф.И.О:  {fio}, {born} ', style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph("2. Место работы:", style))
-    fwb.append(Paragraph(f"2.1 Организация (предприятие): {work_place}", style))
-    fwb.append(Paragraph(f"2.2 Цех, участок ОПУ: {department}", style))
+    fwb.append(Paragraph(f'2. Пол:  {sex} ', style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f"3 Профессия (должность) (в настоящее время): {work_position}", style))
-    fwb.append(Paragraph(f"4 Вредный производственный фактор или вид работы: согласно приказу № 29Н - {harmful_factor}", style))
+    fwb.append(Paragraph("3. Место работы:", style))
+    fwb.append(Paragraph(f"3.1 Организация (предприятие): {work_place}", style))
+    fwb.append(Paragraph(f"3.2 Цех, участок ОПУ: {department}", style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f"4 Профессия (должность) (в настоящее время): {work_position}", style))
+    fwb.append(Paragraph(f"5 Вредный производственный фактор или вид работы: согласно приказу № 29Н - {harmful_factor}", style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(
         Paragraph(
-            f"5. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
+            f"6. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
             f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами заключение <u>{med_report}</u> ",
             style,
         )
     )
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f"7 Диспансерная группа: {dispensary_group}", style))
     fwb.append(Spacer(1, 5 * mm))
     fwb.append(Paragraph("Председатель врачебной комиссии________________________(__________)", style))
     fwb.append(Spacer(1, 3 * mm))
