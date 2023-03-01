@@ -123,6 +123,7 @@ class SettingManager:
                     "rmis_queue",
                     "benefit",
                     "harmful_factor",
+                    "company_statistic_async_search",
                     "microbiology",
                     "citology",
                     "gistology",

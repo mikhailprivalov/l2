@@ -179,6 +179,8 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
 
 def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00'):
     sess_id = request_get_sess_id()
+    if not sess_id:
+        return []
     if "@R" in rmis_location:
         key_time = "TimeTableResource_begTime"
         type_slot = "TimeTableResource_id"
@@ -340,3 +342,19 @@ def fill_slot_ecp_free_nearest(direction):
 
                 if ecp_id:
                     register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+
+
+def attach_patient_ecp(person_id, lpu_region_id, date_begin, lpu_id, lpu_region_type_id):
+    sess_id = request_get_sess_id()
+    result = make_request_get(
+        "PersonCard",
+        query=f"Sess_id={sess_id}&LpuRegion_id={lpu_region_id}&PersonCard_begDate={date_begin}&Person_id={person_id}&Lpu_id={lpu_id}&"
+        f"LpuAttachType_id=1&PersonCard_IsAttachCondit=0&LpuRegionType_id={lpu_region_type_id}",
+        sess_id=sess_id,
+        method="POST",
+    )
+    if not result or not result.get("PersonCard_id"):
+        return None
+    person_card_id = result['PersonCard_id']
+    person_card_attach_id = result['PersonCardAttach_id']
+    return (person_card_id, person_card_attach_id)
