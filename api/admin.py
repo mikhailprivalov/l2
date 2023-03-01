@@ -19,6 +19,6 @@ class AnalyzerAdmin(AjaxSelectAdmin):
     list_display = ('__str__', 'service_name', 'port', 'protocol', 'mode', 'connection_string')
 
 
-@admin.register(models.ManageDocProfileAnalyzer)
-class ManageDocProfileAnalyzerAdmin(AjaxSelectAdmin):
+@admin.register(models.ManageDoctorProfileAnalyzer)
+class ManageDoctorProfileAnalyzerAdmin(AjaxSelectAdmin):
     list_display = ('__str__', 'analyzer')

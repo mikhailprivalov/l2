@@ -136,12 +136,12 @@ class Analyzer(models.Model):
         verbose_name_plural = 'Анализаторы'
 
 
-class ManageDocProfileAnalyzer(models.Model):
-    doc_prof = models.ForeignKey(DoctorProfile, help_text="Пользователь, который принадлежит к этому анализатору", on_delete=models.CASCADE)
+class ManageDoctorProfileAnalyzer(models.Model):
+    doctor_profile = models.ForeignKey(DoctorProfile, help_text="Пользователь, который принадлежит к этому анализатору", on_delete=models.CASCADE)
     analyzer = models.ForeignKey(Analyzer, on_delete=models.CASCADE)
 
     def __str__(self):
-        return str(self.doc_prof)
+        return str(self.doctor_profile)
 
     class Meta:
         verbose_name = 'Управление анализатором'
