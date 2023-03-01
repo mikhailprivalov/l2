@@ -4052,10 +4052,12 @@ def direction_history(request):
             client_send.append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], *[[k, v] for k, v in json.loads(lg.body).items()]])
 
         if client_send:
-            data.append({
-                "type": "Отправка пациенту",
-                "events": client_send,
-            })
+            data.append(
+                {
+                    "type": "Отправка пациенту",
+                    "events": client_send,
+                }
+            )
 
         for lg in Log.objects.filter(key=str(pk), type__in=(5002,)):
             data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
