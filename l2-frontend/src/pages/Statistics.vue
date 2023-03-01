@@ -509,7 +509,7 @@ const STATS_CATEGORIES = {
       },
       dispanserization: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
-        title: 'Диспасеризация',
+        title: 'Диспансеризация',
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-dispanserization&date-start=<date-start>&date-end=<date-end>',
       },

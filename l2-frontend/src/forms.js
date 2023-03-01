@@ -22,7 +22,7 @@ export default [
       { url: '/forms/pdf?type=101.22&card_pk={card}', title: 'Согласие на рентгенологическое исследование', type: '101.22' },
       { url: '/forms/pdf?type=101.13&card_pk={card}', title: 'Согласие на диспансеризацию', type: '101.13' },
       { url: '/forms/pdf?type=101.12&card_pk={card}', title: 'Согласие на прививку COVID-19', type: '101.12' },
-      { url: '/forms/pdf?type=101.09&card_pk={card}', title: 'Согласие на прерывание беремености', type: '101.09' },
+      { url: '/forms/pdf?type=101.09&card_pk={card}', title: 'Согласие на прерывание беременности', type: '101.09' },
       { url: '/forms/pdf?type=101.06&card_pk={card}', title: 'Согласие COVID-19', type: '101.06' },
       { url: '/forms/pdf?type=101.14&card_pk={card}', title: 'Согласие на оперативное вмешательство', type: '101.14' },
       { url: '/forms/pdf?type=101.15&card_pk={card}', title: 'Согласие на анестезиологическое обеспечение', type: '101.15' },
