@@ -121,7 +121,7 @@ class Analyzer(models.Model):
     MODES = ((0, "TCP Connection"),)
 
     title = models.CharField(max_length=60, help_text="Название")
-    ports = models.PositiveSmallIntegerField(blank=True, null=True, help_text="Номер порта анализатора")
+    port = models.PositiveSmallIntegerField(blank=True, null=True, help_text="Номер порта анализатора")
     service_name = models.CharField(max_length=60, help_text="Название службы Systemd", null=True)
     protocol = models.IntegerField(choices=PROTOCOLS, help_text="Поддерживаемый протокол")
     mode = models.IntegerField(choices=MODES, help_text="Режим")

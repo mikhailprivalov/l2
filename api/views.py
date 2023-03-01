@@ -3064,7 +3064,7 @@ def status_analyzer(request):
 
 
 def get_status_analyzer(arg):
-    port = Analyzer.objects.values_list('ports', flat=True).get(id=arg)
+    port = Analyzer.objects.values_list('port', flat=True).get(id=arg)
     lsof_command = f'lsof -i :{port}'.split()
     process = subprocess.Popen(lsof_command, stdout=subprocess.PIPE)
     output, error = process.communicate()
