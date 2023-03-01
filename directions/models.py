@@ -1625,7 +1625,7 @@ class Napravleniya(models.Model):
         return all([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
     def post_confirmation(self):
-        if self.is_all_confirm() and self.client.send_to_email and self.client.email:
+        if SettingManager.l2("send_patients_email_results") and self.is_all_confirm() and self.client.send_to_email and self.client.email:
             rt = SettingManager.get("lab_reset_confirm_time_min") * 60 + 1
             task_id = str(uuid.uuid4())
             send_result.apply_async(args=(self.pk,), countdown=rt, task_id=task_id)
