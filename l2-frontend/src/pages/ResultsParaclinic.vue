@@ -1086,7 +1086,7 @@
                 class="field"
               >
                 <div class="field-title">
-                  Платная категоря
+                  Платная категория
                 </div>
                 <div class="field-value">
                   <select

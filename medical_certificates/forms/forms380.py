@@ -758,7 +758,7 @@ def form_05_06_data_result_(iss):
 
 
 def form_07(request_data):
-    # Справка на госслужбу а № 001-ГС/у от 14.12.2009 № 984н
+    # Справка на госслужбу № 001-ГС/у от 14.12.2009 № 984н
     direction = request_data["dir"]
 
     buffer = BytesIO()

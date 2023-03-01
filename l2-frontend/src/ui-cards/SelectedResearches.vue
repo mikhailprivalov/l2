@@ -299,10 +299,10 @@
           v-tippy
           class="btn btn-blue-nb top-inner-select"
           :disabled="!can_save"
-          title="Сохранить и заполнить монитиринг"
+          title="Сохранить и заполнить мониторинг"
           @click="generate('save-and-open-embedded-form')"
         >
-          <span>Сохранить и заполнить монитиринг</span>
+          <span>Сохранить и заполнить мониторинг</span>
         </button>
       </template>
       <template v-else-if="create_and_open">
@@ -357,7 +357,7 @@
           v-tippy
           class="btn btn-blue-nb top-inner-select"
           :disabled="!can_save"
-          title="Сохранить и распечатать дополнителельные документы"
+          title="Сохранить и распечатать дополнительные документы"
           @click="generate('complect-document')"
         >
           <span>Набор документов</span>

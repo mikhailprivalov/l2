@@ -1139,7 +1139,7 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
         ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
     elif tp == "statistics-dispanserization":
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспасеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспансеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Диспансеризация")
@@ -1196,7 +1196,7 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
-        ws = wb.create_sheet("Дисп-учет зарегистрирвоано")
+        ws = wb.create_sheet("Дисп-учет зарегистрировано")
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
 
@@ -1468,7 +1468,7 @@ def statistic_xls(request):
     elif tp == "all-labs":
         labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Все_Лаборатории_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
-        ws = wb.add_sheet("Выполненых анализов")
+        ws = wb.add_sheet("Выполненных анализов")
 
         font_style = xlwt.XFStyle()
         row_num = 0

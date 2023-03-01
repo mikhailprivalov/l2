@@ -6,7 +6,7 @@ from utils.db import namedtuplefetchall
 
 def dispensarization_research(sex, age, client_id, d_start, d_end):
     """
-    на входе: пол, возраст,
+    На входе: пол, возраст,
     выход: pk - исследований, справочника "DispensaryRouteSheet"
     :return:
     """

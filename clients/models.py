@@ -206,7 +206,7 @@ class Individual(models.Model):
                         doc = Document(**data)
                         doc.save()
                         if out:
-                            out.write("Добавление докумена: %s" % doc)
+                            out.write("Добавление документа: %s" % doc)
                         kk = "%s_%s_%s" % (doc.document_type_id, doc.serial, doc.number)
                         save_docs.append(kk)
                         continue
@@ -812,8 +812,8 @@ class Document(models.Model):
     number = models.CharField(max_length=30, blank=True, help_text="Номер")
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True, blank=True, help_text="Документ активен")
-    date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
-    date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
+    date_start = models.DateField(help_text="Дата начала действия документа", blank=True, null=True)
+    date_end = models.DateField(help_text="Дата окончания действия документа", blank=True, null=True)
     who_give = models.TextField(default="", blank=True, help_text="Кто выдал")
     from_rmis = models.BooleanField(default=True, blank=True)
     rmis_uid = models.CharField(max_length=11, default=None, blank=True, null=True)
@@ -833,7 +833,7 @@ class Document(models.Model):
     @staticmethod
     def get_all_doc(docs):
         """
-        возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
+        Возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
         """
         documents = {
             'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
@@ -1010,7 +1010,7 @@ class Card(models.Model):
     AGENT_NEED_DOC = ['curator', 'agent']
     AGENT_CANT_SELECT = ['payer']
 
-    number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
+    number = models.CharField(max_length=20, blank=True, help_text="Идентификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True, help_text="Карта в архиве")
@@ -1032,16 +1032,19 @@ class Card(models.Model):
     curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание опекуна")
     agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None, on_delete=models.SET_NULL)
-    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание представителя")
+    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание представителя")
     payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     who_is_agent = models.CharField(max_length=7, choices=AGENT_CHOICES, blank=True, default='', help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок", on_delete=models.SET_NULL)
     ginekolog_district = models.ForeignKey(District, related_name='ginekolog_district', default=None, null=True, blank=True, help_text="Участок", on_delete=models.SET_NULL)
 
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
-    number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идетификатор карты поликлиника", db_index=True)
+    number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идентификатор карты поликлиника", db_index=True)
     phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
+
+    email = models.CharField(max_length=255, blank=True, default='')
+    send_to_email = models.BooleanField(default=False, blank=True, db_index=True, help_text="Отправлять результаты на почту")
 
     medbook_prefix = models.CharField(max_length=3, blank=True, default='', db_index=True, help_text="Префикс номера мед.книжки")
     medbook_number = models.CharField(max_length=16, blank=True, default='', db_index=True, help_text="Номер мед.книжки")
@@ -1747,7 +1750,7 @@ class BenefitType(models.Model):
         (4, 'ВЗН'),
     )
 
-    title = models.CharField(max_length=255, help_text='Каегория льготы')
+    title = models.CharField(max_length=255, help_text='Категория льготы')
     hide = models.BooleanField(help_text="Скрыть категорию", default=False)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
 

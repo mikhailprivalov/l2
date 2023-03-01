@@ -333,7 +333,7 @@ export default {
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
-        this.$root.$emit('msg', 'error', 'Произошла ошибка рассчёта');
+        this.$root.$emit('msg', 'error', 'Произошла ошибка расчёта');
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },

@@ -306,7 +306,7 @@
             <tr>
               <th>Номер</th>
               <th v-if="!isSearchStationar">
-                Организция
+                Организация
               </th>
               <th v-else>
                 История болезни
