@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @app.task(bind=True)
 def send_result(self, direction_pk):
     from directions.models import Napravleniya, Issledovaniya
+
     direction = Napravleniya.objects.get(pk=direction_pk)
     task_id = self.request.id
     direction.celery_send_task_ids = [x for x in direction.celery_send_task_ids if x != task_id]
