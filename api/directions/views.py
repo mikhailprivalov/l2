@@ -4048,7 +4048,19 @@ def direction_history(request):
 
         client_send = []
 
-        for lg in Log.objects.filter(key=str(pk), type__in=(180000, 180001, 180002, 180003,)).distinct().order_by('time'):
+        for lg in (
+            Log.objects.filter(
+                key=str(pk),
+                type__in=(
+                    180000,
+                    180001,
+                    180002,
+                    180003,
+                ),
+            )
+            .distinct()
+            .order_by('time')
+        ):
             client_send.append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], *[[k, v] for k, v in json.loads(lg.body).items()]])
 
         if client_send:
