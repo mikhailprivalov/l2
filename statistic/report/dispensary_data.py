@@ -70,7 +70,7 @@ def dispansery_reg_count_base(ws1, d1):
     ws1.cell(row=2, column=1).value = f'На дату {d1}'
 
     columns = [
-        ('Взрослые 18 и страше', 25),
+        ('Взрослые 18 и старше', 25),
         ('Дети до 0-17 лет', 25),
     ]
     for idx, column in enumerate(columns, 1):

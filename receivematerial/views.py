@@ -373,7 +373,7 @@ def receive_journal(request):
         if return_type == "pdf":
             n_dict[k] += 1
             if n_dict[k] >= start:
-                if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
+                if k not in labs.keys():  # Добавление списка в словарь если по ключу k нет ничего в словаре labs
                     labs[k] = []
 
                 if perpage - len(labs[k]) % perpage < len(iss_list):

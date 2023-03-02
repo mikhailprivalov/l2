@@ -857,7 +857,7 @@ def print_history(request):
         k = v.doc_get.podrazdeleniye.title + "@" + str(iss[0].research.get_podrazdeleniye().title)
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
-        if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
+        if k not in labs.keys():  # Добавление списка в словарь если по ключу k нет ничего в словаре labs
             labs[k] = []
         for value in iss_list:  # Перебор списка исследований
             labs[k].append(
