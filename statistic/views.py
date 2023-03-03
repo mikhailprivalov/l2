@@ -1779,7 +1779,7 @@ def statistic_xls(request):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
 
         type_fin = int(request_data.get("fin", -1))
-        detail_patient = int(request_data.get("detailPatient", -1))
+        detail_patient = int(request_data.get("detail-patient", -1))
         if type_fin == -100:
             type_fin = tuple(IstochnikiFinansirovaniya.objects.values_list('id', flat=True).filter(base__internal_type=True))
         else:
@@ -1793,7 +1793,7 @@ def statistic_xls(request):
         query_doctors = sql_func.consolidate_doctors_by_type_department(start_date, end_date, type_fin, doctors)
         ws_and_finish_order = consolidates.consolidate_base_doctors_by_type_department(ws, d1, d2, fin_source_data)
         ws = ws_and_finish_order[0]
-        if detail_patient == "1":
+        if detail_patient == 1:
             ws = consolidates.consolidate_fill_data_doctors_by_type_department_detail_patient(ws, query_doctors, ws_and_finish_order[1])
         else:
             ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
