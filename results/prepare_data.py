@@ -68,14 +68,14 @@ def lab_iss_to_pdf(data1):
                     title_research = i['title_research']
                     title_fractions = i['title_fracions']
                     fractions_result = i['result']
-                    # получить индексы ислючнных фракций
+                    # получить индексы исключённых фракций
                     fractions_index_to_remove = []
                     for fraction in title_fractions:
                         maybe_exclude_fraction = f'{title_research}#@#{fraction}'
                         if maybe_exclude_fraction in exclude_fraction:
                             fractions_index_to_remove.append(title_fractions.index(fraction))
 
-                    # удалить заголовки для исключенных фракци
+                    # удалить заголовки для исключенных фракций
                     title_fractions_final = [Paragraph(f, style_centre) for f in title_fractions if title_fractions.index(f) not in fractions_index_to_remove]
                     title_fractions_final.insert(0, Paragraph('Дата, напр.', style_centre))
 
@@ -104,14 +104,14 @@ def lab_iss_to_pdf(data1):
                     continue
                 for i in data:
                     title_fractions = i['title_fracions']
-                    # получить индексы ислючнных фракций
+                    # получить индексы исключённых фракций
                     fractions_index_to_remove = []
                     for fraction in title_fractions:
                         maybe_exclude_fraction = f'{type_lab}#@#{fraction}'
                         if maybe_exclude_fraction in exclude_fraction:
                             fractions_index_to_remove.append(title_fractions.index(fraction))
 
-                    # удалить заголовки для исключенных фракциq
+                    # удалить заголовки для исключенных фракций
                     title_fractions_final = [f for f in title_fractions if title_fractions.index(f) not in fractions_index_to_remove]
                     fractions_result = i['result']
                     # установить кол-вл колонок результатов

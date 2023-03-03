@@ -24,7 +24,7 @@ class Hospitals(models.Model):
     remote_url = models.CharField(max_length=128, blank=True, default='', help_text="Адрес L2")
     remote_token = models.CharField(max_length=128, blank=True, default='', help_text="Токен L2")
     license_data = models.CharField(max_length=128, blank=True, default='', help_text="Лицензия")
-    client = models.ForeignKey(Card, default=None, blank=True, null=True, db_index=True, help_text='Суррогатный пациент для мониторигна', on_delete=models.SET_NULL)
+    client = models.ForeignKey(Card, default=None, blank=True, null=True, db_index=True, help_text='Суррогатный пациент для мониторинга', on_delete=models.SET_NULL)
     research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
     current_manager = models.CharField(max_length=128, blank=True, default='', help_text="Руководитель/ИО учреждения")
     okpo = models.CharField(max_length=10, blank=True, default='', help_text="ОКПО")
@@ -73,15 +73,15 @@ class Hospitals(models.Model):
 
     @property
     def safe_email(self):
-        # если отсутствует email то адрес сайта
+        # если отсутствует email, то адрес сайта
         return self.email or SettingManager.get("org_www")
 
-    def send_email_with_pdf_file(self, subject, message, file):
+    def send_email_with_pdf_file(self, subject, message, file, to=None):
         email = EmailMessage(
             subject,
             message,
             from_email=f"{self.safe_short_title} <{EMAIL_HOST_USER}>",
-            to=[self.email],
+            to=[to or self.email],
         )
         email.attach(file.name, file.read(), 'application/pdf')
         email.send()
@@ -101,7 +101,7 @@ class HospitalsGroup(models.Model):
     CHILD_HOSP = 'CHILD_HOSP'
 
     HOSPITAL_TYPES = (
-        (REQUIREMENT_MONITORING_HOSP, 'Обязательные моиторинги'),
+        (REQUIREMENT_MONITORING_HOSP, 'Обязательные мониторинги'),
         (REGION_HOSP, 'По районам'),
         (CHILD_HOSP, 'Детские'),
     )
@@ -143,4 +143,4 @@ class HospitalParams(models.Model):
 
     class Meta:
         verbose_name = 'Параметр больницы произвольный'
-        verbose_name_plural = 'Параметры больницы произвоньные'
+        verbose_name_plural = 'Параметры больницы произвольные'

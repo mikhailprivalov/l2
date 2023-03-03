@@ -307,7 +307,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
 
 
 def get_research_by_dir(numdir):
-    """выход стр-ра:
+    """Выход стр-ра:
     issledovaniya.id - для последующего поиска подчинений по исследованию
     directions_issledovaniya.research_id - является main_research
     """

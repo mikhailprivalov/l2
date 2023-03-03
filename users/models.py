@@ -97,19 +97,19 @@ class DoctorProfile(models.Model):
     position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
     snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="", db_index=True)
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
-    disabled_forms = models.CharField(max_length=255, help_text='Отключеные формы перчислить ч/з запятую', blank=True, default="")
+    disabled_forms = models.CharField(max_length=255, help_text='Отключенные формы перчислить ч/з запятую', blank=True, default="")
     disabled_statistic_categories = models.CharField(max_length=255, help_text='Отключить доступ к статистике-категории ч/з запятую', blank=True, default="")
     disabled_statistic_reports = models.CharField(max_length=255, help_text='Отключить доступ к статистике категории-отчету ч/з запятую', blank=True, default="")
-    disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещеные источники финансирвоания')
+    disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещенные источники финансирования')
     external_access = models.BooleanField(default=False, blank=True, help_text='Разрешен внешний доступ')
     date_stop_external_access = models.DateField(help_text='Окончание внешнего доступа', db_index=True, default=None, blank=True, null=True)
-    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
+    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая служба', on_delete=models.CASCADE)
     not_control_anketa = models.BooleanField(default=False, blank=True, help_text='Не контролировать заполнение Анкет')
     signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
     last_online = models.DateTimeField(default=None, blank=True, null=True, help_text="Когда пользователь был в сети")
     cabinet = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Кабинет приема")
     max_age_patient_registration = models.SmallIntegerField(help_text='Ограничения возраста записи указать в месяцах', default=-1)
-    available_quotas_time = models.TextField(default='', blank=True, help_text='Доступная запись для подраздлений по времени {"id-подразделения": "10:00-15:00"}')
+    available_quotas_time = models.TextField(default='', blank=True, help_text='Доступная запись для подразделений по времени {"id-подразделения": "10:00-15:00"}')
 
     @property
     def notify_queue_key_base(self):
@@ -423,7 +423,7 @@ class DoctorProfile(models.Model):
         """
         Проверка вхождения пользователя в группу
         :param groups: названия групп
-        :return: bool, входит ли в указаную группу
+        :return: bool, входит ли в указанную группу
         """
         return self.user.groups.filter(name__in=groups).exists()
 
@@ -603,7 +603,7 @@ class DistrictResearchLimitAssign(models.Model):
         (0, 'День'),
         (1, 'Месяц'),
     )
-    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
+    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая служба', on_delete=models.CASCADE)
     research = models.ForeignKey('directory.Researches', related_name='услуга', blank=True, default=None, null=True, help_text='Услуга', on_delete=models.CASCADE)
     limit_count = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     type_period_limit = models.SmallIntegerField(choices=PERIOD_TYPES, help_text='Тип ограничения на период', default=0)

@@ -91,7 +91,7 @@
                     <td>{{ direction_data.diagnos }}</td>
                   </tr>
                   <tr v-else>
-                    <td>Огранизация</td>
+                    <td>Организация</td>
                     <td>{{ direction_data.imported_org }}</td>
                   </tr>
                   <tr v-if="l2_decriptive_coexecutor">
@@ -259,7 +259,7 @@
                           class="btn btn-blue-nb"
                           @click="make_visit()"
                         >
-                          Регистрация забора биоматерала
+                          Регистрация забора биоматериала
                         </button>
                       </template>
                       <button

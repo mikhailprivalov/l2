@@ -77,7 +77,7 @@ def get_distinct_research(list_research_id, list_dirs, is_text_research=False):
 
 def get_distinct_fraction(list_iss):
     """
-    возвращает уникальные фракци(id, title, units), которые присутствуют во всех исследованиях
+    Возвращает уникальные фракци(id, title, units), которые присутствуют во всех исследованиях
     """
     with connection.cursor() as cursor:
         cursor.execute(
@@ -97,7 +97,7 @@ def get_distinct_fraction(list_iss):
 
 def get_result_fraction(list_iss):
     """
-    возвращает результат: дата, фракция, значение(value)
+    Возвращает результат: дата, фракция, значение(value)
     """
     with connection.cursor() as cursor:
         cursor.execute(
