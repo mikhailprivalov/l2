@@ -400,12 +400,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
             ws1.cell(row=row, column=3).value = old_research
             ws1.cell(row=row, column=1).value = old_department
             ws1.cell(row=row, column=2).value = f"Итого: {old_doctor}"
-            for k, v in research_finsource_count.items():
-                col = fin_source_order.get(k) if fin_source_order.get(k) else 50
-                ws1.cell(row=row, column=col).value = v
-            for k, v in uet_finsource_count.items():
-                col = fin_source_order.get(k) if fin_source_order.get(k) else 50
-                ws1.cell(row=row, column=col + 1).value = v
+            ws1 = fill_data_cells_by_research(ws1, research_finsource_count, fin_source_order, uet_finsource_count, row)
             row += 1
             ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
             sum_current_department.append(row)
@@ -429,12 +424,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
         if old_research != current_research and step != 0 and step_department != 0:
             row += 1
             ws1.cell(row=row, column=3).value = old_research
-            for k, v in research_finsource_count.items():
-                col = fin_source_order.get(k) if fin_source_order.get(k) else 50
-                ws1.cell(row=row, column=col).value = v
-            for k, v in uet_finsource_count.items():
-                col = fin_source_order.get(k) if fin_source_order.get(k) else 50
-                ws1.cell(row=row, column=col + 1).value = v
+            ws1 = fill_data_cells_by_research(ws1, research_finsource_count, fin_source_order, uet_finsource_count, row)
             research_finsource_count = {k: 0 for k in fin_source_order.keys()}
             uet_finsource_count = {k: 0 for k in fin_source_order.keys()}
 
@@ -448,12 +438,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
         step += 1
     row += 1
     ws1.cell(row=row, column=3).value = old_research
-    for k, v in research_finsource_count.items():
-        col = fin_source_order.get(k) if fin_source_order.get(k) else 50
-        ws1.cell(row=row, column=col).value = v
-    for k, v in uet_finsource_count.items():
-        col = fin_source_order.get(k) if fin_source_order.get(k) else 50
-        ws1.cell(row=row, column=col + 1).value = v
+    ws1 = fill_data_cells_by_research(ws1, research_finsource_count, fin_source_order, uet_finsource_count, row)
     ws1.cell(row=row, column=1).value = current_department_title
     ws1.cell(row=row, column=2).value = current_doctor
     row += 1
@@ -504,4 +489,14 @@ def doctor_summary(ws2, star_col, end_col, start_current_row, purpose_row, fill_
         ws2.cell(row=purpose_row, column=k).value = f'=SUM({get_column_letter(k)}{start_current_row}:{get_column_letter(k)}{purpose_row - 1})'
     ws2.row_dimensions.group(start_current_row, purpose_row - 1, hidden=True)
     fill_cells(ws2[f'A{purpose_row}:{get_column_letter(end_col + 1)}{purpose_row}'], fill_param)
+    return ws2
+
+
+def fill_data_cells_by_research(ws2, research_finsource_count, fin_source_order, uet_finsource_count, current_row):
+    for k, v in research_finsource_count.items():
+        col = fin_source_order.get(k) if fin_source_order.get(k) else 50
+        ws2.cell(row=current_row, column=col).value = v
+    for k, v in uet_finsource_count.items():
+        col = fin_source_order.get(k) if fin_source_order.get(k) else 50
+        ws2.cell(row=current_row, column=col + 1).value = v
     return ws2
