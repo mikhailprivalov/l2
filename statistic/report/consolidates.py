@@ -322,7 +322,7 @@ def consolidate_base_doctors_by_type_department(ws1, d1, d2, fin_source_data):
     return (ws1, finish_order)
 
 
-def consolidate_fill_data_doctors_by_type_department_old(ws1, query, fin_source_order):
+def consolidate_fill_data_doctors_by_type_department_detail_patient(ws1, query, fin_source_order):
     style_border1 = NamedStyle(name="style_border1")
     bd = Side(style='thin', color="000000")
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -441,7 +441,6 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
             ws1.cell(row=row, column=1).value = current_department_title
             ws1.cell(row=row, column=2).value = current_doctor
         step_department += 1
-        print("wdsds", i.istochnik_f_id,current_doctor, current_research, current_department_title, i.istochnik_f_id,)
         if research_finsource_count.get(i.istochnik_f_id) or research_finsource_count.get(i.istochnik_f_id) == 0:
             research_finsource_count[i.istochnik_f_id] = research_finsource_count[i.istochnik_f_id] + 1
             uet_finsource_count[i.istochnik_f_id] = uet_finsource_count[i.istochnik_f_id] + i.uet_refferal_doc
