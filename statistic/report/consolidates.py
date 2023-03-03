@@ -386,32 +386,47 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
     start_row = row + 1
     old_doctor, old_department, current_doctor, current_department_title, current_research, old_research = "", "", "", "", "", ""
     step = 0
+    step_department = 0
     min_col_val, max_col_val = min(fin_source_order.values()), max(fin_source_order.values()) + 2
     sum_current_department = []
     research_finsource_count = {k: 0 for k in fin_source_order.keys()}
     uet_finsource_count = {k: 0 for k in fin_source_order.keys()}
-    print(research_finsource_count)
-    print(uet_finsource_count)
-
     for i in query:
         current_department_title = i.department_title
         current_doctor = f"{i.family} {i.name} {i.patronymic}"
         current_research = i.research_title
-        if (old_doctor != current_doctor) and (step != 0):
+        if (old_doctor != current_doctor) and (step != 0) and (step_department != 0):
+            row += 1
+            ws1.cell(row=row, column=3).value = old_research
             ws1.cell(row=row, column=1).value = old_department
             ws1.cell(row=row, column=2).value = f"Итого: {old_doctor}"
+            for k, v in research_finsource_count.items():
+                col = fin_source_order.get(k) if fin_source_order.get(k) else 50
+                ws1.cell(row=row, column=col).value = v
+            for k, v in uet_finsource_count.items():
+                col = fin_source_order.get(k) if fin_source_order.get(k) else 50
+                ws1.cell(row=row, column=col + 1).value = v
+            row += 1
             ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
             sum_current_department.append(row)
+            ws1.cell(row=row, column=1).value = old_department
+            ws1.cell(row=row, column=2).value = f"Итого: {old_doctor}"
+            research_finsource_count = {k: 0 for k in fin_source_order.keys()}
+            uet_finsource_count = {k: 0 for k in fin_source_order.keys()}
             if old_department != current_department_title:
                 row += 1
                 ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
                 ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
                 sum_current_department = []
+                research_finsource_count = {k: 0 for k in fin_source_order.keys()}
+                uet_finsource_count = {k: 0 for k in fin_source_order.keys()}
+                step_department = 0
             ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
             ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
             row += 1
             start_row = row
-        if old_research != current_research and step != 0:
+
+        if old_research != current_research and step != 0 and step_department != 0:
             row += 1
             ws1.cell(row=row, column=3).value = old_research
             for k, v in research_finsource_count.items():
@@ -425,20 +440,23 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
 
             ws1.cell(row=row, column=1).value = current_department_title
             ws1.cell(row=row, column=2).value = current_doctor
-
-        # col = fin_source_order.get(i.istochnik_f_id) if fin_source_order.get(i.istochnik_f_id) else 50
-        print("wdsds", i.istochnik_f_id)
-        print(research_finsource_count.get(i.istochnik_f_id))
+        step_department += 1
+        print("wdsds", i.istochnik_f_id,current_doctor, current_research, current_department_title, i.istochnik_f_id,)
         if research_finsource_count.get(i.istochnik_f_id) or research_finsource_count.get(i.istochnik_f_id) == 0:
-            print(research_finsource_count[i.istochnik_f_id])
             research_finsource_count[i.istochnik_f_id] = research_finsource_count[i.istochnik_f_id] + 1
-            print(research_finsource_count[i.istochnik_f_id])
             uet_finsource_count[i.istochnik_f_id] = uet_finsource_count[i.istochnik_f_id] + i.uet_refferal_doc
-            print(research_finsource_count[i.istochnik_f_id])
-        # ws1.cell(row=row, column=col).value = 1
-        # ws1.cell(row=row, column=col + 1).value = i.uet_refferal_doc
         old_doctor, old_department, old_research = current_doctor, current_department_title, current_research
         step += 1
+    row += 1
+    ws1.cell(row=row, column=3).value = old_research
+    for k, v in research_finsource_count.items():
+        col = fin_source_order.get(k) if fin_source_order.get(k) else 50
+        ws1.cell(row=row, column=col).value = v
+    for k, v in uet_finsource_count.items():
+        col = fin_source_order.get(k) if fin_source_order.get(k) else 50
+        ws1.cell(row=row, column=col + 1).value = v
+    ws1.cell(row=row, column=1).value = current_department_title
+    ws1.cell(row=row, column=2).value = current_doctor
     row += 1
     ws1.cell(row=row, column=1).value = current_department_title
     ws1.cell(row=row, column=2).value = f"Итого: {current_doctor}"
