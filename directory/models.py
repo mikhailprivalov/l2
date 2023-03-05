@@ -65,7 +65,7 @@ class ResearchSite(models.Model):
     TYPES = (
         (0, 'Консультация врача'),
         (1, 'Лечение'),
-        (2, 'Стоматалогия'),
+        (2, 'Стоматология'),
         (3, 'Стационар'),
         (4, 'Микробиология'),
         (7, 'Формы'),
@@ -132,7 +132,7 @@ class Researches(models.Model):
         (38002, '38002. ИО - Направление на МСКТ'),
         (38003, '38003. ИО - Направление на COVID-19'),
         (38004, '38004. ИО - Направление на Микробиологию'),
-        (38005, '38005. ИО - Напрвление в др. организацию'),
+        (38005, '38005. ИО - Направление в др. организацию'),
         (38006, '38006. ИО - Заявление на ВМП'),
         (38007, '38007. ИО - С параметрами по умолчанию'),
         (38008, '38008. ИО - Универсальное на бак.исследование'),
@@ -211,7 +211,7 @@ class Researches(models.Model):
     template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
     comment_variants = models.ForeignKey("directory.MaterialVariants", default=None, null=True, blank=True, help_text='Варианты комментариев к материалу', on_delete=models.SET_NULL)
     groups = models.ManyToManyField(ResearchGroup, blank=True, help_text='Группа исследований в лаборатории', db_index=True)
-    onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не можеть быть назначено', on_delete=models.SET_NULL)
+    onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не может быть назначено', on_delete=models.SET_NULL)
     can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?", db_index=True)
@@ -644,7 +644,7 @@ class ParaclinicInputField(models.Model):
 class ParaclinicTemplateName(models.Model):
     DEFAULT_TEMPLATE_TITLE = 'По умолчанию'
 
-    title = models.CharField(max_length=255, help_text='Название шаблона запонение полей')
+    title = models.CharField(max_length=255, help_text='Название шаблона заполнения полей')
     research = models.ForeignKey(Researches, on_delete=models.CASCADE, db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрыть шаблон")
 
@@ -694,7 +694,7 @@ class AutoAdd(models.Model):
 
     class Meta:
         verbose_name = 'Автоматическое добавление назначений'
-        verbose_name_plural = 'Автоматическоие добавления назначений'
+        verbose_name_plural = 'Автоматическое добавления назначений'
 
 
 class References(models.Model):
@@ -783,7 +783,7 @@ class Fractions(models.Model):
     max_iterations = models.IntegerField(default=1, verbose_name='Максимальное число итераций', blank=True)
     variants = models.ForeignKey(ResultVariants, null=True, blank=True, verbose_name='Варианты подсказок результатов', on_delete=models.SET_NULL)
     variants2 = models.ForeignKey(ResultVariants, related_name="variants2", null=True, blank=True, verbose_name='Варианты подсказок результатов для Бак.лаб.', on_delete=models.SET_NULL)
-    sort_weight = models.IntegerField(default=0, null=True, blank=True, verbose_name='Вес соритировки')
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, verbose_name='Вес сортировки')
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие фракции', db_index=True)
     render_type = models.IntegerField(default=0, blank=True, verbose_name='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
     options = models.CharField(max_length=511, default="", blank=True, verbose_name='Варианты для динамического числа полей')
@@ -829,7 +829,7 @@ class Absorption(models.Model):
     """
 
     fupper = models.ForeignKey(Fractions, related_name="fupper", help_text='Какая фракция главнее', db_index=True, on_delete=models.CASCADE)
-    flower = models.ForeignKey(Fractions, related_name="flower", help_text='Какая фракция поглащяется главной', on_delete=models.CASCADE)
+    flower = models.ForeignKey(Fractions, related_name="flower", help_text='Какая фракция поглощается главной', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.flower.__str__() + " -> " + self.fupper.__str__()
@@ -867,7 +867,7 @@ class DispensaryRouteSheet(models.Model):
     age_client = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False, blank=False)
     sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
-    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
+    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес сортировки')
 
     def __str__(self):
         return "{} , - возраст, {} - пол, {}, {}-sort".format(self.age_client, self.sex_client, self.research, self.sort_weight)
@@ -902,7 +902,7 @@ class ScreeningPlan(models.Model):
     sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, включенное в список', on_delete=models.CASCADE)
     period = models.PositiveSmallIntegerField(db_index=True, help_text='Период (1 раз в лет/года)', validators=[MinValueValidator(1), MaxValueValidator(100)])
-    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
+    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес сортировки')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие', db_index=True)
 
     def __str__(self):

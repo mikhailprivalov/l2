@@ -24,8 +24,10 @@ from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
+from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION
+from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
@@ -473,6 +475,7 @@ class Napravleniya(models.Model):
     last_confirmed_at = models.DateTimeField(help_text='Дата и время последнего подтверждения', db_index=True, blank=True, default=None, null=True)
     emdr_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД РЭМД', db_index=True)
     email_with_results_sent = models.BooleanField(verbose_name='Результаты отправлены на почту', blank=True, default=False, db_index=True)
+    celery_send_task_ids = ArrayField(models.CharField(max_length=64), default=list, blank=True, db_index=True)
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -494,6 +497,11 @@ class Napravleniya(models.Model):
             updated.append('last_confirmed_at')
         if updated:
             self.save(update_fields=updated)
+
+        if self.is_all_confirm():
+            self.post_confirmation()
+        else:
+            self.post_reset_confirmation()
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -1616,6 +1624,23 @@ class Napravleniya(models.Model):
         """
         return all([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
+    def post_confirmation(self):
+        if SettingManager.l2("send_patients_email_results") and self.is_all_confirm() and self.client.send_to_email and self.client.email:
+            rt = SettingManager.get("lab_reset_confirm_time_min") * 60 + 1
+            task_id = str(uuid.uuid4())
+            send_result.apply_async(args=(self.pk,), countdown=rt, task_id=task_id)
+            self.celery_send_task_ids = (self.celery_send_task_ids or []) + [task_id]
+            self.save(update_fields=['celery_send_task_ids'])
+            slog.Log.log(key=self.pk, type=180000, body={"task_id": task_id})
+
+    def post_reset_confirmation(self):
+        if self.celery_send_task_ids:
+            task_ids = self.celery_send_task_ids
+            celeryapp.control.revoke(task_ids, terminate=True)
+            self.celery_send_task_ids = []
+            self.save(update_fields=['celery_send_task_ids'])
+            slog.Log.log(key=self.pk, type=180003, body={"task_ids": task_ids})
+
     def last_time_confirm(self):
         return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
 
@@ -1926,7 +1951,7 @@ class Issledovaniya(models.Model):
     executor_confirmation = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="executor_confirmation", db_index=True, help_text='Профиль оператора, заполнившего результат', on_delete=models.SET_NULL
     )
-    deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
+    deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли исследование', db_index=True)
     comment = models.CharField(max_length=255, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
@@ -1976,8 +2001,8 @@ class Issledovaniya(models.Model):
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )
-    aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
-    aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
+    aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязанных к стационарному случаю')
+    aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязанных к стационарному случаю')
     microbiology_conclusion = models.TextField(default=None, null=True, blank=True, help_text='Заключение по микробиологии')
     hospital_department_override = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
     doc_add_additional = models.ForeignKey(
