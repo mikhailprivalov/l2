@@ -399,7 +399,7 @@ def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_orde
             row += 1
             ws1.cell(row=row, column=3).value = old_research
             ws1.cell(row=row, column=1).value = old_department
-            ws1.cell(row=row, column=2).value = f"Итого: {old_doctor}"
+            ws1.cell(row=row, column=2).value = old_doctor
             ws1 = fill_data_cells_by_research(ws1, research_finsource_count, fin_source_order, uet_finsource_count, row)
             row += 1
             ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
