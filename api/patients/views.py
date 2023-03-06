@@ -7,9 +7,9 @@ from typing import Optional, List
 import pytz_deprecation_shim as pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.core.validators import validate_email
 
 from api.patients.common_func import get_card_control_param
-from api.patients.sql_func import get_patient_control_params
 from ecp_integration.integration import search_patient_ecp_by_person_id
 from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
@@ -643,6 +643,8 @@ def patients_card_save(request):
     c.work_position = request_data["work_position"]
     c.work_department = request_data["work_department"]
     c.phone = request_data["phone"]
+    c.email = request_data.get("email", "")
+    c.send_to_email = bool(request_data.get("send_to_email", False))
     c.harmful_factor = request_data.get("harmful", "")
     c.contact_trust_health = request_data.get("contactTrustHealth", "")
     medbook_type = request_data.get("medbookType", "")
@@ -1110,6 +1112,20 @@ def update_screening_reg_plan(request):
     ScreeningRegPlan.update_plan(request_data)
 
     return JsonResponse({"ok": True})
+
+
+def validate_email_view(request):
+    request_data = json.loads(request.body)
+    email = request_data['email']
+
+    try:
+        if email:
+            validate_email(email)
+            return JsonResponse({"ok": True})
+    except:
+        pass
+
+    return JsonResponse({"ok": False})
 
 
 def load_vaccine(request):

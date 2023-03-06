@@ -170,7 +170,7 @@
             <label
               v-else
               v-tippy
-              title="Переключить статус забора всех неисполенных ёмкостей"
+              title="Переключить статус забора всех неисполненных ёмкостей"
               @click.prevent="toggleGlobalCheck"
             >
               <input
