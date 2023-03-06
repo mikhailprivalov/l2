@@ -612,7 +612,7 @@ def form_02(request_data):
     styleCenter.spaceAfter = 1 * mm
     styleCenterBold = deepcopy(styleBold)
     styleCenterBold.alignment = TA_CENTER
-    styleCenterBold.fontSize = 12
+    styleCenterBold.fontSize = 10
     styleCenterBold.leading = 15
     styleCenterBold.face = 'PTAstraSerifBold'
     styleCenterBold.borderColor = black
@@ -641,7 +641,11 @@ def form_02(request_data):
     opinion = [
         [
             Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
-            Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>' 'Медицинская документация<br/>форма № 003/у</font>', styleT),
+            Paragraph(
+    "<font size=9 >Код формы по ОКУД:<br/>"
+    "Медицинская документация<br/>форма № 003/у<br/><br/>Утверждена приказом Министерства здравоохранения Российской Федерации от «5» августа 2022г. N 530н</font>",
+    styleT,
+),
         ],
     ]
 
@@ -740,7 +744,76 @@ def form_02(request_data):
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
-        Paragraph('<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА № {} <u>{}</u>, <br/> стационарного больного</font>'.format(p_card_num, hosp_nums), styleCenter),
+        Paragraph(
+    '<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫ Х УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
+        p_card_num, hosp_nums
+    ),
+    styleCenterBold,
+),
+        Spacer(1, 2 * mm),
+        Spacer(1, 2 * mm),
+        Spacer(1, 2 * mm),
+        Paragraph("Фамилия, имя, отчество:&nbsp;", style),
+        Spacer(1, 0.2 * mm),
+        Paragraph(f"Дата рождения: {patient_data['born']} Пол: {patient_data['sex']}", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph(f"Поступил в стационар - 1, в дневной стационар — 2(указать):", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph(f"Дата и время поступления: «	»	20	г. время:	час.	мин.", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph('Поступил через часов после начала заболевания, получения травмы, отравления.', style),
+        Spacer(1, 0.5 * mm),
+        Paragraph('Направлен в стационар (дневной стационар):', style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Наименование	медицинской	организации, направившей пациента:", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Номер и дата направления:	от «        »	20     г.", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Поступил в стационар (дневной стационар) для оказания медицинской помощи в текущем году: "
+                  "по поводу основного заболевания, указанного в диагнозе при поступлении: первично — 1,повторно — 2.",style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Форма оказании медицинской помощи: плановая — 1, экстренная — 2.", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Наименование отделения:		профиль коек	палата №  	", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Переведен в отделение:		профиль коек	палата №_____", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Дата и время перевода: «      »	20      г. время:	час. мин.", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Выписан: «	»	20	г. время:	час.	мин. ", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Количество дней нахождения в медицинской организации:   		", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Диагноз при направлении:", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("код по МКБ", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Предварительный диагноз (диагноз при поступлении):", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Дата и время установления диагноза при поступлении: «	»	20	г. время:	час.	мин.", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Основное заболевание       код по МКБ", style),
+        Spacer(1, 0.5 * mm),
+        Paragraph("Осложнения основного заболевания    код по МКБ", style),
+
+        Spacer(1, 0.5 * mm),
+        Paragraph("Внешняя причина при травмах, отравлениях   код по МКБ", style),
+
+        Spacer(1, 0.5 * mm),
+        Paragraph("Сопутствующие заболевания   код по МКБ", style),
+
+        Spacer(1, 0.5 * mm),
+        Paragraph("Дополнительные сведения о заболевании", style),
+
+        Spacer(1, 0.5 * mm),
+        Paragraph("В анамнезе: туберкулез	ВИЧ-инфекция	вирусные гепатиты	сифилис	COVID- 19   Осмотр на педикулез, чесотку: да — 1, нет — 2, результат осмотра: "
+                  "Аллергические реакции на лекарственные препараты, пищевая аллергия или иные виды непереносимости в анамнезе, с указанием типа и вида аллергической реакции:", style),
+
+        Paragraph('Группа крови	резус-принадлежность	антиген K1 системы Kell ', style),
+        Spacer(1, 0.5 * mm),
+        Paragraph('иные сведения групповой принадлежности крови (при наличии)', style),
+
+        ###############################################
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
@@ -795,6 +868,67 @@ def form_02(request_data):
         )
 
     second_page = [
+        Spacer(1, 2 * mm),
+        Paragraph('Диагноз клинический, установленный в стационаре:', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Дата и время установления клинического диагноза: «	»	20	г. время:	час.	мин.', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Основное заболевание   код по МКБ', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Осложнения основного заболевания   код по МКБ', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Внешняя причина при травмах, отравления   код по МКБ', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Сопутствующие заболевания   код по МКБ', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Дополнительные сведения о заболевании', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Проведенные оперативные вмешательства (операции):', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('Исход госпитализации: выписан — 1, в том числе в дневной стационар — 2, в стационар — 3.', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Наименование медицинской	организации	(фамилия,	имя, отчество (при наличии) индивидуального предпринимателя, осуществляющего медицинскую деятельность), '
+                  'куда переведен пациент', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Исход госпитализации: выписан — 1, в том числе в дневной стационар — 2, в стационар — 3.', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('Результат госпитализации: выздоровление — 1, улучшение — 2, без перемен — 3, ухудшение — 4, умер — 5.', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('Умер в	отделении: «	»	20	г. время:	час.	мин.', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('Умерла беременная: 1 — до 22 недель беременности, 2 — после 22 недель беременности.', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('Умерла беременная: 1 — до 22 недель беременности, 2 — после 22 недель беременности.', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('Оформлен листок нетрудоспособности: № от «		»  20		г. ', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('(дубликат листка нетрудоспособности №			от «	»			20	г.)', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('освобождение от работы с «	»	20	г. по «			»			20		г.', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('продление листка нетрудоспособности:', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('№	освобождение от работы с «	»	20	г. по «	»	20	г.', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('№	освобождение от работы с «	»	20	г. по «	»	20	г.', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('приступить к работе с «	»	20	г.', style),
+
+
+
+        ##################################################################################
         Spacer(1, 2 * mm),
         Paragraph('11. Диагноз заключительный клинический:', style),
         Spacer(1, 0.5 * mm),
