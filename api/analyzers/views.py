@@ -8,8 +8,7 @@ from django.http import JsonResponse
 
 
 def all_analyzers(request):
-    analyzers = [{"label": analyzer.title,
-                  "pk": analyzer.id} for analyzer in Analyzer.objects.all().exclude(service_name__isnull=True).exclude(port__isnull=True).order_by('title', 'id')]
+    analyzers = [{"label": analyzer.title, "pk": analyzer.id} for analyzer in Analyzer.objects.all().exclude(service_name__isnull=True).exclude(port__isnull=True).order_by('title', 'id')]
     return JsonResponse({"data": analyzers})
 
 
@@ -27,8 +26,7 @@ def restart_analyzer(request):
 
 def manage_profile_analyzer(request):
     current_user = request.user.doctorprofile.pk
-    filter_analyze = [{"label": g.analyzer.title,
-                       "pk": g.analyzer_id} for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).order_by('analyzer', 'id')]
+    filter_analyze = [{"label": g.analyzer.title, "pk": g.analyzer_id} for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).order_by('analyzer', 'id')]
     return JsonResponse({"data": filter_analyze})
 
 
@@ -67,7 +65,7 @@ def get_status_analyzer(pk):
                 a = [tmp_res[1], tmp_res[-1], tmp_res[-2]]
                 result.append(a)
             step += 1
-    result = [{"pk": pk, "status": i}for i in result]
+    result = [{"pk": pk, "status": i} for i in result]
     return result
 
 
@@ -78,5 +76,5 @@ def get_status_systemctl(pk):
     output, error = proc.communicate()
     result = output.decode()
     result = result.split('\n')
-    result = [{"pk": pk, "status": i}for i in result]
+    result = [{"pk": pk, "status": i} for i in result]
     return result
