@@ -122,7 +122,7 @@ class Analyzer(models.Model):
 
     title = models.CharField(max_length=60, help_text="Название")
     port = models.PositiveSmallIntegerField(blank=True, null=True, help_text="Номер порта анализатора")
-    service_name = models.CharField(max_length=60, help_text="Название службы Systemd", null=True)
+    service_name = models.CharField(max_length=60, help_text="Название службы Systemd", null=True, blank=True)
     protocol = models.IntegerField(choices=PROTOCOLS, help_text="Поддерживаемый протокол")
     mode = models.IntegerField(choices=MODES, help_text="Режим")
     connection_string = models.TextField(help_text="Строка подключения")
@@ -141,7 +141,7 @@ class ManageDoctorProfileAnalyzer(models.Model):
     analyzer = models.ForeignKey(Analyzer, on_delete=models.CASCADE)
 
     def __str__(self):
-        return str(self.doctor_profile)
+        return f"{self.doctor_profile} — {self.analyzer}"
 
     class Meta:
         verbose_name = 'Управление анализатором'

@@ -3,10 +3,6 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path('manage-analyze', views.get_manage_analyzer),
-    path('manage-profile-analyzer', views.manage_profile_analyzer),
-    path('status-analyzer', views.status_analyzer),
-    path('restart-analyze', views.restart_analyzer),
     path('send', views.send),
     path('endpoint', views.endpoint),
     path('departments', views.departments),
@@ -78,6 +74,7 @@ urlpatterns = [
     path('current-time', views.current_time),
     path('search-param', views.search_param),
     path('statistic-params-search', views.statistic_params_search),
+    path('analyzers/', include('api.analyzers.urls')),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),
