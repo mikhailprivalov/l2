@@ -25,7 +25,7 @@ class PlanOperations(models.Model):
     type_operation = models.TextField(default=None, blank=True, null=True, help_text="Вид операции")
     canceled = models.BooleanField(default=False, help_text='Операция отменена')
     doc_anesthetist = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_anesthetist", help_text='Кто опрерирует', on_delete=models.SET_NULL)
-    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_create_plan", help_text='Создатель планирвоания', on_delete=models.SET_NULL)
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_create_plan", help_text='Создатель планирования', on_delete=models.SET_NULL)
 
     @staticmethod
     def save_data(data, doc_who_create):

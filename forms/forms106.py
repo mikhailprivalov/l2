@@ -26,7 +26,7 @@ from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_
 
 def form_01(request_data):
     """
-    Форма 003/у - cстационарная карта
+    Форма 003/у - стационарная карта
     """
 
     num_dir = request_data["dir_pk"]
@@ -141,7 +141,7 @@ def form_01(request_data):
     # взять самое последнее направленеие из hosp_dirs
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     ############################################################################################################
-    # Получение данных из выписки
+    # Получение данных из выписки.
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 

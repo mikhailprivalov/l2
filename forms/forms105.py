@@ -441,7 +441,7 @@ def form_02(request_data):
 
         objs.append(Spacer(1, 5 * mm))
 
-        # Получить структуру Направлений если, направление в Дереве не важно в корне в середине или в начале
+        # Получить структуру Направлений если, направление в Дереве неважно в корне в середине или в начале
         root_dir = tree_directions.root_direction(dir)
         num_iss = root_dir[-1][-2]
         tree_dir = tree_directions.tree_direction(num_iss)

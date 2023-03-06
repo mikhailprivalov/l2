@@ -225,7 +225,7 @@ def directions_history(request):
     final_result = []
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
 
-    # status: 4 - выписано пользователем,   0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
+    # status: 4 - выписано пользователем, 0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
     if req_status == 4:
         user_creater = request.user.doctorprofile.pk
     if req_status in [0, 1, 2, 3, 5]:
@@ -4045,6 +4045,32 @@ def direction_history(request):
                 ],
             }
             data.append(d)
+
+        client_send = []
+
+        for lg in (
+            Log.objects.filter(
+                key=str(pk),
+                type__in=(
+                    180000,
+                    180001,
+                    180002,
+                    180003,
+                ),
+            )
+            .distinct()
+            .order_by('time')
+        ):
+            client_send.append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], *[[k, v] for k, v in json.loads(lg.body).items()]])
+
+        if client_send:
+            data.append(
+                {
+                    "type": "Отправка пациенту",
+                    "events": client_send,
+                }
+            )
+
         for lg in Log.objects.filter(key=str(pk), type__in=(5002,)):
             data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
         for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023, 60024, 60025)):

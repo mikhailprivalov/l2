@@ -1139,7 +1139,7 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
         ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
     elif tp == "statistics-dispanserization":
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспасеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспансеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Диспансеризация")
@@ -1196,7 +1196,7 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
-        ws = wb.create_sheet("Дисп-учет зарегистрирвоано")
+        ws = wb.create_sheet("Дисп-учет зарегистрировано")
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
 
@@ -1468,7 +1468,7 @@ def statistic_xls(request):
     elif tp == "all-labs":
         labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Все_Лаборатории_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
-        ws = wb.add_sheet("Выполненых анализов")
+        ws = wb.add_sheet("Выполненных анализов")
 
         font_style = xlwt.XFStyle()
         row_num = 0
@@ -1779,6 +1779,7 @@ def statistic_xls(request):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
 
         type_fin = int(request_data.get("fin", -1))
+        detail_patient = int(request_data.get("detail-patient", -1))
         if type_fin == -100:
             type_fin = tuple(IstochnikiFinansirovaniya.objects.values_list('id', flat=True).filter(base__internal_type=True))
         else:
@@ -1792,7 +1793,10 @@ def statistic_xls(request):
         query_doctors = sql_func.consolidate_doctors_by_type_department(start_date, end_date, type_fin, doctors)
         ws_and_finish_order = consolidates.consolidate_base_doctors_by_type_department(ws, d1, d2, fin_source_data)
         ws = ws_and_finish_order[0]
-        ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
+        if detail_patient == 1:
+            ws = consolidates.consolidate_fill_data_doctors_by_type_department_detail_patient(ws, query_doctors, ws_and_finish_order[1])
+        else:
+            ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
 
     wb.save(response)
     return response

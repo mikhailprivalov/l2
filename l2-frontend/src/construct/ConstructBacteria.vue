@@ -157,7 +157,7 @@
             <button
               v-tippy="{ placement : 'bottom' }"
               class="btn btn-default btn-primary-nb"
-              :title="`Соханить в &#171;${searchTypesGroups.toUpperCase().trim()}&#187;`"
+              :title="`Сохранить в &#171;${searchTypesGroups.toUpperCase().trim()}&#187;`"
               :disabled="!newgroup"
               @click="addNewGroup"
             >

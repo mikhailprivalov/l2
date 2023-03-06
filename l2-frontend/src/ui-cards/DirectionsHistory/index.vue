@@ -188,7 +188,7 @@
                   (row.maybe_onco ? '. Онкоподозрение' : '') +
                   (row.is_expertise
                     ? row.expertise_status > 0
-                      ? ' (экспертиза БЕЗ заменчаний)'
+                      ? ' (экспертиза БЕЗ замечаний)'
                       : ' (экспертза С замечаниями)'
                     : '') + (row.person_contract_pk > 0 ? ' (Договор-' + row.person_contract_pk +
                     ' (Направления: ' + row.person_contract_dirs + ')': '') +
