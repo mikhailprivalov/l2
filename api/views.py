@@ -2,7 +2,6 @@ import logging
 import threading
 import time
 import re
-import subprocess
 from collections import defaultdict
 from typing import Optional, Union
 
@@ -1574,8 +1573,8 @@ def user_save_view(request):
 
             ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=doc.pk).delete()
             for g in group_analyzer:
-                analizator = Analyzer.objects.get(pk=g)
-                ManageDoctorProfileAnalyzer(analyzer_id=analizator.pk, doctor_profile_id=doc.pk).save()
+                analyzer = Analyzer.objects.get(pk=g)
+                ManageDoctorProfileAnalyzer(analyzer_id=analyzer.pk, doctor_profile_id=doc.pk).save()
             doc.user.save()
 
             doc.restricted_to_direct.clear()
@@ -3033,51 +3032,3 @@ def update_order_param(request):
         else:
             return status_response(False, 'Параметр последний')
     return status_response(True)
-
-
-def get_manage_analyzer(request):
-    analyzers = [{"label": analyzerList.title,
-                  "pk": analyzerList.id} for analyzerList in Analyzer.objects.all().order_by('title', 'id')]
-    return JsonResponse({"data": analyzers})
-
-
-def restart_analyzer(request):
-    request_data = json.loads(request.body)
-    name = ManageDoctorProfileAnalyzer.objects.filter(analyzer_id=request_data["pk"], doctor_profile_id=request.user.doctorprofile.pk).first()
-    restart_service = subprocess.Popen(["systemctl", "--user", "restart", name.analyzer.service_name])
-    restart_service.wait()
-    result = get_status_analyzer(request_data["pk"])
-    return JsonResponse({"data": result})
-
-
-def manage_profile_analyzer(request):
-    current_user = request.user.doctorprofile.pk
-    filter_analyze = [{"label": g.analyzer.title,
-                       "pk": g.analyzer_id} for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).order_by('analyzer', 'id')]
-    return JsonResponse({"data": filter_analyze})
-
-
-def status_analyzer(request):
-    request_data = json.loads(request.body)
-    result = get_status_analyzer(request_data["pk"])
-    return JsonResponse({"data": result})
-
-
-def get_status_analyzer(arg):
-    port = Analyzer.objects.values_list('port', flat=True).get(id=arg)
-    lsof_command = f'lsof -i :{port}'.split()
-    process = subprocess.Popen(lsof_command, stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    res = output.decode().replace(' ', ',')
-    res = res.split('\n')
-    result = []
-    step = 0
-    for i in res:
-        tmp_res = i.split(',')
-        tmp_res = [x for x in tmp_res if x]
-        if len(tmp_res) != 0:
-            if step != 0:
-                a = [tmp_res[1], tmp_res[-1], tmp_res[-2]]
-                result.append(a)
-            step += 1
-    return result

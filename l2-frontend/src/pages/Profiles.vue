@@ -1035,7 +1035,7 @@ export default {
     this.current_resource_title = '';
   },
   mounted() {
-    this.getAnalyzer();
+    this.getAllAnalyzers();
   },
   methods: {
     open_schedule() {
@@ -1050,8 +1050,8 @@ export default {
         }
       }
     },
-    async getAnalyzer() {
-      const list = await this.$api('manage-analyze');
+    async getAllAnalyzers() {
+      const list = await this.$api('analyzers/all-analyzers');
       this.analyzers_list = list.data;
     },
     async save_resource() {

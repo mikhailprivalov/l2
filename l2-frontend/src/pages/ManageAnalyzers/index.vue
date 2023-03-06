@@ -1,15 +1,13 @@
 <template>
   <div>
     <h5>
-      Анализаторы <i
-        class="name table"
-      />
+      Анализаторы
     </h5>
-    <table class="table table-bordered table-responsive table-condensed">
+    <table class="table table-fixed table-bordered table-responsive table-condensed">
       <colgroup>
-        <col width="125">
-        <col width="300">
-        <col width="80">
+        <col style="width: 20%;">
+        <col style="width: 55%;">
+        <col style="width: 25%;">
       </colgroup>
       <thead>
         <tr>
@@ -22,12 +20,11 @@
         <Row
           v-for="row in analyzers"
           :key="row.pk"
-          :value="row.pk"
           :data="row"
         />
         <tr v-if="analyzers.length === 0">
           <td colspan="3">
-            Нет Анализаторов
+            Нет анализаторов
           </td>
         </tr>
       </tbody>
@@ -36,6 +33,8 @@
 </template>
 
 <script>
+import * as actions from '@/store/action-types';
+
 import Row from './components/Row.vue';
 
 export default {
@@ -53,8 +52,10 @@ export default {
   },
   methods: {
     async getProfileAnalyzer() {
-      const rows = await this.$api('manage-profile-analyzer');
+      await this.$store.dispatch(actions.INC_LOADING);
+      const rows = await this.$api('analyzers/manage-profile-analyzer');
       this.analyzers = rows.data;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
 };
