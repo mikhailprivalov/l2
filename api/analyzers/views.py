@@ -34,7 +34,6 @@ def manage_profile_analyzer(request):
 
 def status_analyzer(request):
     request_data = json.loads(request.body)
-    print(request_data["pk"])
     can_get_status = request.user.is_superuser or request.user.doctorprofile.has_group('Управление аналаизаторами')
     if can_get_status:
         result = get_status_analyzer(request_data["pk"])
