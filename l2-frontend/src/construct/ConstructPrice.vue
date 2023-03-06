@@ -15,7 +15,7 @@
           <col>
           <col width="120">
           <col width="120">
-          <col width="200">
+          <col width="500">
           <col
             v-if="priceIsActive"
             width="100"
