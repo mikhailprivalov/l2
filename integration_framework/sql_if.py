@@ -5,7 +5,7 @@ from laboratory.settings import TIME_ZONE
 
 def direction_collect(d_s, researches, is_research, limit):
     """
-    парам: d_s - date-start, researches - списко исследований которые требуются
+    парам: d_s - date-start, researches - списко исследований, которые требуются
 
     Вернуть:
     Направления, в к-рых все исследования подтверждены, и подтверждены после определенной даты
@@ -50,7 +50,7 @@ def direction_collect(d_s, researches, is_research, limit):
 
 def direction_collect_date_signed(d_s, researches, is_research, limit):
     """
-    парам: d_s - date-start, researches - списко исследований которые требуются по дате подписания
+    парам: d_s - date-start, researches - списко исследований, которые требуются по дате подписания
     Вернуть:
     Направления, в к-рых все исследования подписаны
     """

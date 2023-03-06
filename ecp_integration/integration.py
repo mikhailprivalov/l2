@@ -1,14 +1,15 @@
 import logging
 from urllib.parse import urljoin
 import requests
+from dateutil.relativedelta import relativedelta
 
 from appconf.manager import SettingManager
 import simplejson as json
 
 from ecp_integration.sql_func import get_doctors_rmis_location_by_research
-from laboratory.utils import current_time
+from laboratory.utils import current_time, TZ, strdatetimeru
 from rmis_integration.client import Settings
-from utils.dates import normalize_dash_date
+from utils.dates import normalize_dash_date, normalize_dots_date
 from django.core.cache import cache
 from laboratory.settings import RMIS_PROXY
 from datetime import timedelta
@@ -146,6 +147,9 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
                 query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}",
                 sess_id=sess_id,
             )
+
+        if req_result.get('data') is None:
+            return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
         schedule_data = req_result['data']
         if len(schedule_data) > 0:
             message = ""
@@ -173,13 +177,15 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
     return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
 
 
-def get_doctor_ecp_free_slots_by_date(rmis_location, date):
+def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00'):
     sess_id = request_get_sess_id()
+    if not sess_id:
+        return []
     if "@R" in rmis_location:
         key_time = "TimeTableResource_begTime"
         type_slot = "TimeTableResource_id"
         rmis_location_resource = rmis_location[:-2]
-        date = f"{date} 08:00:00"
+        date = f"{date} {time}"
         req_result = make_request_get(
             "TimeTableResource/TimeTableResourceFreeDateTime", query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date}", sess_id=sess_id
         )
@@ -308,3 +314,47 @@ def cancel_ecp_patient_record(time_table_id, type_slot, reason_cancel=1):
             if cancel_direction["error_code"] == 0:
                 return True
     return False
+
+
+def fill_slot_ecp_free_nearest(direction):
+    slots = []
+    for i in direction.issledovaniya_set.all():
+        if i.research.auto_register_on_rmis_location:
+            date_find_start = current_time().astimezone(TZ)
+            step = 0
+            for d in range(7):
+                date_find = date_find_start + relativedelta(days=d, minutes=1)
+                normal_data = strdatetimeru(date_find).split(' ')
+                date_find = normalize_dots_date(normal_data[0])
+                time_find = '08:00:00'
+                if step == 0:
+                    time_find = normal_data[1]
+                slots = get_doctor_ecp_free_slots_by_date(i.research.auto_register_on_rmis_location, date_find, time_find)
+                step += 1
+                if len(slots) > 0:
+                    break
+            if len(slots) > 0:
+                slot_id = slots[0].get('pk', None)
+                type_slot = slots[0].get('typeSlot', None)
+                ecp_id = None
+                if slot_id and type_slot:
+                    ecp_id = direction.client.get_ecp_id()
+
+                if ecp_id:
+                    register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+
+
+def attach_patient_ecp(person_id, lpu_region_id, date_begin, lpu_id, lpu_region_type_id):
+    sess_id = request_get_sess_id()
+    result = make_request_get(
+        "PersonCard",
+        query=f"Sess_id={sess_id}&LpuRegion_id={lpu_region_id}&PersonCard_begDate={date_begin}&Person_id={person_id}&Lpu_id={lpu_id}&"
+        f"LpuAttachType_id=1&PersonCard_IsAttachCondit=0&LpuRegionType_id={lpu_region_type_id}",
+        sess_id=sess_id,
+        method="POST",
+    )
+    if not result or not result.get("PersonCard_id"):
+        return None
+    person_card_id = result['PersonCard_id']
+    person_card_attach_id = result['PersonCardAttach_id']
+    return (person_card_id, person_card_attach_id)

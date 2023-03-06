@@ -24,7 +24,7 @@ def consolidate_base(ws1, d1, d2, fin_source):
         ('Отчество', 16),
         ('Комментарий_в_карте', 20),
         ('Наимен. услуги', 30),
-        ('№ напраления', 15),
+        ('№ направления', 15),
         ('Дата подтверждения', 15),
         ('Врач', 25),
         ('Место работы', 55),
@@ -34,6 +34,8 @@ def consolidate_base(ws1, d1, d2, fin_source):
         ('Подчинение', 15),
         ('Цель', 15),
         ('Категория', 25),
+        ('Леч врач', 25),
+        ('Кто создал', 25),
     ]
 
     row = 5
@@ -89,7 +91,9 @@ def consolidate_fill_data(ws1, result_query):
             ws1.cell(row=r, column=15).value = i.parent_iss
             ws1.cell(row=r, column=16).value = i.purpose
             ws1.cell(row=r, column=17).value = i.category_title
-            for j in range(1, 18):
+            ws1.cell(row=r, column=18).value = f"{i.user_doc_f} {i.user_doc_n} {i.user_doc_p}"
+            ws1.cell(row=r, column=19).value = f"{i.doc_who_create_f} {i.doc_who_create_n} {i.doc_who_create_p}"
+            for j in range(1, 20):
                 ws1.cell(row=r, column=j).style = style_border1
 
         if i.parent_iss:
@@ -114,7 +118,9 @@ def consolidate_fill_data(ws1, result_query):
             ws1.cell(row=r, column=15).value = i.parent_iss
             ws1.cell(row=r, column=16).value = data["purpose"]
             ws1.cell(row=r, column=17).value = i.category_title
-            for j in range(1, 18):
+            ws1.cell(row=r, column=18).value = f"{i.user_doc_f} {i.user_doc_n} {i.user_doc_p}"
+            ws1.cell(row=r, column=19).value = f"{i.doc_who_create_f} {i.doc_who_create_n} {i.doc_who_create_p}"
+            for j in range(1, 20):
                 ws1.cell(row=r, column=j).style = style_border1
 
     return ws1
@@ -279,3 +285,218 @@ def fill_cells(rows_fill, total_fill):
     for row_f in rows_fill:
         for cell in row_f:
             cell.fill = total_fill
+
+
+def consolidate_base_doctors_by_type_department(ws1, d1, d2, fin_source_data):
+    style_border = NamedStyle(name="style_border_ca5")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=1).value = 'Сводный:'
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+
+    columns = [
+        ('Подразделение', 20),
+        ('Сотрудник', 30),
+        ('Услуга', 30),
+        ('Данные пациента', 40),
+    ]
+    finish_order = {}
+    for k, v in fin_source_data.items():
+        start_position_col = len(columns) + 1
+        columns.append((f"{v}, шт.", 12))
+        finish_order[k] = start_position_col
+        start_position_col += 1
+        columns.append((f"{v}, ует.", 12))
+    columns.append(("Итого, шт.", 12))
+    columns.append(("Итого, ует.", 12))
+    row = 5
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=row, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=row, column=idx).style = style_border
+
+    return (ws1, finish_order)
+
+
+def consolidate_fill_data_doctors_by_type_department_detail_patient(ws1, query, fin_source_order):
+    style_border1 = NamedStyle(name="style_border1")
+    bd = Side(style='thin', color="000000")
+    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border1.font = Font(bold=False, size=11)
+    style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
+    row = 5
+    start_row = row + 1
+    old_doctor, old_department, current_doctor, current_department_title = "", "", "", ""
+    step = 0
+    min_col_val, max_col_val = min(fin_source_order.values()), max(fin_source_order.values()) + 2
+    sum_current_department = []
+    for i in query:
+        row += 1
+        current_department_title = i.department_title
+        current_doctor = f"{i.family} {i.name} {i.patronymic}"
+        if (old_doctor != current_doctor) and (step != 0):
+            ws1.cell(row=row, column=1).value = old_department
+            ws1.cell(row=row, column=2).value = f"Итого: {old_doctor}"
+            ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
+            sum_current_department.append(row)
+            if old_department != current_department_title:
+                row += 1
+                ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
+                ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
+                sum_current_department = []
+            ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
+            ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
+            row += 1
+            start_row = row
+        ws1.cell(row=row, column=1).value = current_department_title
+        ws1.cell(row=row, column=2).value = current_doctor
+        ws1.cell(row=row, column=3).value = i.research_title
+        ws1.cell(row=row, column=4).value = f"{i.patient_family} {i.patient_name} {i.patient_patronymic}; карта-{i.patient_card_num}; напр-{i.dir_id}; {i.date_confirm}"
+        col = fin_source_order.get(i.istochnik_f_id) if fin_source_order.get(i.istochnik_f_id) else 50
+        ws1.cell(row=row, column=col).value = 1
+        ws1.cell(row=row, column=col + 1).value = i.uet_refferal_doc
+        old_doctor, old_department = current_doctor, current_department_title
+        step += 1
+    row += 1
+    ws1.cell(row=row, column=1).value = current_department_title
+    ws1.cell(row=row, column=2).value = f"Итого: {current_doctor}"
+    ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
+    sum_current_department.append(row)
+    row += 1
+    ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
+    ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
+    ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
+    ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
+    return ws1
+
+
+def consolidate_fill_data_doctors_by_type_department(ws1, query, fin_source_order):
+    style_border1 = NamedStyle(name="style_border1")
+    bd = Side(style='thin', color="000000")
+    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border1.font = Font(bold=False, size=11)
+    style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
+    row = 5
+    start_row = row + 1
+    old_doctor, old_department, current_doctor, current_department_title, current_research, old_research = "", "", "", "", "", ""
+    step = 0
+    step_department = 0
+    min_col_val, max_col_val = min(fin_source_order.values()), max(fin_source_order.values()) + 2
+    sum_current_department = []
+    research_finsource_count = {k: 0 for k in fin_source_order.keys()}
+    uet_finsource_count = {k: 0 for k in fin_source_order.keys()}
+    for i in query:
+        current_department_title = i.department_title
+        current_doctor = f"{i.family} {i.name} {i.patronymic}"
+        current_research = i.research_title
+        if (old_doctor != current_doctor) and (step != 0) and (step_department != 0):
+            row += 1
+            ws1.cell(row=row, column=3).value = old_research
+            ws1.cell(row=row, column=1).value = old_department
+            ws1.cell(row=row, column=2).value = old_doctor
+            ws1 = fill_data_cells_by_research(ws1, research_finsource_count, fin_source_order, uet_finsource_count, row)
+            row += 1
+            ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
+            sum_current_department.append(row)
+            ws1.cell(row=row, column=1).value = old_department
+            ws1.cell(row=row, column=2).value = f"Итого: {old_doctor}"
+            research_finsource_count = {k: 0 for k in fin_source_order.keys()}
+            uet_finsource_count = {k: 0 for k in fin_source_order.keys()}
+            if old_department != current_department_title:
+                row += 1
+                ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
+                ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
+                sum_current_department = []
+                research_finsource_count = {k: 0 for k in fin_source_order.keys()}
+                uet_finsource_count = {k: 0 for k in fin_source_order.keys()}
+                step_department = 0
+            ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
+            ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
+            row += 1
+            start_row = row
+
+        if old_research != current_research and step != 0 and step_department != 0:
+            row += 1
+            ws1.cell(row=row, column=3).value = old_research
+            ws1 = fill_data_cells_by_research(ws1, research_finsource_count, fin_source_order, uet_finsource_count, row)
+            research_finsource_count = {k: 0 for k in fin_source_order.keys()}
+            uet_finsource_count = {k: 0 for k in fin_source_order.keys()}
+
+            ws1.cell(row=row, column=1).value = current_department_title
+            ws1.cell(row=row, column=2).value = current_doctor
+        step_department += 1
+        if research_finsource_count.get(i.istochnik_f_id) or research_finsource_count.get(i.istochnik_f_id) == 0:
+            research_finsource_count[i.istochnik_f_id] = research_finsource_count[i.istochnik_f_id] + 1
+            uet_finsource_count[i.istochnik_f_id] = uet_finsource_count[i.istochnik_f_id] + i.uet_refferal_doc
+        old_doctor, old_department, old_research = current_doctor, current_department_title, current_research
+        step += 1
+    row += 1
+    ws1.cell(row=row, column=3).value = old_research
+    ws1 = fill_data_cells_by_research(ws1, research_finsource_count, fin_source_order, uet_finsource_count, row)
+    ws1.cell(row=row, column=1).value = current_department_title
+    ws1.cell(row=row, column=2).value = current_doctor
+    row += 1
+    ws1.cell(row=row, column=1).value = current_department_title
+    ws1.cell(row=row, column=2).value = f"Итого: {current_doctor}"
+    ws1 = doctor_summary(ws1, min_col_val, max_col_val, start_row, row, total_fill)
+    sum_current_department.append(row)
+    row += 1
+    ws1.cell(row=row, column=1).value = f"Итого: {old_department}"
+    ws1 = count_sum_from_data_cells(ws1, min_col_val, max_col_val, sum_current_department, row)
+    ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val, max_col_val)
+    ws1 = count_sum_by_custom_cells(ws1, start_row, row + 1, min_col_val + 1, max_col_val + 1)
+    return ws1
+
+
+def count_sum_by_custom_cells(ws2, start_row, end_row, start_col, end_col):
+    for s in range(start_row, end_row):
+        step_sum = 1
+        sum_column = '=SUM('
+        for k in range(start_col, end_col):
+            step_sum += 1
+            if step_sum % 2 == 0 and step_sum != 2:
+                sum_column = f"{sum_column},{get_column_letter(k)}{s}"
+            elif step_sum % 2 == 0 and step_sum == 2:
+                sum_column = f"{sum_column}{get_column_letter(k)}{s}"
+        sum_column = f"{sum_column})"
+        ws2.cell(row=s, column=end_col).value = f'{sum_column}'
+    return ws2
+
+
+def count_sum_from_data_cells(ws2, start_col, end_col, data_rows, purpose_row):
+    for purpose_col in range(start_col, end_col):
+        step_sum = 0
+        sum_column = '=SUM('
+        for current_row in data_rows:
+            if step_sum != 0:
+                sum_column = f'{sum_column}, {get_column_letter(purpose_col)}{current_row}'
+            else:
+                sum_column = f'{sum_column}{get_column_letter(purpose_col)}{current_row}'
+            step_sum += 1
+        sum_column = f"{sum_column})"
+        ws2.cell(row=purpose_row, column=purpose_col).value = f"={sum_column}"
+    return ws2
+
+
+def doctor_summary(ws2, star_col, end_col, start_current_row, purpose_row, fill_param):
+    for k in range(star_col, end_col):
+        ws2.cell(row=purpose_row, column=k).value = f'=SUM({get_column_letter(k)}{start_current_row}:{get_column_letter(k)}{purpose_row - 1})'
+    ws2.row_dimensions.group(start_current_row, purpose_row - 1, hidden=True)
+    fill_cells(ws2[f'A{purpose_row}:{get_column_letter(end_col + 1)}{purpose_row}'], fill_param)
+    return ws2
+
+
+def fill_data_cells_by_research(ws2, research_finsource_count, fin_source_order, uet_finsource_count, current_row):
+    for k, v in research_finsource_count.items():
+        col = fin_source_order.get(k) if fin_source_order.get(k) else 50
+        ws2.cell(row=current_row, column=col).value = v
+    for k, v in uet_finsource_count.items():
+        col = fin_source_order.get(k) if fin_source_order.get(k) else 50
+        ws2.cell(row=current_row, column=col + 1).value = v
+    return ws2

@@ -76,7 +76,7 @@
           Убрать
         </button>
         <div v-if="has_not_filled && !simple">
-          <div><strong>Незаполенные поля:</strong></div>
+          <div><strong>Незаполненные поля:</strong></div>
           <ul>
             <li
               v-for="f in not_filled_fields"

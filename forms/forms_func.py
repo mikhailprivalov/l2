@@ -19,7 +19,7 @@ from utils.dates import normalize_date
 
 def get_all_doc(docs: [Document]):
     """
-    возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
+    Возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
     """
     documents = {
         'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
@@ -112,7 +112,7 @@ def get_final_data(research_price_loc):
     tmp_napr = []
     for k, v in research_price_loc.items():
         # research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
-        research_attr = [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')]
+        research_attr = [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code', 'short_title')]
         research_attr_list = [list(z) for z in research_attr]
         for research_id, research_coast in v.items():
             h = []
@@ -141,6 +141,7 @@ def get_final_data(research_price_loc):
                     h.append(res_obj.paraclinic_info)
                     h[0], h[1] = h[1], h[0]
                     total_sum += research_sum
+                    h.append(j[3])
                     research_attr_list.remove(j)
                     tmp_data.append(h)
                     if h[1]:
@@ -173,7 +174,7 @@ def get_final_data(research_price_loc):
 def get_data_individual(card_object):
     """
     Получает на входе объект Карта
-    возвращает словарь атрибутов по карте и Физ.лицу(Индивидуалу)
+    возвращает словарь атрибутов по карте и Физ.лицу (Индивидуалу)
     :param card_object:
     :return:
     """
@@ -259,7 +260,7 @@ def form_notfound():
 
 def get_doc_results(doc_obj, date_result):
     """
-    возвращает результаты врача за определенную дату. ***** Ни в коем случае не переделывать на диапозон дат
+    Возвращает результаты врача за определенную дату. ***** Ни в коем случае не переделывать на диапозон дат
     """
     doc_results = Issledovaniya.objects.filter(doc_confirmation=doc_obj, time_confirmation__date=date_result, napravleniye__isnull=False)
     return doc_results
@@ -927,7 +928,7 @@ def create_contract(ind_dir, card_pk):
     napr = Napravleniya.objects.filter(pk__in=ind_dir)
     dir_temp = []
 
-    # Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
+    # Проверить, что все направления принадлежат к одной карте и имеют ист.финансирования "Платно"
     num_contract_set = set()
     for n in napr:
         if n.istochnik_f_id in ist_f_list and n.client == ind_card:

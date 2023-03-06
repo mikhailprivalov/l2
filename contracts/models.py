@@ -43,7 +43,11 @@ class PriceName(models.Model):
 
     @staticmethod
     def as_json(price):
-        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": price.company_id}
+        if price.company:
+            company_title = price.company.title
+        else:
+            company_title = ""
+        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": price.company_id, "companyTitle": company_title}
         return json_data
 
 
@@ -60,7 +64,7 @@ class PriceCoast(models.Model):
         """
         Принимает вид исследования, объект price_modifier: объект прайса, модификатор
         на основании прайса получает базовую цену и умножает на модификатор.
-        Возвращает окончательну цену для записи в issledovaniya
+        Возвращает окончательную цену для записи в issledovaniya
         """
         value = 0
         if price_modifier:
@@ -88,8 +92,8 @@ class PriceCoast(models.Model):
 class Contract(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text='Наименование организации', db_index=True)
     number = models.CharField(max_length=255, blank=True, help_text='Номер договора', db_index=False)
-    date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
-    date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
+    date_start = models.DateField(help_text="Дата начала действия документа", blank=True, null=True)
+    date_end = models.DateField(help_text="Дата окончания действия документа", blank=True, null=True)
     price = models.ForeignKey(PriceName, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
     modifier = models.DecimalField(max_digits=8, decimal_places=3, default=1, help_text="10000,101")
     active_status = models.BooleanField(default=True, help_text='Действующий', db_index=True)
