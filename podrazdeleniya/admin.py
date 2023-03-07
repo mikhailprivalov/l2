@@ -15,5 +15,12 @@ class RoomAdmin(admin.ModelAdmin):
     search_fields = ('title', 'hospital')
 
 
+class ChamberAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'title', 'hospital')
+    autocomplete_fields = ('hospital',)
+    search_fields = ('title', 'hospital')
+
+
+admin.site.register(Chamber, ChamberAdmin)
 admin.site.register(Podrazdeleniya, PodrazdeleniyaAdmin)
 admin.site.register(Room, RoomAdmin)

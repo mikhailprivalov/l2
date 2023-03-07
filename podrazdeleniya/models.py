@@ -116,3 +116,16 @@ class Room(models.Model):
         verbose_name = 'Кабинет'
         verbose_name_plural = 'Кабинеты'
         ordering = ['-id']
+
+
+class Chamber(models.Model):
+    hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, verbose_name='Больница', on_delete=models.CASCADE)
+    title = models.CharField(max_length=64, help_text='Название палаты')
+
+    def __str__(self):
+        return f'{self.hospital} — {self.title}'
+
+    class Meta:
+        verbose_name = 'Палата'
+        verbose_name_plural = 'Палаты'
+
