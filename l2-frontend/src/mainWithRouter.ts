@@ -687,6 +687,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/chambers',
+      name: 'ManageChamber',
+      component: () => import('@/pages/ManageChambers/index.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Палаты',
+        groups: ['Палаты'],
+      },
+    },
+    {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
       component: () => import('@/construct/ConstructRelatedTube.vue'),
