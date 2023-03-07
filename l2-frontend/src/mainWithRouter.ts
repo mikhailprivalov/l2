@@ -657,7 +657,6 @@ const router = new Router({
       },
     },
     {
-      path:
     },
     {
       path: '/404',
