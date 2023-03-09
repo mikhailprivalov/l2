@@ -12,10 +12,10 @@
     <div class="edit-price">
       <table class="table">
         <colgroup>
+          <col width="240">
+          <col width="120">
+          <col width="120">
           <col>
-          <col width="120">
-          <col width="120">
-          <col width="500">
           <col
             v-if="priceIsActive"
             width="100"
