@@ -448,6 +448,7 @@ class HospitalService(models.Model):
         'extracts': 7,
         'bl': 8,
         't, ad, p sheet': 9,
+        'list assignments': 10,
     }
 
     TYPES_BY_KEYS_REVERSED = {
@@ -461,6 +462,7 @@ class HospitalService(models.Model):
         7: 'extracts',
         8: 'bl',
         9: 't, ad, p sheet',
+        10: 'list assignments',
     }
 
     TYPES_REVERSED = {
