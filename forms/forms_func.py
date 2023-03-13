@@ -547,7 +547,7 @@ def primary_reception_get_data(hosp_first_num):
         'near_diagnos': near_diagnos,
         'final_diagnos_mkb': final_diagnos_mkb,
         'other_diagnos_mkb': other_diagnos_mkb,
-        'near_diagnos_mkb': near_diagnos_mkb
+        'near_diagnos_mkb': near_diagnos_mkb,
     }
 
 
