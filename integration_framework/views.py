@@ -761,6 +761,65 @@ def check_enp(request):
         tfoms_data = match_patient_by_snils(snils)
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
+        else:
+            params = json.dumps(
+                {
+                    "type": CardBase.objects.get(internal_type=True).pk,
+                    "extendedSearch": True,
+                    "form": {
+                        "snils": snils,
+                        "archive": False,
+                    },
+                    "limit": 1,
+                }
+            )
+            request_obj = HttpRequest()
+            request_obj._body = params
+            request_obj.user = request.user
+            data = patients_search_card(request_obj)
+            results_json = json.loads(data.content.decode('utf-8'))
+            if len(results_json['results']) > 0:
+                data_patient = results_json['results'][0]
+                docs_patinet = data_patient['docs']
+                snils = ""
+                for d in docs_patinet:
+                    if d['type_title'] == 'СНИЛС':
+                        snils = d['number']
+                patient_data = {
+                    "family": data_patient['family'],
+                    "given": data_patient['name'],
+                    "patronymic": data_patient['twoname'],
+                    "gender": data_patient['sex'],
+                    "birthdate": normalize_dots_date(data_patient['birthday']),
+                    "enp": enp,
+                    "birthyear": f"{normalize_dots_date(data_patient['birthday']).split('-')[0]}",
+                    "country": "RUS",
+                    "polis_seria": "",
+                    "polis_number": "",
+                    "polis_type": "",
+                    "polis_dognumber": "",
+                    "polis_dogdate": "",
+                    "polis_datebegin": "",
+                    "snils": snils,
+                    "status_code": "",
+                    "status_name": "",
+                    "unit_code": "",
+                    "unit_name": "",
+                    "unit_date": "",
+                    "document_type": "",
+                    "document_seria": "",
+                    "document_number": "",
+                    "insurer_code": "",
+                    "insurer_name": "",
+                    "address": "",
+                    "codestreet": "",
+                    "house": "",
+                    "block": "",
+                    "flat": "",
+                    "idt": "",
+                    "insurer_full_code": "",
+                }
+                return Response({"ok": True, 'patient_data': patient_data, '1': results_json['results']})
     elif enp_mode == 'l2-enp-full':
         patronymic = patronymic if patronymic != 'None' else None
         logger.exception(f'data: {(family, name, patronymic, bd)}')

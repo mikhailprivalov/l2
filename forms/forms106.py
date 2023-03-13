@@ -1,6 +1,6 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, KeepInFrame
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, KeepInFrame, HRFlowable
 from reportlab.platypus import PageBreak, Indenter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
@@ -188,7 +188,7 @@ def form_01(request_data):
 
     ###########################################################################################################
     # получение данных клинического диагноза
-    clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)
+    clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)[0]
 
     #####################################################################################################
     # получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
@@ -595,8 +595,8 @@ def form_02(request_data):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 12
-    style.leading = 15
+    style.fontSize = 11
+    style.leading = 12
     style.spaceAfter = 0.5 * mm
 
     styleLead = deepcopy(style)
@@ -608,11 +608,11 @@ def form_02(request_data):
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
     styleCenter.fontSize = 12
-    styleCenter.leading = 15
+    styleCenter.leading = 9
     styleCenter.spaceAfter = 1 * mm
     styleCenterBold = deepcopy(styleBold)
     styleCenterBold.alignment = TA_CENTER
-    styleCenterBold.fontSize = 10
+    styleCenterBold.fontSize = 7
     styleCenterBold.leading = 15
     styleCenterBold.face = 'PTAstraSerifBold'
     styleCenterBold.borderColor = black
@@ -689,16 +689,22 @@ def form_02(request_data):
 
     extrac_date, extract_time, final_diagnos, other_diagnos, near_diagnos, outcome, doc_fio, manager_depart, room_num, depart_extract = '', '', '', '', '', '', '', '', '', ''
     days_count = '__________________________'
-
+    final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = "", "", ""
+    result_hospital = ''
     if hosp_extract_data:
         extrac_date = hosp_extract_data['date_value']
         extract_time = hosp_extract_data['time_value']
         final_diagnos = hosp_extract_data['final_diagnos']
+        final_diagnos_mkb = hosp_extract_data['final_diagnos_mkb']
         other_diagnos = hosp_extract_data['other_diagnos']
+        other_diagnos_mkb = hosp_extract_data['other_diagnos_mkb']
         near_diagnos = hosp_extract_data['near_diagnos']
+        near_diagnos_mkb = hosp_extract_data['near_diagnos_mkb']
         days_count = hosp_extract_data['days_count']
         if hosp_extract_data['outcome']:
-            outcome = hosp_extract_data['outcome'] + ' (' + hosp_extract_data['result_hospital'] + ')'
+            outcome = hosp_extract_data['outcome']
+        if hosp_extract_data['result_hospital']:
+            result_hospital = hosp_extract_data['result_hospital']
         doc_fio = hosp_extract_data['doc_fio']
         manager_depart = hosp_extract_data['manager_depart']
         room_num = hosp_extract_data['room_num']
@@ -706,7 +712,9 @@ def form_02(request_data):
         depart_extract = iss_last_hosp.research.title
 
     # Получить отделение - из названия услуги или самого главного направления
-    hosp_depart = hosp_nums_obj[0].get('research_title')
+    first_bed_profile = hosp_nums_obj[0].get('research_title')
+    iss_first_depart = Issledovaniya.objects.get(pk=hosp_nums_obj[0].get('issledovaniye'))
+    first_hosp_depart = iss_first_depart.hospital_department_override.title if iss_first_depart.hospital_department_override else ""
 
     ############################################################################################################
     # Получить данные из первичного приема (самого первого hosp-направления)
@@ -730,7 +738,7 @@ def form_02(request_data):
 
     ###########################################################################################################
     # получение данных клинического диагноза
-    clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)
+    clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)[1][0]
 
     #####################################################################################################
     # получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
@@ -738,125 +746,90 @@ def form_02(request_data):
     transfers_data = hosp_get_transfers_data(hosp_nums_obj)
     transfers = ''
     for i in transfers_data:
-        transfers = f"{transfers} в {i['transfer_research_title']} {i['date_transfer_value']}/{i['time_transfer_value']};"
+        transfers = f"{transfers}<br/> Переведен в отделение {i['transfer_depart']}; профиль коек {i['transfer_research_title']}<br/>Дата и время перевода {i['date_transfer_value']} время:{i['time_transfer_value']};<br/>"
 
-    #####################################################################################################
+    plan_form = primary_reception_data['plan_hospital']
+    extra_hospital = primary_reception_data['extra_hospital']
+    result_form = ""
+    if plan_form.lower() == "да":
+        result_form = "плановая — 1"
+    if extra_hospital.lower() == "да":
+        result_form = "экстренная — 2"
+
     title_page = [
         Indenter(left=0 * mm),
-        Spacer(1, 8 * mm),
+        Spacer(1, 2 * mm),
         Paragraph(
-    '<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫ Х УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
+    '<font fontname="PTAstraSerifBold" size=10>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫ Х УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
         p_card_num, hosp_nums
     ),
     styleCenterBold,
 ),
         Spacer(1, 2 * mm),
-        Spacer(1, 2 * mm),
-        Spacer(1, 2 * mm),
-        Paragraph("Фамилия, имя, отчество:&nbsp;", style),
+        Paragraph(f"Фамилия, имя, отчество:&nbsp; {patient_data['fio']}", style),
         Spacer(1, 0.2 * mm),
         Paragraph(f"Дата рождения: {patient_data['born']} Пол: {patient_data['sex']}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph(f"Поступил в стационар - 1, в дневной стационар — 2(указать):", style),
+        Paragraph(f"Поступил в: стационар - 1", style),
         Spacer(1, 0.5 * mm),
-        Paragraph(f"Дата и время поступления: «	»	20	г. время:	час.	мин.", style),
+        Paragraph(f"Дата и время поступления: {primary_reception_data['date_entered_value']}, {primary_reception_data['time_entered_value']}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph('Поступил через часов после начала заболевания, получения травмы, отравления.', style),
+        Paragraph(f"Поступил через {primary_reception_data['time_start_ill']} часов после начала заболевания, получения травмы, отравления.", style),
         Spacer(1, 0.5 * mm),
         Paragraph('Направлен в стационар (дневной стационар):', style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Наименование	медицинской	организации, направившей пациента:", style),
+        Paragraph(f"Наименование	медицинской	организации, направившей пациента: {primary_reception_data['who_directed']}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Номер и дата направления:	от «        »	20     г.", style),
+        Paragraph("Номер и дата направления:	от «      »	20     г.", style),
         Spacer(1, 0.5 * mm),
         Paragraph("Поступил в стационар (дневной стационар) для оказания медицинской помощи в текущем году: "
                   "по поводу основного заболевания, указанного в диагнозе при поступлении: первично — 1,повторно — 2.",style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Форма оказании медицинской помощи: плановая — 1, экстренная — 2.", style),
+
+        Paragraph(f"Форма оказания медицинской помощи: {result_form}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Наименование отделения:		профиль коек	палата №  	", style),
+        Paragraph(f"Наименование отделения: {first_hosp_depart}; профиль коек {first_bed_profile}; палата № ____", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Переведен в отделение:		профиль коек	палата №_____", style),
+        Paragraph(f"{transfers}", style),
+        Spacer(1, 1 * mm),
+        Paragraph(f"Выписан: {extrac_date}. время:	{extract_time}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Дата и время перевода: «      »	20      г. время:	час. мин.", style),
+        Paragraph(f"Количество дней нахождения в медицинской организации: {days_count}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Выписан: «	»	20	г. время:	час.	мин. ", style),
+        Paragraph("Диагноз при направлении:____________________________", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Количество дней нахождения в медицинской организации:   		", style),
-        Spacer(1, 0.5 * mm),
-        Paragraph("Диагноз при направлении:", style),
-        Spacer(1, 0.5 * mm),
-        Paragraph("код по МКБ", style),
+        Paragraph("код по МКБ:_______________________", style),
         Spacer(1, 0.5 * mm),
         Paragraph("Предварительный диагноз (диагноз при поступлении):", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Дата и время установления диагноза при поступлении: «	»	20	г. время:	час.	мин.", style),
+        Paragraph(f"Дата и время установления диагноза при поступлении: {clinical_diagnos['date']}г. время:	час.____ мин.____", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Основное заболевание       код по МКБ", style),
+        Paragraph(f"Основное заболевание {clinical_diagnos['main_diagnos']}      код по МКБ", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Осложнения основного заболевания    код по МКБ", style),
+        Paragraph(f"Осложнения основного заболевания {clinical_diagnos['other_diagnos']} код по МКБ", style),
 
         Spacer(1, 0.5 * mm),
         Paragraph("Внешняя причина при травмах, отравлениях   код по МКБ", style),
 
         Spacer(1, 0.5 * mm),
-        Paragraph("Сопутствующие заболевания   код по МКБ", style),
+        Paragraph(f"Сопутствующие заболевания {clinical_diagnos['near_diagnos']}  код по МКБ", style),
 
         Spacer(1, 0.5 * mm),
         Paragraph("Дополнительные сведения о заболевании", style),
 
         Spacer(1, 0.5 * mm),
-        Paragraph("В анамнезе: туберкулез	ВИЧ-инфекция	вирусные гепатиты	сифилис	COVID- 19   Осмотр на педикулез, чесотку: да — 1, нет — 2, результат осмотра: "
-                  "Аллергические реакции на лекарственные препараты, пищевая аллергия или иные виды непереносимости в анамнезе, с указанием типа и вида аллергической реакции:", style),
+        Paragraph("В анамнезе: туберкулез_____	ВИЧ-инфекция_____ вирусные гепатиты_____	сифилис_____	COVID-19_____ ", style),
 
-        Paragraph('Группа крови	резус-принадлежность	антиген K1 системы Kell ', style),
         Spacer(1, 0.5 * mm),
-        Paragraph('иные сведения групповой принадлежности крови (при наличии)', style),
+        Paragraph("Осмотр на педикулез, чесотку: да — 1, нет — 2, результат осмотра: ", style),
 
-        ###############################################
-        Spacer(1, 2 * mm),
-        Spacer(1, 2 * mm),
-        Spacer(1, 2 * mm),
-        Paragraph('Дата и время поступления: {} - {}'.format(primary_reception_data['date_entered_value'], primary_reception_data['time_entered_value']), style),
         Spacer(1, 0.5 * mm),
-        Paragraph('Дата и время выписки: {} - {}'.format(extrac_date, extract_time), style),
+        Paragraph(f"Аллергические реакции на лекарственные препараты, пищевая аллергия или иные виды непереносимости в анамнезе, с указанием типа и вида аллергической реакции: {primary_reception_data['medicament_allergy']}", style),
+        Paragraph("___________________________________________________________", style),
+
+        Paragraph(f'Группа крови: {group_blood_avo_value}; резус-принадлежность {group_rezus_value}; антиген K1 системы Kell _____', style),
         Spacer(1, 0.5 * mm),
-        Paragraph('Отделение: {}'.format(hosp_depart), style),
-        Spacer(1, 0.5 * mm),
-        Paragraph(f"Палата №: {room_num} {depart_extract}", style),
-        Spacer(1, 0.5 * mm),
-        Paragraph('Переведен в отделение:', style),
-        Spacer(1, 8 * mm),
-        Paragraph('Проведено койко-дней: {}'.format(days_count), style),
-        Spacer(1, 0.5 * mm),
-        Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(primary_reception_data['type_transport']), style),
-        Spacer(1, 0.5 * mm),
-        Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo_value, group_rezus_value), style),
-        Spacer(1, 1 * mm),
-        Paragraph('Побочное действие лекарств(непереносимость):', style),
-        Spacer(1, 12 * mm),
-        Paragraph("1. Фамилия, имя, отчество:&nbsp;", style),
-        Spacer(1, 2 * mm),
-        Paragraph('2. Пол: {} {} 3. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']), style),
-        Spacer(1, 0.5 * mm),
-        Paragraph('4. Постоянное место жительства: ', style),
-        Spacer(1, 3.5 * mm),
-        Paragraph('5. Место работы, профессия или должность:', style),
-        Spacer(1, 0.5 * mm),
-        Paragraph('6. Кем направлен больной:', style),
-        Spacer(1, 0.5 * mm),
-        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format(primary_reception_data['extra_hospital']), style),
-        Spacer(1, 0.5 * mm),
-        Paragraph(' через: {} после начала заболевания, получения травмы; '.format(primary_reception_data['time_start_ill']), style),
-        Spacer(1, 0.5 * mm),
-        Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(primary_reception_data['plan_hospital']), style),
-        Spacer(1, 0.5 * mm),
-        Paragraph('8. Диагноз направившего учреждения:', style),
-        Spacer(1, 8 * mm),
-        Paragraph('9. Диагноз при поступлении:', style),
-        Spacer(1, 10 * mm),
-        Paragraph('10. Диагноз клинический:', style),
-        PageBreak(),
+        Paragraph('иные сведения групповой принадлежности крови (при наличии) ______________', style),
     ]
 
     closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
@@ -867,34 +840,85 @@ def form_02(request_data):
             f"к труду: <u>{closed_bl_result['start_work']}</u> <br/>Номер ЛН: <u>{closed_bl_result['num']}</u> Выдан кому: {closed_bl_result['who_get']} "
         )
 
+    styleTO = deepcopy(style)
+    styleTO.alignment = TA_LEFT
+    styleTO.firstLineIndent = 0
+    styleTO.fontSize = 9.5
+    styleTO.leading = 10
+    styleTO.spaceAfter = 0.2 * mm
+
+    # Таблица для операции
+    opinion_oper = [
+        [
+            Paragraph('Дата проведения', styleTO),
+            Paragraph('Наименование оперативного вмешательства (операции), код согласно номенклатуре медицинских услуг', styleTO),
+            Paragraph('Вид анестезиологического пособия', styleTO),
+            Paragraph('Кровопотеря во время оперативного вмешательства (операции), мл', styleTO),
+        ]
+    ]
+
+    hosp_operation = hosp_get_operation_data(num_dir)
+    x = 0
+    operation_result = []
+    for i in hosp_operation:
+        operation_template = [''] * 4
+        operation_template[0] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTO)
+        operation_template[1] = Paragraph(f"{i['name_operation']} <br/><font face=\"PTAstraSerifBold\" size=\"8.7\">({i['category_difficult']}), {i['doc_fio']}</font>", styleTO)
+        operation_template[2] = Paragraph(i['anesthesia method'], styleTO)
+        operation_template[3] = Paragraph(i['complications'], styleTO)
+        operation_result.append(operation_template.copy())
+
+    opinion_oper.extend(operation_result)
+
+    t_opinion_oper = opinion_oper.copy()
+    tbl_o = Table(
+        t_opinion_oper,
+        colWidths=(
+            20 * mm,
+            85 * mm,
+            45 * mm,
+            24 * mm,
+        ),
+    )
+    tbl_o.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
+
     second_page = [
+        Spacer(1, 4 * mm),
+        HRFlowable(width=210 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.grey, thickness=1, lineCap='square', dash=(4, 4)),
         Spacer(1, 2 * mm),
         Paragraph('Диагноз клинический, установленный в стационаре:', style),
         Spacer(1, 2 * mm),
         Paragraph('Дата и время установления клинического диагноза: «	»	20	г. время:	час.	мин.', style),
         Spacer(1, 2 * mm),
-        Paragraph('Основное заболевание   код по МКБ', style),
+        Paragraph(f'Основное заболевание {final_diagnos};   код по МКБ {final_diagnos_mkb}', style),
         Spacer(1, 2 * mm),
-        Paragraph('Осложнения основного заболевания   код по МКБ', style),
+        Paragraph(f'Осложнения основного заболевания {other_diagnos};  код по МКБ {other_diagnos_mkb}', style),
         Spacer(1, 2 * mm),
         Paragraph('Внешняя причина при травмах, отравления   код по МКБ', style),
         Spacer(1, 2 * mm),
-        Paragraph('Сопутствующие заболевания   код по МКБ', style),
+        Paragraph(f'Сопутствующие заболевания {near_diagnos}  код по МКБ {near_diagnos_mkb}', style),
         Spacer(1, 2 * mm),
         Paragraph('Дополнительные сведения о заболевании', style),
         Spacer(1, 2 * mm),
         Paragraph('Проведенные оперативные вмешательства (операции):', style),
+        tbl_o,
 
         Spacer(1, 2 * mm),
-        Paragraph('Исход госпитализации: выписан — 1, в том числе в дневной стационар — 2, в стационар — 3.', style),
+        Paragraph(f'Исход госпитализации: {outcome}', style),
         Spacer(1, 2 * mm),
         Paragraph('Наименование медицинской	организации	(фамилия,	имя, отчество (при наличии) индивидуального предпринимателя, осуществляющего медицинскую деятельность), '
                   'куда переведен пациент', style),
-        Spacer(1, 2 * mm),
-        Paragraph('Исход госпитализации: выписан — 1, в том числе в дневной стационар — 2, в стационар — 3.', style),
 
         Spacer(1, 2 * mm),
-        Paragraph('Результат госпитализации: выздоровление — 1, улучшение — 2, без перемен — 3, ухудшение — 4, умер — 5.', style),
+        Paragraph(f'Результат госпитализации: {result_hospital}', style),
 
         Spacer(1, 2 * mm),
         Paragraph('Умер в	отделении: «	»	20	г. время:	час.	мин.', style),
@@ -926,59 +950,21 @@ def form_02(request_data):
         Spacer(1, 2 * mm),
         Paragraph('приступить к работе с «	»	20	г.', style),
 
-
-
-        ##################################################################################
         Spacer(1, 2 * mm),
-        Paragraph('11. Диагноз заключительный клинический:', style),
-        Spacer(1, 0.5 * mm),
-        Paragraph('а) основной:', style),
-        Spacer(1, 45 * mm),
-        Paragraph('б) осложнение основного:', style),
-        Spacer(1, 18 * mm),
-        Paragraph('в) сопутствующий:', style),
-        Spacer(1, 19 * mm),
-        Paragraph(
-            '12. Госпитализирован в данном году по поводу данного заболевания: {}, <br/>'
-            'всего  - {} раз.:'.format(primary_reception_data['what_time_hospitalized'], primary_reception_data['all_hospitalized']),
-            styleLead,
-        ),
-        Spacer(1, 1 * mm),
-        Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения:', styleLead),
-        Spacer(1, 40 * mm),
-        Paragraph('14. Другие виды лечения:___________________________________________', styleLead),
-        Spacer(1, 0.2 * mm),
-        Paragraph('для больных злокачественными новообразованиями.', styleLead),
-        Spacer(1, 0.2 * mm),
-        Paragraph(
-            ' 1.Специальное лечение: хирургическое(дистанционная гамматерапия, рентгенотерапия, быстрые '
-            'электроны, контактная и дистанционная гамматерапия, контактная гамматерапия и глубокая '
-            'рентгенотерапия); комбинированное(хирургическое и гамматерапия, хирургическое и рентгено - '
-            'терапия, хирургическое и сочетанное лучевое); химиопрепаратами, гормональными препаратами.',
-            styleLead,
-        ),
-        Spacer(1, 1 * mm),
-        Paragraph('2. Паллиативное', styleLead),
-        Spacer(1, 0.2 * mm),
-        Paragraph('3. Симптоматическое лечение.', styleLead),
-        Spacer(1, 0.2 * mm),
-        Paragraph(f"15. Отметка о выдаче листка нетрудоспособности:{data_bl}", styleLead),
-        Spacer(1, 1 * mm),
-        Paragraph('16. Исход заболевания: {}'.format(outcome), styleLead),
-        Spacer(1, 1 * mm),
-        Paragraph(
-            '17.  Трудоспособность восстановлена полностью, снижена, временно утрачена, стойко утрачена в связи ' 'с данным заболеванием, с другими причинами(подчеркнуть): {}'.format(''),
-            styleLead,
-        ),
-        Spacer(1, 1 * mm),
-        Paragraph('18. Для поступивших на экспертизу - заключение:___________________', styleLead),
-        Spacer(1, 1 * mm),
-        Paragraph('___________________________________________________________________', styleLead),
-        Spacer(1, 1 * mm),
-        Paragraph('19. Особые отметки', style),
+        Paragraph('явка в другую медицинскую организацию (другое структурное подразделение медицинской организации) «	»	20  г. ', style),
+
         Spacer(1, 2 * mm),
-        Paragraph('Лечащий врач: {}'.format(doc_fio), style),
-        Paragraph('Заведующий отделением: {}'.format(manager_depart), style),
+        Paragraph('Оформлен листок нетрудоспособности по уходу за больным членом семьи (фамилия, имя, отчество (при наличии):', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('Выдано направление на медико-социальную экспертизу (МСЭ): «	»	20	г. ', style),
+
+        Spacer(1, 2 * mm),
+        Paragraph('Сведения о лице, которому может быть передана информация о состоянии здоровья пациента:', style),
+        Paragraph('фамилия, имя, отчество (при наличии), номер контактного телефона', style),
+        Spacer(1, 2 * mm),
+        Paragraph('Дополнительные сведения о пациенте', style),
+
     ]
     if primary_reception_data['weight']:
         second_page.append(Paragraph(f"Вес: {primary_reception_data['weight']}", styleRight))
@@ -987,247 +973,7 @@ def form_02(request_data):
 
     closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
 
-    def first_pages(canvas, document):
-        canvas.saveState()
-        if closed_bl_result.get('is_closed', None):
-            canvas.setFont('PTAstraSerifBold', 12)
-            canvas.drawString(7 * mm, 290 * mm, 'ЛН')
-        # Переведен
-        transfers_text = [Paragraph('{}'.format(transfers), styleJustified)]
-        transfers_frame = Frame(27 * mm, 206 * mm, 175 * mm, 7 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        transfers_inframe = KeepInFrame(
-            175 * mm,
-            12 * mm,
-            transfers_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        transfers_frame.addFromList([transfers_inframe], canvas)
-
-        # Побочное действие лекарств(непереносимость) координаты
-        medicament_text = [Paragraph('{}'.format(primary_reception_data['medicament_allergy']), styleJustified)]
-        medicament_frame = Frame(27 * mm, 171 * mm, 175 * mm, 9 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        medicament_inframe = KeepInFrame(
-            175 * mm,
-            12 * mm,
-            medicament_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        medicament_frame.addFromList([medicament_inframe], canvas)
-
-        # ФИО
-        fio_text = [Paragraph("<font size=11.7 fontname ='PTAstraSerifBold'> {}</font> ".format(patient_data['fio']), style)]
-        fio_frame = Frame(77 * mm, 159 * mm, 125 * mm, 8 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        fio_inframe = KeepInFrame(
-            175 * mm,
-            12 * mm,
-            fio_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        fio_frame.addFromList([fio_inframe], canvas)
-
-        # Постоянное место жительства
-        live_text = [Paragraph('{}, {}'.format(p_address, p_phone), style)]
-        live_frame = Frame(88 * mm, 144 * mm, 115 * mm, 9 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        live_inframe = KeepInFrame(
-            175 * mm,
-            12 * mm,
-            live_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        live_frame.addFromList([live_inframe], canvas)
-
-        # Место работы
-        work_text = [Paragraph('{}'.format(p_work), style)]
-        work_frame = Frame(108 * mm, 138.5 * mm, 95 * mm, 5 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        work_inframe = KeepInFrame(
-            175 * mm,
-            12 * mm,
-            work_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        work_frame.addFromList([work_inframe], canvas)
-
-        # Кем направлен больной
-        who_directed_text = [Paragraph('{}'.format(primary_reception_data['who_directed']), style)]
-        who_directed_frame = Frame(77 * mm, 129.5 * mm, 126 * mm, 7 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        who_directed_inframe = KeepInFrame(
-            175 * mm,
-            12 * mm,
-            who_directed_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        who_directed_frame.addFromList([who_directed_inframe], canvas)
-
-        # Диагноз направившего учреждения координаты
-        diagnos_directed_text = [Paragraph('{}'.format(primary_reception_data['diagnos_who_directed']), styleJustified)]
-        diagnos_directed_frame = Frame(27 * mm, 98 * mm, 175 * mm, 9 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        diagnos_directed_inframe = KeepInFrame(
-            175 * mm,
-            10 * mm,
-            diagnos_directed_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
-
-        # Диагноз при поступлении координаты
-        diagnos_entered_text = [Paragraph('{}'.format(primary_reception_data['diagnos_entered']), styleJustified)]
-        diagnos_entered_frame = Frame(27 * mm, 83 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        diagnos_entered_inframe = KeepInFrame(
-            175 * mm,
-            10 * mm,
-            diagnos_entered_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        diagnos_entered_frame.addFromList([diagnos_entered_inframe], canvas)
-
-        # клинический диагноз координаты
-        diagnos_text = [Paragraph('{}'.format(clinical_diagnos), styleJustified)]
-        diagnos_frame = Frame(27 * mm, 22 * mm, 175 * mm, 55 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        diagnos_inframe = KeepInFrame(175 * mm, 55 * mm, diagnos_text)
-        diagnos_frame.addFromList([diagnos_inframe], canvas)
-
-        # представитель пациента
-        p_agent = None
-        agent_status = ''
-        agent = ''
-        if ind_card.who_is_agent:
-            p_agent = getattr(ind_card, ind_card.who_is_agent)
-            agent_status = ind_card.get_who_is_agent_display()
-        if p_agent:
-            agent_data = p_agent.get_data_individual()
-            agent_fio = agent_data['fio']
-            agent_phone = ','.join(agent_data['phone'])
-            agent = f"{agent_status}: {agent_fio}, тел.:{agent_phone}"
-
-        agent_text = [Paragraph('<u>{}</u>'.format(agent), styleRight)]
-        agent_frame = Frame(27 * mm, 5 * mm, 175 * mm, 7 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        agent_inframe = KeepInFrame(175 * mm, 10 * mm, agent_text)
-        agent_frame.addFromList([agent_inframe], canvas)
-        canvas.restoreState()
-
-    # Получить все услуги из категории операции
-    styleTO = deepcopy(style)
-    styleTO.alignment = TA_LEFT
-    styleTO.firstLineIndent = 0
-    styleTO.fontSize = 9.5
-    styleTO.leading = 10
-    styleTO.spaceAfter = 0.2 * mm
-
-    # Таблица для операции
-    opinion_oper = [
-        [
-            Paragraph('№', styleTO),
-            Paragraph('Название операции', styleTO),
-            Paragraph('Дата, &nbsp час', styleTO),
-            Paragraph('Метод обезболивания', styleTO),
-            Paragraph('Осложнения', styleTO),
-            Paragraph('Оперировал', styleTO),
-        ]
-    ]
-
-    hosp_operation = hosp_get_operation_data(num_dir)
-    x = 0
-    operation_result = []
-    for i in hosp_operation:
-        operation_template = [''] * 6
-        x += 1
-        operation_template[0] = Paragraph(str(x), styleTO)
-        operation_template[1] = Paragraph(f"{i['name_operation']} <br/><font face=\"PTAstraSerifBold\" size=\"8.7\">({i['category_difficult']})</font>", styleTO)
-        operation_template[2] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTO)
-        operation_template[3] = Paragraph(i['anesthesia method'], styleTO)
-        operation_template[4] = Paragraph(i['complications'], styleTO)
-        operation_template[5] = Paragraph(i['doc_fio'], styleTO)
-        operation_result.append(operation_template.copy())
-
-    opinion_oper.extend(operation_result)
-
-    t_opinion_oper = opinion_oper.copy()
-    tbl_o = Table(
-        t_opinion_oper,
-        colWidths=(
-            7 * mm,
-            62 * mm,
-            25 * mm,
-            30 * mm,
-            15 * mm,
-            45 * mm,
-        ),
-    )
-    tbl_o.setStyle(
-        TableStyle(
-            [
-                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ]
-        )
-    )
-
-    def later_pages(canvas, document):
-        canvas.saveState()
-        # Заключительные диагнозы
-        # Основной заключительный диагноз
-        final_diagnos_text = [Paragraph('{}'.format(final_diagnos), styleJustified)]
-        final_diagnos_frame = Frame(27 * mm, 230 * mm, 175 * mm, 45 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
-        final_diagnos_inframe = KeepInFrame(
-            175 * mm,
-            50 * mm,
-            final_diagnos_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        final_diagnos_frame.addFromList([final_diagnos_inframe], canvas)
-
-        # Осложнения основного заключительного диагноза
-        other_diagnos_text = [Paragraph('{}'.format(other_diagnos), styleJustified)]
-        other_diagnos_frame = Frame(27 * mm, 205 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
-        other_diagnos_inframe = KeepInFrame(
-            175 * mm,
-            20 * mm,
-            other_diagnos_text,
-            hAlign='LEFT',
-            vAlign='TOP',
-        )
-        other_diagnos_frame.addFromList([other_diagnos_inframe], canvas)
-
-        # Сопутствующие основного заключительного диагноза
-        near_diagnos_text = [Paragraph('{}'.format(near_diagnos.replace('<', '&lt;').replace('>', '&gt;')), styleJustified)]
-        near_diagnos_frame = Frame(27 * mm, 181 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
-        near_diagnos_inframe = KeepInFrame(
-            175 * mm,
-            20 * mm,
-            near_diagnos_text,
-            vAlign='TOP',
-        )
-        near_diagnos_frame.addFromList([near_diagnos_inframe], canvas)
-
-        # Таблица операции
-        operation_text = [tbl_o]
-        operation_frame = Frame(22 * mm, 123 * mm, 170 * mm, 40 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
-        operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
-        operation_frame.addFromList([operation_inframe], canvas)
-
-        canvas.setFont('PTAstraSerifBold', 8)
-        hospital: Hospitals = request_data["hospital"]
-
-        hospital_name = hospital.safe_short_title
-
-        canvas.drawString(55 * mm, 12 * mm, '{}'.format(hospital_name))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер истории: {}'.format(p_card_num, hosp_nums))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(patient_data['fio'], patient_data['born']))
-        canvas.line(55 * mm, 11.5 * mm, 200 * mm, 11.5 * mm)
-
-        canvas.restoreState()
-
-    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
 
