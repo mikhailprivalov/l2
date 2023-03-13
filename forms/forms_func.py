@@ -542,6 +542,12 @@ def primary_reception_get_data(hosp_first_num):
         'blood_group': blood_group,
         'resus_factor': resus_factor,
         'weight': weight,
+        'final_diagnos': final_diagnos,
+        'other_diagnos': other_diagnos,
+        'near_diagnos': near_diagnos,
+        'final_diagnos_mkb': final_diagnos_mkb,
+        'other_diagnos_mkb': other_diagnos_mkb,
+        'near_diagnos_mkb': near_diagnos_mkb
     }
 
 
