@@ -1487,8 +1487,6 @@ def user_view(request):
 @group_required("Создание и редактирование пользователей")
 def user_save_view(request):
     request_data = json.loads(request.body)
-    print(request.user.doctorprofile.pk)
-    print(request.user.id)
     pk = request_data["pk"]
     ok = True
     message = ""
