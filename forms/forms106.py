@@ -760,11 +760,11 @@ def form_02(request_data):
         Indenter(left=0 * mm),
         Spacer(1, 2 * mm),
         Paragraph(
-    '<font fontname="PTAstraSerifBold" size=10>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫ Х УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
-        p_card_num, hosp_nums
-    ),
-    styleCenterBold,
-),
+            '<font fontname="PTAstraSerifBold" size=10>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫ Х УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
+                p_card_num, hosp_nums
+            ),
+            styleCenterBold,
+        ),
         Spacer(1, 2 * mm),
         Paragraph(f"Фамилия, имя, отчество:&nbsp; {patient_data['fio']}", style),
         Spacer(1, 0.2 * mm),
