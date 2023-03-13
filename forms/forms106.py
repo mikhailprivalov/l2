@@ -661,7 +661,6 @@ def form_02(request_data):
     )
 
     objs.append(tbl)
-    space_symbol = '&nbsp;'
     if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
         patient_data['serial'] = patient_data['bc_serial']
         patient_data['num'] = patient_data['bc_num']
@@ -672,10 +671,6 @@ def form_02(request_data):
     p_phone = ''
     if patient_data['phone']:
         p_phone = 'тел.: ' + ", ".join(patient_data['phone'])
-
-    p_address = patient_data['main_address']
-    work_place = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
-    p_work = work_place
 
     card_num_obj = patient_data['card_num'].split(' ')
     p_card_num = card_num_obj[0]
@@ -705,9 +700,6 @@ def form_02(request_data):
             outcome = hosp_extract_data['outcome']
         if hosp_extract_data['result_hospital']:
             result_hospital = hosp_extract_data['result_hospital']
-        doc_fio = hosp_extract_data['doc_fio']
-        manager_depart = hosp_extract_data['manager_depart']
-        iss_last_hosp = Issledovaniya.objects.filter(napravleniye__pk=hosp_last_num)[0]
 
     # Получить отделение - из названия услуги или самого главного направления
     first_bed_profile = hosp_nums_obj[0].get('research_title')
@@ -962,7 +954,6 @@ def form_02(request_data):
     objs.extend(title_page)
     objs.extend(second_page)
 
-    closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
 
     doc.build(objs)
     pdf = buffer.getvalue()
