@@ -712,7 +712,9 @@ def hosp_get_transfers_data(hosp_nums_obj):
                     time_transfer_value = i[2]
                     continue
 
-        transfers.append({'transfer_research_title': transfer_research_title, 'transfer_depart': transfer_depart, 'date_transfer_value': date_transfer_value, 'time_transfer_value': time_transfer_value})
+        transfers.append(
+            {'transfer_research_title': transfer_research_title, 'transfer_depart': transfer_depart, 'date_transfer_value': date_transfer_value, 'time_transfer_value': time_transfer_value}
+        )
 
     return transfers
 

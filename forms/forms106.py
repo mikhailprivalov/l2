@@ -642,10 +642,10 @@ def form_02(request_data):
         [
             Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
             Paragraph(
-    "<font size=9 >Код формы по ОКУД:<br/>"
-    "Медицинская документация<br/>форма № 003/у<br/><br/>Утверждена приказом Министерства здравоохранения Российской Федерации от «5» августа 2022г. N 530н</font>",
-    styleT,
-),
+                "<font size=9 >Код формы по ОКУД:<br/>"
+                "Медицинская документация<br/>форма № 003/у<br/><br/>Утверждена приказом Министерства здравоохранения Российской Федерации от «5» августа 2022г. N 530н</font>",
+                styleT,
+            ),
         ],
     ]
 
@@ -759,11 +759,11 @@ def form_02(request_data):
         Indenter(left=0 * mm),
         Spacer(1, 2 * mm),
         Paragraph(
-    '<font fontname="PTAstraSerifBold" size=10>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫ Х УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
-        p_card_num, hosp_nums
-    ),
-    styleCenterBold,
-),
+            '<font fontname="PTAstraSerifBold" size=10>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫ Х УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
+                p_card_num, hosp_nums
+            ),
+            styleCenterBold,
+        ),
         Spacer(1, 2 * mm),
         Paragraph(f"Фамилия, имя, отчество:&nbsp; {patient_data['fio']}", style),
         Spacer(1, 0.2 * mm),

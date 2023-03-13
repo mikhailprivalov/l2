@@ -44,10 +44,9 @@ class Case(models.Model):
     opened = models.DateTimeField(help_text='Дата и время открытия случая')
     closed = models.DateTimeField(blank=True, null=True, default=None, help_text='Дата и время закрытия случая')
     cancel = models.BooleanField(blank=True, default=False, help_text='Отмена случая')
-    case_type = models.SmallIntegerField(choices=CASE_TYPES, help_text='Вид случая') # DEPRECATED
-    case_regimen = models.SmallIntegerField(choices=CASE_REGIMENS, help_text='Условия оказания помощи') # DEPRECATED
-    care_type = models.SmallIntegerField(choices=CARE_TYPES, help_text='Вид медицинской помощи') # DEPRECATED
-
+    case_type = models.SmallIntegerField(choices=CASE_TYPES, help_text='Вид случая')  # DEPRECATED
+    case_regimen = models.SmallIntegerField(choices=CASE_REGIMENS, help_text='Условия оказания помощи')  # DEPRECATED
+    care_type = models.SmallIntegerField(choices=CARE_TYPES, help_text='Вид медицинской помощи')  # DEPRECATED
 
     @property
     def opened_local(self):
