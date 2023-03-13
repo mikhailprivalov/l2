@@ -736,8 +736,10 @@ def form_02(request_data):
     transfers_data = hosp_get_transfers_data(hosp_nums_obj)
     transfers = ''
     for i in transfers_data:
-        transfers = f"{transfers}<br/> Переведен в отделение {i['transfer_depart']}; профиль коек {i['transfer_research_title']}<br/>Дата и время перевода {i['date_transfer_value']} " \
-                    f"время:{i['time_transfer_value']};<br/>"
+        transfers = (
+            f"{transfers}<br/> Переведен в отделение {i['transfer_depart']}; профиль коек {i['transfer_research_title']}<br/>Дата и время перевода {i['date_transfer_value']} "
+            f"время:{i['time_transfer_value']};<br/>"
+        )
 
     plan_form = primary_reception_data['plan_hospital']
     extra_hospital = primary_reception_data['extra_hospital']
@@ -773,10 +775,12 @@ def form_02(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph("Номер и дата направления:	от «      »	20     г.", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Поступил в стационар (дневной стационар) для оказания медицинской помощи в текущем году: "
-                  "по поводу основного заболевания, указанного в диагнозе при поступлении: первично — 1,повторно — 2.",style),
+        Paragraph(
+            "Поступил в стационар (дневной стационар) для оказания медицинской помощи в текущем году: "
+            "по поводу основного заболевания, указанного в диагнозе при поступлении: первично — 1,повторно — 2.",
+            style,
+        ),
         Spacer(1, 0.5 * mm),
-
         Paragraph(f"Форма оказания медицинской помощи: {result_form}", style),
         Spacer(1, 0.5 * mm),
         Paragraph(f"Наименование отделения: {first_hosp_depart}; профиль коек {first_bed_profile}; палата № ____", style),
@@ -798,10 +802,8 @@ def form_02(request_data):
         Paragraph(f"Основное заболевание {clinical_diagnos['main_diagnos']}      код по МКБ", style),
         Spacer(1, 0.5 * mm),
         Paragraph(f"Осложнения основного заболевания {clinical_diagnos['other_diagnos']} код по МКБ", style),
-
         Spacer(1, 0.5 * mm),
         Paragraph("Внешняя причина при травмах, отравлениях   код по МКБ", style),
-
         Spacer(1, 0.5 * mm),
         Paragraph(f"Сопутствующие заболевания {clinical_diagnos['near_diagnos']}  код по МКБ", style),
 
@@ -813,10 +815,12 @@ def form_02(request_data):
 
         Spacer(1, 0.5 * mm),
         Paragraph("Осмотр на педикулез, чесотку: да — 1, нет — 2, результат осмотра: ", style),
-
         Spacer(1, 0.5 * mm),
-        Paragraph(f"Аллергические реакции на лекарственные препараты, пищевая аллергия или иные виды непереносимости в анамнезе, с указанием типа и вида аллергической реакции: "
-                  f"{primary_reception_data['medicament_allergy']}", style),
+        Paragraph(
+            f"Аллергические реакции на лекарственные препараты, пищевая аллергия или иные виды непереносимости в анамнезе, с указанием типа и вида аллергической реакции: "
+            f"{primary_reception_data['medicament_allergy']}",
+            style,
+        ),
         Paragraph("___________________________________________________________", style),
 
         Paragraph(f'Группа крови: {group_blood_avo_value}; резус-принадлежность {group_rezus_value}; антиген K1 системы Kell _____', style),
@@ -935,19 +939,14 @@ def form_02(request_data):
 
         Spacer(1, 2 * mm),
         Paragraph('явка в другую медицинскую организацию (другое структурное подразделение медицинской организации) «	»	20  г. ', style),
-
         Spacer(1, 2 * mm),
         Paragraph('Оформлен листок нетрудоспособности по уходу за больным членом семьи (фамилия, имя, отчество (при наличии):', style),
-
-        Spacer(1, 2 * mm),
         Paragraph('Выдано направление на медико-социальную экспертизу (МСЭ): «	»	20	г. ', style),
-
         Spacer(1, 2 * mm),
         Paragraph('Сведения о лице, которому может быть передана информация о состоянии здоровья пациента:', style),
         Paragraph(f'фамилия, имя, отчество (при наличии), номер контактного телефона {p_phone}', style),
         Spacer(1, 2 * mm),
         Paragraph('Дополнительные сведения о пациенте', style),
-
     ]
     if primary_reception_data['weight']:
         second_page.append(Paragraph(f"Вес: {primary_reception_data['weight']}", styleRight))
