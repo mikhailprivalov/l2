@@ -819,7 +819,7 @@ def check_enp(request):
                     "idt": "",
                     "insurer_full_code": "",
                 }
-                return Response({"ok": True, 'patient_data': patient_data, '1': results_json['results']})
+                return Response({"ok": True, 'patient_data': patient_data})
     elif enp_mode == 'l2-enp-full':
         patronymic = patronymic if patronymic != 'None' else None
         logger.exception(f'data: {(family, name, patronymic, bd)}')
