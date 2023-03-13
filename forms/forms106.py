@@ -682,7 +682,7 @@ def form_02(request_data):
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
-    extrac_date, extract_time, final_diagnos, other_diagnos, near_diagnos, outcome, doc_fio, manager_depart =  '', '', '', '', '', '', '', ''
+    extrac_date, extract_time, final_diagnos, other_diagnos, near_diagnos, outcome = '', '', '', '', '', ''
     days_count = '__________________________'
     final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = "", "", ""
     result_hospital = ''
@@ -953,7 +953,6 @@ def form_02(request_data):
         second_page.append(Paragraph(f"Вес: {primary_reception_data['weight']}", styleRight))
     objs.extend(title_page)
     objs.extend(second_page)
-
 
     doc.build(objs)
     pdf = buffer.getvalue()
