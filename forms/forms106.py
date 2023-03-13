@@ -948,7 +948,6 @@ def form_02(request_data):
         Paragraph(f'фамилия, имя, отчество (при наличии), номер контактного телефона {p_phone}', style),
         Spacer(1, 2 * mm),
         Paragraph('Дополнительные сведения о пациенте', style),
-
     ]
     if primary_reception_data['weight']:
         second_page.append(Paragraph(f"Вес: {primary_reception_data['weight']}", styleRight))
