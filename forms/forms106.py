@@ -687,7 +687,7 @@ def form_02(request_data):
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
-    extrac_date, extract_time, final_diagnos, other_diagnos, near_diagnos, outcome, doc_fio, manager_depart, room_num, depart_extract = '', '', '', '', '', '', '', '', '', ''
+    extrac_date, extract_time, final_diagnos, other_diagnos, near_diagnos, outcome, doc_fio, manager_depart =  '', '', '', '', '', '', '', ''
     days_count = '__________________________'
     final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = "", "", ""
     result_hospital = ''
@@ -707,9 +707,7 @@ def form_02(request_data):
             result_hospital = hosp_extract_data['result_hospital']
         doc_fio = hosp_extract_data['doc_fio']
         manager_depart = hosp_extract_data['manager_depart']
-        room_num = hosp_extract_data['room_num']
         iss_last_hosp = Issledovaniya.objects.filter(napravleniye__pk=hosp_last_num)[0]
-        depart_extract = iss_last_hosp.research.title
 
     # Получить отделение - из названия услуги или самого главного направления
     first_bed_profile = hosp_nums_obj[0].get('research_title')
@@ -746,7 +744,8 @@ def form_02(request_data):
     transfers_data = hosp_get_transfers_data(hosp_nums_obj)
     transfers = ''
     for i in transfers_data:
-        transfers = f"{transfers}<br/> Переведен в отделение {i['transfer_depart']}; профиль коек {i['transfer_research_title']}<br/>Дата и время перевода {i['date_transfer_value']} время:{i['time_transfer_value']};<br/>"
+        transfers = f"{transfers}<br/> Переведен в отделение {i['transfer_depart']}; профиль коек {i['transfer_research_title']}<br/>Дата и время перевода {i['date_transfer_value']} " \
+                    f"время:{i['time_transfer_value']};<br/>"
 
     plan_form = primary_reception_data['plan_hospital']
     extra_hospital = primary_reception_data['extra_hospital']
@@ -770,7 +769,7 @@ def form_02(request_data):
         Spacer(1, 0.2 * mm),
         Paragraph(f"Дата рождения: {patient_data['born']} Пол: {patient_data['sex']}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph(f"Поступил в: стационар - 1", style),
+        Paragraph("Поступил в: стационар - 1", style),
         Spacer(1, 0.5 * mm),
         Paragraph(f"Дата и время поступления: {primary_reception_data['date_entered_value']}, {primary_reception_data['time_entered_value']}", style),
         Spacer(1, 0.5 * mm),
@@ -824,21 +823,14 @@ def form_02(request_data):
         Paragraph("Осмотр на педикулез, чесотку: да — 1, нет — 2, результат осмотра: ", style),
 
         Spacer(1, 0.5 * mm),
-        Paragraph(f"Аллергические реакции на лекарственные препараты, пищевая аллергия или иные виды непереносимости в анамнезе, с указанием типа и вида аллергической реакции: {primary_reception_data['medicament_allergy']}", style),
+        Paragraph(f"Аллергические реакции на лекарственные препараты, пищевая аллергия или иные виды непереносимости в анамнезе, с указанием типа и вида аллергической реакции: "
+                  f"{primary_reception_data['medicament_allergy']}", style),
         Paragraph("___________________________________________________________", style),
 
         Paragraph(f'Группа крови: {group_blood_avo_value}; резус-принадлежность {group_rezus_value}; антиген K1 системы Kell _____', style),
         Spacer(1, 0.5 * mm),
         Paragraph('иные сведения групповой принадлежности крови (при наличии) ______________', style),
     ]
-
-    closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
-    data_bl = ''
-    if closed_bl_result['start_date'] and closed_bl_result['end_date'] and closed_bl_result['num']:
-        data_bl = (
-            f"<br/>открыт <u>{closed_bl_result['start_date']}</u>{5 * space_symbol}закрыт: <u>{closed_bl_result['end_date']}</u> {3 * space_symbol}"
-            f"к труду: <u>{closed_bl_result['start_work']}</u> <br/>Номер ЛН: <u>{closed_bl_result['num']}</u> Выдан кому: {closed_bl_result['who_get']} "
-        )
 
     styleTO = deepcopy(style)
     styleTO.alignment = TA_LEFT
@@ -858,7 +850,6 @@ def form_02(request_data):
     ]
 
     hosp_operation = hosp_get_operation_data(num_dir)
-    x = 0
     operation_result = []
     for i in hosp_operation:
         operation_template = [''] * 4
@@ -961,7 +952,7 @@ def form_02(request_data):
 
         Spacer(1, 2 * mm),
         Paragraph('Сведения о лице, которому может быть передана информация о состоянии здоровья пациента:', style),
-        Paragraph('фамилия, имя, отчество (при наличии), номер контактного телефона', style),
+        Paragraph(f'фамилия, имя, отчество (при наличии), номер контактного телефона {p_phone}', style),
         Spacer(1, 2 * mm),
         Paragraph('Дополнительные сведения о пациенте', style),
 
