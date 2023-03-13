@@ -736,8 +736,10 @@ def form_02(request_data):
     transfers_data = hosp_get_transfers_data(hosp_nums_obj)
     transfers = ''
     for i in transfers_data:
-        transfers = f"{transfers}<br/> Переведен в отделение {i['transfer_depart']}; профиль коек {i['transfer_research_title']}<br/>Дата и время перевода {i['date_transfer_value']} " \
-                    f"время:{i['time_transfer_value']};<br/>"
+        transfers = (
+            f"{transfers}<br/> Переведен в отделение {i['transfer_depart']}; профиль коек {i['transfer_research_title']}<br/>Дата и время перевода {i['date_transfer_value']} "
+            f"время:{i['time_transfer_value']};<br/>"
+        )
 
     plan_form = primary_reception_data['plan_hospital']
     extra_hospital = primary_reception_data['extra_hospital']
