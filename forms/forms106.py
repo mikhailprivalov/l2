@@ -804,7 +804,6 @@ def form_02(request_data):
         Paragraph(f"Осложнения основного заболевания {clinical_diagnos['other_diagnos']} код по МКБ", style),
         Spacer(1, 0.5 * mm),
         Paragraph("Внешняя причина при травмах, отравлениях   код по МКБ", style),
-
         Spacer(1, 0.5 * mm),
         Paragraph(f"Сопутствующие заболевания {clinical_diagnos['near_diagnos']}  код по МКБ", style),
 
