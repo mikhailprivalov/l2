@@ -2879,3 +2879,33 @@ def get_direction_pk_by_emdr_id(request):
     emdr_id = data.get('emdrId')
     direction = Napravleniya.objects.get(emdr_id=emdr_id)
     return Response({"pk": direction.pk})
+
+
+@api_view(['POST'])
+def get_value_field(request):
+    data = json.loads(request.body)
+    research_id = data.get('researchId')
+    field_id = data.get('fieldId')
+    date = data.get('date')
+    type_period = data.get('typePeriod')
+    research_obj = Researches.objects.filter(pk=research_id).first()
+    data = []
+    if research_obj and research_obj.is_monitoring:
+        query_data = directions.MonitoringResult.objects.filter(type_period=type_period, period_date=date, field_id=int(field_id), research_id=research_id)
+        data = [
+            {
+                'hospitalTitle': i.hospital.title,
+                'hospitalOid': i.hospital.oid,
+                'valueAggregate': i.value_aggregate,
+                'valueText': i.value_text,
+                'period_param_hour': i.period_param_hour,
+                'period_param_day': i.period_param_day,
+                'period_param_week_description': i.period_param_week_description,
+                'period_param_week_date_start': i.period_param_week_date_start,
+                'period_param_week_date_end': i.period_param_week_date_end,
+                'period_param_month': i.period_param_month,
+                'period_param_year': i.period_param_year,
+             }
+            for i in query_data
+        ]
+    return Response({"data": data})

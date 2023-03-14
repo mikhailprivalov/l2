@@ -55,4 +55,5 @@ urlpatterns = [
     path('amd-save', views.amd_save),
     path('register-emdr-id', views.register_emdr_id),
     path('get-direction-pk-by-emdr-id', views.get_direction_pk_by_emdr_id),
+    path('get-value-field', views.get_value_field),
 ]
