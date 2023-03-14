@@ -2905,7 +2905,7 @@ def get_value_field(request):
                 'period_param_week_date_end': i.period_param_week_date_end,
                 'period_param_month': i.period_param_month,
                 'period_param_year': i.period_param_year,
-             }
+            }
             for i in query_data
         ]
     return Response({"data": data})
