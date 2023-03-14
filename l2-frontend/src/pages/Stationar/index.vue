@@ -726,6 +726,10 @@
             v-if="opened_list_key === 'pharmacotherapy'"
             :direction="direction"
           />
+          <AggregateAssignments
+            v-if="opened_list_key === 'list assignments'"
+            :direction="direction"
+          />
         </div>
       </div>
     </div>
@@ -970,6 +974,7 @@ import RadioField from '@/fields/RadioField.vue';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
 import { PRINT_QUEUE_ADD_ELEMENT } from '@/store/action-types';
+import AggregateAssignments from '@/fields/AggregateAssignments.vue';
 
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
@@ -978,6 +983,7 @@ import menuMixin from './mixins/menu';
 
 export default {
   components: {
+    AggregateAssignments,
     RadioField,
     Treeselect,
     Favorite,
