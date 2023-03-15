@@ -5,9 +5,15 @@
         <h5 class="text-center">
           {{ isNewCompany ? 'Добавить компанию' : 'Обновить компанию' }}
         </h5>
+        <div
+          v-if="!isNewCompany"
+          class="add-file"
+        >
+          <LoadFile :companyInn="editorCompany.inn" />
+        </div>
         <h6
           v-if="!isNewCompany"
-          class="text-center"
+          class="text-center margin-right margin-left"
         >
           {{ originShortTitle }}
         </h6>
@@ -238,10 +244,11 @@
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
+import LoadFile from '@/ui-cards/LoadFile.vue';
 
 export default {
   name: 'ConstructCompany',
-  components: { VueTippyTd },
+  components: { LoadFile, VueTippyTd },
   data() {
     return {
       companies: [],
@@ -367,18 +374,28 @@ export default {
         }
       }
     },
+    showModal() {
+      this.modal = true;
+    },
+    hideModal() {
+      this.modal = false;
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_download_file');
+    },
   },
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .box {
   background-color: #FFF;
   margin: 30px 10px;
   flex-basis: 350px;
   flex-grow: 1;
   border-radius: 4px;
-  min-height: 390px;
+  min-height: 426px;
 }
 .main {
   display: flex;
@@ -386,7 +403,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  max-height: 596px;
+  max-height: 648px;
 }
 .title {
   white-space: nowrap;
@@ -433,5 +450,9 @@ export default {
 }
 .noborder {
   border: none;
+}
+.add-file {
+  width: 130px;
+  margin: 0 auto;
 }
 </style>

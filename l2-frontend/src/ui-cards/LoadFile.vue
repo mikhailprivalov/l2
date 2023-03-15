@@ -19,7 +19,7 @@
         <span slot="header">Загрузка файла</span>
         <div slot="body">
           <div class="form-group">
-            <label for="fileInput">PDF файл</label>
+            <label for="fileInput">PDF/XLSX файл</label>
             <input
               id="fileInput"
               ref="file"
@@ -82,6 +82,12 @@ import Modal from '@/ui-cards/Modal.vue';
 export default {
   name: 'LoadFile',
   components: { Modal },
+  props: {
+    companyInn: {
+      type: String,
+      required: false,
+    },
+  },
   data() {
     return {
       open: false,
@@ -111,6 +117,7 @@ export default {
         this.results = [];
         const formData = new FormData();
         formData.append('file', this.file);
+        formData.append('companyInn', this.companyInn);
         const { data } = await axios.post('/api/parse-file/loadfile', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',

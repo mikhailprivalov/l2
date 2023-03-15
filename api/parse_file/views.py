@@ -2,7 +2,10 @@ import tempfile
 from django.http import HttpRequest, JsonResponse
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
+
+from api.patients.views import patients_search_card
 from api.views import endpoint
+from openpyxl import load_workbook
 from appconf.manager import SettingManager
 
 
@@ -38,6 +41,31 @@ def http_func(data, user):
     endpoint(http_obj)
 
 
+def parse_medical_examination(request):
+    result = []
+    company_inn = request.POST['companyInn']
+    print(company_inn)
+    company_file = request.FILES['file']
+    wb = load_workbook(filename=company_file)
+    ws = wb.active
+    for row in ws.values:
+        employee = json.dumps({
+            "inc_rmis": False,
+            "type": 1,
+            "form": {"snils": row[1]}
+        })
+        request_obj = HttpRequest()
+        request_obj._body = employee
+        request_obj.user = request.user
+        employee_card = patients_search_card(request_obj)
+        results_json = json.loads(employee_card.content.decode('utf-8'))
+    return result
+
+
 def load_file(request):
-    results = dnk_covid(request)
-    return JsonResponse({"ok": True, "results": results})
+    if request.POST['companyInn']:
+        result = parse_medical_examination(request)
+        return JsonResponse({"ok": True, "results": 'result'})
+    else:
+        results = dnk_covid(request)
+        return JsonResponse({"ok": True, "results": results})
