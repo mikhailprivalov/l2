@@ -50,8 +50,8 @@ def parse_medical_examination(request):
     ws = wb.active
     for row in ws.values:
         employee = json.dumps({
-            "inc_rmis": False,
             "type": 1,
+            "extendedSearch": True,
             "form": {"snils": row[1]}
         })
         request_obj = HttpRequest()
@@ -59,6 +59,7 @@ def parse_medical_examination(request):
         request_obj.user = request.user
         employee_card = patients_search_card(request_obj)
         results_json = json.loads(employee_card.content.decode('utf-8'))
+        print(results_json)
     return result
 
 
