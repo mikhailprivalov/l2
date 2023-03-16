@@ -119,13 +119,24 @@ class Room(models.Model):
 
 
 class Chamber(models.Model):
-    hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, verbose_name='Больница', on_delete=models.CASCADE)
-    title = models.CharField(max_length=64, help_text='Название палаты')
+    podrazdelenie = models.ForeignKey(Podrazdeleniya, null=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=64, help_text='Название палаты',  null=True)
 
     def __str__(self):
-        return f'{self.hospital} — {self.title}'
+        return f'{self.podrazdelenie} {self.title}'
 
     class Meta:
         verbose_name = 'Палата'
         verbose_name_plural = 'Палаты'
 
+
+class Bed(models.Model):
+    chamber = models.ForeignKey(Chamber, on_delete=models.CASCADE)
+    bed_number = models.PositiveSmallIntegerField(blank=True, null=True, help_text="Номер койки")
+
+    def __str__(self):
+        return f'{self.chamber} - {self.bed_number}'
+
+    class Meta:
+        verbose_name = 'Койку'
+        verbose_name_plural = 'Койки'
