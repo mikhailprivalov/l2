@@ -2841,7 +2841,7 @@ def get_research_sets(request):
 
 
 @login_required
-@group_required('Конструктор: Настройка организации')
+@group_required('Конструктор: Настройка организации', '')
 def get_type_departments(request):
     res = [{"id": t[0], "label": t[1]} for t in Podrazdeleniya.TYPES if t[0] in STATISTIC_TYPE_DEPARTMENT]
     return JsonResponse({"data": res})
