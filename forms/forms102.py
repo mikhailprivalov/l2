@@ -1977,9 +1977,10 @@ def form_03(request_data):
     """
     Шаблон договора с юрлицами
     """
-    price_id = request_data.get("priceId", None)
+    price_id = request_data.get("priceId", 1)
     result = get_research_data_for_contract_specification(price_id)
     result = [{"code": i.research_code, "title": i.research_title, "coast": i.coast, "counts": i.number_services_by_contract} for i in result]
+    print(result)
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -2066,9 +2067,33 @@ def form_03(request_data):
             objs = partner_check_section_param(objs, styles_obj, section)
         objs.append(Paragraph(org_contacts, style))
 
-    price_spec = [[Paragraph('Код', styleTB), Paragraph('Услуга', styleTB), Paragraph('Цена', styleTB), Paragraph(' Кол-во', styleTB), Paragraph(' Кол-во', styleTB)]]
+    price_spec = [[Paragraph('Код', styleTB), Paragraph('Услуга', styleTB), Paragraph('Цена', styleTB), Paragraph(' Кол-во', styleTB)]]
     for i in result:
-        price_spec.append([Paragraph(i['code'], styleTB), Paragraph(i.research_title, styleTB)])
+        print(i)
+        print(str(i['coast']))
+        price_spec.append(
+            [
+                Paragraph(i.get('code', "0"), styleTB),
+                Paragraph(i.get('title', "-"), styleTB),
+                Paragraph(str(i.get('coast', "0")), styleTB),
+                Paragraph(str(i.get("counts", "0")), styleTB)
+            ]
+        )
+
+    tbl = Table(price_spec, colWidths=(30 * mm, 90 * mm, 25 * mm, 20 * mm), hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
+
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(PageBreak())
+    objs.append(tbl)
 
     doc.build(objs)
     pdf = buffer.getvalue()
@@ -2086,12 +2111,10 @@ def partner_check_section_param(objs, styles_obj, section):
         s = ""
         for i in data:
             if "space_symbol" in i:
-                print("yfeeedf")
                 space_result = i.split("*")
                 s = f"{s} {space_symbol * int(space_result[1])}"
                 continue
             s = s + i
-        print(s)
         objs.append(Paragraph(s, styles_obj[section['style']]))
     else:
         objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
