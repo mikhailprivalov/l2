@@ -202,3 +202,25 @@ def sort_direction_by_file_name_contract(directions, is_create_contract):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_research_data_for_contract_specification(price_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            contracts_pricecoast.research_id,
+            contracts_pricecoast.coast,
+            contracts_pricecoast.number_services_by_contract,
+            directory_researches.title as research_title,
+            directory_researches.code as research_code
+            FROM contracts_pricecoast
+            LEFT JOIN directory_researches on
+            directory_researches.id = contracts_pricecoast.research_id
+            WHERE contracts_pricecoast.price_name_id = %(price_id)s       
+        """,
+            params={'price_id': price_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
