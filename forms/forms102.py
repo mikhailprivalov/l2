@@ -2024,6 +2024,8 @@ def form_03(request_data):
     styleTCenter = deepcopy(styleCenter)
     styleTCenter.alignment = TA_CENTER
     styleTCenter.leading = 3.5 * mm
+    styleTCenter.firstLineIndent = 0
+    style.fontSize = 9
 
     styleTBold = deepcopy(styleCenterBold)
     styleTBold.fontSize = 10
@@ -2037,13 +2039,18 @@ def form_03(request_data):
     styleTB = deepcopy(style)
     styleTB.firstLineIndent = 0
     styleTB.fontSize = 9
-    styleTB.alignment = TA_CENTER
-    styleTB.fontName = "PTAstraSerifBold"
-
-    styles_obj = {'style': style, 'styleCenter': styleCenter, 'styleAppendix': styleAppendix, "styleBoldCenter": styleBoldCenter}
 
     styleTR = deepcopy(style)
     styleTR.alignment = TA_RIGHT
+    styleTB.fontSize = 9
+
+    styles_obj = {
+        'style': style,
+        'styleCenter': styleCenter,
+        'styleAppendix': styleAppendix,
+        "styleBoldCenter": styleBoldCenter,
+        "styleTR": styleTR
+    }
 
     contract_file_partner = SettingManager.get("contract_from_file_partner", default='', default_type='s')
     if not os.path.join(BASE_DIR, 'forms', 'contract_forms', ):
@@ -2055,32 +2062,23 @@ def form_03(request_data):
         with open(contract_file) as json_file:
             data = json.load(json_file)
             body_paragraphs = data['body_paragraphs']
-            org_contacts = data['org_contacts']
-            executor = data['executor']
-            appendix_paragraphs = data.get('appendix_paragraphs', None)
     else:
         executor = None
 
     objs.append(Spacer(1, 5 * mm))
-    if contract_file:
-        for section in body_paragraphs:
-            objs = partner_check_section_param(objs, styles_obj, section)
-        objs.append(Paragraph(org_contacts, style))
-
-    price_spec = [[Paragraph('Код', styleTB), Paragraph('Услуга', styleTB), Paragraph('Цена', styleTB), Paragraph(' Кол-во', styleTB)]]
+    price_spec = [[Paragraph('Код', styleTCenter), Paragraph('Услуга', styleTCenter), Paragraph('Кол-во', styleTCenter), Paragraph('Цена', styleTCenter), Paragraph('Итого', styleTCenter)]]
     for i in result:
-        print(i)
-        print(str(i['coast']))
         price_spec.append(
             [
                 Paragraph(i.get('code', "0"), styleTB),
                 Paragraph(i.get('title', "-"), styleTB),
-                Paragraph(str(i.get('coast', "0")), styleTB),
-                Paragraph(str(i.get("counts", "0")), styleTB)
+                Paragraph(str(i.get("counts", 0)), styleTCenter),
+                Paragraph(str(i.get('coast', 0)), styleTR),
+                Paragraph(str(i.get("counts", 0) * i.get('coast', 0)), styleTR)
             ]
         )
 
-    tbl = Table(price_spec, colWidths=(30 * mm, 90 * mm, 25 * mm, 20 * mm), hAlign='LEFT')
+    tbl = Table(price_spec, colWidths=(33 * mm, 85 * mm, 19 * mm, 24 * mm, 24 * mm), hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
@@ -2091,9 +2089,9 @@ def form_03(request_data):
         )
     )
 
-    objs.append(Spacer(1, 5 * mm))
-    objs.append(PageBreak())
-    objs.append(tbl)
+    if contract_file:
+        for section in body_paragraphs:
+            objs = partner_check_section_param(objs, styles_obj, section, tbl)
 
     doc.build(objs)
     pdf = buffer.getvalue()
@@ -2101,11 +2099,15 @@ def form_03(request_data):
     return pdf
 
 
-def partner_check_section_param(objs, styles_obj, section):
+def partner_check_section_param(objs, styles_obj, section, tbl_specification):
     space_symbol = '&nbsp;'
     if section.get('Spacer'):
         height_spacer = section.get('spacer_data')
         objs.append(Spacer(1, height_spacer * mm))
+    elif section.get('page_break'):
+        objs.append(PageBreak())
+    elif section.get('specification'):
+        objs.append(tbl_specification)
     elif section.get('List_data'):
         data = section.get('List_data').split("@#")
         s = ""
@@ -2119,4 +2121,3 @@ def partner_check_section_param(objs, styles_obj, section):
     else:
         objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
     return objs
-
