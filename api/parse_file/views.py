@@ -1,12 +1,16 @@
+import json
 import tempfile
 from django.http import HttpRequest, JsonResponse
+
+from api.models import Application
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
 
-from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
+from integration_framework.views import check_enp
+from api.patients.views import patients_search_card
 
 
 def dnk_covid(request):
@@ -43,30 +47,33 @@ def http_func(data, user):
 
 def parse_medical_examination(request):
     result = []
+    employee_data = []
     company_inn = request.POST['companyInn']
-    print(company_inn)
     company_file = request.FILES['file']
     wb = load_workbook(filename=company_file)
     ws = wb.active
+    counter_row = 0
     for row in ws.values:
-        employee = json.dumps({
-            "type": 1,
-            "extendedSearch": True,
-            "form": {"snils": row[1]}
-        })
-        request_obj = HttpRequest()
-        request_obj._body = employee
-        request_obj.user = request.user
-        employee_card = patients_search_card(request_obj)
-        results_json = json.loads(employee_card.content.decode('utf-8'))
-        print(results_json)
+        if counter_row >= 3:
+            params = {"enp": "", "snils": row[1].replace('-', '').replace(' ', ''), "check_mode": "l2-snils"}
+            request_obj = HttpRequest()
+            request_obj._body = params
+            request_obj.user = request.user
+            request_obj.method = 'POST'
+            request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
+            employee = check_enp(request_obj)
+            employee_card = patients_search_card()
+            print(employee.data)
+            # harmful_factor_template = HarmfulFactor.objects.filter(title=row[7]).first().template_id
+
+        counter_row += 1
     return result
 
 
 def load_file(request):
     if request.POST['companyInn']:
         result = parse_medical_examination(request)
-        return JsonResponse({"ok": True, "results": 'result'})
+        return JsonResponse({"ok": True, "results": result})
     else:
         results = dnk_covid(request)
         return JsonResponse({"ok": True, "results": results})
