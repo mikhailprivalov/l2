@@ -1,6 +1,5 @@
 from django.db import models
 
-
 class Podrazdeleniya(models.Model):  # Модель подразделений
     HIDDEN = 0
     DEPARTMENT = 1
@@ -119,8 +118,8 @@ class Room(models.Model):
 
 
 class Chamber(models.Model):
-    podrazdelenie = models.ForeignKey(Podrazdeleniya, null=True, on_delete=models.CASCADE)
-    title = models.CharField(max_length=64, help_text='Название палаты',  null=True)
+    podrazdelenie = models.ForeignKey(Podrazdeleniya, on_delete=models.CASCADE)
+    title = models.CharField(max_length=64, help_text='Название палаты')
 
     def __str__(self):
         return f'{self.podrazdelenie} {self.title}'
@@ -132,10 +131,11 @@ class Chamber(models.Model):
 
 class Bed(models.Model):
     chamber = models.ForeignKey(Chamber, on_delete=models.CASCADE)
-    bed_number = models.PositiveSmallIntegerField(blank=True, null=True, help_text="Номер койки")
+    bed_number = models.PositiveSmallIntegerField(help_text="Номер койки")
+    status_bed = models.BooleanField(default=True, blank=True, help_text="Состояние койки (true: свободная / false: занята)")
 
     def __str__(self):
-        return f'{self.chamber} - {self.bed_number}'
+        return f'{self.chamber} - {self.bed_number} - {self.status_bed}'
 
     class Meta:
         verbose_name = 'Койку'

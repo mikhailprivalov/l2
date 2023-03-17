@@ -11,15 +11,16 @@
         />
         <div class="sidebar-content">
           <draggable
-            :list="users"
-            group="my-group"
+            v-model="users"
+            :options="{group:{ name: 'users', put: 'beds.contents'}}"
+            class="dragArea"
           >
             <div
               v-for="user in users"
               :key="user.pk"
               class="research"
             >
-              {{ user.fio }} {{ user.age }}
+              {{ user.fio }}
             </div>
           </draggable>
         </div>
@@ -45,23 +46,30 @@
             <td>
               {{ chamber.label }}
             </td>
-            <td>
-              <draggable
-                :list="beds"
-                group="my-group"
+            <td class="drop-zone">
+              <div
+                v-for="bed in beds"
+                v-if="chamber.pk === bed.pk_chamber"
+                :key="bed.pk"
               >
-                <div
-                  v-for="bed in beds"
-                  v-if="chamber.pk === bed.pk_chamber || bed.age.length !== 0"
-                  :key="bed.pk"
+                <draggable
+                  v-model="bed.contents"
+                  :options="{group:{ name: 'beds.contents', put: 'users'}}"
+                  class="drag-el"
+                  @change="loadDataBed"
                 >
                   <i
-                    class="fa fa-bed"
-                    style="margin-top: 10px; margin-left: 25px; font-size: 30px;"
+                    v-if="bed.pk_chamber >= 0"
+                    :class="bed.contents.sex === 'ж' ? 'fa fa-bed women' : 'fa fa-bed bedMin'"
                   />
-                  {{ bed.age }}
-                </div>
-              </draggable>
+                  <div
+                    v-for="item in bed.contents"
+                    :key="item.pk"
+                  >
+                    <span style="margin-left: 16px;">{{ item.age }}</span>
+                  </div>
+                </draggable>
+              </div>
             </td>
           </tr>
           <tr v-if="chambers.length === 0">
@@ -89,8 +97,8 @@ export default {
       chambers: [],
       departments: [],
       users: [],
-      listUsers: [],
-      listBeds: [],
+      womenClass: 'women',
+      maxClass: 'man',
       filters: {
         department_pk: -1,
       },
@@ -106,6 +114,9 @@ export default {
       this.loadUser();
       this.loadChamber();
       this.loadBed();
+    },
+    contents() {
+      console.log('bed change');
     },
   },
   mounted() {
@@ -133,6 +144,12 @@ export default {
         department_pk: this.deapartment,
       });
       this.beds = list.data;
+    },
+    async loadDataBed() {
+      const result = await this.$api('chambers/load-data-bed', {
+        beds: this.beds,
+      });
+      this.beds = result.data;
     },
   },
 };
@@ -213,5 +230,37 @@ export default {
   bottom: 0;
   left: 300px;
   width: 750px;
+}
+.drop-zone {
+  background-color: #eee;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+.drag-el {
+  background-color: #fff;
+  margin-bottom: 10px;
+  padding: 5px;
+  max-width: 50px;
+}
+.dragArea {
+  min-height: 10px;
+}
+.bedMin {
+  margin-top: 10px;
+  margin-left: 12px;
+  font-size: 20px;
+  color: #000000;
+}
+.women {
+  margin-top: 10px;
+  margin-left: 12px;
+  font-size: 20px;
+  color: #ffb9ea;
+}
+.bedClear {
+  color: #000000;
+}
+.man {
+  color: #00bfff;
 }
 </style>
