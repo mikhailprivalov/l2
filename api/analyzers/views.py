@@ -14,38 +14,44 @@ def all_analyzers(request):
 
 def restart_analyzer(request):
     request_data = json.loads(request.body)
-    can_restart = request.user.is_superuser or request.user.doctorprofile.has_group('Управление аналаизаторами')
-    if can_restart:
+    su = request.user.is_superuser
+    if su:
+        name = Analyzer.objects.filter(id=request_data["pk"]).first()
+        restart_service = subprocess.Popen(["systemctl", "--user", "restart", name.service_name])
+        restart_service.wait()
+        result = get_status_analyzer(request_data["pk"])
+        return JsonResponse({"data": result})
+    else:
         name = ManageDoctorProfileAnalyzer.objects.filter(analyzer_id=request_data["pk"], doctor_profile_id=request.user.doctorprofile.pk).first()
         restart_service = subprocess.Popen(["systemctl", "--user", "restart", name.analyzer.service_name])
         restart_service.wait()
         result = get_status_analyzer(request_data["pk"])
         return JsonResponse({"data": result})
-    return JsonResponse(0)
 
 
 def manage_profile_analyzer(request):
     current_user = request.user.doctorprofile.pk
-    filter_analyze = [{"label": g.analyzer.title, "pk": g.analyzer_id} for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).order_by('analyzer', 'id')]
-    return JsonResponse({"data": filter_analyze})
+    su = request.user.is_superuser
+    print(su)
+    if su:
+        filter_analyzer = [{"label": g.title, "pk": g.pk} for g in Analyzer.objects.all().order_by('title', 'pk')]
+        return JsonResponse({"data": filter_analyzer})
+    else:
+
+        filter_analyzer = [{"label": g.analyzer.title, "pk": g.analyzer_id} for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).order_by('analyzer', 'id')]
+        return JsonResponse({"data": filter_analyzer})
 
 
 def status_analyzer(request):
     request_data = json.loads(request.body)
-    can_get_status = request.user.is_superuser or request.user.doctorprofile.has_group('Управление аналаизаторами')
-    if can_get_status:
-        result = get_status_analyzer(request_data["pk"])
-        return JsonResponse({"data": result})
-    return JsonResponse(0)
+    result = get_status_analyzer(request_data["pk"])
+    return JsonResponse({"data": result})
 
 
 def status_systemctl(request):
     request_data = json.loads(request.body)
-    can_get_status = request.user.is_superuser or request.user.doctorprofile.has_group('Управление аналаизаторами')
-    if can_get_status:
-        result = get_status_systemctl(request_data["pk"])
-        return JsonResponse({"data": result})
-    return JsonResponse(0)
+    result = get_status_systemctl(request_data["pk"])
+    return JsonResponse({"data": result})
 
 
 def get_status_analyzer(pk):
