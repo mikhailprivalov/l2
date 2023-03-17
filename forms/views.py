@@ -7,7 +7,6 @@ from django.utils.module_loading import import_string
 import datetime
 
 from io import BytesIO
-from datetime import datetime
 from pdf2docx import Converter
 from docx import Document
 from appconf.manager import SettingManager
@@ -60,8 +59,8 @@ def docx(request):
     buffer.write(pdf)
     buffer.seek(0)
 
-    today = datetime.now()
-    date_now1 = datetime.strftime(today, "%Y%m%d%H%M%S%f")[:-3]
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%Y%m%d%H%M%S%f")[:-3]
     date_now_str = str(date_now1)
     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
     docx_file = os.path.join(dir_param, date_now_str + '_dir.docx')

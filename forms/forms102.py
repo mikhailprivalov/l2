@@ -28,7 +28,6 @@ from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from clients.models import Card
-from contracts.models import PriceName, PriceCoast
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, PersonContract, Issledovaniya
 from hospitals.models import Hospitals
 from laboratory import utils
@@ -1980,7 +1979,6 @@ def form_03(request_data):
     price_id = request_data.get("priceId", 1)
     result = get_research_data_for_contract_specification(price_id)
     result = [{"code": i.research_code, "title": i.research_title, "coast": i.coast, "counts": i.number_services_by_contract} for i in result]
-    print(result)
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -2062,8 +2060,6 @@ def form_03(request_data):
         with open(contract_file) as json_file:
             data = json.load(json_file)
             body_paragraphs = data['body_paragraphs']
-    else:
-        executor = None
 
     objs.append(Spacer(1, 5 * mm))
     price_spec = [[Paragraph('Код', styleTCenter), Paragraph('Услуга', styleTCenter), Paragraph('Кол-во', styleTCenter), Paragraph('Цена', styleTCenter), Paragraph('Итого', styleTCenter)]]
