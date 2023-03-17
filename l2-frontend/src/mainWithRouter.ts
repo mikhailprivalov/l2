@@ -647,7 +647,7 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/all_analyzers',
+      path: '/ui/analyzers',
       name: 'ManageAnalyzer',
       component: () => import('@/pages/ManageAnalyzers/index.vue'),
       meta: {
