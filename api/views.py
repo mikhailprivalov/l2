@@ -2588,10 +2588,7 @@ def add_research_in_price(request):
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     current_coast_research = PriceCoast(
-        price_name_id=request_data["priceId"],
-        research_id=request_data["researchId"],
-        coast=request_data["coast"],
-        number_services_by_contract=request_data.get("numberService", 0)
+        price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"], number_services_by_contract=request_data.get("numberService", 0)
     )
     current_coast_research.save()
     Log.log(
