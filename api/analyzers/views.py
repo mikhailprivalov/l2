@@ -36,7 +36,6 @@ def manage_profile_analyzer(request):
         filter_analyzer = [{"label": g.title, "pk": g.pk} for g in Analyzer.objects.all().order_by('title', 'pk')]
         return JsonResponse({"data": filter_analyzer})
     else:
-
         filter_analyzer = [{"label": g.analyzer.title, "pk": g.analyzer_id} for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).order_by('analyzer', 'id')]
         return JsonResponse({"data": filter_analyzer})
 
