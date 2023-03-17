@@ -2042,13 +2042,7 @@ def form_03(request_data):
     styleTR.alignment = TA_RIGHT
     styleTB.fontSize = 9
 
-    styles_obj = {
-        'style': style,
-        'styleCenter': styleCenter,
-        'styleAppendix': styleAppendix,
-        "styleBoldCenter": styleBoldCenter,
-        "styleTR": styleTR
-    }
+    styles_obj = {'style': style, 'styleCenter': styleCenter, 'styleAppendix': styleAppendix, "styleBoldCenter": styleBoldCenter, "styleTR": styleTR}
 
     contract_file_partner = SettingManager.get("contract_from_file_partner", default='', default_type='s')
     if not os.path.join(BASE_DIR, 'forms', 'contract_forms', ):
