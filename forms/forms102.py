@@ -2068,7 +2068,7 @@ def form_03(request_data):
                 Paragraph(i.get('title', "-"), styleTB),
                 Paragraph(str(i.get("counts", 0)), styleTCenter),
                 Paragraph(str(i.get('coast', 0)), styleTR),
-                Paragraph(str(i.get("counts", 0) * i.get('coast', 0)), styleTR)
+                Paragraph(str(i.get("counts", 0) * i.get('coast', 0)), styleTR),
             ]
         )
 
