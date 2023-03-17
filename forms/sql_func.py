@@ -223,4 +223,3 @@ def get_research_data_for_contract_specification(price_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
