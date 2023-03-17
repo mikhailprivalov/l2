@@ -9,8 +9,9 @@ import simplejson as json
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
+from clients.models import Individual, HarmfulFactor
 from integration_framework.views import check_enp
-from api.patients.views import patients_search_card
+from users.models import AssignmentResearches
 
 
 def dnk_covid(request):
@@ -47,7 +48,7 @@ def http_func(data, user):
 
 def parse_medical_examination(request):
     result = []
-    employee_data = []
+    bed_employee = []
     company_inn = request.POST['companyInn']
     company_file = request.FILES['file']
     wb = load_workbook(filename=company_file)
@@ -55,17 +56,25 @@ def parse_medical_examination(request):
     counter_row = 0
     for row in ws.values:
         if counter_row >= 3:
-            params = {"enp": "", "snils": row[1].replace('-', '').replace(' ', ''), "check_mode": "l2-snils"}
-            request_obj = HttpRequest()
-            request_obj._body = params
-            request_obj.user = request.user
-            request_obj.method = 'POST'
-            request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
-            employee = check_enp(request_obj)
-            employee_card = patients_search_card()
-            print(employee.data)
-            # harmful_factor_template = HarmfulFactor.objects.filter(title=row[7]).first().template_id
-
+            if company_inn != f'{row[5]}':
+                bed_employee.append({"fio": row[2]})
+            else:
+                params = {"enp": "", "snils": row[1].replace('-', '').replace(' ', ''), "check_mode": "l2-snils"}
+                request_obj = HttpRequest()
+                request_obj._body = params
+                request_obj.user = request.user
+                request_obj.method = 'POST'
+                request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
+                employee = check_enp(request_obj)
+                if employee.data.get("message"):
+                    bed_employee.append({"fio": row[2]})
+                elif employee.data.get("patient_data") and type(employee.data.get("patient_data")) != list:
+                    employee_card = employee.data["patient_data"]["card"]
+                else:
+                    employee = employee.data
+                    employee_card = Individual.import_from_tfoms(employee, None, None, None, True)
+                harmful_factor_template = HarmfulFactor.objects.get(title=row[7]).template_id
+                need_research = AssignmentResearches.objects.filter(pk=harmful_factor_template)
         counter_row += 1
     return result
 
