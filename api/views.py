@@ -2465,7 +2465,7 @@ def check_price_active(request):
 def get_coasts_researches_in_price(request):
     request_data = json.loads(request.body)
     coast_research = [
-        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f'{data.coast}'}
+        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f'{data.coast}', "numberService": data.number_services_by_contract}
         for data in PriceCoast.objects.filter(price_name_id=request_data["id"]).prefetch_related('research').order_by('research__title')
     ]
     return JsonResponse({"data": coast_research})
@@ -2481,7 +2481,9 @@ def update_coast_research_in_price(request):
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     old_coast = current_coast_research.coast
+    old_number = current_coast_research.number_services_by_contract
     current_coast_research.coast = request_data["coast"]
+    current_coast_research.number_services_by_contract = request_data.get("numberService", 0)
     current_coast_research.save()
     Log.log(
         current_coast_research.pk,
@@ -2493,6 +2495,8 @@ def update_coast_research_in_price(request):
             "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
             "old_coast": old_coast,
             "new_coast": current_coast_research.coast,
+            "old_number": old_number,
+            "new_number": current_coast_research.number_services_by_contract,
         },
     )
     return JsonResponse({"ok": "ok"})
@@ -2583,7 +2587,12 @@ def add_research_in_price(request):
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
-    current_coast_research = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
+    current_coast_research = PriceCoast(
+        price_name_id=request_data["priceId"],
+        research_id=request_data["researchId"],
+        coast=request_data["coast"],
+        number_services_by_contract=request_data.get("numberService", 0)
+    )
     current_coast_research.save()
     Log.log(
         current_coast_research.pk,
