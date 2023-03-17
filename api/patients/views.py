@@ -164,7 +164,7 @@ def patients_search_card(request):
             objects = objects.filter(document__serial=pass_s, document__number=pass_n, document__document_type__title='Паспорт гражданина РФ')
 
         snils = str(form.get('snils', ''))
-        if pass_n:
+        if snils:
             objects = objects.filter(document__number=snils, document__document_type__title='СНИЛС')
 
         medbook_number = str(form.get('medbookNumber', ''))
