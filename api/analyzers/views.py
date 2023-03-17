@@ -32,7 +32,6 @@ def restart_analyzer(request):
 def manage_profile_analyzer(request):
     current_user = request.user.doctorprofile.pk
     su = request.user.is_superuser
-    print(su)
     if su:
         filter_analyzer = [{"label": g.title, "pk": g.pk} for g in Analyzer.objects.all().order_by('title', 'pk')]
         return JsonResponse({"data": filter_analyzer})
