@@ -8,7 +8,7 @@
         <a
           v-tippy="{
             placement: 'right',
-            html: '#template-systemctl',
+            html: '#template-systemctl-' + data.pk,
             arrow: true,
             reactive: true,
             theme: 'light bordered',
@@ -32,7 +32,7 @@
         </a>
       </div>
       <div
-        id="template-systemctl"
+        :id="`template-systemctl-${data.pk}`"
       >
         <strong>Systemctl</strong><br>
         <ul
