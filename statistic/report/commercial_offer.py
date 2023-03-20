@@ -41,7 +41,6 @@ def offer_fill_data(ws1, result_query):
         ws1.cell(row=r, column=3).value = float(i.get("coast", 0))
         ws1.cell(row=r, column=4).value = f'= {get_column_letter(2)}{r} * {get_column_letter(3)}{r}'
 
-
         for j in range(1, 5):
             ws1.cell(row=r, column=j).style = style_border1
     r += 1
