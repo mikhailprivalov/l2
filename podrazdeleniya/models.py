@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Podrazdeleniya(models.Model):  # Модель подразделений
     HIDDEN = 0
     DEPARTMENT = 1
