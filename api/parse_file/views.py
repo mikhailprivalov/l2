@@ -56,7 +56,7 @@ def parse_medical_examination(request):
     for key, val in enumerate(ws.values):
         if key >= 3:
             if company_inn != f"{val[5]}":
-                incorrect_employees.append({"result": {"fio": val[2], "reason": "ИНН организации не совпадает"}})
+                incorrect_employees.append({"fio": val[2], "reason": "ИНН организации не совпадает"})
             else:
                 employee_data.append({
                     "snils": val[1].replace('-', '').replace(' ', ''),
@@ -80,10 +80,10 @@ def parse_medical_examination(request):
             params = {"enp": "", "family": row["family"], "name": row["name"], "bd": row["birthday"], "check_mode": "l2-enp-full"}
             current_employee = check_enp(request_obj)
             if current_employee.data.get("message"):
-                incorrect_employees.append({"result": {"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": "Не найден"}})
+                incorrect_employees.append({"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": "Не найден"})
                 continue
             elif len(current_employee.data) > 1:
-                incorrect_employees.append({"result": {"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": "Совпадение"}})
+                incorrect_employees.append({"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": "Совпадение"})
                 continue
             else:
                 employee_card = Individual.import_from_tfoms(current_employee.data["patient_data"], None, None, None, True)
@@ -100,7 +100,7 @@ def parse_medical_examination(request):
             else:
                 incorrect_factor.append(f"{i}")
         if len(incorrect_factor) != 0:
-            incorrect_employees.append({"result": {"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": f"Не верные факторы: {incorrect_factor}"}})
+            incorrect_employees.append({"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": f"Не верные факторы: {incorrect_factor}"})
 
         PatientHarmfullFactor.save_card_harmful_factor(employee_card.pk, harmful_data)
 

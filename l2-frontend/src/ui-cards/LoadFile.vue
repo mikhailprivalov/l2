@@ -19,7 +19,7 @@
         <span slot="header">Загрузка файла</span>
         <div slot="body">
           <div class="form-group">
-            <label for="fileInput">PDF/XLSX файл</label>
+            <label for="fileInput"> {{ company === true ? 'XLSX файл' : 'PDF файл' }}</label>
             <input
               id="fileInput"
               ref="file"
@@ -45,12 +45,20 @@
           <h5 v-if="results.length > 0">
             {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
-          <ul>
+          <ul v-if="!company">
             <li
               v-for="r in results"
               :key="r.pk"
             >
               {{ r.pk }} – {{ r.result }}
+            </li>
+          </ul>
+          <ul v-else>
+            <li
+              v-for="r in results"
+              :key="r.pk"
+            >
+              {{ r.fio }} - {{ r.reason }}
             </li>
           </ul>
         </div>
