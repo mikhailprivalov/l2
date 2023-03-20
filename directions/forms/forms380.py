@@ -530,7 +530,7 @@ def form_04(c: Canvas, dir: Napravleniya):
         if dir.parent:
             hosp_nums_obj = hosp_get_hosp_direction(dir.parent.napravleniye_id)
             if len(hosp_nums_obj) > 0:
-                clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)
+                clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)[0]
 
         objs.append(Paragraph(f"Диагноз, дата заболевания:  <font face=\"PTAstraSerifBold\">{clinical_diagnos}</font>", style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))

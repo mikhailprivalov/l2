@@ -81,7 +81,7 @@ import notifyAudioSrc from '@/assets/notify.mp3';
   },
   watch: {
     $route() {
-      this.embedded = this.$route.query.embedded === 'true';
+      this.embedded = this.$route.query.embedded === '1';
     },
     l2_chats() {
       this.loadChatsDebounced();

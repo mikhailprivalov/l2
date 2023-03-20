@@ -893,6 +893,7 @@ def directions_services(request):
                     (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
                     or request.user.is_superuser
                     or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+                    or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
                 and n.visit_date
             )
@@ -980,6 +981,7 @@ def directions_mark_visit(request):
                     (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
                     or request.user.is_superuser
                     or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+                    or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
                 and n.visit_date
             )
