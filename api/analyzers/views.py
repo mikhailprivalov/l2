@@ -27,7 +27,10 @@ def manage_profile_analyzer(request):
     if su:
         filter_analyzer = [{"label": g.title, "pk": g.pk} for g in Analyzer.objects.all().exclude(service_name__isnull=True).exclude(port__isnull=True).order_by('title', 'pk')]
     else:
-        filter_analyzer = [{"label": g.analyzer.title, "pk": g.analyzer_id} for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).order_by('analyzer', 'id')]
+        filter_analyzer = [{
+            "label": g.analyzer.title,
+            "pk": g.analyzer_id}
+            for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).exclude(service_name__isnull=True).exclude(port__isnull=True).order_by('analyzer', 'id')]
     return JsonResponse({"data": filter_analyzer})
 
 
