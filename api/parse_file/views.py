@@ -1,7 +1,6 @@
 import tempfile
 
-import openpyxl
-from django.http import HttpRequest, JsonResponse, HttpResponse
+from django.http import HttpRequest, JsonResponse
 from openpyxl.reader.excel import load_workbook
 
 from api.parse_file.pdf import extract_text_from_pdf
