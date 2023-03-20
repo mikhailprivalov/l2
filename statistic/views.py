@@ -1924,7 +1924,7 @@ def sreening_xls(request):
 @login_required
 def commercial_offer_xls(request):
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = "attachment; filename=\"Screening.xlsx\""
+    response['Content-Disposition'] = "attachment; filename=\"Specification.xlsx\""
     wb = openpyxl.Workbook()
     wb.remove(wb.get_sheet_by_name('Sheet'))
     ws = wb.create_sheet("Спецификация")
