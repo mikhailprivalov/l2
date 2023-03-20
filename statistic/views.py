@@ -31,7 +31,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -1797,7 +1797,6 @@ def statistic_xls(request):
             ws = consolidates.consolidate_fill_data_doctors_by_type_department_detail_patient(ws, query_doctors, ws_and_finish_order[1])
         else:
             ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
-
     wb.save(response)
     return response
 
@@ -1917,6 +1916,23 @@ def sreening_xls(request):
     researches_sql = sql_func.statistics_research(PAP_ANALYSIS_ID[0], datetime_start, datetime_end, hospital_id)
     screening_data['count_pap_analysys'] = len(researches_sql)
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
+    wb.save(response)
+    return response
+
+
+@csrf_exempt
+@login_required
+def commercial_offer_xls(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Specification.xlsx\""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.get_sheet_by_name('Sheet'))
+    ws = wb.create_sheet("Спецификация")
+    ws = commercial_offer.offer_base(ws)
+    request_data = request.POST if request.method == "POST" else request.GET
+    data_offer = request_data.get("offer", "")
+    data_offer = json.loads(data_offer)
+    ws = commercial_offer.offer_fill_data(ws, data_offer)
     wb.save(response)
     return response
 
