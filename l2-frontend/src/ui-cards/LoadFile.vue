@@ -53,7 +53,7 @@
               {{ r.pk }} – {{ r.result }}
             </li>
           </ul>
-          <ul v-else>
+          <ul v-else-if="company">
             <li
               v-for="r in results"
               :key="r.pk"

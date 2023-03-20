@@ -114,16 +114,13 @@ def parse_medical_examination(request):
 
 
 def load_file(request):
-    # if request.POST['companyInn']:
-    #     results = parse_medical_examination(request)
-    #     return JsonResponse({"ok": True, "results": results, "company": True})
-    # else:
-    #     results = dnk_covid(request)
-    #     return JsonResponse({"ok": True, "results": results})
     link = ""
     if request.POST.get('isGenCommercialOffer'):
         results = gen_commercial_offer(request)
         link = "commercial-offer"
+    elif request.POST.get('companyInn'):
+        results = parse_medical_examination(request)
+        return JsonResponse({"ok": True, "results": results, "company": True})
     else:
         results = dnk_covid(request)
     return JsonResponse({"ok": True, "results": results, "link": link})
