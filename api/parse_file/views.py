@@ -1,14 +1,20 @@
 import json
 import tempfile
+
 from django.http import HttpRequest, JsonResponse
 
 from api.models import Application
+from openpyxl.reader.excel import load_workbook
+
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
 
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
+from clients.models import HarmfulFactor
+from contracts.models import PriceCoast
+from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor
 from integration_framework.views import check_enp
 
@@ -108,9 +114,44 @@ def parse_medical_examination(request):
 
 
 def load_file(request):
-    if request.POST['companyInn']:
-        results = parse_medical_examination(request)
-        return JsonResponse({"ok": True, "results": results, "company": True})
+    # if request.POST['companyInn']:
+    #     results = parse_medical_examination(request)
+    #     return JsonResponse({"ok": True, "results": results, "company": True})
+    # else:
+    #     results = dnk_covid(request)
+    #     return JsonResponse({"ok": True, "results": results})
+    link = ""
+    if request.POST.get('isGenCommercialOffer'):
+        results = gen_commercial_offer(request)
+        link = "commercial-offer"
     else:
         results = dnk_covid(request)
-        return JsonResponse({"ok": True, "results": results})
+    return JsonResponse({"ok": True, "results": results, "link": link})
+
+
+def gen_commercial_offer(request):
+    file_data = request.FILES['file']
+    selected_price = request.POST.get('selectedPrice')
+
+    wb = load_workbook(filename=file_data)
+    ws = wb[wb.sheetnames[0]]
+    starts = False
+    counts_research = {}
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "код вредности" in cells:
+                starts = True
+                harmful_factor = cells.index("код вредности")
+        else:
+            harmful_factor_data = [i.replace(" ", "") for i in cells[harmful_factor].split(",")]
+            templates_data = HarmfulFactor.objects.values_list("template_id", flat=True).filter(title__in=harmful_factor_data)
+            researches_data = AssignmentResearches.objects.values_list('research_id', flat=True).filter(template_id__in=templates_data)
+            researches_data = set(researches_data)
+            for r in researches_data:
+                if counts_research.get(r):
+                    counts_research[r] += 1
+                else:
+                    counts_research[r] = 1
+    price_data = PriceCoast.objects.filter(price_name__id=selected_price, research_id__in=list(counts_research.keys()))
+    return [{'title': k.research.title, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]

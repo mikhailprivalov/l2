@@ -45,7 +45,7 @@
           <h5 v-if="results.length > 0">
             {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
-          <ul v-if="!company">
+          <ul v-if="!link">
             <li
               v-for="r in results"
               :key="r.pk"
@@ -95,6 +95,16 @@ export default {
       type: String,
       required: false,
     },
+    isGenCommercialOffer: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    selectedPrice: {
+      type: Number,
+      default: -1,
+      required: false,
+    },
   },
   data() {
     return {
@@ -103,6 +113,7 @@ export default {
       file: '',
       results: [],
       company: false,
+      link: null,
     };
   },
   computed: {
@@ -127,6 +138,8 @@ export default {
         const formData = new FormData();
         formData.append('file', this.file);
         formData.append('companyInn', this.companyInn);
+        formData.append('isGenCommercialOffer', this.isGenCommercialOffer);
+        formData.append('selectedPrice', this.selectedPrice);
         const { data } = await axios.post('/api/parse-file/loadfile', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -138,6 +151,10 @@ export default {
         this.$refs.file.value = '';
         this.file = '';
         this.$root.$emit('msg', 'ok', 'Файл загружен');
+        this.link = data.link;
+        if (this.link) {
+          window.open(`/statistic/${this.link}?offer=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
+        }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
