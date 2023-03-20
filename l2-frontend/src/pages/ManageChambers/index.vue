@@ -13,7 +13,6 @@
           <draggable
             v-model="users"
             :options="{group:{ name: 'users', put: 'beds.contents'}}"
-            class="dragArea"
           >
             <div
               v-for="user in users"
@@ -47,29 +46,29 @@
               {{ chamber.label }}
             </td>
             <td class="drop-zone">
-              <div
+              <span
                 v-for="bed in beds"
-                v-if="chamber.pk === bed.pk_chamber"
+                v-if="chamber.pk === bed.pkChamber"
                 :key="bed.pk"
               >
                 <draggable
                   v-model="bed.contents"
                   :options="{group:{ name: 'beds.contents', put: 'users'}}"
                   class="drag-el"
+                  style="display: inline-block; margin-left: 20px"
                   @change="loadDataBed"
                 >
                   <i
-                    v-if="bed.pk_chamber >= 0"
                     :class="bed.contents.sex === 'ж' ? 'fa fa-bed women' : 'fa fa-bed bedMin'"
                   />
                   <div
                     v-for="item in bed.contents"
                     :key="item.pk"
                   >
-                    <span style="margin-left: 16px;">{{ item.age }}</span>
+                    <span style="margin-left: 15px">{{ item.age }}</span>
                   </div>
                 </draggable>
-              </div>
+              </span>
             </td>
           </tr>
           <tr v-if="chambers.length === 0">
@@ -97,8 +96,6 @@ export default {
       chambers: [],
       departments: [],
       users: [],
-      womenClass: 'women',
-      maxClass: 'man',
       filters: {
         department_pk: -1,
       },
@@ -114,9 +111,6 @@ export default {
       this.loadUser();
       this.loadChamber();
       this.loadBed();
-    },
-    contents() {
-      console.log('bed change');
     },
   },
   mounted() {
@@ -146,7 +140,7 @@ export default {
       this.beds = list.data;
     },
     async loadDataBed() {
-      const result = await this.$api('chambers/load-data-bed', {
+      const result = await this.$api('chambers/load-data-beds', {
         beds: this.beds,
       });
       this.beds = result.data;
@@ -241,24 +235,19 @@ export default {
   margin-bottom: 10px;
   padding: 5px;
   max-width: 50px;
-}
-.dragArea {
-  min-height: 10px;
+  width: 50px;
 }
 .bedMin {
   margin-top: 10px;
-  margin-left: 12px;
+  margin-left: 10px;
   font-size: 20px;
   color: #000000;
 }
 .women {
   margin-top: 10px;
-  margin-left: 12px;
+  margin-left: 10px;
   font-size: 20px;
   color: #ffb9ea;
-}
-.bedClear {
-  color: #000000;
 }
 .man {
   color: #00bfff;
