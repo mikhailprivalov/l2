@@ -45,7 +45,7 @@
           <h5 v-if="results.length > 0">
             Сохранённые результаты
           </h5>
-          <ul>
+          <ul v-if="!link">
             <li
               v-for="r in results"
               :key="r.pk"
@@ -82,12 +82,25 @@ import Modal from '@/ui-cards/Modal.vue';
 export default {
   name: 'LoadFile',
   components: { Modal },
+  props: {
+    isGenCommercialOffer: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    selectedPrice: {
+      type: Number,
+      default: -1,
+      required: false,
+    },
+  },
   data() {
     return {
       open: false,
       loading: false,
       file: '',
       results: [],
+      link: null,
     };
   },
   computed: {
@@ -111,6 +124,8 @@ export default {
         this.results = [];
         const formData = new FormData();
         formData.append('file', this.file);
+        formData.append('isGenCommercialOffer', this.isGenCommercialOffer);
+        formData.append('selectedPrice', this.selectedPrice);
         const { data } = await axios.post('/api/parse-file/loadfile', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -121,6 +136,10 @@ export default {
         this.$refs.file.value = '';
         this.file = '';
         this.$root.$emit('msg', 'ok', 'Файл загружен');
+        this.link = data.link;
+        if (this.link) {
+          window.open(`/statistic/${this.link}?offer=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
+        }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
