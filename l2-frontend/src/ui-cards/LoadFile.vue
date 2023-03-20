@@ -43,7 +43,7 @@
             <span v-else>Загрузить</span>
           </button>
           <h5 v-if="results.length > 0">
-            Сохранённые результаты
+            {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
           <ul>
             <li
@@ -94,6 +94,7 @@ export default {
       loading: false,
       file: '',
       results: [],
+      company: false,
     };
   },
   computed: {
@@ -125,6 +126,7 @@ export default {
           },
         });
         this.results = data.results;
+        this.company = data.company;
         this.$refs.file.value = '';
         this.file = '';
         this.$root.$emit('msg', 'ok', 'Файл загружен');

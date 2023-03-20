@@ -8,9 +8,7 @@
         <div
           v-if="!isNewCompany"
           class="add-file"
-        >
-          <LoadFile :companyInn="editorCompany.inn" />
-        </div>
+        />
         <h6
           v-if="!isNewCompany"
           class="text-center margin-right margin-left"
@@ -115,6 +113,11 @@
                 class="nbr margin-right"
                 :label="isNewCompany ? 'Добавить' : 'Сохранить'"
               />
+            </div>
+            <div class="button" v-if="!isNewCompany">
+              <ul class="nav navbar">
+                <LoadFile :company-inn="editorCompany.inn" />
+              </ul>
             </div>
           </FormulateForm>
         </div>
@@ -403,7 +406,7 @@ export default {
 }
 .scroll {
   overflow-y: auto;
-  max-height: 648px;
+  max-height: 653px;
 }
 .title {
   white-space: nowrap;
