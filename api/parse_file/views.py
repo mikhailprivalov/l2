@@ -53,29 +53,47 @@ def parse_medical_examination(request):
     company_file = request.FILES['file']
     wb = load_workbook(filename=company_file)
     ws = wb.active
-    counter_row = 0
-    for row in ws.values:
-        if counter_row >= 3:
-            if company_inn != f'{row[5]}':
-                bed_employee.append({"fio": row[2]})
+    employee_data = []
+    for key, val in enumerate(ws.values):
+        if key >= 3:
+            if company_inn != f"{val[5]}":
+                bed_employee.append({"fio": val[2], "reason": "ИНН организации"})
             else:
-                params = {"enp": "", "snils": row[1].replace('-', '').replace(' ', ''), "check_mode": "l2-snils"}
-                request_obj = HttpRequest()
-                request_obj._body = params
-                request_obj.user = request.user
-                request_obj.method = 'POST'
-                request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
-                employee = check_enp(request_obj)
-                if employee.data.get("message"):
-                    bed_employee.append({"fio": row[2]})
-                elif employee.data.get("patient_data") and type(employee.data.get("patient_data")) != list:
-                    employee_card = employee.data["patient_data"]["card"]
-                else:
-                    employee = employee.data
-                    employee_card = Individual.import_from_tfoms(employee, None, None, None, True)
-                harmful_factor_template = HarmfulFactor.objects.get(title=row[7]).template_id
-                need_research = AssignmentResearches.objects.filter(pk=harmful_factor_template)
-        counter_row += 1
+                employee_data.append({
+                    "snils": val[1].replace('-', '').replace(' ', ''),
+                    "family": val[2].split(' ')[0],
+                    "name": val[2].split(' ')[1],
+                    "patronymic": val[2].split(' ')[2],
+                    "birthday": str(val[3]).split(' ')[0].replace('-', ''),
+                    "post": val[6],
+                    "harmful_factor": val[7]
+                })
+    print(employee_data)
+
+    for row in employee_data:
+        params = {"enp": "", "snils": row["snils"], "check_mode": "l2-snils"}
+        request_obj = HttpRequest()
+        request_obj._body = params
+        request_obj.user = request.user
+        request_obj.method = 'POST'
+        request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
+        current_employee = check_enp(request_obj)
+        if current_employee.data.get("message"):
+            params = {"enp": "", "family": row["family"], "name": row["name"], "bd": row["birthday"], "check_mode": "l2-enp-full"}
+            current_employee = check_enp(request_obj)
+            if current_employee.data.get("message"):
+                bed_employee.append({"fio": row["family"]+row["name"]+row["patronymic"], "reason": "Не найдено"})
+            elif len(current_employee.data) > 1:
+                bed_employee.append({"fio": row["family"]+row["name"]+row["patronymic"], "reason": "Совпадение"})
+            else:
+                employee_card = Individual.import_from_tfoms(current_employee.data, None, None, None, True)
+        elif current_employee.data.get("patient_data") and type(current_employee.data.get("patient_data")) != list:
+            employee_card = current_employee.data["patient_data"]["card"]
+        else:
+            employee_card = Individual.import_from_tfoms(current_employee.data, None, None, None, True)
+        harmful_factor_template = HarmfulFactor.objects.get(title=row["harmful_factor"]).template_id
+        need_research = AssignmentResearches.objects.filter(pk=harmful_factor_template)
+
     return result
 
 
