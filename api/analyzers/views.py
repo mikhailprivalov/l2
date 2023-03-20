@@ -14,30 +14,21 @@ def all_analyzers(request):
 
 def restart_analyzer(request):
     request_data = json.loads(request.body)
-    su = request.user.is_superuser
-    if su:
-        name = Analyzer.objects.filter(id=request_data["pk"]).first()
-        restart_service = subprocess.Popen(["systemctl", "--user", "restart", name.service_name])
-        restart_service.wait()
-        result = get_status_analyzer(request_data["pk"])
-        return JsonResponse({"data": result})
-    else:
-        name = ManageDoctorProfileAnalyzer.objects.filter(analyzer_id=request_data["pk"], doctor_profile_id=request.user.doctorprofile.pk).first()
-        restart_service = subprocess.Popen(["systemctl", "--user", "restart", name.analyzer.service_name])
-        restart_service.wait()
-        result = get_status_analyzer(request_data["pk"])
-        return JsonResponse({"data": result})
+    name = Analyzer.objects.filter(id=request_data["pk"]).first()
+    restart_service = subprocess.Popen(["systemctl", "--user", "restart", name.service_name])
+    restart_service.wait()
+    result = get_status_analyzer(request_data["pk"])
+    return JsonResponse({"data": result})
 
 
 def manage_profile_analyzer(request):
     current_user = request.user.doctorprofile.pk
     su = request.user.is_superuser
     if su:
-        filter_analyzer = [{"label": g.title, "pk": g.pk} for g in Analyzer.objects.all().order_by('title', 'pk')]
-        return JsonResponse({"data": filter_analyzer})
+        filter_analyzer = [{"label": g.title, "pk": g.pk} for g in Analyzer.objects.all().exclude(service_name__isnull=True).exclude(port__isnull=True).order_by('title', 'pk')]
     else:
         filter_analyzer = [{"label": g.analyzer.title, "pk": g.analyzer_id} for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).order_by('analyzer', 'id')]
-        return JsonResponse({"data": filter_analyzer})
+    return JsonResponse({"data": filter_analyzer})
 
 
 def status_analyzer(request):
