@@ -18,6 +18,7 @@ from reportlab.lib.units import mm
 from utils.common import get_system_name
 
 from utils.dates import normalize_date
+from utils.xh import show_qr_lk_address
 
 
 def form_04(request_data):
@@ -1412,6 +1413,7 @@ def form_11(request_data):
     fwb.append(Spacer(1, 8 * mm))
     fwb.append(Paragraph(f'_______________________({fio_short}) {date} г.', style))
     fwb.append(Paragraph('(подпись работника<br/>освидетельствуемого)', style))
+    fwb = show_qr_lk_address(fwb)
 
     doc.build(fwb)
     pdf = buffer.getvalue()

@@ -427,6 +427,12 @@ def primary_reception_get_data(hosp_first_num):
         'Группа крови',
         'Резус принадлежность',
         'Вес',
+        'Основной диагноз (описание)',
+        'Основной диагноз по МКБ',
+        'Осложнение основного диагноза (описание)',
+        'Осложнение основного диагноза по МКБ',
+        'Сопутствующий диагноз (описание)',
+        'Сопутствующий диагноз по МКБ',
     ]
     list_values = None
     if titles_field and hosp_primary_receptions:
@@ -438,6 +444,7 @@ def primary_reception_get_data(hosp_first_num):
     what_time_hospitalized, state, social_status, category_privilege = '', '', '', ''
     all_hospitalized, type_trauma, blood_group, resus_factor = '', '', '', ''
     weight = ''
+    final_diagnos, other_diagnos, near_diagnos, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', ''
 
     if list_values:
         for i in list_values:
@@ -501,6 +508,18 @@ def primary_reception_get_data(hosp_first_num):
             if i[3] == 'Вес':
                 weight = i[2]
                 continue
+            if i[3] == 'Основной диагноз (описание)':
+                final_diagnos = i[2]
+            if i[3] == 'Осложнение основного диагноза (описание)':
+                other_diagnos = i[2]
+            if i[3] == 'Сопутствующий диагноз (описание)':
+                near_diagnos = i[2]
+            if i[3] == 'Основной диагноз по МКБ':
+                final_diagnos_mkb = str(i[2])
+            if i[3] == 'Осложнение основного диагноза по МКБ':
+                other_diagnos_mkb = str(i[2]).split(' ')[0]
+            if i[3] == 'Сопутствующий диагноз по МКБ':
+                near_diagnos_mkb = str(i[2]).split(' ')[0]
 
     return {
         'date_entered_value': date_entered_value,
@@ -523,6 +542,12 @@ def primary_reception_get_data(hosp_first_num):
         'blood_group': blood_group,
         'resus_factor': resus_factor,
         'weight': weight,
+        'final_diagnos': final_diagnos,
+        'other_diagnos': other_diagnos,
+        'near_diagnos': near_diagnos,
+        'final_diagnos_mkb': final_diagnos_mkb,
+        'other_diagnos_mkb': other_diagnos_mkb,
+        'near_diagnos_mkb': near_diagnos_mkb,
     }
 
 
@@ -624,7 +649,7 @@ def hosp_get_clinical_diagnos(hosp_obj):
                     day_entries_iss.append(i.get('iss'))
                     if not day_entries_research_id:
                         day_entries_research_id = i.get('research_id')
-        titles_field = ['Диагноз клинический', 'Дата установления диагноза', 'Основной', 'Осложнение', 'Сопутствующий']
+        titles_field = ['Диагноз клинический', 'Дата установления диагноза', 'Основной', 'Осложнение', 'Сопутствующий', 'Внешняя причина при травмах, отравлениях']
         list_values = []
         if titles_field and day_entries_iss:
             for i in day_entries_iss:
@@ -632,7 +657,7 @@ def hosp_get_clinical_diagnos(hosp_obj):
 
         if list_values:
             for fields in list_values:
-                clinical_data = {'clinic_diagnos': '', 'main_diagnos': '', 'other_diagnos': '', 'near_diagnos': '', 'date': ''}
+                clinical_data = {'clinic_diagnos': '', 'main_diagnos': '', 'other_diagnos': '', 'near_diagnos': '', 'date': '', 'foreign_reason': ''}
                 for i in fields:
                     if i[3] == 'Дата установления диагноза':
                         clinical_data['date'] = normalize_date(i[2])
@@ -641,13 +666,16 @@ def hosp_get_clinical_diagnos(hosp_obj):
                         clinical_data['clinic_diagnos'] = i[2]
                         continue
                     if i[3] == 'Основной':
-                        clinical_data['main_diagnos'] = f"Основной: {i[2]}"
+                        clinical_data['main_diagnos'] = f"(Основной): {i[2]}"
                         continue
                     if i[3] == 'Осложнение':
-                        clinical_data['other_diagnos'] = f"; Осложнение: {i[2]}"
+                        clinical_data['other_diagnos'] = f"; (Осложнение): {i[2]}"
                         continue
                     if i[3] == 'Сопутствующий':
-                        clinical_data['near_diagnos'] = f"; Сопутствующий: {i[2]}"
+                        clinical_data['near_diagnos'] = f"; (Сопутствующий): {i[2]}"
+                        continue
+                    if i[3] == 'Внешняя причина при травмах, отравлениях':
+                        clinical_data['foreign_reason'] = f"{i[2]}"
                         continue
                 if clinical_data['date'] and (clinical_data['clinic_diagnos'] or clinical_data['main_diagnos']):
                     tmp_clinic_diagnos.append(clinical_data.copy())
@@ -655,7 +683,7 @@ def hosp_get_clinical_diagnos(hosp_obj):
     for i in tmp_clinic_diagnos:
         clinic_diagnos = f"{clinic_diagnos}{i['clinic_diagnos']} <u>{i['main_diagnos']}</u>{i['other_diagnos']}{i['near_diagnos']}; дата: {i['date']}<br/>"
 
-    return clinic_diagnos
+    return clinic_diagnos, tmp_clinic_diagnos
 
 
 def hosp_get_transfers_data(hosp_nums_obj):
@@ -668,6 +696,8 @@ def hosp_get_transfers_data(hosp_nums_obj):
             continue
 
         transfer_research_title = hosp_nums_obj[i].get('research_title')
+        iss_data = Issledovaniya.objects.get(pk=hosp_nums_obj[i].get('issledovaniye'))
+        transfer_depart = iss_data.hospital_department_override.title if iss_data.hospital_department_override else ""
         # получить для текущего hosp_dir эпикриз с title - перевод.....
         from_hosp_dir_transfer = hosp_nums_obj[i - 1].get('direction')
         epicrisis_data = hosp_get_data_direction(from_hosp_dir_transfer, site_type=6, type_service='None', level=2)
@@ -688,7 +718,9 @@ def hosp_get_transfers_data(hosp_nums_obj):
                     time_transfer_value = i[2]
                     continue
 
-        transfers.append({'transfer_research_title': transfer_research_title, 'date_transfer_value': date_transfer_value, 'time_transfer_value': time_transfer_value})
+        transfers.append(
+            {'transfer_research_title': transfer_research_title, 'transfer_depart': transfer_depart, 'date_transfer_value': date_transfer_value, 'time_transfer_value': time_transfer_value}
+        )
 
     return transfers
 

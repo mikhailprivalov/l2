@@ -12,10 +12,10 @@
     <div class="edit-price">
       <table class="table">
         <colgroup>
+          <col width="240">
+          <col width="120">
+          <col width="120">
           <col>
-          <col width="120">
-          <col width="120">
-          <col width="200">
           <col
             v-if="priceIsActive"
             width="100"
@@ -109,9 +109,21 @@
         </tr>
       </table>
     </div>
-    <h4 v-if="priceIsSelected">
-      Исследования
-    </h4>
+    <span v-if="priceIsSelected">
+      <a
+        class="a-under a-align"
+        href="#"
+        @click.prevent="downloadSpecification"
+      >
+        Скачать спецификацию
+      </a>
+      <ul class="nav navbar-nav">
+        <LoadFile
+          :is-gen-commercial-offer="true"
+          :selected-price="selectedPrice"
+        />
+      </ul>
+    </span>
     <div
       v-if="priceIsSelected"
       class="margin-bottom"
@@ -131,6 +143,7 @@
           <colgroup>
             <col>
             <col width="100">
+            <col width="100">
             <col
               v-if="priceIsActive"
               width="100"
@@ -138,14 +151,13 @@
           </colgroup>
           <thead class="sticky">
             <tr class="border-no-top">
-              <th
-                class="text-center border-right"
-              >
+              <th class="text-center border-right">
                 <strong>Название</strong>
               </th>
-              <th
-                class="text-center border-right"
-              >
+              <th class="text-center border-right">
+                <strong>Кол-во</strong>
+              </th>
+              <th class="text-center border-right">
                 <strong>Цена</strong>
               </th>
               <th
@@ -173,6 +185,16 @@
               class="research border padding-left"
               :text="coastResearch.research.title"
             />
+            <td class="border">
+              <input
+                v-model="coastResearch.numberService"
+                :disabled="!priceIsActive"
+                type="number"
+                min="0"
+                step="1"
+                class="text-right form-control"
+              >
+            </td>
             <td class="border">
               <input
                 v-model="coastResearch.coast"
@@ -232,6 +254,16 @@
           </td>
           <td class="border">
             <input
+              v-model="numberService"
+              type="number"
+              class="text-right form-control"
+              min="0"
+              step="1"
+              placeholder="Кол-во"
+            >
+          </td>
+          <td class="border">
+            <input
               v-model="coast"
               type="number"
               class="text-right form-control"
@@ -266,10 +298,11 @@ import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
+import LoadFile from '@/ui-cards/LoadFile.vue';
 
 export default {
   name: 'ConstructPrice',
-  components: { VueTippyTd, Treeselect },
+  components: { VueTippyTd, Treeselect, LoadFile },
   data() {
     return {
       prices: {},
@@ -280,6 +313,7 @@ export default {
       selectedPrice: null,
       selectedResearch: null,
       coast: '',
+      numberService: '',
       researchList: {},
       search: '',
       coastResearches: [],
@@ -290,7 +324,6 @@ export default {
       return this.coastResearches.filter(coastResearch => {
         const research = coastResearch.research.title.toLowerCase();
         const searchTerm = this.search.toLowerCase();
-
         return research.includes(searchTerm);
       });
     },
@@ -326,6 +359,16 @@ export default {
     this.getResearchList();
   },
   methods: {
+    showModal() {
+      this.modal = true;
+    },
+    hideModal() {
+      this.modal = false;
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_download_file');
+    },
     normalizer(node) {
       return {
         id: node.pk,
@@ -334,6 +377,9 @@ export default {
     },
     async getPrices() {
       this.prices = await this.$api('/get-prices');
+    },
+    downloadSpecification() {
+      window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
     },
     async updatePrice() {
       if (!this.priceDataIsFilled) {
@@ -411,6 +457,7 @@ export default {
         const { ok, message } = await this.$api('/update-coast-research-in-price', {
           coastResearchId: coastResearch.id,
           coast: coastResearch.coast,
+          numberService: coastResearch.numberService,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -451,6 +498,7 @@ export default {
           priceId: this.selectedPrice,
           researchId: this.selectedResearch,
           coast: this.coast,
+          numberService: this.numberService,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -547,4 +595,7 @@ export default {
     flex: 1;
     padding: 7px 0;
   }
+.a-align {
+  float: right;
+}
 </style>

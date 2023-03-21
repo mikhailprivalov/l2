@@ -1,4 +1,7 @@
 from api.directions.sql_func import get_lab_podr
+from appconf.manager import SettingManager
+from laboratory.settings import QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
+from utils.flowable import QrCodeSite
 
 
 def fix(s: str):
@@ -85,3 +88,14 @@ def translation_number_from_decimal(current_num):
         s = symbol + s
         current_num = current_num // base
     return s
+
+
+def show_qr_lk_address(fwb, leftnone=False):
+    lk_address = SettingManager.get("lk_address", default='', default_type='s')
+    if lk_address:
+        if leftnone:
+            qr_code_param = LEFT_QRCODE_OFFSET_SIZE
+        else:
+            qr_code_param = QRCODE_OFFSET_SIZE
+        fwb.append(QrCodeSite(lk_address, qr_code_param))
+    return fwb
