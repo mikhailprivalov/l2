@@ -1946,8 +1946,6 @@ def get_harmful_factors(request):
     wb.remove(wb.get_sheet_by_name('Sheet'))
     ws = wb.create_sheet("Спецификация")
 
-    request_data = request.POST if request.method == "POST" else request.GET
-
     ws = harmful_factors.harmful_factors_base(ws)
     data_template = get_all_harmful_factors_templates()
     data_template_ids = tuple([i.template_id for i in data_template])
@@ -1961,7 +1959,6 @@ def get_harmful_factors(request):
         }
         for i in data_template
     }
-    print(data_template_meta)
     for k in date_researches:
         data_template_meta[k.template_id]['research_title'] = f"{data_template_meta[k.template_id]['research_title']};  {k.title}"
     ws = harmful_factors.harmful_factors_fill_data(ws, data_template_meta)
