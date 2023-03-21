@@ -32,7 +32,6 @@ def harmful_factors_fill_data(ws1, result_query):
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border1.font = Font(bold=False, size=11)
     style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
-    my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
     pink_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='FCD5B4', end_color='FCD5B4')
 
     r = 5
