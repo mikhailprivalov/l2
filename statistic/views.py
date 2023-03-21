@@ -31,7 +31,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -44,6 +44,8 @@ from .sql_func import (
     sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
     sql_get_result_by_direction,
     sql_get_documents_by_card_id,
+    get_all_harmful_factors_templates,
+    get_researches_by_templates,
 )
 
 from laboratory.settings import (
@@ -1933,6 +1935,29 @@ def commercial_offer_xls(request):
     data_offer = request_data.get("offer", "")
     data_offer = json.loads(data_offer)
     ws = commercial_offer.offer_fill_data(ws, data_offer)
+    wb.save(response)
+    return response
+
+
+@csrf_exempt
+@login_required
+def get_harmful_factors(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Specification.xlsx\""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.get_sheet_by_name('Sheet'))
+    ws = wb.create_sheet("Спецификация")
+
+    ws = harmful_factors.harmful_factors_base(ws)
+    data_template = get_all_harmful_factors_templates()
+    data_template_ids = tuple([i.template_id for i in data_template])
+    date_researches = get_researches_by_templates(data_template_ids)
+    data_template_meta = {
+        i.template_id: {"harmfulfactor_title": i.harmfulfactor_title, "description": i.description, "template_title": i.template_title, "research_title": ""} for i in data_template
+    }
+    for k in date_researches:
+        data_template_meta[k.template_id]['research_title'] = f"{data_template_meta[k.template_id]['research_title']};  {k.title}"
+    ws = harmful_factors.harmful_factors_fill_data(ws, data_template_meta)
     wb.save(response)
     return response
 
