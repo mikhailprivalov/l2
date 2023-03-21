@@ -1953,13 +1953,7 @@ def get_harmful_factors(request):
     data_template_ids = tuple([i.template_id for i in data_template])
     date_researches = get_researches_by_templates(data_template_ids)
     data_template_meta = {
-        i.template_id: {
-            "harmfulfactor_title": i.harmfulfactor_title,
-            "description": i.description,
-            "template_title": i.template_title,
-            "research_title": ""
-        }
-        for i in data_template
+        i.template_id: {"harmfulfactor_title": i.harmfulfactor_title, "description": i.description, "template_title": i.template_title, "research_title": ""} for i in data_template
     }
     for k in date_researches:
         data_template_meta[k.template_id]['research_title'] = f"{data_template_meta[k.template_id]['research_title']};  {k.title}"
