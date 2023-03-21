@@ -1707,4 +1707,3 @@ def get_researches_by_templates(template_ids):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
