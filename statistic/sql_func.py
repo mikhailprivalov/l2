@@ -1669,3 +1669,41 @@ def get_pair_iss_direction(iss_tuple):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_all_harmful_factors_templates():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                 SELECT
+                    clients_harmfulfactor.id as harmfulfactor_id,
+                    clients_harmfulfactor.title as harmfulfactor_title,
+                    clients_harmfulfactor.description,
+                    ut.title as template_title,
+                    ut.id as template_id
+                FROM clients_harmfulfactor
+                LEFT JOIN users_assignmenttemplates ut on 
+                clients_harmfulfactor.template_id = ut.id
+                ORDER BY harmfulfactor_title
+            """
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_researches_by_templates(template_ids):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                 SELECT
+                    users_assignmentresearches.template_id,
+                    users_assignmentresearches.research_id, 
+                    dr.title
+                FROM users_assignmentresearches
+                LEFT JOIN directory_researches dr on dr.id = users_assignmentresearches.research_id
+                WHERE users_assignmentresearches.template_id in %(template_ids)s
+            """,
+            params={'template_ids': template_ids},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
