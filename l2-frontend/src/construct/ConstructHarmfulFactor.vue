@@ -1,8 +1,15 @@
 <template>
   <div>
-    <h4>
-      Факторы вредности
-    </h4>
+    <h5>
+      <a
+        class="a-under a-align"
+        href="#"
+        @click.prevent="downloadHarmFullFactors"
+      >
+        Скачать - Факторы вредности
+      </a>
+    </h5>
+
     <div>
       <input
         v-model.trim="search"
@@ -236,6 +243,9 @@ export default {
   methods: {
     async getFactors() {
       this.factors = await this.$api('/get-harmful-factors');
+    },
+    downloadHarmFullFactors() {
+      window.open('/statistic/harmful-factors', '_blank');
     },
     async getTemplates() {
       this.templates = await this.$api('/get-templates');

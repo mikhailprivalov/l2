@@ -46,7 +46,7 @@ def http_func(data, user):
 
 def load_file(request):
     link = ""
-    if request.POST.get('isGenCommercialOffer'):
+    if request.POST.get('isGenCommercialOffer') == "true":
         results = gen_commercial_offer(request)
         link = "commercial-offer"
     else:
