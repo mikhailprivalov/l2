@@ -60,16 +60,18 @@ def parse_factors_file(request):
             if company_inn != f"{val[5]}":
                 incorrect_employees.append({"fio": val[2], "reason": "ИНН организации не совпадает"})
             else:
-                employee_data.append({
-                    "snils": val[1].replace('-', '').replace(' ', ''),
-                    "family": val[2].split(' ')[0],
-                    "name": val[2].split(' ')[1],
-                    "patronymic": val[2].split(' ')[2],
-                    "gender": val[4][0],
-                    "birthday": str(val[3]).split(' ')[0],
-                    "position": val[6],
-                    "harmful_factor": val[7].split(',')
-                })
+                employee_data.append(
+                    {
+                        "snils": val[1].replace('-', '').replace(' ', ''),
+                        "family": val[2].split(' ')[0],
+                        "name": val[2].split(' ')[1],
+                        "patronymic": val[2].split(' ')[2],
+                        "gender": val[4][0],
+                        "birthday": str(val[3]).split(' ')[0],
+                        "position": val[6],
+                        "harmful_factor": val[7].split(','),
+                    }
+                )
     return employee_data, incorrect_employees
 
 
