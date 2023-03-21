@@ -1,10 +1,8 @@
-import json
 import tempfile
 
 from django.http import HttpRequest, JsonResponse
 
 from api.models import Application
-from openpyxl.reader.excel import load_workbook
 
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
@@ -12,10 +10,9 @@ import simplejson as json
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
-from clients.models import HarmfulFactor
 from contracts.models import PriceCoast
 from users.models import AssignmentResearches
-from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor
+from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
 from integration_framework.views import check_enp
 
 
@@ -51,9 +48,8 @@ def http_func(data, user):
     endpoint(http_obj)
 
 
-def parse_medical_examination(request):
+def parse_factors_file(request):
     incorrect_employees = []
-    harmful_data = []
     company_inn = request.POST['companyInn']
     company_file = request.FILES['file']
     wb = load_workbook(filename=company_file)
@@ -69,11 +65,17 @@ def parse_medical_examination(request):
                     "family": val[2].split(' ')[0],
                     "name": val[2].split(' ')[1],
                     "patronymic": val[2].split(' ')[2],
-                    "birthday": str(val[3]).split(' ')[0].replace('-', ''),
-                    "post": val[6],
+                    "gender": val[4][0],
+                    "birthday": str(val[3]).split(' ')[0],
+                    "position": val[6],
                     "harmful_factor": val[7].split(',')
                 })
+    return employee_data, incorrect_employees
 
+
+def add_factors_to_employees(request):
+    employee_data, incorrect_employees = parse_factors_file(request)
+    harmful_factors_data = []
     for row in employee_data:
         params = {"enp": "", "snils": row["snils"], "check_mode": "l2-snils"}
         request_obj = HttpRequest()
@@ -83,16 +85,17 @@ def parse_medical_examination(request):
         request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
         current_employee = check_enp(request_obj)
         if current_employee.data.get("message"):
-            params = {"enp": "", "family": row["family"], "name": row["name"], "bd": row["birthday"], "check_mode": "l2-enp-full"}
+            params = {"enp": "", "family": row["family"], "name": row["name"], "bd": row["birthday"].replace('-', ''), "check_mode": "l2-enp-full"}
             current_employee = check_enp(request_obj)
             if current_employee.data.get("message"):
-                incorrect_employees.append({"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": "Не найден"})
-                continue
+                employee_indv = Individual(family=row["family"], name=row["name"], patronymic=row["patronymic"], birthday=row["birthday"], sex=row["gender"])
+                employee_indv.save()
+                employee_card = Card.add_l2_card(individual=employee_indv)
             elif len(current_employee.data) > 1:
                 incorrect_employees.append({"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": "Совпадение"})
                 continue
             else:
-                employee_card = Individual.import_from_tfoms(current_employee.data["patient_data"], None, None, None, True)
+                employee_card = Individual.import_from_tfoms(current_employee.data["list"], None, None, None, True)
         elif current_employee.data.get("patient_data") and type(current_employee.data.get("patient_data")) != list:
             employee_card = current_employee.data["patient_data"]["card"]
         else:
@@ -102,24 +105,23 @@ def parse_medical_examination(request):
         for i in row["harmful_factor"]:
             harmful_factor = HarmfulFactor.objects.filter(title=i).first()
             if harmful_factor:
-                harmful_data.append({"factorId": harmful_factor.pk})
+                harmful_factors_data.append({"factorId": harmful_factor.pk})
             else:
                 incorrect_factor.append(f"{i}")
         if len(incorrect_factor) != 0:
             incorrect_employees.append({"fio": row["family"] + ' ' + row["name"] + ' ' + row["patronymic"], "reason": f"Не верные факторы: {incorrect_factor}"})
-
-        PatientHarmfullFactor.save_card_harmful_factor(employee_card.pk, harmful_data)
+        PatientHarmfullFactor.save_card_harmful_factor(employee_card.pk, harmful_factors_data)
 
     return incorrect_employees
 
 
 def load_file(request):
     link = ""
-    if request.POST.get('isGenCommercialOffer'):
+    if request.POST.get('isGenCommercialOffer') == "true":
         results = gen_commercial_offer(request)
         link = "commercial-offer"
-    elif request.POST.get('companyInn'):
-        results = parse_medical_examination(request)
+    elif len(request.POST.get('companyInn')) != 0:
+        results = add_factors_to_employees(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
     else:
         results = dnk_covid(request)

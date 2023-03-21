@@ -114,7 +114,10 @@
                 :label="isNewCompany ? 'Добавить' : 'Сохранить'"
               />
             </div>
-            <div class="button" v-if="!isNewCompany">
+            <div
+              v-if="!isNewCompany"
+              class="button"
+            >
               <ul class="nav navbar">
                 <LoadFile :company-inn="editorCompany.inn" />
               </ul>

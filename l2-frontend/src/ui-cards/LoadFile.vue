@@ -45,7 +45,7 @@
           <h5 v-if="results.length > 0">
             {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
-          <ul v-if="!link">
+          <ul v-if="link != null">
             <li
               v-for="r in results"
               :key="r.pk"
@@ -53,7 +53,7 @@
               {{ r.pk }} – {{ r.result }}
             </li>
           </ul>
-          <ul v-else-if="company">
+          <ul v-if="company">
             <li
               v-for="r in results"
               :key="r.pk"
@@ -93,6 +93,7 @@ export default {
   props: {
     companyInn: {
       type: String,
+      default: '',
       required: false,
     },
     isGenCommercialOffer: {
