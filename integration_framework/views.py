@@ -786,6 +786,7 @@ def check_enp(request):
                     if d['type_title'] == 'СНИЛС':
                         snils = d['number']
                 patient_data = {
+                    "card": data_patient["pk"],
                     "family": data_patient['family'],
                     "given": data_patient['name'],
                     "patronymic": data_patient['twoname'],

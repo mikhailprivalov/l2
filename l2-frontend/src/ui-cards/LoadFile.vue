@@ -19,7 +19,7 @@
         <span slot="header">Загрузка файла</span>
         <div slot="body">
           <div class="form-group">
-            <label for="fileInput">PDF файл</label>
+            <label for="fileInput"> {{ company === true ? 'XLSX файл' : 'PDF файл' }}</label>
             <input
               id="fileInput"
               ref="file"
@@ -43,14 +43,22 @@
             <span v-else>Загрузить</span>
           </button>
           <h5 v-if="results.length > 0">
-            Сохранённые результаты
+            {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
-          <ul v-if="!link">
+          <ul v-if="link != null">
             <li
               v-for="r in results"
               :key="r.pk"
             >
               {{ r.pk }} – {{ r.result }}
+            </li>
+          </ul>
+          <ul v-if="company">
+            <li
+              v-for="r in results"
+              :key="r.pk"
+            >
+              {{ r.fio }} - {{ r.reason }}
             </li>
           </ul>
         </div>
@@ -83,6 +91,11 @@ export default {
   name: 'LoadFile',
   components: { Modal },
   props: {
+    companyInn: {
+      type: String,
+      default: '',
+      required: false,
+    },
     isGenCommercialOffer: {
       type: Boolean,
       default: false,
@@ -100,6 +113,7 @@ export default {
       loading: false,
       file: '',
       results: [],
+      company: false,
       link: null,
     };
   },
@@ -124,6 +138,7 @@ export default {
         this.results = [];
         const formData = new FormData();
         formData.append('file', this.file);
+        formData.append('companyInn', this.companyInn);
         formData.append('isGenCommercialOffer', this.isGenCommercialOffer);
         formData.append('selectedPrice', this.selectedPrice);
         const { data } = await axios.post('/api/parse-file/loadfile', formData, {
@@ -133,6 +148,7 @@ export default {
           },
         });
         this.results = data.results;
+        this.company = data.company;
         this.$refs.file.value = '';
         this.file = '';
         this.$root.$emit('msg', 'ok', 'Файл загружен');
