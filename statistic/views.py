@@ -43,7 +43,9 @@ from .sql_func import (
     sql_pass_pap_fraction_result_value,
     sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
     sql_get_result_by_direction,
-    sql_get_documents_by_card_id, get_all_harmful_factors_templates, get_researches_by_templates,
+    sql_get_documents_by_card_id,
+    get_all_harmful_factors_templates,
+    get_researches_by_templates,
 )
 
 from laboratory.settings import (
