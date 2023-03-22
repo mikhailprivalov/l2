@@ -56,7 +56,15 @@ def add_factors_from_file(request):
     wb = load_workbook(filename=company_file)
     ws = wb.worksheets[0]
     starts = False
-    snils, fio, birthday, gender, inn_company, position, code_harmful = '', '', '', '', '', '', '',
+    snils, fio, birthday, gender, inn_company, position, code_harmful = (
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+    )
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
@@ -81,11 +89,22 @@ def add_factors_from_file(request):
                 current_patient = check_enp(request_obj)
                 cells[birthday].split(' ')[0].replace('.', '')
                 if current_patient.data.get("message"):
-                    params = {"enp": "", "family": cells[fio].split(' ')[0], "name": cells[fio].split(' ')[1], "bd": cells[birthday].split(' ')[0].replace('.', ''), "check_mode": "l2-enp-full"}
+                    params = {
+                        "enp": "",
+                        "family": cells[fio].split(' ')[0],
+                        "name": cells[fio].split(' ')[1],
+                        "bd": cells[birthday].split(' ')[0].replace('.', ''),
+                        "check_mode": "l2-enp-full",
+                    }
                     current_patient = check_enp(request_obj)
                     if current_patient.data.get("message"):
-                        patient_indv = Individual(family=cells[fio].split(' ')[0], name=cells[fio].split(' ')[1], patronymic=cells[fio].split(' ')[2],
-                                                  birthday=cells[birthday].split(' ')[0].replace('.', ''), sex=cells[gender][0])
+                        patient_indv = Individual(
+                            family=cells[fio].split(' ')[0],
+                            name=cells[fio].split(' ')[1],
+                            patronymic=cells[fio].split(' ')[2],
+                            birthday=cells[birthday].split(' ')[0].replace('.', ''),
+                            sex=cells[gender][0],
+                        )
                         patient_indv.save()
                         patient_card = Card.add_l2_card(individual=patient_indv)
                     elif len(current_patient.data) > 1:
