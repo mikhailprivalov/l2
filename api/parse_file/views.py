@@ -56,8 +56,7 @@ def add_factors_from_file(request):
     wb = load_workbook(filename=company_file)
     ws = wb.worksheets[0]
     starts = False
-    snils, fio, birthday, gender, inn_company, position, code_harmful = (
-        '',
+    snils, fio, birthday, gender, inn_company, code_harmful = (
         '',
         '',
         '',
