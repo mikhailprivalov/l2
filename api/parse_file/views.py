@@ -60,13 +60,13 @@ def add_factors_from_file(request):
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
-            if "Код вредности" in cells:
-                snils = cells.index("СНИЛС")
-                fio = cells.index("ФИО")
-                birthday = cells.index("Дата рождения")
-                gender = cells.index("Пол")
-                inn_company = cells.index("ИНН организации")
-                code_harmful = cells.index("Код вредности")
+            if "код вредности" in cells:
+                snils = cells.index("снилс")
+                fio = cells.index("фио")
+                birthday = cells.index("дата рождения")
+                gender = cells.index("пол")
+                inn_company = cells.index("инн организации")
+                code_harmful = cells.index("код вредности")
                 starts = True
         else:
             if company_inn != cells[inn_company]:
