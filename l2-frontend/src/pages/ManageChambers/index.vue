@@ -12,7 +12,7 @@
         <div class="sidebar-content">
           <draggable
             v-model="users"
-            :options="{group:{ name: 'users', put: 'beds.contents'}}"
+            :options="{group:{ name: 'users', put: 'bed.contents'}}"
           >
             <div
               v-for="user in users"
@@ -47,25 +47,28 @@
             </td>
             <td class="drop-zone">
               <span
-                v-for="bed in beds"
-                v-if="chamber.pk === bed.pkChamber"
+                v-for="bed in chamber.beds"
                 :key="bed.pk"
               >
                 <draggable
                   v-model="bed.contents"
-                  :options="{group:{ name: 'beds.contents', put: 'users'}}"
+                  :options="{group:{name: 'bed.contents', put: 'users'}}"
                   class="drag-el"
                   style="display: inline-block; margin-left: 20px"
                   @change="loadDataBed"
                 >
                   <i
-                    :class="bed.contents.sex === 'ж' ? 'fa fa-bed women' : 'fa fa-bed bedMin'"
+                    class="fa fa-bed bedMin"
+                    :class="{ 'women': bed.statusSex === 'women', 'man': bed.statusSex === 'man' }"
                   />
-                  <div
-                    v-for="item in bed.contents"
-                    :key="item.pk"
-                  >
-                    <span style="margin-left: 15px">{{ item.age }}</span>
+                  <div>
+                    <span
+                      v-for="info in bed.contents"
+                      :key="info.pk"
+                      style="margin-left: 15px"
+                    >
+                      {{ info.age }}
+                    </span>
                   </div>
                 </draggable>
               </span>
@@ -92,7 +95,6 @@ export default {
   components: { Filters, draggable },
   data() {
     return {
-      beds: [],
       chambers: [],
       departments: [],
       users: [],
@@ -109,8 +111,7 @@ export default {
   watch: {
     deapartment() {
       this.loadUser();
-      this.loadChamber();
-      this.loadBed();
+      this.loadChamberAndBed();
     },
   },
   mounted() {
@@ -127,23 +128,17 @@ export default {
       });
       this.users = result.data;
     },
-    async loadChamber() {
-      const result = await this.$api('chambers/get-chambers', {
+    async loadChamberAndBed() {
+      const result = await this.$api('chambers/get-chambers-and-bed', {
         department_pk: this.deapartment,
       });
       this.chambers = result.data;
     },
-    async loadBed() {
-      const list = await this.$api('chambers/get-beds', {
-        department_pk: this.deapartment,
-      });
-      this.beds = list.data;
-    },
     async loadDataBed() {
-      const result = await this.$api('chambers/load-data-beds', {
-        beds: this.beds,
+      const result = await this.$api('chambers/load-data-bed', {
+        chambers: this.chambers,
       });
-      this.beds = result.data;
+      this.chambers = result.data;
     },
   },
 };
@@ -156,9 +151,7 @@ export default {
   right: 0;
   bottom: 0;
   left: 0;
-
   border-right: 1px solid #b1b1b1;
-
   display: flex;
   align-items: stretch;
   flex-direction: row;
@@ -169,7 +162,6 @@ export default {
     align-self: stretch;
   }
 }
-
 .construct-sidebar {
   width: 300px;
   border-right: 1px solid #b1b1b1;
@@ -209,11 +201,9 @@ export default {
     transform: scale(1.008);
   }
 }
-
 .research:not(:first-child) {
   margin-top: 0;
 }
-
 .research:last-child {
   margin-bottom: 0;
 }
@@ -241,12 +231,8 @@ export default {
   margin-top: 10px;
   margin-left: 10px;
   font-size: 20px;
-  color: #000000;
 }
 .women {
-  margin-top: 10px;
-  margin-left: 10px;
-  font-size: 20px;
   color: #ffb9ea;
 }
 .man {
