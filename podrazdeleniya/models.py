@@ -141,3 +141,16 @@ class Bed(models.Model):
     class Meta:
         verbose_name = 'Койку'
         verbose_name_plural = 'Койки'
+
+
+class PatienToBed(models.Model):
+    patient = models.ForeignKey("directions.Issledovaniya", on_delete=models.CASCADE)
+    bed = models.ForeignKey(Bed, on_delete=models.CASCADE)
+    status = models.BooleanField(default=True, blank=True, help_text="История койки (true: лежит / false: лежал)")
+
+    def __str__(self):
+        return f'{self.patient} - {self.bed} - {self.status}'
+
+    class Meta:
+        verbose_name = 'Историю койки'
+        verbose_name_plural = 'История коек'
