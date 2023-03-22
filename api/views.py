@@ -7,8 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from api.models import Analyzer
-from api.models import ManageDoctorProfileAnalyzer
+from api.models import ManageDoctorProfileAnalyzer, Analyzer
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
