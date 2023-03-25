@@ -92,7 +92,7 @@
                 :update_value="updateValue(field)"
                 :value="field.value"
                 :values="field.values_to_input"
-                :confirmed="confirmed"
+                :confirmed="confirmed || userGroups.includes(field.deniedGroup)"
                 :field_type="field.field_type"
                 :field_title="field.title"
               />
@@ -102,7 +102,7 @@
               >
                 <TextFieldWithTemplates
                   v-model="field.value"
-                  :confirmed="confirmed"
+                  :confirmed="confirmed || userGroups.includes(field.deniedGroup)"
                   :field-pk="field.pk"
                   :lines="field.lines"
                 />
@@ -594,6 +594,9 @@ export default {
     groups() {
       return this.research.groups;
     },
+    userGroups() {
+      return this.$store.getters.user_data.groups || [];
+    },
   },
   watch: {
     groups: {
@@ -617,6 +620,12 @@ export default {
     clearInterval(this.versionTickTimer);
   },
   methods: {
+    deniedGroup(deniedGr) {
+      console.log(deniedGr);
+      console.log(this.$store.getters.user_data.groups);
+      console.log((this.$store.getters.user_data.groups || []).includes(deniedGr));
+      return (this.$store.getters.user_data.groups || []).includes(deniedGr);
+    },
     inc_version() {
       // eslint-disable-next-line vue/no-mutating-props
       this.research.version = (this.research.version || 0) + 1;

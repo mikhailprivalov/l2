@@ -1686,6 +1686,7 @@ def directions_paraclinic_form(request):
                             value = ''
                         elif field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
                             value = values_to_input[0]
+                        print(field.denied_group.name if field.denied_group else "-")
                         g["fields"].append(
                             {
                                 "pk": field.pk,
@@ -1703,6 +1704,7 @@ def directions_paraclinic_form(request):
                                 "controlParam": field.control_param,
                                 "not_edit": field.not_edit,
                                 "operator_enter_param": field.operator_enter_param,
+                                "deniedGroup": field.denied_group.name if field.denied_group else ""
                             }
                         )
                     iss["research"]["groups"].append(g)
