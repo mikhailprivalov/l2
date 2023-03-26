@@ -69,7 +69,7 @@
     "vue-property-decorator": "^9.1.2",
     "vue-resize-detector": "^0.2.0",
     "vue-router": "^3.6.5",
-    "vue-select": "^3.20.0",
+    "vue-select": "^3.20.2",
     "vue-simple-progress": "^1.1.1",
     "vue-tippy": "^4.16.0",
     "vue-toastification": "^1.7.14",
