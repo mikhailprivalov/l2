@@ -4374,10 +4374,10 @@ crypto-browserify@^3.11.0:
     randombytes "^2.0.0"
     randomfill "^1.0.3"
 
-crypto-pro@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/crypto-pro/-/crypto-pro-2.3.0.tgz#1c092d265358e4aba9ecc7202eca04adf4d4c445"
-  integrity sha512-cppYuMRRijEaZ0UKAOW5L1CQIvzQA3DTRp4pARINl6K8Pp1JMhlch5TyWwv6Z4Y3x677A9xxcW62okHD91Veqg==
+crypto-pro@^2.3.2:
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/crypto-pro/-/crypto-pro-2.3.2.tgz#f8fadcbeaee1628eb65292aad580abe059cab036"
+  integrity sha512-KniSHNSsM1726pcxhc22QR0iBR0InSehxvTlTXXd+TAQkqIqLUalt87/3lzxZW/yfrMJGFijETK3ksmhe9sCfg==
 
 css-declaration-sorter@^6.0.3:
   version "6.1.4"
