@@ -7,6 +7,7 @@ from api.models import Application
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
 
+from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
@@ -50,6 +51,7 @@ def http_func(data, user):
 
 def add_factors_from_file(request):
     incorrect_patients = []
+    patient_card = ''
     company_inn = request.POST['companyInn']
     company_file = request.FILES['file']
     wb = load_workbook(filename=company_file)
@@ -97,15 +99,72 @@ def add_factors_from_file(request):
                     }
                     current_patient = check_enp(request_obj)
                     if current_patient.data.get("message"):
-                        patient_indv = Individual(
-                            family=cells[fio].split(' ')[0],
-                            name=cells[fio].split(' ')[1],
-                            patronymic=cells[fio].split(' ')[2],
-                            birthday=cells[birthday].split(' ')[0].replace('.', ''),
-                            sex=cells[gender][0],
+                        params_internal_search = json.dumps(
+                            {
+                                "type": Card.objects.get(internal_type=True).pk,
+                                "extendedSearch": True,
+                                "form": {
+                                    "family": cells[fio].split(' ')[0],
+                                    "name": cells[fio].split(' ')[1],
+                                    "patronymic": cells[fio].split(' ')[2],
+                                    "birthday": cells[birthday].split(' ')[0].replace('.', ''),
+                                    "archive": False,
+                                },
+                                "limit": 1,
+                            }
                         )
-                        patient_indv.save()
-                        patient_card = Card.add_l2_card(individual=patient_indv)
+                        request_obj._body = params_internal_search
+                        data = patients_search_card(request_obj)
+                        results_json = json.loads(data.content.decode('utf-8'))
+                        if len(results_json) > 0:
+                            patient_card_pk = results_json["result"][0]["pk"]
+                            patient_card = Card.objects.filter(pk=patient_card_pk).first()
+                        elif len(results_json) == 0:
+                            for i in range(len(cells[fio].split(' ')[0])):
+                                if cells[fio].split(' ')[0][i].lower() == "е":
+                                    current_family = cells[fio].split(' ')[0]
+                                    current_family[i] = "ё"
+                                    params["family"] = current_family
+                                    current_patient = check_enp(request_obj)
+                                    if current_patient.data.get("message"):
+                                        params_internal_search["form"]["family"] = current_family
+                                        data = patients_search_card(request_obj)
+                                        results_json = json.loads(data.content.decode('utf-8'))
+                                        if len(results_json) > 0:
+                                            patient_card_pk = results_json["result"][0]["pk"]
+                                            patient_card = Card.objects.filter(pk=patient_card_pk).first()
+                                            break
+                                        else:
+                                            continue
+                                    else:
+                                        patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
+                                elif cells[fio].split(' ')[0][i].lower() == "ё":
+                                    current_family = cells[fio].split(' ')[0]
+                                    current_family[i] = "е"
+                                    params["family"] = current_family
+                                    current_patient = check_enp(request_obj)
+                                    if current_patient.data.get("message"):
+                                        params_internal_search["form"]["family"] = current_family
+                                        data = patients_search_card(request_obj)
+                                        results_json = json.loads(data.content.decode('utf-8'))
+                                        if len(results_json) > 0:
+                                            patient_card_pk = results_json["result"][0]["pk"]
+                                            patient_card = Card.objects.filter(pk=patient_card_pk).first()
+                                            break
+                                        else:
+                                            continue
+                                    else:
+                                        patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
+                        elif patient_card == '':
+                            patient_indv = Individual(
+                                family=cells[fio].split(' ')[0],
+                                name=cells[fio].split(' ')[1],
+                                patronymic=cells[fio].split(' ')[2],
+                                birthday=cells[birthday].split(' ')[0].replace('.', ''),
+                                sex=cells[gender][0],
+                            )
+                            patient_indv.save()
+                            patient_card = Card.add_l2_card(individual=patient_indv)
                     elif len(current_patient.data) > 1:
                         incorrect_patients.append({"fio": cells[fio], "reason": "Совпадение"})
                         continue
