@@ -10,7 +10,7 @@ import simplejson as json
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
-from contracts.models import PriceCoast
+from contracts.models import PriceCoast, Company
 from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
 from integration_framework.views import check_enp
@@ -50,7 +50,6 @@ def http_func(data, user):
 
 def add_factors_from_file(request):
     incorrect_patients = []
-    harmful_factors_data = []
     company_inn = request.POST['companyInn']
     company_file = request.FILES['file']
     wb = load_workbook(filename=company_file)
@@ -74,6 +73,7 @@ def add_factors_from_file(request):
                 gender = cells.index("пол")
                 inn_company = cells.index("инн организации")
                 code_harmful = cells.index("код вредности")
+                position = cells.index("должность")
                 starts = True
         else:
             if company_inn != cells[inn_company]:
@@ -112,19 +112,27 @@ def add_factors_from_file(request):
                     else:
                         patient_card = Individual.import_from_tfoms(current_patient.data["list"], None, None, None, True)
                 elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
-                    patient_card = current_patient.data["patient_data"]["card"]
+                    patient_card_pk = current_patient.data["patient_data"]["card"]
+                    patient_card = Card.objects.filter(pk=patient_card_pk).first()
                 else:
                     patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
                 incorrect_factor = []
+                harmful_factors_data = []
                 for i in cells[code_harmful].split(','):
-                    harmful_factor = HarmfulFactor.objects.filter(title=i).first()
+                    harmful_factor = HarmfulFactor.objects.filter(title=i.replace(" ", "")).first()
                     if harmful_factor:
                         harmful_factors_data.append({"factorId": harmful_factor.pk})
                     else:
-                        incorrect_factor.append(f"{i}")
+                        incorrect_factor.append(f'{i.replace(" ", "")}')
                 if len(incorrect_factor) != 0:
                     incorrect_patients.append({"fio": cells[fio], "reason": f"Не верные факторы: {incorrect_factor}"})
                 PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
+                company = Company.objects.filter(inn=company_inn).first()
+                patient_card.work_position=cells[position].strip()
+                patient_card.work_place_db = company
+                patient_card.save()
+
+
 
     return incorrect_patients
 
