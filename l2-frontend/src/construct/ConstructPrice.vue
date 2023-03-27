@@ -109,14 +109,21 @@
         </tr>
       </table>
     </div>
-    <a
-      v-if="priceIsSelected"
-      class="a-under a-align"
-      href="#"
-      @click.prevent="downloadSpecification"
-    >
-      <h6>Скачать спецификацию</h6>
-    </a>
+    <span v-if="priceIsSelected">
+      <a
+        class="a-under a-align"
+        href="#"
+        @click.prevent="downloadSpecification"
+      >
+        Скачать спецификацию
+      </a>
+      <ul class="nav navbar-nav">
+        <LoadFile
+          :is-gen-commercial-offer="true"
+          :selected-price="selectedPrice"
+        />
+      </ul>
+    </span>
     <div
       v-if="priceIsSelected"
       class="margin-bottom"
@@ -291,10 +298,11 @@ import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
+import LoadFile from '@/ui-cards/LoadFile.vue';
 
 export default {
   name: 'ConstructPrice',
-  components: { VueTippyTd, Treeselect },
+  components: { VueTippyTd, Treeselect, LoadFile },
   data() {
     return {
       prices: {},
@@ -351,6 +359,16 @@ export default {
     this.getResearchList();
   },
   methods: {
+    showModal() {
+      this.modal = true;
+    },
+    hideModal() {
+      this.modal = false;
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_download_file');
+    },
     normalizer(node) {
       return {
         id: node.pk,
