@@ -132,8 +132,6 @@ def add_factors_from_file(request):
                 patient_card.work_place_db = company
                 patient_card.save()
 
-
-
     return incorrect_patients
 
 
