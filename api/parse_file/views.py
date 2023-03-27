@@ -155,7 +155,7 @@ def add_factors_from_file(request):
                                             continue
                                     else:
                                         patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
-                        elif patient_card == '':
+                        if patient_card == '':
                             patient_indv = Individual(
                                 family=cells[fio].split(' ')[0],
                                 name=cells[fio].split(' ')[1],
