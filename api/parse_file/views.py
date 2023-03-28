@@ -13,7 +13,7 @@ from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company
 from users.models import AssignmentResearches
-from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
+from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase
 from integration_framework.views import check_enp
 
 
@@ -90,6 +90,7 @@ def add_factors_from_file(request):
                 current_patient = check_enp(request_obj)
                 cells[birthday].split(' ')[0].replace('.', '')
                 if current_patient.data.get("message"):
+                    print('Не нашли по снилсу')
                     params = {
                         "enp": "",
                         "family": cells[fio].split(' ')[0],
@@ -99,9 +100,9 @@ def add_factors_from_file(request):
                     }
                     current_patient = check_enp(request_obj)
                     if current_patient.data.get("message"):
-                        params_internal_search = json.dumps(
-                            {
-                                "type": Card.objects.get(internal_type=True).pk,
+                        print('Не нашли по фио тфомс')
+                        params_internal_search = {
+                                "type": CardBase.objects.get(internal_type=True).pk,
                                 "extendedSearch": True,
                                 "form": {
                                     "family": cells[fio].split(' ')[0],
@@ -112,46 +113,50 @@ def add_factors_from_file(request):
                                 },
                                 "limit": 1,
                             }
-                        )
-                        request_obj._body = params_internal_search
+                        request_obj._body = json.dumps(params_internal_search)
                         data = patients_search_card(request_obj)
                         results_json = json.loads(data.content.decode('utf-8'))
-                        if len(results_json) > 0:
-                            patient_card_pk = results_json["result"][0]["pk"]
+                        if len(results_json["results"]) > 0:
+                            patient_card_pk = results_json["results"][0]["pk"]
                             patient_card = Card.objects.filter(pk=patient_card_pk).first()
-                        elif len(results_json) == 0:
+                        else:
+                            print('Не нашли по фио л2')
                             for i in range(len(cells[fio].split(' ')[0])):
                                 if cells[fio].split(' ')[0][i].lower() == "е":
                                     current_family = cells[fio].split(' ')[0]
-                                    current_family[i] = "ё"
+                                    current_family = current_family[0:i] + "ё" + current_family[i+1:]
                                     params["family"] = current_family
                                     current_patient = check_enp(request_obj)
                                     if current_patient.data.get("message"):
+                                        print(f'{current_family} Не нашли по не тому фио тфомс е')
                                         params_internal_search["form"]["family"] = current_family
                                         data = patients_search_card(request_obj)
                                         results_json = json.loads(data.content.decode('utf-8'))
-                                        if len(results_json) > 0:
+                                        if len(results_json["results"]) > 0:
                                             patient_card_pk = results_json["result"][0]["pk"]
                                             patient_card = Card.objects.filter(pk=patient_card_pk).first()
                                             break
                                         else:
+                                            print(f'{current_family} Не нашли по не тому фио л2 е')
                                             continue
                                     else:
                                         patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
                                 elif cells[fio].split(' ')[0][i].lower() == "ё":
                                     current_family = cells[fio].split(' ')[0]
-                                    current_family[i] = "е"
+                                    current_family = current_family[0:i] + "е" + current_family[i+1:]
                                     params["family"] = current_family
                                     current_patient = check_enp(request_obj)
                                     if current_patient.data.get("message"):
+                                        print(f'{current_family} Не нашли по не тому фио тфомс ё')
                                         params_internal_search["form"]["family"] = current_family
                                         data = patients_search_card(request_obj)
                                         results_json = json.loads(data.content.decode('utf-8'))
-                                        if len(results_json) > 0:
-                                            patient_card_pk = results_json["result"][0]["pk"]
+                                        if len(results_json["results"]) > 0:
+                                            patient_card_pk = results_json["results"][0]["pk"]
                                             patient_card = Card.objects.filter(pk=patient_card_pk).first()
                                             break
                                         else:
+                                            print(f'{current_family} Не нашли по не тому фио л2 ё')
                                             continue
                                     else:
                                         patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
