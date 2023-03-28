@@ -125,7 +125,6 @@ def add_factors_from_file(request):
                                     params["family"] = current_family
                                     current_patient = check_enp(request_obj)
                                     if current_patient.data.get("message"):
-                                        print(f'{current_family} Не нашли по не тому фио тфомс е')
                                         params_internal_search["form"]["family"] = current_family
                                         data = patients_search_card(request_obj)
                                         results_json = json.loads(data.content.decode('utf-8'))
@@ -134,7 +133,6 @@ def add_factors_from_file(request):
                                             patient_card = Card.objects.filter(pk=patient_card_pk).first()
                                             break
                                         else:
-                                            print(f'{current_family} Не нашли по не тому фио л2 е')
                                             continue
                                     else:
                                         patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
@@ -144,7 +142,6 @@ def add_factors_from_file(request):
                                     params["family"] = current_family
                                     current_patient = check_enp(request_obj)
                                     if current_patient.data.get("message"):
-                                        print(f'{current_family} Не нашли по не тому фио тфомс ё')
                                         params_internal_search["form"]["family"] = current_family
                                         data = patients_search_card(request_obj)
                                         results_json = json.loads(data.content.decode('utf-8'))
@@ -153,7 +150,6 @@ def add_factors_from_file(request):
                                             patient_card = Card.objects.filter(pk=patient_card_pk).first()
                                             break
                                         else:
-                                            print(f'{current_family} Не нашли по не тому фио л2 ё')
                                             continue
                                     else:
                                         patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
