@@ -90,7 +90,6 @@ def add_factors_from_file(request):
                 current_patient = check_enp(request_obj)
                 cells[birthday].split(' ')[0].replace('.', '')
                 if current_patient.data.get("message"):
-                    print('Не нашли по снилсу')
                     params = {
                         "enp": "",
                         "family": cells[fio].split(' ')[0],
@@ -100,7 +99,6 @@ def add_factors_from_file(request):
                     }
                     current_patient = check_enp(request_obj)
                     if current_patient.data.get("message"):
-                        print('Не нашли по фио тфомс')
                         params_internal_search = {
                                 "type": CardBase.objects.get(internal_type=True).pk,
                                 "extendedSearch": True,
@@ -120,7 +118,6 @@ def add_factors_from_file(request):
                             patient_card_pk = results_json["results"][0]["pk"]
                             patient_card = Card.objects.filter(pk=patient_card_pk).first()
                         else:
-                            print('Не нашли по фио л2')
                             for i in range(len(cells[fio].split(' ')[0])):
                                 if cells[fio].split(' ')[0][i].lower() == "е":
                                     current_family = cells[fio].split(' ')[0]
