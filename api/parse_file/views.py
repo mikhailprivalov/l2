@@ -100,17 +100,17 @@ def add_factors_from_file(request):
                     current_patient = check_enp(request_obj)
                     if current_patient.data.get("message"):
                         params_internal_search = {
-                                "type": CardBase.objects.get(internal_type=True).pk,
-                                "extendedSearch": True,
-                                "form": {
-                                    "family": cells[fio].split(' ')[0],
-                                    "name": cells[fio].split(' ')[1],
-                                    "patronymic": cells[fio].split(' ')[2],
-                                    "birthday": cells[birthday].split(' ')[0].replace('.', ''),
-                                    "archive": False,
-                                },
-                                "limit": 1,
-                            }
+                            "type": CardBase.objects.get(internal_type=True).pk,
+                            "extendedSearch": True,
+                            "form": {
+                                "family": cells[fio].split(' ')[0],
+                                "name": cells[fio].split(' ')[1],
+                                "patronymic": cells[fio].split(' ')[2],
+                                "birthday": cells[birthday].split(' ')[0].replace('.', ''),
+                                "archive": False,
+                            },
+                            "limit": 1,
+                        }
                         request_obj._body = json.dumps(params_internal_search)
                         data = patients_search_card(request_obj)
                         results_json = json.loads(data.content.decode('utf-8'))
@@ -121,7 +121,7 @@ def add_factors_from_file(request):
                             for i in range(len(cells[fio].split(' ')[0])):
                                 if cells[fio].split(' ')[0][i].lower() == "е":
                                     current_family = cells[fio].split(' ')[0]
-                                    current_family = current_family[0:i] + "ё" + current_family[i+1:]
+                                    current_family = current_family[0:i] + "ё" + current_family[i + 1 :]
                                     params["family"] = current_family
                                     current_patient = check_enp(request_obj)
                                     if current_patient.data.get("message"):
@@ -140,7 +140,7 @@ def add_factors_from_file(request):
                                         patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
                                 elif cells[fio].split(' ')[0][i].lower() == "ё":
                                     current_family = cells[fio].split(' ')[0]
-                                    current_family = current_family[0:i] + "е" + current_family[i+1:]
+                                    current_family = current_family[0:i] + "е" + current_family[i + 1 :]
                                     params["family"] = current_family
                                     current_patient = check_enp(request_obj)
                                     if current_patient.data.get("message"):
