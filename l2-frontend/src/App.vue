@@ -43,7 +43,7 @@
 
     <CheckBackend />
     <ChatsDialogs v-if="chatsEnabled" />
-    <ModalForm />
+    <ModalForm :key="`modal-form-${editId}`" />
 
     <audio
       ref="notifyAudioSrc"
@@ -71,7 +71,7 @@ import notifyAudioSrc from '@/assets/notify.mp3';
   components: {
     CheckBackend, Navbar, ChatsDialogs, ModalForm,
   },
-  computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
+  computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated', 'editId']),
   metaInfo() {
     return {
       title: `${this.$route?.meta?.title || this.$systemTitle()} — ${this.$orgTitle()}`,

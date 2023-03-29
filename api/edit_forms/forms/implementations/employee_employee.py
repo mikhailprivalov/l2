@@ -28,6 +28,20 @@ class EmployeeEmployeeForm(BaseForm, HospitalObjectView[Employee]):
     def list_name():
         return 'fullName'
 
+    @staticmethod
+    def _search_filters(search: str):
+        return [
+            {
+                "family__istartswith": search,
+            },
+            {
+                "name__istartswith": search,
+            },
+            {
+                "patronymic__istartswith": search,
+            },
+        ]
+
     @classmethod
     def get_form_data(cls, doctorprofile: DoctorProfile, form_data: Dict[str, Any]):
         hospital = cls.get_current_hospital(doctorprofile)

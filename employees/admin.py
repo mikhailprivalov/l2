@@ -19,7 +19,6 @@ class PositionAdmin(admin.ModelAdmin):
     ordering = ('hospital', 'name', 'is_active')
     autocomplete_fields = ('hospital', 'doctorprofile_created', 'doctorprofile_updated')
 
-
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ('hospital', 'name', 'is_active')

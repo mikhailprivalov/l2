@@ -115,6 +115,19 @@ watch(
   },
 );
 
+const inputValue = computed(() => props.value);
+watch(
+  inputValue,
+  () => {
+    if (selectedId.value !== inputValue.value) {
+      selectedId.value = inputValue.value;
+    }
+  },
+  {
+    immediate: true,
+  },
+);
+
 const select = (id: Id) => {
   if (props.selectable) {
     selectedId.value = id;

@@ -2,10 +2,9 @@
   <PageInnerLayout>
     <TwoSidedLayout>
       <template #left>
-        <EditableList
+        <SimpleSelectableList
           v-model="activeSection"
           :rows="sections"
-          selectable
         />
       </template>
       <template #right>
@@ -119,36 +118,28 @@ import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
 import ContentCenterLayout from '@/layouts/ContentCenterLayout.vue';
 import TopBottomLayout from '@/layouts/TopBottomLayout.vue';
+import SimpleSelectableList, { ListElementSimple } from '@/components/SimpleSelectableList.vue';
 import EditFormList from '@/components/EditFormList.vue';
 import FetchComponent from '@/components/FetchComponent.vue';
 import EditFormTable from '@/components/EditFormTable.vue';
-import EditableList, { IdOptional, ListElement } from '@/components/EditableList.vue';
+import type { IdOptional } from '@/components/EditableList.vue';
 
 const selectedDepartmentId = ref<IdOptional>(null);
 
 const activeSection = ref<IdOptional>(null);
 
-const sections = ref<ListElement[]>([
+const sections = ref<ListElementSimple[]>([
   {
     id: 'positions',
     name: 'Должности',
-    createdAt: null,
-    updatedAt: null,
-    isActive: true,
   },
   {
     id: 'people',
     name: 'Люди',
-    createdAt: null,
-    updatedAt: null,
-    isActive: true,
   },
   {
     id: 'departments',
     name: 'Подразделения и сотрудники',
-    createdAt: null,
-    updatedAt: null,
-    isActive: true,
   },
 ]);
 

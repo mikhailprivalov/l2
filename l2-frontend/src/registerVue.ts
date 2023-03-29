@@ -28,6 +28,7 @@ import { sendEvent } from '@/metrics';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 import api from './api';
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal.vue';
+import FormulateObjectSelect from './fields/FormulateObjectSelect.vue';
 
 moment.locale('ru');
 
@@ -61,9 +62,19 @@ export default (): void => {
   Vue.use(VueCollapse);
   Vue.use(PortalVue);
   Vue.use(VueFullscreen);
+  Vue.component('FormulateObjectSelect', FormulateObjectSelect);
   Vue.use(VueFormulate, {
     plugins: [ru],
     locale: 'ru',
+    library: {
+      'object-select': {
+        classification: 'id',
+        component: 'FormulateObjectSelect',
+        slotProps: {
+          component: ['formType'],
+        },
+      },
+    },
   });
   Vue.use(VueImg);
   Vue.prototype.$api = api;

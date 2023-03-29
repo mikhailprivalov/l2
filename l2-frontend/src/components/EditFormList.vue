@@ -51,6 +51,19 @@ watch(
   },
 );
 
+const inputValue = computed(() => props.value);
+watch(
+  inputValue,
+  () => {
+    if (selectedId.value !== inputValue.value) {
+      selectedId.value = inputValue.value;
+    }
+  },
+  {
+    immediate: true,
+  },
+);
+
 const openEdit = (editId: IdOptional) => {
   store.dispatch(EDIT_OPEN, { editId, formType: props.formType });
 };
@@ -59,7 +72,14 @@ const dataList = ref<InstanceType<typeof DataList> | null>(null);
 
 onMounted(() => {
   store.subscribeAction(action => {
-    if (action.type === EDIT_SAVED_OBJECT && action.payload?.formType === props.formType) {
+    if (
+      action.type === EDIT_SAVED_OBJECT
+      && (
+        action.payload?.formType === props.formType
+        || store.getters.editStackHasFormType(props.formType)
+      )
+      && action.payload?.result
+    ) {
       if (dataList.value) {
         dataList.value.reload();
       }

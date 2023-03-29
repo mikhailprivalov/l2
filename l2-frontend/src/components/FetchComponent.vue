@@ -52,7 +52,10 @@ onMounted(() => {
   store.subscribeAction(action => {
     if (
       action.type === EDIT_SAVED_OBJECT
-      && action.payload?.formType === props.formType
+      && (
+        action.payload?.formType === props.formType
+        || store.getters.editStackHasFormType(props.formType)
+      )
       && action.payload?.id === props.id
       && action.payload?.result
     ) {

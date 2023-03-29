@@ -1,6 +1,7 @@
 from enum import Enum
-from functools import wraps
-from typing import Any, Dict, Generic, Optional, Self, Tuple, TypeVar
+
+from django.db.models import Q
+from typing import Any, Dict, Generic, Optional, Tuple, TypeVar
 
 from django.db import models
 from django.core.paginator import Paginator
@@ -127,6 +128,23 @@ class ObjectView(Static, Generic[ObjectType]):
         }
 
     @classmethod
+    def _treeselect(cls, json_object: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        if not json_object:
+            return None
+        return {
+            "id": json_object.get('id'),
+            "label": json_object.get(cls.list_name()),
+        }
+
+    @staticmethod
+    def _search_filters(search: str):
+        return [
+            {
+                "name__istartswith": search,
+            }
+        ]
+
+    @classmethod
     def json(cls, doctorprofile: DoctorProfile, object: ObjectType) -> Optional[Dict[str, Any]]:
         has_access(doctorprofile, cls.access_groups_to_view)
         return cls._json(object)
@@ -159,6 +177,8 @@ class ObjectView(Static, Generic[ObjectType]):
         sort_direction: Optional[SortDirections] = None,
         filter: Optional[Dict[str, Any]] = None,
         return_total_rows: bool = False,
+        as_treeselect: bool = False,
+        search: Optional[str] = None,
     ):
         has_access(doctorprofile, cls.access_groups_to_view)
         objects = cls._default_rows(doctorprofile)
@@ -171,6 +191,13 @@ class ObjectView(Static, Generic[ObjectType]):
         if filters:
             objects = objects.filter(**filters)
 
+        if search:
+            q_objects = Q()
+            search_tokens = cls._search_filters(search)
+            for t in search_tokens:
+                q_objects |= Q(**t)
+            objects = objects.filter(q_objects)
+
         if sort_column:
             objects = objects.order_by(f'{"-" if sort_direction == SortDirections.DESC else ""}{sort_column}')
 
@@ -181,16 +208,21 @@ class ObjectView(Static, Generic[ObjectType]):
             rows = paginator.get_page(page)
             total_pages = paginator.num_pages
 
+        rows = [cls._json(o) for o in rows]
+
+        if as_treeselect:
+            rows = [cls._treeselect(o) for o in rows]
+
         return {
             "page": page,
             "perPage": per_page,
             "pages": total_pages,
             "totalCount": objects.count(),
-            "rows": [cls._json(object) for object in rows],
+            "rows": rows,
         }
 
 
-class HospitalObjectView(ObjectView[Generic[ObjectType]]):
+class HospitalObjectView(ObjectView[ObjectType]):
     @staticmethod
     def get_current_hospital(doctorprofile: DoctorProfile) -> Hospitals:
         return doctorprofile.get_hospital()

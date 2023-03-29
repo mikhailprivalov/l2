@@ -107,7 +107,9 @@ def objects_search(request):
     request_data = json.loads(request.body)
     form_type = request_data.get('formType')
     filters = request_data.get('filters')
+    search = request_data.get('search')
     return_total_rows = request_data.get('returnTotalRows', False)
+    as_treeselect = request_data.get('asTreeselect', False)
     page = request_data.get('page', 1)
     per_page = request_data.get('perPage', 30)
     sort_column = request_data.get('sortColumn')
@@ -122,7 +124,7 @@ def objects_search(request):
         if not issubclass(form, ObjectView):
             raise FormNotFoundException(f'Form {form_type} is not ObjectView')
 
-        result = form.search(request.user.doctorprofile, page, per_page, sort_column, sort_direction, filters, return_total_rows)
+        result = form.search(request.user.doctorprofile, page, per_page, sort_column, sort_direction, filters, return_total_rows, as_treeselect, search)
 
         if result is not None:
             return status_response(True, data={"result": result, "viewParams": form.view_params()})

@@ -13,7 +13,6 @@
       <div
         v-if="status === ApiStatus.SUCCESS && data.ok && formSchema"
         slot="body"
-        style="min-height: 200px"
       >
         <FormulateForm
           v-model="formValues"
@@ -74,6 +73,7 @@ const store = useStore();
 
 const opened = computed(() => store.getters.editOpened);
 const formType = computed(() => store.getters.editFormType);
+const filters = computed(() => store.getters.editFilters);
 const editId = computed(() => store.getters.editId);
 const root = getCurrentInstance().proxy.$root;
 
@@ -96,6 +96,7 @@ const apiParams = computed(() => ({
     formType: formType.value,
     formData: {
       id: editId.value,
+      filters: filters.value,
     },
   },
   disableReactiveRequest: !opened.value,
@@ -155,6 +156,7 @@ const apiSaveParams = computed(() => ({
     formType: formType.value,
     formData: {
       id: editId.value,
+      filters: filters.value,
       values: formValues.value,
     },
   },
@@ -208,6 +210,7 @@ const save = async () => {
   padding: 10px !important;
   height: calc(100% - 144px);
   min-height: 200px;
+  background: #fff !important;
 }
 
 ::v-deep .formulate-input-element {
