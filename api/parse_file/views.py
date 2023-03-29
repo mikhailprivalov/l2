@@ -51,7 +51,6 @@ def http_func(data, user):
 
 def add_factors_from_file(request):
     incorrect_patients = []
-    patient_card = ''
     company_inn = request.POST['companyInn']
     company_file = request.FILES['file']
     wb = load_workbook(filename=company_file)
@@ -89,37 +88,30 @@ def add_factors_from_file(request):
                 request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
                 current_patient = check_enp(request_obj)
                 if current_patient.data.get("message"):
-                    params = {
+                    params_tfoms_fio = {
                         "enp": "",
                         "family": cells[fio].split(' ')[0],
                         "name": cells[fio].split(' ')[1],
                         "bd": cells[birthday].split(' ')[0].replace('-', ''),
                         "check_mode": "l2-enp-full",
                     }
-                    current_patient = check_enp(request_obj)
-                    if current_patient.data.get("message"):
-                        params_internal = {
-                            "type": CardBase.objects.get(internal_type=True).pk,
-                            "extendedSearch": True,
-                            "form": {
-                                "family": cells[fio].split(' ')[0],
-                                "name": cells[fio].split(' ')[1],
-                                "patronymic": cells[fio].split(' ')[2],
-                                "birthday": cells[birthday].split(' ')[0].replace('-', ''),
-                                "archive": False,
-                            },
-                            "limit": 1,
-                        }
-                        request_obj._body = json.dumps(params_internal)
-                        data = patients_search_card(request_obj)
-                        results_json = json.loads(data.content.decode('utf-8'))
-                        if len(results_json["results"]) > 0:
-                            patient_card_pk = results_json["results"][0]["pk"]
-                            patient_card = Card.objects.filter(pk=patient_card_pk).first()
-                        else:
-                            possible_family = find_and_replace(cells[fio].split(' ')[0], 'e', 'ё')
-                            patient_card = search_by_possible_fio(request_obj, params, params_internal, possible_family)
-                        if patient_card == '':
+                    params_internal_fio = {
+                        "type": CardBase.objects.get(internal_type=True).pk,
+                        "extendedSearch": True,
+                        "form": {
+                            "family": cells[fio].split(' ')[0],
+                            "name": cells[fio].split(' ')[1],
+                            "patronymic": cells[fio].split(' ')[2],
+                            "birthday": cells[birthday].split(' ')[0].replace('-', ''),
+                            "archive": False,
+                        },
+                        "limit": 1,
+                    }
+                    patient_card = search_by_fio(request_obj, params_tfoms_fio, params_internal_fio)
+                    if not patient_card:
+                        possible_family = find_and_replace(cells[fio].split(' ')[0], 'е', 'ё')
+                        patient_card = search_by_possible_fio(request_obj, params_tfoms_fio, params_internal_fio, possible_family)
+                        if not patient_card:
                             patient_indv = Individual(
                                 family=cells[fio].split(' ')[0],
                                 name=cells[fio].split(' ')[1],
@@ -129,11 +121,6 @@ def add_factors_from_file(request):
                             )
                             patient_indv.save()
                             patient_card = Card.add_l2_card(individual=patient_indv)
-                    elif len(current_patient.data) > 1:
-                        incorrect_patients.append({"fio": cells[fio], "reason": "Совпадение"})
-                        continue
-                    else:
-                        patient_card = Individual.import_from_tfoms(current_patient.data["list"], None, None, None, True)
                 elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
                     patient_card_pk = current_patient.data["patient_data"]["card"]
                     patient_card = Card.objects.filter(pk=patient_card_pk).first()
@@ -199,6 +186,23 @@ def gen_commercial_offer(request):
     return [{'title': k.research.title, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
 
 
+def search_by_fio(request_obj: HttpRequest, params_tfoms: dict, params_internal: dict) -> Card | str:
+    patient_card = ''
+    request_obj._body = params_tfoms
+    current_patient = check_enp(request_obj)
+    if current_patient.data.get("message"):
+        request_obj._body = json.dumps(params_internal)
+        data = patients_search_card(request_obj)
+        results_json = json.loads(data.content.decode('utf-8'))
+        if len(results_json["results"]) > 0:
+            patient_card_pk = results_json["results"][0]["pk"]
+            patient_card = Card.objects.filter(pk=patient_card_pk).first()
+    elif len(current_patient.data["list"]) > 1:
+        return patient_card
+    else:
+        patient_card = Individual.import_from_tfoms(current_patient.data["list"], None, None, None, True)
+    return patient_card
+
 def find_and_replace(text: str, symbol1: str, symbol2: str) -> list:
     result = []
     for i in range(len(text)):
@@ -217,24 +221,12 @@ def search_by_possible_fio(request_obj: HttpRequest, params_tfoms: dict, params_
     if not possible_family:
         return ''
     patient_card = ''
-    request_obj._body = params_tfoms
     for i in possible_family:
         params_tfoms["family"] = i
-        current_patient = check_enp(request_obj)
-        if current_patient.data.get("message"):
-            params_internal["form"]["family"] = i
-            request_obj._body = json.dumps(params_internal)
-            data = patients_search_card(request_obj)
-            results_json = json.loads(data.content.decode('utf-8'))
-            if len(results_json["results"]) > 0:
-                patient_card_pk = results_json["result"][0]["pk"]
-                patient_card = Card.objects.filter(pk=patient_card_pk).first()
-                break
-            else:
-                continue
-        elif len(current_patient.data) > 1:
-            continue
-        else:
-            patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
+        params_internal["form"]["family"] = i
+        patient_card = search_by_fio(request_obj, params_tfoms, params_internal)
+        if patient_card:
             break
+        else:
+            continue
     return patient_card
