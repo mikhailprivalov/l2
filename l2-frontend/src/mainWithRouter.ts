@@ -656,6 +656,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/analyzers',
+      name: 'ManageAnalyzer',
+      component: () => import('@/pages/ManageAnalyzers/index.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Управление анализаторами',
+        groups: ['Управление анализаторами'],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

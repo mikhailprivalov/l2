@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
+from api.models import ManageDoctorProfileAnalyzer, Analyzer
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
@@ -1488,6 +1489,7 @@ def user_view(request):
 @group_required("Создание и редактирование пользователей")
 def user_save_view(request):
     request_data = json.loads(request.body)
+    group_analyzer = request_data["groupsAnalyzer"]
     pk = request_data["pk"]
     ok = True
     message = ""
@@ -1569,6 +1571,11 @@ def user_save_view(request):
             for g in ud["groups"]:
                 group = Group.objects.get(pk=g)
                 doc.user.groups.add(group)
+
+            ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=doc.pk).delete()
+            for g in group_analyzer:
+                analyzer = Analyzer.objects.get(pk=g)
+                ManageDoctorProfileAnalyzer(analyzer_id=analyzer.pk, doctor_profile_id=doc.pk).save()
             doc.user.save()
 
             doc.restricted_to_direct.clear()
