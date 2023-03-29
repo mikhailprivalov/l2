@@ -128,8 +128,8 @@ def add_factors_from_file(request):
                     incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
                 PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
                 company_obj = Company.objects.filter(inn=company_inn).first()
-                patient_card.work_position = cells[position].strip()
-                patient_card.work_place_db = company_obj
+                patient_card.work_position=cells[position].strip()
+                patient_card.work_place_db=company_obj
                 patient_card.save()
 
     return incorrect_patients

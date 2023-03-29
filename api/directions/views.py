@@ -1686,7 +1686,6 @@ def directions_paraclinic_form(request):
                             value = ''
                         elif field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
                             value = values_to_input[0]
-                        print(field.denied_group.name if field.denied_group else "-")
                         g["fields"].append(
                             {
                                 "pk": field.pk,
