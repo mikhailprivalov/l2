@@ -20,6 +20,8 @@ from laboratory.settings import (
     TITLE_REPORT_FILTER_STATTALON_FIELDS,
     SEARCH_PAGE_STATISTIC_PARAMS,
     UNLIMIT_PERIOD_STATISTIC_GROUP,
+    TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
+    STATISTIC_TYPE_DEPARTMENT,
 )
 from utils.response import status_response
 
@@ -1119,6 +1121,7 @@ def flg(request):
                     if i.napravleniye:
                         i.napravleniye.qr_check_token = None
                         i.napravleniye.save(update_fields=['qr_check_token'])
+                        i.napravleniye.post_confirmation()
                     i.save()
 
                 if not i.napravleniye.visit_who_mark or not i.napravleniye.visit_date:
@@ -1970,8 +1973,9 @@ def result_of_treatment(request):
 
 @login_required
 def title_report_filter_stattalon_fields(request):
-    rows = TITLE_REPORT_FILTER_STATTALON_FIELDS
-    return JsonResponse({'rows': rows})
+    has_stattalon_filter = TITLE_REPORT_FILTER_STATTALON_FIELDS
+    has_all_fin_source = TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE
+    return JsonResponse({'hasStattalonFilter': has_stattalon_filter, 'allFinSource': has_all_fin_source})
 
 
 @login_required
@@ -2463,7 +2467,7 @@ def check_price_active(request):
 def get_coasts_researches_in_price(request):
     request_data = json.loads(request.body)
     coast_research = [
-        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f'{data.coast}'}
+        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f'{data.coast}', "numberService": data.number_services_by_contract}
         for data in PriceCoast.objects.filter(price_name_id=request_data["id"]).prefetch_related('research').order_by('research__title')
     ]
     return JsonResponse({"data": coast_research})
@@ -2479,7 +2483,9 @@ def update_coast_research_in_price(request):
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     old_coast = current_coast_research.coast
+    old_number = current_coast_research.number_services_by_contract
     current_coast_research.coast = request_data["coast"]
+    current_coast_research.number_services_by_contract = request_data.get("numberService", 0)
     current_coast_research.save()
     Log.log(
         current_coast_research.pk,
@@ -2491,6 +2497,8 @@ def update_coast_research_in_price(request):
             "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
             "old_coast": old_coast,
             "new_coast": current_coast_research.coast,
+            "old_number": old_number,
+            "new_number": current_coast_research.number_services_by_contract,
         },
     )
     return JsonResponse({"ok": "ok"})
@@ -2505,6 +2513,7 @@ def get_research_list(request):
         "Параклиника": {},
         "Консультации": {"Общие": []},
         "Формы": {"Общие": []},
+        "Лечение": {"Общие": []},
         "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
         "Стоматология": {"Общие": []},
     }
@@ -2538,6 +2547,13 @@ def get_research_list(request):
                 res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
             else:
                 res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
+        elif research.is_treatment:
+            if research.site_type is None:
+                res_list["Лечение"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Лечение"].get(research.site_type.title):
+                res_list["Лечение"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Лечение"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_paraclinic:
             if research.podrazdeleniye is None:
                 pass
@@ -2573,7 +2589,9 @@ def add_research_in_price(request):
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
-    current_coast_research = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
+    current_coast_research = PriceCoast(
+        price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"], number_services_by_contract=request_data.get("numberService", 0)
+    )
     current_coast_research.save()
     Log.log(
         current_coast_research.pk,
@@ -2743,7 +2761,7 @@ def get_harmful_factors(request):
     rows = [
         {
             "id": factor.pk,
-            "label": f"{factor.title} - шаблон {factor.template.title}",
+            "label": f"{factor.title}",
             "title": factor.title,
             "description": factor.description,
             "template_id": factor.template_id,
@@ -2828,6 +2846,13 @@ def add_factor(request):
 def get_research_sets(request):
     sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.all().order_by("title")]
     return JsonResponse({"data": sets})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации', '')
+def get_type_departments(request):
+    res = [{"id": t[0], "label": t[1]} for t in Podrazdeleniya.TYPES if t[0] in STATISTIC_TYPE_DEPARTMENT]
+    return JsonResponse({"data": res})
 
 
 @login_required
@@ -2931,7 +2956,7 @@ def update_set_hiding(request):
         current_set.pk,
         170002,
         request.user.doctorprofile,
-        {"pk": current_set.pk, "title": current_set.title, "hide": True},
+        {"pk": current_set.pk, "title": current_set.title, "hide": current_set.hide},
     )
     return status_response(True)
 

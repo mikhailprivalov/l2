@@ -13,7 +13,7 @@ from anytree import Node, RenderTree
 
 
 def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', level=-1):
-    # получить данные по разделу Стационарной карты
+    # Получить данные по разделу Стационарной карты
     # hosp_site_type=-1 - не получать ничего.
     # level уровень подчинения. Если вернуть только дочерние для текущего направления level=2
     result = tree_directions.get_research_by_dir(main_direction)

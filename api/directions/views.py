@@ -4,7 +4,7 @@ import os
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory
-from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction
+from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
@@ -89,6 +89,7 @@ from .sql_func import (
     get_patient_contract,
     get_directions_by_user,
     get_confirm_direction_by_hospital,
+    get_directions_meta_info,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -178,6 +179,7 @@ def directions_generate(request):
             for pk in result["directions"]:
                 d: Napravleniya = Napravleniya.objects.get(pk=pk)
                 d.fill_acsn()
+                fill_slot_ecp_free_nearest(d)
     return JsonResponse(result)
 
 
@@ -223,7 +225,7 @@ def directions_history(request):
     final_result = []
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
 
-    # status: 4 - выписано пользователем,   0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
+    # status: 4 - выписано пользователем, 0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
     if req_status == 4:
         user_creater = request.user.doctorprofile.pk
     if req_status in [0, 1, 2, 3, 5]:
@@ -444,7 +446,7 @@ def directions_history(request):
 
         status_val = 0
         has_descriptive = False
-        if i[8] or i[9]:
+        if i[8] or i[9] or i[33] or i[34] or i[35]:
             status_val = 1
         if i[7] or i[24]:
             status_val = 2
@@ -891,6 +893,7 @@ def directions_services(request):
                     (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
                     or request.user.is_superuser
                     or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+                    or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
                 and n.visit_date
             )
@@ -978,6 +981,7 @@ def directions_mark_visit(request):
                     (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
                     or request.user.is_superuser
                     or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+                    or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
                 and n.visit_date
             )
@@ -1354,6 +1358,19 @@ def directions_paraclinic_form(request):
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
+        all_confirmed = d.is_all_confirm()
+        if (
+            SettingManager.get("control_visit_gistology", default='false', default_type='b')
+            and not all_confirmed
+            and d.research().is_gistology
+            and (d.visit_date is None or d.register_number is None)
+        ):
+            response["message"] = "Отсутствует дата регистрации"
+            return JsonResponse(response)
+        if SettingManager.get("control_time_gistology_receive", default='false', default_type='b') and not all_confirmed and d.research().is_gistology and d.time_gistology_receive is None:
+            response["message"] = "Отсутствует дата приема"
+            return JsonResponse(response)
+
         df = d.issledovaniya_set.all()
         if df.exists():
             response["ok"] = True
@@ -1389,7 +1406,7 @@ def directions_paraclinic_form(request):
                 "has_snils": has_snils,
             }
             response["showExaminationDate"] = SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE
-            all_confirmed = d.is_all_confirm()
+
             hospital_tfoms_code = d.get_hospital_tfoms_id()
             date = strdateru(d.data_sozdaniya)
             response["direction"] = {
@@ -4030,6 +4047,32 @@ def direction_history(request):
                 ],
             }
             data.append(d)
+
+        client_send = []
+
+        for lg in (
+            Log.objects.filter(
+                key=str(pk),
+                type__in=(
+                    180000,
+                    180001,
+                    180002,
+                    180003,
+                ),
+            )
+            .distinct()
+            .order_by('time')
+        ):
+            client_send.append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], *[[k, v] for k, v in json.loads(lg.body).items()]])
+
+        if client_send:
+            data.append(
+                {
+                    "type": "Отправка пациенту",
+                    "events": client_send,
+                }
+            )
+
         for lg in Log.objects.filter(key=str(pk), type__in=(5002,)):
             data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
         for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023, 60024, 60025)):
@@ -4172,3 +4215,60 @@ def get_directions_by_hospital_sent(request):
             }
         )
     return JsonResponse({"rows": rows})
+
+
+@login_required
+def meta_info(request):
+    request_data = json.loads(request.body)
+    res_direction = tuple(list(request_data["directions"]))
+    if not res_direction:
+        return JsonResponse({"rows": [{}]})
+    result = get_directions_meta_info(res_direction)
+    lab_podr = get_lab_podr()
+    lab_podr = [i[0] for i in lab_podr]
+    type_slave_research = dict(HospitalService.TYPES)
+
+    data_directions = []
+    tmp_direction = {}
+    last_direction = None
+
+    for i in result:
+        if last_direction != i.napravleniye_id and len(tmp_direction) > 0:
+            data_directions.append(tmp_direction.copy())
+            tmp_direction = {}
+        tmp_direction["direction"] = i.napravleniye_id
+        tmp_direction["researches"] = f"{tmp_direction.get('researches', '')} {i.title}"
+        if i.is_paraclinic:
+            tmp_direction["type"] = "Диагностика"
+        elif i.is_doc_refferal:
+            tmp_direction["type"] = "Консультация"
+        elif i.is_stom:
+            tmp_direction["type"] = "Стоматология"
+        elif i.is_microbiology:
+            tmp_direction["type"] = "Бак.исследование"
+        elif i.is_gistology:
+            tmp_direction["type"] = "Гистология"
+        elif i.is_form:
+            tmp_direction["type"] = "Произвольный протокол"
+
+        if i.is_slave_hospital:
+            tmp_direction["type"] = type_slave_research.get(i.site_type)
+        tmp_direction["timeConfirm"] = i.ch_time_confirm
+        last_direction = i.napravleniye_id
+
+        tmp_direction["isLab"] = False
+        tmp_direction["isDocReferral"] = True
+        tmp_direction["isParaclinic"] = True
+
+        if i.podrazdeleniye_id in lab_podr:
+            tmp_direction["type"] = "Лаборатория"
+            tmp_direction["isLab"] = True
+            tmp_direction["isDocReferral"] = False
+            tmp_direction["isParaclinic"] = False
+
+    data_directions.append(tmp_direction.copy())
+    sort_result = [{} for k in range(len(res_direction))]
+    for i in data_directions:
+        index_num = res_direction.index(i['direction'])
+        sort_result[index_num] = i
+    return JsonResponse({"rows": sort_result})

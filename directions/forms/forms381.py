@@ -982,3 +982,96 @@ def form_02(c: Canvas, dir: Napravleniya):
         gistology_frame.addFromList([gistology_inframe], c)
 
     printForm()
+
+
+def form_03(c: Canvas, dir: Napravleniya):
+    # СПИД направление на ВИЧ
+    def printForm():
+        hospital_name = dir.hospital_short_title
+
+        if sys.platform == 'win32':
+            locale.setlocale(locale.LC_ALL, 'rus_rus')
+        else:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 10
+        style.leading = 8
+        style.spaceAfter = 1.1 * mm
+
+        styleZeroSpaceAfter = deepcopy(style)
+        styleZeroSpaceAfter.spaceAfter = 1 * mm
+
+        styleCenterBold = deepcopy(style)
+        styleCenterBold.alignment = TA_CENTER
+        styleCenterBold.fontSize = 12
+        styleCenterBold.fontName = 'PTAstraSerifBold'
+
+        styleCenter = deepcopy(styleCenterBold)
+        styleCenter.fontName = 'PTAstraSerifReg'
+
+        styleCenter10 = deepcopy(styleCenter)
+        styleCenter10.fontSize = 10
+
+        styleT = deepcopy(style)
+        styleT.alignment = TA_LEFT
+        styleT.fontSize = 10
+        styleT.leading = 4.5 * mm
+        styleT.face = 'PTAstraSerifReg'
+
+        objs = []
+        objs.append(Paragraph('Иркутский областной центр по профилактике и борьбе со СПИД и инфекционными заболеваниями.', styleCenter))
+        objs.append(Paragraph('Лаборатория молекулярно-генетических методов исследования', styleCenter))
+        objs.append(Paragraph('664035, г.Иркутска ,ул.Спартаковская , 11, тел:(83952)777-958', styleCenter))
+        objs.append(Spacer(1, 2 * mm))
+        objs.append(Paragraph('Штамп учреждения', style))
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} ', styleCenterBold))
+        objs.append(Paragraph('На количественное определение РНК ВИЧ -1', styleCenter))
+        objs.append(Paragraph('(Тест системы:Abbot Real Time ВИЧ-1,COBAS® AmpliPer/ COBAS® TagMan® HIV-1,', styleCenter))
+        objs.append(Paragraph('АмплиСенс ВМЧ-Монитор –FRT, АмплиСенс ВИЧ Монитор –M-FL, РеалБест ВИЧ ПЦР)', styleCenter))
+        objs.append(Spacer(1, 2 * mm))
+        space_symbol = '&nbsp;'
+        objs.append(Paragraph(f'Дата {strdate(dir.data_sozdaniya)}г. {space_symbol * 5}№ история болезни _____________________________________', style))
+        sex = dir.client.individual.sex
+        if sex == "м":
+            sex = 'муж'
+        else:
+            sex = 'жен'
+
+        objs.append(Paragraph(f'Ф.И.О.: {dir.client.individual.fio()} {space_symbol * 25} Пол {sex} ', style))
+        born = dir.client.individual.bd().split('.')
+        address = dir.client.fact_address if dir.client.fact_address else dir.client.main_address
+        objs.append(Paragraph(f'Дата рождения: {born[0]}.{born[1]}.{born[2]} {space_symbol * 3} Адрес: {address}', style))
+        objs.append(Paragraph('Эпид.номер_____________________ Код_____________', style))
+        objs.append(Paragraph('Дата иммуноблота______________ Стадия ВИЧ-инфекции_________ в фазе____________________________', style))
+        objs.append(Paragraph(f'{space_symbol * 50} Прежнее значение вирусной нагрузки ____________________________________', style))
+        objs.append(Paragraph('Обследование в связи с (подчеркнуть)', styleCenter10))
+        objs.append(Paragraph('Мониторингом терапии (принимает АРВП)', styleCenter10))
+        objs.append(Paragraph('Плановым диспансерным наблюдением (не принимает АРВП)', styleCenter10))
+        objs.append(Paragraph(f'Направляющая организация: {hospital_name}', style))
+        objs.append(Paragraph(f'Ф.И.О, Лечащего врача {dir.doc.get_fio()} {space_symbol * 25} Подпись___________', style))
+
+        objs.append(Paragraph('Необходимые отметки по забору, хранению и транспортировке образца:', styleCenter10))
+        objs.append(Paragraph('Ф.И.О. оператора, подпись  _____________________________________________________', styleCenter10))
+        objs.append(Paragraph('Дата забора крови «___»_________20___г.__________час.____мин.___________________', styleCenter10))
+        objs.append(Paragraph('Время забора плазмы : ______час.____мин.___________', styleCenter10))
+        objs.append(Paragraph('Условия хранения плазмы (укажите дату и время ,когда образец поместили на хранение):', styleCenter10))
+        objs.append(Paragraph('+2-+8C «__»_________20__г.____________час_______.мин.:', styleCenter10))
+        objs.append(Paragraph('-20C «__»_________20__г.____________час_______.мин.', styleCenter10))
+        objs.append(Paragraph('Результаты исследования HIV-1 РНК: ____________________________', styleCenter10))
+        objs.append(Paragraph('Дата выдачи ___________________________  Подпись ___________', styleCenter10))
+        objs.append(Paragraph('__________________________________________________________________________________________________________', styleCenter10))
+        objs.append(Paragraph('__________________________________________________________________________________________________________', styleCenter10))
+        objs.append(Spacer(1, 15 * mm))
+        one_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        one_inframe = KeepInFrame(210 * mm, 146 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        two_inframe = KeepInFrame(210 * mm, 146 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        one_frame.addFromList([one_inframe, two_inframe], c)
+
+    printForm()

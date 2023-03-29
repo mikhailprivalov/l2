@@ -31,7 +31,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -44,6 +44,8 @@ from .sql_func import (
     sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
     sql_get_result_by_direction,
     sql_get_documents_by_card_id,
+    get_all_harmful_factors_templates,
+    get_researches_by_templates,
 )
 
 from laboratory.settings import (
@@ -1139,7 +1141,7 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
         ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
     elif tp == "statistics-dispanserization":
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспасеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспансеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Диспансеризация")
@@ -1196,7 +1198,7 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename=\"План Д-учет_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
-        ws = wb.create_sheet("Дисп-учет зарегистрирвоано")
+        ws = wb.create_sheet("Дисп-учет зарегистрировано")
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
 
@@ -1468,7 +1470,7 @@ def statistic_xls(request):
     elif tp == "all-labs":
         labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Все_Лаборатории_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
-        ws = wb.add_sheet("Выполненых анализов")
+        ws = wb.add_sheet("Выполненных анализов")
 
         font_style = xlwt.XFStyle()
         row_num = 0
@@ -1737,9 +1739,13 @@ def statistic_xls(request):
         set_research = int(request_data.get("research-set", -1))
         company_id = int(request_data.get("company", -1))
         query = None
+        is_research_set = -1
+        head_data = {}
         if set_research > 0:
-            set_research = directory.SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
-            head_data = {i.research_id: i.research.title for i in set_research}
+            set_research_d = directory.SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
+            head_data = {i.research_id: i.research.title for i in set_research_d}
+            is_research_set = 1
+        if company_id > 0:
             def_value_data = {k: 0 for k in head_data.keys()}
             price = get_price_company(company_id, start_date, end_date)
             if price:
@@ -1757,10 +1763,42 @@ def statistic_xls(request):
             ws, start_research_column = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title, head_data_coast)
             ws = consolidates.consolidate_research_sets_fill_data(ws, query, def_value_data, start_research_column)
         else:
-            query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin)
+            def_value_data = {k: 0 for k in head_data.keys()}
+            researche_ids = (-1,)
+            if is_research_set == 1:
+                researche_ids = tuple(def_value_data.keys())
+            query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin, is_research_set, researche_ids)
             ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
             ws = consolidates.consolidate_fill_data(ws, query)
+    elif tp == "consolidate-type-department":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Свод пациенты-услуги_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Врачи-сводный по подразделению")
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
 
+        type_fin = int(request_data.get("fin", -1))
+        detail_patient = int(request_data.get("detail-patient", -1))
+        if type_fin == -100:
+            type_fin = tuple(IstochnikiFinansirovaniya.objects.values_list('id', flat=True).filter(base__internal_type=True))
+        else:
+            type_fin = (type_fin,)
+        type_department = int(request_data.get("type-department", -1))
+        doctors = tuple(DoctorProfile.objects.values_list('id', flat=True).filter(podrazdeleniye__p_type=type_department, position__title__icontains="врач"))
+        fin_source_data_doctors = IstochnikiFinansirovaniya.objects.values_list('id', 'title').filter(id__in=type_fin).order_by('order_weight')
+        fin_source_data = {}
+        for i in fin_source_data_doctors:
+            fin_source_data[i[0]] = i[1]
+        query_doctors = sql_func.consolidate_doctors_by_type_department(start_date, end_date, type_fin, doctors)
+        ws_and_finish_order = consolidates.consolidate_base_doctors_by_type_department(ws, d1, d2, fin_source_data)
+        ws = ws_and_finish_order[0]
+        if detail_patient == 1:
+            ws = consolidates.consolidate_fill_data_doctors_by_type_department_detail_patient(ws, query_doctors, ws_and_finish_order[1])
+        else:
+            ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
     wb.save(response)
     return response
 
@@ -1880,6 +1918,46 @@ def sreening_xls(request):
     researches_sql = sql_func.statistics_research(PAP_ANALYSIS_ID[0], datetime_start, datetime_end, hospital_id)
     screening_data['count_pap_analysys'] = len(researches_sql)
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
+    wb.save(response)
+    return response
+
+
+@csrf_exempt
+@login_required
+def commercial_offer_xls(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Specification.xlsx\""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.get_sheet_by_name('Sheet'))
+    ws = wb.create_sheet("Спецификация")
+    ws = commercial_offer.offer_base(ws)
+    request_data = request.POST if request.method == "POST" else request.GET
+    data_offer = request_data.get("offer", "")
+    data_offer = json.loads(data_offer)
+    ws = commercial_offer.offer_fill_data(ws, data_offer)
+    wb.save(response)
+    return response
+
+
+@csrf_exempt
+@login_required
+def get_harmful_factors(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Specification.xlsx\""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.get_sheet_by_name('Sheet'))
+    ws = wb.create_sheet("Спецификация")
+
+    ws = harmful_factors.harmful_factors_base(ws)
+    data_template = get_all_harmful_factors_templates()
+    data_template_ids = tuple([i.template_id for i in data_template])
+    date_researches = get_researches_by_templates(data_template_ids)
+    data_template_meta = {
+        i.template_id: {"harmfulfactor_title": i.harmfulfactor_title, "description": i.description, "template_title": i.template_title, "research_title": ""} for i in data_template
+    }
+    for k in date_researches:
+        data_template_meta[k.template_id]['research_title'] = f"{data_template_meta[k.template_id]['research_title']};  {k.title}"
+    ws = harmful_factors.harmful_factors_fill_data(ws, data_template_meta)
     wb.save(response)
     return response
 

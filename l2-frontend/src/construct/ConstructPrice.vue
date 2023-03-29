@@ -12,10 +12,10 @@
     <div class="edit-price">
       <table class="table">
         <colgroup>
+          <col width="240">
+          <col width="120">
+          <col width="120">
           <col>
-          <col width="120">
-          <col width="120">
-          <col width="200">
           <col
             v-if="priceIsActive"
             width="100"
@@ -65,11 +65,30 @@
           <td class="border">
             <Treeselect
               v-model="priceData.company"
-              :options="companies.data"
-              :normalizer="normalizer"
-              placeholder="Выберите компанию"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              class="treeselect-wide treeselect-nbr"
+              :async="true"
+              :append-to-body="true"
+              :clearable="true"
+              :z-index="10001"
+              placeholder="Укажите организацию"
+              :load-options="loadCompaniesAsyncSearch"
+              loading-text="Загрузка"
+              no-results-text="Не найдено"
+              search-prompt-text="Начните писать для поиска"
+              :cache-options="false"
+              open-direction="bottom"
+              :open-on-focus="true"
               :disabled="!priceIsActive"
-            />
+            >
+              <div
+                slot="value-label"
+                slot-scope="{ node }"
+              >
+                {{ node.raw.label || priceData.companyTitle }}
+              </div>
+            </Treeselect>
           </td>
           <td
             v-if="priceIsActive"
@@ -90,9 +109,21 @@
         </tr>
       </table>
     </div>
-    <h4 v-if="priceIsSelected">
-      Исследования
-    </h4>
+    <span v-if="priceIsSelected">
+      <a
+        class="a-under a-align"
+        href="#"
+        @click.prevent="downloadSpecification"
+      >
+        Скачать спецификацию
+      </a>
+      <ul class="nav navbar-nav">
+        <LoadFile
+          :is-gen-commercial-offer="true"
+          :selected-price="selectedPrice"
+        />
+      </ul>
+    </span>
     <div
       v-if="priceIsSelected"
       class="margin-bottom"
@@ -112,6 +143,7 @@
           <colgroup>
             <col>
             <col width="100">
+            <col width="100">
             <col
               v-if="priceIsActive"
               width="100"
@@ -119,14 +151,13 @@
           </colgroup>
           <thead class="sticky">
             <tr class="border-no-top">
-              <th
-                class="text-center border-right"
-              >
+              <th class="text-center border-right">
                 <strong>Название</strong>
               </th>
-              <th
-                class="text-center border-right"
-              >
+              <th class="text-center border-right">
+                <strong>Кол-во</strong>
+              </th>
+              <th class="text-center border-right">
                 <strong>Цена</strong>
               </th>
               <th
@@ -154,6 +185,16 @@
               class="research border padding-left"
               :text="coastResearch.research.title"
             />
+            <td class="border">
+              <input
+                v-model="coastResearch.numberService"
+                :disabled="!priceIsActive"
+                type="number"
+                min="0"
+                step="1"
+                class="text-right form-control"
+              >
+            </td>
             <td class="border">
               <input
                 v-model="coastResearch.coast"
@@ -213,6 +254,16 @@
           </td>
           <td class="border">
             <input
+              v-model="numberService"
+              type="number"
+              class="text-right form-control"
+              min="0"
+              step="1"
+              placeholder="Кол-во"
+            >
+          </td>
+          <td class="border">
+            <input
               v-model="coast"
               type="number"
               class="text-right form-control"
@@ -242,15 +293,16 @@
 
 <script lang="ts">
 
-import Treeselect from '@riophae/vue-treeselect';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
+import LoadFile from '@/ui-cards/LoadFile.vue';
 
 export default {
   name: 'ConstructPrice',
-  components: { VueTippyTd, Treeselect },
+  components: { VueTippyTd, Treeselect, LoadFile },
   data() {
     return {
       prices: {},
@@ -261,10 +313,10 @@ export default {
       selectedPrice: null,
       selectedResearch: null,
       coast: '',
+      numberService: '',
       researchList: {},
       search: '',
       coastResearches: [],
-      companies: [],
     };
   },
   computed: {
@@ -272,7 +324,6 @@ export default {
       return this.coastResearches.filter(coastResearch => {
         const research = coastResearch.research.title.toLowerCase();
         const searchTerm = this.search.toLowerCase();
-
         return research.includes(searchTerm);
       });
     },
@@ -306,9 +357,18 @@ export default {
   mounted() {
     this.getPrices();
     this.getResearchList();
-    this.getCompanies();
   },
   methods: {
+    showModal() {
+      this.modal = true;
+    },
+    hideModal() {
+      this.modal = false;
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_download_file');
+    },
     normalizer(node) {
       return {
         id: node.pk,
@@ -317,6 +377,9 @@ export default {
     },
     async getPrices() {
       this.prices = await this.$api('/get-prices');
+    },
+    downloadSpecification() {
+      window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
     },
     async updatePrice() {
       if (!this.priceDataIsFilled) {
@@ -375,8 +438,14 @@ export default {
     async getResearchList() {
       this.researchList = await this.$api('/get-research-list');
     },
-    async getCompanies() {
-      this.companies = await this.$api('/get-companies');
+    async loadCompaniesAsyncSearch({ action, searchQuery, callback }) {
+      if (action === ASYNC_SEARCH) {
+        const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
+        callback(
+          null,
+          data.map(d => ({ id: `${d.id}`, label: `${d.title}` })),
+        );
+      }
     },
     async getCoastsResearchesInPrice() {
       const coast = await this.$api('/get-coasts-researches-in-price', { id: this.selectedPrice });
@@ -388,6 +457,7 @@ export default {
         const { ok, message } = await this.$api('/update-coast-research-in-price', {
           coastResearchId: coastResearch.id,
           coast: coastResearch.coast,
+          numberService: coastResearch.numberService,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -428,6 +498,7 @@ export default {
           priceId: this.selectedPrice,
           researchId: this.selectedResearch,
           coast: this.coast,
+          numberService: this.numberService,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -524,4 +595,7 @@ export default {
     flex: 1;
     padding: 7px 0;
   }
+.a-align {
+  float: right;
+}
 </style>

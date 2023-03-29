@@ -473,6 +473,7 @@ const router = new Router({
         showHospFavorites: true,
         showOperationPlans: true,
         showExpertiseStatus: true,
+        showPrintQueue: true,
       },
     },
     {

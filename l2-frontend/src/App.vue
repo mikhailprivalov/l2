@@ -85,7 +85,7 @@ import notifyAudioSrc from '@/assets/notify.mp3';
   },
   watch: {
     $route() {
-      this.embedded = this.$route.query.embedded === 'true';
+      this.embedded = this.$route.query.embedded === '1';
     },
     l2_chats() {
       this.loadChatsDebounced();
@@ -95,6 +95,7 @@ import notifyAudioSrc from '@/assets/notify.mp3';
     },
   },
   mounted() {
+    this.$store.dispatch(actions.PRINT_QUEUE_INIT);
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
     if (!this.embedded && !this.hideHeaderWithoutLogin && !this.isEmptyLayout) {

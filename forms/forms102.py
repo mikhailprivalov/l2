@@ -35,7 +35,7 @@ from laboratory.settings import FONTS_FOLDER, BASE_DIR
 from utils.xh import save_tmp_file
 from . import forms_func
 from utils.pagenum import PageNumCanvasPartitionAll
-from .sql_func import sort_direction_by_file_name_contract
+from .sql_func import sort_direction_by_file_name_contract, get_research_data_for_contract_specification
 from directions.views import gen_pdf_dir as f_print_direction
 from django.http import HttpRequest
 
@@ -84,7 +84,7 @@ def form_01(request_data):
     napr = Napravleniya.objects.filter(pk__in=ind_dir)
     dir_temp = []
 
-    # Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
+    # Проверить, что все направления принадлежат к одной карте и имеют ист.финансирования "Платно"
     num_contract_set = set()
     for n in napr:
         if n.istochnik_f_id in ist_f_list and n.client == ind_card:
@@ -1084,7 +1084,7 @@ def form_02(request_data):
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
     ist_f_list = [int(x[0]) for x in ist_f]
 
-    # Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
+    # Проверить, что все направления принадлежат к одной карте и имеют ист.финансирования "Платно"
     for n in napr:
         if n.istochnik_f_id in ist_f_list and n.client == ind_card:
             dir_temp.append(n.pk)
@@ -1463,7 +1463,7 @@ def form_02(request_data):
         # используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
         for i in range(len(example_template)):
             list_t = []
-            for j in range(len(example_template[i]) - 1):
+            for j in range(len(example_template[i]) - 2):
                 if j in (3, 5, 7):
                     s = styleTCright
                 elif j in (4, 6):
@@ -1476,7 +1476,9 @@ def form_02(request_data):
                 barcode = code128.Code128(example_template[i][1], barHeight=5 * mm, barWidth=1.25, lquiet=1 * mm)
             else:
                 barcode = Paragraph('', styleTC)
-            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC), Paragraph(example_template[i][8], styleTC), barcode])
+            comment_strip = example_template[i][8][0:40].replace('<', '').replace('>', '')
+            research_title = example_template[i][9] if example_template[i][9] else example_template[i][2]
+            route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(research_title, styleTC), Paragraph(comment_strip, styleTC), barcode])
 
         opinion.extend(list_g)
 
@@ -1967,4 +1969,149 @@ def check_section_param(objs, s, styles_obj, sum_research, styleTCright, section
         objs.append(Spacer(1, 2 * mm))
     else:
         objs.append(Paragraph(section['text'], styles_obj[section['style']]))
+    return objs
+
+
+def form_03(request_data):
+    """
+    Шаблон договора с юрлицами
+    """
+    price_id = request_data.get("priceId", 1)
+    result = get_research_data_for_contract_specification(price_id)
+    result = [{"code": i.research_code, "title": i.research_title, "coast": i.coast, "counts": i.number_services_by_contract} for i in result]
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=12 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=28 * mm, allowSplitting=1, title="Форма {}".format("Договор на оплату")
+    )
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.leading = 13
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBoldCenter = deepcopy(styleBold)
+    styleBoldCenter.alignment = TA_CENTER
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.spaceAfter = 0 * mm
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 20
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    styleTCenter = deepcopy(styleCenter)
+    styleTCenter.alignment = TA_CENTER
+    styleTCenter.leading = 3.5 * mm
+    styleTCenter.firstLineIndent = 0
+    style.fontSize = 9
+
+    styleTBold = deepcopy(styleCenterBold)
+    styleTBold.fontSize = 10
+    styleTBold.alignment = TA_LEFT
+
+    styleAppendix = deepcopy(style)
+    styleAppendix.fontSize = 9
+    styleAppendix.firstLineIndent = 8
+    styleAppendix.leading = 9
+
+    styleTB = deepcopy(style)
+    styleTB.firstLineIndent = 0
+    styleTB.fontSize = 9
+
+    styleTR = deepcopy(style)
+    styleTR.alignment = TA_RIGHT
+    styleTB.fontSize = 9
+
+    styles_obj = {'style': style, 'styleCenter': styleCenter, 'styleAppendix': styleAppendix, "styleBoldCenter": styleBoldCenter, "styleTR": styleTR}
+
+    contract_file_partner = SettingManager.get("contract_from_file_partner", default='', default_type='s')
+    if not os.path.join(
+        BASE_DIR,
+        'forms',
+        'contract_forms',
+    ):
+        contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', "contract_file_partner.json")
+    else:
+        contract_file = os.path.join(BASE_DIR, 'forms', 'contract_forms', contract_file_partner)
+    objs = []
+    if contract_file:
+        with open(contract_file) as json_file:
+            data = json.load(json_file)
+            body_paragraphs = data['body_paragraphs']
+
+    objs.append(Spacer(1, 5 * mm))
+    price_spec = [[Paragraph('Код', styleTCenter), Paragraph('Услуга', styleTCenter), Paragraph('Кол-во', styleTCenter), Paragraph('Цена', styleTCenter), Paragraph('Итого', styleTCenter)]]
+    for i in result:
+        price_spec.append(
+            [
+                Paragraph(i.get('code', "0"), styleTB),
+                Paragraph(i.get('title', "-"), styleTB),
+                Paragraph(str(i.get("counts", 0)), styleTCenter),
+                Paragraph(str(i.get('coast', 0)), styleTR),
+                Paragraph(str(i.get("counts", 0) * i.get('coast', 0)), styleTR),
+            ]
+        )
+
+    tbl = Table(price_spec, colWidths=(33 * mm, 85 * mm, 19 * mm, 24 * mm, 24 * mm), hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
+
+    if contract_file:
+        for section in body_paragraphs:
+            objs = partner_check_section_param(objs, styles_obj, section, tbl)
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def partner_check_section_param(objs, styles_obj, section, tbl_specification):
+    space_symbol = '&nbsp;'
+    if section.get('Spacer'):
+        height_spacer = section.get('spacer_data')
+        objs.append(Spacer(1, height_spacer * mm))
+    elif section.get('page_break'):
+        objs.append(PageBreak())
+    elif section.get('specification'):
+        objs.append(tbl_specification)
+    elif section.get('List_data'):
+        data = section.get('List_data').split("@#")
+        s = ""
+        for i in data:
+            if "space_symbol" in i:
+                space_result = i.split("*")
+                s = f"{s} {space_symbol * int(space_result[1])}"
+                continue
+            s = s + i
+        objs.append(Paragraph(s, styles_obj[section['style']]))
+    else:
+        objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
     return objs

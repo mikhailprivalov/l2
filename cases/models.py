@@ -29,7 +29,7 @@ class Case(models.Model):
         (0, 'Амбулаторно'),
         (1, 'Скорая МП'),
         (2, 'Стационар дневной'),
-        (3, 'Стационар круглосутончый'),
+        (3, 'Стационар круглосуточный'),
     )
 
     CASE_REGIMENS_REL = {
@@ -39,14 +39,14 @@ class Case(models.Model):
     }
 
     card = models.ForeignKey(clients.Card, on_delete=models.CASCADE, help_text='Карта пациента')
-    doctor = models.ForeignKey(users.DoctorProfile, on_delete=models.CASCADE, help_text='Врач', related_name='case_doc')
+    doctor = models.ForeignKey(users.DoctorProfile, on_delete=models.CASCADE, help_text='Врач', related_name='case_doc_closed')
     creator = models.ForeignKey(users.DoctorProfile, on_delete=models.CASCADE, help_text='Создатель случая', related_name='case_creator')
     opened = models.DateTimeField(help_text='Дата и время открытия случая')
     closed = models.DateTimeField(blank=True, null=True, default=None, help_text='Дата и время закрытия случая')
     cancel = models.BooleanField(blank=True, default=False, help_text='Отмена случая')
-    case_type = models.SmallIntegerField(choices=CASE_TYPES, help_text='Вид случая')
-    case_regimen = models.SmallIntegerField(choices=CASE_REGIMENS, help_text='Условия оказания помощи')
-    care_type = models.SmallIntegerField(choices=CARE_TYPES, help_text='Вид медицинской помощи')
+    case_type = models.SmallIntegerField(choices=CASE_TYPES, help_text='Вид случая')  # DEPRECATED
+    case_regimen = models.SmallIntegerField(choices=CASE_REGIMENS, help_text='Условия оказания помощи')  # DEPRECATED
+    care_type = models.SmallIntegerField(choices=CARE_TYPES, help_text='Вид медицинской помощи')  # DEPRECATED
 
     @property
     def opened_local(self):

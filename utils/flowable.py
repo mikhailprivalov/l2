@@ -90,7 +90,7 @@ class InteractiveListTypeMedExam(Flowable):
         options = [
             ' ',
             "Платно",
-            "Профомотр",
+            "Профосмотр",
         ]
         form.choice(
             name='choice2',
