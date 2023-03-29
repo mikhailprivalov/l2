@@ -74,6 +74,7 @@ urlpatterns = [
     path('current-time', views.current_time),
     path('search-param', views.search_param),
     path('statistic-params-search', views.statistic_params_search),
+    path('analyzers/', include('api.analyzers.urls')),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),

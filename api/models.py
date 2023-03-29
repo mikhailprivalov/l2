@@ -3,6 +3,7 @@ from typing import Union
 import uuid
 
 from django.db import models
+from users.models import DoctorProfile
 
 import directory.models as directory_models
 
@@ -120,6 +121,8 @@ class Analyzer(models.Model):
     MODES = ((0, "TCP Connection"),)
 
     title = models.CharField(max_length=60, help_text="Название")
+    port = models.PositiveSmallIntegerField(blank=True, null=True, help_text="Номер порта анализатора")
+    service_name = models.CharField(max_length=60, help_text="Название службы Systemd", null=True, blank=True)
     protocol = models.IntegerField(choices=PROTOCOLS, help_text="Поддерживаемый протокол")
     mode = models.IntegerField(choices=MODES, help_text="Режим")
     connection_string = models.TextField(help_text="Строка подключения")
@@ -131,6 +134,18 @@ class Analyzer(models.Model):
     class Meta:
         verbose_name = 'Анализатор'
         verbose_name_plural = 'Анализаторы'
+
+
+class ManageDoctorProfileAnalyzer(models.Model):
+    doctor_profile = models.ForeignKey(DoctorProfile, help_text="Пользователь, который принадлежит к этому анализатору", on_delete=models.CASCADE)
+    analyzer = models.ForeignKey(Analyzer, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.doctor_profile} — {self.analyzer}"
+
+    class Meta:
+        verbose_name = 'Управление анализатором'
+        verbose_name_plural = 'Управление анализаторами'
 
 
 class RelationCultureASTM(models.Model):
