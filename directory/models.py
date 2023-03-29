@@ -610,7 +610,7 @@ class ParaclinicInputField(models.Model):
     control_param = models.TextField(default='', blank=True)
     operator_enter_param = models.BooleanField(default=False, help_text='Поле ввода для оператора(лаборанта)', blank=True)
     cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text='CDA-поле для всей группы', on_delete=models.SET_NULL)
-    denied_group = models.ForeignKey(Group, default=None, null=True, blank=True,  on_delete=models.SET_NULL)
+    denied_group = models.ForeignKey(Group, default=None, null=True, blank=True, on_delete=models.SET_NULL)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
