@@ -33,7 +33,7 @@ ANY_GROUPS = (ANY_GROUP,)
 
 def has_access(doctorprofile: DoctorProfile, groups: Tuple):
     if not groups:
-        raise Exception(f'Access groups not configured')
+        raise Exception('Access groups not configured')
     if not doctorprofile.user.is_staff and not set(ANY_GROUPS).intersection(set(groups)) and not doctorprofile.is_member(groups):
         raise FormForbiddenException(f'Access is prohibited: access={groups}, user={[str(x) for x in doctorprofile.user.groups.all()]}')
 

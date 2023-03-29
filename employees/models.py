@@ -14,10 +14,12 @@ class Employee(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
-    doctorprofile_created = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True,
-                                              verbose_name='Профиль пользователя, создавшего запись', related_name='employees_employee_created')
-    doctorprofile_updated = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True,
-                                              verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_updated')
+    doctorprofile_created = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, создавшего запись', related_name='employees_employee_created'
+    )
+    doctorprofile_updated = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_updated'
+    )
 
     def __str__(self):
         return f'{self.family} {self.name} {self.patronymic} ({self.hospital})'.strip()
@@ -116,10 +118,12 @@ class Position(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='Активна')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
-    doctorprofile_created = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True,
-                                              verbose_name='Профиль пользователя, создавшего запись', related_name='employees_position_created')
-    doctorprofile_updated = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True,
-                                              verbose_name='Профиль пользователя, обновившего запись', related_name='employees_position_updated')
+    doctorprofile_created = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, создавшего запись', related_name='employees_position_created'
+    )
+    doctorprofile_updated = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_position_updated'
+    )
 
     def __str__(self):
         return self.name
@@ -204,10 +208,12 @@ class Department(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
-    doctorprofile_created = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True,
-                                              verbose_name='Профиль пользователя, создавшего запись', related_name='employees_department_created')
-    doctorprofile_updated = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True,
-                                              verbose_name='Профиль пользователя, обновившего запись', related_name='employees_department_updated')
+    doctorprofile_created = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, создавшего запись', related_name='employees_department_created'
+    )
+    doctorprofile_updated = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_department_updated'
+    )
 
     def __str__(self):
         return self.name
@@ -313,10 +319,12 @@ class EmployeePosition(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='Активна')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
-    doctorprofile_created = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True,
-                                              verbose_name='Профиль пользователя, создавшего запись', related_name='employees_employee_position_created')
-    doctorprofile_updated = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True,
-                                              verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_position_updated')
+    doctorprofile_created = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, создавшего запись', related_name='employees_employee_position_created'
+    )
+    doctorprofile_updated = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_position_updated'
+    )
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'

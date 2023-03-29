@@ -97,7 +97,6 @@ urlpatterns = [
     path('health/', include('api.health.urls')),
     path('chats/', include('api.chats.urls')),
     path('ecp/', include('api.ecp.urls')),
-    path('employees/', include('api.employees.urls')),
     path('edit-forms/', include('api.edit_forms.urls')),
     path('get-prices', views.get_prices),
     path('get-price-data', views.get_price_data),
