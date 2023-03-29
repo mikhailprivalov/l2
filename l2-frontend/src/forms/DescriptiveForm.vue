@@ -620,12 +620,6 @@ export default {
     clearInterval(this.versionTickTimer);
   },
   methods: {
-    deniedGroup(deniedGr) {
-      console.log(deniedGr);
-      console.log(this.$store.getters.user_data.groups);
-      console.log((this.$store.getters.user_data.groups || []).includes(deniedGr));
-      return (this.$store.getters.user_data.groups || []).includes(deniedGr);
-    },
     inc_version() {
       // eslint-disable-next-line vue/no-mutating-props
       this.research.version = (this.research.version || 0) + 1;
