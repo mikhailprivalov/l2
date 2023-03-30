@@ -42,6 +42,11 @@ def get_expertise(pk, with_check_available=False):
                         "serviceTitle": i.title,
                     }
                 )
-                if i.date_confirm:
-                    expertise_data['status'] = 'ok' if without_remarks else 'error'
+        for direction in expertise_data["directions"]:
+            if not direction["withoutRemarks"]:
+                expertise_data["status"] = 'error'
+                break
+        if expertise_data["status"] != 'error':
+            expertise_data["status"] = 'ok'
+
     return expertise_data
