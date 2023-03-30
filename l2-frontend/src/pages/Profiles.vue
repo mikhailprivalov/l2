@@ -732,6 +732,49 @@
               </div>
             </div>
           </div>
+          <div class="more-title">
+            Анализаторы:
+            <button
+              class="btn btn-blue-nb sidebar-btn"
+              style="font-size: 13px"
+            >
+              <i
+                v-if="setup_analyzer"
+                v-tippy="{ placement: 'bottom'}"
+                class="glyphicon glyphicon-circle-arrow-up"
+                title="Скрыть"
+                @click="change_setup_analyzer"
+              />
+              <i
+                v-else
+                v-tippy="{ placement: 'bottom' }"
+                class="glyphicon glyphicon-circle-arrow-down"
+                title="Выбрать"
+                @click="change_setup_analyzer"
+              />
+            </button>
+          </div>
+          <div
+            v-if="setup_analyzer"
+            class="input-group"
+            style="width: 100%"
+          >
+            <span class="input-group-addon">Анализаторы</span>
+            <select
+              v-model="analyzers"
+              class="form-control"
+              multiple
+              style="height: 136px"
+            >
+              <option
+                v-for="l in analyzers_list"
+                :key="l.pk"
+                :value="l.pk"
+              >
+                {{ l.label }}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="right-bottom">
@@ -834,10 +877,13 @@ export default {
     return {
       filter: '',
       departments: [],
+      analyzers: [],
+      analyzers_list: [],
       specialities: [],
       positions: [],
       districts: [],
       resource_researches: [],
+      setup_analyzer: false,
       setup_forbidden: false,
       setup_resource: false,
       resource_templates_list: [],
@@ -988,6 +1034,9 @@ export default {
     this.resource_researches = [];
     this.current_resource_title = '';
   },
+  mounted() {
+    this.getAllAnalyzers();
+  },
   methods: {
     open_schedule() {
       window.open('/ui/schedule', '_blank');
@@ -1001,6 +1050,10 @@ export default {
         }
       }
     },
+    async getAllAnalyzers() {
+      const list = await this.$api('analyzers/all-analyzers');
+      this.analyzers_list = list.data;
+    },
     async save_resource() {
       await this.$store.dispatch(actions.INC_LOADING);
       await this.$api('schedule/save-resource', {
@@ -1013,6 +1066,9 @@ export default {
     },
     change_setup_forbidden() {
       this.setup_forbidden = !this.setup_forbidden;
+    },
+    change_setup_analyzer() {
+      this.setup_analyzer = !this.setup_analyzer;
     },
     change_setup_resource() {
       this.setup_resource = !this.setup_resource;
@@ -1075,6 +1131,7 @@ export default {
       const { ok, npk, message } = await usersPoint.saveUser({
         pk: this.open_pk,
         user_data: this.user,
+        groupsAnalyzer: this.analyzers,
         hospital_pk: this.selected_hospital,
       });
       if (ok) {
@@ -1096,6 +1153,7 @@ export default {
     },
     async close() {
       this.open_pk = -2;
+      this.analyzers = [];
       this.user = {
         family: '',
         name: '',
