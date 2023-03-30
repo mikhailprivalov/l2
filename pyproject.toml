@@ -78,6 +78,8 @@ psycopg2-binary = "^2.9.4"
 boto3 = "^1.26.56"
 prompt-toolkit = "^3.0.36"
 pdf2docx = "^0.5.6"
+pyotp = "^2.8.0"
+qrcode = "^7.4.2"
 
 [tool.poetry.extras]
 caching = ["psycopg2"]
