@@ -203,6 +203,7 @@ def search_by_fio(request_obj: HttpRequest, params_tfoms: dict, params_internal:
         patient_card = Individual.import_from_tfoms(current_patient.data["list"], None, None, None, True)
     return patient_card
 
+
 def find_and_replace(text: str, symbol1: str, symbol2: str) -> list:
     result = []
     for i in range(len(text)):
