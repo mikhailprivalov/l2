@@ -396,7 +396,7 @@ import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
   computed: {
     ...mapGetters(['menu', 'user_data']),
     buttons() {
-      if (!this.menu || !this.menu.buttons) {
+      if (!this.menu?.buttons) {
         return [];
       }
 

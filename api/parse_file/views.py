@@ -135,7 +135,7 @@ def add_factors_from_file(request):
                     else:
                         incorrect_factor.append(f'{i.replace(" ", "")}')
                 if len(incorrect_factor) != 0:
-                    incorrect_patients.append({"fio": cells[fio], "reason": f"Не верные факторы: {incorrect_factor}"})
+                    incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
                 PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
                 company = Company.objects.filter(inn=company_inn).first()
                 patient_card.work_position = cells[position].strip()
