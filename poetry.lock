@@ -276,18 +276,18 @@ dev = ["Sphinx (==4.3.2)", "black (==22.3.0)", "build (==0.8.0)", "flake8 (==4.0
 
 [[package]]
 name = "boto3"
-version = "1.26.56"
+version = "1.26.102"
 description = "The AWS SDK for Python"
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "boto3-1.26.56-py3-none-any.whl", hash = "sha256:72214a08f337d29a1300d7861872f60ea41016b2a8ad8094fab20d783c8cf1ae"},
-    {file = "boto3-1.26.56.tar.gz", hash = "sha256:0ff8667fbfda8390cab2718a4d129374a6ddd6fd1913f79777fd4498f93c84f1"},
+    {file = "boto3-1.26.102-py3-none-any.whl", hash = "sha256:043f8981d10c4e7c48736df4381dac557b46c5b369b0a450d8f3d7f5fdd24db5"},
+    {file = "boto3-1.26.102.tar.gz", hash = "sha256:b00f416832bc59863b96175045d2ebe067d9222289bce677c48fd72c006eaaad"},
 ]
 
 [package.dependencies]
-botocore = ">=1.29.56,<1.30.0"
+botocore = ">=1.29.102,<1.30.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.6.0,<0.7.0"
 
@@ -296,14 +296,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.29.56"
+version = "1.29.102"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.29.56-py3-none-any.whl", hash = "sha256:669ed3a256c4352f8f8a77a24b4d623ab7acc966d843b460d7ce2261a9813a79"},
-    {file = "botocore-1.29.56.tar.gz", hash = "sha256:ca4d6403d745218270a20d9ca3ca9a33e3ad2fabb59a96ed8d6e1a824b274c86"},
+    {file = "botocore-1.29.102-py3-none-any.whl", hash = "sha256:4bae8f502507da18ff37c61cb18745cfb11d87a61dd0ea27e346adadff92aa3f"},
+    {file = "botocore-1.29.102.tar.gz", hash = "sha256:58b11c630d2044ea732ba4c403d29fab51e954465f9b3f7099cbf5ac0ce7ab47"},
 ]
 
 [package.dependencies]
@@ -312,7 +312,7 @@ python-dateutil = ">=2.1,<3.0.0"
 urllib3 = ">=1.25.4,<1.27"
 
 [package.extras]
-crt = ["awscrt (==0.15.3)"]
+crt = ["awscrt (==0.16.9)"]
 
 [[package]]
 name = "cached-property"
@@ -2115,4 +2115,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "e146d5ea8e4628e72df453247717c7d6e81ac129cd05e9d87c43f19733aee153"
+content-hash = "f0bee242db51bcdea564e1d3baaa8fc611d8c80477b479c0a434a82360c77e36"
