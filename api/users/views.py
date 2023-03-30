@@ -193,10 +193,13 @@ def generate_totp_code(request):
     qr.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue())
 
-    return status_response(True, data={
-        'secretCode': secret_code,
-        'qrCode': f"data:image/png;base64,{img_str.decode('utf-8')}",
-    })
+    return status_response(
+        True,
+        data={
+            'secretCode': secret_code,
+            'qrCode': f"data:image/png;base64,{img_str.decode('utf-8')}",
+        },
+    )
 
 
 @login_required
