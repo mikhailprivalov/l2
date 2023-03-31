@@ -68,7 +68,7 @@ from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from pharmacotherapy.models import Drugs
-from podrazdeleniya.models import Podrazdeleniya
+from podrazdeleniya.models import Podrazdeleniya, Room
 from slog import models as slog
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, ExcludePurposes
@@ -1398,6 +1398,7 @@ def user_view(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
     resource_researches = []
+    data_r =Room.objects.all().order_by('title')
     if pk == -1:
         data = {
             "family": '',
@@ -1410,6 +1411,8 @@ def user_view(request):
             "restricted_to_direct": [],
             "users_services": [],
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
+            "rooms": [],
+            "rooms_list": [{"id": x.pk, "label": x.title} for x in Room.objects.all()],
             "password": '',
             "rmis_location": '',
             "rmis_login": '',
@@ -1448,6 +1451,7 @@ def user_view(request):
                     temp_result.append(i.researches_id)
                     resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
         resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
+        data_r = doc.room_access.all()
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
@@ -1459,6 +1463,8 @@ def user_view(request):
             "restricted_to_direct": [x.pk for x in doc.restricted_to_direct.all()],
             "users_services": [x.pk for x in doc.users_services.all()],
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
+            "rooms": [x.pk for x in doc.room_access.all()],
+            "rooms_list": [{"id": x.pk, "label": x.title} for x in Room.objects.all()],
             "password": '',
             "rmis_location": doc.rmis_location or '',
             "max_age_patient_registration": doc.max_age_patient_registration or -1,
@@ -1571,6 +1577,10 @@ def user_save_view(request):
             for g in ud["groups"]:
                 group = Group.objects.get(pk=g)
                 doc.user.groups.add(group)
+            doc.room_access.clear()
+            for r in ud["rooms"]:
+                room = Room.objects.get(pk=r)
+                doc.room_access.add(room)
 
             ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=doc.pk).delete()
             for g in group_analyzer:

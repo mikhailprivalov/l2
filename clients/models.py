@@ -23,6 +23,7 @@ from clients.sql_func import last_result_researches_years
 from directory.models import Researches, ScreeningPlan, PatientControlParam
 
 from laboratory.utils import localtime, current_year, strfdatetime
+from podrazdeleniya.models import Room
 from users.models import Speciality, DoctorProfile, AssignmentTemplates
 from django.contrib.postgres.fields import ArrayField
 
@@ -1054,6 +1055,7 @@ class Card(models.Model):
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     death_date = models.DateField(help_text='Дата смерти', db_index=True, default=None, blank=True, null=True)
     contact_trust_health = models.CharField(max_length=400, help_text='Кому доверяю состояние здоровья', blank=True, default="")
+    room_location = models.ForeignKey(Room, default=None, blank=True, null=True, help_text="Кабинет нахождения карты", db_index=True, on_delete=models.SET_NULL)
 
     @property
     def main_address_full(self):
@@ -1891,3 +1893,14 @@ class CardControlParam(models.Model):
                 continue
             elif i.get("isSelected", False):
                 CardControlParam(card_id=card_pk, patient_control_param_id=i["id"]).save()
+
+
+class CardMovementRoom(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    room_out = models.ForeignKey(Room, help_text="Кабинет откуда", related_name="room_out", db_index=True, on_delete=models.CASCADE)
+    room_in = models.ForeignKey(Room, help_text="Кабинет куда ", related_name="room_in", db_index=True, on_delete=models.CASCADE)
+    doc_who_issued = models.ForeignKey(DoctorProfile, related_name="doc_who_issued",  default=None, blank=True, null=True, help_text='Создатель направления', on_delete=models.SET_NULL)
+    date_issued = models.DateTimeField(auto_now_add=True, help_text='Дата выдачи карт', db_index=True)
+    doc_who_received = models.ForeignKey(DoctorProfile, related_name="doc_who_received", default=None, blank=True, null=True, help_text='Создатель направления', on_delete=models.SET_NULL)
+    date_received = models.DateTimeField(auto_now_add=True, help_text='Дата подтверждения получения', db_index=True)
+    comment = models.CharField(max_length=128, help_text='Комментарий движения', default="")
