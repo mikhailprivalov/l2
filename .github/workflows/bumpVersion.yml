@@ -31,6 +31,7 @@ jobs:
         with:
           token: ${{ secrets.CPR_SEC }}
           commit-message: Bump version to ${{ steps.version_var.outputs.version }}
+          committer: GitHub <noreply@github.com>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           signoff: false
           draft: false
