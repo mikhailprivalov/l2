@@ -29,7 +29,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CPR_SEC }}
           commit-message: Bump version to ${{ steps.version_var.outputs.version }}
           committer: Mikhail Privalov <n5250@ya.ru>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
@@ -50,7 +50,7 @@ jobs:
       - name: Enable Pull Request Automerge
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CPR_SEC }}
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
           merge-method: merge
       - name: Check outputs
