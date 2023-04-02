@@ -31,7 +31,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Bump version to ${{ steps.version_var.outputs.version }}
-          committer: GitHub <noreply@github.com>
+          committer: Mikhail Privalov <n5250@ya.ru>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           signoff: false
           draft: false
@@ -40,6 +40,7 @@ jobs:
           labels: |
             automated pr
           reviewers: moodpulse
+          base: develop
           body: |
             Bump version L2 to ${{ steps.version_var.outputs.version }}
             - ${{ steps.version_var.outputs.version }}
