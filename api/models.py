@@ -36,6 +36,7 @@ class Application(models.Model):
     is_superuser = False
     tube_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами пробирок")
     can_access_schedule = models.BooleanField(default=False, help_text="У приложения есть доступ к расписанию")
+    csv_header = models.CharField(max_length=255, blank=True, null=True, help_text="Заголовок CSV файла")
 
     def auto_set_places(self, rel: "RelationFractionASTM", value: Union[str, float, int]) -> str:
         if rel.full_round:
