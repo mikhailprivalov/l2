@@ -89,7 +89,7 @@ class Application(models.Model):
         return r
 
     def truncate(self, f):
-        return math.floor(f * 10 ** self.decimal_places) / 10 ** self.decimal_places
+        return math.floor(f * 10**self.decimal_places) / 10**self.decimal_places
 
 
 class RelationFractionASTM(models.Model):
@@ -153,6 +153,7 @@ class RelationCultureASTM(models.Model):
     """
     Модель соответствия фракций из ASTM для LIS
     """
+
     astm_field = models.CharField(max_length=127, help_text="ASTM-поле", db_index=True)
     culture = models.ForeignKey(directory_models.Culture, help_text="Культура", on_delete=models.CASCADE)
 
