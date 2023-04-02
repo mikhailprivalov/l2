@@ -39,9 +39,6 @@ jobs:
           delete-branch: true
           labels: |
             automated pr
-          team-reviewers: |
-            owners
-            maintainers
           body: |
             Bump version to ${{ steps.version_var.outputs.version }}
             - ${{ steps.version_var.outputs.version }}
