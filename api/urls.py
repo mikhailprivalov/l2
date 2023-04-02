@@ -128,4 +128,9 @@ urlpatterns = [
     path('update-control-param', views.update_control_param),
     path('add-control-param', views.add_control_param),
     path('update-order-param', views.update_order_param),
+    path('get-wards', views.get_wards),
+    path('get-beds', views.get_beds),
+    path('add-ward', views.add_ward),
+    path('add-bed', views.add_bed),
+    path('get-podrazdeleniya', views.get_podrazdeleniya),
 ]

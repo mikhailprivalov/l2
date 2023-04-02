@@ -162,6 +162,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/wards-beds',
+      name: 'wards_beds',
+      component: () => import('@/construct/ConstructWards.vue'),
+      meta: {
+        title: 'Палаты и койки',
+        groups: ['Конструктор: Палаты и койки'],
+      },
+    },
+    {
       path: '/ui/extra-notification',
       name: 'extra_notification',
       component: () => import('@/pages/ExtraNotification.vue'),

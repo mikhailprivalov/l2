@@ -65,7 +65,7 @@ from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from pharmacotherapy.models import Drugs
-from podrazdeleniya.models import Podrazdeleniya
+from podrazdeleniya.models import Podrazdeleniya, Ward, Bed
 from slog import models as slog
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, ExcludePurposes
@@ -2054,6 +2054,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
         {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
+        {"url": "/ui/construct/wards-beds", "title": "Палаты и койки", "access": ["Конструктор: Палаты и койки"], "module": None}
     ]
 
     from context_processors.utils import make_menu
@@ -3005,4 +3006,70 @@ def update_order_param(request):
             current_param.save()
         else:
             return status_response(False, 'Параметр последний')
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Палаты и койки')
+def get_podrazdeleniya(request):
+    podrazdeleniya = Podrazdeleniya.objects.all().values('id', 'title')
+    data = {'podrazdeleniya': list(podrazdeleniya)}
+    return JsonResponse(data)
+
+
+@login_required
+@group_required('Конструктор: Палаты и койки')
+def get_wards(request):
+    department = request.GET.get('department')
+    if department:
+        wards = Ward.objects.filter(department_id=department).values('id', 'title')
+    else:
+        wards = Ward.objects.all().values('id', 'title')
+    data = {'wards': list(wards)}
+    return JsonResponse(data)
+
+
+@login_required
+@group_required('Конструктор: Палаты и койки')
+def get_beds(request):
+    wards_id = request.GET.get('wardsId').split(',')
+    beds_in_ward = {}
+    for ward_id in wards_id:
+        bed = Bed.objects.filter(ward_id=int(ward_id)).values('id', 'bed_number')
+        beds_in_ward[ward_id] = list(bed)
+    data = {'beds': beds_in_ward}
+    return JsonResponse(data)
+
+
+@login_required
+@group_required('Конструктор: Палаты и койки')
+def add_ward(request):
+    request_data = json.loads(request.body)
+    if not Ward.objects.all().exists():
+        offset = 0
+    else:
+        offset = 1
+
+    department_id = request_data['department']
+    department = Podrazdeleniya.objects.get(id=department_id)
+
+    new_ward = Ward(title=request_data['title'], department=department, hide=request_data['hide'] + offset)
+    new_ward.save()
+    return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Палаты и койки')
+def add_bed(request):
+    request_data = json.loads(request.body)
+
+    if not Bed.objects.all().exists():
+        offset = 0
+
+    else:
+        offset = 1
+    ward = Ward.objects.get(id=request_data['ward'])
+    new_bed = Bed(bed_number=request_data['bed_number'], ward=ward, hide=request_data['hide'] + offset)
+    print(new_bed)
+    new_bed.save()
     return status_response(True)
