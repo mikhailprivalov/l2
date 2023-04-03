@@ -1,5 +1,5 @@
 from django.contrib import admin
-from podrazdeleniya.models import Podrazdeleniya, Room, Chamber, Bed, PatienToBed
+from podrazdeleniya.models import Podrazdeleniya, Room, Chamber, Bed, PatientToBed
 
 
 class PodrazdeleniyaAdmin(admin.ModelAdmin):
@@ -27,13 +27,13 @@ class BedAdmin(admin.ModelAdmin):
     search_fields = ('chamber', 'bed_number')
 
 
-class PatienToBedAdmin(admin.ModelAdmin):
-    list_display = ('patient', 'bed', 'status')
+class PatientToBedAdmin(admin.ModelAdmin):
+    list_display = ('pk', '__str__', 'bed', 'entrance', 'extract')
     autocomplete_fields = ('patient',)
     search_fields = ('patient', 'bed')
 
 
-admin.site.register(PatienToBed, PatienToBedAdmin)
+admin.site.register(PatientToBed, PatientToBedAdmin)
 admin.site.register(Bed, BedAdmin)
 admin.site.register(Chamber, ChamberAdmin)
 admin.site.register(Podrazdeleniya, PodrazdeleniyaAdmin)

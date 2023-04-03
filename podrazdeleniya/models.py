@@ -1,3 +1,5 @@
+from datetime import timezone, timedelta
+
 from django.db import models
 
 
@@ -143,13 +145,14 @@ class Bed(models.Model):
         verbose_name_plural = 'Койки'
 
 
-class PatienToBed(models.Model):
-    patient = models.ForeignKey("directions.Issledovaniya", on_delete=models.CASCADE)
+class PatientToBed(models.Model):
+    patient = models.ForeignKey("directions.Napravleniya", on_delete=models.CASCADE)
     bed = models.ForeignKey(Bed, on_delete=models.CASCADE)
-    status = models.BooleanField(default=True, blank=True, help_text="История койки (true: лежит / false: лежал)")
+    entrance = models.DateField(auto_now_add=True)
+    extract = models.DateField(null=True)
 
     def __str__(self):
-        return f'{self.patient} - {self.bed} - {self.status}'
+        return f'{self.patient.client.individual.fio()}'
 
     class Meta:
         verbose_name = 'Историю койки'
