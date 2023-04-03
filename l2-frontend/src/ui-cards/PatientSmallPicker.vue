@@ -592,10 +592,6 @@ td:not(.select-td) {
   }
 }
 
-.nbr {
-  border-radius: 0;
-}
-
 .bob {
   border-left: none !important;
   border-top: none !important;

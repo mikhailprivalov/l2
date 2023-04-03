@@ -3,6 +3,7 @@ import random
 import string
 import uuid
 
+import pyotp
 from django.contrib.auth.models import User, Group
 from django.db import models, transaction
 from django.utils import timezone
@@ -35,12 +36,14 @@ class Speciality(models.Model):
         verbose_name_plural = 'Специальности'
 
 
-def add_dots_if_not_digit(w: str, dots):
+def add_dots_if_not_digit(w: str, dots, with_space=False):
     w = w.strip()
     if not w:
         return ''
     if not w.isdigit() and len(w) > 0:
         w = w[0] + ("." if dots else "")
+    if with_space:
+        w += " "
     return w
 
 
@@ -72,6 +75,7 @@ class DoctorProfile(models.Model):
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт', on_delete=models.CASCADE)
     specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True, help_text='Специальности пользователя', on_delete=models.CASCADE)
     fio = models.CharField(max_length=255, help_text='ФИО')  # DEPRECATED
+    totp_secret = models.CharField(max_length=64, blank=True, default=None, null=True, help_text='Секретный ключ для двухфакторной авторизации')
     family = models.CharField(max_length=255, help_text='Фамилия', blank=True, default=None, null=True)
     name = models.CharField(max_length=255, help_text='Имя', blank=True, default=None, null=True)
     patronymic = models.CharField(max_length=255, help_text='Отчество', blank=True, default=None, null=True)
@@ -409,7 +413,7 @@ class DoctorProfile(models.Model):
     def get_full_fio(self):
         return " ".join(self.get_fio_parts()).strip()
 
-    def get_fio(self, dots=True):
+    def get_fio(self, dots=True, with_space=True):
         """
         Функция формирования фамилии и инициалов (Иванов И.И.)
         :param dots:
@@ -417,7 +421,7 @@ class DoctorProfile(models.Model):
         """
         fio_parts = self.get_fio_parts()
 
-        return f"{fio_parts[0]} {add_dots_if_not_digit(fio_parts[1], dots)} {add_dots_if_not_digit(fio_parts[2], dots)}".strip()
+        return f"{fio_parts[0]} {add_dots_if_not_digit(fio_parts[1], dots, with_space)}{add_dots_if_not_digit(fio_parts[2], dots)}".strip()
 
     def is_member(self, groups: list) -> bool:
         """
@@ -447,6 +451,17 @@ class DoctorProfile(models.Model):
         if self.last_online:
             return int(self.last_online.timestamp())
         return None
+
+    def check_totp(self, code, ip):
+        if not self.totp_secret:
+            return True
+        key = f"{self.pk}:{code}"
+        prev_ip = cache.get(key)
+        if prev_ip and prev_ip != ip:
+            return False
+        cache.set(key, ip, 60)
+        totp = pyotp.TOTP(self.totp_secret)
+        return totp.verify(code)
 
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:

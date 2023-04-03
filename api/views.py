@@ -7,8 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
-from api.models import Analyzer
-from api.models import ManageDoctorProfileAnalyzer
+from api.models import ManageDoctorProfileAnalyzer, Analyzer
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
@@ -270,7 +269,7 @@ def send(request):
 
 @csrf_exempt
 def endpoint(request):
-    result = {"answer": False, "body": "", "patientData": {}}
+    result = {"answer": False, "body": "", "patientData": {}, "ok": False}
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
@@ -378,6 +377,7 @@ def endpoint(request):
                                                 fraction_result.ref_m = ref.m
                                                 fraction_result.ref_f = ref.f
                                             fraction_result.save()
+                                            result["ok"] = True
                                             issled.api_app = app
                                             issled.save()
                                             fraction_result.get_ref(re_save=True)
@@ -653,6 +653,8 @@ def current_user_info(request):
             )
 
             ret["fio"] = doctorprofile.get_full_fio()
+            ret["shortFio"] = doctorprofile.get_fio(with_space=False)
+            ret["hasTOTP"] = doctorprofile.totp_secret is not None
             ret["email"] = doctorprofile.email or ''
             ret["doc_pk"] = doctorprofile.pk
             ret["rmis_location"] = doctorprofile.rmis_location
@@ -2060,6 +2062,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/dispensary-plan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
         {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
         {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/employees", "title": "Управление сотрудниками", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
