@@ -43,6 +43,7 @@ urlpatterns = [
     path('statistic/commercial-offer', statistic.views.commercial_offer_xls),
     path('statistic/harmful-factors', statistic.views.get_harmful_factors),
     path('ajax_select/', include(ajax_select_urls)),
+    path('admin/login/', RedirectView.as_view(url='/')),
     path('admin/', admin.site.urls),
     path('construct/', include('construct.urls')),
     path('api/', include('api.urls')),

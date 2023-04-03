@@ -9,7 +9,11 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'key', 'active')
 
 
-admin.site.register(models.RelationFractionASTM)
+@admin.register(models.RelationFractionASTM)
+class RelationFractionASTMAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'fraction', 'signs_after_point', 'full_round')
+    autocomplete_fields = ('fraction',)
+
 
 admin.site.register(models.RelationCultureASTM)
 

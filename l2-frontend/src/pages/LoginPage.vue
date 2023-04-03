@@ -23,6 +23,15 @@
             name="password"
             placeholder="Пароль"
           >
+          <input
+            v-if="needTotp"
+            id="input-totp"
+            v-model="totp"
+            type="text"
+            class="form-control input-lg"
+            name="totp"
+            placeholder="Введите код двухфакторной аутентификации"
+          >
           <button
             class="btn btn-lg btn-primary-nb btn-block"
             type="submit"
@@ -177,7 +186,9 @@ import { sendEvent } from '@/metrics';
       loosePassword: false,
       loading: false,
       hasCodeSend: false,
+      needTotp: false,
       code: '',
+      totp: '',
     };
   },
   watch: {
@@ -209,6 +220,10 @@ export default class LoginPage extends Vue {
   loading: boolean;
 
   hasCodeSend: boolean;
+
+  needTotp: boolean;
+
+  totp: string;
 
   get system() {
     return this.$systemTitle();
@@ -288,9 +303,14 @@ export default class LoginPage extends Vue {
       orgId,
       orgTitle,
       userId,
-    } = await this.$api('users/auth', this, ['username', 'password']);
+      totp,
+    } = await this.$api('users/auth', this, ['username', 'password', 'totp']);
     await this.$store.dispatch(actions.DEC_LOADING);
     if (!ok) {
+      if (totp) {
+        this.needTotp = true;
+        return;
+      }
       this.$toast.error(message, {
         position: POSITION.BOTTOM_RIGHT,
         timeout: 8000,
@@ -374,6 +394,10 @@ export default class LoginPage extends Vue {
 #input-password {
   margin-bottom: 10px;
   border-radius: 0 0 5px 5px;
+}
+
+#input-totp {
+  margin-bottom: 10px;
 }
 
 @media (max-width: 450px) {
