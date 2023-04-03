@@ -1,166 +1,109 @@
-from users.models import DoctorProfile
-from podrazdeleniya.models import Chamber, Bed, PatienToBed
+from podrazdeleniya.models import Chamber, Bed, PatientToBed
 
 import simplejson as json
 from django.http import JsonResponse
 
 from directory.models import Researches
-from directions.models import Issledovaniya
+from directions.models import Issledovaniya, Napravleniya
+
+from clients.models import Individual
+
+import datetime
 
 
-def get_list_patients(request):
+def get_unallocated_patients(request):
     request_data = json.loads(request.body)
-    department_pk = request_data.get('department_pk', -1)
-    # print(department_pk)
-    researches_pk = list(Researches.objects.values_list('pk', flat=True).filter(podrazdeleniye_id=int(department_pk)))
-    # print(researches_pk)
-    if not researches_pk:
-        return JsonResponse({"result": []})
-    clients = [{"fio": i.napravleniye.client.individual.fio(),
-                "age": i.napravleniye.client.individual.age(),
-                "sex": i.napravleniye.client.individual.sex,
-                "pk": i.napravleniye.client.individual.pk} for i in Issledovaniya.objects.filter(research_id__in=researches_pk, hospital_department_override_id=department_pk)]
-    # print(clients)
-    return JsonResponse({"data": clients})
+    patients_obj = get_patients(request_data.get('department_pk', -1))
+    patients = filter_patient(patients_obj)
+    return JsonResponse({"data": patients})
 
 
-def get_chambers_and_bed(request):
+def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
-    department_pk = request_data.get('department_pk', -1)
     chambers = []
-    for i in Chamber.objects.filter(podrazdelenie_id=int(department_pk)):
+    for i in Chamber.objects.filter(podrazdelenie_id=int(request_data.get('department_pk', -1))):
         chamber = {
             "pk": i.pk,
             "label": i.title,
             "beds": [],
         }
         for j in Bed.objects.filter(chamber=i.pk):
-            history = PatienToBed.objects.filter(bed=j.pk, status=True).first()
+            history = PatientToBed.objects.filter(bed=j.pk, extract__isnull=True).last()
             if history:
+                direction_obj = Napravleniya.objects.get(pk=history.patient.pk)
+                ind_card = direction_obj.client
+                patient_data = ind_card.get_data_individual()
+                clients_obj = Individual.objects.get(pk=history.patient.pk)
+                short_fio = clients_obj.fio(short=True, dots=True)
                 chamber["beds"].append(
                     {
                         "pk": j.pk,
                         "bed_number": j.bed_number,
-                        "statusSex": '',
-                        "contents": [{"sex": history.patient.napravleniye.client.individual.sex, "age": history.patient.napravleniye.client.individual.age()}]
-                    })
+                        "doc": {
+                            'id': direction_obj.doc.pk,
+                            'label': direction_obj.doc.fio,
+                        },
+                        "contents": [
+                            {
+                                "fio": patient_data["fio"],
+                                "short_fio": short_fio,
+                                "age": patient_data["age"],
+                                "sex": patient_data["sex"],
+                                "pk": history.patient_id
+                            }
+                        ]
+                    }
+                )
+                print(chamber["beds"])
             else:
                 chamber["beds"].append(
                     {
                         "pk": j.pk,
                         "bed_number": j.bed_number,
-                        "statusSex": '',
+                        'doc': '',
                         "contents": []
                     }
                 )
         chambers.append(chamber)
-    # print(chambers)
-    # chambers = [{'label': g.title, 'pk': g.pk} for g in Chamber.objects.filter(podrazdelenie_id=int(department_pk))]
     return JsonResponse({"data": chambers})
 
 
-# def get_beds(request):
-#     request_data = json.loads(request.body)
-#     department_pk = request_data.get('department_pk', -1)
-#     # print(department_pk)
-#     chambers_pk = list(Chamber.objects.values_list('pk', flat=True).filter(podrazdelenie_id=int(department_pk)))
-#     # print(chambers_pk)
-#     beds = [{'bedNumber': bed.bed_number,
-#              'pk': bed.pk,
-#              'pkChamber': bed.chamber_id,
-#              'status': bed.status_bed,
-#              'sexStatus': '',
-#              'ageStatus': '',
-#              'contents': []} for bed in Bed.objects.filter(chamber_id__in=chambers_pk)]
-#     for i in beds:
-#         patient = PatienToBed.objects.filter(bed=i["pk"], status=True).first()
-#         if patient:
-#             i["sexStatus"] = patient.napravleniye.client.individual.sex
-#             i["ageStatus"] = patient.napravleniye.client.individual.age()
-#
-#     return JsonResponse({"data": beds})
-
-#
-def load_data_bed(request):
+def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
-    chambers = get_color_and_status(request_data.get('chambers'))
-    # print(beds)
-    return JsonResponse({"data": chambers})
+    bed_obj = request_data.get('beds')
+    if not PatientToBed.objects.filter(bed_id=bed_obj["pk"], extract=None):
+        bed = bed_obj['contents'][0]
+        PatientToBed(patient_id=bed["pk"], bed_id=bed_obj["pk"]).save()
+        bed_obj["statusSex"] = bed["sex"]
+    return JsonResponse({'ok': True})
 
 
-def get_color_and_status(chambers):
-    # print(chambers)
-    for g in chambers:
-        # print(g)
-        for i in g["beds"]:
-            # print(i)
-            if i["contents"]:
-                for j in i["contents"]:
-                    print(j)
-                    if j["sex"] == 'м':
-                        i["statusSex"] = 'man'
-                    else:
-                        i["statusSex"] = 'women'
-    print(chambers)
-    return chambers
-    # for g in beds:
-    #     if g['contents']:
-    #         g['status'] = False
-    #         res = g['contents']
-    #         # print(res)
-    #         for key in res:
-    #             if key['age'] > 7:
-    #                 g['ageStatus'] = True
-    #             else:
-    #                 g['ageStatus'] = False
-    #             if key['sex'] == 'м':
-    #                 g['sexStatus'] = 'man'
-    #             else:
-    #                 g['sexStatus'] = 'women'
-    #     else:
-    #         g['status'] = True
-    #         g['sexStatus'] = ''
-    # return beds
+def extract_patient_bed(request):
+    request_data = json.loads(request.body)
+    patient_obj = request_data.get('patient')
+    patient = PatientToBed.objects.filter(patient_id=patient_obj["pk"], extract=None).first()
+    patient.extract = datetime.datetime.today()
+    patient.save()
+    return JsonResponse({'ok': True})
 
 
-# def get_color_and_status(beds):
-#     for g in beds:
-#         if g['contents']:
-#             g['status'] = False
-#             res = g['contents']
-#             # print(res)
-#             for key in res:
-#                 if key['sex'] == 'м':
-#                     g['sexStatus'] = 'man'
-#                 else:
-#                     g['sexStatus'] = 'women'
-#         else:
-#             g['status'] = True
-#             g['sexStatus'] = ''
-#     return beds
-#
-#
-# def check_age(key):
-#     # print(key)
-#     age = []
-#     for g in key:
-#         # print(g)
-#         if not g['status']:
-#             # print(g)
-#             result = g['contents']
-#             # print(result)
-#             for i in result:
-#                 # print(i)
-#                 age.append(i['age'])
-#     # print(age)
-#     if not len(age) == 1:
-#         min_age = min(age)
-#         print(min_age)
-#         max_age = max(age)
-#         print(max_age)
-#         if min_age == max_age:
-#             key.append('OK')
-#         else:
-#             key.append('Ошибка: Девочка и мальчик в одной палате')
-#         print(key)
-#     return 'hello'
+def filter_patient(patients):
+    patients_beds = [patient.patient.pk for patient in PatientToBed.objects.filter(extract=None)]
+    filtered_patients = []
+    for i in patients:
+        if i["pk"] not in patients_beds:
+            filtered_patients.append(i)
+    return filtered_patients
+
+
+def get_patients(pk):
+    researches_pk = list(Researches.objects.values_list('pk', flat=True).filter(podrazdeleniye_id=pk))
+    if not researches_pk:
+        return JsonResponse({"result": []})
+    clients_obj = [{"fio": i.napravleniye.client.individual.fio(),
+                    "age": i.napravleniye.client.individual.age(),
+                    "short_fio": i.napravleniye.client.individual.fio(short=True, dots=True),
+                    "sex": i.napravleniye.client.individual.sex,
+                    "pk": i.napravleniye.client.individual.pk} for i in Issledovaniya.objects.filter(research_id__in=researches_pk, hospital_department_override_id=pk).exclude()]
+    return clients_obj
+
