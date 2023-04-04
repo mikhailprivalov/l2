@@ -5,10 +5,6 @@
         <h5 class="text-center">
           {{ isNewCompany ? 'Добавить компанию' : 'Обновить компанию' }}
         </h5>
-        <div
-          v-if="!isNewCompany"
-          class="add-file"
-        />
         <h6
           v-if="!isNewCompany"
           class="text-center margin-right margin-left"
@@ -118,6 +114,18 @@
               v-if="!isNewCompany"
               class="button"
             >
+              <input
+                v-model="date"
+                type="date"
+              >
+              <button
+                v-tippy
+                title="Списки на мед. осмотр"
+                class="btn last btn-blue-nb nbr"
+                @click="showModal()"
+              >
+                Списки
+              </button>
               <ul class="nav navbar">
                 <LoadFile :company-inn="editorCompany.inn" />
               </ul>
@@ -242,6 +250,57 @@
         </div>
       </div>
     </div>
+    <Modal
+      v-if="modal"
+      ref="modal"
+      margin-top="30px"
+      margin-left-right="auto"
+      max-width="600px"
+      height="500px"
+      show-footer="true"
+      white-bg="true"
+      width="100%"
+      @close="hideModal"
+    >
+      <span slot="header">Список на мед осмотр</span>
+      <div
+        slot="body"
+      >
+        <table class="table table-bordered">
+          <colgroup>
+            <col>
+          </colgroup>
+          <tr
+            v-if="filteredCompany.length === 0"
+            class="text-center"
+          >
+            <td
+              class="title"
+              colspan="2"
+            >
+              Нет данных
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+          </tr>
+        </table>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-10" />
+          <div class="col-xs-2">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hideModal"
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -251,10 +310,11 @@ import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import LoadFile from '@/ui-cards/LoadFile.vue';
+import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   name: 'ConstructCompany',
-  components: { LoadFile, VueTippyTd },
+  components: { LoadFile, VueTippyTd, Modal },
   data() {
     return {
       companies: [],
@@ -266,6 +326,8 @@ export default {
       newDepartment: '',
       editorCompany: {},
       originShortTitle: '',
+      date: '',
+      modal: false,
     };
   },
   computed: {
@@ -292,6 +354,7 @@ export default {
   mounted() {
     this.getCompanies();
     this.getContracts();
+    this.getDateNow();
   },
   methods: {
     async getCompanies() {
@@ -380,6 +443,10 @@ export default {
         }
       }
     },
+    getDateNow() {
+      const today = new Date();
+      this.date = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    },
     showModal() {
       this.modal = true;
     },
@@ -388,7 +455,7 @@ export default {
       if (this.$refs.modal) {
         this.$refs.modal.$el.style.display = 'none';
       }
-      this.$root.$emit('hide_download_file');
+      this.$root.$emit('hide_examination_list');
     },
   },
 };
@@ -457,8 +524,7 @@ export default {
 .noborder {
   border: none;
 }
-.add-file {
-  width: 130px;
-  margin: 0 auto;
+::v-deep .navbar {
+  margin-bottom: 0;
 }
 </style>
