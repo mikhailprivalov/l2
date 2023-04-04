@@ -4,7 +4,7 @@
       <slot name="left" />
     </div>
     <div :class="$style.center">
-      <slot name="left" />
+      <slot name="center" />
     </div>
     <div :class="$style.right">
       <slot name="right" />

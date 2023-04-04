@@ -65,6 +65,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/transfer-card',
+      name: 'transfer_card',
+      component: () => import('@/pages/TransferDocument/TransferCard.vue'),
+      meta: {
+        title: 'Движение карт',
+        groups: ['Лечащий врач', 'Оператор лечащего врача'],
+      },
+    },
+    {
       path: '/ui/construct/menu',
       name: 'construct_menu',
       component: () => import('@/construct/ConstructMenu.vue'),
