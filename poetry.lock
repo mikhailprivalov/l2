@@ -276,18 +276,18 @@ dev = ["Sphinx (==4.3.2)", "black (==22.3.0)", "build (==0.8.0)", "flake8 (==4.0
 
 [[package]]
 name = "boto3"
-version = "1.26.103"
+version = "1.26.106"
 description = "The AWS SDK for Python"
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "boto3-1.26.103-py3-none-any.whl", hash = "sha256:c02dd0c4bc5adf70f49361141dba61d8795433a1b60d24e0a8a6bee912b267ee"},
-    {file = "boto3-1.26.103.tar.gz", hash = "sha256:7fa84b8ca6fbb544e4093ad8d91729c61e3526040759c7c3dbaaa34f1862e0b0"},
+    {file = "boto3-1.26.106-py3-none-any.whl", hash = "sha256:53d449bc3445da0a8812857f3e24e143dc56573bc365f36a5610900b09d06faf"},
+    {file = "boto3-1.26.106.tar.gz", hash = "sha256:bdabab7ad27ae86de22a8687cbf55d8a152c6d6f178ffb452e560bac0be957a7"},
 ]
 
 [package.dependencies]
-botocore = ">=1.29.103,<1.30.0"
+botocore = ">=1.29.106,<1.30.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.6.0,<0.7.0"
 
@@ -296,14 +296,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.29.103"
+version = "1.29.106"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.29.103-py3-none-any.whl", hash = "sha256:e020173473b254c913a03c16bef179751095a6331f113d5206ae7d47340abfc2"},
-    {file = "botocore-1.29.103.tar.gz", hash = "sha256:30bd3fffc878cd5724c0e9a18629210da7f1efbcb6e668213a79153cc2dfd474"},
+    {file = "botocore-1.29.106-py3-none-any.whl", hash = "sha256:d50df9a39da1b0e475727c6c2ba141b44d9df527d3dc1936b264ee4cb1525ab7"},
+    {file = "botocore-1.29.106.tar.gz", hash = "sha256:eaaa669fe33a0ef2e9d345a98ed0befac1ea33395d63620913c1bb738c387d4d"},
 ]
 
 [package.dependencies]
@@ -2139,4 +2139,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "18848e91e57255ed5f92aa90a4ff9e570fb1aaa16ac733a6aeceaf4c21de6be8"
+content-hash = "f3b64140b9b3be630d8dfd0450274a379c3bed6378f33b6a326ba32ab0596900"
