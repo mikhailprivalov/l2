@@ -91,29 +91,10 @@ def add_factors_from_file(request):
                 request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
                 current_patient = check_enp(request_obj)
                 if current_patient.data.get("message"):
-                    params_tfoms_fio = {
-                        "enp": "",
-                        "family": cells[fio].split(' ')[0],
-                        "name": cells[fio].split(' ')[1],
-                        "bd": cells[birthday].split(' ')[0].replace('-', ''),
-                        "check_mode": "l2-enp-full",
-                    }
-                    params_internal_fio = {
-                        "type": CardBase.objects.get(internal_type=True).pk,
-                        "extendedSearch": True,
-                        "form": {
-                            "family": cells[fio].split(' ')[0],
-                            "name": cells[fio].split(' ')[1],
-                            "patronymic": cells[fio].split(' ')[2],
-                            "birthday": cells[birthday].split(' ')[0].replace('-', ''),
-                            "archive": False,
-                        },
-                        "limit": 1,
-                    }
-                    patient_card = search_by_fio(request_obj, params_tfoms_fio, params_internal_fio)
+                    patient_card = search_by_fio(request_obj, cells[fio], cells[birthday])
                     if not patient_card:
                         possible_family = find_and_replace(cells[fio].split(' ')[0], 'е', 'ё')
-                        patient_card = search_by_possible_fio(request_obj, params_tfoms_fio, params_internal_fio, possible_family)
+                        patient_card = search_by_possible_fio(request_obj, cells[fio], cells[birthday], possible_family)
                         if not patient_card:
                             patient_indv = Individual(
                                 family=cells[fio].split(' ')[0],
@@ -237,8 +218,27 @@ def load_csv(request):
     return JsonResponse({"ok": True, "results": results, "method": method})
 
 
-def search_by_fio(request_obj: HttpRequest, params_tfoms: dict, params_internal: dict) -> Card | str:
+def search_by_fio(request_obj: HttpRequest, fio: str, birthday: str) -> Card | str:
     patient_card = ''
+    params_tfoms = {
+        "enp": "",
+        "family": fio.split(' ')[0],
+        "name": fio.split(' ')[1],
+        "bd": birthday.split(' ')[0].replace('-', ''),
+        "check_mode": "l2-enp-full",
+    }
+    params_internal = {
+        "type": CardBase.objects.get(internal_type=True).pk,
+        "extendedSearch": True,
+        "form": {
+            "family": fio.split(' ')[0],
+            "name": fio.split(' ')[1],
+            "patronymic": fio.split(' ')[2],
+            "birthday": birthday.split(' ')[0].replace('-', ''),
+            "archive": False,
+        },
+        "limit": 1,
+    }
     request_obj._body = params_tfoms
     current_patient = check_enp(request_obj)
     if current_patient.data.get("message"):
@@ -269,14 +269,13 @@ def find_and_replace(text: str, symbol1: str, symbol2: str) -> list:
     return result
 
 
-def search_by_possible_fio(request_obj: HttpRequest, params_tfoms: dict, params_internal: dict, possible_family: list) -> Card | str:
+def search_by_possible_fio(request_obj: HttpRequest, fio: str, birthday: str, possible_family: list) -> Card | str:
     if not possible_family:
         return ''
     patient_card = ''
     for i in possible_family:
-        params_tfoms["family"] = i
-        params_internal["form"]["family"] = i
-        patient_card = search_by_fio(request_obj, params_tfoms, params_internal)
+        current_fio = i + " " + fio.split(' ')[1] + " " + fio.split(' ')[2]
+        patient_card = search_by_fio(request_obj, current_fio, birthday)
         if patient_card:
             break
         else:
