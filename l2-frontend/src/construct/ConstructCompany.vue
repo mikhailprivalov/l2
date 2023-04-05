@@ -110,27 +110,27 @@
                 :label="isNewCompany ? 'Добавить' : 'Сохранить'"
               />
             </div>
-            <div
-              v-if="!isNewCompany"
-              class="button"
-            >
-              <input
-                v-model="date"
-                type="date"
-              >
-              <button
-                v-tippy
-                title="Списки на мед. осмотр"
-                class="btn last btn-blue-nb nbr"
-                @click="showModal()"
-              >
-                Списки
-              </button>
-              <ul class="nav navbar">
-                <LoadFile :company-inn="editorCompany.inn" />
-              </ul>
-            </div>
           </FormulateForm>
+          <div
+            v-if="!isNewCompany"
+            class="button"
+          >
+            <input
+              v-model="date"
+              type="date"
+              class="form-control date-input"
+            >
+            <button
+              v-tippy
+              title="Списки на мед. осмотр"
+              class="btn last btn-blue-nb nbr"
+            >
+              Списки
+            </button>
+            <ul class="nav navbar add-file">
+              <LoadFile :company-inn="editorCompany.inn" />
+            </ul>
+          </div>
         </div>
       </div>
       <div class="box card-1 card-no-hover">
@@ -392,17 +392,8 @@ export default {
       }
     },
     getDateNow() {
-      this.date = new Date().;
-    },
-    showModal() {
-      this.modal = true;
-    },
-    hideModal() {
-      this.modal = false;
-      if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none';
-      }
-      this.$root.$emit('hide_examination_list');
+      const DateNow = new Date().toISOString().split('T')[0];
+      this.date = DateNow;
     },
   },
 };
@@ -473,5 +464,14 @@ export default {
 }
 ::v-deep .navbar {
   margin-bottom: 0;
+}
+.add-file {
+  width: 140px;
+}
+.date-input {
+  width: 120px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  border-radius: 0
 }
 </style>

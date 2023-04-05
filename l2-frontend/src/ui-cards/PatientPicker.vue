@@ -790,7 +790,6 @@ export default {
       benefit: false,
       harmful_factor: false,
       template_editor: false,
-      examination_list: false,
       vaccine: false,
       suggests: {
         focused: -1,
@@ -1042,9 +1041,6 @@ export default {
     });
     this.$root.$on('hide_template_editor', () => {
       this.template_editor = false;
-    });
-    this.$root.$on('hide_examination_list', () => {
-      this.examination_list = false;
     });
     this.$root.$on('hide_vaccine', () => {
       this.vaccine = false;
