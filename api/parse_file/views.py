@@ -278,6 +278,4 @@ def search_by_possible_fio(request_obj: HttpRequest, fio: str, birthday: str, po
         patient_card = search_by_fio(request_obj, current_fio, birthday)
         if patient_card:
             break
-        else:
-            continue
     return patient_card
