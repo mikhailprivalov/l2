@@ -1,6 +1,9 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
+from directory.models import Researches
+from utils.dates import normalize_date
+
 
 def offer_base(ws1):
     style_border = NamedStyle(name="style_border_ca5")
@@ -81,12 +84,14 @@ def register_data(ws1, patients, research_price):
     start_row = r + 1
     current_patient = ""
     current_patient_step = 0
+    sum_rows = []
     for i in patients:
         r += 1
         if current_patient != i.get("fio", "-"):
             current_patient_step += 1
             ws1.cell(row=r, column=1).value = current_patient_step
-            ws1.cell(row=r, column=2).value = i.get("fio", "-")
+            born_date = normalize_date(i.get("born"))
+            ws1.cell(row=r, column=2).value = f'{i.get("fio", "-")} ({born_date}-{i.get("age", "age")})'
             ws1.cell(row=r, column=3).value = i.get("position", "-")
             ws1.cell(row=r, column=4).value = i.get("harmful_factor", "-")
             start_row = r
@@ -94,14 +99,24 @@ def register_data(ws1, patients, research_price):
         is_researches = False
         for k in i.get("researches"):
             r += 1
-            research_title = research_price.get(k, "-@0").split("@")
-            ws1.cell(row=r, column=5).value = research_title[0]
-            ws1.cell(row=r, column=6).value = float(research_title[1])
+            research_data = research_price.get(k, "-@0").split("@")
+            if research_data[0] == "-":
+                research_title = Researches.objects.filter(pk=k).first().title
+            else:
+                research_title = research_data[0]
+            ws1.cell(row=r, column=5).value = research_title
+            ws1.cell(row=r, column=6).value = float(research_data[1])
             is_researches = True
         if not is_researches:
             r += 1
         r += 1
-        ws1.cell(row=r, column=1).value = 'Итого по пациенту'
+        ws1.cell(row=r, column=2).value = 'Итого по пациенту'
         ws1.cell(row=r, column=6).value = f'=SUM({get_column_letter(6)}{start_row}:{get_column_letter(6)}{r - 1})'
-
+        sum_rows.append(r)
+    r += 1
+    ws1.cell(row=r, column=2).value = 'Итого всего'
+    formula = "=SUM("
+    for i in sum_rows:
+        formula = f"{formula} + {get_column_letter(6)}{i}"
+    ws1.cell(row=r, column=6).value = f"{formula})"
     return ws1
