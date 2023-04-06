@@ -20,7 +20,7 @@
         <div slot="body">
           <template v-if="l2_load_file">
             <div class="form-group">
-              <label for="fileInput"> {{ company === true ? 'XLSX файл' : 'PDF файл' }}</label>
+              <label for="fileInput"> {{ company === true ? 'XLSX файл' : 'PDF' }}</label>
               <input
                 id="fileInput"
                 ref="file"
@@ -73,7 +73,7 @@
           <h5 v-if="results.length > 0">
             {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
-          <ul v-if="results.length !== 0">
+          <ul v-if="results.length !== 0 && !link">
             <li v-if="method">
               Методика: {{ method }}
             </li>
@@ -198,7 +198,7 @@ export default {
         this.$root.$emit('msg', 'ok', 'Файл загружен');
         this.link = data.link;
         if (this.link) {
-          window.open(`/statistic/${this.link}?offer=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
+          window.open(`/statistic/${this.link}?file=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
         }
       } catch (e) {
         // eslint-disable-next-line no-console
