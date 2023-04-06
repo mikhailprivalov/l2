@@ -185,8 +185,7 @@ def gen_commercial_offer(request):
             if adds_harmfull:
                 for i in sorted(adds_harmfull.keys()):
                     if age < i:
-                        val_adds_harmfull = adds_harmfull[i]
-                        harmful_factor_data.append(val_adds_harmfull)
+                        harmful_factor_data.append(adds_harmfull[i])
                         break
             templates_data = HarmfulFactor.objects.values_list("template_id", flat=True).filter(title__in=harmful_factor_data)
             researches_data = AssignmentResearches.objects.values_list('research_id', flat=True).filter(template_id__in=templates_data)
