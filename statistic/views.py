@@ -2004,7 +2004,7 @@ def open_xls(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = "attachment; filename=\"Register.xlsx\""
     request_data = request.POST if request.method == "POST" else request.GET
-    file_name = request_data.get("file").replace('"',"")
+    file_name = request_data.get("file").replace('"', "")
     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
     file_dir = os.path.join(dir_param, file_name)
     wb = load_workbook(file_dir)
