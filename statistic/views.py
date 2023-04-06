@@ -15,7 +15,7 @@ import directory.models as directory
 import slog.models as slog
 from api.directions.sql_func import get_lab_podr
 from appconf.manager import SettingManager
-from clients.models import CardBase, Card, PatientHarmfullFactor
+from clients.models import CardBase
 from contracts.models import PriceName, PriceCoast, Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
@@ -26,7 +26,7 @@ from researches.models import Tubes
 from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expertis_results_by_issledovaniya
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
-from utils.dates import try_parse_range, normalize_date, try_strptime
+from utils.dates import try_parse_range, normalize_date
 from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
 from . import sql_func
 from . import structure_sheet
