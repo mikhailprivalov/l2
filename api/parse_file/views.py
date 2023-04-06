@@ -14,6 +14,7 @@ from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company
+from statistic.views import commercial_offer_xls_save_file
 from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
 from integration_framework.views import check_enp
@@ -142,7 +143,7 @@ def load_file(request):
     link = ""
     if request.POST.get('isGenCommercialOffer') == "true":
         results = gen_commercial_offer(request)
-        link = "commercial-offer"
+        link = "open-xls"
     elif len(request.POST.get('companyInn')) != 0:
         results = add_factors_from_file(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
@@ -159,12 +160,16 @@ def gen_commercial_offer(request):
     ws = wb[wb.sheetnames[0]]
     starts = False
     counts_research = {}
+    patients = []
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
             if "код вредности" in cells:
                 starts = True
                 harmful_factor = cells.index("код вредности")
+                fio = cells.index("фио")
+                born = cells.index("дата рождения")
+                position = cells.index("должность")
         else:
             harmful_factor_data = [i.replace(" ", "") for i in cells[harmful_factor].split(",")]
             templates_data = HarmfulFactor.objects.values_list("template_id", flat=True).filter(title__in=harmful_factor_data)
@@ -175,8 +180,13 @@ def gen_commercial_offer(request):
                     counts_research[r] += 1
                 else:
                     counts_research[r] = 1
+            patients.append({"fio": cells[fio], "born": cells[born], "harmful_factor": cells[harmful_factor], "position": cells[position], "researches": researches_data})
+
     price_data = PriceCoast.objects.filter(price_name__id=selected_price, research_id__in=list(counts_research.keys()))
-    return [{'title': k.research.title, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
+    data_price = [{'title': k.research.title, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
+    research_price = {d.research.pk: f"{d.research.title}@{d.coast}" for d in price_data}
+    file_name = commercial_offer_xls_save_file(data_price, patients, research_price)
+    return file_name
 
 
 def load_csv(request):

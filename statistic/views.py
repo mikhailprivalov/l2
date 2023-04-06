@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 from copy import deepcopy
 
@@ -8,11 +9,13 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone, dateformat
 from django.views.decorators.csrf import csrf_exempt
+from openpyxl.reader.excel import load_workbook
 
 import directory.models as directory
 import slog.models as slog
 from api.directions.sql_func import get_lab_podr
-from clients.models import CardBase
+from appconf.manager import SettingManager
+from clients.models import CardBase, Card, PatientHarmfullFactor
 from contracts.models import PriceName, PriceCoast, Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
@@ -23,7 +26,7 @@ from researches.models import Tubes
 from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expertis_results_by_issledovaniya
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
-from utils.dates import try_parse_range, normalize_date
+from utils.dates import try_parse_range, normalize_date, try_strptime
 from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
 from . import sql_func
 from . import structure_sheet
@@ -1922,21 +1925,24 @@ def sreening_xls(request):
     return response
 
 
-@csrf_exempt
-@login_required
-def commercial_offer_xls(request):
-    response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = "attachment; filename=\"Specification.xlsx\""
+def commercial_offer_xls_save_file(data_offer, patients, research_price):
     wb = openpyxl.Workbook()
     wb.remove(wb.get_sheet_by_name('Sheet'))
     ws = wb.create_sheet("Спецификация")
     ws = commercial_offer.offer_base(ws)
-    request_data = request.POST if request.method == "POST" else request.GET
-    data_offer = request_data.get("offer", "")
-    data_offer = json.loads(data_offer)
     ws = commercial_offer.offer_fill_data(ws, data_offer)
-    wb.save(response)
-    return response
+
+    ws = wb.create_sheet("Реестр")
+    ws = commercial_offer.register_base(ws)
+    ws = commercial_offer.register_data(ws, patients, research_price)
+
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = "offer" + str(date_now1)
+    file_dir = os.path.join(dir_param, date_now_str + '.xlsx')
+    wb.save(filename=file_dir)
+    return file_dir
 
 
 @csrf_exempt
@@ -1959,6 +1965,51 @@ def get_harmful_factors(request):
         data_template_meta[k.template_id]['research_title'] = f"{data_template_meta[k.template_id]['research_title']};  {k.title}"
     ws = harmful_factors.harmful_factors_fill_data(ws, data_template_meta)
     wb.save(response)
+    return response
+
+
+@csrf_exempt
+@login_required
+def company_register_xls(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Register.xlsx\""
+    # wb = openpyxl.Workbook()
+    # wb.remove(wb.get_sheet_by_name('Sheet'))
+    # ws = wb.create_sheet("Реестр")
+    # ws = commercial_offer.offer_base(ws)
+    # request_data = request.POST if request.method == "POST" else request.GET
+    # company_id = int(request_data.get("company", -1))
+    # date = request_data.get("date")
+    # start_date = try_strptime(date, formats=('%Y-%m-%d', '%d.%m.%Y'))
+    # end_date = start_date + datetime.timedelta(days=1)
+    # price = get_price_company(company_id, start_date, end_date)
+    #
+    # cards = Card.objects.values_list('pk', flat=True).filter(work_place_db_id=company_id, prognos_date_medical_examination=start_date)
+    # print(cards)
+    # harmful_factors_data = PatientHarmfullFactor.objects.values_list('harmful_factor_id', flat=True).filter(card_id__in=cards)
+    # unique_harmful_factors = set(harmful_factors_data)
+    # print(harmful_factors)
+    #
+    # # ws = commercial_offer.offer_fill_data(ws, data_offer)
+    file_dir = '/Users/sergej/Downloads/99995.xlsx'
+    wb = load_workbook('/Users/sergej/Downloads/99995.xlsx')
+    wb.save(response)
+    os.remove(file_dir)
+    return response
+
+
+@csrf_exempt
+@login_required
+def open_xls(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Register.xlsx\""
+    request_data = request.POST if request.method == "POST" else request.GET
+    file_name = request_data.get("file").replace('"',"")
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_dir = os.path.join(dir_param, file_name)
+    wb = load_workbook(file_dir)
+    wb.save(response)
+    os.remove(file_dir)
     return response
 
 
