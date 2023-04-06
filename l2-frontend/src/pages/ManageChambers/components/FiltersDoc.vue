@@ -1,12 +1,11 @@
 <template>
   <div>
     <Treeselect
-      v-model="/* eslint-disable-line vue/no-mutating-props */ filters.doctor_pk"
+      v-model="/* eslint-disable-line vue/no-mutating-props */ filters.departmentDoc_pk"
       :multiple="false"
       :disable-branch-nodes="true"
-      :options="doctors"
-      :z-index="10001"
-      placeholder="Лечащий врач не выбран"
+      :options="departments"
+      placeholder="Отделение не выбрано"
       :append-to-body="true"
     />
   </div>
@@ -25,8 +24,8 @@ export default {
       type: Object,
       required: true,
     },
-    doctors: {
-      type: Object,
+    departments: {
+      type: Array,
       required: true,
     },
   },
