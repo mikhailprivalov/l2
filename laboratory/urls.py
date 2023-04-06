@@ -40,7 +40,6 @@ urlpatterns = [
     path('laboratory/', include('results.urls')),
     path('statistic/xls', statistic.views.statistic_xls),
     path('statistic/screening', statistic.views.sreening_xls),
-    path('statistic/company-register', statistic.views.company_register_xls),
     path('statistic/open-xls', statistic.views.open_xls),
     path('statistic/harmful-factors', statistic.views.get_harmful_factors),
     path('ajax_select/', include(ajax_select_urls)),

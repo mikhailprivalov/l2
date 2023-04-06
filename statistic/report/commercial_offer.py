@@ -85,6 +85,7 @@ def register_data(ws1, patients, research_price):
     current_patient = ""
     current_patient_step = 0
     sum_rows = []
+    count_sum = 0
     for i in patients:
         r += 1
         if current_patient != i.get("fio", "-"):
@@ -106,6 +107,7 @@ def register_data(ws1, patients, research_price):
                 research_title = research_data[0]
             ws1.cell(row=r, column=5).value = research_title
             ws1.cell(row=r, column=6).value = float(research_data[1])
+            count_sum += float(research_data[1])
             is_researches = True
         if not is_researches:
             r += 1
@@ -119,4 +121,5 @@ def register_data(ws1, patients, research_price):
     for i in sum_rows:
         formula = f"{formula} + {get_column_letter(6)}{i}"
     ws1.cell(row=r, column=6).value = f"{formula})"
+    ws1.cell(row=r, column=7).value = count_sum
     return ws1

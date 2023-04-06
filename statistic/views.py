@@ -1970,36 +1970,6 @@ def get_harmful_factors(request):
 
 @csrf_exempt
 @login_required
-def company_register_xls(request):
-    response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = "attachment; filename=\"Register.xlsx\""
-    # wb = openpyxl.Workbook()
-    # wb.remove(wb.get_sheet_by_name('Sheet'))
-    # ws = wb.create_sheet("Реестр")
-    # ws = commercial_offer.offer_base(ws)
-    # request_data = request.POST if request.method == "POST" else request.GET
-    # company_id = int(request_data.get("company", -1))
-    # date = request_data.get("date")
-    # start_date = try_strptime(date, formats=('%Y-%m-%d', '%d.%m.%Y'))
-    # end_date = start_date + datetime.timedelta(days=1)
-    # price = get_price_company(company_id, start_date, end_date)
-    #
-    # cards = Card.objects.values_list('pk', flat=True).filter(work_place_db_id=company_id, prognos_date_medical_examination=start_date)
-    # print(cards)
-    # harmful_factors_data = PatientHarmfullFactor.objects.values_list('harmful_factor_id', flat=True).filter(card_id__in=cards)
-    # unique_harmful_factors = set(harmful_factors_data)
-    # print(harmful_factors)
-    #
-    # # ws = commercial_offer.offer_fill_data(ws, data_offer)
-    file_dir = '/Users/sergej/Downloads/99995.xlsx'
-    wb = load_workbook('/Users/sergej/Downloads/99995.xlsx')
-    wb.save(response)
-    os.remove(file_dir)
-    return response
-
-
-@csrf_exempt
-@login_required
 def open_xls(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = "attachment; filename=\"Register.xlsx\""
