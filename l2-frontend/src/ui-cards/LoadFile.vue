@@ -20,7 +20,7 @@
         <div slot="body">
           <template v-if="l2_load_file">
             <div class="form-group">
-              <label for="fileInput"> {{ company === true ? 'XLSX файл' : 'файл' }}</label>
+              <label for="fileInput"> {{ company === true ? 'XLSX файл' : 'PDF' }}</label>
               <input
                 id="fileInput"
                 ref="file"
@@ -41,7 +41,7 @@
                 v-if="loading"
                 class="fa fa-spinner"
               />
-              <span v-else>Загрузить {{ company === true ? 'XLSX' : 'Файл' }}</span>
+              <span v-else>Загрузить {{ company === true ? 'XLSX' : 'PDF' }}</span>
             </button>
           </template>
           <template v-if="l2_csv_load_file">
