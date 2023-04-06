@@ -12,10 +12,13 @@
         <div
           class="sidebar-content"
         >
+          <h5 style="text-align: center">
+            Пациенты
+          </h5>
           <draggable
             v-model="unallocatedPatients"
-            :options="{group:{ name: 'unallocatedPatients', put: 'beds.contents'}, sort: false, ForceFallback: true}"
-            class="patient"
+            :options="{group:{ name: 'unallocatedPatients', put: 'patient'}, sort: false, ForceFallback: true}"
+            class="draggable-element"
             chosen-class="dragClass"
             animation="500"
             @change="extractPatientBed"
@@ -23,7 +26,7 @@
             <div
               v-for="patient in unallocatedPatients"
               :key="patient.pk"
-              class="patient-content"
+              class="content-research"
             >
               {{ patient.fio }}
             </div>
@@ -31,11 +34,31 @@
         </div>
       </div>
     </div>
-    <div>
+    <div class="construct-bottom-root">
+      <div class="construct-bottom-bar">
+        <div class="sidebar-content">
+          <h5 style="text-align: center">
+            Дома
+          </h5>
+          <draggable
+            v-model="attendingDoctor"
+            :options="{group:{
+                         name: 'PatientWithoutBeds',
+                         pull: ['unallocatedPatients', 'patient'],
+                         put: ['unallocatedPatients', 'patient']},
+                       sort: false,
+                       ForceFallback: true}"
+            class="draggable-element"
+            animation="500"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="scroll-div">
       <table class="table table-fixed table-bordered table-responsive table-condensed chamber-table">
         <colgroup>
           <col width="80">
-          <col width="670">
+          <col width="856">
         </colgroup>
         <thead>
           <tr>
@@ -63,17 +86,48 @@
                 v-for="bed in chamber.beds"
                 :key="bed.pk"
                 class="element"
+                :class="{ 'padding-element': bed.contents.length < 1}"
               >
                 <draggable
-                  v-model="bed.contents"
-                  :options="{group: { name: 'beds.contents', put: bed.contents < 1, pull: 'unallocatedPatients'}, sort: false}"
+                  v-model="bed.doctor"
+                  :options="{group:{
+                               name: 'doctor',
+                               put: conditionsDragDoc(bed),
+                               pull: 'attendingDoctor'},
+                             sort: false}"
                   animation="500"
-                  class="drag-and-drop-element"
+                  class="drag-and-drop"
+                  @change="changeDoctor($event, bed);"
+                >
+                  <i
+                    v-if="bed.doctor.length > 0"
+                    class="fa-solid fa-user-doctor"
+                    :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
+                    style="font-size: 20px"
+                  />
+                  <span
+                    v-if="bed.doctor.length < 1"
+                    style="font-size: 12px"
+                  >
+                    Б/В
+                  </span>
+                </draggable>
+                <draggable
+                  v-model="bed.contents"
+                  :options="{
+                    group:{
+                      name: 'patient',
+                      put: 'patient' || 'unallocatedPatients',
+                      pull: 'unallocatedPatients' || 'patient'
+                    },
+                    sort: false}"
+                  animation="500"
+                  class="drag-and-drop-patient"
                   @change="entrancePatientBed($event, bed)"
+                  @remove="clearArrayDoctor(bed)"
                 >
                   <div
-                    class="element"
-                    @click="showModal = bed.pk"
+                    style="display: inline-block"
                   >
                     <div
                       v-if="bed.contents.length > 0"
@@ -87,89 +141,27 @@
                     />
                   </div>
                 </draggable>
-                <span
-                  v-if="bed.contents.length > 0"
-                  class="element-fio"
+                <table
+                  v-if="bed.contents.length > 0 || bed.doctor.length > 0"
+                  class="table table-fixed table-bordered table-responsive table-condensed table-info"
                 >
-                  {{ bed.contents[0].short_fio }}
-                </span>
-                <Modal
-                  v-if="showModal === bed.pk"
-                  ref="modal"
-                  :z-index="5001"
-                  white-bg="true"
-                  max-width="710px"
-                  width="100%"
-                  show-footer="true"
-                  @close="showModal = ''"
-                >
-                  <span slot="header">Информация по пациенту</span>
-                  <div slot="body">
-                    <table class="table table-bordered ">
-                      <colgroup>
-                        <col width="124">
-                        <col>
-                      </colgroup>
-                      <tbody>
-                        <tr>
-                          <td class="table-header-row">
-                            Лечащий врач
-                          </td>
-                          <td class="table-content-row">
-                            <FiltersDoc
-                              :doctors="doctors"
-                              :filters="filters"
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="table-header-row"
-                          >
-                            ФИО:
-                          </td>
-                          <td
-                            v-if="bed.contents.length > 0"
-                            class="table-content-row"
-                          >
-                            {{ bed.contents[0].fio }}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="table-header-row">
-                            Возраст:
-                          </td>
-                          <td
-                            v-if="bed.contents.length > 0"
-                            class="table-content-row"
-                          >
-                            {{ bed.contents[0].age }} лет
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="table-header-row">
-                            Пол:
-                          </td>
-                          <td
-                            v-if="bed.contents.length > 0"
-                            class="table-content-row"
-                          >
-                            {{ bed.contents[0].sex }}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div slot="footer">
-                    <button
-                      class="btn btn-primary-nb btn-blue-nb"
-                      type="button"
-                      @click="showModal = ''"
+                  <tr>
+                    <td
+                      v-if="bed.contents.length > 0"
                     >
-                      Закрыть
-                    </button>
-                  </div>
-                </Modal>
+                      {{ bed.contents[0].short_fio }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="border-top: 2px solid #ddd;"
+                    >
+                      <div v-if="bed.doctor.length > 0 && bed.contents.length > 0">
+                        {{ bed.doctor[0].short_fio }}
+                      </div>
+                    </td>
+                  </tr>
+                </table>
               </div>
             </td>
           </tr>
@@ -181,14 +173,46 @@
         </tbody>
       </table>
     </div>
+    <div class="construct-right">
+      <div
+        class="construct-sidebar"
+      >
+        <FiltersDoc
+          :filters="filters"
+          :departments="departments"
+        />
+        <div
+          class="sidebar-content"
+          style="width: 297px"
+        >
+          <h5 style="text-align: center">
+            Врачи
+          </h5>
+          <draggable
+            v-model="attendingDoctor"
+            :options="{group:{ name: 'attendingDoctor', pull: 'clone', put: 'doctor'}, sort: false, ForceFallback: true}"
+            class="draggable-element"
+            chosen-class="dragClass"
+            animation="500"
+          >
+            <div
+              v-for="doctor in attendingDoctor"
+              :key="doctor.pk"
+              class="content-research"
+            >
+              {{ doctor.fio }}
+            </div>
+          </draggable>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import draggable from 'vuedraggable';
 
-import usersPoint from '@/api/user-point';
-import Modal from '@/ui-cards/Modal.vue';
+import * as actions from '@/store/action-types';
 
 import Filters from './components/Filters.vue';
 import FiltersDoc from './components/FiltersDoc.vue';
@@ -199,18 +223,16 @@ export default {
     Filters,
     draggable,
     FiltersDoc,
-    Modal,
   },
   data() {
     return {
       chambers: [],
       departments: [],
       unallocatedPatients: [],
-      doctors: [],
-      showModal: '',
+      attendingDoctor: [],
       filters: {
         department_pk: -1,
-        doctor_pk: -1,
+        departmentDoc_pk: -1,
       },
     };
   },
@@ -218,11 +240,17 @@ export default {
     department() {
       return this.filters.department_pk;
     },
+    departmentDoc() {
+      return this.filters.departmentDoc_pk;
+    },
   },
   watch: {
     department() {
       this.getUnallocatedPatients();
       this.loadChamberAndBed();
+    },
+    departmentDoc() {
+      this.getAttendingDoctor();
     },
   },
   mounted() {
@@ -230,31 +258,42 @@ export default {
   },
   methods: {
     async init() {
+      await this.$store.dispatch(actions.INC_LOADING);
       const { data } = await this.$api('procedural-list/suitable-departments');
       this.departments = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    async getDoctors(doc) {
-      const { users } = await usersPoint.loadUsersByGroup({ group: ['Лечащий врач'] });
-      this.doctors = [{ id: doc.id, label: doc.label }, ...users];
-      console.log(this.doctors);
+    async getAttendingDoctor() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const row = await this.$api('chambers/get-attending-doctor', {
+        department_pk: this.departmentDoc,
+      });
+      this.attendingDoctor = row.data;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async getUnallocatedPatients() {
+      await this.$store.dispatch(actions.INC_LOADING);
       const row = await this.$api('chambers/get-unallocated-patients', {
         department_pk: this.department,
       });
       this.unallocatedPatients = row.data;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async loadChamberAndBed() {
+      await this.$store.dispatch(actions.INC_LOADING);
       const row = await this.$api('chambers/get-chambers-and-beds', {
         department_pk: this.department,
       });
       this.chambers = row.data;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async entrancePatientBed({ added }, bed) {
       if (added) {
+        await this.$store.dispatch(actions.INC_LOADING);
         const ok = await this.$api('chambers/entrance-patient-to-bed', {
           beds: bed,
         });
+        await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Пациент поступил');
         }
@@ -262,13 +301,54 @@ export default {
     },
     async extractPatientBed({ added }) {
       if (added) {
+        await this.$store.dispatch(actions.INC_LOADING);
         const ok = await this.$api('chambers/extract-patient-bed', {
           patient: added.element,
         });
+        await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Пациент выписан');
         }
       }
+    },
+    async changeDoctor({ added, removed }, bed) {
+      if (added) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const ok = await this.$api('chambers/doctor-assigned-patient', {
+          beds: bed,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Лечащий врач закреплен');
+        }
+      }
+      if (removed) {
+        await this.getAttendingDoctor();
+        await this.$store.dispatch(actions.INC_LOADING);
+        const ok = await this.$api('chambers/doctor-detached-patient', {
+          doctor: removed.element,
+          beds: bed,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (ok) {
+          this.$root.$emit('msg', 'ok', 'Лечащий врач откреплен');
+        }
+      }
+    },
+    conditionsDragDoc(bed) {
+      if (bed.contents.length > 0 && bed.doctor.length < 1) {
+        return 'attendingDoctor';
+      }
+      return false;
+    },
+    conditionsDragBed(bed) {
+      if (bed.contents < 1) {
+        return 'unallocatedPatients';
+      }
+      return false;
+    },
+    clearArrayDoctor(bed) {
+      bed.doctor.pop();
     },
     colorWomen(val) {
       if (val.contents.length > 0) {
@@ -287,6 +367,44 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.scroll-div {
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: absolute;
+  top: 35px;
+  right: 0;
+  bottom: 0;
+  left: 300px;
+  width: 936px;
+  height: 500px;
+}
+.construct-right {
+  position: absolute;
+  top: 35px;
+  right: 0;
+  bottom: 0;
+  left: 1236px;
+  width: 282px;
+  border-left: 1px solid #b1b1b1;
+}
+.construct-bottom-root {
+  position: absolute;
+  top: 535px;
+  right: 0;
+  bottom: 0;
+  left: 300px;
+  border-right: 1px solid #b1b1b1;
+  border-top: 1px solid #b1b1b1;
+  display: inline-block;
+  align-items: stretch;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-content: stretch;
+
+  & > div {
+    align-self: stretch;
+  }
+}
 .construct-root {
   position: absolute;
   top: 35px;
@@ -304,8 +422,20 @@ export default {
     align-self: stretch;
   }
 }
+.construct-bottom-bar {
+  width: 936px;
+  display: flex;
+  flex-direction: column;
+
+  .form-control {
+    border-radius: 0;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+}
 .construct-sidebar {
-  width: 300px;
+  width: 299px;
   border-right: 1px solid #b1b1b1;
   display: flex;
   flex-direction: column;
@@ -322,18 +452,26 @@ export default {
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
 }
-.patient {
+.draggable-element {
   padding: 5px;
   margin: 10px;
-  height: calc(100vh - 100px);
+  height: 615px;
 }
 .chamber-table {
-  position: absolute;
-  top: 35px;
-  right: 0;
-  bottom: 0;
-  left: 300px;
-  width: 750px;
+  height: 500px;
+}
+.table-info {
+  display: inline-block;
+  border: none;
+  background-color: transparent;
+  width: 140px;
+  margin-bottom: 0;
+}
+.table-info tr:nth-child(2n-1) {
+  background-color: transparent;
+}
+.table-info tr:nth-child(2n) {
+  background-color: transparent;
 }
 .chamber-table tr:nth-child(2n) {
   background-color: #F5F5F5;
@@ -345,11 +483,37 @@ export default {
   margin-bottom: 10px;
   padding: 10px;
 }
-.drag-and-drop-element {
+.drag-and-drop {
   display: inline-block;
   overflow: hidden;
   background-color: #fff;
   margin-left: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+  padding: 5px;
+  height: 30px;
+  width: 30px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  &.rhide {
+  background-image: linear-gradient(#6c7a89, #56616c);
+  color: #fff;
+  }
+
+  &:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  z-index: 1;
+  transform: scale(1.008);
+  }
+}
+.drag-and-drop-patient {
+  display: inline-block;
+  overflow: hidden;
+  background-color: #fff;
+  margin-left: 5px;
   margin-bottom: 10px;
   text-align: right;
   padding: 5px;
@@ -381,7 +545,10 @@ export default {
 .man {
   color: #00bfff;
 }
-.patient-content {
+.currentDoctor {
+  color:  #00bfff;
+}
+.content-research {
   margin-top: 10px;
   margin-bottom: 10px;
   background-color: #fff;
@@ -404,6 +571,9 @@ export default {
 }
 .element {
   display: inline-block;
+}
+.padding-element {
+  padding-right: 140px;
 }
 .element-content {
   display: inline-block;
@@ -451,5 +621,13 @@ export default {
   max-width: 450px;
   //height: 450px;
 }
-
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+::-webkit-scrollbar-thumb {
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
 </style>

@@ -146,14 +146,26 @@ class Bed(models.Model):
 
 
 class PatientToBed(models.Model):
-    patient = models.ForeignKey("directions.Napravleniya", on_delete=models.CASCADE)
+    direction = models.ForeignKey("directions.Napravleniya", on_delete=models.CASCADE)
+    doctor = models.ForeignKey("users.DoctorProfile", on_delete=models.CASCADE, null=True)
     bed = models.ForeignKey(Bed, on_delete=models.CASCADE)
-    entrance = models.DateField(auto_now_add=True)
-    extract = models.DateField(null=True)
+    date_in = models.DateField(auto_now_add=True)
+    date_out = models.DateField(null=True)
 
     def __str__(self):
-        return f'{self.patient.client.individual.fio()}'
+        return f'{self.direction.client.individual.fio()}'
 
     class Meta:
         verbose_name = 'Историю койки'
         verbose_name_plural = 'История коек'
+
+
+class PatientStationarWithoutBeds(models.Model):
+    direction = models.ForeignKey("directions.Napravleniya", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.direction.client.individual.fio()}'
+
+    class Meta:
+        verbose_name = 'Пациент без койки'
+        verbose_name_plural = 'Пациенты без коек'
