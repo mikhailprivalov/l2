@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db import models
 
 import directory.models as directory
+from clients.models import Card
 from contracts.sql_func import search_companies
 
 
@@ -183,3 +184,20 @@ class CompanyDepartment(models.Model):
     class Meta:
         verbose_name = 'Отдел компании'
         verbose_name_plural = 'Отделы компаний'
+
+
+
+class MedicalExamination(models.Model):
+    patient = models.ForeignKey(Card, help_text="Карта пациента", db_index=True, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
+    date = models.DateField(help_text="Дата мед. осмотра")
+
+
+    def __str__(self):
+        return f"{self.patient} - {self.company} - {self.date}"
+
+
+    class Meta:
+        verbose_name = 'Медицинский осмотр'
+        verbose_name_plural = 'Медицинские осмотры'
+
