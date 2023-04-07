@@ -1,3 +1,6 @@
+import csv
+import io
+import re
 import tempfile
 
 from django.http import HttpRequest, JsonResponse
@@ -11,9 +14,12 @@ from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company
+from laboratory.settings import CONTROL_AGE_MEDEXAM
+from statistic.views import commercial_offer_xls_save_file
 from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
 from integration_framework.views import check_enp
+from utils.dates import age_for_year
 
 
 def dnk_covid(request):
@@ -45,7 +51,7 @@ def http_func(data, user):
     http_obj = HttpRequest()
     http_obj.POST.update(data)
     http_obj.user = user
-    endpoint(http_obj)
+    return endpoint(http_obj)
 
 
 def add_factors_from_file(request):
@@ -139,7 +145,7 @@ def load_file(request):
     link = ""
     if request.POST.get('isGenCommercialOffer') == "true":
         results = gen_commercial_offer(request)
-        link = "commercial-offer"
+        link = "open-xls"
     elif len(request.POST.get('companyInn')) != 0:
         results = add_factors_from_file(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
@@ -156,14 +162,31 @@ def gen_commercial_offer(request):
     ws = wb[wb.sheetnames[0]]
     starts = False
     counts_research = {}
+    patients = []
+
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
             if "код вредности" in cells:
                 starts = True
                 harmful_factor = cells.index("код вредности")
+                fio = cells.index("фио")
+                born = cells.index("дата рождения")
+                position = cells.index("должность")
+                sex = cells.index("пол")
         else:
             harmful_factor_data = [i.replace(" ", "") for i in cells[harmful_factor].split(",")]
+            born_data = cells[born].split(" ")[0]
+            age = age_for_year(born_data)
+            if "м" in cells[sex]:
+                adds_harmfull = CONTROL_AGE_MEDEXAM.get("м")
+            else:
+                adds_harmfull = CONTROL_AGE_MEDEXAM.get("ж")
+            if adds_harmfull:
+                for i in sorted(adds_harmfull.keys()):
+                    if age < i:
+                        harmful_factor_data.append(adds_harmfull[i])
+                        break
             templates_data = HarmfulFactor.objects.values_list("template_id", flat=True).filter(title__in=harmful_factor_data)
             researches_data = AssignmentResearches.objects.values_list('research_id', flat=True).filter(template_id__in=templates_data)
             researches_data = set(researches_data)
@@ -172,5 +195,58 @@ def gen_commercial_offer(request):
                     counts_research[r] += 1
                 else:
                     counts_research[r] = 1
+            patients.append({"fio": cells[fio], "born": born_data, "harmful_factor": cells[harmful_factor], "position": cells[position], "researches": researches_data, "age": age})
+
     price_data = PriceCoast.objects.filter(price_name__id=selected_price, research_id__in=list(counts_research.keys()))
-    return [{'title': k.research.title, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
+    data_price = [{'title': k.research.title, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
+    research_price = {d.research.pk: f"{d.research.title}@{d.coast}" for d in price_data}
+    file_name = commercial_offer_xls_save_file(data_price, patients, research_price)
+    return file_name
+
+
+def load_csv(request):
+    file_data = request.FILES['file']
+    file_data = file_data.read().decode('utf-8')
+    io_string = io.StringIO(file_data)
+
+    data = csv.reader(io_string, delimiter='\t')
+    header = next(data)
+
+    application = None
+
+    for app in Application.objects.filter(csv_header__isnull=False).exclude(csv_header__exact=""):
+        if app.csv_header in header:
+            application = app
+            break
+
+    if application is None or application.csv_header not in header:
+        return JsonResponse({"ok": False, "message": "Файл не соответствует ни одному приложению"})
+
+    app_key = application.key.hex
+
+    method = re.search(r'^(\S+)\s+.*$', header[1]).group(1)
+    results = []
+    pattern = re.compile(r'^\d+$')
+
+    for row in data:
+        if len(row) > 5 and pattern.match(row[2]):
+            r = {
+                "pk": row[2],
+                "result": row[5],
+            }
+
+            result = json.dumps({"pk": r["pk"], "result": {method: r["result"]}})
+
+            resp = http_func({"key": app_key, "result": result, "message_type": "R"}, request.user)
+
+            resp = json.loads(resp.content)
+
+            results.append(
+                {
+                    "pk": row[2],
+                    "result": row[5],
+                    "comment": "успешно" if resp["ok"] else "не удалось сохранить результат",
+                }
+            )
+
+    return JsonResponse({"ok": True, "results": results, "method": method})

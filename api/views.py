@@ -269,7 +269,7 @@ def send(request):
 
 @csrf_exempt
 def endpoint(request):
-    result = {"answer": False, "body": "", "patientData": {}}
+    result = {"answer": False, "body": "", "patientData": {}, "ok": False}
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
@@ -377,6 +377,7 @@ def endpoint(request):
                                                 fraction_result.ref_m = ref.m
                                                 fraction_result.ref_f = ref.f
                                             fraction_result.save()
+                                            result["ok"] = True
                                             issled.api_app = app
                                             issled.save()
                                             fraction_result.get_ref(re_save=True)
@@ -653,6 +654,7 @@ def current_user_info(request):
 
             ret["fio"] = doctorprofile.get_full_fio()
             ret["shortFio"] = doctorprofile.get_fio(with_space=False)
+            ret["hasTOTP"] = doctorprofile.totp_secret is not None
             ret["email"] = doctorprofile.email or ''
             ret["doc_pk"] = doctorprofile.pk
             ret["rmis_location"] = doctorprofile.rmis_location

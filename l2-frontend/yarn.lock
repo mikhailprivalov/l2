@@ -3809,9 +3809,9 @@ caniuse-api@^3.0.0:
     lodash.uniq "^4.5.0"
 
 caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001449, caniuse-lite@^1.0.30001464:
-  version "1.0.30001472"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001472.tgz#3f484885f2a2986c019dc416e65d9d62798cdd64"
-  integrity sha512-xWC/0+hHHQgj3/vrKYY0AAzeIUgr7L9wlELIcAvZdDUHlhL/kNxMdnQLOSOQfP8R51ZzPhmHdyMkI0MMpmxCfg==
+  version "1.0.30001474"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001474.tgz"
+  integrity sha512-iaIZ8gVrWfemh5DG3T9/YqarVZoYf0r188IjaGwx68j4Pf0SGY6CQkmJUIE+NZHkkecQGohzXmBGEwWDr9aM3Q==
 
 case-sensitive-paths-webpack-plugin@^2.3.0:
   version "2.4.0"
@@ -9828,10 +9828,10 @@ vue-demi@*:
   resolved "https://registry.yarnpkg.com/vue-demi/-/vue-demi-0.13.11.tgz#7d90369bdae8974d87b1973564ad390182410d99"
   integrity sha512-IR8HoEEGM65YY3ZJYAjMlKygDQn25D5ajNFNoKh9RSDMQtlzCxtfQjdQgv9jjK+m3377SsJXY8ysq8kLCZL25A==
 
-vue-easytable@^2.21.11:
-  version "2.24.0"
-  resolved "https://registry.yarnpkg.com/vue-easytable/-/vue-easytable-2.24.0.tgz#7345cad6df3239ee6b1077c57de9118d65014c53"
-  integrity sha512-5OcCw3EMLEb/cBLV/pMqRIhAmwt3FadXpoZvWhdE+SynthdNtTrQhxFKyjgpAmX6OPEMb9/XFNX86gDuIVnlxg==
+vue-easytable@^2.25.0:
+  version "2.25.0"
+  resolved "https://registry.yarnpkg.com/vue-easytable/-/vue-easytable-2.25.0.tgz#f1972a269c704b4333ce6e0d3d72a7ced5845bc6"
+  integrity sha512-I+Nfx8fPdooF2t9jflP8Pf4byr8o4mQab5Eoa3MmmELTGgoRu+0eP8m2v5DfKrhPdnMj1BnfDMpX9rojAyRtlA==
   dependencies:
     lodash "^4.17.20"
     resize-observer-polyfill "^1.5.1"
@@ -9851,10 +9851,10 @@ vue-eslint-parser@^8.0.0:
     lodash "^4.17.21"
     semver "^7.3.5"
 
-vue-eslint-parser@^9.0.1, vue-eslint-parser@^9.1.0:
-  version "9.1.0"
-  resolved "https://registry.yarnpkg.com/vue-eslint-parser/-/vue-eslint-parser-9.1.0.tgz#0e121d1bb29bd10763c83e3cc583ee03434a9dd5"
-  integrity sha512-NGn/iQy8/Wb7RrRa4aRkokyCZfOUWk19OP5HP6JEozQFX5AoS/t+Z0ZN7FY4LlmWc4FNI922V7cvX28zctN8dQ==
+vue-eslint-parser@^9.0.1, vue-eslint-parser@^9.1.1:
+  version "9.1.1"
+  resolved "https://registry.yarnpkg.com/vue-eslint-parser/-/vue-eslint-parser-9.1.1.tgz#3f4859be7e9bb7edaa1dc7edb05abffee72bf3dd"
+  integrity sha512-C2aI/r85Q6tYcz4dpgvrs4wH/MqVrRAVIdpYedrxnATDHHkb+TroeRcDpKWGZCx/OcECMWfz7tVwQ8e+Opy6rA==
   dependencies:
     debug "^4.3.4"
     eslint-scope "^7.1.1"
