@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 from copy import deepcopy
 
@@ -8,10 +9,12 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone, dateformat
 from django.views.decorators.csrf import csrf_exempt
+from openpyxl.reader.excel import load_workbook
 
 import directory.models as directory
 import slog.models as slog
 from api.directions.sql_func import get_lab_podr
+from appconf.manager import SettingManager
 from clients.models import CardBase
 from contracts.models import PriceName, PriceCoast, Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
@@ -1922,21 +1925,24 @@ def sreening_xls(request):
     return response
 
 
-@csrf_exempt
-@login_required
-def commercial_offer_xls(request):
-    response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = "attachment; filename=\"Specification.xlsx\""
+def commercial_offer_xls_save_file(data_offer, patients, research_price):
     wb = openpyxl.Workbook()
     wb.remove(wb.get_sheet_by_name('Sheet'))
     ws = wb.create_sheet("Спецификация")
     ws = commercial_offer.offer_base(ws)
-    request_data = request.POST if request.method == "POST" else request.GET
-    data_offer = request_data.get("offer", "")
-    data_offer = json.loads(data_offer)
     ws = commercial_offer.offer_fill_data(ws, data_offer)
-    wb.save(response)
-    return response
+
+    ws = wb.create_sheet("Реестр")
+    ws = commercial_offer.register_base(ws)
+    ws = commercial_offer.register_data(ws, patients, research_price)
+
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = "offer" + str(date_now1)
+    file_dir = os.path.join(dir_param, date_now_str + '.xlsx')
+    wb.save(filename=file_dir)
+    return file_dir
 
 
 @csrf_exempt
@@ -1959,6 +1965,21 @@ def get_harmful_factors(request):
         data_template_meta[k.template_id]['research_title'] = f"{data_template_meta[k.template_id]['research_title']};  {k.title}"
     ws = harmful_factors.harmful_factors_fill_data(ws, data_template_meta)
     wb.save(response)
+    return response
+
+
+@csrf_exempt
+@login_required
+def open_xls(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Register.xlsx\""
+    request_data = request.POST if request.method == "POST" else request.GET
+    file_name = request_data.get("file").replace('"', "")
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_dir = os.path.join(dir_param, file_name)
+    wb = load_workbook(file_dir)
+    wb.save(response)
+    os.remove(file_dir)
     return response
 
 

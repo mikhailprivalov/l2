@@ -9,7 +9,7 @@ export const HTTP = axios.create({
 });
 
 export const smartCall = async ({
-  method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys, formData = null,
+  method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys, formData = null, raiseError = false,
 }: any): Promise<any> => {
   let data;
   if (ctx) {
@@ -50,8 +50,12 @@ export const smartCall = async ({
       return response.data;
     }
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
+    if (raiseError) {
+      throw e;
+    } else {
+      // eslint-disable-next-line no-console
+      console.error(e);
+    }
   }
   return onReject;
 };

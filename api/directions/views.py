@@ -1703,6 +1703,7 @@ def directions_paraclinic_form(request):
                                 "controlParam": field.control_param,
                                 "not_edit": field.not_edit,
                                 "operator_enter_param": field.operator_enter_param,
+                                "deniedGroup": field.denied_group.name if field.denied_group else "",
                             }
                         )
                     iss["research"]["groups"].append(g)

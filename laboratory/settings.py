@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'django_celery_results',
     'dashboards',
     'chats.apps.ChatsConfig',
+    'employees.apps.EmployeesConfig',
 )
 
 MIDDLEWARE = [
@@ -379,7 +380,7 @@ PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE = {}
 PRINT_APPENDIX_PAGE_DIRECTION = {}
 HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION = []
 STATISTIC_TYPE_DEPARTMENT = [3]
-
+CONTROL_AGE_MEDEXAM = {}  # {"male": {40: 30, 39: 31}, "femail": {40: 32, 39: 33}}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
