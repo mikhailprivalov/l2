@@ -112,6 +112,7 @@ urlpatterns = [
     path('get-contracts', views.get_contracts),
     path('get-company', views.get_company),
     path('update-company', views.update_company),
+    path('get-examination-list', views.get_examination_list),
     path('update-department', views.update_department),
     path('add-department', views.add_department),
     path('get-harmful-factors', views.get_harmful_factors),

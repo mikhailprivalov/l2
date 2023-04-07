@@ -87,11 +87,11 @@ class ResContract(admin.ModelAdmin):
 
 class ResMedicalExamination(admin.ModelAdmin):
     list_display = (
-        'patient',
+        'card',
         'company',
         'date'
     )
-    list_display_links = ('patient', 'company', 'date')
+    list_display_links = ('card', 'company', 'date')
     list_filter = (
         'company',
         'date'

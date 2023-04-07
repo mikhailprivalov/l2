@@ -97,7 +97,7 @@
               name="contractId"
               label="Договор"
             />
-            <div class="button">
+            <div class="flex-end">
               <FormulateInput
                 class="margin-right"
                 type="button"
@@ -113,23 +113,28 @@
           </FormulateForm>
           <div
             v-if="!isNewCompany"
-            class="button"
+            class="flex-space-between"
           >
-            <input
-              v-model="date"
-              type="date"
-              class="form-control date-input"
-            >
-            <button
-              v-tippy
-              title="Списки на мед. осмотр"
-              class="btn last btn-blue-nb nbr"
-            >
-              Списки
-            </button>
-            <ul class="nav navbar add-file">
-              <LoadFile :company-inn="editorCompany.inn" />
-            </ul>
+            <div class="flex">
+              <input
+                v-model="date"
+                type="date"
+                class="form-control date-input"
+              >
+              <button
+                v-tippy
+                title="Списки на мед. осмотр"
+                class="btn last btn-blue-nb nbr"
+                @click="getExaminationList"
+              >
+                Списки
+              </button>
+            </div>
+            <div>
+              <ul class="nav navbar add-file">
+                <LoadFile :company-inn="editorCompany.inn" />
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -250,19 +255,60 @@
         </div>
       </div>
     </div>
+    <div
+      v-if="showExaminationList"
+      class="main"
+    >
+      <div class="box card-1 card-no-hover">
+        <h5 class="text-center">
+          {{ originShortTitle + ' мед. осмотры на: ' + date.split('-').reverse().join('.') }}
+        </h5>
+        <VeTable
+          :columns="columns"
+          :table-data="examinationList"
+        />
+        <div
+          v-show="examinationList.length === 0"
+          class="empty-list"
+        >
+          Нет записей
+        </div>
+        <div>
+          <VePagination
+            :total="examinationList.length"
+            :page-index="page"
+            :page-size="pageSize"
+            :page-size-option="pageSizeOptions"
+            @on-page-number-change="pageNumberChange"
+            @on-page-size-change="pageSizeChange"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
+import {
+  VeLocale,
+  VePagination,
+  VeTable,
+} from 'vue-easytable';
+import 'vue-easytable/libs/theme-default/index.css';
 
+import ruRu from '@/locales/ve';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 
+VeLocale.use(ruRu);
+
 export default {
   name: 'ConstructCompany',
-  components: { LoadFile, VueTippyTd },
+  components: {
+    LoadFile, VueTippyTd, VeTable, VePagination,
+  },
   data() {
     return {
       companies: [],
@@ -275,7 +321,22 @@ export default {
       editorCompany: {},
       originShortTitle: '',
       date: '',
-      modal: false,
+      showExaminationList: false,
+      examinationList: [],
+      columns: [
+        {
+          field: 'patient', key: 'patient', title: 'Пациент', align: 'left', width: 400,
+        },
+        {
+          field: 'harmful_factor', key: 'harmful_factor', title: 'Вредные факторы', align: 'left', width: 400,
+        },
+        {
+          field: 'researches', key: 'researches', title: 'Исследования', align: 'left',
+        },
+      ],
+      page: 1,
+      pageSize: 30,
+      pageSizeOptions: [30, 50, 70, 100],
     };
   },
   computed: {
@@ -392,8 +453,25 @@ export default {
       }
     },
     getDateNow() {
-      const DateNow = new Date().toISOString().split('T')[0];
-      this.date = DateNow;
+      const dateNow = new Date().toISOString().split('T')[0];
+      this.date = dateNow;
+    },
+    async getExaminationList() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const medicalExamination = await this.$api('get-examination-list', {
+        date: this.date,
+        company: this.editorCompany.pk,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      console.log(medicalExamination);
+      this.showExaminationList = true;
+      this.examinationList = medicalExamination.data;
+    },
+    pageNumberChange(number: number) {
+      this.page = number;
+    },
+    pageSizeChange(size: number) {
+      this.pageSize = size;
     },
   },
 };
@@ -438,9 +516,16 @@ export default {
 .border {
   border: 1px solid #ddd;
 }
-.button {
+.flex-space-between {
+  display: flex;
+  justify-content: space-between;
+}
+.flex-end {
   display: flex;
   justify-content: flex-end;
+}
+.flex {
+  display: flex;
 }
 .margin-right {
   margin-right: 5px;
@@ -473,5 +558,9 @@ export default {
   padding-top: 20px;
   padding-bottom: 20px;
   border-radius: 0
+}
+.empty-list {
+  width: 85px;
+  margin: 20px auto;
 }
 </style>

@@ -4,7 +4,7 @@ from django.db import models
 
 import directory.models as directory
 from clients.models import Card
-from contracts.sql_func import search_companies
+from contracts.sql_func import search_companies, get_examination_data
 
 
 class PriceCategory(models.Model):
@@ -188,14 +188,22 @@ class CompanyDepartment(models.Model):
 
 
 class MedicalExamination(models.Model):
-    patient = models.ForeignKey(Card, help_text="Карта пациента", db_index=True, on_delete=models.CASCADE)
+    card = models.ForeignKey(Card, help_text="Карта пациента", on_delete=models.CASCADE)
     company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
-    date = models.DateField(help_text="Дата мед. осмотра")
+    date = models.DateField(help_text="Дата мед. осмотра", db_index=True)
 
 
     def __str__(self):
-        return f"{self.patient} - {self.company} - {self.date}"
+        return f"{self.card} - {self.company} - {self.date}"
 
+    @staticmethod
+    def get_by_date(date: str, company_id: int):
+        if not date or not company_id:
+            return []
+        examination_data = get_examination_data(date, company_id)
+        for i in examination_data:
+            print('')
+        return examination_data
 
     class Meta:
         verbose_name = 'Медицинский осмотр'
