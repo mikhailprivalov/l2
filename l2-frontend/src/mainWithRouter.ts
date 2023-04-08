@@ -71,6 +71,7 @@ const router = new Router({
       meta: {
         title: 'Движение карт',
         groups: ['Лечащий врач', 'Оператор лечащего врача'],
+        narrowLayout: true,
       },
     },
     {
