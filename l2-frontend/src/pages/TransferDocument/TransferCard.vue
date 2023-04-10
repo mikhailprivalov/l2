@@ -10,7 +10,7 @@
     </div>
     <div
       class="row"
-      style="padding-top:35px;"
+      style="padding-top:25px;"
     >
       <div class="col-xs-5">
         <div class="input-group treeselect-noborder-left">
@@ -23,7 +23,6 @@
             :options="sources"
             :clearable="true"
             class="treeselect-wide"
-            placeholder="Кабинет не указаны"
           />
         </div>
       </div>
@@ -36,7 +35,6 @@
             :disable-branch-nodes="true"
             :flatten-search-results="true"
             :options="destinations"
-            placeholder="Кабинет не указаны"
             :clearable="false"
             class="treeselect-wide"
           />
@@ -52,62 +50,83 @@
         </button>
       </div>
     </div>
-    <div
-      class="margin-bottom"
-    >
-      <input
-        v-model.trim="search"
-        class="form-control search"
-        placeholder="Поиск по номеру"
-      >
+    <div class="row">
+      <div class="col-xs-5">
+        <div
+          class="input-group"
+          style="padding-top: 20px"
+        >
+          <span class="input-group-addon">Номер карты</span>
+          <input
+            v-model="search"
+            type="text"
+            size="40"
+            class="form-control form-control-forced-last"
+            data-container="body"
+            data-toggle="popover"
+            data-placement="bottom"
+            data-content=""
+            spellcheck="false"
+            autofocus
+            placeholder="Введите номер карты"
+            @keyup.enter="load"
+          >
+          <span class="input-group-btn">
+            <button
+              class="btn btn-blue-nb"
+              type="button"
+              @click="executeTranfer"
+            >Загрузить</button>
+          </span>
+        </div>
+      </div>
     </div>
     <div
-      class="card-no-hover card card-1"
+      class="scroll"
+      style="padding-top: 10px"
     >
-      <div class="scroll">
-        <table class="table">
-          <colgroup>
-            <col width="100">
-            <col>
-            <col width="28">
-          </colgroup>
-          <thead class="sticky">
-            <tr>
-              <th class="text-center">
-                № карты
-              </th>
-              <th class="text-center">
-                ФИО
-              </th>
-              <th class="nopd noel">
-                <input
-                  v-model="allChecked"
-                  type="checkbox"
-                >
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in transferCards"
-              :key="row.pk"
-            >
-              <td class="text-center">
-                {{ row.number_p }}
-              </td>
-              <td class="text-center">
-                {{ row.fio }}
-              </td>
-              <td class="nopd">
-                <input
-                  v-model="row.checked"
-                  type="checkbox"
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table class="table table-bordered">
+        <colgroup>
+          <col width="100">
+          <col>
+          <col width="28">
+        </colgroup>
+        <thead class="sticky">
+          <tr>
+            <th class="text-center">
+              № карты
+            </th>
+            <th class="text-center">
+              ФИО
+            </th>
+            <th class="nopd noel">
+              <input
+                v-model="allChecked"
+                type="checkbox"
+              >
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in transferCards"
+            :key="row.pk"
+          >
+            <td class="text-center">
+              {{ row.number_p }}
+            </td>
+            <td class="text-center">
+              {{ row.fio }}
+            </td>
+            <td class="nopd">
+              <input
+                v-model="row.checked"
+                type="checkbox"
+              >
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -138,7 +157,7 @@ const sources = ref([
   { id: -1, label: 'не выбрано' },
   { id: 1, label: 'каб11' }, { id: 2, label: 'каб22' }, { id: 3, label: 'каб33' }]);
 
-const transferCards = [
+const transferCards = ref([
   {
     pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
   },
@@ -148,59 +167,7 @@ const transferCards = [
   {
     pk: 3, number_p: 33, fio: 'Ивано Иван Иванович', checked: false,
   },
-  {
-    pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 2, number_p: 22, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 3, number_p: 33, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 2, number_p: 22, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 3, number_p: 33, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 2, number_p: 22, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 3, number_p: 33, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 2, number_p: 22, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 3, number_p: 33, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 2, number_p: 22, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 3, number_p: 33, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
-  },
-
-];
+]);
 
 function filteredGroupObject() {
   console.log(searchTypesObject);
@@ -211,14 +178,13 @@ function executeTranfer() {
 }
 
 watch(allChecked, () => {
-  for (const row of transferCards) {
+  for (const row of transferCards.value) {
     row.checked = allChecked.value;
   }
 });
 
 watch(transferCards, () => {
-  checked.value = [];
-  for (const row of transferCards) {
+  for (const row of transferCards.value) {
     if (row.checked) {
       checked.value.push(row.pk);
     }
@@ -246,15 +212,10 @@ watch(transferCards, () => {
   padding: 6px 6px;
   background-color: transparent;
 }
-::v-deep .card {
-  margin: 0;
-}
+
 .table {
   margin-bottom: 0;
   table-layout: fixed;
-}
-.margin-bottom {
-  margin-bottom: 20px;
 }
 
 .sticky {
@@ -262,5 +223,13 @@ watch(transferCards, () => {
   top: 0;
   z-index: 1;
   background-color: white;
+}
+
+input[type=text]:focus {
+  background-color: #e1f2fe;
+}
+
+input[type=text] {
+  background-color: #FFFFFF;
 }
 </style>
