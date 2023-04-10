@@ -11,4 +11,7 @@ urlpatterns = [
     path('doctor-assigned-patient', views.doctor_assigned_patient),
     path('get-attending-doctor', views.get_attending_doctor),
     path('doctor-detached-patient', views.doctor_detached_patient),
+    path('get-patients-without-bed', views.get_patients_without_bed),
+    path('save-patient-without-bed', views.save_patient_without_bed),
+    path('delete-patient-without-bed', views.delete_patient_without_bed),
 ]
