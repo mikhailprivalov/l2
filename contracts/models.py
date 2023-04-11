@@ -210,14 +210,14 @@ class MedicalExamination(models.Model):
                     "card_id": i.card_id,
                     "fio": i.family + " " + i.name + " " + i.patronymic,
                     "harmful_factors": [f'{i.harmful_factor}; '],
-                    "research_id": [f'{i.research_id}; '],
+                    "research_id": [i.research_id],
                     "research_titles": [f'{i.research_title}; '],
                 })
             else:
                 if f'{i.harmful_factor}; ' not in result[-1]["harmful_factors"]:
                     result[-1]["harmful_factors"].append(f'{i.harmful_factor}; ')
-                if f'{i.research_id}; ' not in result[-1]["research_id"]:
-                    result[-1]["research_id"].append(f'{i.research_id}; ')
+                if i.research_id not in result[-1]["research_id"]:
+                    result[-1]["research_id"].append(i.research_id)
                     result[-1]["research_titles"].append(f'{i.research_title}; ')
             prev_card_id = i.card_id
         print(result)
