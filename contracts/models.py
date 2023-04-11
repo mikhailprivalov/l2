@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.contrib.auth.models import User
 from django.db import models
 
 import directory.models as directory
@@ -200,10 +201,28 @@ class MedicalExamination(models.Model):
     def get_by_date(date: str, company_id: int):
         if not date or not company_id:
             return []
+        result = []
+        prev_card_id = -1
         examination_data = get_examination_data(date, company_id)
         for i in examination_data:
-            print('')
-        return examination_data
+            if prev_card_id != i.card_id:
+                result.append({
+                    "card_id": i.card_id,
+                    "fio": i.family + " " + i.name + " " + i.patronymic,
+                    "harmful_factors": [f'{i.harmful_factor}; '],
+                    "research_id": [f'{i.research_id}; '],
+                    "research_titles": [f'{i.research_title}; '],
+                })
+            else:
+                if f'{i.harmful_factor}; ' not in result[-1]["harmful_factors"]:
+                    result[-1]["harmful_factors"].append(f'{i.harmful_factor}; ')
+                if f'{i.research_id}; ' not in result[-1]["research_id"]:
+                    result[-1]["research_id"].append(f'{i.research_id}; ')
+                    result[-1]["research_titles"].append(f'{i.research_title}; ')
+            prev_card_id = i.card_id
+        print(result)
+
+        return result
 
     class Meta:
         verbose_name = 'Медицинский осмотр'

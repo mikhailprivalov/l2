@@ -124,7 +124,7 @@
               <button
                 v-tippy
                 title="Списки на мед. осмотр"
-                class="btn last btn-blue-nb nbr"
+                class="btn last btn-blue-nb nbr load-exam-date"
                 @click="getExaminationList"
               >
                 Списки
@@ -173,14 +173,16 @@
                 :text="company.title"
               />
               <td class="border">
-                <button
-                  v-tippy
-                  title="Редактировать"
-                  class="btn last btn-blue-nb nbr"
-                  @click="editCompany(company)"
-                >
-                  <i class="fa fa-pencil" />
-                </button>
+                <div class="button">
+                  <button
+                    v-tippy
+                    title="Редактировать"
+                    class="btn last btn-blue-nb nbr"
+                    @click="editCompany(company)"
+                  >
+                    <i class="fa fa-pencil" />
+                  </button>
+                </div>
               </td>
             </tr>
           </table>
@@ -199,7 +201,7 @@
           <table class="table">
             <colgroup>
               <col>
-              <col width="38.25">
+              <col width="40">
             </colgroup>
             <tr
               v-if="filteredDepartments.length === 0"
@@ -223,14 +225,16 @@
                 >
               </td>
               <td class="border">
-                <button
-                  v-tippy
-                  title="Сохранить"
-                  class="btn last btn-blue-nb nbr"
-                  @click="updateDepartment(department)"
-                >
-                  <i class="fa fa-save" />
-                </button>
+                <div class="button">
+                  <button
+                    v-tippy
+                    title="Сохранить"
+                    class="btn last btn-blue-nb nbr"
+                    @click="updateDepartment(department)"
+                  >
+                    <i class="fa fa-save" />
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="editorCompany.pk">
@@ -241,14 +245,16 @@
                 >
               </td>
               <td class="border">
-                <button
-                  v-tippy
-                  title="Добавить"
-                  class="btn last btn-blue-nb nbr"
-                  @click="addDepartment"
-                >
-                  <i class="fa fa-plus" />
-                </button>
+                <div class="button">
+                  <button
+                    v-tippy
+                    title="Добавить"
+                    class="btn last btn-blue-nb nbr"
+                    @click="addDepartment"
+                  >
+                    <i class="fa fa-plus" />
+                  </button>
+                </div>
               </td>
             </tr>
           </table>
@@ -260,9 +266,41 @@
       class="main"
     >
       <div class="box card-1 card-no-hover">
-        <h5 class="text-center">
-          {{ originShortTitle + ' мед. осмотры на: ' + date.split('-').reverse().join('.') }}
-        </h5>
+        <table class="table">
+          <colgroup>
+            <col width="120">
+            <col>
+            <col width="400">
+          </colgroup>
+          <tr>
+            <td>
+              <div class="button">
+                <button
+                  v-tippy
+                  title="Печать"
+                  class="btn last btn-blue-nb nbr"
+                >
+                  Печать
+                </button>
+              </div>
+            </td>
+            <td>
+              <h5 class="text-center no-margin">
+                {{ originShortTitle + ' мед. осмотры на: ' + date.split('-').reverse().join('.') }}
+              </h5>
+            </td>
+            <td>
+              <Treeselect
+                v-model="excludedResearches"
+                :multiple="true"
+                :options="researches.data"
+                :disable-branch-nodes="true"
+                :append-to-body="true"
+                placeholder="Выберите исследование"
+              />
+            </td>
+          </tr>
+        </table>
         <VeTable
           :columns="columns"
           :table-data="examinationList"
@@ -295,10 +333,12 @@ import {
   VeTable,
 } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
+import Treeselect from '@riophae/vue-treeselect';
+
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import ruRu from '@/locales/ve';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
-import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 
@@ -307,7 +347,7 @@ VeLocale.use(ruRu);
 export default {
   name: 'ConstructCompany',
   components: {
-    LoadFile, VueTippyTd, VeTable, VePagination,
+    LoadFile, VueTippyTd, VeTable, VePagination, Treeselect,
   },
   data() {
     return {
@@ -325,18 +365,20 @@ export default {
       examinationList: [],
       columns: [
         {
-          field: 'patient', key: 'patient', title: 'Пациент', align: 'left', width: 400,
+          field: 'fio', key: 'fio', title: 'Пациент', align: 'left', width: 400,
         },
         {
-          field: 'harmful_factor', key: 'harmful_factor', title: 'Вредные факторы', align: 'left', width: 400,
+          field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 400,
         },
         {
-          field: 'researches', key: 'researches', title: 'Исследования', align: 'left',
+          field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
         },
       ],
       page: 1,
-      pageSize: 30,
-      pageSizeOptions: [30, 50, 70, 100],
+      pageSize: 100,
+      pageSizeOptions: [50, 100, 200],
+      excludedResearches: [],
+      researches: [],
     };
   },
   computed: {
@@ -363,7 +405,7 @@ export default {
   mounted() {
     this.getCompanies();
     this.getContracts();
-    this.getDateNow();
+    this.getResearches();
   },
   methods: {
     async getCompanies() {
@@ -452,10 +494,6 @@ export default {
         }
       }
     },
-    getDateNow() {
-      const dateNow = new Date().toISOString().split('T')[0];
-      this.date = dateNow;
-    },
     async getExaminationList() {
       await this.$store.dispatch(actions.INC_LOADING);
       const medicalExamination = await this.$api('get-examination-list', {
@@ -463,9 +501,11 @@ export default {
         company: this.editorCompany.pk,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
-      console.log(medicalExamination);
       this.showExaminationList = true;
       this.examinationList = medicalExamination.data;
+    },
+    async getResearches() {
+      this.researches = await this.$api('/get-research-list');
     },
     pageNumberChange(number: number) {
       this.page = number;
@@ -540,6 +580,10 @@ export default {
 .padding-left {
   padding-left: 9px;
 }
+.no-margin {
+  margin-top: 0;
+  margin-bottom: 0;
+}
 .search {
   margin-top: 36px;
   padding-left: 9px;
@@ -553,6 +597,9 @@ export default {
 .add-file {
   width: 140px;
 }
+.load-exam-date {
+  width: 80px;
+}
 .date-input {
   width: 120px;
   padding-top: 20px;
@@ -563,4 +610,16 @@ export default {
   width: 85px;
   margin: 20px auto;
 }
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
 </style>
