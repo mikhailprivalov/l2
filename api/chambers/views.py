@@ -3,8 +3,7 @@ from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWi
 import simplejson as json
 from django.http import JsonResponse
 
-from directory.models import Researches
-from directions.models import Issledovaniya, Napravleniya
+from directions.models import Napravleniya
 
 from clients.models import Individual
 from users.models import DoctorProfile
@@ -57,6 +56,7 @@ def get_chambers_and_beds(request):
                                     "short_fio": short_fio,
                                     "age": patient_data["age"],
                                     "sex": patient_data["sex"],
+                                    "highlight": False,
                                     "pk": history.direction_id
                                 }
                             ]
@@ -74,6 +74,7 @@ def get_chambers_and_beds(request):
                                     "short_fio": short_fio,
                                     "age": patient_data["age"],
                                     "sex": patient_data["sex"],
+                                    "highlight": False,
                                     "pk": history.direction_id
                                 }
                             ]
@@ -157,6 +158,7 @@ def get_patients_without_bed(request):
                     "short_fio": short_fio,
                     "age": patient_data["age"],
                     "sex": patient_data["sex"],
+                    "highlight": False,
                     "pk": patient.direction_id
                 }
             )
@@ -198,6 +200,7 @@ def get_patients(hosp_id):
                 "age": calculate_age(g.birthday),
                 "short_fio": f'{g.family} {g.name[0]}. {g.patronymic[0]}.',
                 "sex": g.sex,
+                "highlight": False,
                 "pk": g.napravleniye_id
             }
         )
