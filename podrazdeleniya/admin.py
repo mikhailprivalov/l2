@@ -22,7 +22,7 @@ class ChamberAdmin(admin.ModelAdmin):
 
 
 class BedAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'chamber', 'bed_number', 'status_bed')
+    list_display = ('pk', 'chamber', 'bed_number')
     autocomplete_fields = ('chamber',)
     search_fields = ('chamber', 'bed_number')
 

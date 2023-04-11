@@ -183,7 +183,9 @@
                   </tr>
                   <tr>
                     <td
+                      v-if="bed.contents.length > 0"
                       style="border-top: 2px solid #ddd;"
+                      :class="{'changeColorDoc': bed.contents[0].highlight}"
                     >
                       <div v-if="bed.doctor.length > 0 && bed.contents.length > 0">
                         {{ bed.doctor[0].short_fio }}
@@ -230,8 +232,9 @@
               v-for="doctor in attendingDoctor"
               :key="doctor.pk"
               class="content-research"
+              @click="highlight(doctor)"
             >
-              {{ doctor.fio }} Кол.пациентов: {{ counterPatientAtDoctor }}
+              {{ doctor.fio }} ({{ countPatientAtDoctor(doctor) }})
             </div>
           </draggable>
         </div>
@@ -242,8 +245,16 @@
 
 <script lang="ts">
 import draggable from 'vuedraggable';
+import {
+  computed,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
 
 import * as actions from '@/store/action-types';
+import api from '@/api';
+import { useStore } from '@/store';
 
 import Filters from './components/Filters.vue';
 import FiltersDoc from './components/FiltersDoc.vue';
@@ -255,40 +266,33 @@ export default {
     draggable,
     FiltersDoc,
   },
-  data() {
-    return {
-      chambers: [],
-      departments: [],
-      unallocatedPatients: [],
-      withOutBeds: [],
-      attendingDoctor: [],
-      filters: {
-        department_pk: -1,
-        departmentDoc_pk: -1,
-      },
-    };
-  },
-  computed: {
-    department() {
-      return this.filters.department_pk;
-    },
-    departmentDoc() {
-      return this.filters.departmentDoc_pk;
-    },
-    bedInformationCounter() {
+  setup() {
+    const chambers = ref([]);
+    const departments = ref([]);
+    const unallocatedPatients = ref([]);
+    const withOutBeds = ref([]);
+    const attendingDoctor = ref([]);
+    const filters = ref({
+      department_pk: -1,
+      departmentDoc_pk: -1,
+    });
+    const store = useStore();
+    const department = computed(() => filters.value.department_pk);
+    const departmentDoc = computed(() => filters.value.departmentDoc_pk);
+    const bedInformationCounter = computed(() => {
       let women = 0;
       let man = 0;
       let occupied = 0;
       let bed = 0;
-      for (let i = 0; i < this.chambers.length; i++) {
-        for (let j = 0; j < this.chambers[i].beds.length; j++) {
+      for (let i = 0; i < chambers.value.length; i++) {
+        for (let j = 0; j < chambers.value[i].beds.length; j++) {
           bed += 1;
-          if (this.chambers[i].beds[j].contents.length > 0) {
+          if (chambers.value[i].beds[j].contents.length > 0) {
             occupied += 1;
-            if (this.chambers[i].beds[j].contents[0].sex === 'ж') {
+            if (chambers.value[i].beds[j].contents[0].sex === 'ж') {
               women += 1;
             }
-            if (this.chambers[i].beds[j].contents[0].sex === 'м') {
+            if (chambers.value[i].beds[j].contents[0].sex === 'м') {
               man += 1;
             }
           }
@@ -300,155 +304,180 @@ export default {
         occupied,
         bed,
       };
-    },
-    counterPatientAtDoctor() {
-      let numberPatient = 0;
-      for (let i = 0; i < this.chambers.length; i++) {
-        for (let j = 0; j < this.chambers[i].beds.length; j++) {
-          if (this.chambers[i].beds[j].doctor.length > 0) {
-            console.log(this.chambers[i].beds[j].doctor[0]);
-            numberPatient += 1;
-          }
-        }
-      }
-      return numberPatient;
-    },
-  },
-  watch: {
-    department() {
-      this.getUnallocatedPatients();
-      this.loadChamberAndBed();
-      this.getPatientWithoutBed();
-    },
-    departmentDoc() {
-      this.getAttendingDoctor();
-    },
-  },
-  mounted() {
-    this.init();
-  },
-  methods: {
-    async init() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { data } = await this.$api('procedural-list/suitable-departments');
-      this.departments = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async getAttendingDoctor() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const row = await this.$api('chambers/get-attending-doctor', {
-        department_pk: this.departmentDoc,
+    });
+    async function init() {
+      await store.dispatch(actions.INC_LOADING);
+      const { data } = await api('procedural-list/suitable-departments');
+      departments.value = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    async function getAttendingDoctor() {
+      await store.dispatch(actions.INC_LOADING);
+      const row = await api('chambers/get-attending-doctor', {
+        department_pk: departmentDoc.value,
       });
-      this.attendingDoctor = row.data;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async getUnallocatedPatients() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const row = await this.$api('chambers/get-unallocated-patients', {
-        department_pk: this.department,
+      attendingDoctor.value = row.data;
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    async function getUnallocatedPatients() {
+      await store.dispatch(actions.INC_LOADING);
+      const row = await api('chambers/get-unallocated-patients', {
+        department_pk: department.value,
       });
-      this.unallocatedPatients = row.data;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async getPatientWithoutBed() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const row = await this.$api('chambers/get-patients-without-bed');
-      this.withOutBeds = row.data;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async loadChamberAndBed() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const row = await this.$api('chambers/get-chambers-and-beds', {
-        department_pk: this.department,
+      unallocatedPatients.value = row.data;
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    async function getPatientWithoutBed() {
+      await store.dispatch(actions.INC_LOADING);
+      const row = await api('chambers/get-patients-without-bed');
+      withOutBeds.value = row.data;
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    async function loadChamberAndBed() {
+      await store.dispatch(actions.INC_LOADING);
+      const row = await api('chambers/get-chambers-and-beds', {
+        department_pk: department.value,
       });
-      this.chambers = row.data;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async changePatientBed({ added, removed }, bed) {
+      chambers.value = row.data;
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    async function changePatientBed({ added, removed }, bed) {
       if (added) {
-        await this.$store.dispatch(actions.INC_LOADING);
-        await this.$api('chambers/entrance-patient-to-bed', {
+        await store.dispatch(actions.INC_LOADING);
+        await api('chambers/entrance-patient-to-bed', {
           beds: bed,
         });
-        this.occupied += 1;
-        await this.$store.dispatch(actions.DEC_LOADING);
+        await store.dispatch(actions.DEC_LOADING);
       }
       if (removed) {
-        await this.$store.dispatch(actions.INC_LOADING);
-        await this.$api('chambers/extract-patient-bed', {
+        await store.dispatch(actions.INC_LOADING);
+        await api('chambers/extract-patient-bed', {
           patient: removed.element,
         });
-        this.occupied -= 1;
-        await this.$store.dispatch(actions.DEC_LOADING);
+        await store.dispatch(actions.DEC_LOADING);
       }
-    },
-    async PatientWaitBed({ added, removed }) {
+    }
+    async function PatientWaitBed({ added, removed }) {
       if (added) {
-        await this.$store.dispatch(actions.INC_LOADING);
-        await this.$api('chambers/save-patient-without-bed', {
+        await store.dispatch(actions.INC_LOADING);
+        await api('chambers/save-patient-without-bed', {
           patient_obj: added.element,
         });
-        await this.$store.dispatch(actions.DEC_LOADING);
+        await store.dispatch(actions.DEC_LOADING);
       }
       if (removed) {
-        await this.$store.dispatch(actions.INC_LOADING);
-        await this.$api('chambers/delete-patient-without-bed', {
+        await store.dispatch(actions.INC_LOADING);
+        await api('chambers/delete-patient-without-bed', {
           patient_obj: removed.element,
         });
-        await this.$store.dispatch(actions.DEC_LOADING);
+        await store.dispatch(actions.DEC_LOADING);
       }
-    },
-    async changeDoctor({ added, removed }, bed) {
+    }
+    async function changeDoctor({ added, removed }, bed) {
       if (added) {
-        await this.$store.dispatch(actions.INC_LOADING);
-        await this.$api('chambers/doctor-assigned-patient', {
+        await store.dispatch(actions.INC_LOADING);
+        await api('chambers/doctor-assigned-patient', {
           beds: bed,
         });
-        await this.$store.dispatch(actions.DEC_LOADING);
+        await store.dispatch(actions.DEC_LOADING);
       }
       if (removed) {
-        await this.getAttendingDoctor();
-        await this.$store.dispatch(actions.INC_LOADING);
-        await this.$api('chambers/doctor-detached-patient', {
+        await getAttendingDoctor();
+        await store.dispatch(actions.INC_LOADING);
+        await api('chambers/doctor-detached-patient', {
           doctor: removed.element,
           beds: bed,
         });
-        await this.$store.dispatch(actions.DEC_LOADING);
+        await store.dispatch(actions.DEC_LOADING);
       }
-    },
-    conditionsDragDoc(bed) {
+    }
+    function conditionsDragDoc(bed) {
       if (bed.contents.length > 0 && bed.doctor.length < 1) {
         return 'attendingDoctor';
       }
       return false;
-    },
-    conditionsDragBed(bed) {
+    }
+    function conditionsDragBed(bed) {
       if (bed.contents < 1) {
         return 'unallocatedPatients';
       }
       return false;
-    },
-    clearArrayDoctor(bed) {
+    }
+    function clearArrayDoctor(bed) {
       bed.doctor.pop();
-    },
-    changeColorWomen(val) {
+    }
+    function changeColorWomen(val) {
       return val.sex === 'ж';
-    },
-    changeColorMan(val) {
+    }
+    function changeColorMan(val) {
       return val.sex === 'м';
-    },
-    colorWomen(val) {
+    }
+    function colorWomen(val) {
       if (val.contents.length > 0) {
         return val.contents[0].sex === 'ж';
       }
       return false;
-    },
-    colorMan(val) {
+    }
+    function colorMan(val) {
       if (val.contents.length > 0) {
         return val.contents[0].sex === 'м';
       }
       return false;
-    },
+    }
+    function highlight(doctor) {
+      for (let i = 0; i < chambers.value.length; i++) {
+        for (let j = 0; j < chambers.value[i].beds.length; j++) {
+          if (chambers.value[i].beds[j].doctor.length > 0) {
+            if (chambers.value[i].beds[j].doctor[0].fio === doctor.fio) {
+              chambers.value[i].beds[j].contents[0].highlight = !chambers.value[i].beds[j].contents[0].highlight;
+            }
+          }
+        }
+      }
+    }
+    function countPatientAtDoctor(doctor) {
+      let patient = 0;
+      for (let i = 0; i < chambers.value.length; i++) {
+        for (let j = 0; j < chambers.value[i].beds.length; j++) {
+          if (chambers.value[i].beds[j].doctor.length > 0) {
+            if (chambers.value[i].beds[j].doctor[0].fio === doctor.fio) {
+              patient += 1;
+            }
+          }
+        }
+      }
+      return patient;
+    }
+    watch(department, () => {
+      getUnallocatedPatients();
+      loadChamberAndBed();
+      getPatientWithoutBed();
+    });
+    watch(departmentDoc, () => {
+      getAttendingDoctor();
+    });
+    onMounted(init);
+    return {
+      filters,
+      chambers,
+      departments,
+      unallocatedPatients,
+      withOutBeds,
+      attendingDoctor,
+      bedInformationCounter,
+      changePatientBed,
+      PatientWaitBed,
+      changeDoctor,
+      conditionsDragDoc,
+      conditionsDragBed,
+      clearArrayDoctor,
+      changeColorWomen,
+      changeColorMan,
+      colorWomen,
+      colorMan,
+      highlight,
+      countPatientAtDoctor,
+    };
   },
 };
 </script>
@@ -501,7 +530,6 @@ export default {
 .bottom-bar-content-home {
   height: calc(100vh - 564.5px);
   overflow-y: auto;
-  //background-color: #4cae4c;
 }
 .construct-root {
   position: absolute;
@@ -530,19 +558,16 @@ export default {
   height: calc(100vh - 72px);
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
-  //background-color: #00a1cb;
 }
 .draggable-element {
   padding: 5px;
   margin: 10px;
   height: 600px;
-  //background-color: #8b2e0c;
 }
 .draggable-element-home {
   padding: 5px;
   margin: 10px;
   height: 120px;
-  //background-color: #8b2e0c;
 }
 .chamber-table {
   height: 500px;
@@ -717,5 +742,8 @@ export default {
   top: 0;
   z-index: 1;
   background-color: white;
+}
+.changeColorDoc {
+  background-color: #BCD2DD;
 }
 </style>

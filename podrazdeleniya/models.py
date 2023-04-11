@@ -135,10 +135,9 @@ class Chamber(models.Model):
 class Bed(models.Model):
     chamber = models.ForeignKey(Chamber, on_delete=models.CASCADE)
     bed_number = models.PositiveSmallIntegerField(help_text="Номер койки")
-    status_bed = models.BooleanField(default=True, blank=True, help_text="Состояние койки (true: свободная / false: занята)")
 
     def __str__(self):
-        return f'{self.chamber} - {self.bed_number} - {self.status_bed}'
+        return f'{self.chamber} - {self.bed_number}'
 
     class Meta:
         verbose_name = 'Койку'
