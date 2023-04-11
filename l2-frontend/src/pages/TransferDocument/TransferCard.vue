@@ -40,15 +40,6 @@
           />
         </div>
       </div>
-      <div class="col-xs-2">
-        <button
-          class="btn last btn-blue-nb nbr"
-          title="Выполнить"
-          @click="executeTranfer"
-        >
-          Выполнить
-        </button>
-      </div>
     </div>
     <div class="row">
       <div class="col-xs-5">
@@ -80,6 +71,18 @@
           </span>
         </div>
       </div>
+      <div
+        class="col-xs-5"
+        style="padding-top: 20px; padding-left: 250px"
+      >
+        <button
+          class="btn last btn-blue-nb nbr"
+          title="Выполнить"
+          @click="executeTranfer"
+        >
+          {{ searchTypesObject }} карты:  <strong> {{ currentCount }} шт</strong>
+        </button>
+      </div>
     </div>
     <div
       class="scroll"
@@ -87,7 +90,7 @@
     >
       <table class="table table-bordered">
         <colgroup>
-          <col width="100">
+          <col width="300">
           <col>
           <col width="28">
         </colgroup>
@@ -120,8 +123,9 @@
             </td>
             <td class="nopd">
               <input
-                v-model="row.checked"
+                v-model="checkedCards"
                 type="checkbox"
+                :value="row"
               >
             </td>
           </tr>
@@ -132,30 +136,22 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed, onBeforeMount, onMounted, ref, watch,
-} from 'vue';
-import Component from 'vue-class-component';
+import { computed, ref, watch } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import * as actions from '@/store/action-types';
 import RadioField from '@/fields/RadioField.vue';
+import api from '@/api';
 
 const typesObject = ref(['Принять', 'Отправить']);
 const searchTypesObject = ref('');
 const destination = ref(-1);
 const source = ref(-1);
 const allChecked = ref(false);
-const checked = ref([]);
+const checkedCards = ref([]);
 const search = ref('');
-
-const destinations = ref([
-  { id: -1, label: 'не выбрано' },
-  { id: 1, label: 'каб1' }, { id: 2, label: 'каб2' }, { id: 3, label: 'каб3' }]);
-const sources = ref([
-  { id: -1, label: 'не выбрано' },
-  { id: 1, label: 'каб11' }, { id: 2, label: 'каб22' }, { id: 3, label: 'каб33' }]);
+const destinations = ref([]);
+const sources = ref([]);
 
 const transferCards = ref([
   {
@@ -175,21 +171,31 @@ function filteredGroupObject() {
 
 function executeTranfer() {
   console.log('Выполнить');
+  console.log(checkedCards);
 }
 
 watch(allChecked, () => {
-  for (const row of transferCards.value) {
-    row.checked = allChecked.value;
-  }
+  if (allChecked.value) {
+    checkedCards.value = [];
+    for (const row of transferCards.value) {
+      checkedCards.value.push(row);
+    }
+  } else checkedCards.value = [];
 });
 
-watch(transferCards, () => {
-  for (const row of transferCards.value) {
-    if (row.checked) {
-      checked.value.push(row.pk);
-    }
-  }
+async function getDestinationsSources() {
+  const data = await api('transfer-document/get-destination-source', searchTypesObject);
+  source.value = -1;
+  destination.value = -1;
+  sources.value = data.sources;
+  destinations.value = data.destinations;
+}
+
+watch(searchTypesObject, () => {
+  getDestinationsSources();
 });
+
+const currentCount = computed(() => checkedCards.value.length);
 
 </script>
 
