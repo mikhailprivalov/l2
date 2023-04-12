@@ -226,7 +226,7 @@ def load_csv(request):
 
     app_key = application.key.hex
 
-    method = re.search(r'^(\S+)\s+.*$', header[1]).group(1)
+    method = re.search(r'^(.+)\s\d+\s.*$', header[1]).group(1)
     results = []
     pattern = re.compile(r'^\d+$')
 
