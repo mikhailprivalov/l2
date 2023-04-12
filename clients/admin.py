@@ -157,6 +157,7 @@ class ResPatientHarmfullFactor(admin.ModelAdmin):
         'harmful_factor',
     )
 
+
 @admin.register(models.CardMovementRoom)
 class ResCardMovementRoom(admin.ModelAdmin):
     list_display = (

@@ -3,8 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from clients.models import Card, CardMovementRoom
-from podrazdeleniya.models import Podrazdeleniya, Room
-from slog.models import Log
+from podrazdeleniya.models import Room
 
 
 @login_required
@@ -28,9 +27,7 @@ def get_cards_to_accept(request):
     request_data = json.loads(request.body)
     room_from_id = request_data.get('roomOutId')
     room_to_id = request_data.get('roomInId')
-    print(room_from_id, room_to_id)
     cards = CardMovementRoom.get_accept_card(room_from_id, room_to_id)
-    print(cards)
     data = [{"id": i.id, "number_p": i.number_poliklinika, "fio": i.get_fio_w_card(), "room": i.room_location.title, "checked": False} for i in cards]
     return JsonResponse({"cardToAccept": data})
 
@@ -43,9 +40,12 @@ def get_cards_to_send(request):
     if room_obj.is_card_storage:
         data = []
     else:
-        cards = Card.objects.filter(room_location_id=room_id)
+        cards_obj = Card.objects.filter(room_location_id=room_id)
+        card_movement = CardMovementRoom.objects.values_list("card_id", flat=True).filter(room_in_id=room_id, doc_who_received=None, date_received=None)
+        cards = cards_obj.all().exclude(id__in=card_movement)
         data = [{"id": i.id, "number_p": i.number_poliklinika, "fio": i.get_fio_w_card(), "room": i.room_location.title, "checked": False} for i in cards]
     return JsonResponse({"cardToSend": data})
+
 
 @login_required
 def get_card_by_number(request):
@@ -76,6 +76,5 @@ def accept_document(request):
     room_in_id = request_data.get('destination')
     doc_who_issued_id = request.user.doctorprofile.id
     cards = request_data.get('cards')
-    print(cards, room_out_id, room_in_id, doc_who_issued_id)
     CardMovementRoom.transfer_accept(cards, room_out_id, room_in_id, doc_who_issued_id)
     return JsonResponse({"data": "ok"})

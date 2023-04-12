@@ -1400,7 +1400,6 @@ def user_view(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
     resource_researches = []
-    data_r =Room.objects.all().order_by('title')
     if pk == -1:
         data = {
             "family": '',
@@ -1453,7 +1452,6 @@ def user_view(request):
                     temp_result.append(i.researches_id)
                     resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
         resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
-        data_r = doc.room_access.all()
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],

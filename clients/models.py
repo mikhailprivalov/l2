@@ -1938,6 +1938,4 @@ class CardMovementRoom(models.Model):
     @staticmethod
     def get_accept_card(room_out_id, room_in_id, ):
         card_ids = CardMovementRoom.objects.values_list("card_id", flat=True).filter(room_in_id=room_in_id, room_out_id=room_out_id, date_received=None, doc_who_received=None)
-        print(card_ids)
         return Card.objects.filter(id__in=card_ids)
-
