@@ -156,3 +156,24 @@ class ResPatientHarmfullFactor(admin.ModelAdmin):
         'card',
         'harmful_factor',
     )
+
+@admin.register(models.CardMovementRoom)
+class ResCardMovementRoom(admin.ModelAdmin):
+    list_display = (
+        'card',
+        'room_out',
+        'room_in',
+        'doc_who_issued',
+        'date_issued',
+        'doc_who_received',
+        'date_received',
+    )
+    list_display_links = (
+        'card',
+        'room_out',
+        'room_in',
+    )
+    raw_id_fields = (
+        'card',
+    )
+

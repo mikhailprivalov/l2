@@ -1897,10 +1897,47 @@ class CardControlParam(models.Model):
 
 class CardMovementRoom(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
-    room_out = models.ForeignKey(Room, help_text="Кабинет откуда", related_name="room_out", db_index=True, on_delete=models.CASCADE)
-    room_in = models.ForeignKey(Room, help_text="Кабинет куда ", related_name="room_in", db_index=True, on_delete=models.CASCADE)
-    doc_who_issued = models.ForeignKey(DoctorProfile, related_name="doc_who_issued",  default=None, blank=True, null=True, help_text='Создатель направления', on_delete=models.SET_NULL)
+    room_out = models.ForeignKey(Room, help_text="Кабинет откуда", related_name="room_out", default=None, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+    room_in = models.ForeignKey(Room, help_text="Кабинет куда ", default=None, blank=True, null=True, related_name="room_in", db_index=True, on_delete=models.CASCADE)
+    doc_who_issued = models.ForeignKey(DoctorProfile, related_name="doc_who_issued",  default=None, blank=True, null=True, help_text='Отправитель', on_delete=models.SET_NULL)
     date_issued = models.DateTimeField(auto_now_add=True, help_text='Дата выдачи карт', db_index=True)
-    doc_who_received = models.ForeignKey(DoctorProfile, related_name="doc_who_received", default=None, blank=True, null=True, help_text='Создатель направления', on_delete=models.SET_NULL)
-    date_received = models.DateTimeField(auto_now_add=True, help_text='Дата подтверждения получения', db_index=True)
+    doc_who_received = models.ForeignKey(DoctorProfile, related_name="doc_who_received", default=None, blank=True, null=True, help_text='Приемщик', on_delete=models.SET_NULL)
+    date_received = models.DateTimeField(default=None, blank=True, null=True, help_text='Дата подтверждения получения', db_index=True)
     comment = models.CharField(max_length=128, help_text='Комментарий движения', default="")
+
+    @staticmethod
+    def transfer_send(cards, room_out_id, room_in_id, doc_who_issued_id):
+        for i in cards:
+            CardMovementRoom(card_id=i['id'], room_out_id=room_out_id, room_in_id=room_in_id, doc_who_issued_id=doc_who_issued_id).save()
+            card = Card.objects.filter(id=i['id']).first()
+            card.room_location_id = room_in_id
+            card.save()
+        return True
+
+    @staticmethod
+    def transfer_accept(cards, room_out_id, room_in_id, doc_who_received_id):
+        for i in cards:
+            transfer_card = CardMovementRoom.objects.filter(card_id=i['id'], room_out_id=room_out_id, room_in_id=room_in_id, doc_who_received_id=None).first()
+            transfer_card.doc_who_received_id = doc_who_received_id
+            today = datetime.now().date()
+            transfer_card.date_received = today
+            transfer_card.save()
+        return True
+
+    @staticmethod
+    def get_await_accept(room_in_ids):
+        card_objs = CardMovementRoom.objects.filter(room_in_id__in=room_in_ids)
+        rooms_out = []
+        rooms_out_result = []
+        for i in card_objs:
+            if i.room_out.id not in rooms_out:
+                rooms_out_result.append({"id": i.room_out.id, "label": i.room_out.title})
+                rooms_out.append(i.room_out.id)
+        return rooms_out_result
+
+    @staticmethod
+    def get_accept_card(room_out_id, room_in_id, ):
+        card_ids = CardMovementRoom.objects.values_list("card_id", flat=True).filter(room_in_id=room_in_id, room_out_id=room_out_id, date_received=None, doc_who_received=None)
+        print(card_ids)
+        return Card.objects.filter(id__in=card_ids)
+

@@ -49,6 +49,7 @@
         >
           <span class="input-group-addon">Номер карты</span>
           <input
+            ref="fieldCard"
             v-model="search"
             type="text"
             size="40"
@@ -66,7 +67,7 @@
             <button
               class="btn btn-blue-nb"
               type="button"
-              @click="executeTranfer"
+              @click="load"
             >Загрузить</button>
           </span>
         </div>
@@ -91,6 +92,7 @@
       <table class="table table-bordered">
         <colgroup>
           <col width="300">
+          <col width="200">
           <col>
           <col width="28">
         </colgroup>
@@ -98,6 +100,9 @@
           <tr>
             <th class="text-center">
               № карты
+            </th>
+            <th class="text-center">
+              Кабинет
             </th>
             <th class="text-center">
               ФИО
@@ -113,10 +118,13 @@
         <tbody>
           <tr
             v-for="row in transferCards"
-            :key="row.pk"
+            :key="row.id"
           >
             <td class="text-center">
               {{ row.number_p }}
+            </td>
+            <td class="text-center">
+              {{ row.room }}
             </td>
             <td class="text-center">
               {{ row.fio }}
@@ -145,33 +153,92 @@ import api from '@/api';
 
 const typesObject = ref(['Принять', 'Отправить']);
 const searchTypesObject = ref('');
+const destinations = ref([]);
 const destination = ref(-1);
+const sources = ref([]);
 const source = ref(-1);
 const allChecked = ref(false);
 const checkedCards = ref([]);
 const search = ref('');
-const destinations = ref([]);
-const sources = ref([]);
 
-const transferCards = ref([
-  {
-    pk: 1, number_p: 11, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 2, number_p: 22, fio: 'Ивано Иван Иванович', checked: false,
-  },
-  {
-    pk: 3, number_p: 33, fio: 'Ивано Иван Иванович', checked: false,
-  },
-]);
+const fieldCard = ref(null);
+const transferCards = ref([]);
+const isCardStorage = ref(false);
+
+function focusFieldCard() {
+  fieldCard.value.focus();
+}
 
 function filteredGroupObject() {
   console.log(searchTypesObject);
 }
 
-function executeTranfer() {
-  console.log('Выполнить');
-  console.log(checkedCards);
+async function load() {
+  let isFind = false;
+  for (const card of transferCards.value) {
+    if (card.number_p === search.value && !checkedCards.value.includes(card)) {
+      checkedCards.value.push(card);
+      isFind = true;
+      break;
+    }
+  }
+
+  if (!isFind && isCardStorage.value) {
+    const data = await api('transfer-document/get-card-by-number', search);
+    if (data.card.id) {
+      if (!checkedCards.value.includes(data.card)) {
+        checkedCards.value.push(data.card);
+      }
+      if (!transferCards.value.includes(data.card)) {
+        transferCards.value.push(data.card);
+      }
+    }
+  }
+}
+
+async function executeTranfer() {
+  if (searchTypesObject.value === 'Отправить') {
+    const data = await api(
+      'transfer-document/send-document',
+      { cards: checkedCards.value, source: source.value, destination: destination.value },
+    );
+    transferCards.value = transferCards.value.filter(x => !checkedCards.value.includes(x));
+  } else {
+    const data = await api(
+      'transfer-document/accept-document',
+      { cards: checkedCards.value, source: source.value, destination: destination.value },
+    );
+  }
+  focusFieldCard();
+}
+
+async function getDestinationsSources() {
+  const data = await api('transfer-document/get-destination-source', searchTypesObject);
+  source.value = -1;
+  destination.value = -1;
+  sources.value = data.sources;
+  destinations.value = data.destinations;
+}
+
+async function cardAccept() {
+  const data = await api('transfer-document/get-card-accept', { roomOutId: source.value, roomInId: destination.value });
+  transferCards.value = data.cardToAccept;
+}
+
+async function cardSend() {
+  const data = await api('transfer-document/get-card-send', source);
+  transferCards.value = data.cardToSend;
+}
+
+const currentCount = computed(() => checkedCards.value.length);
+
+function getIsCardStorage() {
+  for (const s of sources.value) {
+    if (s.id === source.value && s.isCardStorage) {
+      return true;
+    }
+  }
+  return false;
 }
 
 watch(allChecked, () => {
@@ -183,19 +250,20 @@ watch(allChecked, () => {
   } else checkedCards.value = [];
 });
 
-async function getDestinationsSources() {
-  const data = await api('transfer-document/get-destination-source', searchTypesObject);
-  source.value = -1;
-  destination.value = -1;
-  sources.value = data.sources;
-  destinations.value = data.destinations;
-}
-
 watch(searchTypesObject, () => {
+  transferCards.value = [];
+  checkedCards.value = [];
   getDestinationsSources();
 });
 
-const currentCount = computed(() => checkedCards.value.length);
+watch(source, () => {
+  transferCards.value = [];
+  checkedCards.value = [];
+  if (searchTypesObject.value === 'Отправить') {
+    cardSend();
+    isCardStorage.value = getIsCardStorage();
+  } else cardAccept();
+});
 
 </script>
 
