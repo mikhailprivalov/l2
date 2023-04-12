@@ -15,7 +15,7 @@ class DocAdmin(admin.ModelAdmin):
     )
     list_display_links = ('fio',)
     search_fields = ('fio',)
-    filter_horizontal = ('white_list_monitoring', 'black_list_monitoring', 'disabled_fin_source')
+    filter_horizontal = ('white_list_monitoring', 'black_list_monitoring', 'disabled_fin_source', 'room_access',)
 
 
 class ResDistrictResearchLimitAssign(admin.ModelAdmin):

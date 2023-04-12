@@ -85,6 +85,8 @@ class Room(models.Model):
     title = models.CharField(max_length=64, verbose_name='Название кабинета')
     type = models.PositiveSmallIntegerField(choices=TYPES, default=COMMON, db_index=True, verbose_name='Тип')
     hide = models.BooleanField(default=False, blank=True, db_index=True, verbose_name='Скрыть')
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
+    is_card_storage = models.BooleanField(default=False, blank=True, db_index=True, verbose_name='Картохранилище')
 
     def __str__(self):
         return f"{self.hospital} — {self.title}"
