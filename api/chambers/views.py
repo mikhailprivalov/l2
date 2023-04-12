@@ -47,19 +47,12 @@ def get_chambers_and_beds(request):
                                 {
                                     "fio": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.fio,
                                     "pk": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.pk,
-                                    "short_fio": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.get_fio()
+                                    "short_fio": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.get_fio(),
                                 }
                             ],
                             "contents": [
-                                {
-                                    "fio": patient_data["fio"],
-                                    "short_fio": short_fio,
-                                    "age": patient_data["age"],
-                                    "sex": patient_data["sex"],
-                                    "highlight": False,
-                                    "pk": history.direction_id
-                                }
-                            ]
+                                {"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": history.direction_id}
+                            ],
                         }
                     )
                 else:
@@ -69,26 +62,12 @@ def get_chambers_and_beds(request):
                             "bed_number": j.bed_number,
                             "doctor": [],
                             "contents": [
-                                {
-                                    "fio": patient_data["fio"],
-                                    "short_fio": short_fio,
-                                    "age": patient_data["age"],
-                                    "sex": patient_data["sex"],
-                                    "highlight": False,
-                                    "pk": history.direction_id
-                                }
-                            ]
+                                {"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": history.direction_id}
+                            ],
                         }
                     )
             else:
-                chamber["beds"].append(
-                    {
-                        "pk": j.pk,
-                        "bed_number": j.bed_number,
-                        "doctor": [],
-                        "contents": []
-                    }
-                )
+                chamber["beds"].append({"pk": j.pk, "bed_number": j.bed_number, "doctor": [], "contents": []})
         chambers.append(chamber)
     return JsonResponse({"data": chambers})
 
@@ -114,13 +93,7 @@ def extract_patient_bed(request):
 def get_attending_doctor(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    doctors = [
-        {
-            'fio': g.fio,
-            'pk': g.pk,
-            'short_fio': g.get_fio()
-        } for g in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)
-    ]
+    doctors = [{'fio': g.fio, 'pk': g.pk, 'short_fio': g.get_fio()} for g in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
     return JsonResponse({"data": doctors})
 
 
@@ -152,16 +125,7 @@ def get_patients_without_bed(request):
             patient_data = ind_card.get_data_individual()
             clients_obj = Individual.objects.get(family=patient_data["family"])
             short_fio = clients_obj.fio(short=True, dots=True)
-            patients.append(
-                {
-                    "fio": patient_data["fio"],
-                    "short_fio": short_fio,
-                    "age": patient_data["age"],
-                    "sex": patient_data["sex"],
-                    "highlight": False,
-                    "pk": patient.direction_id
-                }
-            )
+            patients.append({"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": patient.direction_id})
     return JsonResponse({"data": patients})
 
 
@@ -201,7 +165,7 @@ def get_patients(hosp_id):
                 "short_fio": f'{g.family} {g.name[0]}. {g.patronymic[0]}.',
                 "sex": g.sex,
                 "highlight": False,
-                "pk": g.napravleniye_id
+                "pk": g.napravleniye_id,
             }
         )
     return clients_obj
