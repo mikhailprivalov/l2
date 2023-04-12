@@ -3048,5 +3048,5 @@ def update_order_param(request):
 @group_required('Конструктор: Настройка организации')
 def get_examination_list(request):
     request_data = json.loads(request.body)
-    examination_list = MedicalExamination.get_by_date(request_data["date"], request_data["company"])
+    examination_list = MedicalExamination.get_by_date(request_data["date"], request_data["company"], request_data["month"])
     return JsonResponse({"data": examination_list})

@@ -124,11 +124,16 @@
               <button
                 v-tippy
                 title="Списки на мед. осмотр"
-                class="btn last btn-blue-nb nbr load-exam-date"
+                class="btn last btn-blue-nb nbr load-exam-data"
                 @click="getExaminationList"
               >
                 Списки
               </button>
+              <input
+                v-model="month"
+                class="margin-left margin-right"
+                type="checkbox"
+              > За месяц
             </div>
             <div>
               <ul class="nav navbar add-file">
@@ -270,6 +275,7 @@
           <colgroup>
             <col width="120">
             <col>
+            <col width="185">
             <col width="400">
           </colgroup>
           <tr>
@@ -288,6 +294,9 @@
               <h5 class="text-center no-margin">
                 {{ originShortTitle + ' мед. осмотры на: ' + date.split('-').reverse().join('.') }}
               </h5>
+            </td>
+            <td>
+              Исключить исследования
             </td>
             <td>
               <Treeselect
@@ -379,6 +388,7 @@ export default {
       pageSizeOptions: [50, 100, 200],
       excludedResearches: [],
       researches: [],
+      month: false,
     };
   },
   computed: {
@@ -495,14 +505,19 @@ export default {
       }
     },
     async getExaminationList() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const medicalExamination = await this.$api('get-examination-list', {
-        date: this.date,
-        company: this.editorCompany.pk,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      this.showExaminationList = true;
-      this.examinationList = medicalExamination.data;
+      if (!this.date) {
+        this.$root.$emit('msg', 'error', 'Дата не выбрана');
+      } else {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const medicalExamination = await this.$api('get-examination-list', {
+          date: this.date,
+          company: this.editorCompany.pk,
+          month: this.month,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        this.showExaminationList = true;
+        this.examinationList = medicalExamination.data;
+      }
     },
     async getResearches() {
       this.researches = await this.$api('/get-research-list');
@@ -597,7 +612,7 @@ export default {
 .add-file {
   width: 140px;
 }
-.load-exam-date {
+.load-exam-data {
   width: 80px;
 }
 .date-input {

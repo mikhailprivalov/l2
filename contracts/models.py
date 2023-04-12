@@ -1,3 +1,5 @@
+import calendar
+import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -198,12 +200,19 @@ class MedicalExamination(models.Model):
         return f"{self.card} - {self.company} - {self.date}"
 
     @staticmethod
-    def get_by_date(date: str, company_id: int):
+    def get_by_date(date: str, company_id: int, month=False):
         if not date or not company_id:
             return []
+        if month:
+            _, num_day = calendar.monthrange(int(date.split('-')[2]), int(date.split('-')[1]))
+            date_start = datetime.date(int(date.split('-')[0]), int(date.split('-')[1]), 1)
+            date_end = datetime.date(int(date.split('-')[0]), int(date.split('-')[1]), num_day)
+        else:
+            date_start = date
+            date_end = date
         result = []
         prev_card_id = -1
-        examination_data = get_examination_data(date, company_id)
+        examination_data = get_examination_data(company_id, date_start, date_end)
         for i in examination_data:
             if prev_card_id != i.card_id:
                 result.append({
@@ -220,7 +229,6 @@ class MedicalExamination(models.Model):
                     result[-1]["research_id"].append(i.research_id)
                     result[-1]["research_titles"].append(f'{i.research_title}; ')
             prev_card_id = i.card_id
-        print(result)
 
         return result
 
