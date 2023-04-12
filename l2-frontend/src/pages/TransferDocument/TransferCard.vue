@@ -5,7 +5,6 @@
         v-model="searchTypesObject"
         :variants="typesObject"
         full-width
-        @modified="filteredGroupObject"
       />
     </div>
     <div
@@ -169,10 +168,6 @@ function focusFieldCard() {
   fieldCard.value.focus();
 }
 
-function filteredGroupObject() {
-  console.log(searchTypesObject);
-}
-
 async function load() {
   let isFind = false;
   for (const card of transferCards.value) {
@@ -198,17 +193,17 @@ async function load() {
 
 async function executeTranfer() {
   if (searchTypesObject.value === 'Отправить') {
-    const data = await api(
+    await api(
       'transfer-document/send-document',
       { cards: checkedCards.value, source: source.value, destination: destination.value },
     );
-    transferCards.value = transferCards.value.filter(x => !checkedCards.value.includes(x));
   } else {
-    const data = await api(
+    await api(
       'transfer-document/accept-document',
       { cards: checkedCards.value, source: source.value, destination: destination.value },
     );
   }
+  transferCards.value = transferCards.value.filter(x => !checkedCards.value.includes(x));
   focusFieldCard();
 }
 

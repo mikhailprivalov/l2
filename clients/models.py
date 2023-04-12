@@ -1899,7 +1899,7 @@ class CardMovementRoom(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     room_out = models.ForeignKey(Room, help_text="Кабинет откуда", related_name="room_out", default=None, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
     room_in = models.ForeignKey(Room, help_text="Кабинет куда ", default=None, blank=True, null=True, related_name="room_in", db_index=True, on_delete=models.CASCADE)
-    doc_who_issued = models.ForeignKey(DoctorProfile, related_name="doc_who_issued",  default=None, blank=True, null=True, help_text='Отправитель', on_delete=models.SET_NULL)
+    doc_who_issued = models.ForeignKey(DoctorProfile, related_name="doc_who_issued", default=None, blank=True, null=True, help_text='Отправитель', on_delete=models.SET_NULL)
     date_issued = models.DateTimeField(auto_now_add=True, help_text='Дата выдачи карт', db_index=True)
     doc_who_received = models.ForeignKey(DoctorProfile, related_name="doc_who_received", default=None, blank=True, null=True, help_text='Приемщик', on_delete=models.SET_NULL)
     date_received = models.DateTimeField(default=None, blank=True, null=True, help_text='Дата подтверждения получения', db_index=True)
