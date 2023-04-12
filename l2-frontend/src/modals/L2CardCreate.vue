@@ -1604,7 +1604,13 @@ export default {
         },
       );
       if (data.result !== 'ok') {
-        this.$root.$emit('msg', 'error', 'Сохранение прошло не удачно');
+        let message = 'Сохранение прошло не удачно';
+        if (Array.isArray(data.messages)) {
+          for (const msg of data.messages) {
+            message = `${message} ${msg}`;
+          }
+        }
+        this.$root.$emit('msg', 'error', message);
         await this.$store.dispatch(actions.DEC_LOADING);
         return;
       }
