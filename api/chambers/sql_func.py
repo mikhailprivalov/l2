@@ -14,11 +14,11 @@ def getting_patient_issledovaniya(hosp_id):
                 napravleniye_id,
                 birthday 
                 FROM directions_issledovaniya 
-	            INNER JOIN directions_napravleniya ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
-	            INNER JOIN clients_card ON directions_napravleniya.client_id=clients_card.id
-	            INNER JOIN public.clients_individual ON clients_card.individual_id = public.clients_individual.id
-	            WHERE hospital_department_override_id = %(department_id)s
-	        """,
+                INNER JOIN directions_napravleniya ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                INNER JOIN clients_card ON directions_napravleniya.client_id=clients_card.id
+                INNER JOIN public.clients_individual ON clients_card.individual_id = public.clients_individual.id
+                WHERE hospital_department_override_id = %(department_id)s
+            """,
             params={"department_id": hosp_id},
         )
 
