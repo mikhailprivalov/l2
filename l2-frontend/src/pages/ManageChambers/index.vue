@@ -146,7 +146,7 @@
                   :options="{
                     group:{
                       name: 'Patients',
-                      put: 'Patients',
+                      put: conditionsDragBed(bed),
                       pull: 'Patients'
                     },
                     sort: false}"
@@ -399,7 +399,7 @@ export default {
     }
     function conditionsDragBed(bed) {
       if (bed.contents < 1) {
-        return 'unallocatedPatients';
+        return 'Patients';
       }
       return false;
     }
