@@ -23,6 +23,7 @@ from clients.sql_func import last_result_researches_years
 from directory.models import Researches, ScreeningPlan, PatientControlParam
 
 from laboratory.utils import localtime, current_year, strfdatetime
+from podrazdeleniya.models import Room
 from users.models import Speciality, DoctorProfile, AssignmentTemplates
 from django.contrib.postgres.fields import ArrayField
 
@@ -1054,7 +1055,7 @@ class Card(models.Model):
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     death_date = models.DateField(help_text='Дата смерти', db_index=True, default=None, blank=True, null=True)
     contact_trust_health = models.CharField(max_length=400, help_text='Кому доверяю состояние здоровья', blank=True, default="")
-    prognos_date_medical_examination = models.DateField(help_text='Предполагаемая дата медосмотра', db_index=True, default=None, blank=True, null=True)
+    room_location = models.ForeignKey(Room, default=None, blank=True, null=True, help_text="Кабинет нахождения карты", db_index=True, on_delete=models.SET_NULL)
 
     @property
     def main_address_full(self):
@@ -1892,3 +1893,49 @@ class CardControlParam(models.Model):
                 continue
             elif i.get("isSelected", False):
                 CardControlParam(card_id=card_pk, patient_control_param_id=i["id"]).save()
+
+
+class CardMovementRoom(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    room_out = models.ForeignKey(Room, help_text="Кабинет откуда", related_name="room_out", default=None, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+    room_in = models.ForeignKey(Room, help_text="Кабинет куда ", default=None, blank=True, null=True, related_name="room_in", db_index=True, on_delete=models.CASCADE)
+    doc_who_issued = models.ForeignKey(DoctorProfile, related_name="doc_who_issued", default=None, blank=True, null=True, help_text='Отправитель', on_delete=models.SET_NULL)
+    date_issued = models.DateTimeField(auto_now_add=True, help_text='Дата выдачи карт', db_index=True)
+    doc_who_received = models.ForeignKey(DoctorProfile, related_name="doc_who_received", default=None, blank=True, null=True, help_text='Приемщик', on_delete=models.SET_NULL)
+    date_received = models.DateTimeField(default=None, blank=True, null=True, help_text='Дата подтверждения получения', db_index=True)
+    comment = models.CharField(max_length=128, help_text='Комментарий движения', default="")
+
+    @staticmethod
+    def transfer_send(cards, room_out_id, room_in_id, doc_who_issued_id):
+        for i in cards:
+            CardMovementRoom(card_id=i['id'], room_out_id=room_out_id, room_in_id=room_in_id, doc_who_issued_id=doc_who_issued_id).save()
+            card = Card.objects.filter(id=i['id']).first()
+            card.room_location_id = room_in_id
+            card.save()
+        return True
+
+    @staticmethod
+    def transfer_accept(cards, room_out_id, room_in_id, doc_who_received_id):
+        for i in cards:
+            transfer_card = CardMovementRoom.objects.filter(card_id=i['id'], room_out_id=room_out_id, room_in_id=room_in_id, doc_who_received_id=None).first()
+            transfer_card.doc_who_received_id = doc_who_received_id
+            today = datetime.now().date()
+            transfer_card.date_received = today
+            transfer_card.save()
+        return True
+
+    @staticmethod
+    def get_await_accept(room_in_ids):
+        card_objs = CardMovementRoom.objects.filter(room_in_id__in=room_in_ids)
+        rooms_out = []
+        rooms_out_result = []
+        for i in card_objs:
+            if i.room_out.id not in rooms_out:
+                rooms_out_result.append({"id": i.room_out.id, "label": i.room_out.title})
+                rooms_out.append(i.room_out.id)
+        return rooms_out_result
+
+    @staticmethod
+    def get_accept_card(room_out_id, room_in_id, ):
+        card_ids = CardMovementRoom.objects.values_list("card_id", flat=True).filter(room_in_id=room_in_id, room_out_id=room_out_id, date_received=None, doc_who_received=None)
+        return Card.objects.filter(id__in=card_ids)

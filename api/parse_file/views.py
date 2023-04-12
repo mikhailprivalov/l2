@@ -177,16 +177,18 @@ def gen_commercial_offer(request):
         else:
             harmful_factor_data = [i.replace(" ", "") for i in cells[harmful_factor].split(",")]
             born_data = cells[born].split(" ")[0]
-            age = age_for_year(born_data)
-            if "м" in cells[sex]:
-                adds_harmfull = CONTROL_AGE_MEDEXAM.get("м")
-            else:
-                adds_harmfull = CONTROL_AGE_MEDEXAM.get("ж")
-            if adds_harmfull:
-                for i in sorted(adds_harmfull.keys()):
-                    if age < i:
-                        harmful_factor_data.append(adds_harmfull[i])
-                        break
+            age = -1
+            if born_data != "None":
+                age = age_for_year(born_data)
+                if "м" in cells[sex]:
+                    adds_harmfull = CONTROL_AGE_MEDEXAM.get("м")
+                else:
+                    adds_harmfull = CONTROL_AGE_MEDEXAM.get("ж")
+                if adds_harmfull:
+                    for i in sorted(adds_harmfull.keys()):
+                        if age < i:
+                            harmful_factor_data.append(adds_harmfull[i])
+                            break
             templates_data = HarmfulFactor.objects.values_list("template_id", flat=True).filter(title__in=harmful_factor_data)
             researches_data = AssignmentResearches.objects.values_list('research_id', flat=True).filter(template_id__in=templates_data)
             researches_data = set(researches_data)
