@@ -230,6 +230,7 @@ class Researches(models.Model):
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
+    is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -279,6 +280,7 @@ class Researches(models.Model):
     uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
     auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
+    show_aux_reserches = models.BooleanField(blank=True, default=False, help_text="Может иметь вспомогательные документы")
 
     @staticmethod
     def filter_type(t):
