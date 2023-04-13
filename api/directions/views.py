@@ -1403,6 +1403,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_form=True)
                         | Q(research__is_monitoring=True)
                         | Q(research__is_expertise=True)
+                        | Q(research__is_aux=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
