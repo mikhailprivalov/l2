@@ -147,7 +147,7 @@ def load_file(request):
     if request.POST.get('isGenCommercialOffer') == "true":
         results = gen_commercial_offer(request)
         link = "open-xls"
-    if request.POST.get('isWritePatientECP') == "true":
+    if request.POST.get('isWritePatientEcp') == "true":
         results = write_patient_ecp(request)
         link = "open-xls"
     elif len(request.POST.get('companyInn')) != 0:
