@@ -6,6 +6,7 @@ from appconf.manager import SettingManager
 import datetime
 
 
+
 def save_file_disk(wb):
     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
     today = datetime.datetime.now()
