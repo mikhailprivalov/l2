@@ -491,6 +491,19 @@ class HospitalService(models.Model):
         verbose_name_plural = 'Стационарные услуги'
 
 
+class AuxService(models.Model):
+    main_research = models.ForeignKey(Researches, help_text="Главная услуга", on_delete=models.CASCADE, db_index=True)
+    aux_research = models.ForeignKey(Researches, related_name='aux_protocol', help_text="Вспомогательная услуга", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+
+    class Meta:
+        verbose_name = 'Вспомогательная услуга'
+        verbose_name_plural = 'Вспомогательные услуги'
+
+    def __str__(self):
+        return f"{self.main_research.title} - {self.aux_research.title} - {self.hide}"
+
+
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text='Название группы')
     show_title = models.BooleanField()
