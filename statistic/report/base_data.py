@@ -36,7 +36,7 @@ def fill_data(ws1, value_data):
     for i in value_data:
         r += 1
         step_col = 0
-        for v in i.value():
+        for v in i.values():
             step_col += 1
             ws1.cell(row=r, column=step_col).value = v
     return ws1
