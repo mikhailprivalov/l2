@@ -14,7 +14,7 @@ from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
-from contracts.models import PriceCoast, Company
+from contracts.models import PriceCoast, Company, MedicalExamination
 from laboratory.settings import CONTROL_AGE_MEDEXAM
 from statistic.views import commercial_offer_xls_save_file
 from users.models import AssignmentResearches
@@ -81,6 +81,7 @@ def add_factors_from_file(request):
                 inn_company = cells.index("инн организации")
                 code_harmful = cells.index("код вредности")
                 position = cells.index("должность")
+                examination_date = cells.index("дата мед. осмотра")
                 starts = True
         else:
             if company_inn != cells[inn_company]:
@@ -128,6 +129,7 @@ def add_factors_from_file(request):
                 patient_card.work_position = cells[position].strip()
                 patient_card.work_place_db = company
                 patient_card.save()
+                MedicalExamination.save_examination(patient_card, company, cells[examination_date].split(' ')[0])
 
     return incorrect_patients
 

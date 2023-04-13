@@ -232,6 +232,13 @@ class MedicalExamination(models.Model):
 
         return result
 
+
+    @staticmethod
+    def save_examination(card: Card, company: Company, date: str):
+        MedicalExamination.objects.filter(card=card).delete()
+        MedicalExamination(card=card, company=company, date=date).save()
+
+
     class Meta:
         verbose_name = 'Медицинский осмотр'
         verbose_name_plural = 'Медицинские осмотры'
