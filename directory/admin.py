@@ -259,8 +259,15 @@ class SetResearchAdmin(admin.ModelAdmin):
 
 
 class SetAuxService(admin.ModelAdmin):
-    list_display = ('main_research', 'aux_research', 'hide',)
-    list_display_links = ('main_research', 'aux_research',)
+    list_display = (
+        'main_research',
+        'aux_research',
+        'hide',
+    )
+    list_display_links = (
+        'main_research',
+        'aux_research',
+    )
 
 
 admin.site.register(models.ResearchSite, RefSiteType)
