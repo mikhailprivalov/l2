@@ -278,7 +278,7 @@ def write_patient_ecp(request):
             born_data = cells[born].split(" ")[0]
             if "." in born_data:
                 born_data = normalize_dots_date(born_data)
-            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data, "snils": "" }
+            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data, "snils": ""}
             result = fill_slot_from_xlsx(cells[doctor], patient)
             is_write = "Ошибка"
             if result and result.get('register'):

@@ -5,6 +5,7 @@ import openpyxl
 from appconf.manager import SettingManager
 import datetime
 
+
 def save_file_disk(wb):
     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
     today = datetime.datetime.now()
@@ -13,6 +14,7 @@ def save_file_disk(wb):
     file_dir = os.path.join(dir_param, date_now_str + '.xlsx')
     wb.save(filename=file_dir)
     return file_dir
+
 
 def initial_work_book(name_sheets):
     wb = openpyxl.Workbook()

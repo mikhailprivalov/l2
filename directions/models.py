@@ -1194,7 +1194,6 @@ class Napravleniya(models.Model):
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result
         pk_reseerches = []
-        print(researches)
         for v in researches.values():
             pk_reseerches.extend(v)
         card = Clients.Card.objects.get(pk=client_id)
