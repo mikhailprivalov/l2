@@ -36,14 +36,14 @@ def get_cards_to_accept(request):
 def get_cards_to_send(request):
     request_data = json.loads(request.body)
     room_id = request_data.get('value')
-    room_obj = Room.objects.filter(id=room_id).first()
-    if room_obj.is_card_storage:
-        data = []
-    else:
-        cards_obj = Card.objects.filter(room_location_id=room_id)
-        card_movement = CardMovementRoom.objects.values_list("card_id", flat=True).filter(room_in_id=room_id, doc_who_received=None, date_received=None)
-        cards = cards_obj.all().exclude(id__in=card_movement)
-        data = [{"id": i.id, "number_p": i.number_poliklinika, "fio": i.get_fio_w_card(), "room": i.room_location.title, "checked": False} for i in cards]
+    data = []
+    if int(room_id) != -1:
+        room_obj = Room.objects.filter(id=room_id).first()
+        if not room_obj.is_card_storage:
+            cards_obj = Card.objects.filter(room_location_id=room_id)
+            card_movement = CardMovementRoom.objects.values_list("card_id", flat=True).filter(room_in_id=room_id, doc_who_received=None, date_received=None)
+            cards = cards_obj.all().exclude(id__in=card_movement)
+            data = [{"id": i.id, "number_p": i.number_poliklinika, "fio": i.get_fio_w_card(), "room": i.room_location.title, "checked": False} for i in cards]
     return JsonResponse({"cardToSend": data})
 
 

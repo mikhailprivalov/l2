@@ -62,7 +62,7 @@ from directions.models import (
     IssledovaniyaResultLaborant,
     SignatureCertificateDetails,
 )
-from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
+from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
 from laboratory import settings, VERSION
 from laboratory import utils
 from laboratory.decorators import group_required
@@ -174,6 +174,64 @@ def directions_generate(request):
             result["directionsStationar"].extend(rc["list_stationar_id"])
             if not result["ok"]:
                 break
+
+        if result["ok"]:
+            for pk in result["directions"]:
+                d: Napravleniya = Napravleniya.objects.get(pk=pk)
+                d.fill_acsn()
+                fill_slot_ecp_free_nearest(d)
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Вспомогательные документы")
+def aux_directions_generate(request):
+    result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
+    if request.method == "POST":
+        p = json.loads(request.body)
+        direction_id = p.get("directionId", None)
+        parent_iss = Issledovaniya.objects.filter(napravleniye_id=direction_id).first()
+        direction_obj = Napravleniya.objects.filter(id=direction_id).first()
+        aux_research = p.get("researches")
+        fin_source = p.get("fin_source", -1)
+        fin_source_pk = int(fin_source) if (isinstance(fin_source, int) or str(fin_source).isdigit()) else fin_source
+        args = [
+            direction_obj.client.pk,
+            p.get("diagnos"),
+            fin_source_pk,
+            p.get("history_num"),
+            p.get("ofname_pk"),
+            request.user.doctorprofile,
+            aux_research,
+            p.get("comments"),
+            p.get("for_rmis"),
+            p.get("rmis_data", {}),
+        ]
+        kwargs = dict(
+            vich_code=p.get("vich_code", ""),
+            count=p.get("count", 1),
+            discount=p.get("discount", 0),
+            parent_iss=parent_iss.id,
+            parent_slave_hosp=p.get("parent_slave_hosp", None),
+            counts=p.get("counts", {}),
+            localizations=p.get("localizations", {}),
+            service_locations=p.get("service_locations", {}),
+            direction_purpose=p.get("direction_purpose", "NONE"),
+            external_organization=p.get("external_organization", "NONE"),
+            direction_form_params=p.get("direction_form_params", {}),
+            current_global_direction_params=p.get("current_global_direction_params", {}),
+            hospital_department_override=p.get("hospital_department_override", -1),
+            hospital_override=p.get("hospital_override", -1),
+            price_category=p.get("priceCategory", -1),
+        )
+        rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
+        result["ok"] = rc["r"]
+        if "message" in rc:
+            result["message"] = rc["message"]
+        result["directions"].extend(rc["list_id"])
+        if "messageLimit" in rc:
+            result["messageLimit"] = rc["messageLimit"]
+        result["directionsStationar"].extend(rc["list_stationar_id"])
 
         if result["ok"]:
             for pk in result["directions"]:
@@ -381,6 +439,11 @@ def directions_history(request):
             status = min(status_set)
             if len(lab) > 0:
                 lab_title = ', '.join(lab)
+            aux_researches = []
+            if status == 2:
+                aux_researches_obj = AuxService.objects.filter(main_research__in=researches_pks)
+                if aux_researches_obj.exists():
+                    aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
             if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append(
                     {
@@ -388,6 +451,7 @@ def directions_history(request):
                         'status': status,
                         'researches': researches_titles,
                         "researches_pks": researches_pks,
+                        "aux_researches": aux_researches,
                         'date': date,
                         'cancel': cancel,
                         'checked': False,
@@ -480,6 +544,11 @@ def directions_history(request):
     status = min(status_set)
     if len(lab) > 0:
         lab_title = ', '.join(lab)
+    aux_researches = []
+    if status == 2:
+        aux_researches_obj = AuxService.objects.filter(main_research__in=researches_pks)
+        if aux_researches_obj.exists():
+            aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
     if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
         final_result.append(
             {
@@ -487,6 +556,7 @@ def directions_history(request):
                 'status': status,
                 'researches': researches_titles,
                 "researches_pks": researches_pks,
+                "aux_researches": aux_researches,
                 'date': date,
                 'cancel': cancel,
                 'checked': False,
@@ -506,9 +576,7 @@ def directions_history(request):
                 'register_number': register_number,
             }
         )
-
     res['directions'] = final_result
-
     return JsonResponse(res)
 
 
