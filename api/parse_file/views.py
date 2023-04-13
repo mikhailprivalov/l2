@@ -20,7 +20,7 @@ from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
 from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
 from integration_framework.views import check_enp
-from utils.dates import age_for_year
+from utils.dates import age_for_year, normalize_dots_date
 
 
 def dnk_covid(request):
@@ -267,7 +267,7 @@ def write_patient_ecp(request):
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
-            if "фамилия" in cells:
+            if "врач" in cells:
                 starts = True
                 family = cells.index("фaмилия")
                 name = cells.index("имя")
@@ -275,14 +275,14 @@ def write_patient_ecp(request):
                 born = cells.index("дата рождения")
                 doctor = cells.index("врач")
         else:
-            doctor_data = [i.replace(" ", "") for i in cells[doctor].split(",")]
             born_data = cells[born].split(" ")[0]
-            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": cells[born_data], "snils": "" }
-            for i in doctor_data:
-                result = fill_slot_from_xlsx(patient, i)
-                is_write = "Ошибка"
-                if result and result.get('register'):
-                    is_write = "записан"
-                patients.append({**patient, "is_write": is_write, "doctor": i})
+            if "." in born_data:
+                born_data = normalize_dots_date(born_data)
+            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data, "snils": "" }
+            result = fill_slot_from_xlsx(cells[doctor], patient)
+            is_write = "Ошибка"
+            if result and result.get('register'):
+                is_write = "записан"
+            patients.append({**patient, "is_write": is_write, "doctor": cells[doctor]})
     file_name = data_xls_save_file(patients, "Запись")
     return file_name

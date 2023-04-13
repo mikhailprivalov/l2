@@ -15,7 +15,7 @@ def fill_base(ws1, header_data):
         ('Цена', 18),
         ('Сумма', 18),
     ]
-    columns = [(i, 30) for i in header_data[0].keys()]
+    # columns = [(i, 30) for i in header_data[0].keys()]
 
     row = 5
     for idx, column in enumerate(columns, 1):
@@ -25,7 +25,7 @@ def fill_base(ws1, header_data):
     return ws1
 
 
-def fill_data(ws1, value_data, count_columns):
+def fill_data(ws1, value_data):
     style_border1 = NamedStyle(name="style_border1")
     bd = Side(style='thin', color="000000")
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
