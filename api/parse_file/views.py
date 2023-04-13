@@ -14,8 +14,9 @@ from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company
+from ecp_integration.integration import fill_slot_from_xlsx
 from laboratory.settings import CONTROL_AGE_MEDEXAM
-from statistic.views import commercial_offer_xls_save_file
+from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
 from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
 from integration_framework.views import check_enp
@@ -146,6 +147,9 @@ def load_file(request):
     if request.POST.get('isGenCommercialOffer') == "true":
         results = gen_commercial_offer(request)
         link = "open-xls"
+    if request.POST.get('isWritePatientECP') == "true":
+        results = write_patient_ecp(request)
+        link = "open-xls"
     elif len(request.POST.get('companyInn')) != 0:
         results = add_factors_from_file(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
@@ -252,3 +256,33 @@ def load_csv(request):
             )
 
     return JsonResponse({"ok": True, "results": results, "method": method})
+
+
+def write_patient_ecp(request):
+    file_data = request.FILES['file']
+    wb = load_workbook(filename=file_data)
+    ws = wb[wb.sheetnames[0]]
+    starts = False
+    patients = []
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "фамилия" in cells:
+                starts = True
+                family = cells.index("фaмилия")
+                name = cells.index("имя")
+                patronymic = cells.index("отчество")
+                born = cells.index("дата рождения")
+                doctor = cells.index("врач")
+        else:
+            doctor_data = [i.replace(" ", "") for i in cells[doctor].split(",")]
+            born_data = cells[born].split(" ")[0]
+            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": cells[born_data], "snils": "" }
+            for i in doctor_data:
+                result = fill_slot_from_xlsx(patient, i)
+                is_write = "Ошибка"
+                if result and result.get('register'):
+                    is_write = "записан"
+                patients.append({**patient, "is_write": is_write, "doctor": i})
+    file_name = data_xls_save_file(patients, "Запись")
+    return file_name
