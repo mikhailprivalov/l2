@@ -1994,5 +1994,3 @@ def open_xls(request):
 
 def get_price_company(company_id, start_date, end_date):
     return PriceName.get_company_price_by_date(company_id, start_date.date(), end_date.date())
-
-
