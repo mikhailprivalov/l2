@@ -439,9 +439,9 @@ def directions_history(request):
             status = min(status_set)
             if len(lab) > 0:
                 lab_title = ', '.join(lab)
+            aux_researches = []
             if status == 2:
                 aux_researches_obj = AuxService.objects.filter(main_research__in=researches_pks)
-                aux_researches = []
                 if aux_researches_obj.exists():
                     aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title}for i in aux_researches_obj]
             if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
@@ -544,9 +544,9 @@ def directions_history(request):
     status = min(status_set)
     if len(lab) > 0:
         lab_title = ', '.join(lab)
+    aux_researches = []
     if status == 2:
         aux_researches_obj = AuxService.objects.filter(main_research__in=researches_pks)
-        aux_researches = []
         if aux_researches_obj.exists():
             aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
     if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
@@ -577,7 +577,6 @@ def directions_history(request):
             }
         )
     res['directions'] = final_result
-
     return JsonResponse(res)
 
 
