@@ -1,9 +1,13 @@
+import calendar
+import datetime
 from decimal import Decimal
 
+from django.contrib.auth.models import User
 from django.db import models
 
 import directory.models as directory
-from contracts.sql_func import search_companies
+from clients.models import Card
+from contracts.sql_func import search_companies, get_examination_data
 
 
 class PriceCategory(models.Model):
@@ -183,3 +187,52 @@ class CompanyDepartment(models.Model):
     class Meta:
         verbose_name = 'Отдел компании'
         verbose_name_plural = 'Отделы компаний'
+
+
+
+class MedicalExamination(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта пациента", on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
+    date = models.DateField(help_text="Дата мед. осмотра", db_index=True)
+
+
+    def __str__(self):
+        return f"{self.card} - {self.company} - {self.date}"
+
+    @staticmethod
+    def get_by_date(date: str, company_id: int, month=False):
+        if not date or not company_id:
+            return []
+        if month:
+            _, num_day = calendar.monthrange(int(date.split('-')[2]), int(date.split('-')[1]))
+            date_start = datetime.date(int(date.split('-')[0]), int(date.split('-')[1]), 1)
+            date_end = datetime.date(int(date.split('-')[0]), int(date.split('-')[1]), num_day)
+        else:
+            date_start = date
+            date_end = date
+        result = []
+        prev_card_id = -1
+        examination_data = get_examination_data(company_id, date_start, date_end)
+        for i in examination_data:
+            if prev_card_id != i.card_id:
+                result.append({
+                    "card_id": i.card_id,
+                    "fio": i.family + " " + i.name + " " + i.patronymic,
+                    "harmful_factors": [f'{i.harmful_factor}; '],
+                    "research_id": [i.research_id],
+                    "research_titles": [f'{i.research_title}; '],
+                })
+            else:
+                if f'{i.harmful_factor}; ' not in result[-1]["harmful_factors"]:
+                    result[-1]["harmful_factors"].append(f'{i.harmful_factor}; ')
+                if i.research_id not in result[-1]["research_id"]:
+                    result[-1]["research_id"].append(i.research_id)
+                    result[-1]["research_titles"].append(f'{i.research_title}; ')
+            prev_card_id = i.card_id
+
+        return result
+
+    class Meta:
+        verbose_name = 'Медицинский осмотр'
+        verbose_name_plural = 'Медицинские осмотры'
+
