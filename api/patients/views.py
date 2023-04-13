@@ -626,8 +626,6 @@ def patients_card_save(request):
         c.fact_address = request_data["fact_address"]
         c.fact_address_fias = None
         c.fact_address_details = None
-
-    c.number_poliklinika = request_data.get("number_poli", "")
     if request_data["custom_workplace"] or not Company.objects.filter(pk=request_data.get("work_place_db", -1)).exists():
         c.work_place_db = None
         c.work_place = request_data["work_place"] if request_data["custom_workplace"] else ''
@@ -676,6 +674,14 @@ def patients_card_save(request):
         except Exception as e:
             logger.exception(e)
             messages.append(str(e))
+    number_poli = request_data.get("number_poli", "")
+    if number_poli:
+        card_number_poli = Card.objects.filter(number_poliklinika=number_poli)
+        for cnp in card_number_poli:
+            if cnp.number_poliklinika == number_poli and cnp != c:
+                messages.append("Номер карты ТФОМС занят")
+                return JsonResponse({"result": "false", "message": message, "messages": messages, "card_pk": card_pk, "individual_pk": individual_pk})
+    c.number_poliklinika = number_poli
     c.save()
     if c.individual.primary_for_rmis:
         try:
