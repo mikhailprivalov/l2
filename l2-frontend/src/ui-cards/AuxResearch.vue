@@ -76,7 +76,6 @@ export default {
   },
   methods: {
     async genAuxDirection() {
-      console.log('Привет');
       const data = await api(
         'directions/aux-generate',
         { directionId: this.mainDirection, researches: { '-9': [this.auxResearch[0].pk] } },
