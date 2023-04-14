@@ -341,6 +341,7 @@ class Researches(models.Model):
             or self.is_direction_params
             or self.is_monitoring
             or self.is_expertise
+            or self.is_aux
         )
 
     def get_flag_types_n3(self):

@@ -197,13 +197,13 @@ def aux_directions_generate(request):
         fin_source_pk = int(fin_source) if (isinstance(fin_source, int) or str(fin_source).isdigit()) else fin_source
         args = [
             direction_obj.client.pk,
-            p.get("diagnos"),
+            p.get("diagnos", "-"),
             fin_source_pk,
             p.get("history_num"),
             p.get("ofname_pk"),
             request.user.doctorprofile,
             aux_research,
-            p.get("comments"),
+            p.get("comments", {}),
             p.get("for_rmis"),
             p.get("rmis_data", {}),
         ]
@@ -440,10 +440,12 @@ def directions_history(request):
             if len(lab) > 0:
                 lab_title = ', '.join(lab)
             aux_researches = []
+            has_aux = False
             if status == 2:
                 aux_researches_obj = AuxService.objects.filter(main_research__in=researches_pks)
                 if aux_researches_obj.exists():
                     aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
+                    has_aux = True
             if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append(
                     {
@@ -452,6 +454,7 @@ def directions_history(request):
                         'researches': researches_titles,
                         "researches_pks": researches_pks,
                         "aux_researches": aux_researches,
+                        "has_aux": has_aux,
                         'date': date,
                         'cancel': cancel,
                         'checked': False,
@@ -545,10 +548,12 @@ def directions_history(request):
     if len(lab) > 0:
         lab_title = ', '.join(lab)
     aux_researches = []
+    has_aux = False
     if status == 2:
         aux_researches_obj = AuxService.objects.filter(main_research__in=researches_pks)
         if aux_researches_obj.exists():
             aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
+            has_aux = True
     if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
         final_result.append(
             {
@@ -557,6 +562,7 @@ def directions_history(request):
                 'researches': researches_titles,
                 "researches_pks": researches_pks,
                 "aux_researches": aux_researches,
+                "has_aux": has_aux,
                 'date': date,
                 'cancel': cancel,
                 'checked': False,
@@ -1403,6 +1409,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_form=True)
                         | Q(research__is_monitoring=True)
                         | Q(research__is_expertise=True)
+                        | Q(research__is_aux=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
