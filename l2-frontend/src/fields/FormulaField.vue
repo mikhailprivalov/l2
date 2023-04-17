@@ -16,7 +16,7 @@
     </span>
     <input
       class="form-control"
-      :value="content"
+      v-model="content"
       :readonly="disabled || !canEdit"
       placeholder="Расчётное поле"
       :key="n"
