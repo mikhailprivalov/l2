@@ -1229,25 +1229,25 @@ test = ["appdirs (==1.4.4)", "pytest (>=6)", "pytest-cov (>=2.7)", "pytest-mock 
 
 [[package]]
 name = "posthog"
-version = "2.1.2"
+version = "3.0.0"
 description = "Integrate PostHog into any python application."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "posthog-2.1.2-py2.py3-none-any.whl", hash = "sha256:c86d4bc128bd3f452a1bd2b75a8ddbfa1af249f0dd274f482355c2eea6223345"},
-    {file = "posthog-2.1.2.tar.gz", hash = "sha256:44fcf5f911530044973fafaf479011bc9a9a1f8c853b847f90d09b65bbec9a68"},
+    {file = "posthog-3.0.0-py2.py3-none-any.whl", hash = "sha256:9a94500e0d5867a52e85c02967fd44f88ba949e98a2fb1854fb0d4480d9a5419"},
+    {file = "posthog-3.0.0.tar.gz", hash = "sha256:faa5689fe031815416bd8125da2e35920aa59a6911126dcaf4a38f098e7dbff5"},
 ]
 
 [package.dependencies]
-backoff = ">=1.10.0,<2.0.0"
+backoff = ">=1.10.0"
 monotonic = ">=1.5"
 python-dateutil = ">2.1"
 requests = ">=2.7,<3.0"
 six = ">=1.5"
 
 [package.extras]
-dev = ["black", "isort", "pre-commit"]
+dev = ["black", "flake8", "flake8-print", "isort", "pre-commit"]
 sentry = ["django", "sentry-sdk"]
 test = ["coverage", "flake8", "freezegun (==0.3.15)", "mock (>=2.0.0)", "pylint", "pytest"]
 
@@ -2140,4 +2140,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "262cdf6e625933e7d31ef52419710de9d5b247a03b53be3c2f94a0b321b3e3fa"
+content-hash = "a5a71ee7dd354daeae36c3bc65336c2443e2c1a43a306aa409f6530958a87a88"
