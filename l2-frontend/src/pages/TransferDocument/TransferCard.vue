@@ -251,7 +251,7 @@ watch(searchTypesObject, () => {
   getDestinationsSources();
 });
 
-watch(source, () => {
+watch([source, destination], () => {
   transferCards.value = [];
   checkedCards.value = [];
   if (searchTypesObject.value === 'Отправить') {
