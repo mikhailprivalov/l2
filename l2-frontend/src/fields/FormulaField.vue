@@ -15,11 +15,11 @@
       </button>
     </span>
     <input
-      class="form-control"
       v-model="content"
+      class="form-control"
+      :key="n"
       :readonly="disabled || !canEdit"
       placeholder="Расчётное поле"
-      :key="n"
     >
   </div>
 </template>

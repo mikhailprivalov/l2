@@ -18,12 +18,9 @@ import plural from 'plural-ru';
 import moment from 'moment';
 import VueFormulate from '@braid/vue-formulate';
 import { ru } from '@braid/vue-formulate-i18n';
-import error2json from '@stdlib/error-to-json';
 // @ts-ignore
 import VueImg from 'v-img';
 import { veLoading } from 'vue-easytable';
-
-import { sendEvent } from '@/metrics';
 
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 import api from './api';
@@ -130,6 +127,5 @@ export default (): void => {
     // eslint-disable-next-line no-console
     console.error(error);
     vm.$root.$emit('msg', 'error', `Vue Error: ${error}`);
-    sendEvent('vue_error', { error: error2json(error) });
   };
 };

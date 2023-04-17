@@ -184,7 +184,6 @@ import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 
 import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
-import { sendEvent } from '@/metrics';
 
 @Component({
   computed: mapGetters([
@@ -264,7 +263,6 @@ export default class Navbar extends Vue {
 
   // eslint-disable-next-line class-methods-use-this
   reload() {
-    sendEvent('reload-with-new-version', {});
     window.location.reload();
   }
 }
