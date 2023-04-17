@@ -1771,6 +1771,7 @@ def directions_paraclinic_form(request):
                                 "values_to_input": values_to_input,
                                 "value": value,
                                 "field_type": field_type,
+                                "can_edit": field.can_edit_computed,
                                 "default_value": field.default_value,
                                 "visibility": field.visibility,
                                 "required": field.required,

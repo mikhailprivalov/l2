@@ -1,9 +1,23 @@
 <template>
   <div class="input-group">
+    <span
+      v-if="!disabled && canEdit"
+      class="input-group-btn"
+    >
+      <button
+        v-tippy
+        type="button"
+        class="btn btn-default btn-primary-nb btn30"
+        title="Сегодня"
+        @click="directiveCalc"
+      >
+        <i class="fa fa-circle" />
+      </button>
+    </span>
     <input
       class="form-control"
       :value="content"
-      readonly
+      :readonly="disabled || !canEdit"
       placeholder="Расчётное поле"
     >
   </div>
@@ -14,7 +28,7 @@ import { CalculateFormula } from '../utils';
 
 export default {
   name: 'FormulaField',
-  props: ['value', 'fields', 'formula', 'patient'],
+  props: ['value', 'fields', 'formula', 'patient', 'canEdit', 'disabled'],
   data() {
     return {
       content: this.value,
@@ -31,14 +45,14 @@ export default {
   watch: {
     patient: {
       handler() {
-        this.content = this.calc();
+        this.reactiveCalc();
       },
       deep: true,
       immediate: true,
     },
     fields: {
       handler() {
-        this.content = this.calc();
+        this.reactiveCalc();
       },
       deep: true,
     },
@@ -52,10 +66,22 @@ export default {
       immediate: true,
     },
     func_formula() {
-      this.content = this.func_formula.toString();
+      if (!this.canEdit && !this.disabled) {
+        this.content = this.func_formula.toString();
+      }
     },
   },
   methods: {
+    reactiveCalc() {
+      if (!this.canEdit && !this.disabled) {
+        this.content = this.calc();
+      }
+    },
+    directiveCalc() {
+      if (!this.disabled) {
+        this.content = this.calc();
+      }
+    },
     calc() {
       return CalculateFormula(this.f_obj, this.formula, this.patient);
     },
