@@ -19,6 +19,7 @@
       :value="content"
       :readonly="disabled || !canEdit"
       placeholder="Расчётное поле"
+      :key="n"
     >
   </div>
 </template>
@@ -32,6 +33,7 @@ export default {
   data() {
     return {
       content: this.value,
+      n: 0,
     };
   },
   computed: {
@@ -79,7 +81,9 @@ export default {
     },
     directiveCalc() {
       if (!this.disabled) {
-        this.content = this.calc();
+        const val = this.calc();
+        this.content = val;
+        this.n++;
       }
     },
     calc() {
