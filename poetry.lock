@@ -655,20 +655,23 @@ pyflakes = ">=2.5.0,<2.6.0"
 
 [[package]]
 name = "flake8-black"
-version = "0.2.3"
+version = "0.3.6"
 description = "flake8 plugin to call black as a code style validator"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "flake8-black-0.2.3.tar.gz", hash = "sha256:c199844bc1b559d91195ebe8620216f21ed67f2cc1ff6884294c91a0d2492684"},
-    {file = "flake8_black-0.2.3-py3-none-any.whl", hash = "sha256:cc080ba5b3773b69ba102b6617a00cc4ecbad8914109690cfda4d565ea435d96"},
+    {file = "flake8-black-0.3.6.tar.gz", hash = "sha256:0dfbca3274777792a5bcb2af887a4cad72c72d0e86c94e08e3a3de151bb41c34"},
+    {file = "flake8_black-0.3.6-py3-none-any.whl", hash = "sha256:fe8ea2eca98d8a504f22040d9117347f6b367458366952862ac3586e7d4eeaca"},
 ]
 
 [package.dependencies]
-black = "*"
-flake8 = ">=3.0.0"
-toml = "*"
+black = ">=22.1.0"
+flake8 = ">=3"
+tomli = {version = "*", markers = "python_version < \"3.11\""}
+
+[package.extras]
+develop = ["build", "twine"]
 
 [[package]]
 name = "fonttools"
@@ -2109,4 +2112,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "10ced48c8ddbab92e4416a50495c572cf1c84af127f72c702ebb09ce0b3efa69"
+content-hash = "450ac9509856f4731fba2e2d568289bba8635a3a4b6e2e2da5c78486fb8bd8ff"
