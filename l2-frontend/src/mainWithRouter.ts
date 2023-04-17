@@ -72,6 +72,7 @@ const router = new Router({
         title: 'Движение карт',
         groups: ['Лечащий врач', 'Оператор лечащего врача'],
         narrowLayout: true,
+        module: 'l2_transfer_card',
       },
     },
     {
