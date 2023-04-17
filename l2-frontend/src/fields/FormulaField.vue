@@ -8,7 +8,7 @@
         v-tippy
         type="button"
         class="btn btn-default btn-primary-nb btn30"
-        title="Сегодня"
+        title="Рассчитать значение"
         @click="directiveCalc"
       >
         <i class="fa fa-circle" />
