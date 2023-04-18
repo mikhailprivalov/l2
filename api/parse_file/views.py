@@ -87,50 +87,50 @@ def add_factors_from_file(request):
         else:
             if company_inn != cells[inn_company]:
                 incorrect_patients.append({"fio": cells[fio], "reason": "ИНН организации не совпадает"})
-            else:
-                params = {"enp": "", "snils": cells[snils].replace('-', '').replace(' ', ''), "check_mode": "l2-snils"}
-                request_obj = HttpRequest()
-                request_obj._body = params
-                request_obj.user = request.user
-                request_obj.method = 'POST'
-                request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
-                current_patient = check_enp(request_obj)
-                if current_patient.data.get("message"):
-                    patient_card = search_by_fio(request_obj, cells[fio], cells[birthday])
+                continue
+            params = {"enp": "", "snils": cells[snils].replace('-', '').replace(' ', ''), "check_mode": "l2-snils"}
+            request_obj = HttpRequest()
+            request_obj._body = params
+            request_obj.user = request.user
+            request_obj.method = 'POST'
+            request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
+            current_patient = check_enp(request_obj)
+            if current_patient.data.get("message"):
+                patient_card = search_by_fio(request_obj, cells[fio], cells[birthday])
+                if not patient_card:
+                    possible_family = find_and_replace(cells[fio].split(' ')[0], 'е', 'ё')
+                    patient_card = search_by_possible_fio(request_obj, cells[fio], cells[birthday], possible_family)
                     if not patient_card:
-                        possible_family = find_and_replace(cells[fio].split(' ')[0], 'е', 'ё')
-                        patient_card = search_by_possible_fio(request_obj, cells[fio], cells[birthday], possible_family)
-                        if not patient_card:
-                            patient_indv = Individual(
-                                family=cells[fio].split(' ')[0],
-                                name=cells[fio].split(' ')[1],
-                                patronymic=cells[fio].split(' ')[2],
-                                birthday=cells[birthday].split(' ')[0],
-                                sex=cells[gender][0],
-                            )
-                            patient_indv.save()
-                            patient_card = Card.add_l2_card(individual=patient_indv)
-                elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
-                    patient_card_pk = current_patient.data["patient_data"]["card"]
-                    patient_card = Card.objects.filter(pk=patient_card_pk).first()
+                        patient_indv = Individual(
+                            family=cells[fio].split(' ')[0],
+                            name=cells[fio].split(' ')[1],
+                            patronymic=cells[fio].split(' ')[2],
+                            birthday=cells[birthday].split(' ')[0],
+                            sex=cells[gender][0],
+                        )
+                        patient_indv.save()
+                        patient_card = Card.add_l2_card(individual=patient_indv)
+            elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
+                patient_card_pk = current_patient.data["patient_data"]["card"]
+                patient_card = Card.objects.filter(pk=patient_card_pk).first()
+            else:
+                patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
+            incorrect_factor = []
+            harmful_factors_data = []
+            for i in cells[code_harmful].split(','):
+                harmful_factor = HarmfulFactor.objects.filter(title=i.replace(" ", "")).first()
+                if harmful_factor:
+                    harmful_factors_data.append({"factorId": harmful_factor.pk})
                 else:
-                    patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
-                incorrect_factor = []
-                harmful_factors_data = []
-                for i in cells[code_harmful].split(','):
-                    harmful_factor = HarmfulFactor.objects.filter(title=i.replace(" ", "")).first()
-                    if harmful_factor:
-                        harmful_factors_data.append({"factorId": harmful_factor.pk})
-                    else:
-                        incorrect_factor.append(f'{i.replace(" ", "")}')
-                if len(incorrect_factor) != 0:
-                    incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
-                PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
-                company_obj = Company.objects.filter(inn=company_inn).first()
-                patient_card.work_position = cells[position].strip()
-                patient_card.work_place_db = company_obj
-                patient_card.save()
-                MedicalExamination.save_examination(patient_card, company_obj, cells[examination_date].split(' ')[0])
+                    incorrect_factor.append(f'{i.replace(" ", "")}')
+            if len(incorrect_factor) != 0:
+                incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
+            PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
+            company_obj = Company.objects.filter(inn=company_inn).first()
+            patient_card.work_position = cells[position].strip()
+            patient_card.work_place_db = company_obj
+            patient_card.save()
+            MedicalExamination.save_examination(patient_card, company_obj, cells[examination_date].split(' ')[0])
 
     return incorrect_patients
 

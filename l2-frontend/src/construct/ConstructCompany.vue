@@ -282,8 +282,8 @@
             <col width="400">
           </colgroup>
           <tr>
-            <td>
-              <div class="button">
+            <td class="position-relative">
+              <div class="button print-div">
                 <button
                   v-tippy
                   title="Печать"
@@ -647,6 +647,11 @@ export default {
 .checkbox-input {
   margin-top: 0;
   margin-bottom: 0;
+}
+.print-div {
+  position: absolute;
+  height: 100%;
+  top: 0;
 }
 .button {
   width: 100%;

@@ -79,6 +79,7 @@
             </li>
             <li
               v-for="r in results"
+              v-if="!company"
               :key="r.pk"
             >
               {{ r.pk }} – {{ r.result }} <small v-if="r.comment">{{ r.comment }}</small>
