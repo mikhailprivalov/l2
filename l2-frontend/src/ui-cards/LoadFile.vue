@@ -73,13 +73,12 @@
           <h5 v-if="results.length > 0">
             {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
-          <ul v-if="results.length !== 0 && !link">
+          <ul v-if="results.length !== 0 && !link && !company">
             <li v-if="method">
               Методика: {{ method }}
             </li>
             <li
               v-for="r in results"
-              v-if="!company"
               :key="r.pk"
             >
               {{ r.pk }} – {{ r.result }} <small v-if="r.comment">{{ r.comment }}</small>
