@@ -48,7 +48,7 @@ from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Cont
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, District, HarmfulFactor,
+from clients.models import CardBase, Individual, Card, Document, District, HarmfulFactor
 from context_processors.utils import menu
 from directory.models import (
     Fractions,
