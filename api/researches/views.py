@@ -599,6 +599,7 @@ def researches_update(request):
                                     visibility=field.get("visibility", ""),
                                     input_templates=json.dumps(field["values_to_input"]),
                                     field_type=field.get("field_type", 0),
+                                    can_edit_computed=field.get("can_edit", False),
                                     helper=field.get("helper", ''),
                                     required=field.get("required", False),
                                     not_edit=field.get("not_edit", False),
@@ -622,6 +623,7 @@ def researches_update(request):
                                 f.visibility = field.get("visibility", "")
                                 f.input_templates = json.dumps(field["values_to_input"])
                                 f.field_type = field.get("field_type", 0)
+                                f.can_edit_computed = field.get("can_edit", False)
                                 f.required = field.get("required", False)
                                 f.not_edit = field.get("not_edit", False)
                                 f.operator_enter_param = field.get("operator_enter_param", False)
@@ -681,6 +683,7 @@ def paraclinic_details(request):
                     "hide": field.hide,
                     "values_to_input": json.loads(field.input_templates),
                     "field_type": field.field_type,
+                    "can_edit": field.can_edit_computed,
                     "required": field.required,
                     "for_talon": field.for_talon,
                     "controlParam": field.control_param,
