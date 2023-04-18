@@ -5,9 +5,8 @@ from decimal import Decimal
 from django.db import models
 
 import directory.models as directory
-from contracts.sql_func import search_companies
-from clients.models import Card
 from contracts.sql_func import search_companies, get_examination_data
+from clients.models import Card
 
 
 class PriceCategory(models.Model):
