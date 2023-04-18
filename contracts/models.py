@@ -189,16 +189,13 @@ class CompanyDepartment(models.Model):
         verbose_name_plural = 'Отделы компаний'
 
 
-
 class MedicalExamination(models.Model):
     card = models.ForeignKey(Card, help_text="Карта пациента", on_delete=models.CASCADE)
     company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
     date = models.DateField(help_text="Дата мед. осмотра", db_index=True)
 
-
     def __str__(self):
         return f"{self.card} - {self.company} - {self.date}"
-
 
     @staticmethod
     def get_by_date(date: str, company_id: int, month=False) -> list[dict]:
@@ -216,14 +213,16 @@ class MedicalExamination(models.Model):
         examination_data = get_examination_data(company_id, date_start, date_end)
         for i in examination_data:
             if prev_card_id != i.card_id:
-                result.append({
-                    "card_id": i.card_id,
-                    "fio": i.family + " " + i.name + " " + i.patronymic,
-                    "harmful_factors": [f'{i.harmful_factor}; '],
-                    "research_id": [i.research_id],
-                    "research_titles": [f'{i.research_title}; '],
-                    "date": ".".join(reversed(str(i.examination_date).split('-')))
-                })
+                result.append(
+                    {
+                        "card_id": i.card_id,
+                        "fio": i.family + " " + i.name + " " + i.patronymic,
+                        "harmful_factors": [f'{i.harmful_factor}; '],
+                        "research_id": [i.research_id],
+                        "research_titles": [f'{i.research_title}; '],
+                        "date": ".".join(reversed(str(i.examination_date).split('-'))),
+                    }
+                )
             else:
                 if f'{i.harmful_factor}; ' not in result[-1]["harmful_factors"]:
                     result[-1]["harmful_factors"].append(f'{i.harmful_factor}; ')
@@ -238,14 +237,11 @@ class MedicalExamination(models.Model):
 
         return result
 
-
     @staticmethod
     def save_examination(card: Card, company: Company, date: str):
         MedicalExamination.objects.filter(card=card).delete()
         MedicalExamination(card=card, company=company, date=date).save()
 
-
     class Meta:
         verbose_name = 'Медицинский осмотр'
         verbose_name_plural = 'Медицинские осмотры'
-
