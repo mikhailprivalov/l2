@@ -1555,6 +1555,7 @@ def directions_paraclinic_form(request):
                         "is_microbiology": i.research.is_microbiology,
                         "is_treatment": i.research.is_treatment,
                         "is_stom": i.research.is_stom,
+                        "isAux": i.research.is_aux,
                         "is_monitoring": i.research.is_monitoring,
                         "wide_headers": i.research.wide_headers,
                         "comment": i.localization.title if i.localization else i.comment,
@@ -1927,6 +1928,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_form=True)
             | Q(research__is_monitoring=True)
             | Q(research__is_expertise=True)
+            | Q(research__is_aux=True)
         ).exists()
         or request.user.is_staff
     ):

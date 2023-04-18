@@ -1323,7 +1323,7 @@
               Сохранить
             </button>
             <button
-              v-if="!row.confirmed && can_confirm && !is_operator_protocol"
+              v-if="!row.confirmed && can_confirm && !is_operator_protocol || !row.confirmed && can_confirm && row.research.isAux"
               class="btn btn-blue-nb"
               :disabled="!r(row) || needFillWorkBy(row)"
               @click="save_and_confirm(row)"
