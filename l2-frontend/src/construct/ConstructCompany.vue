@@ -131,9 +131,12 @@
               </button>
               <input
                 v-model="month"
-                class="margin-left margin-right"
+                class="margin-left margin-right checkbox-input"
                 type="checkbox"
-              > За месяц
+              >
+              <div class="month">
+                За месяц
+              </div>
             </div>
             <div>
               <ul class="nav navbar add-file">
@@ -292,7 +295,7 @@
             </td>
             <td>
               <h5 class="text-center no-margin">
-                {{ originShortTitle + ' мед. осмотры на: ' + date.split('-').reverse().join('.') }}
+                {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
               </h5>
             </td>
             <td>
@@ -372,12 +375,16 @@ export default {
       date: '',
       showExaminationList: false,
       examinationList: [],
+      dateTitle: '',
       columns: [
         {
-          field: 'fio', key: 'fio', title: 'Пациент', align: 'left', width: 400,
+          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
         },
         {
-          field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 400,
+          field: 'fio', key: 'fio', title: 'Пациент', align: 'left', width: 300,
+        },
+        {
+          field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 200,
         },
         {
           field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
@@ -517,6 +524,11 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
         this.showExaminationList = true;
         this.examinationList = medicalExamination.data;
+        if (this.month) {
+          this.dateTitle = this.date.split('-').reverse().slice(-2).join('.');
+        } else {
+          this.dateTitle = this.date.split('-').reverse().join('.');
+        }
       }
     },
     async getResearches() {
@@ -624,6 +636,13 @@ export default {
 .empty-list {
   width: 85px;
   margin: 20px auto;
+}
+.month {
+  margin-top: 10px;
+}
+.checkbox-input {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 .button {
   width: 100%;
