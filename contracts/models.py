@@ -189,7 +189,6 @@ class CompanyDepartment(models.Model):
         verbose_name_plural = 'Отделы компаний'
 
 
-
 class MedicalExamination(models.Model):
     card = models.ForeignKey(Card, help_text="Карта пациента", on_delete=models.CASCADE)
     company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
@@ -197,7 +196,6 @@ class MedicalExamination(models.Model):
 
     def __str__(self):
         return f"{self.card} - {self.company} - {self.date}"
-
 
     @staticmethod
     def get_by_date(date: str, company_id: int, month=False) -> list[dict]:
@@ -239,12 +237,10 @@ class MedicalExamination(models.Model):
 
         return result
 
-
     @staticmethod
     def save_examination(card: Card, company: Company, date: str):
         MedicalExamination.objects.filter(card=card).delete()
         MedicalExamination(card=card, company=company, date=date).save()
-
 
     class Meta:
         verbose_name = 'Медицинский осмотр'

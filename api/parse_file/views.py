@@ -245,11 +245,11 @@ def find_and_replace(text: str, symbol1: str, symbol2: str) -> list:
     for i in range(len(text)):
         if text[i] == symbol1:
             current_family = text
-            current_family = current_family[0:i] + symbol2 + current_family[i + 1:]
+            current_family = current_family[0:i] + symbol2 + current_family[i + 1 :]
             result.append(current_family)
         elif text[i] == symbol2:
             current_family = text
-            current_family = current_family[0:i] + symbol1 + current_family[i + 1:]
+            current_family = current_family[0:i] + symbol1 + current_family[i + 1 :]
             result.append(current_family)
     return result
 

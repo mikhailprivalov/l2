@@ -87,16 +87,9 @@ class ResContract(admin.ModelAdmin):
 
 
 class ResMedicalExamination(admin.ModelAdmin):
-    list_display = (
-        'card',
-        'company',
-        'date'
-    )
+    list_display = ('card', 'company', 'date')
     list_display_links = ('card', 'company', 'date')
-    list_filter = (
-        'company',
-        'date'
-    )
+    list_filter = ('company', 'date')
 
 
 admin.site.register(PriceCategory)
