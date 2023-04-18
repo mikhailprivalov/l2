@@ -230,6 +230,7 @@ class Researches(models.Model):
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
+    is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -340,6 +341,7 @@ class Researches(models.Model):
             or self.is_direction_params
             or self.is_monitoring
             or self.is_expertise
+            or self.is_aux
         )
 
     def get_flag_types_n3(self):
@@ -489,6 +491,19 @@ class HospitalService(models.Model):
         verbose_name_plural = 'Стационарные услуги'
 
 
+class AuxService(models.Model):
+    main_research = models.ForeignKey(Researches, help_text="Главная услуга", on_delete=models.CASCADE, db_index=True)
+    aux_research = models.ForeignKey(Researches, related_name='aux_protocol', help_text="Вспомогательная услуга", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+
+    class Meta:
+        verbose_name = 'Вспомогательная услуга'
+        verbose_name_plural = 'Вспомогательные услуги'
+
+    def __str__(self):
+        return f"{self.main_research.title} - {self.aux_research.title} - {self.hide}"
+
+
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text='Название группы')
     show_title = models.BooleanField()
@@ -600,6 +615,7 @@ class ParaclinicInputField(models.Model):
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
     for_talon = models.BooleanField(default=False, blank=True)
+    can_edit_computed = models.BooleanField(default=False, blank=True)
     sign_organization = models.BooleanField(default=False, blank=True, help_text='Подпись от организации')
     visibility = models.TextField(default='', blank=True)
     helper = models.CharField(max_length=999, blank=True, default='')

@@ -73,7 +73,7 @@
       <table class="table table-responsive table-bordered table-one">
         <colgroup>
           <col width="66">
-          <col width="70">
+          <col width="77">
           <col>
           <col width="65">
           <col :width="!!iss_pk ? 200 : 150">
@@ -119,7 +119,7 @@
       <table class="table table-responsive table-bordered no-first-border-top table-hover table-two">
         <colgroup>
           <col width="66">
-          <col width="70">
+          <col width="77">
           <col>
           <col width="65">
           <col :width="!!iss_pk ? 200 : 150">
@@ -170,6 +170,11 @@
                 </a>
               </span>
               <span v-else>{{ row.pk }}</span>
+              <span v-if="row.has_aux">
+                <AuxResearch
+                  :main-direction="row.pk"
+                  :aux-research="row.aux_researches"
+                /></span>
             </td>
             <td
               class="researches"
@@ -378,6 +383,7 @@ import { mapGetters } from 'vuex';
 import _ from 'lodash';
 
 import { Research } from '@/types/research';
+import AuxResearch from '@/ui-cards/AuxResearch.vue';
 import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
 
@@ -398,7 +404,9 @@ function truncate(s, n, useWordBoundary) {
 
 export default {
   name: 'DirectionsHistory',
-  components: { SelectPickerM, DateRange, Bottom },
+  components: {
+    SelectPickerM, DateRange, Bottom, AuxResearch,
+  },
   props: {
     patient_pk: {
       type: Number,

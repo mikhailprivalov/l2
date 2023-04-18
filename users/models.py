@@ -115,6 +115,8 @@ class DoctorProfile(models.Model):
     max_age_patient_registration = models.SmallIntegerField(help_text='Ограничения возраста записи указать в месяцах', default=-1)
     available_quotas_time = models.TextField(default='', blank=True, help_text='Доступная запись для подразделений по времени {"id-подразделения": "10:00-15:00"}')
 
+    room_access = models.ManyToManyField('podrazdeleniya.Room', blank=True, help_text='Доступ к кабинетам')
+
     @property
     def notify_queue_key_base(self):
         return f"chats:notify-queues:{self.pk}"

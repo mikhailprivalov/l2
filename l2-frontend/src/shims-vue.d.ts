@@ -15,10 +15,6 @@ declare module '*.vue' {
   export default V;
 }
 
-declare module '@stdlib/error-to-json' {
-  export default function error2json(err: Error): Record<string, any>;
-}
-
 declare module '*.mp3' {
   const src: string;
   export default src;
