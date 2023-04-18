@@ -181,7 +181,7 @@
                 :text="company.title"
               />
               <td class="border">
-               <div class="button">
+                <div class="button">
                   <button
                     v-tippy
                     title="Редактировать"
