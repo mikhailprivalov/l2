@@ -274,45 +274,39 @@
       class="main"
     >
       <div class="box card-1 card-no-hover">
-        <table class="table">
-          <colgroup>
-            <col width="120">
-            <col>
-            <col width="185">
-            <col width="400">
-          </colgroup>
-          <tr>
-            <td class="position-relative">
-              <div class="button print-div">
+        <div>
+          <div class="flex margin-bottom">
+            <div class="print-div">
+              <div class="button">
                 <button
                   v-tippy
-                  title="Печать"
+                  title="печать"
                   class="btn last btn-blue-nb nbr"
                 >
-                  Печать
+                  печать
                 </button>
               </div>
-            </td>
-            <td>
+            </div>
+            <div class="row-div">
               <h5 class="text-center no-margin">
                 {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
               </h5>
-            </td>
-            <td>
-              Исключить исследования
-            </td>
-            <td>
-              <Treeselect
-                v-model="excludedResearches"
-                :multiple="true"
-                :options="researches.data"
-                :disable-branch-nodes="true"
-                :append-to-body="true"
-                placeholder="Выберите исследование"
+            </div>
+          </div>
+          <div class="row-div">
+            Исключить исследования:
+          </div>
+          <div class="row-div">
+            <Treeselect
+              v-model="excludedResearches"
+              :multiple="true"
+              :options="researches.data"
+              :disable-branch-nodes="true"
+              :append-to-body="true"
+              placeholder="Выберите исследование"
               />
-            </td>
-          </tr>
-        </table>
+          </div>
+        </div>
         <VeTable
           :columns="columns"
           :table-data="examinationList"
@@ -648,10 +642,14 @@ export default {
   margin-top: 0;
   margin-bottom: 0;
 }
+.margin-bottom {
+  margin-bottom: 5px;
+}
 .print-div {
-  position: absolute;
-  height: 100%;
-  top: 0;
+  width: 135px;
+}
+.row-div {
+  width: 100%;
 }
 .button {
   width: 100%;
