@@ -10,15 +10,16 @@ from api.models import Application
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
 
+from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
-from contracts.models import PriceCoast, Company
+from contracts.models import PriceCoast, Company, MedicalExamination
 from ecp_integration.integration import fill_slot_from_xlsx
 from laboratory.settings import CONTROL_AGE_MEDEXAM
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
 from users.models import AssignmentResearches
-from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
+from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase
 from integration_framework.views import check_enp
 from utils.dates import age_for_year, normalize_dots_date
 
@@ -81,6 +82,7 @@ def add_factors_from_file(request):
                 inn_company = cells.index("инн организации")
                 code_harmful = cells.index("код вредности")
                 position = cells.index("должность")
+                examination_date = cells.index("дата мед. осмотра")
                 starts = True
         else:
             if company_inn != cells[inn_company]:
@@ -93,31 +95,21 @@ def add_factors_from_file(request):
                 request_obj.method = 'POST'
                 request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
                 current_patient = check_enp(request_obj)
-                cells[birthday].split(' ')[0].replace('.', '')
                 if current_patient.data.get("message"):
-                    params = {
-                        "enp": "",
-                        "family": cells[fio].split(' ')[0],
-                        "name": cells[fio].split(' ')[1],
-                        "bd": cells[birthday].split(' ')[0].replace('.', ''),
-                        "check_mode": "l2-enp-full",
-                    }
-                    current_patient = check_enp(request_obj)
-                    if current_patient.data.get("message"):
-                        patient_indv = Individual(
-                            family=cells[fio].split(' ')[0],
-                            name=cells[fio].split(' ')[1],
-                            patronymic=cells[fio].split(' ')[2],
-                            birthday=cells[birthday].split(' ')[0].replace('.', ''),
-                            sex=cells[gender][0],
-                        )
-                        patient_indv.save()
-                        patient_card = Card.add_l2_card(individual=patient_indv)
-                    elif len(current_patient.data) > 1:
-                        incorrect_patients.append({"fio": cells[fio], "reason": "Совпадение"})
-                        continue
-                    else:
-                        patient_card = Individual.import_from_tfoms(current_patient.data["list"], None, None, None, True)
+                    patient_card = search_by_fio(request_obj, cells[fio], cells[birthday])
+                    if not patient_card:
+                        possible_family = find_and_replace(cells[fio].split(' ')[0], 'е', 'ё')
+                        patient_card = search_by_possible_fio(request_obj, cells[fio], cells[birthday], possible_family)
+                        if not patient_card:
+                            patient_indv = Individual(
+                                family=cells[fio].split(' ')[0],
+                                name=cells[fio].split(' ')[1],
+                                patronymic=cells[fio].split(' ')[2],
+                                birthday=cells[birthday].split(' ')[0],
+                                sex=cells[gender][0],
+                            )
+                            patient_indv.save()
+                            patient_card = Card.add_l2_card(individual=patient_indv)
                 elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
                     patient_card_pk = current_patient.data["patient_data"]["card"]
                     patient_card = Card.objects.filter(pk=patient_card_pk).first()
@@ -130,7 +122,7 @@ def add_factors_from_file(request):
                     if harmful_factor:
                         harmful_factors_data.append({"factorId": harmful_factor.pk})
                     else:
-                        incorrect_factor.append(f"{i}")
+                        incorrect_factor.append(f'{i.replace(" ", "")}')
                 if len(incorrect_factor) != 0:
                     incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
                 PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
@@ -138,6 +130,7 @@ def add_factors_from_file(request):
                 patient_card.work_position = cells[position].strip()
                 patient_card.work_place_db = company_obj
                 patient_card.save()
+                MedicalExamination.save_examination(patient_card, company_obj, cells[examination_date].split(' ')[0])
 
     return incorrect_patients
 
@@ -208,6 +201,69 @@ def gen_commercial_offer(request):
     research_price = {d.research.pk: f"{d.research.title}@{d.coast}" for d in price_data}
     file_name = commercial_offer_xls_save_file(data_price, patients, research_price)
     return file_name
+
+
+def search_by_fio(request_obj: HttpRequest, fio: str, birthday: str) -> Card | str:
+    patient_card = ''
+    params_tfoms = {
+        "enp": "",
+        "family": fio.split(' ')[0],
+        "name": fio.split(' ')[1],
+        "bd": birthday.split(' ')[0].replace('-', ''),
+        "check_mode": "l2-enp-full",
+    }
+    params_internal = {
+        "type": CardBase.objects.get(internal_type=True).pk,
+        "extendedSearch": True,
+        "form": {
+            "family": fio.split(' ')[0],
+            "name": fio.split(' ')[1],
+            "patronymic": fio.split(' ')[2],
+            "birthday": birthday.split(' ')[0].replace('-', ''),
+            "archive": False,
+        },
+        "limit": 1,
+    }
+    request_obj._body = params_tfoms
+    current_patient = check_enp(request_obj)
+    if current_patient.data.get("message"):
+        request_obj._body = json.dumps(params_internal)
+        data = patients_search_card(request_obj)
+        results_json = json.loads(data.content.decode('utf-8'))
+        if len(results_json["results"]) > 0:
+            patient_card_pk = results_json["results"][0]["pk"]
+            patient_card = Card.objects.filter(pk=patient_card_pk).first()
+    elif len(current_patient.data["list"]) > 1:
+        return patient_card
+    else:
+        patient_card = Individual.import_from_tfoms(current_patient.data["list"], None, None, None, True)
+    return patient_card
+
+
+def find_and_replace(text: str, symbol1: str, symbol2: str) -> list:
+    result = []
+    for i in range(len(text)):
+        if text[i] == symbol1:
+            current_family = text
+            current_family = current_family[0:i] + symbol2 + current_family[i + 1:]
+            result.append(current_family)
+        elif text[i] == symbol2:
+            current_family = text
+            current_family = current_family[0:i] + symbol1 + current_family[i + 1:]
+            result.append(current_family)
+    return result
+
+
+def search_by_possible_fio(request_obj: HttpRequest, fio: str, birthday: str, possible_family: list) -> Card | str:
+    if not possible_family:
+        return ''
+    patient_card = ''
+    for i in possible_family:
+        current_fio = i + " " + fio.split(' ')[1] + " " + fio.split(' ')[2]
+        patient_card = search_by_fio(request_obj, current_fio, birthday)
+        if patient_card:
+            break
+    return patient_card
 
 
 def load_csv(request):

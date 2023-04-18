@@ -44,11 +44,11 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
-from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract, CompanyDepartment
+from contracts.models import Company, PriceCategory, PriceName, PriceCoast, Contract, CompanyDepartment, MedicalExamination
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, District, HarmfulFactor
+from clients.models import CardBase, Individual, Card, Document, District, HarmfulFactor, PatientHarmfullFactor
 from context_processors.utils import menu
 from directory.models import (
     Fractions,
@@ -3050,3 +3050,11 @@ def update_order_param(request):
         else:
             return status_response(False, 'Параметр последний')
     return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_examination_list(request):
+    request_data = json.loads(request.body)
+    examination_list = MedicalExamination.get_by_date(request_data["date"], request_data["company"], request_data["month"])
+    return JsonResponse({"data": examination_list})
