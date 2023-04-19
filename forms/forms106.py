@@ -21,6 +21,7 @@ import os.path
 from io import BytesIO
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from api.sql_func import get_fraction_result
+from utils.dates import normalize_date
 from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data, hosp_get_operation_data, closed_bl
 
 
@@ -748,12 +749,12 @@ def form_02(request_data):
         result_form = "плановая — 1"
     if extra_hospital.lower() == "да":
         result_form = "экстренная — 2"
-
+    number_direction = normalize_date(primary_reception_data['ext_direction_date'])
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 2 * mm),
         Paragraph(
-            '<font fontname="PTAstraSerifBold" size=10>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫ Х УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
+            '<font fontname="PTAstraSerifBold" size=10>МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,<br/>ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ<br/>В СТАЦИОНАРНЫХ УСЛОВНЯХ<br/> № {} <u>{}</u></font>'.format(
                 p_card_num, hosp_nums
             ),
             styleCenterBold,
@@ -767,17 +768,16 @@ def form_02(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph(f"Дата и время поступления: {primary_reception_data['date_entered_value']}, {primary_reception_data['time_entered_value']}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph(f"Поступил через {primary_reception_data['time_start_ill']} часов после начала заболевания, получения травмы, отравления.", style),
+        Paragraph(f"Поступил через <u>{primary_reception_data['time_start_ill']}</u> часов после начала заболевания, получения травмы, отравления.", style),
         Spacer(1, 0.5 * mm),
         Paragraph('Направлен в стационар (дневной стационар):', style),
         Spacer(1, 0.5 * mm),
-        Paragraph(f"Наименование	медицинской	организации, направившей пациента: {primary_reception_data['who_directed']}", style),
+        Paragraph(f"Наименование медицинской	организации, направившей пациента: {primary_reception_data['who_directed']}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Номер и дата направления:	от «      »	20     г.", style),
+        Paragraph(f"Номер и дата направления: {primary_reception_data['ext_direction_number']}	от {number_direction} г.", style),
         Spacer(1, 0.5 * mm),
-        Paragraph(
-            "Поступил в стационар (дневной стационар) для оказания медицинской помощи в текущем году: "
-            "по поводу основного заболевания, указанного в диагнозе при поступлении: первично — 1,повторно — 2.",
+        Paragraph(f"Поступил в стационар (дневной стационар) для оказания медицинской помощи в текущем году:"
+                  f"по поводу основного заболевания, указанного в диагнозе при поступлении: {primary_reception_data['what_time_hospitalized']}.",
             style,
         ),
         Spacer(1, 0.5 * mm),
@@ -791,9 +791,9 @@ def form_02(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph(f"Количество дней нахождения в медицинской организации: {days_count}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Диагноз при направлении:____________________________", style),
+        Paragraph(f"Диагноз при направлении: {primary_reception_data['direction_diagnos']}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("код по МКБ:_______________________", style),
+        Paragraph(f"код по МКБ: {primary_reception_data['direction_mkb_diagnos']}", style),
         Spacer(1, 0.5 * mm),
         Paragraph("Предварительный диагноз (диагноз при поступлении):", style),
         Spacer(1, 0.5 * mm),

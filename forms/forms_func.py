@@ -433,6 +433,25 @@ def primary_reception_get_data(hosp_first_num):
         'Осложнение основного диагноза по МКБ',
         'Сопутствующий диагноз (описание)',
         'Сопутствующий диагноз по МКБ',
+        'Номер направления',
+        'Дата направления',
+        'Госпитализирован по поводу данного заболевания',
+        'Диагноз при направлении',
+        'Код МКБ при направлении',
+        'Предварительный диагноз при поступлении',
+        'Основное заболевание код по МКБ',
+        'Осложнения основного заболевания код по МКБ',
+        'Сопутствующие заболевания код по МКБ',
+        'Внешняя причина при травмах, отравлениях код по МКБ',
+        'Дополнительные сведения о заболевании',
+        'туберкулез',
+        'ВИЧ-инфекция',
+        'вирусные гепатиты',
+        'сифилис',
+        'COVID-19',
+        'осмотр на педиклез, чесотку',
+        'результат осмотра',
+        'Аллергические реакции',
     ]
     list_values = None
     if titles_field and hosp_primary_receptions:
@@ -445,6 +464,10 @@ def primary_reception_get_data(hosp_first_num):
     all_hospitalized, type_trauma, blood_group, resus_factor = '', '', '', ''
     weight = ''
     final_diagnos, other_diagnos, near_diagnos, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', ''
+    ext_direction_number, ext_direction_date, direction_diagnos, direction_mkb_diagnos, once_again = "", "", "", "", ""
+    external_reason_mkb, additional_data_ill = "", ""
+    tuberculosis, hiv_infection, viral_infections, covid19, syphilis, pediculosis, result_pediculosis_exam = "", "", "", "", "", "", ""
+    allergic_reactions, preliminary_diagnosis = "", ""
 
     if list_values:
         for i in list_values:
@@ -474,7 +497,6 @@ def primary_reception_get_data(hosp_first_num):
             else:
                 plan_hospital = "Да"
                 extra_hospital = "Нет"
-                time_start_ill = ''
             if i[3] == 'Диагноз направившего учреждения':
                 diagnos_who_directed = i[2]
                 continue
@@ -520,6 +542,44 @@ def primary_reception_get_data(hosp_first_num):
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Сопутствующий диагноз по МКБ':
                 near_diagnos_mkb = str(i[2]).split(' ')[0]
+            if i[3] == 'Время через, которое доставлен после начала заболевания, получения травмы':
+                time_start_ill = i[2]
+
+            if i[3] == 'Номер направления':
+                ext_direction_number = i[2]
+            if i[3] == 'Дата направления':
+                ext_direction_date = i[2]
+            if i[3] == 'Диагноз при направлении':
+                direction_diagnos = i[2]
+            if i[3] == 'Код МКБ при направлении':
+                direction_mkb_diagnos = str(i[2])
+            if i[3] == "Основное заболевание код по МКБ":
+                final_diagnos_mkb = i[2]
+            if i[3] == "Осложнения основного заболевания код по МКБ":
+                other_diagnos_mkb = i[2]
+            if i[3] == 'Сопутствующие заболевания код по МКБ':
+                near_diagnos_mkb = i[2]
+            if i[3] == 'Внешняя причина при травмах, отравлениях код по МКБ':
+                external_reason_mkb = i[2]
+            if i[3] == 'Дополнительные сведения о заболевании':
+                additional_data_ill = i[2]
+
+            if i[3] == 'туберкулез':
+                tuberculosis = i[2]
+            if i[3] == 'ВИЧ-инфекция':
+                hiv_infection = i[2]
+            if i[3] == 'вирусные гепатиты':
+                viral_infections = i[2]
+            if i[3] == 'COVID-19':
+                covid19 = i[2]
+            if i[3] == 'сифилис':
+                syphilis = i[2]
+            if i[3] == 'осмотр на педиклез, чесотку':
+                pediculosis = i[2]
+            if i[3] == 'результат осмотра':
+                result_pediculosis_exam = i[2]
+            if i[3] == "Аллергические реакции":
+                allergic_reactions = i[2]
 
     return {
         'date_entered_value': date_entered_value,
@@ -548,6 +608,20 @@ def primary_reception_get_data(hosp_first_num):
         'final_diagnos_mkb': final_diagnos_mkb,
         'other_diagnos_mkb': other_diagnos_mkb,
         'near_diagnos_mkb': near_diagnos_mkb,
+        'ext_direction_date': ext_direction_date,
+        'ext_direction_number': ext_direction_number,
+        'direction_diagnos': direction_diagnos,
+        'direction_mkb_diagnos': direction_mkb_diagnos,
+        'external_reason_mkb': external_reason_mkb,
+        'additional_data_ill': additional_data_ill,
+        'tuberculosis': tuberculosis,
+        'hiv_infection': hiv_infection,
+        'viral_infections': viral_infections,
+        'covid19': covid19,
+        'syphilis': syphilis,
+        'pediculosis': pediculosis,
+        'result_pediculosis_exam': result_pediculosis_exam,
+        'allergic_reactions': allergic_reactions,
     }
 
 
