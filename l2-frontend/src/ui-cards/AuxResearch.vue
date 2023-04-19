@@ -44,7 +44,7 @@
             <td>
               <a
                 href="#"
-                @click.prevent="genAuxDirection()"
+                @click.prevent="genAuxDirection(row.pk)"
               >{{ row.title }}</a>
             </td>
           </tr>
@@ -122,10 +122,10 @@ export default {
       }
       this.toEnter = null;
     },
-    async genAuxDirection() {
+    async genAuxDirection(idResearch) {
       const data = await api(
         'directions/aux-generate',
-        { directionId: this.mainDirection, researches: { '-9': [this.auxResearch[0].pk] } },
+        { directionId: this.mainDirection, researches: { '-9': [idResearch] } },
       );
       const pk = data.directions[0];
       this.toEnter = pk;
