@@ -666,6 +666,12 @@
                       v-model="row.default"
                       class="form-control"
                     >
+                    <label>
+                      <input
+                        v-model="row.can_edit"
+                        type="checkbox"
+                      > можно редактировать
+                    </label>
                   </div>
                   <div v-else-if="[2, 28, 32, 33, 34, 36].includes(row.field_type)">
                     <strong>Ссылка на поле (%):</strong>
@@ -1462,6 +1468,7 @@ export default {
         hide: false,
         lines: 3,
         field_type: 0,
+        can_edit: false,
       });
     },
     add_group() {

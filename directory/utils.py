@@ -91,6 +91,7 @@ def get_researches_details(pk):
                         "hide": field.hide,
                         "values_to_input": json.loads(field.input_templates),
                         "field_type": field.field_type,
+                        "can_edit": field.can_edit_computed,
                         "required": field.required,
                         "not_edit": field.not_edit,
                         "operator_enter_param": field.operator_enter_param,
