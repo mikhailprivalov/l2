@@ -274,38 +274,36 @@
       class="main"
     >
       <div class="box card-1 card-no-hover">
-        <div>
-          <div class="flex margin-bottom">
-            <div class="print-div">
-              <div class="button">
-                <button
-                  v-tippy
-                  title="печать"
-                  class="btn last btn-blue-nb nbr"
-                >
-                  печать
-                </button>
-              </div>
-            </div>
-            <div class="row-div">
-              <h5 class="text-center no-margin">
-                {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
-              </h5>
+        <div class="flex margin-bottom">
+          <div class="print-div">
+            <div class="button">
+              <button
+                v-tippy
+                title="печать"
+                class="btn last btn-blue-nb nbr"
+              >
+                печать
+              </button>
             </div>
           </div>
           <div class="row-div">
-            Исключить исследования:
+            <h5 class="text-center no-margin">
+              {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
+            </h5>
           </div>
-          <div class="row-div">
-            <Treeselect
-              v-model="excludedResearches"
-              :multiple="true"
-              :options="researches.data"
-              :disable-branch-nodes="true"
-              :append-to-body="true"
-              placeholder="Выберите исследование"
-              />
-          </div>
+        </div>
+        <div class="row-div">
+          Исключить исследования:
+        </div>
+        <div class="row-div">
+          <Treeselect
+            v-model="excludedResearches"
+            :multiple="true"
+            :options="researches.data"
+            :disable-branch-nodes="true"
+            :append-to-body="true"
+            placeholder="Выберите исследование"
+            />
         </div>
         <VeTable
           :columns="columns"
