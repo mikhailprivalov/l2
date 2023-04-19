@@ -173,7 +173,6 @@ import * as actions from '@/store/action-types';
 import { Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
 import Modal from '@/ui-cards/Modal.vue';
-import { sendEvent } from '@/metrics';
 
 @Component({
   components: { Modal },
@@ -300,9 +299,6 @@ export default class LoginPage extends Vue {
       ok,
       message,
       fio,
-      orgId,
-      orgTitle,
-      userId,
       totp,
     } = await this.$api('users/auth', this, ['username', 'password', 'totp']);
     await this.$store.dispatch(actions.DEC_LOADING);
@@ -318,14 +314,7 @@ export default class LoginPage extends Vue {
         pauseOnHover: true,
         icon: true,
       });
-      sendEvent('fail-login', { status: 'error', message });
     } else {
-      window.posthogInit(
-        window.posthog,
-        orgId,
-        orgTitle,
-        userId,
-      );
       await this.$store.dispatch(actions.CHATS_CLEAR_STATE);
       this.$toast.success(`Вы вошли как ${fio}`, {
         position: POSITION.BOTTOM_RIGHT,
@@ -335,7 +324,6 @@ export default class LoginPage extends Vue {
         icon: true,
       });
       this.afterOkAuth();
-      sendEvent('successful-login', {});
     }
   }
 

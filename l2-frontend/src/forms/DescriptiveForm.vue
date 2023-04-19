@@ -141,6 +141,8 @@
                   :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
                   :formula="field.default_value"
                   :patient="patient"
+                  :can-edit="field.can_edit"
+                  :disabled="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div

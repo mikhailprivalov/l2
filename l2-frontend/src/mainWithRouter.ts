@@ -72,6 +72,7 @@ const router = new Router({
         title: 'Движение карт',
         groups: ['Лечащий врач', 'Оператор лечащего врача'],
         narrowLayout: true,
+        module: 'l2_transfer_card',
       },
     },
     {
@@ -810,9 +811,6 @@ router.beforeEach(async (to, from, next) => {
 });
 
 router.afterEach(async () => {
-  if (window.posthog) {
-    window.posthog.capture('$pageview');
-  }
   await router.app.$store.dispatch(actions.DEC_G_LOADING);
 });
 

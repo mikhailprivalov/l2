@@ -52,7 +52,10 @@
             :class="settings[i].type === 2 && 'mkb'"
           >
             <div
-              v-if="settings[i].type === 'rowNumber' || (disabled && ![32, 33, 34, 35, 36].includes(settings[i].type))"
+              v-if="
+                settings[i].type === 'rowNumber'
+                  || (disabled && ![32, 33, 34, 35, 36, 'relatedMultiselect'].includes(settings[i].type))
+              "
               class="just-val"
               :class="settings[i].type === 'rowNumber' && 'rowNumber'"
             >
@@ -168,6 +171,13 @@
               :not_autoload_result="false"
               :iss_pk="iss_pk"
             />
+            <TreeSelectMultiField
+              v-else-if="settings[i].type === 'relatedMultiselect'"
+              v-model="r[i]"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              :disabled="disabled"
+              :variants="getMultiselectVariants(j, i)"
+            />
 
             <div
               v-if="errors[`${fieldPk}_${j}_${i}`]"
@@ -203,6 +213,7 @@ import MKBFieldForm from '@/fields/MKBFieldForm.vue';
 import MKBFieldTreeselect from '@/fields/MKBFieldTreeselect.vue';
 import SearchFieldValueField from '@/fields/SearchFieldValueField.vue';
 import DoctorProfileTreeselectField from '@/fields/DoctorProfileTreeselectField.vue';
+import TreeSelectMultiField from '@/fields/TreeSelectMultiField.vue';
 
 const DEFAULT_SETTINGS = () => ({
   type: 0,
@@ -222,6 +233,7 @@ export default {
     SearchFieldValueField,
     MKBFieldTreeselect,
     DoctorProfileTreeselectField,
+    TreeSelectMultiField,
   },
   model: {
     event: 'modified',
@@ -407,6 +419,19 @@ export default {
     validate() {
       this.validateRowsLength();
       this.validateRowsValues();
+    },
+    getMultiselectVariants(row, column) {
+      const settings = this.params.columns.settings[column];
+
+      const linkedIndex = settings.linked;
+
+      if (linkedIndex === null) {
+        return [];
+      }
+
+      const linkedValue = this.rows[row][linkedIndex];
+
+      return settings.multiVariants.find(v => v.key === linkedValue)?.values || [];
     },
     getCellContent(row, column, fieldId) {
       const r = row - 1;
