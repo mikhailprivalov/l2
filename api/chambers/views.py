@@ -48,6 +48,14 @@ def get_chambers_and_beds(request):
             "beds": [],
         }
         for j in Bed.objects.filter(chamber=i.pk):
+            chamber["beds"].append(
+                {
+                    "pk": j.pk,
+                    "bed_number": j.bed_number,
+                    "doctor": [],
+                    "patient": []
+                }
+            )
             history = PatientToBed.objects.filter(bed=j.pk, date_out__isnull=True).last()
             if history:
                 direction_obj = Napravleniya.objects.get(pk=history.direction.pk)
@@ -55,50 +63,69 @@ def get_chambers_and_beds(request):
                 patient_data = ind_card.get_data_individual()
                 individual_obj = Individual.objects.get(family=patient_data["family"])
                 short_fio = individual_obj.fio(short=True, dots=True)
-                if history.doctor is None:
-                    chamber["beds"].append(
+                chamber["beds"][-1]["patient"].append(
+                    {
+                        "fio": patient_data["fio"],
+                        "short_fio": short_fio,
+                        "age": patient_data["age"],
+                        "sex": patient_data["sex"],
+                        "highlight": False,
+                        "direction_pk": history.direction_id
+                    }
+                )
+                if history.doctor:
+                    chamber["beds"][-1]["doctor"].append(
                         {
-                            "pk": j.pk,
-                            "bed_number": j.bed_number,
-                            "doctor": [],
-                            "patient": [
-                                {
-                                    "fio": patient_data["fio"],
-                                    "short_fio": short_fio,
-                                    "age": patient_data["age"],
-                                    "sex": patient_data["sex"],
-                                    "highlight": False,
-                                    "direction_pk": history.direction_id
-                                }
-                            ],
+                            "fio": history.doctor.get_full_fio(),
+                            "pk": history.doctor.pk,
+                            "short_fio": history.doctor.get_fio(),
                         }
                     )
-                else:
-                    chamber["beds"].append(
-                        {
-                            "pk": j.pk,
-                            "bed_number": j.bed_number,
-                            "doctor": [
-                                {
-                                    "fio": history.doctor.get_full_fio(),
-                                    "pk": history.doctor.pk,
-                                    "short_fio": history.doctor.get_fio(),
-                                }
-                            ],
-                            "patient": [
-                                {
-                                    "fio": patient_data["fio"],
-                                    "short_fio": short_fio,
-                                    "age": patient_data["age"],
-                                    "sex": patient_data["sex"],
-                                    "highlight": False,
-                                    "direction_pk": history.direction_id
-                                }
-                            ],
-                        }
-                    )
-            else:
-                chamber["beds"].append({"pk": j.pk, "bed_number": j.bed_number, "doctor": [], "patient": []})
+
+            #     if history.doctor is None:
+            #         chamber["beds"].append(
+            #             {
+            #                 "pk": j.pk,
+            #                 "bed_number": j.bed_number,
+            #                 "doctor": [],
+            #                 "patient": [
+            #                     {
+            #                         "fio": patient_data["fio"],
+            #                         "short_fio": short_fio,
+            #                         "age": patient_data["age"],
+            #                         "sex": patient_data["sex"],
+            #                         "highlight": False,
+            #                         "direction_pk": history.direction_id
+            #                     }
+            #                 ],
+            #             }
+            #         )
+            #     else:
+            #         chamber["beds"].append(
+            #             {
+            #                 "pk": j.pk,
+            #                 "bed_number": j.bed_number,
+            #                 "doctor": [
+            #                     {
+            #                         "fio": history.doctor.get_full_fio(),
+            #                         "pk": history.doctor.pk,
+            #                         "short_fio": history.doctor.get_fio(),
+            #                     }
+            #                 ],
+            #                 "patient": [
+            #                     {
+            #                         "fio": patient_data["fio"],
+            #                         "short_fio": short_fio,
+            #                         "age": patient_data["age"],
+            #                         "sex": patient_data["sex"],
+            #                         "highlight": False,
+            #                         "direction_pk": history.direction_id
+            #                     }
+            #                 ],
+            #             }
+            #         )
+            # else:
+            #     chamber["beds"].append({"pk": j.pk, "bed_number": j.bed_number, "doctor": [], "patient": []})
         chambers.append(chamber)
     return JsonResponse({"data": chambers})
 
@@ -115,7 +142,7 @@ def entrance_patient_to_bed(request):
 def extract_patient_bed(request):
     request_data = json.loads(request.body)
     patient_obj = request_data.get('patient')
-    patient = PatientToBed.objects.filter(direction_id=patient_obj["direction_id"], date_out=None).first()
+    patient = PatientToBed.objects.filter(direction_id=patient_obj["direction_pk"], date_out=None).first()
     patient.date_out = datetime.datetime.today()
     patient.save()
     return status_response(True)
