@@ -71,7 +71,6 @@ def add_factors_from_file(request):
         "",
         "",
     )
-    bearer_token = None
     application = Application.objects.filter(active=True, is_background_worker=True).first()
     if application:
         bearer_token = f"Bearer {application.key}"
