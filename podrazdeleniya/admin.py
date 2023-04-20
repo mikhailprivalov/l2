@@ -34,7 +34,7 @@ class PatientToBedAdmin(admin.ModelAdmin):
 
 
 class PatientStationarWithoutBedsAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'direction')
+    list_display = ('__str__', 'direction', 'department')
 
 
 admin.site.register(PatientStationarWithoutBeds, PatientStationarWithoutBedsAdmin)

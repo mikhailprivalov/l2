@@ -8,22 +8,40 @@ from directions.models import Napravleniya
 from clients.models import Individual
 from users.models import DoctorProfile
 
+from utils.response import status_response
+
 import datetime
 from datetime import date
-from .sql_func import getting_patient_issledovaniya
+from .sql_func import get_patients_stationar
 
 
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
-    patients_obj = get_patients(request_data.get('department_pk', -1))
-    patients = filter_patient(patients_obj)
-    return JsonResponse({"data": patients})
+    department_pk = request_data.get('department_pk', -1)
+    today = date.today()
+    patients = [
+        {
+            "fio": f'{patient.family} {patient.name} {patient.patronymic}',
+            "age": today.year - patient.birthday.year,
+            "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0]}.',
+            "sex": patient.sex,
+            "highlight": False,
+            "pk": patient.napravleniye_id,
+        } for patient in get_patients_stationar(department_pk)
+    ]
+    patients_beds = [patient.direction.pk for patient in PatientToBed.objects.filter(date_out=None)]
+    patients_without_beds = [patient.direction.pk for patient in PatientStationarWithoutBeds.objects.filter(department=department_pk)]
+    filtered_patients = []
+    for i in patients:
+        if i["pk"] not in patients_beds and i["pk"] not in patients_without_beds:
+            filtered_patients.append(i)
+    return JsonResponse({"data": filtered_patients})
 
 
 def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     chambers = []
-    for i in Chamber.objects.filter(podrazdelenie_id=int(request_data.get('department_pk', -1))):
+    for i in Chamber.objects.filter(podrazdelenie_id=request_data.get('department_pk', -1)):
         chamber = {
             "pk": i.pk,
             "label": i.title,
@@ -50,7 +68,7 @@ def get_chambers_and_beds(request):
                                     "short_fio": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.get_fio(),
                                 }
                             ],
-                            "contents": [
+                            "patient": [
                                 {"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": history.direction_id}
                             ],
                         }
@@ -61,13 +79,13 @@ def get_chambers_and_beds(request):
                             "pk": j.pk,
                             "bed_number": j.bed_number,
                             "doctor": [],
-                            "contents": [
+                            "patient": [
                                 {"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": history.direction_id}
                             ],
                         }
                     )
             else:
-                chamber["beds"].append({"pk": j.pk, "bed_number": j.bed_number, "doctor": [], "contents": []})
+                chamber["beds"].append({"pk": j.pk, "bed_number": j.bed_number, "doctor": [], "patient": []})
         chambers.append(chamber)
     return JsonResponse({"data": chambers})
 
@@ -76,9 +94,9 @@ def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_obj = request_data.get('beds')
     if not PatientToBed.objects.filter(bed_id=bed_obj["pk"], date_out=None):
-        bed = bed_obj["contents"][0]
+        bed = bed_obj["patient"][0]
         PatientToBed(direction_id=bed["pk"], bed_id=bed_obj["pk"]).save()
-    return JsonResponse({'ok': True})
+    return status_response(True)
 
 
 def extract_patient_bed(request):
@@ -87,7 +105,7 @@ def extract_patient_bed(request):
     patient = PatientToBed.objects.filter(direction_id=patient_obj["pk"], date_out=None).first()
     patient.date_out = datetime.datetime.today()
     patient.save()
-    return JsonResponse({'ok': True})
+    return status_response(True)
 
 
 def get_attending_doctor(request):
@@ -100,77 +118,47 @@ def get_attending_doctor(request):
 def doctor_assigned_patient(request):
     request_data = json.loads(request.body)
     bed_obj = request_data.get('beds')
-    doctor = PatientToBed.objects.filter(direction_id=bed_obj["contents"][0]["pk"], doctor=None, date_out=None).first()
+    doctor = PatientToBed.objects.filter(direction_id=bed_obj["patient"][0]["pk"], doctor=None, date_out=None).first()
     doctor.doctor_id = bed_obj["doctor"][0]["pk"]
     doctor.save()
-    return JsonResponse({'ok': True})
+    return status_response(True)
 
 
 def doctor_detached_patient(request):
     request_data = json.loads(request.body)
     doctor_obj = request_data.get('doctor')
     bed_obj = request_data.get('beds')
-    doctor = PatientToBed.objects.filter(doctor_id=doctor_obj["pk"], direction_id=bed_obj["contents"][0]["pk"], date_out=None).first()
+    doctor = PatientToBed.objects.filter(doctor_id=doctor_obj["pk"], direction_id=bed_obj["patient"][0]["pk"], date_out=None).first()
     doctor.doctor = None
     doctor.save()
-    return JsonResponse({'ok': True})
+    return status_response(True)
 
 
 def get_patients_without_bed(request):
+    request_data = json.loads(request.body)
+    department_pk = request_data.get('department_pk', -1)
     patients = []
-    if PatientStationarWithoutBeds.objects.all():
-        for patient in PatientStationarWithoutBeds.objects.all():
-            direction_obj = Napravleniya.objects.get(pk=patient.direction.pk)
-            ind_card = direction_obj.client
-            patient_data = ind_card.get_data_individual()
-            clients_obj = Individual.objects.get(family=patient_data["family"])
-            short_fio = clients_obj.fio(short=True, dots=True)
-            patients.append({"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": patient.direction_id})
+    for patient in PatientStationarWithoutBeds.objects.filter(department_id=department_pk):
+        direction_obj = Napravleniya.objects.get(pk=patient.direction.pk)
+        ind_card = direction_obj.client
+        patient_data = ind_card.get_data_individual()
+        clients_obj = Individual.objects.get(family=patient_data["family"])
+        short_fio = clients_obj.fio(short=True, dots=True)
+        patients.append({"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": patient.direction_id})
     return JsonResponse({"data": patients})
 
 
 def save_patient_without_bed(request):
     request_data = json.loads(request.body)
+    department_pk = request_data.get('department_pk', -1)
     patient_obj = request_data.get('patient_obj')
-    PatientStationarWithoutBeds(direction_id=patient_obj["pk"]).save()
-    return JsonResponse({'ok': True})
+    if department_pk != -1:
+        PatientStationarWithoutBeds(direction_id=patient_obj["pk"], department_id=department_pk).save()
+    return status_response(True)
 
 
 def delete_patient_without_bed(request):
     request_data = json.loads(request.body)
     patient_obj = request_data.get('patient_obj')
-    entry = PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["pk"])
-    entry.delete()
-    return JsonResponse({'ok': True})
-
-
-def filter_patient(patients):
-    patients_beds = [patient.direction.pk for patient in PatientToBed.objects.filter(date_out=None)]
-    patients_without_beds = [patient.direction.pk for patient in PatientStationarWithoutBeds.objects.all()]
-    filtered_patients = []
-    for i in patients:
-        if i["pk"] not in patients_beds and i["pk"] not in patients_without_beds:
-            filtered_patients.append(i)
-    return filtered_patients
-
-
-def get_patients(hosp_id):
-    patients = getting_patient_issledovaniya(hosp_id)
-    clients_obj = []
-    for g in patients:
-        clients_obj.append(
-            {
-                "fio": f'{g.family} {g.name} {g.patronymic}',
-                "age": calculate_age(g.birthday),
-                "short_fio": f'{g.family} {g.name[0]}. {g.patronymic[0]}.',
-                "sex": g.sex,
-                "highlight": False,
-                "pk": g.napravleniye_id,
-            }
-        )
-    return clients_obj
-
-
-def calculate_age(born):
-    today = date.today()
-    return today.year - born.year
+    PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["pk"]).delete()
+    return status_response(True)
