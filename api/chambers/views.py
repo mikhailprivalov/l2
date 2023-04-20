@@ -81,51 +81,6 @@ def get_chambers_and_beds(request):
                             "short_fio": history.doctor.get_fio(),
                         }
                     )
-
-            #     if history.doctor is None:
-            #         chamber["beds"].append(
-            #             {
-            #                 "pk": j.pk,
-            #                 "bed_number": j.bed_number,
-            #                 "doctor": [],
-            #                 "patient": [
-            #                     {
-            #                         "fio": patient_data["fio"],
-            #                         "short_fio": short_fio,
-            #                         "age": patient_data["age"],
-            #                         "sex": patient_data["sex"],
-            #                         "highlight": False,
-            #                         "direction_pk": history.direction_id
-            #                     }
-            #                 ],
-            #             }
-            #         )
-            #     else:
-            #         chamber["beds"].append(
-            #             {
-            #                 "pk": j.pk,
-            #                 "bed_number": j.bed_number,
-            #                 "doctor": [
-            #                     {
-            #                         "fio": history.doctor.get_full_fio(),
-            #                         "pk": history.doctor.pk,
-            #                         "short_fio": history.doctor.get_fio(),
-            #                     }
-            #                 ],
-            #                 "patient": [
-            #                     {
-            #                         "fio": patient_data["fio"],
-            #                         "short_fio": short_fio,
-            #                         "age": patient_data["age"],
-            #                         "sex": patient_data["sex"],
-            #                         "highlight": False,
-            #                         "direction_pk": history.direction_id
-            #                     }
-            #                 ],
-            #             }
-            #         )
-            # else:
-            #     chamber["beds"].append({"pk": j.pk, "bed_number": j.bed_number, "doctor": [], "patient": []})
         chambers.append(chamber)
     return JsonResponse({"data": chambers})
 
@@ -134,7 +89,7 @@ def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_id = request_data.get('bed_id')
     direction_id = request_data.get('direction_id')
-    if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None):
+    if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exist():
         PatientToBed(direction_id=direction_id, bed_id=bed_id).save()
     return status_response(True)
 
