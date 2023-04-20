@@ -71,6 +71,14 @@ def add_factors_from_file(request):
         "",
         "",
     )
+    bearer_token = None
+    application = Application.objects.filter(active=True, is_background_worker=True).first()
+    if application:
+        bearer_token = f"Bearer {application.key}"
+    else:
+        new_application = Application(name="background_worker", is_background_worker=True)
+        new_application.save()
+        bearer_token = f"Bearer {new_application.key}"
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
@@ -88,7 +96,7 @@ def add_factors_from_file(request):
             if company_inn != cells[inn_company].strip():
                 incorrect_patients.append({"fio": cells[fio], "reason": "ИНН организации не совпадает"})
                 continue
-            snils_data = cells[snils].replace('-', '').replace(' ', '')
+            snils_data = cells[snils].replace("-", "").replace(" ", "")
             fio_data = cells[fio].split(' ')
             family_data = fio_data[0]
             name_data = fio_data[1]
@@ -105,7 +113,7 @@ def add_factors_from_file(request):
             request_obj._body = params
             request_obj.user = request.user
             request_obj.method = "POST"
-            request_obj.META["HTTP_AUTHORIZATION"] = f"Bearer {Application.objects.first().key}"
+            request_obj.META["HTTP_AUTHORIZATION"] = bearer_token
             current_patient = check_enp(request_obj)
             if current_patient.data.get("message"):
                 patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_without_dash)
