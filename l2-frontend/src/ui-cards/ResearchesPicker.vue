@@ -766,10 +766,8 @@ export default {
     },
     founded_select(clearOrig = false) {
       const clear = clearOrig || false;
-      const selected = [];
       for (const row of this.researches_display) {
         if (this.highlight_search(row)) {
-          selected.push(row.pk);
           this.select_research_ignore(row.pk);
         }
       }
