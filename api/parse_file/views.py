@@ -104,7 +104,6 @@ def add_factors_from_file(request):
             if len(fio_data) > 2:
                 patronymic_data = fio_data[2]
             birthday_data = cells[birthday].split(' ')[0]
-            birthday_without_dash = birthday_data.replace("-", "")
             code_harmful_data = cells[code_harmful].split(',')
             exam_data = cells[examination_date].split(' ')[0]
             gender_data = cells[gender][0]
@@ -116,10 +115,10 @@ def add_factors_from_file(request):
             request_obj.META["HTTP_AUTHORIZATION"] = bearer_token
             current_patient = check_enp(request_obj)
             if current_patient.data.get("message"):
-                patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_without_dash)
+                patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_data)
                 if patient_card is None:
                     possible_family = find_and_replace(family_data, "е", "ё")
-                    patient_card = search_by_possible_fio(request_obj, family_data, name_data, patronymic_data, birthday_without_dash, possible_family)
+                    patient_card = search_by_possible_fio(request_obj, family_data, name_data, patronymic_data, birthday_data, possible_family)
                     if patient_card is None:
                         patient_indv = Individual(
                             family=family_data,
