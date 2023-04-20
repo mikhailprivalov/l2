@@ -596,7 +596,18 @@ def primary_reception_get_data(hosp_first_num):
                     near_diagnos_mkb = f"{near_diagnos_mkb} {json.loads(rr[0]).get('code', '')};"
             if i[3] == 'Внешняя причина при травмах, отравлениях код по МКБ':
                 external_reason_mkb = i[2]
-                print(external_reason_mkb)
+                external_reason_mkb_data = i[2]
+                external_reason_mkb_details = {}
+                if external_reason_mkb_data:
+                    try:
+                        external_reason_mkb_details = json.loads(external_reason_mkb_data)
+                    except:
+                        external_reason_mkb_details = {}
+                external_reason_mkb_row = external_reason_mkb_details.get("rows", [])
+                external_reason_mkb = ""
+                for rr in external_reason_mkb_row:
+                    external_reason_mkb = f"{external_reason_mkb} {json.loads(rr[0]).get('code', '')};"
+
             if i[3] == 'Дополнительные сведения о заболевании':
                 additional_data_ill = i[2]
             if i[3] == 'туберкулез':

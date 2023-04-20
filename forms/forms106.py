@@ -803,7 +803,7 @@ def form_02(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph(f"Осложнения основного заболевания код по МКБ: {primary_reception_data['other_diagnos_mkb']}", style),
         Spacer(1, 0.5 * mm),
-        Paragraph("Внешняя причина при травмах, отравлениях   код по МКБ", style),
+        Paragraph(f"Внешняя причина при травмах, отравлениях   код по МКБ: {primary_reception_data['external_reason_mkb']}", style),
         Spacer(1, 0.5 * mm),
         Paragraph(f"Сопутствующие заболевания код по МКБ: {primary_reception_data['near_diagnos_mkb']}", style),
 
