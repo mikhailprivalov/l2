@@ -53,10 +53,20 @@ def get_chambers_and_beds(request):
                 direction_obj = Napravleniya.objects.get(pk=history.direction.pk)
                 ind_card = direction_obj.client
                 patient_data = ind_card.get_data_individual()
-                clients_obj = Individual.objects.get(family=patient_data["family"])
-                short_fio = clients_obj.fio(short=True, dots=True)
-                doc = PatientToBed.objects.filter(bed=j.pk, date_out__isnull=True, doctor=None).last()
-                if not doc:
+                individual_obj = Individual.objects.get(family=patient_data["family"])
+                short_fio = individual_obj.fio(short=True, dots=True)
+                if history.doctor is None:
+                    chamber["beds"].append(
+                            {
+                                "pk": j.pk,
+                                "bed_number": j.bed_number,
+                                "doctor": [],
+                                "patient": [
+                                    {"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": history.direction_id}
+                                ],
+                            }
+                        )
+                else:
                     chamber["beds"].append(
                         {
                             "pk": j.pk,
@@ -68,17 +78,6 @@ def get_chambers_and_beds(request):
                                     "short_fio": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.get_fio(),
                                 }
                             ],
-                            "patient": [
-                                {"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": history.direction_id}
-                            ],
-                        }
-                    )
-                else:
-                    chamber["beds"].append(
-                        {
-                            "pk": j.pk,
-                            "bed_number": j.bed_number,
-                            "doctor": [],
                             "patient": [
                                 {"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": history.direction_id}
                             ],
@@ -142,8 +141,8 @@ def get_patients_without_bed(request):
         direction_obj = Napravleniya.objects.get(pk=patient.direction.pk)
         ind_card = direction_obj.client
         patient_data = ind_card.get_data_individual()
-        clients_obj = Individual.objects.get(family=patient_data["family"])
-        short_fio = clients_obj.fio(short=True, dots=True)
+        individual_obj = Individual.objects.get(family=patient_data["family"])
+        short_fio = individual_obj.fio(short=True, dots=True)
         patients.append({"fio": patient_data["fio"], "short_fio": short_fio, "age": patient_data["age"], "sex": patient_data["sex"], "highlight": False, "pk": patient.direction_id})
     return JsonResponse({"data": patients})
 
