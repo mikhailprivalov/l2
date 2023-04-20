@@ -240,7 +240,7 @@ class MedicalExamination(models.Model):
     def save_examination(card: Card, company: Company, date: str):
         current_exam = MedicalExamination.objects.filter(card=card).first()
         if current_exam:
-            current_exam.company = Company
+            current_exam.company = company
             current_exam.date = date
             current_exam.save()
 
