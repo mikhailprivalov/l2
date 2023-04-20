@@ -15,6 +15,7 @@ from laboratory.utils import strdate
 from api.stationar.stationar_func import hosp_get_data_direction, check_transfer_epicrisis
 from api.stationar.sql_func import get_result_value_iss
 from utils.dates import normalize_date
+import json
 
 
 def get_all_doc(docs: [Document]):
@@ -452,6 +453,8 @@ def primary_reception_get_data(hosp_first_num):
         'осмотр на педиклез, чесотку',
         'результат осмотра',
         'Аллергические реакции',
+        'Дата установления диагноза',
+        'Время установления диагноза',
     ]
     list_values = None
     if titles_field and hosp_primary_receptions:
@@ -468,6 +471,7 @@ def primary_reception_get_data(hosp_first_num):
     external_reason_mkb, additional_data_ill = "", ""
     tuberculosis, hiv_infection, viral_infections, covid19, syphilis, pediculosis, result_pediculosis_exam = "", "", "", "", "", "", ""
     allergic_reactions, preliminary_diagnosis = "", ""
+    date_preliminary_diagnosis, time_preliminary_diagnosis = "", ""
 
     if list_values:
         for i in list_values:
@@ -542,9 +546,10 @@ def primary_reception_get_data(hosp_first_num):
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Сопутствующий диагноз по МКБ':
                 near_diagnos_mkb = str(i[2]).split(' ')[0]
+
+
             if i[3] == 'Время через, которое доставлен после начала заболевания, получения травмы':
                 time_start_ill = i[2]
-
             if i[3] == 'Номер направления':
                 ext_direction_number = i[2]
             if i[3] == 'Дата направления':
@@ -553,17 +558,47 @@ def primary_reception_get_data(hosp_first_num):
                 direction_diagnos = i[2]
             if i[3] == 'Код МКБ при направлении':
                 direction_mkb_diagnos = str(i[2])
+            if i[3] == 'Предварительный диагноз при поступлении':
+                preliminary_diagnosis = i[2]
+
             if i[3] == "Основное заболевание код по МКБ":
-                final_diagnos_mkb = i[2]
+                final_diagnos_mkb_data = i[2]
+                final_diagnos_mkb_details = {}
+                if final_diagnos_mkb_data:
+                    try:
+                        final_diagnos_mkb_details = json.loads(final_diagnos_mkb_data)
+                    except:
+                        final_diagnos_mkb_details = {}
+                final_diagnos_mkb = final_diagnos_mkb_details.get("code", "")
             if i[3] == "Осложнения основного заболевания код по МКБ":
-                other_diagnos_mkb = i[2]
+                other_diagnos_mkb_data = i[2]
+                other_diagnos_mkb_details = {}
+                if other_diagnos_mkb_data:
+                    try:
+                        other_diagnos_mkb_details = json.loads(other_diagnos_mkb_data)
+                    except:
+                        other_diagnos_mkb_details = {}
+                other_diagnos_mkb_row = other_diagnos_mkb_details.get("rows", [])
+                other_diagnos_mkb = ""
+                for rr in other_diagnos_mkb_row:
+                    other_diagnos_mkb = f"{other_diagnos_mkb} {json.loads(rr[0]).get('code', '')};"
             if i[3] == 'Сопутствующие заболевания код по МКБ':
-                near_diagnos_mkb = i[2]
+                near_diagnos_mkb_data = i[2]
+                near_diagnos_mkb_details = {}
+                if near_diagnos_mkb_data:
+                    try:
+                        near_diagnos_mkb_details = json.loads(near_diagnos_mkb_data)
+                    except:
+                        near_diagnos_mkb_details = {}
+                near_diagnos_mkb_row = near_diagnos_mkb_details.get("rows", [])
+                other_diagnos_mkb = ""
+                for rr in near_diagnos_mkb_row:
+                    near_diagnos_mkb = f"{near_diagnos_mkb} {json.loads(rr[0]).get('code', '')};"
             if i[3] == 'Внешняя причина при травмах, отравлениях код по МКБ':
                 external_reason_mkb = i[2]
+                print(external_reason_mkb)
             if i[3] == 'Дополнительные сведения о заболевании':
                 additional_data_ill = i[2]
-
             if i[3] == 'туберкулез':
                 tuberculosis = i[2]
             if i[3] == 'ВИЧ-инфекция':
@@ -580,6 +615,10 @@ def primary_reception_get_data(hosp_first_num):
                 result_pediculosis_exam = i[2]
             if i[3] == "Аллергические реакции":
                 allergic_reactions = i[2]
+            if i[3] == "Дата установления диагноза":
+                date_preliminary_diagnosis = normalize_date(i[2])
+            if i[3] == "Время установления диагноза":
+                time_preliminary_diagnosis = i[2]
 
     return {
         'date_entered_value': date_entered_value,
@@ -622,6 +661,9 @@ def primary_reception_get_data(hosp_first_num):
         'pediculosis': pediculosis,
         'result_pediculosis_exam': result_pediculosis_exam,
         'allergic_reactions': allergic_reactions,
+        'preliminary_diagnosis': preliminary_diagnosis,
+        'date_preliminary_diagnosis': date_preliminary_diagnosis,
+        'time_preliminary_diagnosis': time_preliminary_diagnosis,
     }
 
 
