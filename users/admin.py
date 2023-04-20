@@ -27,7 +27,7 @@ class ResAssignmentTemplates(admin.ModelAdmin):
     search_fields = ('title',)
 
 
-admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке
+admin.site.register(DoctorProfile, DocAdmin)
 admin.site.register(AssignmentTemplates, ResAssignmentTemplates)
 admin.site.register(AssignmentResearches)
 admin.site.register(Speciality)
