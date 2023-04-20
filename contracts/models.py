@@ -189,7 +189,7 @@ class CompanyDepartment(models.Model):
 
 
 class MedicalExamination(models.Model):
-    card = models.ForeignKey(Card, help_text="Карта пациента", on_delete=models.CASCADE)
+    card = models.ForeignKey(Card, help_text="Карта пациента", db_index=True, on_delete=models.CASCADE)
     company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
     date = models.DateField(help_text="Дата мед. осмотра", db_index=True)
 
@@ -238,8 +238,11 @@ class MedicalExamination(models.Model):
 
     @staticmethod
     def save_examination(card: Card, company: Company, date: str):
-        MedicalExamination.objects.filter(card=card).delete()
-        MedicalExamination(card=card, company=company, date=date).save()
+        current_exam = MedicalExamination.objects.filter(card=card).first()
+        if current_exam:
+            current_exam.company = Company
+            current_exam.date = date
+            current_exam.save()
 
     class Meta:
         verbose_name = 'Медицинский осмотр'
