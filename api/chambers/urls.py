@@ -8,7 +8,7 @@ urlpatterns = [
     path('entrance-patient-to-bed', views.entrance_patient_to_bed),
     path('extract-patient-bed', views.extract_patient_bed),
     path('doctor-assigned-patient', views.doctor_assigned_patient),
-    path('get-attending-doctor', views.get_attending_doctor),
+    path('get-attending-doctors', views.get_attending_doctors),
     path('doctor-detached-patient', views.doctor_detached_patient),
     path('get-patients-without-bed', views.get_patients_without_bed),
     path('save-patient-without-bed', views.save_patient_without_bed),

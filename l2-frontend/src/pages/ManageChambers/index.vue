@@ -303,9 +303,9 @@ async function init() {
   departments.value = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
   await store.dispatch(actions.DEC_LOADING);
 }
-async function getAttendingDoctor() {
+async function getAttendingDoctors() {
   await store.dispatch(actions.INC_LOADING);
-  const row = await api('chambers/get-attending-doctor', {
+  const row = await api('chambers/get-attending-doctors', {
     department_pk: departmentDoc.value,
   });
   attendingDoctor.value = row.data;
@@ -373,12 +373,13 @@ async function changeDoctor({ added, removed }, bed) {
   if (added) {
     await store.dispatch(actions.INC_LOADING);
     await api('chambers/doctor-assigned-patient', {
+      doctor: added.element,
       direction_id: bed.patient[0].direction_pk,
     });
     await store.dispatch(actions.DEC_LOADING);
   }
   if (removed) {
-    await getAttendingDoctor();
+    await getAttendingDoctors();
     await store.dispatch(actions.INC_LOADING);
     await api('chambers/doctor-detached-patient', {
       doctor: removed.element,
@@ -450,7 +451,7 @@ watch(department, () => {
   getPatientWithoutBed();
 });
 watch(departmentDoc, () => {
-  getAttendingDoctor();
+  getAttendingDoctors();
 });
 onMounted(init);
 </script>

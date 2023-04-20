@@ -80,9 +80,9 @@ def get_chambers_and_beds(request):
                             "bed_number": j.bed_number,
                             "doctor": [
                                 {
-                                    "fio": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.fio,
-                                    "pk": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.pk,
-                                    "short_fio": PatientToBed.objects.get(bed=j.pk, date_out__isnull=True).doctor.get_fio(),
+                                    "fio": history.doctor.get_full_fio(),
+                                    "pk": history.doctor.pk,
+                                    "short_fio": history.doctor.get_fio(),
                                 }
                             ],
                             "patient": [
@@ -121,18 +121,19 @@ def extract_patient_bed(request):
     return status_response(True)
 
 
-def get_attending_doctor(request):
+def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    doctors = [{'fio': g.fio, 'pk': g.pk, 'short_fio': g.get_fio()} for g in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
+    doctors = [{'fio': g.get_full_fio(), 'pk': g.pk, 'short_fio': g.get_fio()} for g in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
     return JsonResponse({"data": doctors})
 
 
 def doctor_assigned_patient(request):
     request_data = json.loads(request.body)
+    doctor_obj = request_data.get('doctor')
     direction_id = request_data.get('direction_id')
     doctor = PatientToBed.objects.filter(direction_id=direction_id, doctor=None, date_out=None).first()
-    doctor.doctor_id = direction_id
+    doctor.doctor_id = doctor_obj["pk"]
     doctor.save()
     return status_response(True)
 
