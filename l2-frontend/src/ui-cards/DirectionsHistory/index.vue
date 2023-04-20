@@ -596,7 +596,7 @@ export default {
       const s = Object.values(researches || {}).map((r: Research) => ({
         value: String(r.pk),
         label: truncate(r.full_title || r.title, 70, true),
-      }));
+      })).filter(({ value }) => !value.startsWith('template-'));
       if (s.length === 0) {
         return;
       }
