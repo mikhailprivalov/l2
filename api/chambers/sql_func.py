@@ -2,7 +2,7 @@ from django.db import connection
 from utils.db import namedtuplefetchall
 
 
-def getting_patient_issledovaniya(hosp_id):
+def get_patients_stationar(department_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -19,7 +19,7 @@ def getting_patient_issledovaniya(hosp_id):
                 INNER JOIN public.clients_individual ON clients_card.individual_id = public.clients_individual.id
                 WHERE hospital_department_override_id = %(department_id)s
             """,
-            params={"department_id": hosp_id},
+            params={"department_id": department_id},
         )
 
         rows = namedtuplefetchall(cursor)
