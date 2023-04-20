@@ -339,7 +339,8 @@ async function changePatientBed({ added, removed }, bed) {
   if (added) {
     await store.dispatch(actions.INC_LOADING);
     await api('chambers/entrance-patient-to-bed', {
-      beds: bed,
+      bed_id: bed.pk,
+      direction_id: bed.patient[0].direction_pk,
     });
     await store.dispatch(actions.DEC_LOADING);
   }
@@ -372,7 +373,7 @@ async function changeDoctor({ added, removed }, bed) {
   if (added) {
     await store.dispatch(actions.INC_LOADING);
     await api('chambers/doctor-assigned-patient', {
-      beds: bed,
+      direction_id: bed.patient[0].direction_pk,
     });
     await store.dispatch(actions.DEC_LOADING);
   }
@@ -381,7 +382,7 @@ async function changeDoctor({ added, removed }, bed) {
     await store.dispatch(actions.INC_LOADING);
     await api('chambers/doctor-detached-patient', {
       doctor: removed.element,
-      beds: bed,
+      direction_id: bed.patient[0].direction_pk,
     });
     await store.dispatch(actions.DEC_LOADING);
   }
