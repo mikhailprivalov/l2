@@ -57,22 +57,22 @@ def get_chambers_and_beds(request):
                 short_fio = individual_obj.fio(short=True, dots=True)
                 if history.doctor is None:
                     chamber["beds"].append(
-                            {
-                                "pk": j.pk,
-                                "bed_number": j.bed_number,
-                                "doctor": [],
-                                "patient": [
-                                    {
-                                        "fio": patient_data["fio"],
-                                        "short_fio": short_fio,
-                                        "age": patient_data["age"],
-                                        "sex": patient_data["sex"],
-                                        "highlight": False,
-                                        "direction_pk": history.direction_id
-                                    }
-                                ],
-                            }
-                        )
+                        {
+                            "pk": j.pk,
+                            "bed_number": j.bed_number,
+                            "doctor": [],
+                            "patient": [
+                                {
+                                    "fio": patient_data["fio"],
+                                    "short_fio": short_fio,
+                                    "age": patient_data["age"],
+                                    "sex": patient_data["sex"],
+                                    "highlight": False,
+                                    "direction_pk": history.direction_id
+                                }
+                            ],
+                        }
+                    )
                 else:
                     chamber["beds"].append(
                         {
