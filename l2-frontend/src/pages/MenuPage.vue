@@ -48,7 +48,6 @@
                   <a
                     href="/logout"
                     class="btn btn-blue-nb"
-                    @click="logout"
                   >Выход</a>
                 </div>
               </div>
@@ -113,7 +112,6 @@
               :to="forms_url"
               class="panel-body"
               target="_blank"
-              @click="addFeedback"
             >
               <span><i class="fas fa-comment" /> Оставить отзыв</span>
             </router-link>
@@ -472,7 +470,6 @@ import { mapGetters } from 'vuex';
 import Modal from '@/ui-cards/Modal.vue';
 import { Button, Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
-import { sendEvent } from '@/metrics';
 import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
 
 @Component({
@@ -723,19 +720,6 @@ export default class MenuPage extends Vue {
 
   get chatsEnabled() {
     return this.$store.getters.chatsEnabled;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  logout() {
-    window.posthog?.reset();
-    window.posthogInit(
-      window.posthog,
-    );
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  addFeedback() {
-    sendEvent('add_feedback', {});
   }
 }
 </script>

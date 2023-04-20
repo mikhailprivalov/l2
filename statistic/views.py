@@ -34,7 +34,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors, base_data
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -61,6 +61,7 @@ from laboratory.settings import (
     DISPANSERIZATION_SERVICE_PK,
     UNLIMIT_PERIOD_STATISTIC_RESEARCH,
 )
+from .statistic_func import save_file_disk, initial_work_book
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -1942,6 +1943,14 @@ def commercial_offer_xls_save_file(data_offer, patients, research_price):
     date_now_str = "offer" + str(date_now1)
     file_dir = os.path.join(dir_param, date_now_str + '.xlsx')
     wb.save(filename=file_dir)
+    return file_dir
+
+
+def data_xls_save_file(data, sheet_name):
+    wb, ws = initial_work_book(sheet_name)
+    ws = base_data.fill_base(ws, data)
+    ws = base_data.fill_data(ws, data)
+    file_dir = save_file_disk(wb)
     return file_dir
 
 

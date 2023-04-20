@@ -14,12 +14,13 @@ from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company
+from ecp_integration.integration import fill_slot_from_xlsx
 from laboratory.settings import CONTROL_AGE_MEDEXAM
-from statistic.views import commercial_offer_xls_save_file
+from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
 from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
 from integration_framework.views import check_enp
-from utils.dates import age_for_year
+from utils.dates import age_for_year, normalize_dots_date
 
 
 def dnk_covid(request):
@@ -146,6 +147,9 @@ def load_file(request):
     if request.POST.get('isGenCommercialOffer') == "true":
         results = gen_commercial_offer(request)
         link = "open-xls"
+    elif request.POST.get('isWritePatientEcp') == "true":
+        results = write_patient_ecp(request)
+        link = "open-xls"
     elif len(request.POST.get('companyInn')) != 0:
         results = add_factors_from_file(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
@@ -177,16 +181,18 @@ def gen_commercial_offer(request):
         else:
             harmful_factor_data = [i.replace(" ", "") for i in cells[harmful_factor].split(",")]
             born_data = cells[born].split(" ")[0]
-            age = age_for_year(born_data)
-            if "м" in cells[sex]:
-                adds_harmfull = CONTROL_AGE_MEDEXAM.get("м")
-            else:
-                adds_harmfull = CONTROL_AGE_MEDEXAM.get("ж")
-            if adds_harmfull:
-                for i in sorted(adds_harmfull.keys()):
-                    if age < i:
-                        harmful_factor_data.append(adds_harmfull[i])
-                        break
+            age = -1
+            if born_data != "None":
+                age = age_for_year(born_data)
+                if "м" in cells[sex]:
+                    adds_harmfull = CONTROL_AGE_MEDEXAM.get("м")
+                else:
+                    adds_harmfull = CONTROL_AGE_MEDEXAM.get("ж")
+                if adds_harmfull:
+                    for i in sorted(adds_harmfull.keys()):
+                        if age < i:
+                            harmful_factor_data.append(adds_harmfull[i])
+                            break
             templates_data = HarmfulFactor.objects.values_list("template_id", flat=True).filter(title__in=harmful_factor_data)
             researches_data = AssignmentResearches.objects.values_list('research_id', flat=True).filter(template_id__in=templates_data)
             researches_data = set(researches_data)
@@ -224,7 +230,7 @@ def load_csv(request):
 
     app_key = application.key.hex
 
-    method = re.search(r'^(\S+)\s+.*$', header[1]).group(1)
+    method = re.search(r'^(.+)\s\d+\s.*$', header[1]).group(1)
     results = []
     pattern = re.compile(r'^\d+$')
 
@@ -250,3 +256,33 @@ def load_csv(request):
             )
 
     return JsonResponse({"ok": True, "results": results, "method": method})
+
+
+def write_patient_ecp(request):
+    file_data = request.FILES['file']
+    wb = load_workbook(filename=file_data)
+    ws = wb[wb.sheetnames[0]]
+    starts = False
+    patients = []
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "врач" in cells:
+                starts = True
+                family = cells.index("фaмилия")
+                name = cells.index("имя")
+                patronymic = cells.index("отчество")
+                born = cells.index("дата рождения")
+                doctor = cells.index("врач")
+        else:
+            born_data = cells[born].split(" ")[0]
+            if "." in born_data:
+                born_data = normalize_dots_date(born_data)
+            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data, "snils": ""}
+            result = fill_slot_from_xlsx(cells[doctor], patient)
+            is_write = "Ошибка"
+            if result and result.get('register'):
+                is_write = "записан"
+            patients.append({**patient, "is_write": is_write, "doctor": cells[doctor]})
+    file_name = data_xls_save_file(patients, "Запись")
+    return file_name

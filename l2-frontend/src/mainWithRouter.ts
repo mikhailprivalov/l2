@@ -65,6 +65,17 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/transfer-card',
+      name: 'transfer_card',
+      component: () => import('@/pages/TransferDocument/TransferCard.vue'),
+      meta: {
+        title: 'Движение карт',
+        groups: ['Лечащий врач', 'Оператор лечащего врача'],
+        narrowLayout: true,
+        module: 'l2_transfer_card',
+      },
+    },
+    {
       path: '/ui/construct/menu',
       name: 'construct_menu',
       component: () => import('@/construct/ConstructMenu.vue'),
@@ -810,9 +821,6 @@ router.beforeEach(async (to, from, next) => {
 });
 
 router.afterEach(async () => {
-  if (window.posthog) {
-    window.posthog.capture('$pageview');
-  }
   await router.app.$store.dispatch(actions.DEC_G_LOADING);
 });
 

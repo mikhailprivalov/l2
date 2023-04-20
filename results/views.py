@@ -429,6 +429,8 @@ def result_print(request):
                 or iss.research.is_citology
                 or iss.research.is_gistology
                 or iss.research.is_form
+                or iss.research.is_aux
+                or iss.research.is_expertise
             ):
                 has_paraclinic = True
             if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
@@ -1110,7 +1112,7 @@ def result_print(request):
                 elif iss.research.can_created_patient and iss.doc_confirmation.user_id == LK_USER:
                     fwb.append(Paragraph("Дата заполнения пациентом: {}".format(t2), styleBold))
 
-                if not iss.research.has_own_form_result and not iss.research.is_form:
+                if not iss.research.has_own_form_result and not iss.research.is_form and not iss.research.is_aux and not iss.research.is_expertise:
                     if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                         fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
                     else:

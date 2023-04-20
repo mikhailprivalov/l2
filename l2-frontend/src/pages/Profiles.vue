@@ -775,6 +775,24 @@
               </option>
             </select>
           </div>
+          <div
+            class="col-xs-6 left-padding"
+          >
+            <div
+              class="input-group"
+              style="width: 100%"
+            >
+              <span class="input-group-addon">Кабинеты</span>
+              <Treeselect
+                v-model="user.rooms"
+                class="treeselect-nbr treeselect-wide treeselect-34px"
+                :multiple="true"
+                :options="user.rooms_list"
+                :flatten-search-results="true"
+                placeholder="Кабинеты не указаны"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div class="right-bottom">

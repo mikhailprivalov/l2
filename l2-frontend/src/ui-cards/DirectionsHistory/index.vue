@@ -73,7 +73,7 @@
       <table class="table table-responsive table-bordered table-one">
         <colgroup>
           <col width="66">
-          <col width="70">
+          <col width="77">
           <col>
           <col width="65">
           <col :width="!!iss_pk ? 200 : 150">
@@ -119,7 +119,7 @@
       <table class="table table-responsive table-bordered no-first-border-top table-hover table-two">
         <colgroup>
           <col width="66">
-          <col width="70">
+          <col width="77">
           <col>
           <col width="65">
           <col :width="!!iss_pk ? 200 : 150">
@@ -170,6 +170,11 @@
                 </a>
               </span>
               <span v-else>{{ row.pk }}</span>
+              <span v-if="row.has_aux">
+                <AuxResearch
+                  :main-direction="row.pk"
+                  :aux-research="row.aux_researches"
+                /></span>
             </td>
             <td
               class="researches"
@@ -378,6 +383,7 @@ import { mapGetters } from 'vuex';
 import _ from 'lodash';
 
 import { Research } from '@/types/research';
+import AuxResearch from '@/ui-cards/AuxResearch.vue';
 import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
 
@@ -398,7 +404,9 @@ function truncate(s, n, useWordBoundary) {
 
 export default {
   name: 'DirectionsHistory',
-  components: { SelectPickerM, DateRange, Bottom },
+  components: {
+    SelectPickerM, DateRange, Bottom, AuxResearch,
+  },
   props: {
     patient_pk: {
       type: Number,
@@ -562,8 +570,8 @@ export default {
       // eslint-disable-next-line max-len
       window.open(`/forms/pdf?type=111.01&card_pk=${card}&rmis_location=${rmisLocation}&date=${date}&time=${time}&researches=${researches}&pageFormat=${pageFormat}&typeSlot=${typeSlot}`, '_blank');
     },
-    async load_history_safe() {
-      await this.load_history_debounced(true);
+    load_history_safe() {
+      this.load_history_debounced(true);
     },
     async cancel_talon(slotId, patentPk, rmisLocation, typeSlot) {
       try {
@@ -588,7 +596,7 @@ export default {
       const s = Object.values(researches || {}).map((r: Research) => ({
         value: String(r.pk),
         label: truncate(r.full_title || r.title, 70, true),
-      }));
+      })).filter(({ value }) => !value.startsWith('template-'));
       if (s.length === 0) {
         return;
       }

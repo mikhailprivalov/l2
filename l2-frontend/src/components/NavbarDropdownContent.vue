@@ -17,7 +17,6 @@
             class="panel-body"
             active-class="dash-active"
             :target="b.nt && '_blank'"
-            @click="recordEvent(b)"
           >
             <span>{{ b.title }}</span>
           </router-link>
@@ -35,8 +34,6 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 
-import { sendEvent } from '@/metrics';
-
 @Component({
   computed: mapGetters(['menu', 'version']),
 })
@@ -47,19 +44,6 @@ export default class NavbarDropdownContent extends Vue {
 
   get system() {
     return this.$systemTitle();
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  recordEvent(button: any) {
-    if (button.metrics) {
-      sendEvent(button.metrics, {});
-      if (button.metrics === 'logout') {
-        window.posthog?.reset();
-        window.posthogInit(
-          window.posthog,
-        );
-      }
-    }
   }
 }
 </script>

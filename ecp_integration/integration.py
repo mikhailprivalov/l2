@@ -317,31 +317,48 @@ def cancel_ecp_patient_record(time_table_id, type_slot, reason_cancel=1):
 
 
 def fill_slot_ecp_free_nearest(direction):
-    slots = []
     for i in direction.issledovaniya_set.all():
         if i.research.auto_register_on_rmis_location:
-            date_find_start = current_time().astimezone(TZ)
-            step = 0
-            for d in range(7):
-                date_find = date_find_start + relativedelta(days=d, minutes=1)
-                normal_data = strdatetimeru(date_find).split(' ')
-                date_find = normalize_dots_date(normal_data[0])
-                time_find = '08:00:00'
-                if step == 0:
-                    time_find = normal_data[1]
-                slots = get_doctor_ecp_free_slots_by_date(i.research.auto_register_on_rmis_location, date_find, time_find)
-                step += 1
-                if len(slots) > 0:
-                    break
+            slots = get_random_doctor_slots(i.research.auto_register_on_rmis_location)
             if len(slots) > 0:
                 slot_id = slots[0].get('pk', None)
                 type_slot = slots[0].get('typeSlot', None)
                 ecp_id = None
                 if slot_id and type_slot:
                     ecp_id = direction.client.get_ecp_id()
-
                 if ecp_id:
                     register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+
+
+def get_random_doctor_slots(medstaff_fact_id):
+    date_find_start = current_time().astimezone(TZ)
+    step = 0
+    slots = []
+    for d in range(7):
+        date_find = date_find_start + relativedelta(days=d, minutes=1)
+        normal_data = strdatetimeru(date_find).split(' ')
+        date_find = normalize_dots_date(normal_data[0])
+        time_find = '08:00:00'
+        if step == 0:
+            time_find = normal_data[1]
+        slots = get_doctor_ecp_free_slots_by_date(medstaff_fact_id, date_find, time_find)
+        step += 1
+        if len(slots) > 0:
+            break
+    return slots
+
+
+def fill_slot_from_xlsx(medstaff_fact_id, patient):
+    slots = get_random_doctor_slots(medstaff_fact_id)
+    if len(slots) > 0:
+        slot_id = slots[0].get('pk', None)
+        type_slot = slots[0].get('typeSlot', None)
+        ecp_id = None
+        if slot_id and type_slot:
+            ecp_id = search_patient_ecp_by_fio(patient)
+        if ecp_id:
+            return register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+    return False
 
 
 def attach_patient_ecp(person_id, lpu_region_id, date_begin, lpu_id, lpu_region_type_id):

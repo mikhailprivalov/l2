@@ -5,7 +5,7 @@
         href="#"
         @click.prevent="doOpen"
       >
-        Загрузка файла
+        Загрузка файла {{ titleButton }}
       </a>
       <Modal
         v-if="open"
@@ -132,9 +132,19 @@ export default {
       default: false,
       required: false,
     },
+    isWritePatientEcp: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
     selectedPrice: {
       type: Number,
       default: -1,
+      required: false,
+    },
+    titleButton: {
+      type: String,
+      default: '',
       required: false,
     },
   },
@@ -184,6 +194,7 @@ export default {
         formData.append('companyInn', this.companyInn);
         formData.append('isGenCommercialOffer', this.isGenCommercialOffer);
         formData.append('selectedPrice', this.selectedPrice);
+        formData.append('isWritePatientEcp', this.isWritePatientEcp);
         const { data } = await axios.post('/api/parse-file/loadfile', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',

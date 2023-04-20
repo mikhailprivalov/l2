@@ -14,6 +14,7 @@ from laboratory.redis import get_redis_client
 from laboratory.settings import EMAIL_HOST, MEDIA_ROOT
 from podrazdeleniya.models import Podrazdeleniya
 from users.tasks import send_login, send_new_email_code, send_new_password, send_old_email_code
+from utils.string import make_short_name_form
 
 
 class Speciality(models.Model):
@@ -34,17 +35,6 @@ class Speciality(models.Model):
     class Meta:
         verbose_name = 'Специальность'
         verbose_name_plural = 'Специальности'
-
-
-def add_dots_if_not_digit(w: str, dots, with_space=False):
-    w = w.strip()
-    if not w:
-        return ''
-    if not w.isdigit() and len(w) > 0:
-        w = w[0] + ("." if dots else "")
-    if with_space:
-        w += " "
-    return w
 
 
 class Position(models.Model):
@@ -114,6 +104,8 @@ class DoctorProfile(models.Model):
     cabinet = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Кабинет приема")
     max_age_patient_registration = models.SmallIntegerField(help_text='Ограничения возраста записи указать в месяцах', default=-1)
     available_quotas_time = models.TextField(default='', blank=True, help_text='Доступная запись для подразделений по времени {"id-подразделения": "10:00-15:00"}')
+
+    room_access = models.ManyToManyField('podrazdeleniya.Room', blank=True, help_text='Доступ к кабинетам')
 
     @property
     def notify_queue_key_base(self):
@@ -421,7 +413,7 @@ class DoctorProfile(models.Model):
         """
         fio_parts = self.get_fio_parts()
 
-        return f"{fio_parts[0]} {add_dots_if_not_digit(fio_parts[1], dots, with_space)}{add_dots_if_not_digit(fio_parts[2], dots)}".strip()
+        return make_short_name_form(fio_parts[0], fio_parts[1], fio_parts[2], dots, with_space)
 
     def is_member(self, groups: list) -> bool:
         """
