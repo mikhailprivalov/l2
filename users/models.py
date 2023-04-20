@@ -14,7 +14,7 @@ from laboratory.redis import get_redis_client
 from laboratory.settings import EMAIL_HOST, MEDIA_ROOT
 from podrazdeleniya.models import Podrazdeleniya
 from users.tasks import send_login, send_new_email_code, send_new_password, send_old_email_code
-from utils.string import make_one_char_reduction, make_short_name_form
+from utils.string import make_short_name_form
 
 
 class Speciality(models.Model):
