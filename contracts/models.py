@@ -243,6 +243,8 @@ class MedicalExamination(models.Model):
             current_exam.company = company
             current_exam.date = date
             current_exam.save()
+        else:
+            MedicalExamination(card=card, company=company, date=date).save()
 
     class Meta:
         verbose_name = 'Медицинский осмотр'
