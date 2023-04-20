@@ -81,7 +81,10 @@ def full_patient_search_data(p, query):
         else:
             btday = None
         if btday:
-            btday = btday[2] + "-" + btday[1] + "-" + btday[0]
+            if len(btday) == 2 and len(btday[1]) == 6:
+                btday = btday[1][2:] + "-" + btday[1][:2] + "-" + btday[0]
+            else:
+                btday = btday[2] + "-" + btday[1] + "-" + btday[0]
             rmis_req["birthDate"] = btday
     return f, n, p, rmis_req, split
 
