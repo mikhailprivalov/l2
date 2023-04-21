@@ -138,7 +138,7 @@ class Bed(models.Model):
         return f'{self.chamber} - {self.bed_number}'
 
     class Meta:
-        verbose_name = 'Койку'
+        verbose_name = 'Койка'
         verbose_name_plural = 'Койки'
 
 
@@ -153,7 +153,7 @@ class PatientToBed(models.Model):
         return f'{self.direction.client.individual.fio()}'
 
     class Meta:
-        verbose_name = 'Историю койки'
+        verbose_name = 'Историю коек'
         verbose_name_plural = 'История коек'
 
 
