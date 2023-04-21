@@ -117,7 +117,7 @@ def add_factors_from_file(request):
                 patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_data)
                 if patient_card is None:
                     possible_family = find_and_replace(family_data, "е", "ё")
-                    patient_card = search_by_possible_fio(request_obj, family_data, name_data, patronymic_data, birthday_data, possible_family)
+                    patient_card = search_by_possible_fio(request_obj, name_data, patronymic_data, birthday_data, possible_family)
                     if patient_card is None:
                         patient_indv = Individual(
                             family=family_data,
@@ -271,7 +271,7 @@ def find_and_replace(text: str, symbol1: str, symbol2: str) -> list:
     return result
 
 
-def search_by_possible_fio(request_obj: HttpRequest, family: str, name: str, patronymic: str | None, birthday: str, possible_family: list) -> Card | None:
+def search_by_possible_fio(request_obj: HttpRequest, name: str, patronymic: str | None, birthday: str, possible_family: list) -> Card | None:
     if not possible_family:
         return None
     patient_card = None
