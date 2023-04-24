@@ -17,7 +17,7 @@ def search_companies(company_title="-1", limit=400):
     return rows
 
 
-def get_examination_data(company_id: int, date_start: str | datetime.datetime, date_end: str | datetime.datetime):
+def get_examination_data(company_id: int, date_start: str | datetime.date, date_end: str | datetime.date):
     with connection.cursor() as cursor:
         cursor.execute(
             """

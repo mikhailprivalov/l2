@@ -200,10 +200,13 @@ class MedicalExamination(models.Model):
     def get_by_date(date: str, company_id: int, month: bool = False) -> list[dict]:
         if not date or not company_id:
             return []
+        date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
         if month:
-            _, num_day = calendar.monthrange(int(date.split('-')[2]), int(date.split('-')[1]))
-            date_start = datetime.date(int(date.split('-')[0]), int(date.split('-')[1]), 1)
-            date_end = datetime.date(int(date.split('-')[0]), int(date.split('-')[1]), num_day)
+            date_year = date.year
+            date_month = date.month
+            _, num_day = calendar.monthrange(date_year, date_month)
+            date_start = datetime.date(date_year, date_month, 1)
+            date_end = datetime.date(date_year, date_month, num_day)
         else:
             date_start = date
             date_end = date
@@ -219,7 +222,7 @@ class MedicalExamination(models.Model):
                         "harmful_factors": [f"{i.harmful_factor}; "],
                         "research_id": [i.research_id],
                         "research_titles": [f"{i.research_title}; "],
-                        "date": ".".join(reversed(str(i.examination_date).split("-"))),
+                        "date": i.examination_date.strftime("%d.%m.%Y")
                     }
                 )
             else:
