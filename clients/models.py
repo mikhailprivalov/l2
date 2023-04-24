@@ -1013,7 +1013,7 @@ class Card(models.Model):
 
     number = models.CharField(max_length=20, blank=True, help_text="Идентификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
-    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
+    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.PROTECT)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True, help_text="Карта в архиве")
     polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
