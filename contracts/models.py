@@ -222,7 +222,7 @@ class MedicalExamination(models.Model):
                         "harmful_factors": [f"{i.harmful_factor}; "],
                         "research_id": [i.research_id],
                         "research_titles": [f"{i.research_title}; "],
-                        "date": i.examination_date.strftime("%d.%m.%Y")
+                        "date": i.examination_date.strftime("%d.%m.%Y"),
                     }
                 )
             else:
