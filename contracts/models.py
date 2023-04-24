@@ -202,11 +202,9 @@ class MedicalExamination(models.Model):
             return []
         date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
         if month:
-            date_year = date.year
-            date_month = date.month
-            _, num_day = calendar.monthrange(date_year, date_month)
-            date_start = datetime.date(date_year, date_month, 1)
-            date_end = datetime.date(date_year, date_month, num_day)
+            _, num_day = calendar.monthrange(date.year, date.month)
+            date_start = date.replace(day=1)
+            date_end = date.replace(day=num_day)
         else:
             date_start = date
             date_end = date
