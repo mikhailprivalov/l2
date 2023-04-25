@@ -374,11 +374,9 @@ export default {
       dateTitle: '',
       checkboxOption: {
         selectedRowChange: ({ row, isSelected, selectedRowKeys }) => {
-          console.log(row, isSelected, selectedRowKeys);
           this.selectedCards = selectedRowKeys;
         },
         selectedAllChange: ({ isSelected, selectedRowKeys }) => {
-          console.log(isSelected, selectedRowKeys);
           this.selectedCards = selectedRowKeys;
         },
       },
