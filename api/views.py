@@ -3063,5 +3063,4 @@ def get_examination_list(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def print_medical_examination_data(request):
-    print(json.loads(request.body))
     return status_response(True)
