@@ -25,7 +25,6 @@ def get_unallocated_patients(request):
             "age": today.year - patient.birthday.year,
             "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0]}.',
             "sex": patient.sex,
-            "highlight": False,
             "direction_pk": patient.napravleniye_id,
         } for patient in get_patients_stationar(department_pk)
     ]
@@ -69,7 +68,6 @@ def get_chambers_and_beds(request):
                         "short_fio": short_fio,
                         "age": patient_data["age"],
                         "sex": patient_data["sex"],
-                        "highlight": False,
                         "direction_pk": history.direction_id
                     }
                 )
@@ -78,6 +76,7 @@ def get_chambers_and_beds(request):
                         {
                             "fio": history.doctor.get_full_fio(),
                             "pk": history.doctor.pk,
+                            "highlight": False,
                             "short_fio": history.doctor.get_fio(),
                         }
                     )
@@ -89,7 +88,7 @@ def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_id = request_data.get('bed_id')
     direction_id = request_data.get('direction_id')
-    if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exist():
+    if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
         PatientToBed(direction_id=direction_id, bed_id=bed_id).save()
     return status_response(True)
 
@@ -106,7 +105,7 @@ def extract_patient_bed(request):
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    doctors = [{'fio': g.get_full_fio(), 'pk': g.pk, 'short_fio': g.get_fio()} for g in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
+    doctors = [{'fio': g.get_full_fio(), 'pk': g.pk, 'highlight': False, 'short_fio': g.get_fio()} for g in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
     return JsonResponse({"data": doctors})
 
 
@@ -146,7 +145,6 @@ def get_patients_without_bed(request):
                 "short_fio": short_fio,
                 "age": patient_data["age"],
                 "sex": patient_data["sex"],
-                "highlight": False,
                 "direction_pk": patient.direction_id
             }
         )
@@ -158,12 +156,12 @@ def save_patient_without_bed(request):
     department_pk = request_data.get('department_pk', -1)
     patient_obj = request_data.get('patient_obj')
     if department_pk != -1:
-        PatientStationarWithoutBeds(direction_id=patient_obj["pk"], department_id=department_pk).save()
+        PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk).save()
     return status_response(True)
 
 
 def delete_patient_without_bed(request):
     request_data = json.loads(request.body)
     patient_obj = request_data.get('patient_obj')
-    PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["pk"]).delete()
+    PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"]).delete()
     return status_response(True)

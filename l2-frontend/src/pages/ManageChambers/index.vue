@@ -1,7 +1,6 @@
 <template>
   <div>
     <div
-      ref="root"
       class="construct-root"
     >
       <div class="construct-sidebar">
@@ -13,7 +12,7 @@
           class="sidebar-content"
         >
           <h5
-            style="text-align: center"
+            class="heading"
           >
             Пациенты
           </h5>
@@ -31,9 +30,8 @@
             >
               {{ patient.fio }}
               <i
-                class="fa-solid fa-child-reaching"
+                class="fa-solid fa-child-reaching icon"
                 :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
-                style="font-size: 20px"
               />
               {{ patient.age }}л.
             </div>
@@ -44,7 +42,9 @@
     <div class="construct-bottom-root">
       <div class="construct-bottom-bar">
         <div class="bottom-bar-content-home">
-          <h5 style="text-align: center">
+          <h5
+            class="heading"
+          >
             Ожидающие
           </h5>
           <draggable
@@ -67,9 +67,8 @@
             >
               {{ patient.short_fio }}
               <i
-                class="fa-solid fa-child-reaching"
+                class="fa-solid fa-child-reaching icon"
                 :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
-                style="font-size: 20px"
               />
               {{ patient.age }}л.
             </div>
@@ -103,7 +102,7 @@
           <tr
             v-for="chamber in chambers"
             :key="chamber.pk"
-            style="max-height: 61px; height: 61px"
+            class="chamber"
           >
             <td
               class="string-alignment"
@@ -130,13 +129,12 @@
                 >
                   <i
                     v-if="bed.doctor.length > 0"
-                    class="fa-solid fa-user-doctor"
+                    class="fa-solid fa-user-doctor icon"
                     :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
-                    style="font-size: 20px"
                   />
                   <span
                     v-if="bed.doctor.length < 1"
-                    style="font-size: 12px"
+                    class="withoutDoctor"
                   >
                     Б/В
                   </span>
@@ -174,20 +172,17 @@
                   v-if="bed.patient.length > 0 || bed.doctor.length > 0"
                   class="table table-fixed table-bordered table-responsive table-condensed table-info"
                 >
-                  <tr>
-                    <td
-                      v-if="bed.patient.length > 0"
-                    >
+                  <tr v-if="bed.patient.length > 0">
+                    <td>
                       {{ bed.patient[0].short_fio }}
                     </td>
                   </tr>
-                  <tr>
+                  <tr v-if="bed.doctor.length > 0">
                     <td
-                      v-if="bed.patient.length > 0"
                       style="border-top: 2px solid #ddd;"
-                      :class="{'changeColorDoc': bed.patient[0].highlight}"
+                      :class="{'changeColorDoc': bed.doctor[0].highlight}"
                     >
-                      <div v-if="bed.doctor.length > 0 && bed.patient.length > 0">
+                      <div>
                         {{ bed.doctor[0].short_fio }}
                       </div>
                     </td>
@@ -217,7 +212,7 @@
           style="width: 297px"
         >
           <h5
-            style="text-align: center"
+            class="heading"
           >
             Врачи
           </h5>
@@ -426,7 +421,7 @@ function highlight(doctor) {
     for (let j = 0; j < chambers.value[i].beds.length; j++) {
       if (chambers.value[i].beds[j].doctor.length > 0) {
         if (chambers.value[i].beds[j].doctor[0].fio === doctor.fio) {
-          chambers.value[i].beds[j].patient[0].highlight = !chambers.value[i].beds[j].patient[0].highlight;
+          chambers.value[i].beds[j].doctor[0].highlight = !chambers.value[i].beds[j].doctor[0].highlight;
         }
       }
     }
@@ -552,12 +547,6 @@ onMounted(init);
   background-color: transparent;
   width: 140px;
   margin-bottom: 0;
-}
-.table-info tr:nth-child(2n-1) {
-  background-color: transparent;
-}
-.table-info tr:nth-child(2n) {
-  background-color: transparent;
 }
 .chamber-table tr:nth-child(2n) {
   background-color: #F5F5F5;
@@ -719,5 +708,18 @@ onMounted(init);
 }
 .changeColorDoc {
   background-color: #BCD2DD;
+}
+.heading {
+  text-align: center;
+}
+.icon {
+  font-size: 20px;
+}
+.chamber {
+  max-height: 61px;
+  height: 61px;
+}
+.withoutDoctor {
+  font-size: 12px;
 }
 </style>
