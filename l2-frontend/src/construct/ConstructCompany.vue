@@ -273,19 +273,8 @@
       v-if="showExaminationList"
       class="main"
     >
-      <div class="box card-1 card-no-hover">
+      <div class="box exam-box card-1 card-no-hover">
         <div class="flex margin-bottom">
-          <div class="print-div">
-            <div class="button">
-              <button
-                v-tippy
-                title="печать"
-                class="btn last btn-blue-nb nbr"
-              >
-                печать
-              </button>
-            </div>
-          </div>
           <div class="row-div">
             <h5 class="text-center no-margin">
               {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
@@ -303,11 +292,13 @@
             :disable-branch-nodes="true"
             :append-to-body="true"
             placeholder="Выберите исследование"
-            />
+          />
         </div>
         <VeTable
           :columns="columns"
           :table-data="examinationList"
+          row-key-field-name="card_id"
+          :checkbox-option="checkboxOption"
         />
         <div
           v-show="examinationList.length === 0"
@@ -315,7 +306,7 @@
         >
           Нет записей
         </div>
-        <div>
+        <div class="flex-space-between">
           <VePagination
             :total="examinationList.length"
             :page-index="page"
@@ -324,6 +315,18 @@
             @on-page-number-change="pageNumberChange"
             @on-page-size-change="pageSizeChange"
           />
+          <div class="print-div">
+            <div class="button">
+              <button
+                v-tippy
+                title="печать"
+                class="btn last btn-blue-nb nbr"
+                @click="print"
+              >
+                печать
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -367,7 +370,18 @@ export default {
       date: '',
       showExaminationList: false,
       examinationList: [],
+      selectedCards: [],
       dateTitle: '',
+      checkboxOption: {
+        selectedRowChange: ({ row, isSelected, selectedRowKeys }) => {
+          console.log(row, isSelected, selectedRowKeys);
+          this.selectedCards = selectedRowKeys;
+        },
+        selectedAllChange: ({ isSelected, selectedRowKeys }) => {
+          console.log(isSelected, selectedRowKeys);
+          this.selectedCards = selectedRowKeys;
+        },
+      },
       columns: [
         {
           field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
@@ -381,10 +395,13 @@ export default {
         {
           field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
         },
+        {
+          field: '', key: 'select', title: '', align: 'center', width: 98, type: 'checkbox',
+        },
       ],
       page: 1,
-      pageSize: 100,
-      pageSizeOptions: [50, 100, 200],
+      pageSize: 50,
+      pageSizeOptions: [25, 50, 100],
       excludedResearches: [],
       researches: [],
       month: false,
@@ -532,6 +549,17 @@ export default {
     pageSizeChange(size: number) {
       this.pageSize = size;
     },
+    async print() {
+      const printData = this.examinationList.filter((exam) => {
+        const card = exam.card_id;
+        const selectCard = this.selectedCards;
+        return selectCard.includes(card);
+      }).map((exam) => ({ card_id: exam.card_id, research: exam.research_id }));
+      await this.$api('print-medical-examination-data', {
+        cards: printData,
+        exclude: this.excludedResearches,
+      });
+    },
   },
 };
 </script>
@@ -544,6 +572,9 @@ export default {
   flex-grow: 1;
   border-radius: 4px;
   min-height: 426px;
+}
+.exam-box {
+  min-height: 0;
 }
 .main {
   display: flex;
@@ -644,7 +675,7 @@ export default {
   margin-bottom: 5px;
 }
 .print-div {
-  width: 135px;
+  width: 100px;
 }
 .row-div {
   width: 100%;

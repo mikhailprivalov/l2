@@ -3058,3 +3058,10 @@ def get_examination_list(request):
     request_data = json.loads(request.body)
     examination_list = MedicalExamination.get_by_date(request_data["date"], request_data["company"], request_data["month"])
     return JsonResponse({"data": examination_list})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def print_medical_examination_data(request):
+    print(json.loads(request.body))
+    return status_response(True)
