@@ -384,8 +384,9 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph('Заключение врачебной комиссии<br/>по обязательному психиатрическому освидетельствованию<br/>'
-                         'работников, осуществляющих отдельные виды деятельности', styleCenterBold))
+    fwb.append(
+        Paragraph('Заключение врачебной комиссии<br/>по обязательному психиатрическому освидетельствованию<br/>' 'работников, осуществляющих отдельные виды деятельности', styleCenterBold)
+    )
     fwb.append(Spacer(1, 3 * mm))
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'Дата выдачи: {data["Дата выдачи"]}', style))
