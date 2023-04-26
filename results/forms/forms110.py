@@ -370,7 +370,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     opinion = [
         [
             Paragraph(f'<font size=11>{direction.hospital_title}<br/>Адрес: {direction.hospital_address}<br/>ОГРН: {direction.hospital.ogrn} <br/> </font>', styleT),
-            Paragraph('<font size=9 >Приложение 2<br/>к «Порядку прохождения обязательного<br/>психиатрического освидетельствования работниками, осуществляющими отдельные виды деятельности, '
+            Paragraph('<font size=9 >Приложение 2<br/>к «Порядку прохождения обязательного<br/>психиатрического освидетельствования работниками, осуществляющими отдельные виды деятельности,'
                       'его периодичности, а также видов деятельности, при осуществлении которых проводится психиатрическое освидетельствования в '
                       f'{direction.hospital.short_title}</font>', styleT),
         ],
@@ -401,7 +401,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     opinion = [
         [
-            Paragraph(f'Председатель комиссии', styleT),
+            Paragraph('Председатель комиссии', styleT),
             Paragraph(f'{data["Председатель комиссии"]}', styleT),
         ],
     ]
@@ -413,7 +413,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     opinion = [
         [
-            Paragraph(f'Члены комиссии ', styleT),
+            Paragraph('Члены комиссии ', styleT),
             Paragraph(f'{data["Члены комиссии"]}', styleT),
         ],
     ]
