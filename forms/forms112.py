@@ -460,7 +460,7 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
             )
             step += 1
 
-    tbl = Table(route_list, colWidths=(25 * mm, 28 * mm, 47 * mm, 45 * mm, 45 * mm), rowHeights=15 * mm, hAlign='LEFT')
+    tbl = Table(route_list, colWidths=(25 * mm, 28 * mm, 47 * mm, 45 * mm, 45 * mm), rowHeights=25 * mm, hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
