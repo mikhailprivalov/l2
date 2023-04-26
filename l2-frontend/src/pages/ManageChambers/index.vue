@@ -154,7 +154,7 @@
                   @remove="clearArrayDoctor(bed)"
                 >
                   <div
-                    style="display: inline-block"
+                    class="element"
                   >
                     <div
                       v-if="bed.patient.length > 0"
@@ -168,26 +168,28 @@
                     />
                   </div>
                 </draggable>
-                <table
+                <div
                   v-if="bed.patient.length > 0 || bed.doctor.length > 0"
-                  class="table table-fixed table-bordered table-responsive table-condensed table-info"
+                  class="info"
                 >
-                  <tr v-if="bed.patient.length > 0">
-                    <td>
-                      {{ bed.patient[0].short_fio }}
-                    </td>
-                  </tr>
-                  <tr v-if="bed.doctor.length > 0">
-                    <td
-                      style="border-top: 2px solid #ddd;"
-                      :class="{'changeColorDoc': bed.doctor[0].highlight}"
-                    >
-                      <div>
-                        {{ bed.doctor[0].short_fio }}
-                      </div>
-                    </td>
-                  </tr>
-                </table>
+                  <div
+                    v-if="bed.patient.length > 0"
+                    class="text-size"
+                  >
+                    {{ bed.patient[0].short_fio }}
+                  </div>
+                  <hr
+                    v-if="bed.doctor.length > 0"
+                    class="line"
+                  >
+                  <div
+                    v-if="bed.doctor.length > 0"
+                    class="text-size"
+                    :class="{'changeColorDoc': bed.doctor[0].highlight}"
+                  >
+                    {{ bed.doctor[0].short_fio }}
+                  </div>
+                </div>
               </div>
             </td>
           </tr>
@@ -208,8 +210,7 @@
           :departments="departments"
         />
         <div
-          class="sidebar-content"
-          style="width: 297px"
+          class="sidebar-content size"
         >
           <h5
             class="heading"
@@ -541,13 +542,6 @@ onMounted(init);
 .chamber-table {
   height: 500px;
 }
-.table-info {
-  display: inline-block;
-  border: none;
-  background-color: transparent;
-  width: 140px;
-  margin-bottom: 0;
-}
 .chamber-table tr:nth-child(2n) {
   background-color: #F5F5F5;
 }
@@ -589,6 +583,7 @@ onMounted(init);
   overflow: hidden;
   background-color: #fff;
   margin-left: 5px;
+  margin-top: 4px;
   margin-bottom: 10px;
   text-align: right;
   padding: 5px;
@@ -721,5 +716,21 @@ onMounted(init);
 }
 .withoutDoctor {
   font-size: 12px;
+}
+.info {
+  display: inline-block;
+  vertical-align: top;
+  width: 136px;
+}
+.line {
+  border-top: 1px solid #ddd;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+.size {
+  width: 297px;
+}
+.text-size {
+  font-size: 13px;
 }
 </style>
