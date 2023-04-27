@@ -50,7 +50,7 @@ def request_get_sess_id():
     data = cache.get("ecp_sess_id")
     if not data:
         data = make_request_get("user/login", query=f"Login={login}&Password={password}", get_sess_id=True)
-        cache.set("ecp_sess_id", data, 60 * 60 * 3)
+        cache.set("ecp_sess_id", data, 60 * 30)
     return data
 
 

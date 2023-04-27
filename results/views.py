@@ -47,7 +47,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE, GISTOLOGY_RESEARCH_PK
+from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE, GISTOLOGY_RESEARCH_PK, RESEARCHES_NOT_PRINT_FOOTERS
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -465,7 +465,7 @@ def result_print(request):
 
             if not has_own_form_result and portion:
                 mark_pages(c, direction, qr_data, "Образец")
-            elif iss.time_confirmation:
+            elif iss.time_confirmation and iss.research.pk not in RESEARCHES_NOT_PRINT_FOOTERS:
                 mark_pages(c, direction, qr_data)
 
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
