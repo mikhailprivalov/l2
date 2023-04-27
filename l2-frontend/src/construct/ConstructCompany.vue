@@ -373,10 +373,10 @@ export default {
       selectedCards: [],
       dateTitle: '',
       checkboxOption: {
-        selectedRowChange: ({ row, isSelected, selectedRowKeys }) => {
+        selectedRowChange: ({ selectedRowKeys }) => {
           this.selectedCards = selectedRowKeys;
         },
-        selectedAllChange: ({ isSelected, selectedRowKeys }) => {
+        selectedAllChange: ({ selectedRowKeys }) => {
           this.selectedCards = selectedRowKeys;
         },
       },
@@ -685,9 +685,9 @@ export default {
   flex-direction: row;
   justify-content: stretch;
 }
-  .btn {
-    align-self: stretch;
-    flex: 1;
-    padding: 7px 0;
-  }
+.btn {
+  align-self: stretch;
+  flex: 1;
+  padding: 7px 0;
+}
 </style>
