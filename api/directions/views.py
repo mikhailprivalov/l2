@@ -2627,6 +2627,14 @@ def last_field_result(request):
         result = {"value": mother_data['born']}
     elif request_data["fieldPk"].find('%snils') != -1:
         result = {"value": data['snils']}
+    elif request_data["fieldPk"].find('%sex_full') != -1:
+        if data['sex'] == 'м':
+            sex = 'мужской'
+        else:
+            sex = 'женский'
+        result = {"value": sex}
+    elif request_data["fieldPk"].find('%sex_short') != -1:
+        result = {"value": data['sex']}
     elif request_data["fieldPk"].find('%mother_snils') != -1:
         result = {"value": mother_data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:
