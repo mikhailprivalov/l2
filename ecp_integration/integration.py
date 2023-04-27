@@ -47,7 +47,10 @@ def make_request_get(path, query="", sess_id="", method="GET", get_sess_id=False
 def request_get_sess_id():
     login = Settings.get("login")
     password = Settings.get("password")
-    data = make_request_get("user/login", query=f"Login={login}&Password={password}", get_sess_id=True)
+    data = cache.get("ecp_sess_id")
+    if not data:
+        data = make_request_get("user/login", query=f"Login={login}&Password={password}", get_sess_id=True)
+        cache.set("ecp_sess_id", data, 60 * 30)
     return data
 
 

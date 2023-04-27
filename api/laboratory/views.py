@@ -1,6 +1,7 @@
 import collections
 import itertools
 from decimal import Decimal
+import re
 from typing import Optional
 
 import bleach
@@ -614,7 +615,10 @@ def confirm_list(request):
             if not request.user.doctorprofile.has_group("Врач-лаборант"):
                 iss.co_executor = request.user.doctorprofile
                 for r in Result.objects.filter(issledovaniye=iss):
-                    iss.def_uet += Decimal(r.fraction.uet_co_executor_1)
+                    if iss.def_uet:
+                        iss.def_uet += Decimal(r.fraction.uet_co_executor_1)
+                    else:
+                        iss.def_uet = Decimal(r.fraction.uet_co_executor_1)
             iss.save()
             if iss.napravleniye:
                 iss.napravleniye.sync_confirmed_fields()
@@ -694,7 +698,7 @@ def receive_one_by_one(request):
     else:
         lab = {"title": "Все лаборатории", "pk": lab_pk}
 
-    pk = request_data['q']
+    pk = re.sub("[^0-9]", "", str(request_data['q']))
     direction = request_data["workMode"] == "direction"
     if not direction:
         pks = [pk]
