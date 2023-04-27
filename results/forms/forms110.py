@@ -1,6 +1,9 @@
 import datetime
+
+from reportlab.lib import colors
+
 from hospitals.models import Hospitals
-from reportlab.platypus import Paragraph, Spacer, Table, FrameBreak
+from reportlab.platypus import Paragraph, Spacer, Table, FrameBreak, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from copy import deepcopy
@@ -306,3 +309,146 @@ def title_fields(iss):
             data[t] = ""
 
     return data
+
+
+def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+    """
+    Заключение врачебной комиссии по обязательному психиатрическому освидетельствованию работников,
+    осуществляющих отдельные виды деятельности
+    """
+
+    title_fields = [
+        "Дата выдачи",
+        "Фамилия имя отчество работника",
+        "Дата рождения",
+        "Пол работника",
+        "Наименование работодателя, почтовый адрес, адрес электронной почты, контактный номер телефона",
+        "Вид экономической деятельности работодателя по ОКВЭД:",
+        "Наименование структурного подразделения работодателя (при наличии)",
+        "Должность сотрудника",
+        "Вид (виды) деятельности, осуществляемый работником ( в соответствии с приложением № 2 к Приказу М3 РФ от 20.05.2022г. № 324н)",
+        "Председатель комиссии",
+        "Члены комиссии",
+        "Результат психиатрического освидетельствования: Пригоден к следующим видам деятельности согласно приказа М3 РФ от 20.05.2022г. № 324Н",
+    ]
+
+    result = fields_result_only_title_fields(iss, title_fields, False)
+    data = {i['title']: i['value'] for i in result}
+
+    for t in title_fields:
+        if not data.get(t, None):
+            data[t] = ""
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.leading = 12
+    style.spaceAfter = 1.5 * mm
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = 'PTAstraSerifBold'
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    styleTCentre = deepcopy(styleT)
+    styleTCentre.alignment = TA_CENTER
+    styleTCentre.fontSize = 13
+
+    opinion = [
+        [
+            Paragraph(f'<font size=11>{direction.hospital_title}<br/>Адрес: {direction.hospital_address}<br/>ОГРН: {direction.hospital.ogrn} <br/> </font>', styleT),
+            Paragraph(
+                '<font size=9 >Приложение 2<br/>к «Порядку прохождения обязательного<br/>психиатрического освидетельствования работниками, осуществляющими отдельные виды деятельности,'
+                'его периодичности, а также видов деятельности, при осуществлении которых проводится психиатрическое освидетельствования в '
+                f'{direction.hospital.short_title}</font>',
+                styleT,
+            ),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [100 * mm])
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 15 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(
+        Paragraph('Заключение врачебной комиссии<br/>по обязательному психиатрическому освидетельствованию<br/>' 'работников, осуществляющих отдельные виды деятельности', styleCenterBold)
+    )
+    fwb.append(Spacer(1, 3 * mm))
+    space_symbol = '&nbsp;'
+    fwb.append(Paragraph(f'Дата выдачи: {data["Дата выдачи"]}', style))
+    fwb.append(Paragraph(f'Фамилия имя отчество работника: {data["Фамилия имя отчество работника"]}', style))
+    fwb.append(Paragraph(f'Дата рождения: {data["Дата рождения"]} {space_symbol * 50} пол работника: {data["Пол работника"]} ', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(
+        Paragraph(
+            'Наименование работодателя, адрес электронной почты, контактный номер телефона: '
+            f'{data["Наименование работодателя, почтовый адрес, адрес электронной почты, контактный номер телефона"]}',
+            style,
+        )
+    )
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Вид экономической деятельности работодателя по ОКВЭД: {data["Вид экономической деятельности работодателя по ОКВЭД:"]}', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Наименование структурного подразделения работодателя (при наличии):{data["Наименование структурного подразделения работодателя (при наличии)"]}', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(
+        Paragraph(
+            f'Вид (виды) деятельности, осуществляемый работником (в соответствии с приложением № 2 к Приказу М3 РФ от 20.05.2022г. № 342н) '
+            f'{data["Вид (виды) деятельности, осуществляемый работником ( в соответствии с приложением № 2 к Приказу М3 РФ от 20.05.2022г. № 324н)"]}',
+            style,
+        )
+    )
+
+    opinion = [
+        [
+            Paragraph('Председатель комиссии', styleT),
+            Paragraph(f'{data["Председатель комиссии"]}', styleT),
+        ],
+    ]
+
+    tbl1 = Table(opinion, [60 * mm, 130 * mm])
+    tbl1.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 25 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(tbl1)
+
+    opinion = [
+        [
+            Paragraph('Члены комиссии ', styleT),
+            Paragraph(f'{data["Члены комиссии"]}', styleT),
+        ],
+    ]
+
+    tbl2 = Table(opinion, [60 * mm, 130 * mm])
+    tbl2.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 25 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(tbl2)
+
+    fwb.append(Spacer(1, 10 * mm))
+    fwb.append(
+        Paragraph(
+            f'Результат психиатрического освидетельствования: '
+            f'{data["Результат психиатрического освидетельствования: Пригоден к следующим видам деятельности согласно приказа М3 РФ от 20.05.2022г. № 324Н"]}',
+            style,
+        )
+    )
+
+    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(tbl1)
+    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(tbl2)
+
+    return fwb

@@ -118,7 +118,7 @@ export default {
         grid: {
           padding: {
             top: c.type === 'PIE' ? 0 : -15,
-            bottom: c.type === 'PIE' ? -10 : -10,
+            bottom: -10,
           },
         },
         legend: {

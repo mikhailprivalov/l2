@@ -570,8 +570,8 @@ export default {
       // eslint-disable-next-line max-len
       window.open(`/forms/pdf?type=111.01&card_pk=${card}&rmis_location=${rmisLocation}&date=${date}&time=${time}&researches=${researches}&pageFormat=${pageFormat}&typeSlot=${typeSlot}`, '_blank');
     },
-    async load_history_safe() {
-      await this.load_history_debounced(true);
+    load_history_safe() {
+      this.load_history_debounced(true);
     },
     async cancel_talon(slotId, patentPk, rmisLocation, typeSlot) {
       try {
@@ -596,7 +596,7 @@ export default {
       const s = Object.values(researches || {}).map((r: Research) => ({
         value: String(r.pk),
         label: truncate(r.full_title || r.title, 70, true),
-      }));
+      })).filter(({ value }) => !value.startsWith('template-'));
       if (s.length === 0) {
         return;
       }
