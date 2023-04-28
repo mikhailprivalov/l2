@@ -62,7 +62,7 @@ from directions.models import (
     IssledovaniyaResultLaborant,
     SignatureCertificateDetails,
 )
-from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
+from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
 from laboratory import settings, VERSION
 from laboratory import utils
 from laboratory.decorators import group_required
@@ -174,6 +174,64 @@ def directions_generate(request):
             result["directionsStationar"].extend(rc["list_stationar_id"])
             if not result["ok"]:
                 break
+
+        if result["ok"]:
+            for pk in result["directions"]:
+                d: Napravleniya = Napravleniya.objects.get(pk=pk)
+                d.fill_acsn()
+                fill_slot_ecp_free_nearest(d)
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Вспомогательные документы")
+def aux_directions_generate(request):
+    result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
+    if request.method == "POST":
+        p = json.loads(request.body)
+        direction_id = p.get("directionId", None)
+        parent_iss = Issledovaniya.objects.filter(napravleniye_id=direction_id).first()
+        direction_obj = Napravleniya.objects.filter(id=direction_id).first()
+        aux_research = p.get("researches")
+        fin_source = p.get("fin_source", -1)
+        fin_source_pk = int(fin_source) if (isinstance(fin_source, int) or str(fin_source).isdigit()) else fin_source
+        args = [
+            direction_obj.client.pk,
+            p.get("diagnos", "-"),
+            fin_source_pk,
+            p.get("history_num"),
+            p.get("ofname_pk"),
+            request.user.doctorprofile,
+            aux_research,
+            p.get("comments", {}),
+            p.get("for_rmis"),
+            p.get("rmis_data", {}),
+        ]
+        kwargs = dict(
+            vich_code=p.get("vich_code", ""),
+            count=p.get("count", 1),
+            discount=p.get("discount", 0),
+            parent_iss=parent_iss.id,
+            parent_slave_hosp=p.get("parent_slave_hosp", None),
+            counts=p.get("counts", {}),
+            localizations=p.get("localizations", {}),
+            service_locations=p.get("service_locations", {}),
+            direction_purpose=p.get("direction_purpose", "NONE"),
+            external_organization=p.get("external_organization", "NONE"),
+            direction_form_params=p.get("direction_form_params", {}),
+            current_global_direction_params=p.get("current_global_direction_params", {}),
+            hospital_department_override=p.get("hospital_department_override", -1),
+            hospital_override=p.get("hospital_override", -1),
+            price_category=p.get("priceCategory", -1),
+        )
+        rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
+        result["ok"] = rc["r"]
+        if "message" in rc:
+            result["message"] = rc["message"]
+        result["directions"].extend(rc["list_id"])
+        if "messageLimit" in rc:
+            result["messageLimit"] = rc["messageLimit"]
+        result["directionsStationar"].extend(rc["list_stationar_id"])
 
         if result["ok"]:
             for pk in result["directions"]:
@@ -381,6 +439,13 @@ def directions_history(request):
             status = min(status_set)
             if len(lab) > 0:
                 lab_title = ', '.join(lab)
+            aux_researches = []
+            has_aux = False
+            if status == 2:
+                aux_researches_obj = AuxService.objects.filter(main_research__in=researches_pks)
+                if aux_researches_obj.exists():
+                    aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
+                    has_aux = True
             if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append(
                     {
@@ -388,6 +453,8 @@ def directions_history(request):
                         'status': status,
                         'researches': researches_titles,
                         "researches_pks": researches_pks,
+                        "aux_researches": aux_researches,
+                        "has_aux": has_aux,
                         'date': date,
                         'cancel': cancel,
                         'checked': False,
@@ -480,6 +547,13 @@ def directions_history(request):
     status = min(status_set)
     if len(lab) > 0:
         lab_title = ', '.join(lab)
+    aux_researches = []
+    has_aux = False
+    if status == 2:
+        aux_researches_obj = AuxService.objects.filter(main_research__in=researches_pks)
+        if aux_researches_obj.exists():
+            aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
+            has_aux = True
     if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
         final_result.append(
             {
@@ -487,6 +561,8 @@ def directions_history(request):
                 'status': status,
                 'researches': researches_titles,
                 "researches_pks": researches_pks,
+                "aux_researches": aux_researches,
+                "has_aux": has_aux,
                 'date': date,
                 'cancel': cancel,
                 'checked': False,
@@ -506,9 +582,7 @@ def directions_history(request):
                 'register_number': register_number,
             }
         )
-
     res['directions'] = final_result
-
     return JsonResponse(res)
 
 
@@ -893,6 +967,7 @@ def directions_services(request):
                     (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
                     or request.user.is_superuser
                     or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+                    or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
                 and n.visit_date
             )
@@ -980,6 +1055,7 @@ def directions_mark_visit(request):
                     (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
                     or request.user.is_superuser
                     or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+                    or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
                 and n.visit_date
             )
@@ -1333,6 +1409,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_form=True)
                         | Q(research__is_monitoring=True)
                         | Q(research__is_expertise=True)
+                        | Q(research__is_aux=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
@@ -1478,6 +1555,7 @@ def directions_paraclinic_form(request):
                         "is_microbiology": i.research.is_microbiology,
                         "is_treatment": i.research.is_treatment,
                         "is_stom": i.research.is_stom,
+                        "isAux": i.research.is_aux,
                         "is_monitoring": i.research.is_monitoring,
                         "wide_headers": i.research.wide_headers,
                         "comment": i.localization.title if i.localization else i.comment,
@@ -1694,6 +1772,7 @@ def directions_paraclinic_form(request):
                                 "values_to_input": values_to_input,
                                 "value": value,
                                 "field_type": field_type,
+                                "can_edit": field.can_edit_computed,
                                 "default_value": field.default_value,
                                 "visibility": field.visibility,
                                 "required": field.required,
@@ -1701,6 +1780,7 @@ def directions_paraclinic_form(request):
                                 "controlParam": field.control_param,
                                 "not_edit": field.not_edit,
                                 "operator_enter_param": field.operator_enter_param,
+                                "deniedGroup": field.denied_group.name if field.denied_group else "",
                             }
                         )
                     iss["research"]["groups"].append(g)
@@ -1848,6 +1928,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_form=True)
             | Q(research__is_monitoring=True)
             | Q(research__is_expertise=True)
+            | Q(research__is_aux=True)
         ).exists()
         or request.user.is_staff
     ):
@@ -2546,6 +2627,14 @@ def last_field_result(request):
         result = {"value": mother_data['born']}
     elif request_data["fieldPk"].find('%snils') != -1:
         result = {"value": data['snils']}
+    elif request_data["fieldPk"].find('%sex_full') != -1:
+        if data['sex'] == 'м':
+            sex = 'мужской'
+        else:
+            sex = 'женский'
+        result = {"value": sex}
+    elif request_data["fieldPk"].find('%sex_short') != -1:
+        result = {"value": data['sex']}
     elif request_data["fieldPk"].find('%mother_snils') != -1:
         result = {"value": mother_data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:

@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 import pytz_deprecation_shim as pytz
 
+from api.models import ManageDoctorProfileAnalyzer, Analyzer
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
@@ -67,7 +68,7 @@ from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from pharmacotherapy.models import Drugs
-from podrazdeleniya.models import Podrazdeleniya
+from podrazdeleniya.models import Podrazdeleniya, Room
 from slog import models as slog
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, ExcludePurposes
@@ -268,7 +269,7 @@ def send(request):
 
 @csrf_exempt
 def endpoint(request):
-    result = {"answer": False, "body": "", "patientData": {}}
+    result = {"answer": False, "body": "", "patientData": {}, "ok": False}
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
@@ -376,6 +377,7 @@ def endpoint(request):
                                                 fraction_result.ref_m = ref.m
                                                 fraction_result.ref_f = ref.f
                                             fraction_result.save()
+                                            result["ok"] = True
                                             issled.api_app = app
                                             issled.save()
                                             fraction_result.get_ref(re_save=True)
@@ -651,6 +653,8 @@ def current_user_info(request):
             )
 
             ret["fio"] = doctorprofile.get_full_fio()
+            ret["shortFio"] = doctorprofile.get_fio(with_space=False)
+            ret["hasTOTP"] = doctorprofile.totp_secret is not None
             ret["email"] = doctorprofile.email or ''
             ret["doc_pk"] = doctorprofile.pk
             ret["rmis_location"] = doctorprofile.rmis_location
@@ -1408,6 +1412,8 @@ def user_view(request):
             "restricted_to_direct": [],
             "users_services": [],
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
+            "rooms": [],
+            "rooms_list": [{"id": x.pk, "label": x.title} for x in Room.objects.all()],
             "password": '',
             "rmis_location": '',
             "rmis_login": '',
@@ -1457,6 +1463,8 @@ def user_view(request):
             "restricted_to_direct": [x.pk for x in doc.restricted_to_direct.all()],
             "users_services": [x.pk for x in doc.users_services.all()],
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
+            "rooms": [x.pk for x in doc.room_access.all()],
+            "rooms_list": [{"id": x.pk, "label": x.title} for x in Room.objects.all()],
             "password": '',
             "rmis_location": doc.rmis_location or '',
             "max_age_patient_registration": doc.max_age_patient_registration or -1,
@@ -1487,6 +1495,7 @@ def user_view(request):
 @group_required("Создание и редактирование пользователей")
 def user_save_view(request):
     request_data = json.loads(request.body)
+    group_analyzer = request_data["groupsAnalyzer"]
     pk = request_data["pk"]
     ok = True
     message = ""
@@ -1568,6 +1577,15 @@ def user_save_view(request):
             for g in ud["groups"]:
                 group = Group.objects.get(pk=g)
                 doc.user.groups.add(group)
+            doc.room_access.clear()
+            for r in ud["rooms"]:
+                room = Room.objects.get(pk=r)
+                doc.room_access.add(room)
+
+            ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=doc.pk).delete()
+            for g in group_analyzer:
+                analyzer = Analyzer.objects.get(pk=g)
+                ManageDoctorProfileAnalyzer(analyzer_id=analyzer.pk, doctor_profile_id=doc.pk).save()
             doc.user.save()
 
             doc.restricted_to_direct.clear()
@@ -2052,6 +2070,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/dispensary-plan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
         {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
         {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/employees", "title": "Управление сотрудниками", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},
@@ -2465,7 +2484,7 @@ def check_price_active(request):
 def get_coasts_researches_in_price(request):
     request_data = json.loads(request.body)
     coast_research = [
-        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f'{data.coast}'}
+        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f'{data.coast}', "numberService": data.number_services_by_contract}
         for data in PriceCoast.objects.filter(price_name_id=request_data["id"]).prefetch_related('research').order_by('research__title')
     ]
     return JsonResponse({"data": coast_research})
@@ -2481,7 +2500,9 @@ def update_coast_research_in_price(request):
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     old_coast = current_coast_research.coast
+    old_number = current_coast_research.number_services_by_contract
     current_coast_research.coast = request_data["coast"]
+    current_coast_research.number_services_by_contract = request_data.get("numberService", 0)
     current_coast_research.save()
     Log.log(
         current_coast_research.pk,
@@ -2493,6 +2514,8 @@ def update_coast_research_in_price(request):
             "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
             "old_coast": old_coast,
             "new_coast": current_coast_research.coast,
+            "old_number": old_number,
+            "new_number": current_coast_research.number_services_by_contract,
         },
     )
     return JsonResponse({"ok": "ok"})
@@ -2583,7 +2606,9 @@ def add_research_in_price(request):
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
-    current_coast_research = PriceCoast(price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"])
+    current_coast_research = PriceCoast(
+        price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"], number_services_by_contract=request_data.get("numberService", 0)
+    )
     current_coast_research.save()
     Log.log(
         current_coast_research.pk,
@@ -2841,7 +2866,7 @@ def get_research_sets(request):
 
 
 @login_required
-@group_required('Конструктор: Настройка организации')
+@group_required('Конструктор: Настройка организации', '')
 def get_type_departments(request):
     res = [{"id": t[0], "label": t[1]} for t in Podrazdeleniya.TYPES if t[0] in STATISTIC_TYPE_DEPARTMENT]
     return JsonResponse({"data": res})

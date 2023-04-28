@@ -65,6 +65,17 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/transfer-card',
+      name: 'transfer_card',
+      component: () => import('@/pages/TransferDocument/TransferCard.vue'),
+      meta: {
+        title: 'Движение карт',
+        groups: ['Лечащий врач', 'Оператор лечащего врача'],
+        narrowLayout: true,
+        module: 'l2_transfer_card',
+      },
+    },
+    {
       path: '/ui/construct/menu',
       name: 'construct_menu',
       component: () => import('@/construct/ConstructMenu.vue'),
@@ -100,6 +111,15 @@ const router = new Router({
         title: 'Настройка организации',
         groups: ['Конструктор: Настройка организации'],
         narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/employees',
+      name: 'construct_employees',
+      component: () => import('@/construct/ConstructEmployees.vue'),
+      meta: {
+        title: 'Управление сотрудниками',
+        groups: ['Конструктор: Настройка организации'],
       },
     },
     {
@@ -647,6 +667,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/analyzers',
+      name: 'ManageAnalyzer',
+      component: () => import('@/pages/ManageAnalyzers/index.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Управление анализаторами',
+        groups: ['Управление анализаторами'],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
@@ -750,7 +780,7 @@ router.beforeEach(async (to, from, next) => {
       next(nextPath || { name: 'menu' });
     } else if (
       toMatched.some((r) => r.meta.groups)
-      && toMatched.every((r) => !r.meta.groups || !r.meta.groups.find((g) => getters.user_groups.includes(g)))
+      && toMatched.every((r) => !r.meta.groups?.find((g) => getters.user_groups.includes(g)))
       && !getters.user_groups.includes('Admin')
     ) {
       router.app.$toast.warning('Нет доступа.', {
@@ -781,9 +811,6 @@ router.beforeEach(async (to, from, next) => {
 });
 
 router.afterEach(async () => {
-  if (window.posthog) {
-    window.posthog.capture('$pageview');
-  }
   await router.app.$store.dispatch(actions.DEC_G_LOADING);
 });
 

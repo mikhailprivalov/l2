@@ -932,16 +932,20 @@ def table_part_result(value, width_max_table=None):
     table_rows = value['rows']
     for t in table_rows:
         temp_data = []
-        result = ""
         for value_raw in t:
+            result = ""
             try:
                 row_data = json.loads(value_raw)
-                if row_data.get('fio', None):
-                    result = f"{row_data.get('family')} {row_data.get('name')} {row_data.get('patronymic')}"
-                if row_data.get('id', None):
-                    doctor = DoctorProfile.objects.get(pk=row_data.get('id'))
-                    position = doctor.position.title if doctor.position else ""
-                    result = f"{result} ({position})"
+
+                if isinstance(row_data, list):
+                    result = '<br/>'.join(row_data)
+                else:
+                    if row_data.get('fio', None):
+                        result = f"{row_data.get('family')} {row_data.get('name')} {row_data.get('patronymic')}"
+                    if row_data.get('id', None):
+                        doctor = DoctorProfile.objects.get(pk=row_data.get('id'))
+                        position = doctor.position.title if doctor.position else ""
+                        result = f"{result} ({position})"
             except:
                 result = value_raw
             temp_data.append(Paragraph(f"{result}", style))
@@ -984,6 +988,7 @@ def table_part_result(value, width_max_table=None):
             [
                 ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (0, -1), 'TOP')
             ]
         )
     )

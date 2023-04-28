@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 from copy import deepcopy
 
@@ -8,10 +9,12 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone, dateformat
 from django.views.decorators.csrf import csrf_exempt
+from openpyxl.reader.excel import load_workbook
 
 import directory.models as directory
 import slog.models as slog
 from api.directions.sql_func import get_lab_podr
+from appconf.manager import SettingManager
 from clients.models import CardBase
 from contracts.models import PriceName, PriceCoast, Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
@@ -31,7 +34,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors, base_data
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -44,6 +47,8 @@ from .sql_func import (
     sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
     sql_get_result_by_direction,
     sql_get_documents_by_card_id,
+    get_all_harmful_factors_templates,
+    get_researches_by_templates,
 )
 
 from laboratory.settings import (
@@ -56,6 +61,7 @@ from laboratory.settings import (
     DISPANSERIZATION_SERVICE_PK,
     UNLIMIT_PERIOD_STATISTIC_RESEARCH,
 )
+from .statistic_func import save_file_disk, initial_work_book
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -1797,7 +1803,6 @@ def statistic_xls(request):
             ws = consolidates.consolidate_fill_data_doctors_by_type_department_detail_patient(ws, query_doctors, ws_and_finish_order[1])
         else:
             ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
-
     wb.save(response)
     return response
 
@@ -1918,6 +1923,72 @@ def sreening_xls(request):
     screening_data['count_pap_analysys'] = len(researches_sql)
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
     wb.save(response)
+    return response
+
+
+def commercial_offer_xls_save_file(data_offer, patients, research_price):
+    wb = openpyxl.Workbook()
+    wb.remove(wb.get_sheet_by_name('Sheet'))
+    ws = wb.create_sheet("Спецификация")
+    ws = commercial_offer.offer_base(ws)
+    ws = commercial_offer.offer_fill_data(ws, data_offer)
+
+    ws = wb.create_sheet("Реестр")
+    ws = commercial_offer.register_base(ws)
+    ws = commercial_offer.register_data(ws, patients, research_price)
+
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = "offer" + str(date_now1)
+    file_dir = os.path.join(dir_param, date_now_str + '.xlsx')
+    wb.save(filename=file_dir)
+    return file_dir
+
+
+def data_xls_save_file(data, sheet_name):
+    wb, ws = initial_work_book(sheet_name)
+    ws = base_data.fill_base(ws, data)
+    ws = base_data.fill_data(ws, data)
+    file_dir = save_file_disk(wb)
+    return file_dir
+
+
+@csrf_exempt
+@login_required
+def get_harmful_factors(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Specification.xlsx\""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.get_sheet_by_name('Sheet'))
+    ws = wb.create_sheet("Спецификация")
+
+    ws = harmful_factors.harmful_factors_base(ws)
+    data_template = get_all_harmful_factors_templates()
+    data_template_ids = tuple([i.template_id for i in data_template])
+    date_researches = get_researches_by_templates(data_template_ids)
+    data_template_meta = {
+        i.template_id: {"harmfulfactor_title": i.harmfulfactor_title, "description": i.description, "template_title": i.template_title, "research_title": ""} for i in data_template
+    }
+    for k in date_researches:
+        data_template_meta[k.template_id]['research_title'] = f"{data_template_meta[k.template_id]['research_title']};  {k.title}"
+    ws = harmful_factors.harmful_factors_fill_data(ws, data_template_meta)
+    wb.save(response)
+    return response
+
+
+@csrf_exempt
+@login_required
+def open_xls(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Register.xlsx\""
+    request_data = request.POST if request.method == "POST" else request.GET
+    file_name = request_data.get("file").replace('"', "")
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_dir = os.path.join(dir_param, file_name)
+    wb = load_workbook(file_dir)
+    wb.save(response)
+    os.remove(file_dir)
     return response
 
 

@@ -55,6 +55,7 @@ class PriceCoast(models.Model):
     price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, db_index=True)
     research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING, db_index=True)
     coast = models.DecimalField(max_digits=10, decimal_places=2)
+    number_services_by_contract = models.PositiveIntegerField(default=0, help_text="Кол-во услуг по контракту")
 
     def __str__(self):
         return "{}".format(self.price_name.title)

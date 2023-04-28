@@ -1323,7 +1323,7 @@
               Сохранить
             </button>
             <button
-              v-if="!row.confirmed && can_confirm && !is_operator_protocol"
+              v-if="!row.confirmed && can_confirm && !is_operator_protocol || !row.confirmed && can_confirm && row.research.isAux"
               class="btn btn-blue-nb"
               :disabled="!r(row) || needFillWorkBy(row)"
               @click="save_and_confirm(row)"
@@ -1978,7 +1978,7 @@ export default {
       return this.$store.getters.modules.l2_morfology_additional;
     },
     show_additional() {
-      if (!this.data || !this.data.ok) {
+      if (!this.data?.ok) {
         return false;
       }
       return (
@@ -2047,7 +2047,7 @@ export default {
       return !!this.user_data.rmis_location;
     },
     user_services() {
-      if (!this.user_data || !this.user_data.user_services) {
+      if (!this.user_data?.user_services) {
         return [];
       }
       const r = [{ pk: -1, title: 'Не выбрано', full_title: 'Не выбрано' }];

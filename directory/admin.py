@@ -167,7 +167,10 @@ class ResParaclinicInputField(admin.ModelAdmin):
         'group',
     )
     list_filter = ('group__research',)
-    search_fields = ('group__research__title',)
+    search_fields = (
+        'id',
+        'group__research__title',
+    )
 
 
 class ResParaclinicInputGroups(admin.ModelAdmin):
@@ -255,6 +258,18 @@ class SetResearchAdmin(admin.ModelAdmin):
     list_display = ('title',)
 
 
+class SetAuxService(admin.ModelAdmin):
+    list_display = (
+        'main_research',
+        'aux_research',
+        'hide',
+    )
+    list_display_links = (
+        'main_research',
+        'aux_research',
+    )
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -286,3 +301,4 @@ admin.site.register(models.PatientControlParam, ResPatientControlParam)
 admin.site.register(models.Phenotype, PhenotypeAdmin)
 admin.site.register(models.SetResearch, SetResearchAdmin)
 admin.site.register(models.SetOrderResearch, SetOrderResearchAdmin)
+admin.site.register(models.AuxService, SetAuxService)

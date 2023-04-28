@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import { POSITION, TYPE } from 'vue-toastification/src/ts/constants';
 
-import { sendEvent } from '@/metrics';
 import ChatToast from '@/ui-cards/Chat/ChatToast.vue';
 import * as actions from '@/store/action-types';
 import directionsPoint from '@/api/directions-point';
@@ -18,70 +17,40 @@ export default (instance: Vue): void => {
 
   instance.$root.$on('print:directions', pks => {
     printForm('/directions/pdf?napr_id={pks}', pks);
-    sendEvent('print', {
-      type: 'directions',
-      pks,
-    });
   });
 
   instance.$root.$on('print:hosp', pks => {
     printForm('/barcodes/hosp?napr_id={pks}', pks);
-    sendEvent('print', {
-      type: 'hosp',
-      pks,
-    });
   });
 
   instance.$root.$on('print:directions:contract', pks => {
     printForm('/directions/pdf?napr_id={pks}&contract=1', pks);
-    sendEvent('print', {
-      type: 'directions-contract',
-      pks,
-    });
   });
 
   instance.$root.$on('print:directions:appendix', pks => {
     printForm('/directions/pdf?napr_id={pks}&appendix=1', pks);
-    sendEvent('print', {
-      type: 'appendix',
-      pks,
-    });
   });
 
   instance.$root.$on('print:barcodes', pks => {
     printForm('/barcodes/tubes?napr_id={pks}', pks);
-    sendEvent('print', {
-      type: 'barcodes',
-      pks,
-    });
   });
 
   instance.$root.$on('print:barcodes:iss', pks => {
     printForm('/barcodes/tubes?iss_ids={pks}', pks);
-    sendEvent('print', {
-      type: 'barcodes:iss',
-      pks,
-    });
   });
 
   instance.$root.$on('print:results', pks => {
     const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}&sort=${0}`;
     printForm(url, pks);
-    sendEvent('print', {
-      type: 'results',
-      pks,
-    });
   });
 
   instance.$root.$on('print:example', pks => {
     const url = '/ui/results/preview?pk={pks}&portion=1';
     printForm(url, pks);
-    sendEvent('print', { type: 'example', pks });
   });
 
   instance.$root.$on('print:directions_list', pks => {
     printForm('/statistic/xls?pk={pks}&type=directions_list', pks);
-    sendEvent('print', { type: 'directions_list', pks });
   });
 
   instance.$root.$on('msg', (type, message, timeout: number | void | null, payload: any | void) => {
@@ -96,11 +65,6 @@ export default (instance: Vue): void => {
     } else if (type === 'info') {
       t = TYPE.INFO;
     }
-
-    sendEvent('toast', {
-      type,
-      message,
-    });
 
     if (type === 'message' && payload) {
       instance.$toast({
@@ -170,37 +134,6 @@ export default (instance: Vue): void => {
       monitoring = false,
       priceCategory = null,
     }) => {
-      sendEvent('generate-directions', {
-        type,
-        cardPk,
-        finSourcePk,
-        diagnos,
-        researches,
-        operator,
-        ofname,
-        historyNum,
-        comments,
-        counts,
-        forRmis,
-        rmisData,
-        vichCode,
-        count,
-        discount,
-        needContract,
-        parentIss,
-        kk,
-        localizations,
-        serviceLocations,
-        directionPurpose,
-        directionsCount,
-        externalOrganization,
-        parentSlaveHosp,
-        hospitalDepartmentOverride,
-        hospitalOverride,
-        monitoring,
-        priceCategory,
-      });
-
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
         return;

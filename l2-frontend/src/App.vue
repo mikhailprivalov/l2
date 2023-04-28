@@ -43,6 +43,7 @@
 
     <CheckBackend />
     <ChatsDialogs v-if="chatsEnabled" />
+    <ModalForm :key="`modal-form-${editId}`" />
 
     <audio
       ref="notifyAudioSrc"
@@ -60,14 +61,17 @@ import { mapGetters } from 'vuex';
 import _ from 'lodash';
 
 import Navbar from '@/components/Navbar.vue';
+import ModalForm from '@/components/ModalForm.vue';
 import CheckBackend from '@/ui-cards/CheckBackend.vue';
 import ChatsDialogs from '@/ui-cards/Chat/ChatsDialogs.vue';
 import * as actions from '@/store/action-types';
 import notifyAudioSrc from '@/assets/notify.mp3';
 
 @Component({
-  components: { CheckBackend, Navbar, ChatsDialogs },
-  computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
+  components: {
+    CheckBackend, Navbar, ChatsDialogs, ModalForm,
+  },
+  computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated', 'editId']),
   metaInfo() {
     return {
       title: `${this.$route?.meta?.title || this.$systemTitle()} — ${this.$orgTitle()}`,
@@ -81,7 +85,7 @@ import notifyAudioSrc from '@/assets/notify.mp3';
   },
   watch: {
     $route() {
-      this.embedded = this.$route.query.embedded === 'true';
+      this.embedded = this.$route.query.embedded === '1';
     },
     l2_chats() {
       this.loadChatsDebounced();
@@ -131,6 +135,8 @@ export default class App extends Vue {
   authenticated: boolean;
 
   embedded: boolean;
+
+  notifyAudioSrc: string;
 
   get isEmptyLayout() {
     return !!this.$route?.meta?.emptyLayout;

@@ -27,6 +27,17 @@
           <span class="badge">{{ totalIndividualsWithoutCards }}</span>
           Очистить пациентов без карт
         </button>
+        <button
+          type="button"
+          class="list-group-item"
+        >
+          <ul class="nav navbar-nav">
+            <LoadFile
+              :is-write-patient-ecp="true"
+              :title-button="titleButton"
+            />
+          </ul>
+        </button>
       </div>
     </div>
   </div>
@@ -34,9 +45,11 @@
 
 <script lang="ts">
 import * as actions from '@/store/action-types';
+import LoadFile from '@/ui-cards/LoadFile.vue';
 
 export default {
   name: 'Utils',
+  components: { LoadFile },
   data() {
     return {
       totalLogs: 0,
@@ -44,6 +57,7 @@ export default {
       logsStoreDays: 0,
       totalArchivedCards: 0,
       totalIndividualsWithoutCards: 0,
+      titleButton: 'для записи в ЕЦП',
     };
   },
   async mounted() {
