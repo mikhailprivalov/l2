@@ -729,6 +729,7 @@
           <AggregateAssignments
             v-if="opened_list_key === 'list assignments'"
             :direction="direction"
+            :researches="list_directions"
           />
         </div>
       </div>
