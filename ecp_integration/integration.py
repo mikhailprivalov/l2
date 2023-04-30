@@ -226,9 +226,11 @@ def register_patient_ecp_slot(patient_ecp_id, slot_id, slot_type):
             "TimeTableResource/TimeTableResourceWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableResource_id={slot_id}", sess_id=sess_id, method="POST"
         )
     if req_result:
-        register_result = req_result['data']
+        register_result = req_result.get('data')
         if req_result['error_code'] == 0 and register_result[slot_type] == slot_id and patient_ecp_id == register_result['Person_id']:
             return {'register': True}
+        if req_result['error_code'] == 6:
+            return {'register': False, "message": req_result.get('error_msg')}
 
     return {'register': False, "message": "Неудачная попытка записи"}
 

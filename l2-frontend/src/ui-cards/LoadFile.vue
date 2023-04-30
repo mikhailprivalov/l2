@@ -73,7 +73,7 @@
           <h5 v-if="results.length > 0">
             {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
-          <ul v-if="results.length !== 0 && !link">
+          <ul v-if="results.length !== 0 && !link && !company">
             <li v-if="method">
               Методика: {{ method }}
             </li>
