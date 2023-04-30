@@ -1512,7 +1512,6 @@ export default {
       };
       if (fieldsData) {
         for (const currentField of fieldsData) {
-          console.log(currentField.input_templates);
           this.add_field(g, currentField.input_templates, currentField.title, currentField.field_type);
         }
       } else {
