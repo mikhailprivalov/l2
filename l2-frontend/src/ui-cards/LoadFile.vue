@@ -142,6 +142,11 @@ export default {
       default: false,
       required: false,
     },
+    researchId: {
+      type: Number,
+      default: -1,
+      required: false,
+    },
     selectedPrice: {
       type: Number,
       default: -1,
@@ -163,6 +168,7 @@ export default {
       results: [],
       company: false,
       link: null,
+      contentLoadGroupForProtocol: null,
     };
   },
   computed: {
@@ -185,6 +191,13 @@ export default {
     handleFileUpload() {
       // eslint-disable-next-line prefer-destructuring
       this.file = this.$refs.file.files[0];
+      if (this.isLoadGroupForProtocol) {
+        const reader = new FileReader();
+        reader.onload = (res) => {
+          this.contentLoadGroupForProtocol = res.target.result;
+        };
+        reader.readAsText(this.file);
+      }
     },
     handleCsvFileUpload() {
       // eslint-disable-next-line prefer-destructuring
@@ -201,21 +214,28 @@ export default {
         formData.append('selectedPrice', this.selectedPrice);
         formData.append('isWritePatientEcp', this.isWritePatientEcp);
         formData.append('isLoadGroupForProtocol', this.isLoadGroupForProtocol);
-        const { data } = await axios.post('/api/parse-file/loadfile', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'X-CSRFToken': Cookies.get('csrftoken'),
-          },
-        });
-        this.results = data.results;
-        this.method = null;
-        this.company = data.company;
-        this.$refs.file.value = '';
-        this.file = '';
-        this.$root.$emit('msg', 'ok', 'Файл загружен');
-        this.link = data.link;
-        if (this.link) {
-          window.open(`/statistic/${this.link}?file=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
+        formData.append('researchId', this.researchId);
+        if (this.isLoadGroupForProtocol) {
+          this.$root.$emit('isLoadGroupForProtocol', this.contentLoadGroupForProtocol);
+          this.open = false;
+          this.loading = false;
+        } else {
+          const { data } = await axios.post('/api/parse-file/loadfile', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'X-CSRFToken': Cookies.get('csrftoken'),
+            },
+          });
+          this.results = data.results;
+          this.method = null;
+          this.company = data.company;
+          this.$refs.file.value = '';
+          this.file = '';
+          this.$root.$emit('msg', 'ok', 'Файл загружен');
+          this.link = data.link;
+          if (this.link) {
+            window.open(`/statistic/${this.link}?file=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
+          }
         }
       } catch (e) {
         // eslint-disable-next-line no-console

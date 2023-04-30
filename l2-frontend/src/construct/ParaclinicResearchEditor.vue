@@ -1049,6 +1049,7 @@
             <LoadFile
               :is-load-group-for-protocol="true"
               :title-button="titleButton"
+              :research-id="pk"
             />
           </ul>
         </div>
@@ -1328,6 +1329,10 @@ export default {
     this.load();
     this.load_deparments();
     this.loadDynamicDirectories();
+    this.$root.$on('isLoadGroupForProtocol', (importData) => {
+      const groupData = JSON.parse(importData);
+      this.add_group(groupData[0].title, groupData[0].paraclinic_input_field);
+    });
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -1349,7 +1354,6 @@ export default {
   },
   methods: {
     exportGroup(groupId) {
-      console.log(groupId);
       window.open(`/forms/group-export?groupId=${groupId}`);
     },
     open_localization() {
@@ -1474,7 +1478,7 @@ export default {
     is_last_field(group, row) {
       return row.order === this.min_max_order(group).max;
     },
-    add_field(group) {
+    add_field(group, inputTemplates = [], titleField = '', fieldType = 0) {
       let order = 0;
       for (const row of group.fields) {
         order = Math.max(order, row.order);
@@ -1482,17 +1486,17 @@ export default {
       group.fields.push({
         pk: -1,
         order: order + 1,
-        title: '',
+        title: titleField,
         default: '',
-        values_to_input: [],
+        values_to_input: inputTemplates,
         new_value: '',
         hide: false,
         lines: 3,
-        field_type: 0,
+        field_type: fieldType,
         can_edit: false,
       });
     },
-    add_group() {
+    add_group(titleGroup = null, fieldsData = []) {
       let order = 0;
       for (const row of this.groups) {
         order = Math.max(order, row.order);
@@ -1500,13 +1504,20 @@ export default {
       const g = {
         pk: -1,
         order: order + 1,
-        title: '',
+        title: titleGroup || '',
         fields: [],
         show_title: true,
         hide: false,
         fieldsInline: false,
       };
-      this.add_field(g);
+      if (fieldsData) {
+        for (const currentField of fieldsData) {
+          console.log(currentField.input_templates);
+          this.add_field(g, currentField.input_templates, currentField.title, currentField.field_type);
+        }
+      } else {
+        this.add_field(g);
+      }
       this.groups.push(g);
     },
     load() {

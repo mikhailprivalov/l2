@@ -162,8 +162,6 @@ def load_file(request):
     elif request.POST.get('isWritePatientEcp') == "true":
         results = write_patient_ecp(request)
         link = "open-xls"
-    elif request.POST.get('isLoadGroupForProtocol') == "true":
-        results = import_group_for_protocol(request)
     elif len(request.POST.get('companyInn')) != 0:
         results = add_factors_from_file(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
@@ -365,10 +363,3 @@ def write_patient_ecp(request):
             patients.append({**patient, "is_write": is_write, "doctor": cells[doctor], "message": message})
     file_name = data_xls_save_file(patients, "Запись")
     return file_name
-
-
-def import_group_for_protocol(request):
-    file_data = request.FILES['file']
-    with open(file_data) as json_file:
-        data = json.load(json_file)
-
