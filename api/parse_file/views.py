@@ -281,8 +281,12 @@ def write_patient_ecp(request):
             patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data, "snils": ""}
             result = fill_slot_from_xlsx(cells[doctor], patient)
             is_write = "Ошибка"
-            if result and result.get('register'):
-                is_write = "записан"
-            patients.append({**patient, "is_write": is_write, "doctor": cells[doctor]})
+            message = ""
+            if result:
+                if result.get('register'):
+                    is_write = "записан"
+                if result.get('message'):
+                    message = result.get('message', '')
+            patients.append({**patient, "is_write": is_write, "doctor": cells[doctor], "message": message})
     file_name = data_xls_save_file(patients, "Запись")
     return file_name
