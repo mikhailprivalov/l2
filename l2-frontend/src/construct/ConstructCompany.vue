@@ -5,10 +5,6 @@
         <h5 class="text-center">
           {{ isNewCompany ? 'Добавить компанию' : 'Обновить компанию' }}
         </h5>
-        <div
-          v-if="!isNewCompany"
-          class="add-file"
-        />
         <h6
           v-if="!isNewCompany"
           class="text-center margin-right margin-left"
@@ -101,7 +97,7 @@
               name="contractId"
               label="Договор"
             />
-            <div class="button">
+            <div class="flex-end">
               <FormulateInput
                 class="margin-right"
                 type="button"
@@ -114,15 +110,40 @@
                 :label="isNewCompany ? 'Добавить' : 'Сохранить'"
               />
             </div>
-            <div
-              v-if="!isNewCompany"
-              class="button"
-            >
+          </FormulateForm>
+          <div
+            v-if="!isNewCompany"
+            class="flex-space-between"
+          >
+            <div class="flex">
+              <input
+                v-model="date"
+                type="date"
+                class="form-control date-input"
+              >
+              <button
+                v-tippy
+                title="Списки на мед. осмотр"
+                class="btn last btn-blue-nb nbr load-exam-data"
+                @click="getExaminationList"
+              >
+                Списки
+              </button>
+              <input
+                v-model="month"
+                class="margin-left margin-right checkbox-input"
+                type="checkbox"
+              >
+              <div class="month">
+                За месяц
+              </div>
+            </div>
+            <div>
               <ul class="nav navbar">
                 <LoadFile :company-inn="editorCompany.inn" />
               </ul>
             </div>
-          </FormulateForm>
+          </div>
         </div>
       </div>
       <div class="box card-1 card-no-hover">
@@ -160,14 +181,16 @@
                 :text="company.title"
               />
               <td class="border">
-                <button
-                  v-tippy
-                  title="Редактировать"
-                  class="btn last btn-blue-nb nbr"
-                  @click="editCompany(company)"
-                >
-                  <i class="fa fa-pencil" />
-                </button>
+                <div class="button">
+                  <button
+                    v-tippy
+                    title="Редактировать"
+                    class="btn last btn-blue-nb nbr"
+                    @click="editCompany(company)"
+                  >
+                    <i class="fa fa-pencil" />
+                  </button>
+                </div>
               </td>
             </tr>
           </table>
@@ -186,7 +209,7 @@
           <table class="table">
             <colgroup>
               <col>
-              <col width="38.25">
+              <col width="40">
             </colgroup>
             <tr
               v-if="filteredDepartments.length === 0"
@@ -210,14 +233,16 @@
                 >
               </td>
               <td class="border">
-                <button
-                  v-tippy
-                  title="Сохранить"
-                  class="btn last btn-blue-nb nbr"
-                  @click="updateDepartment(department)"
-                >
-                  <i class="fa fa-save" />
-                </button>
+                <div class="button">
+                  <button
+                    v-tippy
+                    title="Сохранить"
+                    class="btn last btn-blue-nb nbr"
+                    @click="updateDepartment(department)"
+                  >
+                    <i class="fa fa-save" />
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="editorCompany.pk">
@@ -228,17 +253,80 @@
                 >
               </td>
               <td class="border">
-                <button
-                  v-tippy
-                  title="Добавить"
-                  class="btn last btn-blue-nb nbr"
-                  @click="addDepartment"
-                >
-                  <i class="fa fa-plus" />
-                </button>
+                <div class="button">
+                  <button
+                    v-tippy
+                    title="Добавить"
+                    class="btn last btn-blue-nb nbr"
+                    @click="addDepartment"
+                  >
+                    <i class="fa fa-plus" />
+                  </button>
+                </div>
               </td>
             </tr>
           </table>
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="showExaminationList"
+      class="main"
+    >
+      <div class="box exam-box card-1 card-no-hover">
+        <div class="flex margin-bottom">
+          <div class="row-div">
+            <h5 class="text-center no-margin">
+              {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
+            </h5>
+          </div>
+        </div>
+        <div class="row-div">
+          Исключить исследования:
+        </div>
+        <div class="row-div">
+          <Treeselect
+            v-model="excludedResearches"
+            :multiple="true"
+            :options="researches.data"
+            :disable-branch-nodes="true"
+            :append-to-body="true"
+            placeholder="Выберите исследование"
+          />
+        </div>
+        <VeTable
+          :columns="columns"
+          :table-data="examinationList"
+          row-key-field-name="card_id"
+          :checkbox-option="checkboxOption"
+        />
+        <div
+          v-show="examinationList.length === 0"
+          class="empty-list"
+        >
+          Нет записей
+        </div>
+        <div class="flex-space-between">
+          <VePagination
+            :total="examinationList.length"
+            :page-index="page"
+            :page-size="pageSize"
+            :page-size-option="pageSizeOptions"
+            @on-page-number-change="pageNumberChange"
+            @on-page-size-change="pageSizeChange"
+          />
+          <div class="print-div">
+            <div class="button">
+              <button
+                v-tippy
+                title="печать"
+                class="btn last btn-blue-nb nbr"
+                @click="print"
+              >
+                печать
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -246,15 +334,28 @@
 </template>
 
 <script lang="ts">
+import {
+  VeLocale,
+  VePagination,
+  VeTable,
+} from 'vue-easytable';
+import 'vue-easytable/libs/theme-default/index.css';
+import Treeselect from '@riophae/vue-treeselect';
 
-import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
+import ruRu from '@/locales/ve';
+import VueTippyTd from '@/construct/VueTippyTd.vue';
 import * as actions from '@/store/action-types';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 
+VeLocale.use(ruRu);
+
 export default {
   name: 'ConstructCompany',
-  components: { LoadFile, VueTippyTd },
+  components: {
+    LoadFile, VueTippyTd, VeTable, VePagination, Treeselect,
+  },
   data() {
     return {
       companies: [],
@@ -266,6 +367,42 @@ export default {
       newDepartment: '',
       editorCompany: {},
       originShortTitle: '',
+      date: '',
+      showExaminationList: false,
+      examinationList: [],
+      selectedCards: [],
+      dateTitle: '',
+      checkboxOption: {
+        selectedRowChange: ({ selectedRowKeys }) => {
+          this.selectedCards = selectedRowKeys;
+        },
+        selectedAllChange: ({ selectedRowKeys }) => {
+          this.selectedCards = selectedRowKeys;
+        },
+      },
+      columns: [
+        {
+          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
+        },
+        {
+          field: 'fio', key: 'fio', title: 'Пациент', align: 'left', width: 300,
+        },
+        {
+          field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 200,
+        },
+        {
+          field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
+        },
+        {
+          field: '', key: 'select', title: '', align: 'center', width: 98, type: 'checkbox',
+        },
+      ],
+      page: 1,
+      pageSize: 50,
+      pageSizeOptions: [25, 50, 100],
+      excludedResearches: [],
+      researches: [],
+      month: false,
     };
   },
   computed: {
@@ -380,15 +517,46 @@ export default {
         }
       }
     },
-    showModal() {
-      this.modal = true;
-    },
-    hideModal() {
-      this.modal = false;
-      if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none';
+    async getExaminationList() {
+      if (!this.date) {
+        this.$root.$emit('msg', 'error', 'Дата не выбрана');
+      } else {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const medicalExamination = await this.$api('get-examination-list', {
+          date: this.date,
+          company: this.editorCompany.pk,
+          month: this.month,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        this.showExaminationList = true;
+        this.examinationList = medicalExamination.data;
+        await this.getResearches();
+        if (this.month) {
+          this.dateTitle = this.date.split('-').reverse().slice(-2).join('.');
+        } else {
+          this.dateTitle = this.date.split('-').reverse().join('.');
+        }
       }
-      this.$root.$emit('hide_download_file');
+    },
+    async getResearches() {
+      this.researches = await this.$api('/get-research-list');
+    },
+    pageNumberChange(number: number) {
+      this.page = number;
+    },
+    pageSizeChange(size: number) {
+      this.pageSize = size;
+    },
+    async print() {
+      const printData = this.examinationList.filter((exam) => {
+        const card = exam.card_id;
+        const selectCard = this.selectedCards;
+        return selectCard.includes(card);
+      }).map((exam) => ({ card_id: exam.card_id, research: exam.research_id }));
+      await this.$api('print-medical-examination-data', {
+        cards: printData,
+        exclude: this.excludedResearches,
+      });
     },
   },
 };
@@ -402,6 +570,9 @@ export default {
   flex-grow: 1;
   border-radius: 4px;
   min-height: 426px;
+}
+.exam-box {
+  min-height: 0;
 }
 .main {
   display: flex;
@@ -433,9 +604,20 @@ export default {
 .border {
   border: 1px solid #ddd;
 }
-.button {
+.flex-space-between {
+  display: flex;
+  justify-content: space-between;
+}
+.flex-end {
   display: flex;
   justify-content: flex-end;
+}
+.flex {
+  display: flex;
+}
+.no-margin {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 .margin-right {
   margin-right: 5px;
@@ -460,5 +642,52 @@ export default {
 .add-file {
   width: 130px;
   margin: 0 auto;
+}
+::v-deep .navbar {
+  margin-bottom: 0;
+}
+.add-file {
+  width: 140px;
+}
+.load-exam-data {
+  width: 80px;
+}
+.date-input {
+  width: 120px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  border-radius: 0
+}
+.empty-list {
+  width: 85px;
+  margin: 20px auto;
+}
+.month {
+  margin-top: 10px;
+}
+.checkbox-input {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.margin-bottom {
+  margin-bottom: 5px;
+}
+.print-div {
+  width: 100px;
+}
+.row-div {
+  width: 100%;
+}
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+.btn {
+  align-self: stretch;
+  flex: 1;
+  padding: 7px 0;
 }
 </style>
