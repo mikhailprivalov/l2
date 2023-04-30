@@ -10,6 +10,7 @@ from io import BytesIO
 from pdf2docx import Converter
 from docx import Document
 from appconf.manager import SettingManager
+from directory.models import ParaclinicInputField, ParaclinicInputGroups
 from forms.sql_func import get_covid_to_json, get_extra_notification_data_for_pdf
 from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
 from utils.dates import normalize_date
@@ -194,6 +195,45 @@ def covid_result(request):
         count += 1
     response['Content-Disposition'] = f"attachment; filename=\"{date}-covid-{count}.json\""
     response.write(json.dumps(data_return, ensure_ascii=False))
+
+    return response
+
+
+def group_export(request):
+    response = HttpResponse(content_type='application/json')
+    request_data = {**dict(request.GET.items())}
+    group_id = request_data["groupId"]
+    fields_in_group = []
+    groups_to_save = []
+    group = ParaclinicInputGroups.objects.filter(id=group_id).first()
+    for f in ParaclinicInputField.objects.filter(group=group):
+        field_data = {
+            'title': f.title,
+            'short_title': f.short_title,
+            'order': f.order,
+            'default_value': f.default_value,
+            'lines': f.lines,
+            'field_type': f.field_type,
+            'for_extract_card': f.for_extract_card,
+            'for_talon': f.for_talon,
+            'helper': f.helper,
+            'input_templates': f.input_templates,
+            'required': f.required,
+            'hide': f.hide,
+        }
+        fields_in_group.append(field_data)
+    groups_to_save.append(
+        {
+            'title': group.title,
+            'show_title': group.show_title,
+            'order': group.order,
+            'hide': group.hide,
+            'paraclinic_input_field': fields_in_group,
+            'fieldsInline': group.fields_inline,
+        }
+    )
+    response['Content-Disposition'] = f"attachment; filename=\"group-{group.title}.json\""
+    response.write(json.dumps(groups_to_save, ensure_ascii=False))
 
     return response
 

@@ -137,6 +137,11 @@ export default {
       default: false,
       required: false,
     },
+    isLoadGroupForProtocol: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
     selectedPrice: {
       type: Number,
       default: -1,
@@ -195,6 +200,7 @@ export default {
         formData.append('isGenCommercialOffer', this.isGenCommercialOffer);
         formData.append('selectedPrice', this.selectedPrice);
         formData.append('isWritePatientEcp', this.isWritePatientEcp);
+        formData.append('isLoadGroupForProtocol', this.isLoadGroupForProtocol);
         const { data } = await axios.post('/api/parse-file/loadfile', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',

@@ -557,7 +557,15 @@
                 > отображать поля</label>
               </div>
             </div>
-            <div class="col-xs-6 text-right">
+            <div class="col-xs-2 text-right" />
+            <div class="col-xs-4 text-right">
+              <a
+                href="#"
+                class="a-under"
+                style="padding-right: 10px"
+                @click.prevent="exportGroup(group.pk)"
+              >Эскпорт группы
+              </a>
               <label>Скрыть группу <input
                 v-model="group.hide"
                 type="checkbox"
@@ -1037,6 +1045,12 @@
           >
             Добавить группу
           </button>
+          <ul class="nav navbar-nav">
+            <LoadFile
+              :is-load-group-for-protocol="true"
+              :title-button="titleButton"
+            />
+          </ul>
         </div>
       </template>
       <div v-if="ex_dep === 12 && pk > -1">
@@ -1098,6 +1112,7 @@ import NumberField from '@/fields/NumberField.vue';
 import FieldHelper from '@/ui-cards/FieldHelper.vue';
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
+import LoadFile from '@/ui-cards/LoadFile.vue';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1106,6 +1121,7 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
+    LoadFile,
     PermanentDirectories,
     FieldHelper,
     NumberRangeField,
@@ -1222,6 +1238,7 @@ export default {
       cda_options: [],
       dynamicDirectories: [],
       autoRegisterRmisLocation: '',
+      titleButton: 'для импорта группы',
     };
   },
   computed: {
@@ -1331,6 +1348,10 @@ export default {
     }, 2000);
   },
   methods: {
+    exportGroup(groupId) {
+      console.log(groupId);
+      window.open(`/forms/group-export?groupId=${groupId}`);
+    },
     open_localization() {
       this.show_localization = true;
     },
