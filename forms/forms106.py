@@ -869,7 +869,6 @@ def form_02(request_data):
 
     title_page.append(Spacer(1, 4 * mm))
     title_page.append(Spacer(1, 2 * mm))
-    print("23232")
     clinical_diagnos = primary_reception_get_data(hosp_first_num, site_type=6)
     title_page.append(Paragraph("Диагноз клинический, установленный в стационаре:", style))
     title_page.append(Spacer(1, 2 * mm))
@@ -893,6 +892,26 @@ def form_02(request_data):
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph("Дополнительные сведения о заболевании", style))
     title_page.append(Spacer(1, 2 * mm))
+
+    title_page.append(Paragraph("Диагноз окончательный при выписке из стационара:", style))
+    title_page.append(Spacer(1, 2 * mm))
+    title_page.append(Paragraph(f"Основное заболевание:", style))
+    for i in hosp_extract_data["final_diagnos_mkb"]:
+        title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
+    title_page.append(Spacer(1, 2 * mm))
+    title_page.append(Paragraph(f"Осложнения основного заболевания:", style))
+    for i in hosp_extract_data["other_diagnos_mkb"]:
+        title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
+    title_page.append(Spacer(1, 2 * mm))
+    title_page.append(Paragraph("Внешняя причина при травмах, отравления:", style))
+    for i in hosp_extract_data["external_reason_mkb"]:
+        title_page.append(Paragraph(f"{i.get('data')}  {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
+    title_page.append(Spacer(1, 2 * mm))
+    title_page.append(Paragraph(f"Сопутствующие заболевания", style))
+    for i in hosp_extract_data["near_diagnos_mkb"]:
+        title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
+    title_page.append(Spacer(1, 2 * mm))
+
     title_page.append(Paragraph("Проведенные оперативные вмешательства (операции):", style))
     styleTO = deepcopy(style)
     styleTO.alignment = TA_LEFT
@@ -948,7 +967,7 @@ def form_02(request_data):
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph(
         "Наименование медицинской	организации	(фамилия,	имя, отчество (при наличии) индивидуального предпринимателя, осуществляющего медицинскую деятельность), "
-        "куда переведен пациент",
+        f"куда переведен пациент {hosp_extract_data['transfer_to']}",
         style,
     ))
     title_page.append(Spacer(1, 2 * mm))
