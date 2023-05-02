@@ -31,4 +31,5 @@ urlpatterns = [
     path('researches-required-stattalon-fields', views.researches_required_stattalon_fields),
     path('help-link-field', views.help_link_field),
     path('research-groups-by-laboratory', views.research_groups_by_laboratory),
+    path('group-as-json', views.group_as_json),
 ]

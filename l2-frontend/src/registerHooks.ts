@@ -214,4 +214,16 @@ export default (instance: Vue): void => {
         });
     },
   );
+
+  Vue.prototype.$msg = (type, message, timeout: number | void | null, payload: any | void) => {
+    instance.$root.$emit('msg', type, message, timeout, payload);
+  };
+
+  Vue.prototype.$error = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'error', message, timeout);
+  };
+
+  Vue.prototype.$ok = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'ok', message, timeout);
+  };
 };
