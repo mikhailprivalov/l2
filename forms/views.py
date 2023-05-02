@@ -199,45 +199,6 @@ def covid_result(request):
     return response
 
 
-def group_export(request):
-    response = HttpResponse(content_type='application/json')
-    request_data = {**dict(request.GET.items())}
-    group_id = request_data["groupId"]
-    fields_in_group = []
-    groups_to_save = []
-    group = ParaclinicInputGroups.objects.filter(id=group_id).first()
-    for f in ParaclinicInputField.objects.filter(group=group):
-        field_data = {
-            'title': f.title,
-            'short_title': f.short_title,
-            'order': f.order,
-            'default_value': f.default_value,
-            'lines': f.lines,
-            'field_type': f.field_type,
-            'for_extract_card': f.for_extract_card,
-            'for_talon': f.for_talon,
-            'helper': f.helper,
-            'input_templates': f.input_templates,
-            'required': f.required,
-            'hide': f.hide,
-        }
-        fields_in_group.append(field_data)
-    groups_to_save.append(
-        {
-            'title': group.title,
-            'show_title': group.show_title,
-            'order': group.order,
-            'hide': group.hide,
-            'paraclinic_input_field': fields_in_group,
-            'fieldsInline': group.fields_inline,
-        }
-    )
-    response['Content-Disposition'] = f"attachment; filename=\"group-{group.title}.json\""
-    response.write(json.dumps(groups_to_save, ensure_ascii=False))
-
-    return response
-
-
 def json_nofication(request):
     response = HttpResponse(content_type='application/json')
     if not request.user.doctorprofile.has_group('Заполнение экстренных извещений'):

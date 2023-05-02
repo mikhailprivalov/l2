@@ -9,6 +9,5 @@ urlpatterns = [
     path('preview', TemplateView.as_view(template_name='dashboard/stattalon_preview.html')),
     path('extra-nofication', views.extra_nofication),
     path('covid-result', views.covid_result),
-    path('group-export', views.group_export),
     path('json-nofication', views.json_nofication),
 ]

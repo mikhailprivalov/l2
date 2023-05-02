@@ -564,8 +564,7 @@
                 class="a-under"
                 style="padding-right: 10px"
                 @click.prevent="exportGroup(group.pk)"
-              >Эскпорт группы
-              </a>
+              >Эскпорт группы</a>
               <label>Скрыть группу <input
                 v-model="group.hide"
                 type="checkbox"
@@ -1038,20 +1037,24 @@
             </div>
           </template>
         </div>
-        <div v-if="ex_dep !== 12 && ex_dep !== 13">
+        <div
+          v-if="ex_dep !== 12 && ex_dep !== 13"
+          class="add-buttons"
+        >
           <button
             class="btn btn-blue-nb"
-            @click="add_group"
+            @click="add_group()"
           >
             Добавить группу
           </button>
-          <ul class="nav navbar-nav">
-            <LoadFile
-              :is-load-group-for-protocol="true"
-              :title-button="titleButton"
-              :research-id="pk"
-            />
-          </ul>
+          <LoadFile
+            is-load-group-for-protocol
+            title-button="Загрузить из файла"
+            file-filter="application/JSON"
+            :research-id="pk"
+            tag="div"
+            @load-file="onLoadFileGroup"
+          />
         </div>
       </template>
       <div v-if="ex_dep === 12 && pk > -1">
@@ -1239,7 +1242,6 @@ export default {
       cda_options: [],
       dynamicDirectories: [],
       autoRegisterRmisLocation: '',
-      titleButton: 'для импорта группы',
     };
   },
   computed: {
@@ -1329,10 +1331,6 @@ export default {
     this.load();
     this.load_deparments();
     this.loadDynamicDirectories();
-    this.$root.$on('isLoadGroupForProtocol', (importData) => {
-      const groupData = JSON.parse(importData);
-      this.add_group(groupData[0].title, groupData[0].paraclinic_input_field);
-    });
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -1353,8 +1351,23 @@ export default {
     }, 2000);
   },
   methods: {
+    onLoadFileGroup(importData) {
+      try {
+        const { groups: [group] } = JSON.parse(importData);
+
+        if (!group.fields) {
+          throw Error('В файле не найдены поля ввода');
+        }
+
+        this.add_group(group);
+        this.$ok(`Группа "${group.title}" успешно загружена`);
+      } catch (e) {
+        console.error(e);
+        this.$error('Некорректный файл');
+      }
+    },
     exportGroup(groupId) {
-      window.open(`/forms/group-export?groupId=${groupId}`);
+      window.open(`/api/researches/group-as-json?groupId=${groupId}`, 'group-export');
     },
     open_localization() {
       this.show_localization = true;
@@ -1478,25 +1491,59 @@ export default {
     is_last_field(group, row) {
       return row.order === this.min_max_order(group).max;
     },
-    add_field(group, inputTemplates = [], titleField = '', fieldType = 0) {
-      let order = 0;
-      for (const row of group.fields) {
-        order = Math.max(order, row.order);
+    add_field(group, field: any = {}, ignoreOrder = false) {
+      let order = ignoreOrder ? field.order ?? null : 0;
+
+      if (!ignoreOrder || order === null) {
+        order = 0;
+
+        for (const row of group.fields) {
+          order = Math.max(order, row.order);
+        }
       }
+
+      let parsedValuesToInput = [];
+
+      if (field.input_templates && typeof field.input_templates === 'string') {
+        try {
+          parsedValuesToInput = JSON.parse(field.input_templates);
+
+          if (!Array.isArray(parsedValuesToInput)) {
+            parsedValuesToInput = [];
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
       group.fields.push({
         pk: -1,
-        order: order + 1,
-        title: titleField,
-        default: '',
-        values_to_input: inputTemplates,
+        order: ignoreOrder ? order : order + 1,
+        title: field.title ?? '',
+        short_title: field.short_title ?? '',
+        default: field.default_value ?? '',
+        helper: field.helper ?? '',
+        values_to_input: parsedValuesToInput,
         new_value: '',
-        hide: false,
-        lines: 3,
-        field_type: fieldType,
-        can_edit: false,
+        hide: field.hide ?? false,
+        lines: field.lines ?? 3,
+        field_type: field.field_type ?? 0,
+        can_edit: field.can_edit ?? false,
+        for_extract_card: field.for_extract_card ?? false,
+        for_talon: field.for_talon ?? false,
+        for_med_certificate: field.for_med_certificate ?? false,
+        operator_enter_param: field.operator_enter_param ?? false,
+        not_edit: field.not_edit ?? false,
+        required: field.required ?? false,
+        visibility: field.visibility ?? false,
+        sign_organization: field.sign_organization ?? false,
+        controlParam: field.controlParam ?? '',
+        attached: field.attached ?? '',
+        patientControlParam: field.patientControlParam ?? -1,
+        cdaOption: field.cdaOption ?? -1,
       });
     },
-    add_group(titleGroup = null, fieldsData = []) {
+    add_group(groupSettings: any = {}) {
       let order = 0;
       for (const row of this.groups) {
         order = Math.max(order, row.order);
@@ -1504,15 +1551,18 @@ export default {
       const g = {
         pk: -1,
         order: order + 1,
-        title: titleGroup || '',
+        title: groupSettings.title ?? '',
         fields: [],
-        show_title: true,
-        hide: false,
-        fieldsInline: false,
+        show_title: groupSettings.show_title ?? true,
+        hide: groupSettings.hide ?? false,
+        fieldsInline: groupSettings.fieldsInline ?? false,
+        cdaOption: groupSettings.cdaOption ?? -1,
+        display_hidden: groupSettings.display_hidden ?? false,
+        visibility: groupSettings.visibility ?? '',
       };
-      if (fieldsData) {
-        for (const currentField of fieldsData) {
-          this.add_field(g, currentField.input_templates, currentField.title, currentField.field_type);
+      if (groupSettings.fields) {
+        for (const currentField of groupSettings.fields) {
+          this.add_field(g, currentField, true);
         }
       } else {
         this.add_field(g);
@@ -1664,7 +1714,7 @@ export default {
   justify-content: stretch !important;
 }
 
-::v-deep .panel-flt {
+::v-deep .panel-flt:not(.ignore-body) {
   margin: 41px;
   align-self: stretch !important;
   width: 100%;
@@ -1672,7 +1722,7 @@ export default {
   flex-direction: column;
 }
 
-::v-deep .panel-body {
+::v-deep .panel-body:not(.ignore-body) {
   flex: 1;
   padding: 0;
   height: calc(100% - 91px);
@@ -1857,5 +1907,11 @@ export default {
 
 .department-select {
   margin-top: 5px;
+}
+
+.add-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }
 </style>
