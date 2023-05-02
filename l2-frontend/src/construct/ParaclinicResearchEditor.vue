@@ -1362,6 +1362,7 @@ export default {
         this.add_group(group);
         this.$ok(`Группа "${group.title}" успешно загружена`);
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
         this.$error('Некорректный файл');
       }
@@ -1512,6 +1513,7 @@ export default {
             parsedValuesToInput = [];
           }
         } catch (error) {
+        // eslint-disable-next-line no-console
           console.error(error);
         }
       }
