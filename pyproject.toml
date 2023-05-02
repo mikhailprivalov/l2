@@ -75,7 +75,7 @@ imgkit = "1.2.3"
 astm = {git = "https://github.com/moodpulse/python-astm.git", rev = "v0.6"}
 psycopg2-binary = "^2.9.4"
 boto3 = "^1.26.116"
-prompt-toolkit = "^3.0.36"
+prompt-toolkit = "^3.0.38"
 pdf2docx = "^0.5.6"
 pyotp = "^2.8.0"
 qrcode = "^7.4.2"
