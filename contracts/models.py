@@ -247,6 +247,11 @@ class MedicalExamination(models.Model):
         else:
             MedicalExamination(card=card, company=company, date=date).save()
 
+    @staticmethod
+    def get_date(card_pk: int):
+        result = MedicalExamination.objects.filter(card_id=card_pk).first()
+        return result
+
     class Meta:
         verbose_name = 'Медицинский осмотр'
         verbose_name_plural = 'Медицинские осмотры'

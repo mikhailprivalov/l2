@@ -3064,3 +3064,11 @@ def get_examination_list(request):
 @group_required('Конструктор: Настройка организации')
 def print_medical_examination_data(request):
     return status_response(True)
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def get_date_medical_examination(request):
+    request_data = json.loads(request.body)
+    result = MedicalExamination.get_date(request_data["card_pk"])
+    return JsonResponse({"date": result})
