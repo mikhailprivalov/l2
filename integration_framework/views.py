@@ -3,6 +3,7 @@ import os
 import html
 import zlib
 
+import requests
 from django.test import Client as TC
 import datetime
 import logging
@@ -65,7 +66,7 @@ from laboratory.settings import (
     DEATH_RESEARCH_PK,
     REMD_EXCLUDE_RESEARCH,
     REMD_ONLY_RESEARCH,
-    HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION,
+    HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION, DICOM_SERVERS, DICOM_SERVER,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -2457,8 +2458,21 @@ def directions_by_category_result_year(request):
     directions = {}
 
     for d in confirmed_directions:
+        ip_server = ""
         if d.direction not in directions:
-            directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag}
+            if d.study_instance_uid_tag:
+                data = {'Level': 'Study', 'Query': {"StudyInstanceUID": {d.study_instance_uid_tag}}, "Expand": True}
+                if len(DICOM_SERVERS) > 1:
+                    for i in DICOM_SERVERS:
+                        dicom_study = requests.post(f'{i}/tools/find', data=json.dumps(data))
+                        if len(dicom_study.json()) > 0:
+                            ip_server = i
+                            break
+                else:
+                    dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
+                    if len(dicom_study.json()) > 0:
+                        ip_server = DICOM_SERVER
+            directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag, "server": ip_server}
         directions[d.direction]['services'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})
 
