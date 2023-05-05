@@ -66,7 +66,9 @@ from laboratory.settings import (
     DEATH_RESEARCH_PK,
     REMD_EXCLUDE_RESEARCH,
     REMD_ONLY_RESEARCH,
-    HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION, DICOM_SERVERS, DICOM_SERVER,
+    HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION,
+    DICOM_SERVERS,
+    DICOM_SERVER,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
