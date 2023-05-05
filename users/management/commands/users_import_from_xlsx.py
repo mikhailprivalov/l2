@@ -29,24 +29,23 @@ class Command(BaseCommand):
             if not starts:
                 if "Сотрудник" in cells and "Должность" in cells and "Подразделение" in cells:
                     starts = True
-                    fio = cells.index("Сотрудник")
+                    last_name = cells.index("Фамилия")
+                    first_name = cells.index("Имя")
+                    patronymic = cells.index("Отчество")
                     rgt = cells.index("Должность")
                     otd = cells.index("Подразделение")
                     login = cells.index("Логин")
                     continue
             else:
-                f = cells[fio].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip().title()
+                last_name = cells[last_name].replace(" ", "")
+                first_name = cells[first_name].replace(" ", "")
+                patronymic = cells[patronymic].replace(" ", "")
                 r = cells[rgt].replace(" ", "").replace(".", ",").split(",")
                 o = fixF(cells[otd].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip())
                 account = cells[login]
 
-                fs = f.split(" ")
-                if len(fs) == 0:
-                    continue
                 self.stdout.write("-------------------")
-                fso = [fs[0]]
-                if len(fs) > 1:
-                    fso.extend([x[0] for x in fs[1:]])
+                fso = f"{last_name}{first_name[:1]}{patronymic[:1]}"
 
                 if o not in otds:
                     ps = pod.Podrazdeleniya.objects.filter(title=o).first()
@@ -62,7 +61,7 @@ class Command(BaseCommand):
                         ps.save()
                     otds[o] = ps
                 o = otds[o]
-                username = translit(''.join(fso).lower())
+                username = translit(fso).lower()
 
                 if account and len(account) > 0:
                     if '@' in account:
@@ -70,13 +69,13 @@ class Command(BaseCommand):
                     else:
                         username = account
 
-                us = users.DoctorProfile.objects.filter(fio=f, podrazdeleniye=o, user__username=username).first()
+                us = users.DoctorProfile.objects.filter(family=last_name, name=first_name, patronymic=patronymic, podrazdeleniye=o, user__username=username).first()
                 if not us:
                     user = User.objects.create_user(username)
                     user.set_password("123456")
                     user.is_active = True
                     user.save()
-                    us = users.DoctorProfile(user=user, fio=f, podrazdeleniye=o)
+                    us = users.DoctorProfile(family=last_name, name=first_name, patronymic=patronymic, podrazdeleniye=o)
                     us.save()
                     us.get_fio_parts()
                     self.stdout.write("Добавлен пользователь " + username + ". Необходимо сменить пароль (по умолчанию 123456)!")

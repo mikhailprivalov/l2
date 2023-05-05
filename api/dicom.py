@@ -1,7 +1,7 @@
 import socket
 from functools import reduce
 from directions.models import Issledovaniya, Napravleniya
-from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER
+from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_SERVERS, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER
 import requests
 import simplejson as json
 
@@ -77,9 +77,15 @@ def find_image_firstly(data_direction):
     for tag in DICOM_SEARCH_TAGS:
         for dir in data_direction:
             data = {'Level': 'Study', 'Query': {tag: dir}, "Expand": True}
-            dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
-            if len(dicom_study.json()) > 0:
-                return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
+            if len(DICOM_SERVERS) > 1:
+                for i in DICOM_SERVERS:
+                    dicom_study = requests.post(f'{i}/tools/find', data=json.dumps(data))
+                    if len(dicom_study.json()) > 0:
+                        return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
+            else:
+                dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
+                if len(dicom_study.json()) > 0:
+                    return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
     return None
 
 
