@@ -90,6 +90,8 @@ class ResMedicalExamination(admin.ModelAdmin):
     list_display = ('card', 'company', 'date')
     list_display_links = ('card', 'company', 'date')
     list_filter = ('company', 'date')
+    raw_id_fields = ('card',)
+    autocomplete_fields = ('card',)
 
 
 admin.site.register(PriceCategory)
