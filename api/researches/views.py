@@ -155,6 +155,7 @@ def get_researches(request, last_used=False):
         r: DResearches
 
         has_morfology = {}
+        has_templates = {}
 
         for r in res:
             k = f'get_researches:research:{r.pk}'
@@ -198,37 +199,40 @@ def get_researches(request, last_used=False):
                 tpls = []
                 if r.is_microbiology and 'is_microbiology' not in has_morfology:
                     has_morfology['is_microbiology'] = True
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True):
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True).distinct():
                         tpls.append(at.as_research())
 
                 if r.is_citology and 'is_citology' not in has_morfology:
                     has_morfology['is_citology'] = True
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True):
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True).distinct():
                         tpls.append(at.as_research())
 
                 if r.is_gistology and 'is_gistology' not in has_morfology:
                     has_morfology['is_gistology'] = True
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True):
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True).distinct():
                         tpls.append(at.as_research())
 
                 if r.reversed_type not in deps:
                     if r.reversed_type > 0:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type).distinct():
                             tpls.append(at.as_research())
                     if r.is_doc_refferal:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True).distinct():
                             tpls.append(at.as_research())
                     if r.is_treatment:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True).distinct():
                             tpls.append(at.as_research())
                     if r.is_stom:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True).distinct():
                             tpls.append(at.as_research())
                     if r.is_hospital:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True).distinct():
                             tpls.append(at.as_research())
+                tpls = [x for x in tpls if not has_templates.get(x['pk'])]
                 if tpls:
                     deps[r.reversed_type].extend(tpls)
+                    for t in tpls:
+                        has_templates[t['pk']] = True
             deps['-109999' if last_used else r.reversed_type].append(research_data)
 
         for dk in deps:

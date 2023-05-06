@@ -7,6 +7,7 @@ urlpatterns = [
     path('search-l2-card', views.patients_search_l2_card),
     path('create-l2-individual-from-card', views.create_l2_individual_from_card),
     path('card/<int:card_id>', views.patients_get_card_data),
+    path('card/simple/<int:card_id>', views.patients_get_card_simple_data),
     path('card/save', views.patients_card_save),
     path('card/archive', views.patients_card_archive),
     path('card/unarchive', views.patients_card_unarchive),
