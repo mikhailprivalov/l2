@@ -9,7 +9,6 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build --mode development --modern",
-    "build_smp": "vue-cli-service build --mode development --modern --measure-speed",
     "build_prod": "vue-cli-service build --modern",
     "lint": "vue-cli-service lint",
     "ci:lint": "vue-cli-service lint --no-fix"

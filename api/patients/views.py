@@ -559,6 +559,29 @@ def patients_get_card_data(request, card_id):
 
 
 @login_required
+def patients_get_card_simple_data(request, card_id):
+    card = Card.objects.get(pk=card_id)
+    base = card.base
+    individual = card.individual
+
+    return JsonResponse(
+        {
+            "pk": card_id,
+            "age": individual.age_s(),
+            "base": {"pk": base.pk, "title": base.title, "short_title": base.short_title, "internal_type": base.internal_type},
+            "birthday": individual.bd(),
+            "family": individual.family,
+            "name": individual.name,
+            "twoname": individual.patronymic,
+            "patronymic": individual.patronymic,
+            "individual_pk": individual.pk,
+            "isArchive": card.is_archive,
+            "main_diagnosis": card.main_diagnosis,
+        }
+    )
+
+
+@login_required
 @group_required("Картотека L2", "Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра")
 def patients_card_save(request):
     request_data = json.loads(request.body)
