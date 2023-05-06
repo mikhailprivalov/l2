@@ -11,6 +11,7 @@ import logging
 import pytz_deprecation_shim as pytz
 from django.utils.module_loading import import_string
 
+from api.dicom import check_dicom_study
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
 from api.patients.views import patients_search_card
 from api.stationar.stationar_func import desc_to_data
@@ -2460,20 +2461,18 @@ def directions_by_category_result_year(request):
     directions = {}
 
     for d in confirmed_directions:
-        ip_server = ""
         if d.direction not in directions:
+            ip_server = None
             if d.study_instance_uid_tag:
                 data = {'Level': 'Study', 'Query': {"StudyInstanceUID": {d.study_instance_uid_tag}}, "Expand": True}
                 if len(DICOM_SERVERS) > 1:
                     for i in DICOM_SERVERS:
-                        dicom_study = requests.post(f'{i}/tools/find', data=json.dumps(data))
-                        if len(dicom_study.json()) > 0:
+                        is_dicom_study = check_dicom_study(i, data)
+                        if is_dicom_study:
                             ip_server = i
                             break
                 else:
-                    dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
-                    if len(dicom_study.json()) > 0:
-                        ip_server = DICOM_SERVER
+                    ip_server = DICOM_SERVER
             directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag, "server": ip_server}
         directions[d.direction]['services'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})

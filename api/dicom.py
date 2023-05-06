@@ -79,13 +79,13 @@ def find_image_firstly(data_direction):
             data = {'Level': 'Study', 'Query': {tag: dir}, "Expand": True}
             if len(DICOM_SERVERS) > 1:
                 for i in DICOM_SERVERS:
-                    dicom_study = requests.post(f'{i}/tools/find', data=json.dumps(data))
-                    if len(dicom_study.json()) > 0:
-                        return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
+                    is_dicom_study = check_dicom_study(i, data)
+                    if is_dicom_study:
+                        return is_dicom_study
             else:
-                dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
-                if len(dicom_study.json()) > 0:
-                    return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
+                is_dicom_study = check_dicom_study(DICOM_SERVER, data)
+                if is_dicom_study:
+                    return is_dicom_study
     return None
 
 
@@ -99,3 +99,11 @@ def change_acsn(link_study, accession_number):
         requests.post(f'{REMOTE_DICOM_SERVER}/peers/{REMOTE_DICOM_PEER}/store', data=link_study)
 
     return link_study
+
+
+def check_dicom_study(server_addr, data):
+    dicom_study = requests.post(f'{server_addr}/tools/find', data=json.dumps(data))
+    if len(dicom_study.json()) > 0:
+        return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
+    return False
+

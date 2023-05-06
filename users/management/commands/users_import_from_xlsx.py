@@ -39,7 +39,6 @@ class Command(BaseCommand):
                 two_name = cells[patronymic].replace(" ", "")
                 r = cells[rgt].replace(" ", "").replace(".", ",").split(",")
                 o = fixF(cells[otd].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip())
-                account = None
                 self.stdout.write("-------------------")
                 fso = f"{family}{name[:1]}{two_name[:1]}"
 
