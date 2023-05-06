@@ -106,4 +106,3 @@ def check_dicom_study(server_addr, data):
     if len(dicom_study.json()) > 0:
         return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
     return False
-

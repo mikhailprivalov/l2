@@ -3,7 +3,6 @@ import os
 import html
 import zlib
 
-import requests
 from django.test import Client as TC
 import datetime
 import logging
