@@ -62,4 +62,5 @@ urlpatterns = [
     path('send-results-to-hospital', views.send_results_to_hospital),
     path('directions-by-hospital-sent', views.get_directions_by_hospital_sent),
     path('meta-info', views.meta_info),
+    path('resend-results', views.resend_results),
 ]

@@ -524,8 +524,9 @@
                 <tr :key="row.pk">
                   <td colspan="5">
                     <SelectedResearchesParams
+                      v-if="selectedCard"
                       :research="form_params[row.pk]"
-                      :selected_card="selected_card"
+                      :selected_card="selectedCard"
                     />
                   </td>
                 </tr>
@@ -535,8 +536,9 @@
         </table>
         <template v-else>
           <SelectedResearchesParams
+            v-if="selectedCard"
             :research="global_research_direction_param"
-            :selected_card="selected_card"
+            :selected_card="selectedCard"
           />
         </template>
       </div>
@@ -702,9 +704,13 @@ export default {
       directions_count: '1',
       researches_direction_params: {},
       tableFieldsErrors: {},
+      selectedCardLocal: null,
     };
   },
   computed: {
+    selectedCard() {
+      return this.selected_card || this.selectedCardLocal;
+    },
     has_stationar() {
       for (const pk of this.researches) {
         if (this.is_stationar(pk)) {
@@ -731,7 +737,7 @@ export default {
       return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar';
     },
     directions_params_enabled() {
-      return this.$store.getters.modules.directions_params && this.kk !== 'stationar' && !this.simple;
+      return this.$store.getters.modules.directions_params && !this.simple;
     },
     l2_price_with_categories() {
       return this.$store.getters.modules.l2_price_with_categories;
@@ -811,7 +817,7 @@ export default {
         if (this.researches.filter(r => r !== -1).length === 0) {
           return false;
         }
-      } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1 || this.selected_card?.isArchive) {
+      } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1 || this.selectedCard?.isArchive) {
         return false;
       }
 
@@ -895,8 +901,20 @@ export default {
     discount() {
       this.discount = Math.min(Math.max(parseInt(this.discount, 10) || 0, 0), 100);
     },
-    card_pk() {
-      this.clear_fin();
+    card_pk: {
+      async handler() {
+        this.clear_fin();
+
+        this.selectedCardLocal = null;
+        if (this.card_pk === null || this.card_pk === -1 || this.selected_card) {
+          return;
+        }
+
+        const cardData = await this.$api(`patients/card/simple/${this.card_pk}`);
+
+        this.selectedCardLocal = cardData;
+      },
+      immediate: true,
     },
     base() {
       this.fin = -1;
