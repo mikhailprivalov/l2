@@ -139,7 +139,6 @@ def search_patient_polis_by_person_id(person_id):
     return enp
 
 
-
 def search_patient_ecp_by_fio(patient, return_first_element=True):
     sess_id = request_get_sess_id()
     result = make_request_get(
