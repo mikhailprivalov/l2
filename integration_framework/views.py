@@ -2473,6 +2473,7 @@ def directions_by_category_result_year(request):
                     dicom_server_url = DICOM_SERVER
             directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag, "server": dicom_server_url}
         directions[d.direction]['services'].append(d.research_title)
+
     return JsonResponse({"results": list(directions.values())})
 
 
