@@ -27,7 +27,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration, Diagnoses
 from directory.models import Fractions, ParaclinicInputGroups, Researches
-from ecp_integration.integration import search_patient_ecp_by_fio, search_patient_ecp_by_person_id, search_patient_polis_by_person_id
+from ecp_integration.integration import search_patient_ecp_by_fio, search_patient_ecp_by_person_id
 from hospitals.models import Hospitals
 from laboratory import settings as l2settings
 from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY, ECP_SEARCH_PATIENT
@@ -726,7 +726,6 @@ class Patients(BaseRequester):
         else:
             qs = [query.upper()]
         polis_type = clients_models.DocumentType.objects.filter(title="Полис ОМС")[0]
-        print(qs)
         for q in qs:
             if q != "":
                 individual = None
