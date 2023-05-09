@@ -382,6 +382,7 @@ PRINT_APPENDIX_PAGE_DIRECTION = {}
 HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION = []
 STATISTIC_TYPE_DEPARTMENT = [3]
 CONTROL_AGE_MEDEXAM = {}  # {"male": {40: 30, 39: 31}, "femail": {40: 32, 39: 33}}
+ECP_SEARCH_PATIENT = {}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
