@@ -748,7 +748,7 @@ class Patients(BaseRequester):
                         document_ids = self.client.getIndividualDocuments(q)
                         for document_id in document_ids:
                             document_object = self.client.getDocument(document_id)
-                            if (document_object["type"] in self.polis_types_id_list and document_object["active"]):
+                            if document_object["type"] in self.polis_types_id_list and document_object["active"]:
                                 q = dict(
                                     document_type=polis_type,
                                     serial=document_object["series"] or "",
