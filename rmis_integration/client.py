@@ -714,7 +714,7 @@ class Patients(BaseRequester):
         if fio:
             if ECP_SEARCH_PATIENT.get("search"):
                 patient = {
-                    "family":query.get("surname").replace("%", ""),
+                    "family": query.get("surname").replace("%", ""),
                     "name": query.get("name").replace("%", ""),
                     "patronymic": query.get("patrName").replace("%", ""),
                     "birthday": query.get("birthDate"),
