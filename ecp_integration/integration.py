@@ -8,10 +8,9 @@ import simplejson as json
 
 from ecp_integration.sql_func import get_doctors_rmis_location_by_research
 from laboratory.utils import current_time, TZ, strdatetimeru
-from rmis_integration.client import Settings
 from utils.dates import normalize_dash_date, normalize_dots_date
 from django.core.cache import cache
-from laboratory.settings import RMIS_PROXY
+from laboratory.settings import RMIS_PROXY, ECP_SEARCH_PATIENT
 from datetime import timedelta
 import datetime
 
@@ -45,8 +44,11 @@ def make_request_get(path, query="", sess_id="", method="GET", get_sess_id=False
 
 
 def request_get_sess_id():
-    login = Settings.get("login")
-    password = Settings.get("password")
+    login = SettingManager.get("rmis_login")
+    password = SettingManager.get("rmis_password")
+    if ECP_SEARCH_PATIENT.get("search"):
+        login = ECP_SEARCH_PATIENT.get("login")
+        password = ECP_SEARCH_PATIENT.get("password")
     data = cache.get("ecp_sess_id")
     if not data:
         data = make_request_get("user/login", query=f"Login={login}&Password={password}", get_sess_id=True)
@@ -125,6 +127,37 @@ def search_patient_ecp_by_person_id(person_id):
     if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] in ['2', '4']:
         patient['enp'] = individual['Polis_Num']
     return patient
+
+
+def search_patient_polis_by_person_id(person_id):
+    sess_id = request_get_sess_id()
+    result = make_request_get("Polis", query=f"Sess_id={sess_id}&Person_id={person_id}", sess_id=sess_id)
+    polis = result['data'][0]
+    enp = ""
+    if polis.get("Polis_Num"):
+        enp = polis.get("Polis_Num")
+    return enp
+
+
+
+def search_patient_ecp_by_fio(patient, return_first_element=True):
+    sess_id = request_get_sess_id()
+    result = make_request_get(
+        "PersonList",
+        query=f"Sess_id={sess_id}&"
+        f"PersonSurName_SurName={patient['family']}&"
+        f"PersonFirName_FirName={patient['name']}&"
+        f"PersonSecName_SecName={patient['patronymic']}&"
+        f"PersonBirthDay_BirthDay={patient['birthday']}&PersonSnils_Snils={patient['snils']}",
+        sess_id=sess_id,
+    )
+    if not result or not result.get("data"):
+        return None
+    if return_first_element:
+        individual = result['data'][0]
+        return individual['Person_id']
+    else:
+        return [i['Person_id'] for i in result['data']]
 
 
 def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, hospital_id):
@@ -233,23 +266,6 @@ def register_patient_ecp_slot(patient_ecp_id, slot_id, slot_type):
             return {'register': False, "message": req_result.get('error_msg')}
 
     return {'register': False, "message": "Неудачная попытка записи"}
-
-
-def search_patient_ecp_by_fio(patient):
-    sess_id = request_get_sess_id()
-    result = make_request_get(
-        "PersonList",
-        query=f"Sess_id={sess_id}&"
-        f"PersonSurName_SurName={patient['family']}&"
-        f"PersonFirName_FirName={patient['name']}&"
-        f"PersonSecName_SecName={patient['patronymic']}&"
-        f"PersonBirthDay_BirthDay={patient['birthday']}&PersonSnils_Snils={patient['snils']}",
-        sess_id=sess_id,
-    )
-    if not result or not result.get("data"):
-        return None
-    individual = result['data'][0]
-    return individual['Person_id']
 
 
 def get_ecp_time_table_list_patient(patient_ecp_id):
