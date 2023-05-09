@@ -2461,18 +2461,17 @@ def directions_by_category_result_year(request):
 
     for d in confirmed_directions:
         if d.direction not in directions:
-            ip_server = None
+            dicom_server_url = None
             if d.study_instance_uid_tag:
                 data = {'Level': 'Study', 'Query': {"StudyInstanceUID": {d.study_instance_uid_tag}}, "Expand": True}
                 if len(DICOM_SERVERS) > 1:
-                    for i in DICOM_SERVERS:
-                        is_dicom_study = check_dicom_study(i, data)
-                        if is_dicom_study:
-                            ip_server = i
-                            break
+                    is_dicom_study = check_dicom_study(DICOM_SERVERS, data)
+                    if is_dicom_study.get("server"):
+                        dicom_server_url = is_dicom_study.get("server")
+                        break
                 else:
-                    ip_server = DICOM_SERVER
-            directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag, "server": ip_server}
+                    dicom_server_url = DICOM_SERVER
+            directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag, "server": dicom_server_url}
         directions[d.direction]['services'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})
 
