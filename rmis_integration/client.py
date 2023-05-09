@@ -718,7 +718,7 @@ class Patients(BaseRequester):
                     "name": query.get("name").replace("%", ""),
                     "patronymic": query.get("patrName").replace("%", ""),
                     "birthday": query.get("birthDate"),
-                    "snils": ""
+                    "snils": "",
                 }
                 qs = search_patient_ecp_by_fio(patient, return_first_element=False)
             else:
