@@ -222,7 +222,7 @@ def gen_commercial_offer(request):
     return file_name
 
 
-def search_by_fio(request_obj: HttpRequest, family: str, name: str, patronymic: str | None, birthday: str) -> Card | None:
+def search_by_fio(request_obj, family, name, patronymic, birthday):
     patient_card = None
     params_tfoms = {
         "enp": "",
@@ -259,7 +259,7 @@ def search_by_fio(request_obj: HttpRequest, family: str, name: str, patronymic: 
     return patient_card
 
 
-def find_and_replace(text: str, symbol1: str, symbol2: str) -> list:
+def find_and_replace(text, symbol1, symbol2):
     result = []
     for i in range(len(text)):
         if text[i] == symbol1:
@@ -271,7 +271,7 @@ def find_and_replace(text: str, symbol1: str, symbol2: str) -> list:
     return result
 
 
-def search_by_possible_fio(request_obj: HttpRequest, name: str, patronymic: str | None, birthday: str, possible_family: list) -> Card | None:
+def search_by_possible_fio(request_obj, name, patronymic, birthday, possible_family):
     if not possible_family:
         return None
     patient_card = None

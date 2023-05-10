@@ -511,8 +511,8 @@ class Individual(models.Model):
         enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
 
         if not individual:
-            if snils_type and patient_data.get('Person_Snils'):
-                individual = Individual.objects.filter(document__document_type=snils_type, document__number=patient_data['Person_Snils']).first()
+            if snils_type and patient_data.get('PersonSnils_Snils'):
+                individual = Individual.objects.filter(document__document_type=snils_type, document__number=patient_data['PersonSnils_Snils']).first()
             if not individual and enp_type and patient_data.get('enp'):
                 individual = Individual.objects.filter(document__document_type=enp_type, document__number=patient_data['enp']).first()
 
@@ -537,8 +537,8 @@ class Individual(models.Model):
             individual.save(update_fields=['family', 'name', 'patronymic', 'birthday', 'sex', 'ecp_id'])
 
         snils_doc = None
-        if snils_type and patient_data.get('Person_Snils'):
-            snils = patient_data['Person_Snils']
+        if snils_type and patient_data.get('PersonSnils_Snils'):
+            snils = patient_data['PersonSnils_Snils']
             snils = ''.join([s for s in snils if s.isdigit()])
             if not Document.objects.filter(individual=individual, document_type=snils_type).exists():
                 snils_doc = Document(
@@ -589,6 +589,7 @@ class Individual(models.Model):
                             cdu.first().save(update_fields=['document'])
                     else:
                         CardDocUsage(card=card, document=snils_doc).save()
+        return individual
 
     @staticmethod
     def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False, need_return_card=False):
