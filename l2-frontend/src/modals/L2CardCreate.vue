@@ -868,25 +868,6 @@
             placeholder="Введите номер карты"
           >
         </div>
-        <div
-          class="input-group form-row-simple"
-          style="margin-bottom: 10px"
-        >
-          <div class="input-group-btn">
-            <button
-              type="button"
-              class="btn btn-blue-nb nbr"
-              @click="change_directions_owner()"
-            >
-              Дата медицинского осмотра
-            </button>
-          </div>
-          <input
-            v-model="dateMedExam"
-            type="date"
-            class="form-control"
-          >
-        </div>
 
         <div
           v-if="can_change_owner_directions"
@@ -1351,7 +1332,6 @@ export default {
       loaded: false,
       new_card_num: '',
       companyDepartments: [],
-      dateMedExam: '',
     };
   },
   computed: {
@@ -1896,11 +1876,6 @@ export default {
       } else {
         this.$root.$emit('msg', 'error', message);
       }
-    },
-    async getDateMedExam() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      this.dateMedExam = this.$api('get-date-medical-examination', { card_pk: this.card_pk }).date;
-      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
 };
