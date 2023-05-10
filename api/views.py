@@ -3067,8 +3067,21 @@ def print_medical_examination_data(request):
 
 
 @login_required
-@group_required('Конструктор: Настройка организации')
 def get_date_medical_examination(request):
     request_data = json.loads(request.body)
-    result = MedicalExamination.get_date(request_data["card_pk"])
-    return JsonResponse({"date": result})
+    current_exam = MedicalExamination.objects.filter(card=request_data["card_pk"]).first()
+    if current_exam:
+        result = current_exam
+        return JsonResponse({"date": result.date})
+    else:
+        result = None
+        return JsonResponse({"date": None})
+
+
+@login_required
+def update_date_medical_examination(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.filter(pk=request_data["card_pk"]).first()
+    company = card.work_place_db
+    MedicalExamination.save_examination(card, company, request_data["date"])
+    return status_response(True)

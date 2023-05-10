@@ -90,6 +90,38 @@
           </button>
         </div>
       </div>
+      <div class="med-exam">
+        <div>
+          <div
+            class="input-group"
+          >
+            <label
+              class="input-group-addon"
+              style="height: 34px;"
+            >
+              Дата мед. осмотра
+            </label>
+          </div>
+        </div>
+        <div>
+          <div
+            class="input-group"
+          >
+            <input
+              class="form-control"
+              type="date"
+            >
+          </div>
+        </div>
+        <button
+          v-tippy
+          title="Сохранить"
+          class="btn last btn-blue-nb nbr"
+          @click="updateDateMedExam"
+        >
+          Сохранить
+        </button>
+      </div>
     </div>
     <div slot="footer">
       <div class="row">
@@ -135,6 +167,7 @@ export default {
       tbData: [makeDefaultRow()],
       harmfulFactors: [],
       disabledButtons: false,
+      dateMedExam: '',
     };
   },
   mounted() {
@@ -146,6 +179,7 @@ export default {
     }).then(rows => {
       this.tbData = rows;
     });
+    this.getDateMedExam();
   },
   methods: {
     hide_modal() {
@@ -194,6 +228,25 @@ export default {
       const currentHarmfullFactors = this.tbData.map((v) => v.factorId);
       const setHarmfullFactors = new Set(currentHarmfullFactors);
       this.disabledButtons = currentHarmfullFactors.length !== setHarmfullFactors.size;
+    },
+    async getDateMedExam() {
+      const data = this.$api('get-date-medical-examination', { card_pk: this.card_pk });
+      console.log(data);
+      console.log(data.re);
+      this.dateMedExam = data.date;
+    },
+    async updateDateMedExam() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = this.$api(
+        'update-date-medical-examination',
+        { card_pk: this.card_pk, date: this.dateMedExam },
+      );
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Сохранено');
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
     },
   },
 };
@@ -380,4 +433,8 @@ export default {
       text-decoration: none;
     }
   }
+.med-exam {
+  display: flex;
+  margin: 10px 0;
+}
 </style>
