@@ -57,6 +57,13 @@ const menuItems = [
       this.$root.$emit('print:directions:appendix', this.checked);
     },
   },
+  {
+    title: 'Отправить результаты на email пациента',
+    requiredModule: 'l2_send_patients_email_results',
+    handler() {
+      this.$root.$emit('directions:resend-patient-email-results', this.checked);
+    },
+  },
 ];
 
 export default {

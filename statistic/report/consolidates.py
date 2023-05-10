@@ -269,10 +269,6 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
     for total_col in range(start_research_column, col + 1):
         ws1.cell(row=row, column=total_col).value = f'={get_column_letter(total_col)}{price_row}*{get_column_letter(total_col)}{row-1}'
 
-    for m in range(row - base_step, row + 1):
-        for n in range(1, len(def_value_data) + start_research_column):
-            ws1.cell(row=m, column=n).style = style_border1
-
     total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='ffcc66', end_color='ffcc66')
     for k, v in fill_rows.items():
         fill_cells(ws1[f'A{k}:{get_column_letter(v)}{k}'], total_fill)

@@ -264,6 +264,16 @@ def add_additional_issledovaniye(request):
 
 
 @login_required
+def resend_results(request):
+    request_data = json.loads(request.body)
+    ids = request_data['ids']
+    for pk in ids:
+        direction = Napravleniya.objects.get(pk=pk)
+        direction.post_confirmation()
+    return status_response(True)
+
+
+@login_required
 def directions_history(request):
     # SQL-query
     res = {"directions": []}
@@ -2627,6 +2637,14 @@ def last_field_result(request):
         result = {"value": mother_data['born']}
     elif request_data["fieldPk"].find('%snils') != -1:
         result = {"value": data['snils']}
+    elif request_data["fieldPk"].find('%sex_full') != -1:
+        if data['sex'] == 'м':
+            sex = 'мужской'
+        else:
+            sex = 'женский'
+        result = {"value": sex}
+    elif request_data["fieldPk"].find('%sex_short') != -1:
+        result = {"value": data['sex']}
     elif request_data["fieldPk"].find('%mother_snils') != -1:
         result = {"value": mother_data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:
@@ -4301,7 +4319,7 @@ def meta_info(request):
     request_data = json.loads(request.body)
     res_direction = tuple(list(request_data["directions"]))
     if not res_direction:
-        return JsonResponse({"rows": [{}]})
+        return JsonResponse({"rows": []})
     result = get_directions_meta_info(res_direction)
     lab_podr = get_lab_podr()
     lab_podr = [i[0] for i in lab_podr]

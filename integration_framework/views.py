@@ -10,6 +10,7 @@ import logging
 import pytz_deprecation_shim as pytz
 from django.utils.module_loading import import_string
 
+from api.dicom import check_dicom_study
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
 from api.patients.views import patients_search_card
 from api.stationar.stationar_func import desc_to_data
@@ -66,6 +67,8 @@ from laboratory.settings import (
     REMD_EXCLUDE_RESEARCH,
     REMD_ONLY_RESEARCH,
     HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION,
+    DICOM_SERVERS,
+    DICOM_SERVER,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -2458,8 +2461,19 @@ def directions_by_category_result_year(request):
 
     for d in confirmed_directions:
         if d.direction not in directions:
-            directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag}
+            dicom_server_url = None
+            if d.study_instance_uid_tag:
+                data = {'Level': 'Study', 'Query': {"StudyInstanceUID": {d.study_instance_uid_tag}}, "Expand": True}
+                if len(DICOM_SERVERS) > 1:
+                    is_dicom_study = check_dicom_study(DICOM_SERVERS, data)
+                    if is_dicom_study.get("server"):
+                        dicom_server_url = is_dicom_study.get("server")
+                        break
+                else:
+                    dicom_server_url = DICOM_SERVER
+            directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag, "server": dicom_server_url}
         directions[d.direction]['services'].append(d.research_title)
+
     return JsonResponse({"results": list(directions.values())})
 
 

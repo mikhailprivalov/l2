@@ -654,7 +654,7 @@ const router = new Router({
       meta: {
         narrowLayout: true,
         title: 'Инструменты',
-        groups: [],
+        groups: ['Инструменты'],
       },
     },
     {

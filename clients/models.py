@@ -511,8 +511,8 @@ class Individual(models.Model):
         enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
 
         if not individual:
-            if snils_type and patient_data.get('Person_Snils'):
-                individual = Individual.objects.filter(document__document_type=snils_type, document__number=patient_data['Person_Snils']).first()
+            if snils_type and patient_data.get('PersonSnils_Snils'):
+                individual = Individual.objects.filter(document__document_type=snils_type, document__number=patient_data['PersonSnils_Snils']).first()
             if not individual and enp_type and patient_data.get('enp'):
                 individual = Individual.objects.filter(document__document_type=enp_type, document__number=patient_data['enp']).first()
 
@@ -537,8 +537,8 @@ class Individual(models.Model):
             individual.save(update_fields=['family', 'name', 'patronymic', 'birthday', 'sex', 'ecp_id'])
 
         snils_doc = None
-        if snils_type and patient_data.get('Person_Snils'):
-            snils = patient_data['Person_Snils']
+        if snils_type and patient_data.get('PersonSnils_Snils'):
+            snils = patient_data['PersonSnils_Snils']
             snils = ''.join([s for s in snils if s.isdigit()])
             if not Document.objects.filter(individual=individual, document_type=snils_type).exists():
                 snils_doc = Document(
@@ -589,6 +589,7 @@ class Individual(models.Model):
                             cdu.first().save(update_fields=['document'])
                     else:
                         CardDocUsage(card=card, document=snils_doc).save()
+        return individual
 
     @staticmethod
     def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False, need_return_card=False):
@@ -1013,7 +1014,7 @@ class Card(models.Model):
 
     number = models.CharField(max_length=20, blank=True, help_text="Идентификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
-    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
+    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.PROTECT)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True, help_text="Карта в архиве")
     polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
@@ -1180,6 +1181,7 @@ class Card(models.Model):
                 docs.append(Document.objects.filter(pk=cd[d])[0])
         ind_data['doc'] = docs if not full_empty else []
         ind_data['fio'] = self.individual.fio()
+        ind_data['sex'] = self.individual.sex
         ind_data['family'] = self.individual.family
         ind_data['name'] = self.individual.name
         ind_data['patronymic'] = self.individual.patronymic
