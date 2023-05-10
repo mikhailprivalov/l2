@@ -29,7 +29,7 @@
             >{{ f.title }}</a>
           </li>
           <li
-            v-for="value in menuItems"
+            v-for="value in menuItemsFiltered"
             :key="value.title"
           >
             <a
@@ -118,6 +118,14 @@ export default {
     user_groups() {
       return this.$store.getters.user_data.groups || [];
     },
+    modules() {
+      return {
+        l2_send_patients_email_results: this.$store.getters.modules.l2_send_patients_email_results,
+      };
+    },
+    menuItemsFiltered() {
+      return this.menuItems.filter(item => !item.requiredModule || this.modules[item.requiredModule]);
+    },
   },
   mounted() {
     this.$root.$on('hide_pe', this.change_parent_hide);
@@ -133,6 +141,9 @@ export default {
     async get_disabled_forms() {
       const resultData = await this.$api('disabled-forms');
       this.disabled_forms = resultData.rows;
+    },
+    in_checked(pk) {
+      return this.checked.indexOf(pk) !== -1;
     },
   },
 };

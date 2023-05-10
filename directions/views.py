@@ -504,7 +504,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     if history_num and len(history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + history_num)
     elif additional_num and len(additional_num) > 0:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, f"({str(additional_num).strip()})")
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 67) + (h / 2) * yn, f"({str(additional_num).strip()})")
     elif dir.client.number_poliklinika and len(dir.client.number_poliklinika) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, f"({str(dir.client.number_poliklinika).strip()})")
 
@@ -513,7 +513,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn, "ФИО: " + dir.client.individual.fio())
 
-    c.setFont('OpenSans', 14)
+    c.setFont('OpenSans', 13.5)
     c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "Код {}".format(translation_number_from_decimal(int(dir.client.pk))))
 
     c.setFont('OpenSans', 9)
