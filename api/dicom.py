@@ -41,7 +41,7 @@ def search_dicom_study(direction=None):
         dicom_study = Issledovaniya.objects.values('study_instance_uid').filter(napravleniye=direction).first()
         if dicom_study and dicom_study['study_instance_uid']:
             if len(DICOM_SERVERS) > 1:
-                return check_dicom_study_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
+                return check_dicom_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
         else:
             if not check_server_port(DICOM_ADDRESS, DICOM_PORT):
                 return ''
@@ -109,7 +109,7 @@ def check_dicom_study(servers_addr, data):
     return {}
 
 
-def check_dicom_study_study_instance_uid(servers_addr, data):
+def check_dicom_study_instance_uid(servers_addr, data):
     for server_addr in servers_addr:
         dicom_study = requests.get(f'{server_addr}/studies/{data}')
         if len(dicom_study.json()) > 0:
