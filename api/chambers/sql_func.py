@@ -18,6 +18,7 @@ def get_patients_stationar(department_id):
                 INNER JOIN clients_card ON directions_napravleniya.client_id=clients_card.id
                 INNER JOIN public.clients_individual ON clients_card.individual_id = public.clients_individual.id
                 WHERE hospital_department_override_id = %(department_id)s
+                AND data_sozdaniya > now() - INTERVAL '2 months'
                 AND NOT EXISTS (SELECT direction_id FROM podrazdeleniya_patienttobed WHERE date_out IS NULL AND napravleniye_id = direction_id)
                 AND NOT EXISTS (SELECT direction_id FROM podrazdeleniya_patientstationarwithoutbeds WHERE napravleniye_id = direction_id)
                 """,
