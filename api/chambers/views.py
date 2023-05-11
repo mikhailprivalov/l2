@@ -28,13 +28,7 @@ def get_unallocated_patients(request):
             "direction_pk": patient.napravleniye_id,
         } for patient in get_patients_stationar(department_pk)
     ]
-    patients_beds = [patient.direction.pk for patient in PatientToBed.objects.filter(date_out=None)]
-    patients_without_beds = [patient.direction.pk for patient in PatientStationarWithoutBeds.objects.filter(department=department_pk)]
-    filtered_patients = []
-    for i in patients:
-        if i["direction_pk"] not in patients_beds and i["direction_pk"] not in patients_without_beds:
-            filtered_patients.append(i)
-    return JsonResponse({"data": filtered_patients})
+    return JsonResponse({"data": patients})
 
 
 def get_chambers_and_beds(request):
