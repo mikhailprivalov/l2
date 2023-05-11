@@ -810,7 +810,7 @@ def form_02(request_data):
         Paragraph(f"код по МКБ: {primary_reception_data['direction_mkb_diagnos']}", style),
         Spacer(1, 0.5 * mm),
     ]
-    title_page.append(Paragraph("Предварительный диагноз (диагноз при поступлении):", style))
+    title_page.append(Paragraph(f"{bold_open}Предварительный диагноз (диагноз при поступлении):{bold_close}", style))
     title_page.append(Spacer(1, 0.5 * mm))
     title_page.append(
         Paragraph(
@@ -823,7 +823,6 @@ def form_02(request_data):
     for i in primary_reception_data["final_diagnos_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2.0 * mm))
-    print(primary_reception_data["other_diagnos_mkb"])
     title_page.append(Paragraph(f"Осложнения основного заболевания: ", style))
     for i in primary_reception_data["other_diagnos_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
@@ -870,8 +869,7 @@ def form_02(request_data):
     title_page.append(Spacer(1, 4 * mm))
     title_page.append(Spacer(1, 2 * mm))
     clinical_diagnos = primary_reception_get_data(hosp_first_num, site_type=6)
-    title_page.append(Paragraph("Диагноз клинический, установленный в стационаре:", style))
-    title_page.append(Spacer(1, 2 * mm))
+    title_page.append(Paragraph(f"{bold_open}Диагноз клинический, установленный в стационаре:{bold_close}", style))
     title_page.append(Paragraph(f"Дата и время установления клинического диагноза: {clinical_diagnos['date_diagnosis']}г. время: {clinical_diagnos['time_diagnosis']}", style))
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph(f"Основное заболевание:", style))
@@ -886,15 +884,14 @@ def form_02(request_data):
     for i in clinical_diagnos["external_reason_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')}  {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2 * mm))
-    title_page.append(Paragraph(f"Сопутствующие заболевания {near_diagnos}  код по МКБ {near_diagnos_mkb}", style))
+    title_page.append(Paragraph(f"Сопутствующие заболевания", style))
     for i in clinical_diagnos["near_diagnos_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph("Дополнительные сведения о заболевании", style))
     title_page.append(Spacer(1, 2 * mm))
 
-    title_page.append(Paragraph("Диагноз окончательный при выписке из стационара:", style))
-    title_page.append(Spacer(1, 2 * mm))
+    title_page.append(Paragraph(f"{bold_open}Диагноз окончательный при выписке из стационара:{bold_close}", style))
     title_page.append(Paragraph(f"Основное заболевание:", style))
     for i in hosp_extract_data["final_diagnos_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
