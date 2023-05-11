@@ -108,6 +108,7 @@
             class="input-group"
           >
             <input
+              v-model="dateMedExam"
               class="form-control"
               type="date"
             >
@@ -230,10 +231,8 @@ export default {
       this.disabledButtons = currentHarmfullFactors.length !== setHarmfullFactors.size;
     },
     async getDateMedExam() {
-      const data = this.$api('get-date-medical-examination', { card_pk: this.card_pk });
-      console.log(data);
-      console.log(data.re);
-      this.dateMedExam = data.date;
+      const result = await this.$api('get-date-medical-examination', { card_pk: this.card_pk });
+      this.dateMedExam = result.data;
     },
     async updateDateMedExam() {
       await this.$store.dispatch(actions.INC_LOADING);

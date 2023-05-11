@@ -249,7 +249,19 @@ class MedicalExamination(models.Model):
 
     @staticmethod
     def get_date(card_pk: int):
-        result = MedicalExamination.objects.filter(card_id=card_pk).first()
+        result = None
+        current_exam = MedicalExamination.objects.filter(card_id=card_pk).first()
+        if current_exam:
+            result = current_exam.date
+        return result
+
+    @staticmethod
+    def update_date(card_pk: int):
+        result = None
+        current_exam = MedicalExamination.objects.filter(card_id=card_pk).first()
+        if current_exam:
+            result = current_exam.date
+        print(result)
         return result
 
     class Meta:
