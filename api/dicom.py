@@ -42,6 +42,8 @@ def search_dicom_study(direction=None):
         if dicom_study and dicom_study['study_instance_uid']:
             if len(DICOM_SERVERS) > 1:
                 return check_dicom_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
+            else:
+                return f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
         else:
             if not check_server_port(DICOM_ADDRESS, DICOM_PORT):
                 return ''
