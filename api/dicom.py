@@ -40,7 +40,10 @@ def search_dicom_study(direction=None):
             return ''
         dicom_study = Issledovaniya.objects.values('study_instance_uid').filter(napravleniye=direction).first()
         if dicom_study and dicom_study['study_instance_uid']:
-            return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study["study_instance_uid"]}'
+            if len(DICOM_SERVERS) > 1:
+                return check_dicom_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
+            else:
+                return f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
         else:
             if not check_server_port(DICOM_ADDRESS, DICOM_PORT):
                 return ''
@@ -106,3 +109,11 @@ def check_dicom_study(servers_addr, data):
         if len(dicom_study.json()) > 0:
             return {"dicom": (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"]), "server": server_addr}
     return {}
+
+
+def check_dicom_study_instance_uid(servers_addr, data):
+    for server_addr in servers_addr:
+        dicom_study = requests.get(f'{server_addr}/studies/{data}')
+        if len(dicom_study.json()) > 0:
+            return f'{server_addr}/osimis-viewer/app/index.html?study={data}'
+    return ''
