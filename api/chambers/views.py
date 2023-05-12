@@ -12,7 +12,7 @@ from utils.response import status_response
 
 import datetime
 from datetime import date
-from .sql_func import get_patients_stationar
+from .sql_func import patients_stationar_unallocated_sql
 
 
 def get_unallocated_patients(request):
@@ -26,7 +26,7 @@ def get_unallocated_patients(request):
             "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0]}.',
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
-        } for patient in get_patients_stationar(department_pk)
+        } for patient in patients_stationar_unallocated_sql(department_pk)
     ]
     return JsonResponse({"data": patients})
 
@@ -40,7 +40,7 @@ def get_chambers_and_beds(request):
             "label": i.title,
             "beds": [],
         }
-        for j in Bed.objects.filter(chamber=i.pk):
+        for j in Bed.objects.filter(chamber_id=i.pk):
             chamber["beds"].append(
                 {
                     "pk": j.pk,
@@ -49,31 +49,25 @@ def get_chambers_and_beds(request):
                     "patient": []
                 }
             )
-            history = PatientToBed.objects.filter(bed=j.pk, date_out__isnull=True).last()
+            history = PatientToBed.objects.filter(bed_id=j.pk, date_out__isnull=True).last()
             if history:
                 direction_obj = Napravleniya.objects.get(pk=history.direction.pk)
                 ind_card = direction_obj.client
                 patient_data = ind_card.get_data_individual()
-                individual_obj = Individual.objects.get(family=patient_data["family"])
-                short_fio = individual_obj.fio(short=True, dots=True)
-                chamber["beds"][-1]["patient"].append(
-                    {
-                        "fio": patient_data["fio"],
-                        "short_fio": short_fio,
-                        "age": patient_data["age"],
-                        "sex": patient_data["sex"],
-                        "direction_pk": history.direction_id
-                    }
-                )
+                chamber["beds"][-1]["patient"] = [{
+                    "fio": patient_data["fio"],
+                    "short_fio": patient_data["short_fio"],
+                    "age": patient_data["age"],
+                    "sex": patient_data["sex"],
+                    "direction_pk": history.direction_id
+                }]
                 if history.doctor:
-                    chamber["beds"][-1]["doctor"].append(
-                        {
-                            "fio": history.doctor.get_full_fio(),
-                            "pk": history.doctor.pk,
-                            "highlight": False,
-                            "short_fio": history.doctor.get_fio(),
-                        }
-                    )
+                    chamber["beds"][-1]["doctor"] = [{
+                        "fio": history.doctor.get_full_fio(),
+                        "pk": history.doctor.pk,
+                        "highlight": False,
+                        "short_fio": history.doctor.get_fio(),
+                    }]
         chambers.append(chamber)
     return JsonResponse({"data": chambers})
 
