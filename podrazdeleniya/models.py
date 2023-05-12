@@ -154,7 +154,7 @@ class PatientToBed(models.Model):
 
     @staticmethod
     def update_doctor(doctor_obj):
-        if doctor_obj["status"]:
+        if doctor_obj["is_assign"]:
             doctor = PatientToBed.objects.filter(direction_id=doctor_obj["direction_id"], doctor=None, date_out=None).first()
             doctor.doctor_id = doctor_obj["doctor_pk"]
             doctor.save()
