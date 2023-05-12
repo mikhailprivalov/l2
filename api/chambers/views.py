@@ -97,24 +97,11 @@ def get_attending_doctors(request):
     return JsonResponse({"data": doctors})
 
 
-def doctor_assigned_patient(request):
+def update_doctor_to_bed(request):
     request_data = json.loads(request.body)
     doctor_obj = request_data.get('doctor')
-    direction_id = request_data.get('direction_id')
-    doctor = PatientToBed.objects.filter(direction_id=direction_id, doctor=None, date_out=None).first()
-    doctor.doctor_id = doctor_obj["pk"]
-    doctor.save()
-    return status_response(True)
-
-
-def doctor_detached_patient(request):
-    request_data = json.loads(request.body)
-    doctor_obj = request_data.get('doctor')
-    direction_id = request_data.get('direction_id')
-    doctor = PatientToBed.objects.filter(doctor_id=doctor_obj["pk"], direction_id=direction_id, date_out=None).first()
-    doctor.doctor = None
-    doctor.save()
-    return status_response(True)
+    result = PatientToBed.update_doctor(doctor_obj)
+    return status_response(result)
 
 
 def get_patients_without_bed(request):
