@@ -3079,7 +3079,10 @@ def get_date_medical_examination(request):
 @login_required
 def update_date_medical_examination(request):
     request_data = json.loads(request.body)
-    card = Card.objects.filter(pk=request_data["card_pk"]).first()
-    company = card.work_place_db
-    MedicalExamination.save_examination(card, company, request_data["date"])
-    return status_response(True)
+    if not request_data.get("date"):
+        return status_response(False, "Дата не заполнена")
+    current_exam = MedicalExamination.update_date(request_data["card_pk"], request_data["date"])
+    if current_exam:
+        return status_response(True)
+    else:
+        return status_response(False, "Место работы не заполнено")

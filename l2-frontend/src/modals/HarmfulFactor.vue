@@ -118,6 +118,7 @@
           v-tippy
           title="Сохранить"
           class="btn last btn-blue-nb nbr"
+          :disabled="!tbData || !dateMedExam"
           @click="updateDateMedExam"
         >
           Сохранить
@@ -236,11 +237,13 @@ export default {
     },
     async updateDateMedExam() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = this.$api(
+      const { ok, message } = await this.$api(
         'update-date-medical-examination',
         { card_pk: this.card_pk, date: this.dateMedExam },
       );
       await this.$store.dispatch(actions.DEC_LOADING);
+      console.log(ok);
+      console.log(message);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Сохранено');
       } else {
@@ -434,6 +437,7 @@ export default {
   }
 .med-exam {
   display: flex;
-  margin: 10px 0;
+  justify-content: center;
+  margin: 30px 0;
 }
 </style>

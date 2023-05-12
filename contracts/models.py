@@ -256,13 +256,18 @@ class MedicalExamination(models.Model):
         return result
 
     @staticmethod
-    def update_date(card_pk: int):
-        result = None
+    def update_date(card_pk: int, date: str):
         current_exam = MedicalExamination.objects.filter(card_id=card_pk).first()
         if current_exam:
-            result = current_exam.date
-        print(result)
-        return result
+            current_exam.date = date
+            current_exam.save()
+        else:
+            card = Card.objects.filter(pk=card_pk).first()
+            if card.work_place_db:
+                MedicalExamination.save_examination(card, card.work_place_db, date)
+            else:
+                return False
+        return True
 
     class Meta:
         verbose_name = 'Медицинский осмотр'
