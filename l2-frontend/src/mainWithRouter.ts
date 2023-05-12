@@ -682,8 +682,8 @@ const router = new Router({
       component: () => import('@/pages/ManageChambers/index.vue'),
       meta: {
         narrowLayout: true,
-        title: 'Управление палатами',
-        groups: ['Управление палатами'],
+        title: 'Палаты',
+        groups: ['Палаты'],
       },
     },
     {

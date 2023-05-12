@@ -205,8 +205,8 @@
       <div
         class="construct-sidebar"
       >
-        <FiltersDoc
-          :filters="filters"
+        <Filters
+          :filters="filtersDoc"
           :departments="departments"
         />
         <div
@@ -253,7 +253,6 @@ import api from '@/api';
 import { useStore } from '@/store';
 
 import Filters from './components/Filters.vue';
-import FiltersDoc from './components/FiltersDoc.vue';
 
 const chambers = ref([]);
 const departments = ref([]);
@@ -262,11 +261,13 @@ const withOutBeds = ref([]);
 const attendingDoctor = ref([]);
 const filters = ref({
   department_pk: -1,
-  departmentDoc_pk: -1,
+});
+const filtersDoc = ref({
+  department_pk: -1,
 });
 const store = useStore();
 const department = computed(() => filters.value.department_pk);
-const departmentDoc = computed(() => filters.value.departmentDoc_pk);
+const departmentDoc = computed(() => filtersDoc.value.department_pk);
 const bedInformationCounter = computed(() => {
   let women = 0;
   let man = 0;
@@ -343,7 +344,7 @@ async function changePatientBed({ added, removed }, bed) {
   if (removed) {
     await store.dispatch(actions.INC_LOADING);
     await api('chambers/extract-patient-bed', {
-      patient: removed.element,
+      patient: removed.element.direction_pk,
     });
     await store.dispatch(actions.DEC_LOADING);
   }
@@ -371,7 +372,7 @@ async function changeDoctor({ added, removed }, bed) {
     doctor = {
       doctor_pk: added.element.pk,
       direction_id: bed.patient[0].direction_pk,
-      status: true,
+      is_assign: true,
     };
   }
   if (removed) {
@@ -379,7 +380,7 @@ async function changeDoctor({ added, removed }, bed) {
     doctor = {
       doctor_pk: removed.element.pk,
       direction_id: bed.patient[0].direction_pk,
-      status: false,
+      is_assign: false,
     };
   }
   await store.dispatch(actions.INC_LOADING);

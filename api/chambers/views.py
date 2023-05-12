@@ -83,8 +83,8 @@ def entrance_patient_to_bed(request):
 
 def extract_patient_bed(request):
     request_data = json.loads(request.body)
-    patient_obj = request_data.get('patient')
-    patient = PatientToBed.objects.filter(direction_id=patient_obj["direction_pk"], date_out=None).first()
+    direction_pk = request_data.get('patient')
+    patient = PatientToBed.objects.filter(direction_id=direction_pk, date_out=None).first()
     patient.date_out = datetime.datetime.today()
     patient.save()
     return status_response(True)
