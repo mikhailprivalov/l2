@@ -366,23 +366,25 @@ async function PatientWaitBed({ added, removed }) {
   }
 }
 async function changeDoctor({ added, removed }, bed) {
+  let doctor;
   if (added) {
-    await store.dispatch(actions.INC_LOADING);
-    await api('chambers/doctor-assigned-patient', {
-      doctor: added.element,
+    doctor = {
+      doctor_pk: added.element.pk,
       direction_id: bed.patient[0].direction_pk,
-    });
-    await store.dispatch(actions.DEC_LOADING);
+      status: true,
+    };
   }
   if (removed) {
     await getAttendingDoctors();
-    await store.dispatch(actions.INC_LOADING);
-    await api('chambers/doctor-detached-patient', {
-      doctor: removed.element,
+    doctor = {
+      doctor_pk: removed.element.pk,
       direction_id: bed.patient[0].direction_pk,
-    });
-    await store.dispatch(actions.DEC_LOADING);
+      status: false,
+    };
   }
+  await store.dispatch(actions.INC_LOADING);
+  await api('chambers/update-doctor-to-bed', { doctor });
+  await store.dispatch(actions.DEC_LOADING);
 }
 function conditionsDragDoc(bed) {
   if (bed.patient.length > 0 && bed.doctor.length < 1) {

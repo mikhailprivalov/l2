@@ -152,6 +152,18 @@ class PatientToBed(models.Model):
     def __str__(self):
         return f'{self.direction.client.individual.fio()}'
 
+    @staticmethod
+    def update_doctor(doctor_obj):
+        if doctor_obj["status"]:
+            doctor = PatientToBed.objects.filter(direction_id=doctor_obj["direction_id"], doctor=None, date_out=None).first()
+            doctor.doctor_id = doctor_obj["doctor_pk"]
+            doctor.save()
+        else:
+            doctor = PatientToBed.objects.filter(doctor_id=doctor_obj["doctor_pk"], direction_id=doctor_obj["direction_id"], date_out=None).first()
+            doctor.doctor = None
+            doctor.save()
+        return True
+
     class Meta:
         verbose_name = 'Историю коек'
         verbose_name_plural = 'История коек'
