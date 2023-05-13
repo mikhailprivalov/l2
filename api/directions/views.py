@@ -1067,7 +1067,8 @@ def directions_mark_visit(request):
                     or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
                     or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
-                and n.visit_date and not n.has_confirm()
+                and n.visit_date
+                and not n.has_confirm()
             )
             if allow_reset_confirm:
                 response["ok"] = True
