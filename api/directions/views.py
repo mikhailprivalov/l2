@@ -1067,7 +1067,7 @@ def directions_mark_visit(request):
                     or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
                     or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
-                and n.visit_date
+                and n.visit_date and not n.has_confirm()
             )
             if allow_reset_confirm:
                 response["ok"] = True
@@ -1077,17 +1077,21 @@ def directions_mark_visit(request):
                 n.visit_date = None
                 n.visit_who_mark = None
                 n.save()
+            elif n.has_confirm():
+                response["message"] = 'Отмена посещения возможна только после "Сброса подтверждения"'
             else:
                 response["message"] = "Отмена посещения возможна только в течении {} мин.".format(rtm)
-        log_data = {
-            "Посещение": "отмена" if cancel else "да",
-            "Дата и время": response["visit_date"],
-            "Дополнительный номер": register_number,
-            "Год": register_number_year,
-            "Со-исполнитель": co_executor,
-        }
-        Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
-        f = True
+            f = True
+        if allow_reset_confirm or not cancel:
+            log_data = {
+                "Посещение": "отмена" if cancel else "да",
+                "Дата и время": response["visit_date"],
+                "Дополнительный номер": register_number,
+                "Год": register_number_year,
+                "Со-исполнитель": co_executor,
+            }
+            Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
+            f = True
     if not f:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
@@ -2082,6 +2086,10 @@ def directions_paraclinic_result(request):
                 f = ParaclinicInputField.objects.get(pk=field["pk"])
                 if f.title == "Дата смерти":
                     date_death = datetime.strptime(field["value"], "%Y-%m-%d").date()
+                if f.title == "Регистрационный номер" and iss.research.is_gistology:
+                    if iss.napravleniye.register_number.strip() != (field["value"]).strip():
+                        response["message"] = "Регистрационный номер неверный"
+                        return JsonResponse(response)
                 if f.field_type == 21:
                     continue
                 if not ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
@@ -2241,7 +2249,6 @@ def directions_paraclinic_result(request):
 
         if stationar_research != -1:
             iss.gen_direction_with_research_after_confirm_id = stationar_research
-
         iss.save()
         if iss.napravleniye:
             iss.napravleniye.sync_confirmed_fields()
