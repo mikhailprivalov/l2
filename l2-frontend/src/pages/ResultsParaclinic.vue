@@ -2430,7 +2430,6 @@ export default {
         }
         let n = 0;
         for (const f of g.fields) {
-          console.log(f);
           n++;
           if (
             (((f.required
