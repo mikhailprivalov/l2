@@ -1,33 +1,23 @@
 <template>
-  <div>
-    <Treeselect
-      v-model="/* eslint-disable-line vue/no-mutating-props */ filters.department_pk"
-      :multiple="false"
-      :disable-branch-nodes="true"
-      :options="departments"
-      placeholder="Отделение не выбрано"
-      :append-to-body="true"
-    />
-  </div>
+  <Treeselect
+    v-model="/* eslint-disable-line vue/no-mutating-props */ departId"
+    :multiple="false"
+    :disable-branch-nodes="true"
+    :options="departments"
+    placeholder="Отделение не выбрано"
+    :append-to-body="true"
+    @input="$emit('input', departId)"
+  />
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+
 import Treeselect from '@riophae/vue-treeselect';
+import { defineProps, ref } from 'vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-export default {
-  name: 'Filters',
-  components: { Treeselect },
-  props: {
-    filters: {
-      type: Object,
-      required: true,
-    },
-    departments: {
-      type: Array,
-      required: true,
-    },
-  },
-};
+const props = defineProps(['departments']);
+const departId = ref(-1);
+
 </script>

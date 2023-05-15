@@ -5,8 +5,8 @@
     >
       <div class="construct-sidebar">
         <Filters
-          :filters="filters"
           :departments="departments"
+          @input="getDepartPatientId($event)"
         />
         <div
           class="sidebar-content"
@@ -18,7 +18,7 @@
           </h5>
           <draggable
             v-model="unallocatedPatients"
-            :options="{group:{ name: 'Patients', put: 'Patients', pull: 'Patients'}, sort: false, ForceFallback: true}"
+            :group="{ name: 'Patients', put: 'Patients', pull: 'Patients'}"
             class="draggable-element"
             chosen-class="dragClass"
             animation="500"
@@ -49,12 +49,10 @@
           </h5>
           <draggable
             v-model="withOutBeds"
-            :options="{group:{
-                         name: 'Patients',
-                         pull: 'Patients',
-                         put: 'Patients'},
-                       sort: false,
-                       ForceFallback: true}"
+            :group="{
+              name: 'Patients',
+              pull: 'Patients',
+              put: 'Patients'}"
             class="draggable-element-home"
             chosen-class="dragClass"
             animation="500"
@@ -118,11 +116,10 @@
               >
                 <draggable
                   v-model="bed.doctor"
-                  :options="{group:{
-                               name: 'doctor',
-                               put: conditionsDragDoc(bed),
-                               pull: 'attendingDoctor'},
-                             sort: false}"
+                  :group="{
+                    name: 'doctor',
+                    put: conditionsDragDoc(bed),
+                    pull: 'attendingDoctor'}"
                   animation="500"
                   class="drag-and-drop"
                   @change="changeDoctor($event, bed);"
@@ -141,13 +138,11 @@
                 </draggable>
                 <draggable
                   v-model="bed.patient"
-                  :options="{
-                    group:{
-                      name: 'Patients',
-                      put: conditionsDragBed(bed),
-                      pull: 'Patients'
-                    },
-                    sort: false}"
+                  :group="{
+                    name: 'Patients',
+                    put: conditionsDragBed(bed),
+                    pull: 'Patients'
+                  }"
                   animation="500"
                   class="drag-and-drop-patient"
                   @change="changePatientBed($event, bed)"
@@ -206,8 +201,8 @@
         class="construct-sidebar"
       >
         <Filters
-          :filters="filtersDoc"
           :departments="departments"
+          @input="getDepartDocId($event)"
         />
         <div
           class="sidebar-content size"
@@ -219,7 +214,7 @@
           </h5>
           <draggable
             v-model="attendingDoctor"
-            :options="{group:{ name: 'attendingDoctor', pull: 'clone', put: 'doctor'}, sort: false, ForceFallback: true}"
+            :group="{ name: 'attendingDoctor', pull: 'clone', put: 'doctor'}"
             class="draggable-element"
             chosen-class="dragClass"
             animation="500"
@@ -259,15 +254,15 @@ const departments = ref([]);
 const unallocatedPatients = ref([]);
 const withOutBeds = ref([]);
 const attendingDoctor = ref([]);
-const filters = ref({
-  department_pk: -1,
-});
-const filtersDoc = ref({
-  department_pk: -1,
-});
+const departmentPatientPk = ref(-1);
+const departmentDocPk = ref(-1);
+function getDepartDocId(data) {
+  departmentDocPk.value = data;
+}
+function getDepartPatientId(data) {
+  departmentPatientPk.value = data;
+}
 const store = useStore();
-const department = computed(() => filters.value.department_pk);
-const departmentDoc = computed(() => filtersDoc.value.department_pk);
 const bedInformationCounter = computed(() => {
   let women = 0;
   let man = 0;
@@ -303,7 +298,7 @@ async function init() {
 async function getAttendingDoctors() {
   await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-attending-doctors', {
-    department_pk: departmentDoc.value,
+    department_pk: departmentDocPk.value,
   });
   attendingDoctor.value = row.data;
   await store.dispatch(actions.DEC_LOADING);
@@ -311,7 +306,7 @@ async function getAttendingDoctors() {
 async function getUnallocatedPatients() {
   await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-unallocated-patients', {
-    department_pk: department.value,
+    department_pk: departmentPatientPk.value,
   });
   unallocatedPatients.value = row.data;
   await store.dispatch(actions.DEC_LOADING);
@@ -319,7 +314,7 @@ async function getUnallocatedPatients() {
 async function getPatientWithoutBed() {
   await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-patients-without-bed', {
-    department_pk: department.value,
+    department_pk: departmentPatientPk.value,
   });
   withOutBeds.value = row.data;
   await store.dispatch(actions.DEC_LOADING);
@@ -327,7 +322,7 @@ async function getPatientWithoutBed() {
 async function loadChamberAndBed() {
   await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-chambers-and-beds', {
-    department_pk: department.value,
+    department_pk: departmentPatientPk.value,
   });
   chambers.value = row.data;
   await store.dispatch(actions.DEC_LOADING);
@@ -354,7 +349,7 @@ async function PatientWaitBed({ added, removed }) {
     await store.dispatch(actions.INC_LOADING);
     await api('chambers/save-patient-without-bed', {
       patient_obj: added.element,
-      department_pk: department.value,
+      department_pk: departmentPatientPk.value,
     });
     await store.dispatch(actions.DEC_LOADING);
   }
@@ -444,12 +439,12 @@ function countPatientAtDoctor(doctor) {
   }
   return patient;
 }
-watch(department, () => {
+watch(departmentPatientPk, () => {
   getUnallocatedPatients();
   loadChamberAndBed();
   getPatientWithoutBed();
 });
-watch(departmentDoc, () => {
+watch(departmentDocPk, () => {
   getAttendingDoctors();
 });
 onMounted(init);
