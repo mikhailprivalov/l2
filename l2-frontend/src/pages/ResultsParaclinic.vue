@@ -2440,6 +2440,7 @@ export default {
                 || this.tableFieldsErrors[f.pk])
               && vField(g, research.research.groups, f.visibility, this.data.patient))
             || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
+            || (f.title === 'Регистрационный номер' && f.value !== this.data.direction.additionalNumber)
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }
