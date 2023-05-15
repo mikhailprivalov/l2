@@ -3,7 +3,7 @@
     v-model="/* eslint-disable-line vue/no-mutating-props */ departId"
     :multiple="false"
     :disable-branch-nodes="true"
-    :options="departments"
+    :options="props.departments"
     placeholder="Отделение не выбрано"
     :append-to-body="true"
     @input="$emit('input', departId)"
