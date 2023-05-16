@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
 
 import simplejson as json
@@ -15,6 +16,7 @@ from datetime import date
 from .sql_func import patients_stationar_unallocated_sql
 
 
+@login_required
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -31,6 +33,7 @@ def get_unallocated_patients(request):
     return JsonResponse({"data": patients})
 
 
+@login_required
 def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     chambers = []
@@ -72,6 +75,7 @@ def get_chambers_and_beds(request):
     return JsonResponse({"data": chambers})
 
 
+@login_required
 def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_id = request_data.get('bed_id')
@@ -81,6 +85,7 @@ def entrance_patient_to_bed(request):
     return status_response(True)
 
 
+@login_required
 def extract_patient_bed(request):
     request_data = json.loads(request.body)
     direction_pk = request_data.get('patient')
@@ -90,6 +95,7 @@ def extract_patient_bed(request):
     return status_response(True)
 
 
+@login_required
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -97,6 +103,7 @@ def get_attending_doctors(request):
     return JsonResponse({"data": doctors})
 
 
+@login_required
 def update_doctor_to_bed(request):
     request_data = json.loads(request.body)
     doctor_obj = request_data.get('doctor')
@@ -104,6 +111,7 @@ def update_doctor_to_bed(request):
     return status_response(result)
 
 
+@login_required
 def get_patients_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -126,6 +134,7 @@ def get_patients_without_bed(request):
     return JsonResponse({"data": patients})
 
 
+@login_required
 def save_patient_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -135,6 +144,7 @@ def save_patient_without_bed(request):
     return status_response(True)
 
 
+@login_required
 def delete_patient_without_bed(request):
     request_data = json.loads(request.body)
     patient_obj = request_data.get('patient_obj')
