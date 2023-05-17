@@ -26,7 +26,8 @@ import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
 from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION
+from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION, \
+    AUTO_PRINT_RESEARCH_DIRECTION
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
@@ -1279,7 +1280,9 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             limit_research_to_assign = {}
+            print(researches)
             for v in researches:  # нормализация исследований
+                print(researches[v])
                 researches_grouped_by_lab.append({v: researches[v]})
 
                 for vv in researches[v]:
@@ -1326,8 +1329,12 @@ class Napravleniya(models.Model):
                 # получить прайс
                 work_place_link = card.work_place_db
                 price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource, work_place_link)
-
                 for v in res:
+                    print("v", v)
+                    yet_assigned_research = False
+                    if v in list(AUTO_PRINT_RESEARCH_DIRECTION.keys()):
+                        yet_assigned_research = True
+                    print(yet_assigned_research)
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
                     if hospital_department_override == -1 and research.is_hospital:
