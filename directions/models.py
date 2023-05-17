@@ -3,6 +3,7 @@ import calendar
 import collections
 import logging
 import uuid
+from copy import deepcopy
 
 from api.sql_func import dispensarization_research
 from cda.integration import get_required_signatures
@@ -1280,9 +1281,7 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             limit_research_to_assign = {}
-            print(researches)
             for v in researches:  # нормализация исследований
-                print(researches[v])
                 researches_grouped_by_lab.append({v: researches[v]})
 
                 for vv in researches[v]:
@@ -1329,12 +1328,11 @@ class Napravleniya(models.Model):
                 # получить прайс
                 work_place_link = card.work_place_db
                 price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource, work_place_link)
+                if AUTO_PRINT_RESEARCH_DIRECTION:
+                    auto_print_direction_research = deepcopy(AUTO_PRINT_RESEARCH_DIRECTION)
+                    for r in res:
+                        auto_print_direction_research.pop(r, None)
                 for v in res:
-                    print("v", v)
-                    yet_assigned_research = False
-                    if v in list(AUTO_PRINT_RESEARCH_DIRECTION.keys()):
-                        yet_assigned_research = True
-                    print(yet_assigned_research)
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
                     if hospital_department_override == -1 and research.is_hospital:
