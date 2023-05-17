@@ -383,7 +383,7 @@ PRINT_APPENDIX_PAGE_DIRECTION = {}
 HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION = []
 STATISTIC_TYPE_DEPARTMENT = [3]
 CONTROL_AGE_MEDEXAM = {}  # {"male": {40: 30, 39: 31}, "femail": {40: 32, 39: 33}}
-AUTO_PRINT_RESEARCH_DIRECTION = {} # {"research_pk_val": "perid_action_month",}
+AUTO_PRINT_RESEARCH_DIRECTION = {} # {perid_month_ago: "10", "researches": [research_pk, research_pk, research_pk]}
 ECP_SEARCH_PATIENT = {}
 
 try:
