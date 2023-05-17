@@ -1,6 +1,6 @@
 <template>
   <Treeselect
-    v-model="/* eslint-disable-line vue/no-mutating-props */ departId"
+    v-model="departId"
     :multiple="false"
     :disable-branch-nodes="true"
     :options="props.departments"
