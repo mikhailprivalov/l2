@@ -143,11 +143,11 @@ class Bed(models.Model):
 
 
 class PatientToBed(models.Model):
-    direction = models.ForeignKey("directions.Napravleniya", on_delete=models.CASCADE)
-    doctor = models.ForeignKey("users.DoctorProfile", on_delete=models.CASCADE, null=True)
-    bed = models.ForeignKey(Bed, on_delete=models.CASCADE)
+    direction = models.ForeignKey("directions.Napravleniya", db_index=True, on_delete=models.CASCADE)
+    doctor = models.ForeignKey("users.DoctorProfile", db_index=True, on_delete=models.CASCADE, null=True)
+    bed = models.ForeignKey(Bed, db_index=True, on_delete=models.CASCADE)
     date_in = models.DateField(auto_now_add=True)
-    date_out = models.DateField(null=True)
+    date_out = models.DateField(null=True, db_index=True)
 
     def __str__(self):
         return f'{self.direction.client.individual.fio()}'
@@ -170,8 +170,8 @@ class PatientToBed(models.Model):
 
 
 class PatientStationarWithoutBeds(models.Model):
-    direction = models.ForeignKey("directions.Napravleniya", on_delete=models.CASCADE)
-    department = models.ForeignKey(Podrazdeleniya, on_delete=models.CASCADE, null=True)
+    direction = models.ForeignKey("directions.Napravleniya", db_index=True, on_delete=models.CASCADE)
+    department = models.ForeignKey(Podrazdeleniya, db_index=True, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f'{self.direction.client.individual.fio()}'

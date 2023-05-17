@@ -1,12 +1,11 @@
+from laboratory.decorators import group_required
 from django.contrib.auth.decorators import login_required
-from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
 
 import simplejson as json
 from django.http import JsonResponse
 
+from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
 from directions.models import Napravleniya
-
-from clients.models import Individual
 from users.models import DoctorProfile
 
 from utils.response import status_response
@@ -17,15 +16,16 @@ from .sql_func import patients_stationar_unallocated_sql
 
 
 @login_required
+@group_required("Управления палатами")
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
     today = date.today()
     patients = [
         {
-            "fio": f'{patient.family} {patient.name} {patient.patronymic}',
+            "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else None}',
             "age": today.year - patient.birthday.year,
-            "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0]}.',
+            "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else None}.',
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
         } for patient in patients_stationar_unallocated_sql(department_pk)
@@ -34,25 +34,26 @@ def get_unallocated_patients(request):
 
 
 @login_required
+@group_required("Управления палатами")
 def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     chambers = []
-    for i in Chamber.objects.filter(podrazdelenie_id=request_data.get('department_pk', -1)):
+    for ward in Chamber.objects.filter(podrazdelenie_id=request_data.get('department_pk', -1)):
         chamber = {
-            "pk": i.pk,
-            "label": i.title,
+            "pk": ward.pk,
+            "label": ward.title,
             "beds": [],
         }
-        for j in Bed.objects.filter(chamber_id=i.pk):
+        for bed in Bed.objects.filter(chamber_id=ward.pk).prefetch_related('chamber'):
             chamber["beds"].append(
                 {
-                    "pk": j.pk,
-                    "bed_number": j.bed_number,
+                    "pk": bed.pk,
+                    "bed_number": bed.bed_number,
                     "doctor": [],
                     "patient": []
                 }
             )
-            history = PatientToBed.objects.filter(bed_id=j.pk, date_out__isnull=True).last()
+            history = PatientToBed.objects.filter(bed_id=bed.pk, date_out__isnull=True).last()
             if history:
                 direction_obj = Napravleniya.objects.get(pk=history.direction.pk)
                 ind_card = direction_obj.client
@@ -76,6 +77,7 @@ def get_chambers_and_beds(request):
 
 
 @login_required
+@group_required("Управления палатами")
 def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_id = request_data.get('bed_id')
@@ -86,6 +88,7 @@ def entrance_patient_to_bed(request):
 
 
 @login_required
+@group_required("Управления палатами")
 def extract_patient_bed(request):
     request_data = json.loads(request.body)
     direction_pk = request_data.get('patient')
@@ -96,6 +99,7 @@ def extract_patient_bed(request):
 
 
 @login_required
+@group_required("Управления палатами")
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -104,6 +108,7 @@ def get_attending_doctors(request):
 
 
 @login_required
+@group_required("Управления палатами")
 def update_doctor_to_bed(request):
     request_data = json.loads(request.body)
     doctor_obj = request_data.get('doctor')
@@ -112,6 +117,7 @@ def update_doctor_to_bed(request):
 
 
 @login_required
+@group_required("Управления палатами")
 def get_patients_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -120,12 +126,10 @@ def get_patients_without_bed(request):
         direction_obj = Napravleniya.objects.get(pk=patient.direction.pk)
         ind_card = direction_obj.client
         patient_data = ind_card.get_data_individual()
-        individual_obj = Individual.objects.get(family=patient_data["family"])
-        short_fio = individual_obj.fio(short=True, dots=True)
         patients.append(
             {
                 "fio": patient_data["fio"],
-                "short_fio": short_fio,
+                "short_fio": patient_data["short_fio"],
                 "age": patient_data["age"],
                 "sex": patient_data["sex"],
                 "direction_pk": patient.direction_id
@@ -135,16 +139,17 @@ def get_patients_without_bed(request):
 
 
 @login_required
+@group_required("Управления палатами")
 def save_patient_without_bed(request):
     request_data = json.loads(request.body)
-    department_pk = request_data.get('department_pk', -1)
+    department_pk = request_data.get('department_pk')
     patient_obj = request_data.get('patient_obj')
-    if department_pk != -1:
-        PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk).save()
+    PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk).save()
     return status_response(True)
 
 
 @login_required
+@group_required("Управления палатами")
 def delete_patient_without_bed(request):
     request_data = json.loads(request.body)
     patient_obj = request_data.get('patient_obj')

@@ -148,7 +148,7 @@ def menu(request):
                     "url": "/ui/chambers",
                     "title": "Палаты",
                     "nt": False,
-                    "access": ["Палаты"]
+                    "access": ["Управления палатами"]
                 },
                 {"url": '/ui/list-wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
                 {"url": '/ui/doc-call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
