@@ -11,7 +11,6 @@ from users.models import DoctorProfile
 from utils.response import status_response
 
 import datetime
-from datetime import date
 from .sql_func import patients_stationar_unallocated_sql
 
 
@@ -20,11 +19,10 @@ from .sql_func import patients_stationar_unallocated_sql
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    today = date.today()
     patients = [
         {
             "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else None}',
-            "age": today.year - patient.birthday.year,
+            "age": patient.age,
             "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else None}.',
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
@@ -103,7 +101,7 @@ def extract_patient_bed(request):
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    doctors = [{'fio': g.get_full_fio(), 'pk': g.pk, 'highlight': False, 'short_fio': g.get_fio()} for g in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
+    doctors = [{'fio': doctor.get_full_fio(), 'pk': doctor.pk, 'highlight': False, 'short_fio': doctor.get_fio()} for doctor in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
     return JsonResponse({"data": doctors})
 
 

@@ -147,7 +147,7 @@ class PatientToBed(models.Model):
     doctor = models.ForeignKey("users.DoctorProfile", db_index=True, on_delete=models.CASCADE, null=True)
     bed = models.ForeignKey(Bed, db_index=True, on_delete=models.CASCADE)
     date_in = models.DateField(auto_now_add=True)
-    date_out = models.DateField(null=True, db_index=True)
+    date_out = models.DateField(null=True)
 
     def __str__(self):
         return f'{self.direction.client.individual.fio()}'
