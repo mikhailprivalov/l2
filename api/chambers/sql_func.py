@@ -12,7 +12,8 @@ def patients_stationar_unallocated_sql(department_id):
                 patronymic, 
                 sex, 
                 napravleniye_id,
-                birthday 
+                birthday,
+                date_part('year', age(birthday))::int AS age
                 FROM directions_issledovaniya 
                 INNER JOIN directions_napravleniya ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
                 INNER JOIN clients_card ON directions_napravleniya.client_id=clients_card.id

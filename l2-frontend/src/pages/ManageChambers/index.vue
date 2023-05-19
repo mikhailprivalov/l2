@@ -407,7 +407,8 @@ const conditionsDragBed = (bed) => {
 };
 
 const clearArrayDoctor = (bed) => {
-  bed.doctor.pop();
+  // eslint-disable-next-line no-param-reassign
+  bed.doctor = bed.doctor.filter(doctor => !bed.doctor.includes(doctor));
 };
 
 const changeColorWomen = (patient) => (patient.sex === 'ж');
