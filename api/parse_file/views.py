@@ -10,16 +10,20 @@ from api.models import Application
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
 
+from api.patients.sql_func import search_cards_by_numbers
 from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company, MedicalExamination
+from directory.models import SetOrderResearch
+from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
 from ecp_integration.integration import fill_slot_from_xlsx
 from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
+from results.sql_func import check_lab_instrumental_results_by_cards_and_period
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
 from users.models import AssignmentResearches
-from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase
+from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, Document, DocumentType
 from integration_framework.views import check_enp
 from utils.dates import age_for_year, normalize_dots_date
 
@@ -369,30 +373,59 @@ def write_patient_ecp(request):
     return file_name
 
 
-def data_research_exam_patient(request, research_set):
+def data_research_exam_patient(request, set_research):
     file_data = request.FILES['file']
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
     starts = False
     patients = []
-    print(DAYS_AGO_SEARCH_RESULT.get("isLab"))
-    print(DAYS_AGO_SEARCH_RESULT.get("isInstrumental"))
+    set_research_d = SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
+    head_data = {i.research_id: i.research.title for i in set_research_d}
+    patients_data = {}
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
-            if "врач" in cells:
+            if "снилс" in cells:
                 starts = True
                 family = cells.index("фaмилия")
                 name = cells.index("имя")
                 patronymic = cells.index("отчество")
                 born = cells.index("дата рождения")
                 snils = cells.index("снилс")
+                starts = True
         else:
             born_data = cells[born].split(" ")[0]
             if "." in born_data:
                 born_data = normalize_dots_date(born_data)
-            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data, "snils": snils}
+            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data}
+            patients_data[cells[snils]] = patient
+    doc_type = DocumentType.objects.filter(title='СНИЛС').first()
+    patient_cards = search_cards_by_numbers(tuple(patients_data.keys()), doc_type.id)
+    cards_id = [i.card_id for i in patient_cards]
+    researches_id = [i.research_id for i in set_research_d]
 
-    file_name = data_xls_save_file(patients, "Запись")
-    return file_name
+    is_paraclinic_researches = is_paraclinic_filter_research(tuple(researches_id))
+    paraclinic_researches = [i.research_id for i in is_paraclinic_researches]
 
+    is_lab_research = is_lab_filter_research(tuple(researches_id))
+    lab_research = [i.research_id for i in is_lab_research]
+
+    lab_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isLab")
+    instrumental_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isInstrumental")
+    patient_results = check_lab_instrumental_results_by_cards_and_period(
+        tuple(cards_id),
+        lab_days_ago_confirm,
+        instrumental_days_ago_confirm,
+        tuple(lab_research),
+        tuple(paraclinic_researches)
+    )
+    for pr in patient_results:
+        print(pr)
+
+
+
+
+    # for i in result:
+    #     print(i.card_number, i.card_id)
+    # file_name = data_xls_save_file(patients, "Запись")
+    return "s"
