@@ -177,6 +177,11 @@ export default {
       default: 'Загрузка файла',
       required: false,
     },
+    researchSet: {
+      type: Number,
+      default: -1,
+      required: false,
+    },
   },
   data() {
     return {
@@ -235,6 +240,7 @@ export default {
         formData.append('isWritePatientEcp', this.isWritePatientEcp);
         formData.append('isLoadGroupForProtocol', this.isLoadGroupForProtocol);
         formData.append('researchId', this.researchId);
+        formData.append('researchSet', this.researchSet);
         if (this.isLoadGroupForProtocol) {
           this.$emit('load-file', this.contentLoadGroupForProtocol);
           this.open = false;

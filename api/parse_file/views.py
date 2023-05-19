@@ -16,7 +16,7 @@ from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company, MedicalExamination
 from ecp_integration.integration import fill_slot_from_xlsx
-from laboratory.settings import CONTROL_AGE_MEDEXAM
+from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
 from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase
@@ -161,6 +161,10 @@ def load_file(request):
         link = "open-xls"
     elif request.POST.get('isWritePatientEcp') == "true":
         results = write_patient_ecp(request)
+        link = "open-xls"
+    elif request.POST.get('researchSet') != "-1":
+        research_set = int(request.POST.get('researchSet'))
+        results = data_research_exam_patient(request, research_set)
         link = "open-xls"
     elif len(request.POST.get('companyInn')) != 0:
         results = add_factors_from_file(request)
@@ -363,3 +367,32 @@ def write_patient_ecp(request):
             patients.append({**patient, "is_write": is_write, "doctor": cells[doctor], "message": message})
     file_name = data_xls_save_file(patients, "Запись")
     return file_name
+
+
+def data_research_exam_patient(request, research_set):
+    file_data = request.FILES['file']
+    wb = load_workbook(filename=file_data)
+    ws = wb[wb.sheetnames[0]]
+    starts = False
+    patients = []
+    print(DAYS_AGO_SEARCH_RESULT.get("isLab"))
+    print(DAYS_AGO_SEARCH_RESULT.get("isInstrumental"))
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "врач" in cells:
+                starts = True
+                family = cells.index("фaмилия")
+                name = cells.index("имя")
+                patronymic = cells.index("отчество")
+                born = cells.index("дата рождения")
+                snils = cells.index("снилс")
+        else:
+            born_data = cells[born].split(" ")[0]
+            if "." in born_data:
+                born_data = normalize_dots_date(born_data)
+            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data, "snils": snils}
+
+    file_name = data_xls_save_file(patients, "Запись")
+    return file_name
+
