@@ -61,7 +61,7 @@ def check_confirm_patient_research(client_id, researches, months_ago):
             AND directions_issledovaniya.time_confirmation BETWEEN (NOW() - interval '%(months_ago)s month')  AND (NOW())
             ORDER BY directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation DESC
             """,
-            params={'client_id': client_id, 'researches': researches,  'months_ago': months_ago, 'tz': TIME_ZONE},
+            params={'client_id': client_id, 'researches': researches, 'months_ago': months_ago, 'tz': TIME_ZONE},
         )
         rows = namedtuplefetchall(cursor)
     return rows

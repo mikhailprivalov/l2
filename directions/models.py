@@ -3,7 +3,6 @@ import calendar
 import collections
 import logging
 import uuid
-from copy import deepcopy
 
 from api.sql_func import dispensarization_research
 from cda.integration import get_required_signatures

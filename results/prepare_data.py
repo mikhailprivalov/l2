@@ -723,7 +723,6 @@ def microbiology_result(iss, fwb, doc):
         fwb.append(t)
         fwb.append(Paragraph("<font size='7'>S – чувствителен; R – резистентен; I – промежуточная чувствительность</font>", style))
         fwb.append(Spacer(1, 2 * mm))
-        print(culture.comments)
         if culture.comments:
             fwb.append(Paragraph("<font size='8'>{}</font>".format(culture.comments.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")), style))
             fwb.append(Spacer(1, 2 * mm))
