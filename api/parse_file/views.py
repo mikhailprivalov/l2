@@ -378,7 +378,6 @@ def data_research_exam_patient(request, set_research):
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
     starts = False
-    patients = []
     set_research_d = SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
     head_data = {i.research_id: i.research.title for i in set_research_d}
     patients_data = {}
@@ -404,6 +403,17 @@ def data_research_exam_patient(request, set_research):
     cards_id = [i.card_id for i in patient_cards]
     researches_id = [i.research_id for i in set_research_d]
 
+    purpose_research = {i: 0 for i in head_data.keys()}
+    meta_patients = {
+        pc.card_id: {
+            "card_num": pc.card_number,
+            "snils": pc.document_number,
+            "researches": purpose_research,
+            "fio": f"{pc.family} {pc.name} {pc.patronymic}",
+            "district": pc.district_title
+        } for pc in patient_cards
+    }
+
     is_paraclinic_researches = is_paraclinic_filter_research(tuple(researches_id))
     paraclinic_researches = [i.research_id for i in is_paraclinic_researches]
 
@@ -420,12 +430,9 @@ def data_research_exam_patient(request, set_research):
         tuple(paraclinic_researches)
     )
     for pr in patient_results:
-        print(pr)
+        meta_patients[pr.client_id]["researches"][pr.research_id] = 1
 
+    file_name = data_xls_save_file(meta_patients, head_data)
+    return file_name
 
-
-
-    # for i in result:
-    #     print(i.card_number, i.card_id)
-    # file_name = data_xls_save_file(patients, "Запись")
     return "s"
