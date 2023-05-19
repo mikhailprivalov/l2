@@ -79,7 +79,7 @@ def check_create_direction_patient_by_research(client_id, researches, months_ago
             ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id 
             WHERE directions_napravleniya.client_id = %(client_id)s
             AND directions_issledovaniya.research_id in %(researches)s 
-            AND directions_issledovaniya.time_confirmation BETWEEN (NOW() - interval '%(months_ago)s month')  AND (NOW())
+            AND directions_napravleniya.data_sozdaniya BETWEEN (NOW() - interval '%(months_ago)s month')  AND (NOW())
             ORDER BY directions_issledovaniya.research_id, directions_napravleniya.data_sozdaniya DESC
             """,
             params={'client_id': client_id, 'researches': researches,  'months_ago': months_ago, 'tz': TIME_ZONE},
