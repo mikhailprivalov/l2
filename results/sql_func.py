@@ -182,7 +182,7 @@ def check_lab_instrumental_results_by_cards_and_period(cards_id, lab_days_ago_co
                 'lab_days_ago_confirm': lab_days_ago_confirm,
                 'paraclinic_days_ago_confirm': paraclinic_days_ago_confirm,
                 'lab_researches': lab_researches,
-                'paraclinic_researches': paraclinic_researches
+                'paraclinic_researches': paraclinic_researches,
             },
         )
         rows = namedtuplefetchall(cursor)
