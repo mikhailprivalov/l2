@@ -24,7 +24,7 @@ from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
 from users.models import AssignmentResearches
-from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, Document, DocumentType
+from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, DocumentType
 from integration_framework.views import check_enp
 from utils.dates import age_for_year, normalize_dots_date
 
