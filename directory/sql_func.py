@@ -24,7 +24,7 @@ def is_lab_filter_research(reserches_id):
         cursor.execute(
             """
                 SELECT
-                  directory_researches.id as research_id
+                directory_researches.id as research_id
                 FROM directory_researches
                 LEFT JOIN podrazdeleniya_podrazdeleniya pp on directory_researches.podrazdeleniye_id = pp.id
                 WHERE directory_researches.id in %(reserches_id)s AND
