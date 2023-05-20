@@ -425,11 +425,7 @@ def data_research_exam_patient(request, set_research):
     lab_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isLab")
     instrumental_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isInstrumental")
     patient_results = check_lab_instrumental_results_by_cards_and_period(
-        tuple(cards_id),
-        lab_days_ago_confirm,
-        instrumental_days_ago_confirm,
-        tuple(lab_research),
-        tuple(paraclinic_researches)
+        tuple(cards_id), lab_days_ago_confirm, instrumental_days_ago_confirm, tuple(lab_research), tuple(paraclinic_researches)
     )
     for pr in patient_results:
         meta_patients[pr.client_id]["researches"][pr.research_id] = 1
