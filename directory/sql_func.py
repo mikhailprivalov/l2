@@ -19,7 +19,6 @@ def is_paraclinic_filter_research(reserches_id):
     return rows
 
 
-
 def is_lab_filter_research(reserches_id):
     with connection.cursor() as cursor:
         cursor.execute(
