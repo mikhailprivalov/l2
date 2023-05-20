@@ -2,6 +2,7 @@ import csv
 import io
 import re
 import tempfile
+from copy import deepcopy
 
 from django.http import HttpRequest, JsonResponse
 
@@ -21,7 +22,7 @@ from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_rese
 from ecp_integration.integration import fill_slot_from_xlsx
 from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
-from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
+from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
 from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, Document, DocumentType
 from integration_framework.views import check_enp
@@ -379,7 +380,7 @@ def data_research_exam_patient(request, set_research):
     ws = wb[wb.sheetnames[0]]
     starts = False
     set_research_d = SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
-    head_data = {i.research_id: i.research.title for i in set_research_d}
+    head_research_data = {i.research_id: i.research.title for i in set_research_d}
     patients_data = {}
     for row in ws.rows:
         cells = [str(x.value) for x in row]
@@ -403,12 +404,12 @@ def data_research_exam_patient(request, set_research):
     cards_id = [i.card_id for i in patient_cards]
     researches_id = [i.research_id for i in set_research_d]
 
-    purpose_research = {i: 0 for i in head_data.keys()}
+    purpose_research = {i: 0 for i in head_research_data.keys()}
     meta_patients = {
         pc.card_id: {
             "card_num": pc.card_number,
             "snils": pc.document_number,
-            "researches": purpose_research,
+            "researches": deepcopy(purpose_research),
             "fio": f"{pc.family} {pc.name} {pc.patronymic}",
             "district": pc.district_title
         } for pc in patient_cards
@@ -432,7 +433,8 @@ def data_research_exam_patient(request, set_research):
     for pr in patient_results:
         meta_patients[pr.client_id]["researches"][pr.research_id] = 1
 
-    file_name = data_xls_save_file(meta_patients, head_data)
-    return file_name
+    head_data = {"num_card": "№ карты", "district": "участок", "family": "Фамилия", "name": "имя", "patronymic": "отчество", "current_age": "возраст текущий",
+                 "year_age": "возраст в году", **head_research_data}
 
-    return "s"
+    file_name = data_xls_save_headers_file(meta_patients, head_data, "Пройденые услуги", "fill_xls_check_research_exam_data")
+    return file_name
