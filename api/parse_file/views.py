@@ -430,8 +430,16 @@ def data_research_exam_patient(request, set_research):
     for pr in patient_results:
         meta_patients[pr.client_id]["researches"][pr.research_id] = 1
 
-    head_data = {"num_card": "№ карты", "district": "участок", "family": "Фамилия", "name": "имя", "patronymic": "отчество", "current_age": "возраст текущий",
-                 "year_age": "возраст в году", **head_research_data}
+    head_data = {
+        "num_card": "№ карты",
+        "district": "участок",
+        "family": "Фамилия",
+        "name": "имя",
+        "patronymic": "отчество",
+        "current_age": "возраст текущий",
+        "year_age": "возраст в году",
+        **head_research_data,
+    }
 
     file_name = data_xls_save_headers_file(meta_patients, head_data, "Пройденые услуги", "fill_xls_check_research_exam_data")
     return file_name
