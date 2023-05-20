@@ -411,8 +411,9 @@ def data_research_exam_patient(request, set_research):
             "snils": pc.document_number,
             "researches": deepcopy(purpose_research),
             "fio": f"{pc.family} {pc.name} {pc.patronymic}",
-            "district": pc.district_title
-        } for pc in patient_cards
+            "district": pc.district_title,
+        }
+        for pc in patient_cards
     }
 
     is_paraclinic_researches = is_paraclinic_filter_research(tuple(researches_id))
