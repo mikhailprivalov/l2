@@ -411,8 +411,9 @@ def data_research_exam_patient(request, set_research):
             "snils": pc.document_number,
             "researches": deepcopy(purpose_research),
             "fio": f"{pc.family} {pc.name} {pc.patronymic}",
-            "district": pc.district_title
-        } for pc in patient_cards
+            "district": pc.district_title,
+        }
+        for pc in patient_cards
     }
 
     is_paraclinic_researches = is_paraclinic_filter_research(tuple(researches_id))
@@ -424,17 +425,21 @@ def data_research_exam_patient(request, set_research):
     lab_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isLab")
     instrumental_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isInstrumental")
     patient_results = check_lab_instrumental_results_by_cards_and_period(
-        tuple(cards_id),
-        lab_days_ago_confirm,
-        instrumental_days_ago_confirm,
-        tuple(lab_research),
-        tuple(paraclinic_researches)
+        tuple(cards_id), lab_days_ago_confirm, instrumental_days_ago_confirm, tuple(lab_research), tuple(paraclinic_researches)
     )
     for pr in patient_results:
         meta_patients[pr.client_id]["researches"][pr.research_id] = 1
 
-    head_data = {"num_card": "№ карты", "district": "участок", "family": "Фамилия", "name": "имя", "patronymic": "отчество", "current_age": "возраст текущий",
-                 "year_age": "возраст в году", **head_research_data}
+    head_data = {
+        "num_card": "№ карты",
+        "district": "участок",
+        "family": "Фамилия",
+        "name": "имя",
+        "patronymic": "отчество",
+        "current_age": "возраст текущий",
+        "year_age": "возраст в году",
+        **head_research_data,
+    }
 
     file_name = data_xls_save_headers_file(meta_patients, head_data, "Пройденые услуги", "fill_xls_check_research_exam_data")
     return file_name

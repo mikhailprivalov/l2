@@ -83,4 +83,3 @@ def fill_xls_check_research_exam_data(ws1, value_data):
             column += 1
             ws1.cell(row=r, column=column).value = v
     return ws1
-
