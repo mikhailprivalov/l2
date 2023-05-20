@@ -348,7 +348,7 @@
           <div v-if="checkReportParam(PARAMS_TYPES.LOAD_FILE)">
             <LoadFile
               title-button="Загрузить из файла"
-              file-filter="application/excel"
+              file-filter="XLSX"
               :research-set="values.researchSet"
               tag="div"
             />
