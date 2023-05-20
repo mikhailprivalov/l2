@@ -2,6 +2,7 @@ import csv
 import io
 import re
 import tempfile
+from copy import deepcopy
 
 from django.http import HttpRequest, JsonResponse
 
@@ -10,16 +11,20 @@ from api.models import Application
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
 
+from api.patients.sql_func import search_cards_by_numbers
 from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company, MedicalExamination
+from directory.models import SetOrderResearch
+from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
 from ecp_integration.integration import fill_slot_from_xlsx
-from laboratory.settings import CONTROL_AGE_MEDEXAM
-from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
+from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
+from results.sql_func import check_lab_instrumental_results_by_cards_and_period
+from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
 from users.models import AssignmentResearches
-from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase
+from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, DocumentType
 from integration_framework.views import check_enp
 from utils.dates import age_for_year, normalize_dots_date
 
@@ -161,6 +166,10 @@ def load_file(request):
         link = "open-xls"
     elif request.POST.get('isWritePatientEcp') == "true":
         results = write_patient_ecp(request)
+        link = "open-xls"
+    elif request.POST.get('researchSet') != "-1":
+        research_set = int(request.POST.get('researchSet'))
+        results = data_research_exam_patient(request, research_set)
         link = "open-xls"
     elif len(request.POST.get('companyInn')) != 0:
         results = add_factors_from_file(request)
@@ -362,4 +371,75 @@ def write_patient_ecp(request):
                     message = result.get('message', '')
             patients.append({**patient, "is_write": is_write, "doctor": cells[doctor], "message": message})
     file_name = data_xls_save_file(patients, "Запись")
+    return file_name
+
+
+def data_research_exam_patient(request, set_research):
+    file_data = request.FILES['file']
+    wb = load_workbook(filename=file_data)
+    ws = wb[wb.sheetnames[0]]
+    starts = False
+    set_research_d = SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
+    head_research_data = {i.research_id: i.research.title for i in set_research_d}
+    patients_data = {}
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "снилс" in cells:
+                starts = True
+                family = cells.index("фaмилия")
+                name = cells.index("имя")
+                patronymic = cells.index("отчество")
+                born = cells.index("дата рождения")
+                snils = cells.index("снилс")
+                starts = True
+        else:
+            born_data = cells[born].split(" ")[0]
+            if "." in born_data:
+                born_data = normalize_dots_date(born_data)
+            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data}
+            patients_data[cells[snils]] = patient
+    doc_type = DocumentType.objects.filter(title='СНИЛС').first()
+    patient_cards = search_cards_by_numbers(tuple(patients_data.keys()), doc_type.id)
+    cards_id = [i.card_id for i in patient_cards]
+    researches_id = [i.research_id for i in set_research_d]
+
+    purpose_research = {i: 0 for i in head_research_data.keys()}
+    meta_patients = {
+        pc.card_id: {
+            "card_num": pc.card_number,
+            "snils": pc.document_number,
+            "researches": deepcopy(purpose_research),
+            "fio": f"{pc.family} {pc.name} {pc.patronymic}",
+            "district": pc.district_title,
+        }
+        for pc in patient_cards
+    }
+
+    is_paraclinic_researches = is_paraclinic_filter_research(tuple(researches_id))
+    paraclinic_researches = [i.research_id for i in is_paraclinic_researches]
+
+    is_lab_research = is_lab_filter_research(tuple(researches_id))
+    lab_research = [i.research_id for i in is_lab_research]
+
+    lab_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isLab")
+    instrumental_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isInstrumental")
+    patient_results = check_lab_instrumental_results_by_cards_and_period(
+        tuple(cards_id), lab_days_ago_confirm, instrumental_days_ago_confirm, tuple(lab_research), tuple(paraclinic_researches)
+    )
+    for pr in patient_results:
+        meta_patients[pr.client_id]["researches"][pr.research_id] = 1
+
+    head_data = {
+        "num_card": "№ карты",
+        "district": "участок",
+        "family": "Фамилия",
+        "name": "имя",
+        "patronymic": "отчество",
+        "current_age": "возраст текущий",
+        "year_age": "возраст в году",
+        **head_research_data,
+    }
+
+    file_name = data_xls_save_headers_file(meta_patients, head_data, "Пройденые услуги", "fill_xls_check_research_exam_data")
     return file_name
