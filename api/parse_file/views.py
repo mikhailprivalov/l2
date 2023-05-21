@@ -161,17 +161,18 @@ def add_factors_from_file(request):
 
 def load_file(request):
     link = ""
-    if request.POST.get('isGenCommercialOffer') == "true":
+    req_data = dict(request.POST)
+    if req_data.get('isGenCommercialOffer')[0] == "true":
         results = gen_commercial_offer(request)
         link = "open-xls"
-    elif request.POST.get('isWritePatientEcp') == "true":
+    elif req_data.get('isWritePatientEcp')[0] == "true":
         results = write_patient_ecp(request)
         link = "open-xls"
-    elif request.POST.get('researchSet') != "-1":
-        research_set = int(request.POST.get('researchSet'))
+    elif req_data.get('researchSet')[0] != "-1":
+        research_set = int(req_data.get('researchSet')[0])
         results = data_research_exam_patient(request, research_set)
         link = "open-xls"
-    elif len(request.POST.get('companyInn')) != 0:
+    elif len(req_data.get('companyInn')[0]) != 0:
         results = add_factors_from_file(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
     else:
@@ -379,6 +380,7 @@ def data_research_exam_patient(request, set_research):
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
     starts = False
+    # set_research = request.POST.get['set_research']
     set_research_d = SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
     head_research_data = {i.research_id: i.research.title for i in set_research_d}
     patients_data = {}
@@ -428,7 +430,8 @@ def data_research_exam_patient(request, set_research):
         tuple(cards_id), lab_days_ago_confirm, instrumental_days_ago_confirm, tuple(lab_research), tuple(paraclinic_researches)
     )
     for pr in patient_results:
-        meta_patients[pr.client_id]["researches"][pr.research_id] = 1
+        if meta_patients.get(pr.client_id):
+            meta_patients[pr.client_id]["researches"][pr.research_id] = 1
 
     head_data = {
         "num_card": "№ карты",
