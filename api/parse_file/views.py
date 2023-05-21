@@ -27,6 +27,7 @@ from users.models import AssignmentResearches
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, DocumentType
 from integration_framework.views import check_enp
 from utils.dates import age_for_year, normalize_dots_date
+from django.views.decorators.csrf import csrf_exempt
 
 
 def dnk_covid(request):
@@ -158,7 +159,7 @@ def add_factors_from_file(request):
 
     return incorrect_patients
 
-
+@csrf_exempt
 def load_file(request):
     link = ""
     req_data = dict(request.POST)
@@ -169,6 +170,7 @@ def load_file(request):
         results = write_patient_ecp(request)
         link = "open-xls"
     elif req_data.get('researchSet')[0] != "-1":
+        print(req_data.get('researchSet')[0])
         research_set = int(req_data.get('researchSet')[0])
         results = data_research_exam_patient(request, research_set)
         link = "open-xls"
