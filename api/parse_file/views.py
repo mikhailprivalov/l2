@@ -380,7 +380,6 @@ def data_research_exam_patient(request, set_research):
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
     starts = False
-    # set_research = request.POST.get['set_research']
     set_research_d = SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
     head_research_data = {i.research_id: i.research.title for i in set_research_d}
     patients_data = {}
