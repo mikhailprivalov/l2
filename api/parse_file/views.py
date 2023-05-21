@@ -159,6 +159,7 @@ def add_factors_from_file(request):
 
     return incorrect_patients
 
+
 @csrf_exempt
 def load_file(request):
     link = ""
@@ -170,7 +171,6 @@ def load_file(request):
         results = write_patient_ecp(request)
         link = "open-xls"
     elif req_data.get('researchSet')[0] != "-1":
-        print(req_data.get('researchSet')[0])
         research_set = int(req_data.get('researchSet')[0])
         results = data_research_exam_patient(request, research_set)
         link = "open-xls"
