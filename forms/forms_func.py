@@ -815,7 +815,6 @@ def hosp_extract_get_data(hosp_last_num):
             if i[3] == 'Отметка о выдаче листка нетрудоспособности':
                 ln_data = i[2]
 
-
     doc_fio = doc_confirm.get_fio()
     return {
         'date_value': date_value,
