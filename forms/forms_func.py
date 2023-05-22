@@ -836,7 +836,7 @@ def hosp_extract_get_data(hosp_last_num):
         'transfer_to': transfer_to,
         'ln_data': ln_data,
         'ln_vk_data': ln_vk_data,
-        'additional_data_ill': additional_data_ill
+        'additional_data_ill': additional_data_ill,
     }
 
 
