@@ -468,7 +468,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
     all_hospitalized, type_trauma, blood_group, resus_factor = '', '', '', ''
     weight = ''
     final_diagnos, other_diagnos, near_diagnos, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', ''
-    ext_direction_number, ext_direction_date, direction_diagnos, direction_mkb_diagnos, once_again = "", "", "", "", ""
+    ext_direction_number, ext_direction_date, direction_diagnos, direction_mkb_diagnos = "", "", "", ""
     external_reason_mkb, additional_data_ill = "", ""
     tuberculosis, hiv_infection, viral_infections, covid19, syphilis, pediculosis, result_pediculosis_exam = "", "", "", "", "", "", ""
     allergic_reactions, preliminary_diagnosis = "", ""
@@ -596,7 +596,6 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
                     except:
                         near_diagnos_mkb_details = {}
                 near_diagnos_mkb_row = near_diagnos_mkb_details.get("rows", [])
-                print("near_diagnos_mkb_row", near_diagnos_mkb_row)
                 near_diagnos_mkb = []
                 for rr in near_diagnos_mkb_row:
                     near_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')}. {rr[1] if len(rr) > 1 else '' }"})
@@ -727,7 +726,7 @@ def hosp_extract_get_data(hosp_last_num):
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
-    final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
+    final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb, additional_data_ill = '', '', '', '', '', '', '', ''
     days_count, result_hospital, manager_depart, room_num, transfer_to = '', '', '', '', ''
     ln_data, ln_vk_data = '', ''
 
@@ -840,6 +839,7 @@ def hosp_extract_get_data(hosp_last_num):
         'transfer_to': transfer_to,
         'ln_data': ln_data,
         'ln_vk_data': ln_vk_data,
+        'additional_data_ill': 'additional_data_ill'
     }
 
 
