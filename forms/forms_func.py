@@ -548,8 +548,6 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Сопутствующий диагноз по МКБ':
                 near_diagnos_mkb = str(i[2]).split(' ')[0]
-
-
             if i[3] == 'Время через, которое доставлен после начала заболевания, получения травмы':
                 time_start_ill = i[2]
             if i[3] == 'Номер направления':
@@ -839,7 +837,7 @@ def hosp_extract_get_data(hosp_last_num):
         'transfer_to': transfer_to,
         'ln_data': ln_data,
         'ln_vk_data': ln_vk_data,
-        'additional_data_ill': 'additional_data_ill'
+        'additional_data_ill': additional_data_ill
     }
 
 
