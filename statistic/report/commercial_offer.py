@@ -38,10 +38,11 @@ def offer_fill_data(ws1, result_query):
     start_row = r + 1
     for i in result_query:
         r += 1
-        ws1.cell(row=r, column=1).value = i.get("title", "")
-        ws1.cell(row=r, column=2).value = i.get("count", 0)
-        ws1.cell(row=r, column=3).value = float(i.get("coast", 0))
-        ws1.cell(row=r, column=4).value = f'= {get_column_letter(2)}{r} * {get_column_letter(3)}{r}'
+        ws1.cell(row=r, column=1).value = i.get("code", "")
+        ws1.cell(row=r, column=2).value = i.get("title", "")
+        ws1.cell(row=r, column=3).value = i.get("count", 0)
+        ws1.cell(row=r, column=4).value = float(i.get("coast", 0))
+        ws1.cell(row=r, column=5).value = f'= {get_column_letter(2)}{r} * {get_column_letter(3)}{r}'
 
         for j in range(1, 5):
             ws1.cell(row=r, column=j).style = style_border1
