@@ -950,11 +950,13 @@ def form_02(request_data):
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph(f"Исход госпитализации: {outcome}", style))
     title_page.append(Spacer(1, 2 * mm))
-    title_page.append(Paragraph(
-        "Наименование медицинской	организации	(фамилия,	имя, отчество (при наличии) индивидуального предпринимателя, осуществляющего медицинскую деятельность), "
-        f"куда переведен пациент {hosp_extract_data['transfer_to']}",
-        style,
-    ))
+    title_page.append(
+        Paragraph(
+            "Наименование медицинской	организации	(фамилия,	имя, отчество (при наличии) индивидуального предпринимателя, осуществляющего медицинскую деятельность), "
+            f"куда переведен пациент {hosp_extract_data['transfer_to']}",
+            style,
+        )
+    )
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph(f"Результат госпитализации: {result_hospital}", style))
     title_page.append(Spacer(1, 2 * mm))
