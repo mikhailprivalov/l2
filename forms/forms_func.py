@@ -455,6 +455,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
         'Аллергические реакции',
         'Дата установления диагноза',
         'Время установления диагноза',
+        'Кому доверяю'
     ]
     list_values = None
     if titles_field and hosp_primary_receptions:
@@ -472,6 +473,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
     tuberculosis, hiv_infection, viral_infections, covid19, syphilis, pediculosis, result_pediculosis_exam = "", "", "", "", "", "", ""
     allergic_reactions, preliminary_diagnosis = "", ""
     date_diagnosis, time_diagnosis = "", ""
+    whom_transfer_health_data = ""
 
     if list_values:
         for i in list_values:
@@ -634,6 +636,8 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
                 date_diagnosis = normalize_date(i[2])
             if i[3] == "Время установления диагноза":
                 time_diagnosis = i[2]
+            if i[3] == "Кому доверяю":
+                whom_transfer_health_data = i[2]
 
     return {
         'date_entered_value': date_entered_value,
@@ -679,6 +683,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
         'preliminary_diagnosis': preliminary_diagnosis,
         'date_diagnosis': date_diagnosis,
         'time_diagnosis': time_diagnosis,
+        'whom_transfer_health_data': whom_transfer_health_data,
     }
 
 
@@ -715,6 +720,8 @@ def hosp_extract_get_data(hosp_last_num):
         'Внешняя причина при травмах, отравлениях код по МКБ',
         'Дополнительные сведения о заболевании',
         'Куда переведен',
+        'Отметка о выдаче листка нетрудоспособности',
+        'Отметка о выдаче листка нетрудоспособности через врачебную комиссию',
     ]
     list_values = None
     if titles_field and hosp_extract:
@@ -722,6 +729,7 @@ def hosp_extract_get_data(hosp_last_num):
     date_value, time_value = '', ''
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
     days_count, result_hospital, manager_depart, room_num, transfer_to = '', '', '', '', ''
+    ln_data, ln_vk_data = '', ''
 
     if list_values:
         for i in list_values:
@@ -805,6 +813,11 @@ def hosp_extract_get_data(hosp_last_num):
                 additional_data_ill = i[2]
             if i[3] == 'Куда переведен':
                 transfer_to = i[2]
+            if i[3] == 'Отметка о выдаче листка нетрудоспособности через врачебную комиссию':
+                ln_vk_data = i[2]
+            if i[3] == 'Отметка о выдаче листка нетрудоспособности':
+                ln_data = i[2]
+
 
     doc_fio = doc_confirm.get_fio()
     return {
@@ -825,6 +838,8 @@ def hosp_extract_get_data(hosp_last_num):
         'manager_depart': manager_depart,
         'room_num': room_num,
         'transfer_to': transfer_to,
+        'ln_data': ln_data,
+        'ln_vk_data': ln_vk_data,
     }
 
 
