@@ -546,14 +546,11 @@ def form_01(request_data):
 
         canvas.setFont("PTAstraSerifBold", 8)
         hospital: Hospitals = request_data["hospital"]
-
         hospital_name = hospital.safe_short_title
-
         canvas.drawString(55 * mm, 12 * mm, "{}".format(hospital_name))
         canvas.drawString(55 * mm, 9 * mm, "№ карты : {}; Номер истории: {}".format(p_card_num, hosp_nums))
         canvas.drawString(55 * mm, 6 * mm, "Пациент: {} {}".format(patient_data["fio"], patient_data["born"]))
         canvas.line(55 * mm, 11.5 * mm, 200 * mm, 11.5 * mm)
-
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
@@ -686,17 +683,10 @@ def form_02(request_data):
 
     extrac_date, extract_time, final_diagnos, other_diagnos, near_diagnos, outcome = "", "", "", "", "", ""
     days_count = "__________________________"
-    final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = "", "", ""
     result_hospital = ""
     if hosp_extract_data:
         extrac_date = hosp_extract_data["date_value"]
         extract_time = hosp_extract_data["time_value"]
-        final_diagnos = hosp_extract_data["final_diagnos"]
-        final_diagnos_mkb = hosp_extract_data["final_diagnos_mkb"]
-        other_diagnos = hosp_extract_data["other_diagnos"]
-        other_diagnos_mkb = hosp_extract_data["other_diagnos_mkb"]
-        near_diagnos = hosp_extract_data["near_diagnos"]
-        near_diagnos_mkb = hosp_extract_data["near_diagnos_mkb"]
         days_count = hosp_extract_data["days_count"]
         if hosp_extract_data["outcome"]:
             outcome = hosp_extract_data["outcome"]
@@ -819,19 +809,19 @@ def form_02(request_data):
         )
     )
     title_page.append(Spacer(1, 2.0 * mm))
-    title_page.append(Paragraph(f"Основное заболевание:", style)),
+    title_page.append(Paragraph("Основное заболевание:", style)),
     for i in primary_reception_data["final_diagnos_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2.0 * mm))
-    title_page.append(Paragraph(f"Осложнения основного заболевания: ", style))
+    title_page.append(Paragraph("Осложнения основного заболевания: ", style))
     for i in primary_reception_data["other_diagnos_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2.0 * mm))
-    title_page.append(Paragraph(f"Внешняя причина при травмах, отравлениях:", style))
+    title_page.append(Paragraph("Внешняя причина при травмах, отравлениях:", style))
     for i in primary_reception_data["external_reason_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')}  {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2.0 * mm))
-    title_page.append(Paragraph(f"Сопутствующие заболевания:", style))
+    title_page.append(Paragraph("Сопутствующие заболевания:", style))
     for i in primary_reception_data["near_diagnos_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
 
