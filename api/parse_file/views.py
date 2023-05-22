@@ -228,7 +228,7 @@ def gen_commercial_offer(request):
             patients.append({"fio": cells[fio], "born": born_data, "harmful_factor": cells[harmful_factor], "position": cells[position], "researches": researches_data, "age": age})
 
     price_data = PriceCoast.objects.filter(price_name__id=selected_price, research_id__in=list(counts_research.keys()))
-    data_price = [{'title': k.research.title, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
+    data_price = [{'title': k.research.title, 'code': k.research.code, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
     research_price = {d.research.pk: f"{d.research.title}@{d.coast}" for d in price_data}
     file_name = commercial_offer_xls_save_file(data_price, patients, research_price)
     return file_name
