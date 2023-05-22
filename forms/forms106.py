@@ -860,7 +860,7 @@ def form_02(request_data):
     title_page.append(Paragraph(f"{bold_open}Диагноз клинический, установленный в стационаре:{bold_close}", style))
     title_page.append(Paragraph(f"Дата и время установления клинического диагноза: {clinical_diagnos['date_diagnosis']}г. время: {clinical_diagnos['time_diagnosis']}", style))
     title_page.append(Spacer(1, 2 * mm))
-    title_page.append(Paragraph(f"Основное заболевание:", style))
+    title_page.append(Paragraph("Основное заболевание:", style))
     for i in clinical_diagnos["final_diagnos_mkb"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2 * mm))
