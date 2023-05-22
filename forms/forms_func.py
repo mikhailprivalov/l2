@@ -455,7 +455,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
         'Аллергические реакции',
         'Дата установления диагноза',
         'Время установления диагноза',
-        'Кому доверяю'
+        'Кому доверяю',
     ]
     list_values = None
     if titles_field and hosp_primary_receptions:
