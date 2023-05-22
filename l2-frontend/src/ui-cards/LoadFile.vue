@@ -25,7 +25,8 @@
         <div slot="body">
           <template v-if="l2_load_file">
             <div class="form-group">
-              <label for="fileInput"> {{ company === true ? 'XLSX файл' : (isLoadGroupForProtocol ? 'JSON': 'PDF') }}</label>
+              <label for="fileInput"> {{ company === true || fileFilter === 'XLSX'?
+                'XLSX файл' : (isLoadGroupForProtocol ? 'JSON': 'PDF') }}</label>
               <input
                 id="fileInput"
                 ref="file"
@@ -47,7 +48,8 @@
                 v-if="loading"
                 class="fa fa-spinner"
               />
-              <span v-else>Загрузить {{ company === true ? 'XLSX' : (isLoadGroupForProtocol ? 'JSON': 'PDF') }}</span>
+              <span v-else>Загрузить {{ company === true || fileFilter === 'XLSX' ?
+                'XLSX' : (isLoadGroupForProtocol ? 'JSON': 'PDF') }}</span>
             </button>
           </template>
           <template v-if="l2_csv_load_file">
@@ -177,6 +179,11 @@ export default {
       default: 'Загрузка файла',
       required: false,
     },
+    researchSet: {
+      type: Number,
+      default: -1,
+      required: false,
+    },
   },
   data() {
     return {
@@ -235,6 +242,7 @@ export default {
         formData.append('isWritePatientEcp', this.isWritePatientEcp);
         formData.append('isLoadGroupForProtocol', this.isLoadGroupForProtocol);
         formData.append('researchId', this.researchId);
+        formData.append('researchSet', this.researchSet);
         if (this.isLoadGroupForProtocol) {
           this.$emit('load-file', this.contentLoadGroupForProtocol);
           this.open = false;

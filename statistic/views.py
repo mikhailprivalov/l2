@@ -1954,6 +1954,15 @@ def data_xls_save_file(data, sheet_name):
     return file_dir
 
 
+def data_xls_save_headers_file(meta_patients, head_data, sheet_name, name_func):
+    wb, ws = initial_work_book(sheet_name)
+    ws = base_data.fill_default_base(ws, head_data)
+    if name_func == "fill_xls_check_research_exam_data":
+        ws = base_data.fill_xls_check_research_exam_data(ws, meta_patients)
+    file_dir = save_file_disk(wb)
+    return file_dir
+
+
 @csrf_exempt
 @login_required
 def get_harmful_factors(request):

@@ -345,6 +345,14 @@
               :values.sync="values.dateValues"
             />
           </div>
+          <div v-if="checkReportParam(PARAMS_TYPES.LOAD_FILE)">
+            <LoadFile
+              title-button="Загрузить из файла"
+              file-filter="XLSX"
+              :research-set="values.researchSet"
+              tag="div"
+            />
+          </div>
           <div
             v-if="titleReportStattalonFields.includes(currentReport.title)"
             class="input-group"
@@ -393,7 +401,7 @@
             </span>
           </div>
           <a
-            v-if="reportUrl"
+            v-if="reportUrl && !checkReportParam(PARAMS_TYPES.LOAD_FILE)"
             class="btn btn-blue-nb"
             type="button"
             :href="reportUrl"
@@ -401,7 +409,7 @@
           >
             Сформировать отчёт
           </a>
-          <div v-else-if="dateRangeInvalid && !unlimitPeridStatistic">
+          <div v-else-if="dateRangeInvalid && !unlimitPeridStatistic ">
             <strong>Диапазон дат должен быть не больше двух месяцев</strong>
           </div>
         </div>
@@ -421,10 +429,11 @@ import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import LaboratoryPicker from '@/fields/LaboratoryPicker.vue';
-import DateSelector from '@/fields/DateSelector.vue';
 import * as actions from '@/store/action-types';
 import usersPoint from '@/api/user-point';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import LoadFile from '@/ui-cards/LoadFile.vue';
+import DateSelector from '@/fields/DateSelector.vue';
 
 const PARAMS_TYPES = {
   DATE_RANGE: 'DATE_RANGE',
@@ -435,6 +444,7 @@ const PARAMS_TYPES = {
   USER_OR_DEP: 'USER_OR_DEP',
   FIN_SOURCE: 'FIN_SOURCE',
   RESEARCH_SETS: 'RESEARCH_SETS',
+  LOAD_FILE: 'LOAD_FILE',
   RESEARCH: 'RESEARCH',
   COMPANY: 'COMPANY',
   MONTH_YEAR: 'MONTH_YEAR',
@@ -536,6 +546,13 @@ const STATS_CATEGORIES = {
         groups: ['Статистика-профосмотры'],
         title: 'По подразделениям',
         params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.TYPE_DEPARTMENT, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=consolidate-type-department&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
+            + 'type-department=<type-department>',
+      },
+      patinetExamSetResearch: {
+        groups: ['Статистика-профосмотры'],
+        title: 'По пациентам из Excel',
+        params: [PARAMS_TYPES.RESEARCH_SETS, PARAMS_TYPES.LOAD_FILE],
         url: '/statistic/xls?type=consolidate-type-department&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
             + 'type-department=<type-department>',
       },
@@ -646,6 +663,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
 
 @Component({
   components: {
+    LoadFile,
     LaboratoryPicker,
     DatePicker,
     Treeselect,
