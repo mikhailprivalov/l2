@@ -44,7 +44,7 @@ def offer_fill_data(ws1, result_query):
         ws1.cell(row=r, column=4).value = float(i.get("coast", 0))
         ws1.cell(row=r, column=5).value = f'= {get_column_letter(4)}{r} * {get_column_letter(3)}{r}'
 
-        for j in range(1, 5):
+        for j in range(1, 6):
             ws1.cell(row=r, column=j).style = style_border1
     r += 1
     ws1.cell(row=r, column=1).value = 'Итого'
