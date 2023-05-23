@@ -114,3 +114,34 @@ def get_patient_control_params_to_hosp(control_params, card_pk, parent_iss, limi
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def search_cards_by_numbers(numbers, document_types):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                clients_document.individual_id as ind_id,
+                cc.id as card_id,
+                cc.number as card_number,
+                clients_document.number as document_number,
+                clients_individual.family,
+                clients_individual.name,
+                clients_individual.patronymic,
+                cd.title as district_title
+            FROM clients_document
+            LEFT JOIN clients_card cc on clients_document.individual_id = cc.individual_id
+            LEFT JOIN clients_individual on clients_document.individual_id = clients_individual.id
+            LEFT JOIN clients_cardbase cb on cc.base_id = cb.id
+            LEFT JOIN clients_district cd on cc.district_id = cd.id
+            WHERE
+            clients_document.number in %(numbers)s AND
+            clients_document.document_type_id = %(document_types)s AND 
+            cb.internal_type=true
+            ORDER BY cc.id
+            """,
+            params={'numbers': numbers, 'document_types': document_types},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

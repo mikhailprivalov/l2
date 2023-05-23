@@ -264,6 +264,16 @@ def add_additional_issledovaniye(request):
 
 
 @login_required
+def resend_results(request):
+    request_data = json.loads(request.body)
+    ids = request_data['ids']
+    for pk in ids:
+        direction = Napravleniya.objects.get(pk=pk)
+        direction.post_confirmation()
+    return status_response(True)
+
+
+@login_required
 def directions_history(request):
     # SQL-query
     res = {"directions": []}
@@ -1058,6 +1068,7 @@ def directions_mark_visit(request):
                     or "Отмена регистрации" in [str(x) for x in request.user.groups.all()]
                 )
                 and n.visit_date
+                and not n.has_confirm()
             )
             if allow_reset_confirm:
                 response["ok"] = True
@@ -1067,17 +1078,21 @@ def directions_mark_visit(request):
                 n.visit_date = None
                 n.visit_who_mark = None
                 n.save()
+            elif n.has_confirm():
+                response["message"] = 'Отмена посещения возможна только после "Сброса подтверждения"'
             else:
                 response["message"] = "Отмена посещения возможна только в течении {} мин.".format(rtm)
-        log_data = {
-            "Посещение": "отмена" if cancel else "да",
-            "Дата и время": response["visit_date"],
-            "Дополнительный номер": register_number,
-            "Год": register_number_year,
-            "Со-исполнитель": co_executor,
-        }
-        Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
-        f = True
+            f = True
+        if allow_reset_confirm or not cancel:
+            log_data = {
+                "Посещение": "отмена" if cancel else "да",
+                "Дата и время": response["visit_date"],
+                "Дополнительный номер": register_number,
+                "Год": register_number_year,
+                "Со-исполнитель": co_executor,
+            }
+            Log(key=pk, type=5001, body=json.dumps(log_data), user=request.user.doctorprofile).save()
+            f = True
     if not f:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
@@ -1888,7 +1903,7 @@ def directions_anesthesia_load(request):
     return JsonResponse({'data': tb_data, 'row_category': row_category})
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
+@group_required("Вспомогательные документы", "Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_paraclinic_result(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {
@@ -2072,6 +2087,10 @@ def directions_paraclinic_result(request):
                 f = ParaclinicInputField.objects.get(pk=field["pk"])
                 if f.title == "Дата смерти":
                     date_death = datetime.strptime(field["value"], "%Y-%m-%d").date()
+                if f.title == "Регистрационный номер" and iss.research.is_gistology:
+                    if iss.napravleniye.register_number.strip() != (field["value"]).strip():
+                        response["message"] = "Регистрационный номер неверный"
+                        return JsonResponse(response)
                 if f.field_type == 21:
                     continue
                 if not ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
@@ -2231,7 +2250,6 @@ def directions_paraclinic_result(request):
 
         if stationar_research != -1:
             iss.gen_direction_with_research_after_confirm_id = stationar_research
-
         iss.save()
         if iss.napravleniye:
             iss.napravleniye.sync_confirmed_fields()
@@ -4309,7 +4327,7 @@ def meta_info(request):
     request_data = json.loads(request.body)
     res_direction = tuple(list(request_data["directions"]))
     if not res_direction:
-        return JsonResponse({"rows": [{}]})
+        return JsonResponse({"rows": []})
     result = get_directions_meta_info(res_direction)
     lab_podr = get_lab_podr()
     lab_podr = [i[0] for i in lab_podr]

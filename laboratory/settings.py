@@ -246,6 +246,7 @@ DICOM_ADDRESS = ''
 DICOM_SERVER_DELETE = ''
 DICOM_PORT = None
 DICOM_SERVER = ''
+DICOM_SERVERS = []
 
 ACSN_MODE = None
 REMOTE_DICOM_ADDRESS = ''
@@ -382,6 +383,9 @@ PRINT_APPENDIX_PAGE_DIRECTION = {}
 HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION = []
 STATISTIC_TYPE_DEPARTMENT = [3]
 CONTROL_AGE_MEDEXAM = {}  # {"male": {40: 30, 39: 31}, "femail": {40: 32, 39: 33}}
+AUTO_PRINT_RESEARCH_DIRECTION = {}  # {perid_month_ago: "10", "researches": [research_pk, research_pk, research_pk]}
+ECP_SEARCH_PATIENT = {}
+DAYS_AGO_SEARCH_RESULT = {}  # {"isLab: 90", "isInstrument: 365"}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
