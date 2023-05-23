@@ -9,6 +9,9 @@ declare module '*.vue' {
       $systemTitle: () => string;
       $asVI: () => boolean;
       $l2LogoClass: () => string;
+      $msg: (type, message, timeout: number | void | null, payload: any | void) => void;
+      $error: (message, timeout: number | void | null) => void;
+      $ok: (message, timeout: number | void | null) => void;
     }
   }
 

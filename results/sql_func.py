@@ -157,3 +157,33 @@ def get_expertis_results_by_issledovaniya(issledovaniye_tuple):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def check_lab_instrumental_results_by_cards_and_period(cards_id, lab_days_ago_confirm, paraclinic_days_ago_confirm, lab_researches, paraclinic_researches):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT
+                dn.client_id as client_id,
+                directions_issledovaniya.research_id
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id                
+                WHERE 
+                dn.client_id in %(cards_id)s and
+                directions_issledovaniya.research_id in %(lab_researches)s and
+                directions_issledovaniya.time_confirmation BEtWEEN (NOW() - interval '%(lab_days_ago_confirm)s day')  AND (NOW())
+                OR 
+                    directions_issledovaniya.research_id in %(paraclinic_researches)s and 
+                    directions_issledovaniya.time_confirmation BEtWEEN (NOW() - interval '%(paraclinic_days_ago_confirm)s day')  AND (NOW()) 
+                ORDER BY dn.client_id
+        """,
+            params={
+                'cards_id': cards_id,
+                'lab_days_ago_confirm': lab_days_ago_confirm,
+                'paraclinic_days_ago_confirm': paraclinic_days_ago_confirm,
+                'lab_researches': lab_researches,
+                'paraclinic_researches': paraclinic_researches,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

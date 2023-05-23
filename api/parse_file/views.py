@@ -2,6 +2,7 @@ import csv
 import io
 import re
 import tempfile
+from copy import deepcopy
 
 from django.http import HttpRequest, JsonResponse
 
@@ -10,17 +11,23 @@ from api.models import Application
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
 
+from api.patients.sql_func import search_cards_by_numbers
+from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
-from contracts.models import PriceCoast, Company
+from contracts.models import PriceCoast, Company, MedicalExamination
+from directory.models import SetOrderResearch
+from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
 from ecp_integration.integration import fill_slot_from_xlsx
-from laboratory.settings import CONTROL_AGE_MEDEXAM
-from statistic.views import commercial_offer_xls_save_file, data_xls_save_file
+from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
+from results.sql_func import check_lab_instrumental_results_by_cards_and_period
+from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
 from users.models import AssignmentResearches
-from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card
+from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, DocumentType
 from integration_framework.views import check_enp
 from utils.dates import age_for_year, normalize_dots_date
+from django.views.decorators.csrf import csrf_exempt
 
 
 def dnk_covid(request):
@@ -57,19 +64,26 @@ def http_func(data, user):
 
 def add_factors_from_file(request):
     incorrect_patients = []
-    company_inn = request.POST['companyInn']
-    company_file = request.FILES['file']
+    company_inn = request.POST["companyInn"]
+    company_file = request.FILES["file"]
     wb = load_workbook(filename=company_file)
     ws = wb.worksheets[0]
     starts = False
     snils, fio, birthday, gender, inn_company, code_harmful = (
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
     )
+    application = Application.objects.filter(active=True, is_background_worker=True).first()
+    if application:
+        bearer_token = f"Bearer {application.key}"
+    else:
+        new_application = Application(name="background_worker", is_background_worker=True)
+        new_application.save()
+        bearer_token = f"Bearer {new_application.key}"
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
@@ -81,76 +95,86 @@ def add_factors_from_file(request):
                 inn_company = cells.index("инн организации")
                 code_harmful = cells.index("код вредности")
                 position = cells.index("должность")
+                examination_date = cells.index("дата мед. осмотра")
                 starts = True
         else:
-            if company_inn != cells[inn_company]:
+            if company_inn != cells[inn_company].strip():
                 incorrect_patients.append({"fio": cells[fio], "reason": "ИНН организации не совпадает"})
-            else:
-                params = {"enp": "", "snils": cells[snils].replace('-', '').replace(' ', ''), "check_mode": "l2-snils"}
-                request_obj = HttpRequest()
-                request_obj._body = params
-                request_obj.user = request.user
-                request_obj.method = 'POST'
-                request_obj.META["HTTP_AUTHORIZATION"] = f'Bearer {Application.objects.first().key}'
-                current_patient = check_enp(request_obj)
-                cells[birthday].split(' ')[0].replace('.', '')
-                if current_patient.data.get("message"):
-                    params = {
-                        "enp": "",
-                        "family": cells[fio].split(' ')[0],
-                        "name": cells[fio].split(' ')[1],
-                        "bd": cells[birthday].split(' ')[0].replace('.', ''),
-                        "check_mode": "l2-enp-full",
-                    }
-                    current_patient = check_enp(request_obj)
-                    if current_patient.data.get("message"):
+                continue
+            snils_data = cells[snils].replace("-", "").replace(" ", "")
+            fio_data = cells[fio].split(' ')
+            family_data = fio_data[0]
+            name_data = fio_data[1]
+            patronymic_data = None
+            if len(fio_data) > 2:
+                patronymic_data = fio_data[2]
+            birthday_data = cells[birthday].split(' ')[0]
+            code_harmful_data = cells[code_harmful].split(',')
+            exam_data = cells[examination_date].split(' ')[0]
+            gender_data = cells[gender][0]
+            params = {"enp": "", "snils": snils_data, "check_mode": "l2-snils"}
+            request_obj = HttpRequest()
+            request_obj._body = params
+            request_obj.user = request.user
+            request_obj.method = "POST"
+            request_obj.META["HTTP_AUTHORIZATION"] = bearer_token
+            current_patient = check_enp(request_obj)
+            if current_patient.data.get("message"):
+                patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_data)
+                if patient_card is None:
+                    possible_family = find_and_replace(family_data, "е", "ё")
+                    patient_card = search_by_possible_fio(request_obj, name_data, patronymic_data, birthday_data, possible_family)
+                    if patient_card is None:
                         patient_indv = Individual(
-                            family=cells[fio].split(' ')[0],
-                            name=cells[fio].split(' ')[1],
-                            patronymic=cells[fio].split(' ')[2],
-                            birthday=cells[birthday].split(' ')[0].replace('.', ''),
-                            sex=cells[gender][0],
+                            family=family_data,
+                            name=name_data,
+                            patronymic=patronymic_data,
+                            birthday=birthday_data,
+                            sex=gender_data,
                         )
                         patient_indv.save()
                         patient_card = Card.add_l2_card(individual=patient_indv)
-                    elif len(current_patient.data) > 1:
-                        incorrect_patients.append({"fio": cells[fio], "reason": "Совпадение"})
-                        continue
-                    else:
-                        patient_card = Individual.import_from_tfoms(current_patient.data["list"], None, None, None, True)
-                elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
-                    patient_card_pk = current_patient.data["patient_data"]["card"]
-                    patient_card = Card.objects.filter(pk=patient_card_pk).first()
+            elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
+                patient_card_pk = current_patient.data["patient_data"]["card"]
+                patient_card = Card.objects.filter(pk=patient_card_pk).first()
+            else:
+                patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
+            incorrect_factor = []
+            harmful_factors_data = []
+            for i in code_harmful_data:
+                current_code = i.replace(" ", "")
+                harmful_factor = HarmfulFactor.objects.filter(title=current_code).first()
+                if harmful_factor:
+                    harmful_factors_data.append({"factorId": harmful_factor.pk})
                 else:
-                    patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
-                incorrect_factor = []
-                harmful_factors_data = []
-                for i in cells[code_harmful].split(','):
-                    harmful_factor = HarmfulFactor.objects.filter(title=i.replace(" ", "")).first()
-                    if harmful_factor:
-                        harmful_factors_data.append({"factorId": harmful_factor.pk})
-                    else:
-                        incorrect_factor.append(f"{i}")
-                if len(incorrect_factor) != 0:
-                    incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
-                PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
-                company_obj = Company.objects.filter(inn=company_inn).first()
-                patient_card.work_position = cells[position].strip()
-                patient_card.work_place_db = company_obj
-                patient_card.save()
+                    incorrect_factor.append(f"{current_code}")
+            if len(incorrect_factor) != 0:
+                incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
+            PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
+            company_obj = Company.objects.filter(inn=company_inn).first()
+            patient_card.work_position = cells[position].strip()
+            patient_card.work_place_db = company_obj
+            patient_card.save()
+            MedicalExamination.save_examination(patient_card, company_obj, exam_data)
 
     return incorrect_patients
 
 
+@csrf_exempt
 def load_file(request):
     link = ""
-    if request.POST.get('isGenCommercialOffer') == "true":
+    req_data = dict(request.POST)
+    if req_data.get('isGenCommercialOffer')[0] == "true":
         results = gen_commercial_offer(request)
         link = "open-xls"
-    elif request.POST.get('isWritePatientEcp') == "true":
+    elif req_data.get('isWritePatientEcp')[0] == "true":
         results = write_patient_ecp(request)
         link = "open-xls"
-    elif len(request.POST.get('companyInn')) != 0:
+    elif req_data.get('researchSet')[0] != "-1":
+        research_set = int(req_data.get('researchSet')[0])
+        results = data_research_exam_patient(request, research_set)
+        link = "open-xls"
+    elif len(req_data.get('companyInn')[0]) != 0:
         results = add_factors_from_file(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
     else:
@@ -204,10 +228,71 @@ def gen_commercial_offer(request):
             patients.append({"fio": cells[fio], "born": born_data, "harmful_factor": cells[harmful_factor], "position": cells[position], "researches": researches_data, "age": age})
 
     price_data = PriceCoast.objects.filter(price_name__id=selected_price, research_id__in=list(counts_research.keys()))
-    data_price = [{'title': k.research.title, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
+    data_price = [{'title': k.research.title, 'code': k.research.code, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
     research_price = {d.research.pk: f"{d.research.title}@{d.coast}" for d in price_data}
     file_name = commercial_offer_xls_save_file(data_price, patients, research_price)
     return file_name
+
+
+def search_by_fio(request_obj, family, name, patronymic, birthday):
+    patient_card = None
+    params_tfoms = {
+        "enp": "",
+        "family": family,
+        "name": name,
+        "bd": birthday,
+        "check_mode": "l2-enp-full",
+    }
+    params_internal = {
+        "type": CardBase.objects.get(internal_type=True).pk,
+        "extendedSearch": True,
+        "form": {
+            "family": family,
+            "name": name,
+            "patronymic": patronymic,
+            "birthday": birthday,
+            "archive": False,
+        },
+        "limit": 1,
+    }
+    request_obj._body = params_tfoms
+    current_patient = check_enp(request_obj)
+    if current_patient.data.get("message"):
+        request_obj._body = json.dumps(params_internal)
+        data = patients_search_card(request_obj)
+        results_json = json.loads(data.content.decode('utf-8'))
+        if len(results_json["results"]) > 0:
+            patient_card_pk = results_json["results"][0]["pk"]
+            patient_card = Card.objects.filter(pk=patient_card_pk).first()
+    elif len(current_patient.data["list"]) > 1:
+        return patient_card
+    else:
+        patient_card = Individual.import_from_tfoms(current_patient.data["list"], None, None, None, True)
+    return patient_card
+
+
+def find_and_replace(text, symbol1, symbol2):
+    result = []
+    for i in range(len(text)):
+        if text[i] == symbol1:
+            current_text = text[0:i] + symbol2 + text[i + 1 :]
+            result.append(current_text)
+        elif text[i] == symbol2:
+            current_text = text[0:i] + symbol1 + text[i + 1 :]
+            result.append(current_text)
+    return result
+
+
+def search_by_possible_fio(request_obj, name, patronymic, birthday, possible_family):
+    if not possible_family:
+        return None
+    patient_card = None
+    for i in possible_family:
+        current_family = i
+        patient_card = search_by_fio(request_obj, current_family, name, patronymic, birthday)
+        if patient_card is not None:
+            break
+    return patient_card
 
 
 def load_csv(request):
@@ -281,8 +366,84 @@ def write_patient_ecp(request):
             patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data, "snils": ""}
             result = fill_slot_from_xlsx(cells[doctor], patient)
             is_write = "Ошибка"
-            if result and result.get('register'):
-                is_write = "записан"
-            patients.append({**patient, "is_write": is_write, "doctor": cells[doctor]})
+            message = ""
+            if result:
+                if result.get('register'):
+                    is_write = "записан"
+                if result.get('message'):
+                    message = result.get('message', '')
+            patients.append({**patient, "is_write": is_write, "doctor": cells[doctor], "message": message})
     file_name = data_xls_save_file(patients, "Запись")
+    return file_name
+
+
+def data_research_exam_patient(request, set_research):
+    file_data = request.FILES['file']
+    wb = load_workbook(filename=file_data)
+    ws = wb[wb.sheetnames[0]]
+    starts = False
+    set_research_d = SetOrderResearch.objects.filter(set_research_id=set_research).order_by("order")
+    head_research_data = {i.research_id: i.research.title for i in set_research_d}
+    patients_data = {}
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "снилс" in cells:
+                starts = True
+                family = cells.index("фaмилия")
+                name = cells.index("имя")
+                patronymic = cells.index("отчество")
+                born = cells.index("дата рождения")
+                snils = cells.index("снилс")
+                starts = True
+        else:
+            born_data = cells[born].split(" ")[0]
+            if "." in born_data:
+                born_data = normalize_dots_date(born_data)
+            patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data}
+            patients_data[cells[snils]] = patient
+    doc_type = DocumentType.objects.filter(title='СНИЛС').first()
+    patient_cards = search_cards_by_numbers(tuple(patients_data.keys()), doc_type.id)
+    cards_id = [i.card_id for i in patient_cards]
+    researches_id = [i.research_id for i in set_research_d]
+
+    purpose_research = {i: 0 for i in head_research_data.keys()}
+    meta_patients = {
+        pc.card_id: {
+            "card_num": pc.card_number,
+            "snils": pc.document_number,
+            "researches": deepcopy(purpose_research),
+            "fio": f"{pc.family} {pc.name} {pc.patronymic}",
+            "district": pc.district_title,
+        }
+        for pc in patient_cards
+    }
+
+    is_paraclinic_researches = is_paraclinic_filter_research(tuple(researches_id))
+    paraclinic_researches = [i.research_id for i in is_paraclinic_researches]
+
+    is_lab_research = is_lab_filter_research(tuple(researches_id))
+    lab_research = [i.research_id for i in is_lab_research]
+
+    lab_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isLab")
+    instrumental_days_ago_confirm = DAYS_AGO_SEARCH_RESULT.get("isInstrumental")
+    patient_results = check_lab_instrumental_results_by_cards_and_period(
+        tuple(cards_id), lab_days_ago_confirm, instrumental_days_ago_confirm, tuple(lab_research), tuple(paraclinic_researches)
+    )
+    for pr in patient_results:
+        if meta_patients.get(pr.client_id):
+            meta_patients[pr.client_id]["researches"][pr.research_id] = 1
+
+    head_data = {
+        "num_card": "№ карты",
+        "district": "участок",
+        "family": "Фамилия",
+        "name": "имя",
+        "patronymic": "отчество",
+        "current_age": "возраст текущий",
+        "year_age": "возраст в году",
+        **head_research_data,
+    }
+
+    file_name = data_xls_save_headers_file(meta_patients, head_data, "Пройденые услуги", "fill_xls_check_research_exam_data")
     return file_name

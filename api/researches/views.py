@@ -1,4 +1,5 @@
 from collections import defaultdict
+from urllib.parse import quote
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
@@ -6,7 +7,7 @@ from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Prefetch, Q
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 
 from api.researches.help_files.constructor_help import constructor_help_message
 from appconf.manager import SettingManager
@@ -154,6 +155,7 @@ def get_researches(request, last_used=False):
         r: DResearches
 
         has_morfology = {}
+        has_templates = {}
 
         for r in res:
             k = f'get_researches:research:{r.pk}'
@@ -197,37 +199,40 @@ def get_researches(request, last_used=False):
                 tpls = []
                 if r.is_microbiology and 'is_microbiology' not in has_morfology:
                     has_morfology['is_microbiology'] = True
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True):
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_microbiology=True).distinct():
                         tpls.append(at.as_research())
 
                 if r.is_citology and 'is_citology' not in has_morfology:
                     has_morfology['is_citology'] = True
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True):
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_citology=True).distinct():
                         tpls.append(at.as_research())
 
                 if r.is_gistology and 'is_gistology' not in has_morfology:
                     has_morfology['is_gistology'] = True
-                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True):
+                    for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_gistology=True).distinct():
                         tpls.append(at.as_research())
 
                 if r.reversed_type not in deps:
                     if r.reversed_type > 0:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, podrazdeleniye_id=r.reversed_type).distinct():
                             tpls.append(at.as_research())
                     if r.is_doc_refferal:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_doc_refferal=True).distinct():
                             tpls.append(at.as_research())
                     if r.is_treatment:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_treatment=True).distinct():
                             tpls.append(at.as_research())
                     if r.is_stom:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_stom=True).distinct():
                             tpls.append(at.as_research())
                     if r.is_hospital:
-                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True):
+                        for at in AssignmentTemplates.objects.filter(show_in_research_picker=True, is_hospital=True).distinct():
                             tpls.append(at.as_research())
+                tpls = [x for x in tpls if not has_templates.get(x['pk'])]
                 if tpls:
                     deps[r.reversed_type].extend(tpls)
+                    for t in tpls:
+                        has_templates[t['pk']] = True
             deps['-109999' if last_used else r.reversed_type].append(research_data)
 
         for dk in deps:
@@ -980,3 +985,58 @@ def research_groups_by_laboratory(request):
             "groups": groups,
         }
     )
+
+
+def group_as_json(request):
+    group_id = request.GET.get("groupId")
+    fields_in_group = []
+    groups_to_save = []
+    group: ParaclinicInputGroups = ParaclinicInputGroups.objects.get(id=group_id)
+    for f in ParaclinicInputField.objects.filter(group=group).order_by('order'):
+        field_data = {
+            'title': f.title,
+            'short_title': f.short_title,
+            'order': f.order,
+            'default_value': f.default_value,
+            'lines': f.lines,
+            'field_type': f.field_type,
+            'for_extract_card': f.for_extract_card,
+            'for_talon': f.for_talon,
+            'operator_enter_param': f.operator_enter_param,
+            'for_med_certificate': f.for_med_certificate,
+            'visibility': f.visibility,
+            'not_edit': f.not_edit,
+            'can_edit': f.can_edit_computed,
+            'controlParam': f.control_param,
+            'helper': f.helper,
+            'sign_organization': f.sign_organization,
+            'input_templates': f.input_templates,
+            'patientControlParam': f.patient_control_param_id,
+            'cdaOption': f.cda_option_id,
+            'attached': f.attached,
+            'required': f.required,
+            'hide': f.hide,
+        }
+        fields_in_group.append(field_data)
+    groups_to_save.append(
+        {
+            'title': group.title,
+            'show_title': group.show_title,
+            'order': group.order,
+            'hide': group.hide,
+            'fields': fields_in_group,
+            'fieldsInline': group.fields_inline,
+            'cdaOption': group.cda_option_id,
+            'visibility': group.visibility,
+            'display_hidden': False,
+        }
+    )
+
+    result = {
+        "groups": groups_to_save,
+    }
+
+    response = HttpResponse(json.dumps(result, ensure_ascii=False), content_type='application/json')
+    response['Content-Disposition'] = f"attachment; filename*=utf-8''group-{quote(f'{group.title}')}.json"
+
+    return response
