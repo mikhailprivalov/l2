@@ -10,7 +10,6 @@ from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
 
 from integration_framework.views import get_cda_data
-from utils import tree_directions
 from utils.response import status_response
 from hospitals.models import Hospitals, HospitalParams
 import operator
@@ -31,7 +30,7 @@ from django.http import JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
 from api import sql_func
-from api.dicom import search_dicom_study, check_server_port
+from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
@@ -66,7 +65,7 @@ from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplat
 from laboratory import settings, VERSION
 from laboratory import utils
 from laboratory.decorators import group_required
-from laboratory.settings import DICOM_SERVER, TIME_ZONE, REMD_ONLY_RESEARCH, REMD_EXCLUDE_RESEARCH, SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE
+from laboratory.settings import DICOM_SERVER, TIME_ZONE, REMD_ONLY_RESEARCH, REMD_EXCLUDE_RESEARCH, SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE, DICOM_SERVERS
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
@@ -508,7 +507,10 @@ def directions_history(request):
             if i[13]:
                 can_has_pacs = True
                 if i[21]:
-                    pacs = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}'
+                    if len(DICOM_SERVERS) > 1:
+                        pacs = check_dicom_study_instance_uid(DICOM_SERVERS, i[21])
+                    else:
+                        pacs = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}'
                 else:
                     pacs = None
             has_hosp = False

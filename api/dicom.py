@@ -114,6 +114,6 @@ def check_dicom_study(servers_addr, data):
 def check_dicom_study_instance_uid(servers_addr, data):
     for server_addr in servers_addr:
         dicom_study = requests.get(f'{server_addr}/studies/{data}')
-        if len(dicom_study.json()) > 0:
+        if dicom_study and len(dicom_study.json()) > 0:
             return f'{server_addr}/osimis-viewer/app/index.html?study={data}'
     return ''
