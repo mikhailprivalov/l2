@@ -40,9 +40,7 @@ class Command(BaseCommand):
                 district_obj = clients.District.objects.filter(title=cells[distict_num]).first()
                 if district_obj is None:
                     district_obj = clients.District.objects.create(title=cells[distict_num])
-                ind = clients.Document.objects.filter(
-                    Q (document_type__title__iexact="СНИЛС", number=cells[snils])
-                    | Q(document_type__title__iexact="Полис ОМС", number=cells[polis])).first()
+                ind = clients.Document.objects.filter(Q(document_type__title__iexact="СНИЛС", number=cells[snils]) | Q(document_type__title__iexact="Полис ОМС", number=cells[polis])).first()
                 if ind:
                     i = ind.individual
                     if clients.Card.objects.filter(individual=i, base=base_l2).exists():
