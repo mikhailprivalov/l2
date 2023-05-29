@@ -58,7 +58,6 @@ class Command(BaseCommand):
                             district=district_obj,
                             phone=cells[phone_number],
                         )
-                        print('Добавлена карта: \n', c)  # noqa: T001
                 else:
                     ind = clients.Individual.objects.create(
                         family=cells[lastname].lower().title(),
@@ -83,4 +82,3 @@ class Command(BaseCommand):
                         district=district_obj,
                         phone=cells[phone_number],
                     )
-                    print('Добавлена карта: \n', c)  # noqa: T001
