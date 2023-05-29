@@ -15,6 +15,7 @@ from laboratory.utils import strdate
 from api.stationar.stationar_func import hosp_get_data_direction, check_transfer_epicrisis
 from api.stationar.sql_func import get_result_value_iss
 from utils.dates import normalize_date
+import json
 
 
 def get_all_doc(docs: [Document]):
@@ -400,9 +401,9 @@ def get_finaldata_talon(doc_result_obj):
     return [fin_source, fin_source_iss]
 
 
-def primary_reception_get_data(hosp_first_num):
+def primary_reception_get_data(hosp_first_num, site_type=0):
     # Получение данных из певичного приема
-    hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=0, type_service='None', level=2)
+    hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=site_type, type_service='None', level=2)
     hosp_primary_iss, primary_research_id = None, None
     if hosp_primary_receptions:
         hosp_primary_iss = hosp_primary_receptions[0].get('iss')
@@ -433,6 +434,28 @@ def primary_reception_get_data(hosp_first_num):
         'Осложнение основного диагноза по МКБ',
         'Сопутствующий диагноз (описание)',
         'Сопутствующий диагноз по МКБ',
+        'Номер направления',
+        'Дата направления',
+        'Госпитализирован по поводу данного заболевания',
+        'Диагноз при направлении',
+        'Код МКБ при направлении',
+        'Предварительный диагноз при поступлении',
+        'Основное заболевание код по МКБ',
+        'Осложнения основного заболевания код по МКБ',
+        'Сопутствующие заболевания код по МКБ',
+        'Внешняя причина при травмах, отравлениях код по МКБ',
+        'Дополнительные сведения о заболевании',
+        'туберкулез',
+        'ВИЧ-инфекция',
+        'вирусные гепатиты',
+        'сифилис',
+        'COVID-19',
+        'осмотр на педиклез, чесотку',
+        'результат осмотра',
+        'Аллергические реакции',
+        'Дата установления диагноза',
+        'Время установления диагноза',
+        'Кому доверяю',
     ]
     list_values = None
     if titles_field and hosp_primary_receptions:
@@ -445,6 +468,12 @@ def primary_reception_get_data(hosp_first_num):
     all_hospitalized, type_trauma, blood_group, resus_factor = '', '', '', ''
     weight = ''
     final_diagnos, other_diagnos, near_diagnos, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', ''
+    ext_direction_number, ext_direction_date, direction_diagnos, direction_mkb_diagnos = "", "", "", ""
+    external_reason_mkb, additional_data_ill = "", ""
+    tuberculosis, hiv_infection, viral_infections, covid19, syphilis, pediculosis, result_pediculosis_exam = "", "", "", "", "", "", ""
+    allergic_reactions, preliminary_diagnosis = "", ""
+    date_diagnosis, time_diagnosis = "", ""
+    whom_transfer_health_data = ""
 
     if list_values:
         for i in list_values:
@@ -474,7 +503,6 @@ def primary_reception_get_data(hosp_first_num):
             else:
                 plan_hospital = "Да"
                 extra_hospital = "Нет"
-                time_start_ill = ''
             if i[3] == 'Диагноз направившего учреждения':
                 diagnos_who_directed = i[2]
                 continue
@@ -520,6 +548,93 @@ def primary_reception_get_data(hosp_first_num):
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Сопутствующий диагноз по МКБ':
                 near_diagnos_mkb = str(i[2]).split(' ')[0]
+            if i[3] == 'Время через, которое доставлен после начала заболевания, получения травмы':
+                time_start_ill = i[2]
+            if i[3] == 'Номер направления':
+                ext_direction_number = i[2]
+            if i[3] == 'Дата направления':
+                ext_direction_date = i[2]
+            if i[3] == 'Диагноз при направлении':
+                direction_diagnos = i[2]
+            if i[3] == 'Код МКБ при направлении':
+                direction_mkb_diagnos = str(i[2])
+            if i[3] == 'Предварительный диагноз при поступлении':
+                preliminary_diagnosis = i[2]
+
+            if i[3] == "Основное заболевание код по МКБ":
+                final_diagnos_mkb_data = i[2]
+                final_diagnos_mkb_details = {}
+                if final_diagnos_mkb_data:
+                    try:
+                        final_diagnos_mkb_details = json.loads(final_diagnos_mkb_data)
+                    except:
+                        final_diagnos_mkb_details = {}
+                final_diagnos_mkb_row = final_diagnos_mkb_details.get("rows", [])
+                final_diagnos_mkb = []
+                for rr in final_diagnos_mkb_row:
+                    final_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({rr[1]})"})
+            if i[3] == "Осложнения основного заболевания код по МКБ":
+                other_diagnos_mkb_data = i[2]
+                other_diagnos_mkb_details = {}
+                if other_diagnos_mkb_data:
+                    try:
+                        other_diagnos_mkb_details = json.loads(other_diagnos_mkb_data)
+                    except:
+                        other_diagnos_mkb_details = {}
+                other_diagnos_mkb_row = other_diagnos_mkb_details.get("rows", [])
+                other_diagnos_mkb = []
+                for rr in other_diagnos_mkb_row:
+                    other_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({rr[1]})"})
+            if i[3] == 'Сопутствующие заболевания код по МКБ':
+                near_diagnos_mkb_data = i[2]
+                near_diagnos_mkb_details = {}
+                if near_diagnos_mkb_data:
+                    try:
+                        near_diagnos_mkb_details = json.loads(near_diagnos_mkb_data)
+                    except:
+                        near_diagnos_mkb_details = {}
+                near_diagnos_mkb_row = near_diagnos_mkb_details.get("rows", [])
+                near_diagnos_mkb = []
+                for rr in near_diagnos_mkb_row:
+                    near_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')}. {rr[1] if len(rr) > 1 else '' }"})
+            if i[3] == 'Внешняя причина при травмах, отравлениях код по МКБ':
+                external_reason_mkb_data = i[2]
+                external_reason_mkb_details = {}
+                if external_reason_mkb_data:
+                    try:
+                        external_reason_mkb_details = json.loads(external_reason_mkb_data)
+                    except:
+                        external_reason_mkb_details = {}
+                external_reason_mkb_row = external_reason_mkb_details.get("rows", [])
+                external_reason_mkb = []
+                if len(external_reason_mkb_row) > 0:
+                    for rr in external_reason_mkb_row:
+                        adds_data = rr[1] if len(rr) > 1 else ""
+                        external_reason_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({adds_data})"})
+            if i[3] == 'Дополнительные сведения о заболевании':
+                additional_data_ill = i[2]
+            if i[3] == 'туберкулез':
+                tuberculosis = i[2]
+            if i[3] == 'ВИЧ-инфекция':
+                hiv_infection = i[2]
+            if i[3] == 'вирусные гепатиты':
+                viral_infections = i[2]
+            if i[3] == 'COVID-19':
+                covid19 = i[2]
+            if i[3] == 'сифилис':
+                syphilis = i[2]
+            if i[3] == 'осмотр на педиклез, чесотку':
+                pediculosis = i[2]
+            if i[3] == 'результат осмотра':
+                result_pediculosis_exam = i[2]
+            if i[3] == "Аллергические реакции":
+                allergic_reactions = i[2]
+            if i[3] == "Дата установления диагноза":
+                date_diagnosis = normalize_date(i[2])
+            if i[3] == "Время установления диагноза":
+                time_diagnosis = i[2]
+            if i[3] == "Кому доверяю":
+                whom_transfer_health_data = i[2]
 
     return {
         'date_entered_value': date_entered_value,
@@ -548,6 +663,24 @@ def primary_reception_get_data(hosp_first_num):
         'final_diagnos_mkb': final_diagnos_mkb,
         'other_diagnos_mkb': other_diagnos_mkb,
         'near_diagnos_mkb': near_diagnos_mkb,
+        'ext_direction_date': ext_direction_date,
+        'ext_direction_number': ext_direction_number,
+        'direction_diagnos': direction_diagnos,
+        'direction_mkb_diagnos': direction_mkb_diagnos,
+        'external_reason_mkb': external_reason_mkb,
+        'additional_data_ill': additional_data_ill,
+        'tuberculosis': tuberculosis,
+        'hiv_infection': hiv_infection,
+        'viral_infections': viral_infections,
+        'covid19': covid19,
+        'syphilis': syphilis,
+        'pediculosis': pediculosis,
+        'result_pediculosis_exam': result_pediculosis_exam,
+        'allergic_reactions': allergic_reactions,
+        'preliminary_diagnosis': preliminary_diagnosis,
+        'date_diagnosis': date_diagnosis,
+        'time_diagnosis': time_diagnosis,
+        'whom_transfer_health_data': whom_transfer_health_data,
     }
 
 
@@ -578,13 +711,22 @@ def hosp_extract_get_data(hosp_last_num):
         'Проведено койко-дней',
         'Заведующий отделением',
         'Палата №',
+        'Основное заболевание код по МКБ',
+        'Осложнения основного заболевания код по МКБ',
+        'Сопутствующие заболевания код по МКБ',
+        'Внешняя причина при травмах, отравлениях код по МКБ',
+        'Дополнительные сведения о заболевании',
+        'Куда переведен',
+        'Отметка о выдаче листка нетрудоспособности',
+        'Отметка о выдаче листка нетрудоспособности через врачебную комиссию',
     ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
-    final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
-    days_count, result_hospital, manager_depart, room_num = '', '', '', ''
+    final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb, additional_data_ill = '', '', '', '', '', '', '', ''
+    days_count, result_hospital, manager_depart, room_num, transfer_to = '', '', '', '', ''
+    ln_data, ln_vk_data = '', ''
 
     if list_values:
         for i in list_values:
@@ -614,6 +756,64 @@ def hosp_extract_get_data(hosp_last_num):
                 manager_depart = str(i[2])
             if i[3] == 'Палата №':
                 room_num = str(i[2])
+            if i[3] == "Основное заболевание код по МКБ":
+                final_diagnos_mkb_data = i[2]
+                final_diagnos_mkb_details = {}
+                if final_diagnos_mkb_data:
+                    try:
+                        final_diagnos_mkb_details = json.loads(final_diagnos_mkb_data)
+                    except:
+                        final_diagnos_mkb_details = {}
+                final_diagnos_mkb_row = final_diagnos_mkb_details.get("rows", [])
+                final_diagnos_mkb = []
+                for rr in final_diagnos_mkb_row:
+                    final_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({rr[1]})"})
+            if i[3] == "Осложнения основного заболевания код по МКБ":
+                other_diagnos_mkb_data = i[2]
+                other_diagnos_mkb_details = {}
+                if other_diagnos_mkb_data:
+                    try:
+                        other_diagnos_mkb_details = json.loads(other_diagnos_mkb_data)
+                    except:
+                        other_diagnos_mkb_details = {}
+                other_diagnos_mkb_row = other_diagnos_mkb_details.get("rows", [])
+                other_diagnos_mkb = []
+                for rr in other_diagnos_mkb_row:
+                    other_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({rr[1]})"})
+            if i[3] == 'Сопутствующие заболевания код по МКБ':
+                near_diagnos_mkb_data = i[2]
+                near_diagnos_mkb_details = {}
+                if near_diagnos_mkb_data:
+                    try:
+                        near_diagnos_mkb_details = json.loads(near_diagnos_mkb_data)
+                    except:
+                        near_diagnos_mkb_details = {}
+                near_diagnos_mkb_row = near_diagnos_mkb_details.get("rows", [])
+                near_diagnos_mkb = []
+                for rr in near_diagnos_mkb_row:
+                    near_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')}. {rr[1] if len(rr) > 1 else '' }"})
+            if i[3] == 'Внешняя причина при травмах, отравлениях код по МКБ':
+                external_reason_mkb_data = i[2]
+                external_reason_mkb_details = {}
+                if external_reason_mkb_data:
+                    try:
+                        external_reason_mkb_details = json.loads(external_reason_mkb_data)
+                    except:
+                        external_reason_mkb_details = {}
+                external_reason_mkb_row = external_reason_mkb_details.get("rows", [])
+                external_reason_mkb = []
+                if len(external_reason_mkb_row) > 0:
+                    for rr in external_reason_mkb_row:
+                        adds_data = rr[1] if len(rr) > 1 else ""
+                        external_reason_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({adds_data})"})
+            if i[3] == 'Дополнительные сведения о заболевании':
+                additional_data_ill = i[2]
+            if i[3] == 'Куда переведен':
+                transfer_to = i[2]
+            if i[3] == 'Отметка о выдаче листка нетрудоспособности через врачебную комиссию':
+                ln_vk_data = i[2]
+            if i[3] == 'Отметка о выдаче листка нетрудоспособности':
+                ln_data = i[2]
 
     doc_fio = doc_confirm.get_fio()
     return {
@@ -626,12 +826,17 @@ def hosp_extract_get_data(hosp_last_num):
         'final_diagnos_mkb': final_diagnos_mkb,
         'other_diagnos_mkb': other_diagnos_mkb,
         'near_diagnos_mkb': near_diagnos_mkb,
+        'external_reason_mkb': external_reason_mkb,
         'extract_iss': hosp_extract_iss,
         'days_count': days_count,
         'result_hospital': result_hospital,
         'doc_fio': doc_fio,
         'manager_depart': manager_depart,
         'room_num': room_num,
+        'transfer_to': transfer_to,
+        'ln_data': ln_data,
+        'ln_vk_data': ln_vk_data,
+        'additional_data_ill': additional_data_ill,
     }
 
 
