@@ -42,7 +42,7 @@ from clients.models import (
     CardControlParam,
     PatientHarmfullFactor,
 )
-from contracts.models import Company, CompanyDepartment
+from contracts.models import Company, CompanyDepartment, MedicalExamination
 from directions.models import Issledovaniya
 from directory.models import Researches, PatientControlParam
 from laboratory import settings
@@ -758,8 +758,11 @@ def patients_save_harmful_factors(request):
     request_data = json.loads(request.body)
     tb_data = request_data.get('tb_data', '')
     card_pk = int(request_data.get('card_pk', -1))
+    date_med_exam = request_data.get('dateMedExam')
     if len(tb_data) < 1:
         return JsonResponse({'message': 'Ошибка в количестве'})
+    if date_med_exam:
+        MedicalExamination.update_date(card_pk, date_med_exam)
     result = PatientHarmfullFactor.save_card_harmful_factor(card_pk, tb_data)
     if result:
         return JsonResponse({'ok': True, 'message': 'Сохранено'})

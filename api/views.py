@@ -3076,13 +3076,3 @@ def get_date_medical_examination(request):
         return JsonResponse({"data": None})
 
 
-@login_required
-def update_date_medical_examination(request):
-    request_data = json.loads(request.body)
-    if not request_data.get("date"):
-        return status_response(False, "Дата не заполнена")
-    current_exam = MedicalExamination.update_date(request_data["card_pk"], request_data["date"])
-    if current_exam:
-        return status_response(True)
-    else:
-        return status_response(False, "Место работы не заполнено")

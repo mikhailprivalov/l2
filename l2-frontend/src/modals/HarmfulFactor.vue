@@ -62,7 +62,21 @@
         </tbody>
       </table>
       <div class="row">
-        <div class="col-xs-3" />
+        <div class="col-xs-5">
+          <div class="med-exam">
+            <label
+              class="input-group-addon"
+              style="height: 34px; width: 150px"
+            >
+              Дата мед. осмотра
+            </label>
+            <input
+              v-model="dateMedExam"
+              class="form-control med-date"
+              type="date"
+            >
+          </div>
+        </div>
         <div class="col-xs-2">
           <button
             class="btn btn-primary-nb btn-blue-nb"
@@ -89,40 +103,6 @@
             Добавить
           </button>
         </div>
-      </div>
-      <div class="med-exam">
-        <div>
-          <div
-            class="input-group"
-          >
-            <label
-              class="input-group-addon"
-              style="height: 34px;"
-            >
-              Дата мед. осмотра
-            </label>
-          </div>
-        </div>
-        <div>
-          <div
-            class="input-group"
-          >
-            <input
-              v-model="dateMedExam"
-              class="form-control"
-              type="date"
-            >
-          </div>
-        </div>
-        <button
-          v-tippy
-          title="Сохранить"
-          class="btn last btn-blue-nb nbr"
-          :disabled="!tbData || !dateMedExam"
-          @click="updateDateMedExam"
-        >
-          Сохранить
-        </button>
       </div>
     </div>
     <div slot="footer">
@@ -202,6 +182,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('patients/card/save-harmful-factors', {
         tb_data: tbData,
+        dateMedExam: this.dateMedExam,
         card_pk: this.card_pk,
       });
       if (ok) {
@@ -234,21 +215,6 @@ export default {
     async getDateMedExam() {
       const result = await this.$api('get-date-medical-examination', { card_pk: this.card_pk });
       this.dateMedExam = result.data;
-    },
-    async updateDateMedExam() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api(
-        'update-date-medical-examination',
-        { card_pk: this.card_pk, date: this.dateMedExam },
-      );
-      await this.$store.dispatch(actions.DEC_LOADING);
-      console.log(ok);
-      console.log(message);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Сохранено');
-      } else {
-        this.$root.$emit('msg', 'error', message);
-      }
     },
   },
 };
@@ -437,7 +403,10 @@ export default {
   }
 .med-exam {
   display: flex;
-  justify-content: center;
-  margin: 30px 0;
+  width: 280px;
+  margin-left: 5px;
+}
+.med-date {
+  border-radius: 0 4px 4px 0;
 }
 </style>

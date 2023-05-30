@@ -115,7 +115,6 @@ urlpatterns = [
     path('update-company', views.update_company),
     path('get-examination-list', views.get_examination_list),
     path('get-date-medical-examination', views.get_date_medical_examination),
-    path('update-date-medical-examination', views.update_date_medical_examination),
     path('print-medical-examination-data', views.print_medical_examination_data),
     path('update-department', views.update_department),
     path('add-department', views.add_department),
