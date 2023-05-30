@@ -676,11 +676,15 @@ def microbiology_result(iss, fwb, doc):
     culture: MicrobiologyResultCulture
     for culture in q:
         fwb.append(Spacer(1, 3 * mm))
-        fwb.append(Paragraph("<font face=\"FreeSansBold\">Культура:</font> " + culture.culture.get_full_title(), style))
+        group_culture = culture.culture.group_culture
+        title_group_bac = ""
+        if group_culture:
+            title_group_bac = f"{group_culture.title} "
+        fwb.append(Paragraph("<font face=\"FreeSansBold\">Культура:</font> " + title_group_bac + culture.culture.get_full_title(), style))
         if culture.koe:
             fwb.append(Paragraph("<font face=\"FreeSansBold\">КОЕ:</font> " + culture.koe, style))
 
-        data = [[Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]]
+        data = [[Paragraph(x, styleBold) for x in ['Антибиотик', 'Чувствительность']]]
 
         for anti in culture.culture_antibiotic.all():
             data.append(
@@ -688,7 +692,6 @@ def microbiology_result(iss, fwb, doc):
                     Paragraph(x, style)
                     for x in [
                         anti.antibiotic.title + ' ' + anti.antibiotic_amount,
-                        anti.dia,
                         anti.sensitivity,
                     ]
                 ]
@@ -697,7 +700,7 @@ def microbiology_result(iss, fwb, doc):
         cw = [int(tw * 0.4), int(tw * 0.3)]
         cw = cw + [tw - sum(cw)]
 
-        t = Table(data, colWidths=cw)
+        t = Table(data, colWidths=cw, hAlign='LEFT')
         style_t = TableStyle(
             [
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -718,7 +721,7 @@ def microbiology_result(iss, fwb, doc):
 
         fwb.append(Spacer(1, 2 * mm))
         fwb.append(t)
-        fwb.append(Paragraph("<para align='right'><font size='7'>S – чувствителен; R – резистентен; I – промежуточная чувствительность</font></para>", style))
+        fwb.append(Paragraph("<font size='7'>S – чувствителен; R – резистентен; I – промежуточная чувствительность</font>", style))
         fwb.append(Spacer(1, 2 * mm))
         if culture.comments:
             fwb.append(Paragraph("<font size='8'>{}</font>".format(culture.comments.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")), style))
