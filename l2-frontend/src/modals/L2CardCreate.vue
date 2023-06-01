@@ -267,6 +267,19 @@
         </div>
       </div>
       <div
+        class="row"
+      >
+        <div
+          class="col-xs-6"
+        >
+          <div class="info-row">
+            <template v-if="card.ecp_id">
+              ЕЦП ИД {{ card.ecp_id }}
+            </template>
+          </div>
+        </div>
+      </div>
+      <div
         v-if="card_pk < 0"
         class="row"
       >
@@ -1279,6 +1292,7 @@ export default {
         docs: [],
         docs_to_delete: [],
         rmis_uid: null,
+        ecp_id: null,
         work_place_db: null,
         work_department_db: null,
         work_place_db_title: '',
