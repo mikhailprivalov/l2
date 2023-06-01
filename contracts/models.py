@@ -261,13 +261,10 @@ class MedicalExamination(models.Model):
         if current_exam:
             current_exam.date = date
             current_exam.save()
-        else:
+        elif date != "":
             card = Card.objects.filter(pk=card_pk).first()
             if card.work_place_db:
                 MedicalExamination.save_examination(card, card.work_place_db, date)
-            else:
-                return False
-        return True
 
     class Meta:
         verbose_name = 'Медицинский осмотр'

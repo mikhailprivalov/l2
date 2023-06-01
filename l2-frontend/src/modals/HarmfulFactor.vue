@@ -61,48 +61,39 @@
           </tr>
         </tbody>
       </table>
-      <div class="row">
-        <div class="col-xs-5">
-          <div class="med-exam">
-            <label
-              class="input-group-addon"
-              style="height: 34px; width: 150px"
-            >
-              Дата мед. осмотра
-            </label>
-            <input
-              v-model="dateMedExam"
-              class="form-control med-date"
-              type="date"
-            >
-          </div>
-        </div>
-        <div class="col-xs-2">
-          <button
-            class="btn btn-primary-nb btn-blue-nb"
-            type="button"
-            @click="selectResearches()"
+      <div class="flex-row">
+        <div class="flex">
+          <label
+            class="input-group-addon med-label"
           >
-            Выбрать
-          </button>
-        </div>
-        <div class="col-xs-2">
-          <button
-            class="btn btn-blue-nb add-row"
-            :disabled="disabledButtons"
-            @click="saveHarmfulFactors(tbData)"
+            Дата мед. осмотра
+          </label>
+          <input
+            v-model="dateMedExam"
+            class="form-control med-date"
+            type="date"
           >
-            Сохранить
-          </button>
         </div>
-        <div class="col-xs-2">
-          <button
-            class="btn btn-blue-nb add-row"
-            @click="add_new_row"
-          >
-            Добавить
-          </button>
-        </div>
+        <button
+          class="btn btn-blue-nb add-row"
+          type="button"
+          @click="selectResearches()"
+        >
+          Выбрать
+        </button>
+        <button
+          class="btn btn-blue-nb add-row"
+          :disabled="disabledButtons"
+          @click="saveHarmfulFactors(tbData)"
+        >
+          Сохранить
+        </button>
+        <button
+          class="btn btn-blue-nb add-row"
+          @click="add_new_row"
+        >
+          Добавить
+        </button>
       </div>
     </div>
     <div slot="footer">
@@ -401,12 +392,24 @@ export default {
       text-decoration: none;
     }
   }
-.med-exam {
+.flex-row {
   display: flex;
-  width: 280px;
-  margin-left: 5px;
+  justify-content: space-between;
+  height: 34px;
+  margin: 10px;
+}
+.flex {
+  display: flex;
 }
 .med-date {
   border-radius: 0 4px 4px 0;
+  width: 150px;
+}
+.med-label {
+  width: 150px;
+  height: 34px;
+}
+::v-deep .input-group-addon {
+  padding: 10px 12px;
 }
 </style>
