@@ -3074,5 +3074,3 @@ def get_date_medical_examination(request):
         return JsonResponse({"data": current_exam})
     else:
         return JsonResponse({"data": None})
-
-
