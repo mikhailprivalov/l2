@@ -61,7 +61,7 @@
           </tr>
         </tbody>
       </table>
-      <div class="flex-row">
+      <div class="flex flex-row">
         <div class="flex">
           <label
             class="input-group-addon med-label"
@@ -393,7 +393,6 @@ export default {
     }
   }
 .flex-row {
-  display: flex;
   justify-content: space-between;
   height: 34px;
   margin: 10px;
@@ -410,6 +409,6 @@ export default {
   height: 34px;
 }
 ::v-deep .input-group-addon {
-  padding: 10px 12px;
+  padding: 8px 12px;
 }
 </style>
