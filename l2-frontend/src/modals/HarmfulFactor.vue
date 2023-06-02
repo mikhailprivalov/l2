@@ -22,7 +22,7 @@
     >
       <table
         class="table table-bordered table-condensed table-sm-pd"
-        style="table-layout: fixed; font-size: 12px"
+        style="table-layout: fixed; font-size: 12px; margin-bottom: 0"
       >
         <colgroup>
           <col>
@@ -61,12 +61,26 @@
           </tr>
         </tbody>
       </table>
+      <div
+        class="flex add-row-div"
+      >
+        <button
+          v-tippy="{ placement: 'bottom' }"
+          class="btn btn-blue-nb nbr add-button"
+          title="Добавить строку"
+          @click="add_new_row"
+        >
+          <i class="fa fa-plus" />
+        </button>
+      </div>
+    </div>
+    <div slot="footer">
       <div class="flex flex-row">
         <div class="flex">
           <label
             class="input-group-addon med-label"
           >
-            Дата мед. осмотра
+            Дата осмотра
           </label>
           <input
             v-model="dateMedExam"
@@ -74,34 +88,23 @@
             type="date"
           >
         </div>
-        <button
-          class="btn btn-blue-nb add-row"
-          type="button"
-          @click="selectResearches()"
-        >
-          Выбрать
-        </button>
-        <button
-          class="btn btn-blue-nb add-row"
-          :disabled="disabledButtons"
-          @click="saveHarmfulFactors(tbData)"
-        >
-          Сохранить
-        </button>
-        <button
-          class="btn btn-blue-nb add-row"
-          @click="add_new_row"
-        >
-          Добавить
-        </button>
-      </div>
-    </div>
-    <div slot="footer">
-      <div class="row">
-        <div class="col-xs-10" />
-        <div class="col-xs-2">
+        <div>
           <button
-            class="btn btn-primary-nb btn-blue-nb"
+            class="btn btn-blue-nb add-row margin-button"
+            type="button"
+            @click="selectResearches()"
+          >
+            Назначить
+          </button>
+          <button
+            class="btn btn-blue-nb add-row margin-button"
+            :disabled="disabledButtons"
+            @click="saveHarmfulFactors(tbData)"
+          >
+            Сохранить
+          </button>
+          <button
+            class="btn btn-blue-nb add-row margin-button"
             type="button"
             @click="hide_modal"
           >
@@ -402,13 +405,24 @@ export default {
 }
 .med-date {
   border-radius: 0 4px 4px 0;
-  width: 150px;
+  width: 125px;
 }
 .med-label {
-  width: 150px;
+  width: 125px;
   height: 34px;
 }
 ::v-deep .input-group-addon {
   padding: 8px 12px;
+}
+.margin-button {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+.add-row-div {
+  justify-content: flex-end;
+  height: 35px;
+}
+.add-button {
+  width: 35px;
 }
 </style>

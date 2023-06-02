@@ -249,7 +249,7 @@
               <td class="border">
                 <input
                   v-model="newDepartment"
-                  class="form-control padding-left noborder"
+                  class="form-control padding-left no-border"
                 >
               </td>
               <td class="border">
