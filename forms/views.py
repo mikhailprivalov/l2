@@ -11,8 +11,15 @@ from pdf2docx import Converter
 from docx import Document
 from appconf.manager import SettingManager
 from forms.sql_func import get_covid_to_json, get_extra_notification_data_for_pdf
-from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, \
-    DISABLED_AUTO_PRINT_DATE_IN_FORMS
+from laboratory.settings import (
+    COVID_RESEARCHES_PK,
+    CENTRE_GIGIEN_EPIDEMIOLOGY,
+    REGION,
+    EXCLUDE_HOSP_SEND_EPGU,
+    EXTRA_MASTER_RESEARCH_PK,
+    EXTRA_SLAVE_RESEARCH_PK,
+    DISABLED_AUTO_PRINT_DATE_IN_FORMS,
+)
 from utils.dates import normalize_date
 from hospitals.models import Hospitals
 from utils.xh import save_tmp_file
