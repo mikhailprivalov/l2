@@ -53,6 +53,12 @@ export default (instance: Vue): void => {
     printForm('/statistic/xls?pk={pks}&type=directions_list', pks);
   });
 
+  instance.$root.$on('directions:resend-patient-email-results', async ids => {
+    await instance.$api('directions/resend-results', { ids });
+    // eslint-disable-next-line max-len
+    instance.$ok('Запланирована повторная отправка результатов.\nРезультаты должны быть подтверждены полностью.\nУ пациента должен быть заполнен email и разраешена отправка.');
+  });
+
   instance.$root.$on('msg', (type, message, timeout: number | void | null, payload: any | void) => {
     let t = TYPE.DEFAULT;
 
@@ -214,4 +220,16 @@ export default (instance: Vue): void => {
         });
     },
   );
+
+  Vue.prototype.$msg = (type, message, timeout: number | void | null, payload: any | void) => {
+    instance.$root.$emit('msg', type, message, timeout, payload);
+  };
+
+  Vue.prototype.$error = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'error', message, timeout);
+  };
+
+  Vue.prototype.$ok = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'ok', message, timeout);
+  };
 };

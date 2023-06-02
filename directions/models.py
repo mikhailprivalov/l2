@@ -23,10 +23,11 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
-from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
+from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc, check_confirm_patient_research, check_create_direction_patient_by_research
 from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION
+from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION, \
+    AUTO_PRINT_RESEARCH_DIRECTION
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
@@ -1270,6 +1271,7 @@ class Napravleniya(models.Model):
 
         ofname_id = ofname_id or -1
         ofname = None
+        auto_print_direction_research = []
 
         if client_id and researches:  # если client_id получен и исследования получены
             if ofname_id > -1:
@@ -1326,7 +1328,10 @@ class Napravleniya(models.Model):
                 # получить прайс
                 work_place_link = card.work_place_db
                 price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource, work_place_link)
-
+                if AUTO_PRINT_RESEARCH_DIRECTION:
+                    auto_print_direction_research = AUTO_PRINT_RESEARCH_DIRECTION.get("researches")
+                    repeat_research = list(set(res) & set(auto_print_direction_research))
+                    auto_print_direction_research = list(set(auto_print_direction_research) - set(repeat_research))
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
@@ -1601,6 +1606,39 @@ class Napravleniya(models.Model):
                     result_sorted[i.file_name_contract].append(i.napravleniye_id)
             for k, v in result_sorted.items():
                 create_contract(v, client_id)
+        if auto_print_direction_research:
+            month_ago = AUTO_PRINT_RESEARCH_DIRECTION.get("month_ago")
+            check_result = check_confirm_patient_research(client_id, tuple(auto_print_direction_research), month_ago)
+            check_result = [ch.research_id for ch in check_result]
+            check_result_research = list(set(auto_print_direction_research) - set(check_result))
+            check_direction = check_create_direction_patient_by_research(client_id, tuple(check_result_research), month_ago)
+            for ch_dir in check_direction:
+                check_result_research.remove(ch_dir.research_id)
+                result["list_id"].append(ch_dir.direction_id)
+            for research_dir in check_result_research:
+                new_direction = Napravleniya.gen_napravleniye(
+                    client_id,
+                    doc_current if not for_rmis else None,
+                    finsource,
+                    diagnos,
+                    history_num,
+                    doc_current,
+                    ofname_id,
+                    ofname,
+                    for_rmis=for_rmis,
+                    rmis_data=rmis_data,
+                    parent_id=parent_iss,
+                    parent_auto_gen_id=parent_auto_gen,
+                    parent_slave_hosp_id=parent_slave_hosp,
+                    rmis_slot=rmis_slot,
+                    direction_purpose=direction_purpose,
+                    external_organization=external_organization,
+                    price_category=price_category,
+                    hospital=hospital_override,
+                )
+                result["list_id"].append(new_direction.pk)
+                Issledovaniya(napravleniye=new_direction, research_id=research_dir, deferred=False).save()
+
         return result
 
     def has_save(self):

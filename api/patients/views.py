@@ -185,7 +185,7 @@ def patients_search_card(request):
                     | Q(card__phone__in=normalized_phones)
                     | Q(card__doctorcall__phone__in=normalized_phones)
                 )
-    if is_ecp_search:
+    if is_ecp_search or ":" in query:
         ecp_id = query.split(':')[1]
         patient_data = search_patient_ecp_by_person_id(ecp_id)
         if patient_data and (patient_data.get('PersonSnils_Snils') or patient_data.get('enp')):
@@ -559,6 +559,29 @@ def patients_get_card_data(request, card_id):
 
 
 @login_required
+def patients_get_card_simple_data(request, card_id):
+    card = Card.objects.get(pk=card_id)
+    base = card.base
+    individual = card.individual
+
+    return JsonResponse(
+        {
+            "pk": card_id,
+            "age": individual.age_s(),
+            "base": {"pk": base.pk, "title": base.title, "short_title": base.short_title, "internal_type": base.internal_type},
+            "birthday": individual.bd(),
+            "family": individual.family,
+            "name": individual.name,
+            "twoname": individual.patronymic,
+            "patronymic": individual.patronymic,
+            "individual_pk": individual.pk,
+            "isArchive": card.is_archive,
+            "main_diagnosis": card.main_diagnosis,
+        }
+    )
+
+
+@login_required
 @group_required("Картотека L2", "Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра")
 def patients_card_save(request):
     request_data = json.loads(request.body)
@@ -868,6 +891,13 @@ def update_cdu(request):
 
 
 def sync_rmis(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    card.individual.sync_with_rmis()
+    return JsonResponse({"ok": True})
+
+
+def sync_ecp(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
     card.individual.sync_with_rmis()

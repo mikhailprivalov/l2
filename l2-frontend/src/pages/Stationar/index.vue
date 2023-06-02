@@ -429,6 +429,13 @@
                   class="btn btn-blue-nb"
                   @click.prevent="print_results(opened_form_pk)"
                 >Печать</a>
+                <a
+                  v-tippy
+                  title="docx формат"
+                  href="#"
+                  class="btn btn-blue-nb"
+                  @click.prevent="print_results_docx(opened_form_pk)"
+                ><i class="fa-solid fa-file-word"/></a>
               </template>
               <div v-frag>
                 <a
@@ -1474,6 +1481,9 @@ export default {
     },
     print_results(pk) {
       this.$root.$emit('print:results', [pk]);
+    },
+    print_results_docx(pk) {
+      window.open(`/forms/docx?type=113.01&direction=${pk}`, '_blank');
     },
     reload_if_need(noСlose = false) {
       if (!this.opened_list_key) {

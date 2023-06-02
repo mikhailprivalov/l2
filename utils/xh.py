@@ -99,3 +99,8 @@ def show_qr_lk_address(fwb, leftnone=False):
             qr_code_param = QRCODE_OFFSET_SIZE
         fwb.append(QrCodeSite(lk_address, qr_code_param))
     return fwb
+
+
+def replace_values(key):
+    replace_data = {"code": "Код МКБ10", "title": "", "id": ""}
+    return replace_data.get(key, "")

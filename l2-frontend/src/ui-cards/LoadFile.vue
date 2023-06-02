@@ -1,32 +1,39 @@
 <template>
   <div v-frag>
-    <li v-show="Boolean(l2_load_file || l2_csv_load_file)">
+    <component
+      :is="tag"
+      v-show="Boolean(l2_load_file || l2_csv_load_file)"
+    >
       <a
         href="#"
+        :class="isLoadGroupForProtocol && 'btn btn-blue-nb'"
         @click.prevent="doOpen"
       >
-        Загрузка файла {{ titleButton }}
+        {{ titleButton }}
       </a>
       <Modal
         v-if="open"
         show-footer="true"
+        ignore-body
         white-bg="true"
         max-width="710px"
         width="100%"
         margin-left-right="auto"
         @close="open = false"
       >
-        <span slot="header">Загрузка файла</span>
+        <span slot="header">{{ titleButton }}</span>
         <div slot="body">
           <template v-if="l2_load_file">
             <div class="form-group">
-              <label for="fileInput"> {{ company === true ? 'XLSX файл' : 'PDF' }}</label>
+              <label for="fileInput"> {{ company === true || fileFilter === 'XLSX'?
+                'XLSX файл' : (isLoadGroupForProtocol ? 'JSON': 'PDF') }}</label>
               <input
                 id="fileInput"
                 ref="file"
                 type="file"
                 class="form-control-file"
                 :readonly="loading"
+                :accept="fileFilter"
                 @change="handleFileUpload()"
               >
             </div>
@@ -41,7 +48,8 @@
                 v-if="loading"
                 class="fa fa-spinner"
               />
-              <span v-else>Загрузить {{ company === true ? 'XLSX' : 'PDF' }}</span>
+              <span v-else>Загрузить {{ company === true || fileFilter === 'XLSX' ?
+                'XLSX' : (isLoadGroupForProtocol ? 'JSON': 'PDF') }}</span>
             </button>
           </template>
           <template v-if="l2_csv_load_file">
@@ -53,6 +61,7 @@
                 type="file"
                 class="form-control-file"
                 :readonly="loading"
+                :accept="fileFilter"
                 @change="handleCsvFileUpload()"
               >
             </div>
@@ -73,7 +82,7 @@
           <h5 v-if="results.length > 0">
             {{ company === true ? 'Не сохраненные результаты': 'Сохранённые результаты' }}
           </h5>
-          <ul v-if="results.length !== 0 && !link">
+          <ul v-if="results.length !== 0 && !link && !company">
             <li v-if="method">
               Методика: {{ method }}
             </li>
@@ -108,7 +117,7 @@
           </div>
         </div>
       </Modal>
-    </li>
+    </component>
   </div>
 </template>
 
@@ -122,10 +131,23 @@ export default {
   name: 'LoadFile',
   components: { Modal },
   props: {
+    tag: {
+      type: String,
+      default: 'li',
+    },
     companyInn: {
       type: String,
       default: '',
       required: false,
+    },
+    fileFilter: {
+      type: String,
+      default: null,
+      required: false,
+    },
+    classess: {
+      type: String,
+      default: '',
     },
     isGenCommercialOffer: {
       type: Boolean,
@@ -137,6 +159,16 @@ export default {
       default: false,
       required: false,
     },
+    isLoadGroupForProtocol: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    researchId: {
+      type: Number,
+      default: -1,
+      required: false,
+    },
     selectedPrice: {
       type: Number,
       default: -1,
@@ -144,7 +176,12 @@ export default {
     },
     titleButton: {
       type: String,
-      default: '',
+      default: 'Загрузка файла',
+      required: false,
+    },
+    researchSet: {
+      type: Number,
+      default: -1,
       required: false,
     },
   },
@@ -158,6 +195,7 @@ export default {
       results: [],
       company: false,
       link: null,
+      contentLoadGroupForProtocol: null,
     };
   },
   computed: {
@@ -180,6 +218,13 @@ export default {
     handleFileUpload() {
       // eslint-disable-next-line prefer-destructuring
       this.file = this.$refs.file.files[0];
+      if (this.isLoadGroupForProtocol) {
+        const reader = new FileReader();
+        reader.onload = (res) => {
+          this.contentLoadGroupForProtocol = res.target.result;
+        };
+        reader.readAsText(this.file);
+      }
     },
     handleCsvFileUpload() {
       // eslint-disable-next-line prefer-destructuring
@@ -195,21 +240,30 @@ export default {
         formData.append('isGenCommercialOffer', this.isGenCommercialOffer);
         formData.append('selectedPrice', this.selectedPrice);
         formData.append('isWritePatientEcp', this.isWritePatientEcp);
-        const { data } = await axios.post('/api/parse-file/loadfile', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'X-CSRFToken': Cookies.get('csrftoken'),
-          },
-        });
-        this.results = data.results;
-        this.method = null;
-        this.company = data.company;
-        this.$refs.file.value = '';
-        this.file = '';
-        this.$root.$emit('msg', 'ok', 'Файл загружен');
-        this.link = data.link;
-        if (this.link) {
-          window.open(`/statistic/${this.link}?file=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
+        formData.append('isLoadGroupForProtocol', this.isLoadGroupForProtocol);
+        formData.append('researchId', this.researchId);
+        formData.append('researchSet', this.researchSet);
+        if (this.isLoadGroupForProtocol) {
+          this.$emit('load-file', this.contentLoadGroupForProtocol);
+          this.open = false;
+          this.loading = false;
+        } else {
+          const { data } = await axios.post('/api/parse-file/loadfile', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'X-CSRFToken': Cookies.get('csrftoken'),
+            },
+          });
+          this.results = data.results;
+          this.method = null;
+          this.company = data.company;
+          this.$refs.file.value = '';
+          this.file = '';
+          this.$root.$emit('msg', 'ok', 'Файл загружен');
+          this.link = data.link;
+          if (this.link) {
+            window.open(`/statistic/${this.link}?file=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
+          }
         }
       } catch (e) {
         // eslint-disable-next-line no-console
