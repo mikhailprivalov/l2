@@ -22,7 +22,7 @@ from appconf.manager import SettingManager
 from clients.models import Individual, Card, Document, CardDocUsage
 from hospitals.models import Hospitals
 from laboratory import settings
-from laboratory.settings import FONTS_FOLDER, DISABLED_FORMS
+from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 
