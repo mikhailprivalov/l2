@@ -1,3 +1,4 @@
+import logging
 import socket
 from functools import reduce
 from directions.models import Issledovaniya, Napravleniya
@@ -5,6 +6,8 @@ from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_SERVERS, 
 import requests
 import simplejson as json
 
+
+logger = logging.getLogger(__name__)
 
 def sum(x, y):
     return int(x) + int(y)
@@ -105,15 +108,21 @@ def change_acsn(link_study, accession_number):
 
 def check_dicom_study(servers_addr, data):
     for server_addr in servers_addr:
-        dicom_study = requests.post(f'{server_addr}/tools/find', data=json.dumps(data))
-        if len(dicom_study.json()) > 0:
-            return {"dicom": (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"]), "server": server_addr}
+        try:
+            dicom_study = requests.post(f'{server_addr}/tools/find', data=json.dumps(data))
+            if len(dicom_study.json()) > 0:
+                return {"dicom": (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"]), "server": server_addr}
+        except Exception as e:
+            logger.error(e)
     return {}
 
 
 def check_dicom_study_instance_uid(servers_addr, data):
     for server_addr in servers_addr:
-        dicom_study = requests.get(f'{server_addr}/studies/{data}')
-        if dicom_study and len(dicom_study.json()) > 0:
-            return f'{server_addr}/osimis-viewer/app/index.html?study={data}'
+        try:
+            dicom_study = requests.get(f'{server_addr}/studies/{data}')
+            if dicom_study and len(dicom_study.json()) > 0:
+                return f'{server_addr}/osimis-viewer/app/index.html?study={data}'
+        except Exception as e:
+            logger.error(e)
     return ''
