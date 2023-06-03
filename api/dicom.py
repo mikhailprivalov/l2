@@ -110,8 +110,9 @@ def check_dicom_study(servers_addr, data):
     for server_addr in servers_addr:
         try:
             dicom_study = requests.post(f'{server_addr}/tools/find', data=json.dumps(data))
-            if len(dicom_study.json()) > 0:
-                return {"dicom": (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"]), "server": server_addr}
+            result = dicom_study.json()
+            if len(result) > 0:
+                return {"dicom": (result[0]["ID"], result[0]["MainDicomTags"]["StudyInstanceUID"]), "server": server_addr}
         except Exception as e:
             logger.error(e)
     return {}
