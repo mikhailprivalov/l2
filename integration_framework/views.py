@@ -2468,7 +2468,6 @@ def directions_by_category_result_year(request):
                     is_dicom_study = check_dicom_study(DICOM_SERVERS, data)
                     if is_dicom_study.get("server"):
                         dicom_server_url = is_dicom_study.get("server")
-                        break
                 else:
                     dicom_server_url = DICOM_SERVER
             directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag, "server": dicom_server_url}
