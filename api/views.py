@@ -3070,7 +3070,4 @@ def print_medical_examination_data(request):
 def get_date_medical_examination(request):
     request_data = json.loads(request.body)
     current_exam = MedicalExamination.get_date(request_data["card_pk"])
-    if current_exam:
-        return JsonResponse({"data": current_exam})
-    else:
-        return JsonResponse({"data": None})
+    return JsonResponse({"data": current_exam})
