@@ -2463,12 +2463,11 @@ def directions_by_category_result_year(request):
         if d.direction not in directions:
             dicom_server_url = None
             if d.study_instance_uid_tag:
-                data = {'Level': 'Study', 'Query': {"StudyInstanceUID": {d.study_instance_uid_tag}}, "Expand": True}
+                data = {'Level': 'Study', 'Query': {"StudyInstanceUID": d.study_instance_uid_tag}, "Expand": True}
                 if len(DICOM_SERVERS) > 1:
                     is_dicom_study = check_dicom_study(DICOM_SERVERS, data)
                     if is_dicom_study.get("server"):
                         dicom_server_url = is_dicom_study.get("server")
-                        break
                 else:
                     dicom_server_url = DICOM_SERVER
             directions[d.direction] = {'pk': d.direction, 'confirmedAt': d.ch_time_confirmation, 'services': [], 'study': d.study_instance_uid_tag, "server": dicom_server_url}
