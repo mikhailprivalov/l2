@@ -22,7 +22,7 @@
     >
       <table
         class="table table-bordered table-condensed table-sm-pd"
-        style="table-layout: fixed; font-size: 12px"
+        style="table-layout: fixed; font-size: 12px; margin-bottom: 0"
       >
         <colgroup>
           <col>
@@ -61,42 +61,50 @@
           </tr>
         </tbody>
       </table>
-      <div class="row">
-        <div class="col-xs-3" />
-        <div class="col-xs-2">
+      <div
+        class="flex add-row-div"
+      >
+        <button
+          v-tippy="{ placement: 'bottom' }"
+          class="btn btn-blue-nb nbr add-button"
+          title="Добавить строку"
+          @click="add_new_row"
+        >
+          <i class="fa fa-plus" />
+        </button>
+      </div>
+    </div>
+    <div slot="footer">
+      <div class="flex flex-row">
+        <div class="flex">
+          <label
+            class="input-group-addon med-label"
+          >
+            Дата осмотра
+          </label>
+          <input
+            v-model="dateMedExam"
+            class="form-control med-date"
+            type="date"
+          >
+        </div>
+        <div>
           <button
-            class="btn btn-primary-nb btn-blue-nb"
+            class="btn btn-blue-nb add-row margin-button"
             type="button"
             @click="selectResearches()"
           >
-            Выбрать
+            Назначить
           </button>
-        </div>
-        <div class="col-xs-2">
           <button
-            class="btn btn-blue-nb add-row"
+            class="btn btn-blue-nb add-row margin-button"
             :disabled="disabledButtons"
             @click="saveHarmfulFactors(tbData)"
           >
             Сохранить
           </button>
-        </div>
-        <div class="col-xs-2">
           <button
-            class="btn btn-blue-nb add-row"
-            @click="add_new_row"
-          >
-            Добавить
-          </button>
-        </div>
-      </div>
-    </div>
-    <div slot="footer">
-      <div class="row">
-        <div class="col-xs-10" />
-        <div class="col-xs-2">
-          <button
-            class="btn btn-primary-nb btn-blue-nb"
+            class="btn btn-blue-nb add-row margin-button"
             type="button"
             @click="hide_modal"
           >
@@ -135,6 +143,7 @@ export default {
       tbData: [makeDefaultRow()],
       harmfulFactors: [],
       disabledButtons: false,
+      dateMedExam: '',
     };
   },
   mounted() {
@@ -146,6 +155,7 @@ export default {
     }).then(rows => {
       this.tbData = rows;
     });
+    this.getDateMedExam();
   },
   methods: {
     hide_modal() {
@@ -166,6 +176,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('patients/card/save-harmful-factors', {
         tb_data: tbData,
+        dateMedExam: this.dateMedExam,
         card_pk: this.card_pk,
       });
       if (ok) {
@@ -194,6 +205,10 @@ export default {
       const currentHarmfullFactors = this.tbData.map((v) => v.factorId);
       const setHarmfullFactors = new Set(currentHarmfullFactors);
       this.disabledButtons = currentHarmfullFactors.length !== setHarmfullFactors.size;
+    },
+    async getDateMedExam() {
+      const result = await this.$api('get-date-medical-examination', { card_pk: this.card_pk });
+      this.dateMedExam = result.data;
     },
   },
 };
@@ -380,4 +395,34 @@ export default {
       text-decoration: none;
     }
   }
+.flex-row {
+  justify-content: space-between;
+  height: 34px;
+  margin: 10px;
+}
+.flex {
+  display: flex;
+}
+.med-date {
+  border-radius: 0 4px 4px 0;
+  width: 125px;
+}
+.med-label {
+  width: 125px;
+  height: 34px;
+}
+::v-deep .input-group-addon {
+  padding: 8px 12px;
+}
+.margin-button {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+.add-row-div {
+  justify-content: flex-end;
+  height: 35px;
+}
+.add-button {
+  width: 35px;
+}
 </style>
