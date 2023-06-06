@@ -66,6 +66,7 @@ const menuItems = [
   },
   {
     title: 'docx формат',
+    requiredModule: 'l2_docx_aggregate_laboratory_results',
     handler() {
       this.$root.$emit('print:aggregate_laboratory_results', this.checked);
     },
