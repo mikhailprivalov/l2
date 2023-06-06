@@ -64,6 +64,12 @@ const menuItems = [
       this.$root.$emit('directions:resend-patient-email-results', this.checked);
     },
   },
+  {
+    title: 'docx формат',
+    handler() {
+      this.$root.$emit('print:aggregate_laboratory_results', this.checked);
+    },
+  },
 ];
 
 export default {

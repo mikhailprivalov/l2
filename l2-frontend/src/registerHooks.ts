@@ -59,6 +59,10 @@ export default (instance: Vue): void => {
     instance.$ok('Запланирована повторная отправка результатов.\nРезультаты должны быть подтверждены полностью.\nУ пациента должен быть заполнен email и разраешена отправка.');
   });
 
+  instance.$root.$on('print:aggregate_laboratory_results', async pks => {
+    window.open(`/forms/docx?type=113.02&directions=${pks}`, '_blank');
+  });
+
   instance.$root.$on('msg', (type, message, timeout: number | void | null, payload: any | void) => {
     let t = TYPE.DEFAULT;
 
