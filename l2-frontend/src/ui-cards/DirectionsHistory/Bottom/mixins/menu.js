@@ -65,7 +65,7 @@ const menuItems = [
     },
   },
   {
-    title: 'docx формат',
+    title: 'экспорт в docx',
     requiredModule: 'l2_docx_aggregate_laboratory_results',
     handler() {
       this.$root.$emit('print:aggregate_laboratory_results', this.checked);
