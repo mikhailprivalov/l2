@@ -734,7 +734,7 @@
             :direction="direction"
           />
           <AggregateAssignments
-            v-if="opened_list_key === 'list assignments'"
+            v-if="opened_list_key === 'pharmacotherapy'"
             :direction="direction"
             :researches="list_directions"
           />

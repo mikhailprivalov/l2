@@ -32,11 +32,6 @@
           </div>
         </div>
       </div>
-      <div>
-        <AggregatePharmacotherapy
-          :direction="direction"
-        />
-      </div>
     </div>
   </div>
 </template>
@@ -53,8 +48,6 @@ import {
 import 'vue-easytable/libs/theme-default/index.css';
 
 import ruRu from '@/locales/ve';
-// eslint-disable-next-line import/extensions
-import AggregatePharmacotherapy from '@/fields/AggregatePharmacotherapy';
 
 VeLocale.use(ruRu);
 
@@ -93,7 +86,6 @@ const pageSizeChange = (size: number) => {
 const assignments = ref([]);
 watch(props.researches, () => {
   assignments.value = props.researches.filter((research) => {
-    console.log(research);
     return research;
   });
 });
