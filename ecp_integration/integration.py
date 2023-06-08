@@ -113,6 +113,8 @@ def get_slot_ecp(person_id, slot_id):
 def search_patient_ecp_by_person_id(person_id):
     sess_id = request_get_sess_id()
     result = make_request_get("Person", query=f"Sess_id={sess_id}&Person_id={person_id}", sess_id=sess_id)
+    if not result.get('data') or len(result.get('data')) == 0:
+        return None
     patient = result['data'][0]
     patient_snils = patient.get("PersonSnils_Snils", "")
     result = make_request_get(

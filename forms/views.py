@@ -11,7 +11,15 @@ from pdf2docx import Converter
 from docx import Document
 from appconf.manager import SettingManager
 from forms.sql_func import get_covid_to_json, get_extra_notification_data_for_pdf
-from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
+from laboratory.settings import (
+    COVID_RESEARCHES_PK,
+    CENTRE_GIGIEN_EPIDEMIOLOGY,
+    REGION,
+    EXCLUDE_HOSP_SEND_EPGU,
+    EXTRA_MASTER_RESEARCH_PK,
+    EXTRA_SLAVE_RESEARCH_PK,
+    DISABLED_AUTO_PRINT_DATE_IN_FORMS,
+)
 from utils.dates import normalize_date
 from hospitals.models import Hospitals
 from utils.xh import save_tmp_file
@@ -31,12 +39,17 @@ def pdf(request):
     response['Content-Disposition'] = 'inline; filename="form-' + t + '.pdf"'
 
     f = import_string('forms.forms' + t[0:3] + '.form_' + t[4:6])
+    disable_date = False
+    if 'form_' + t[4:6] in DISABLED_AUTO_PRINT_DATE_IN_FORMS:
+        disable_date = True
+
     response.write(
         f(
             request_data={
                 **dict(request.GET.items()),
                 "user": request.user,
                 "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                "disable_date": disable_date,
             }
         )
     )
