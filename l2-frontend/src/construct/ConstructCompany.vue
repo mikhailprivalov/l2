@@ -1,13 +1,13 @@
 <template>
   <div class="container">
-    <div class="main">
+    <div class="flex flex-wrap">
       <div class="box card-1 card-no-hover">
         <h5 class="text-center">
           {{ isNewCompany ? 'Добавить компанию' : 'Обновить компанию' }}
         </h5>
         <h6
           v-if="!isNewCompany"
-          class="text-center margin-right margin-left"
+          class="text-center"
         >
           {{ originShortTitle }}
         </h6>
@@ -97,7 +97,7 @@
               name="contractId"
               label="Договор"
             />
-            <div class="flex-end">
+            <div class="flex flex-right">
               <FormulateInput
                 class="margin-right"
                 type="button"
@@ -113,9 +113,9 @@
           </FormulateForm>
           <div
             v-if="!isNewCompany"
-            class="flex-space-between"
+            class="flex flex-space-between"
           >
-            <div class="flex">
+            <div class="flex fixed-height">
               <input
                 v-model="date"
                 type="date"
@@ -229,7 +229,7 @@
               <td class="border">
                 <input
                   v-model="department.label"
-                  class="form-control padding-left noborder"
+                  class="form-control padding-left no-border"
                 >
               </td>
               <td class="border">
@@ -249,7 +249,7 @@
               <td class="border">
                 <input
                   v-model="newDepartment"
-                  class="form-control padding-left noborder"
+                  class="form-control padding-left no-border"
                 >
               </td>
               <td class="border">
@@ -271,29 +271,37 @@
     </div>
     <div
       v-if="showExaminationList"
-      class="main"
+      class="flex flex-wrap"
     >
       <div class="box exam-box card-1 card-no-hover">
-        <div class="flex margin-bottom">
-          <div class="row-div">
-            <h5 class="text-center no-margin">
-              {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
-            </h5>
+        <h5 class="text-center no-margin">
+          {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
+        </h5>
+        <div class="flex flex-space-between">
+          <div class="flex flex-bottom">
+            Исключить исследования:
+          </div>
+          <div class="print-div">
+            <div class="button">
+              <button
+                v-tippy
+                title="Печать"
+                class="btn last btn-blue-nb nbr"
+                @click="print"
+              >
+                Печать
+              </button>
+            </div>
           </div>
         </div>
-        <div class="row-div">
-          Исключить исследования:
-        </div>
-        <div class="row-div">
-          <Treeselect
-            v-model="excludedResearches"
-            :multiple="true"
-            :options="researches.data"
-            :disable-branch-nodes="true"
-            :append-to-body="true"
-            placeholder="Выберите исследование"
-          />
-        </div>
+        <Treeselect
+          v-model="excludedResearches"
+          :multiple="true"
+          :options="researches.data"
+          :disable-branch-nodes="true"
+          :append-to-body="true"
+          placeholder="Выберите исследование"
+        />
         <VeTable
           :columns="columns"
           :table-data="examinationList"
@@ -306,7 +314,7 @@
         >
           Нет записей
         </div>
-        <div class="flex-space-between">
+        <div class="flex flex-space-between">
           <VePagination
             :total="examinationList.length"
             :page-index="page"
@@ -319,11 +327,11 @@
             <div class="button">
               <button
                 v-tippy
-                title="печать"
+                title="Печать"
                 class="btn last btn-blue-nb nbr"
                 @click="print"
               >
-                печать
+                Печать
               </button>
             </div>
           </div>
@@ -574,8 +582,7 @@ export default {
 .exam-box {
   min-height: 0;
 }
-.main {
-  display: flex;
+.flex-wrap {
   flex-wrap: wrap;
 }
 .scroll {
@@ -605,15 +612,19 @@ export default {
   border: 1px solid #ddd;
 }
 .flex-space-between {
-  display: flex;
   justify-content: space-between;
 }
-.flex-end {
-  display: flex;
+.flex-right {
   justify-content: flex-end;
 }
 .flex {
   display: flex;
+}
+.fixed-height {
+  height: 42px;
+}
+.flex-bottom {
+  align-items: flex-end;
 }
 .no-margin {
   margin-top: 0;
@@ -636,7 +647,7 @@ export default {
   margin-top: 36px;
   padding-left: 9px;
 }
-.noborder {
+.no-border {
   border: none;
 }
 .add-file {

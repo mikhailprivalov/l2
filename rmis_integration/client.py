@@ -766,6 +766,7 @@ class Patients(BaseRequester):
                             individual.sync_with_rmis(c=self.main_client, forced_data=individual_row)
 
                 if ECP_SEARCH_PATIENT.get("search"):
+
                     individual_row = search_patient_ecp_by_person_id(q)
                     individual = clients_models.Individual.import_from_ecp(individual_row)
                 return_rows.append(individual)

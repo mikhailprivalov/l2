@@ -541,7 +541,10 @@ def form_03(request_data):
 
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
     objs.append(Spacer(1, 5 * mm))
-    objs.append(Paragraph('{} г.'.format(date_now), style))
+    if not request_data.get("disable_date"):
+        objs.append(Paragraph(f'{date_now} г.', style))
+    else:
+        objs.append(Spacer(1, 3 * mm))
     objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph('(дата оформления)', styleBottom))
 
@@ -6390,7 +6393,10 @@ def form_27(request_data):
     objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph(f'{date_now} г.', style))
+    if not request_data.get("disable_date"):
+        objs.append(Paragraph(f'{date_now} г.', style))
+    else:
+        objs.append(Spacer(1, 3 * mm))
     objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
     doc.build(objs)

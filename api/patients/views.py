@@ -42,7 +42,7 @@ from clients.models import (
     CardControlParam,
     PatientHarmfullFactor,
 )
-from contracts.models import Company, CompanyDepartment
+from contracts.models import Company, CompanyDepartment, MedicalExamination
 from directions.models import Issledovaniya
 from directory.models import Researches, PatientControlParam
 from laboratory import settings
@@ -185,7 +185,7 @@ def patients_search_card(request):
                     | Q(card__phone__in=normalized_phones)
                     | Q(card__doctorcall__phone__in=normalized_phones)
                 )
-    if is_ecp_search:
+    if is_ecp_search or ":" in query:
         ecp_id = query.split(':')[1]
         patient_data = search_patient_ecp_by_person_id(ecp_id)
         if patient_data and (patient_data.get('PersonSnils_Snils') or patient_data.get('enp')):
@@ -758,8 +758,11 @@ def patients_save_harmful_factors(request):
     request_data = json.loads(request.body)
     tb_data = request_data.get('tb_data', '')
     card_pk = int(request_data.get('card_pk', -1))
+    date_med_exam = request_data.get('dateMedExam')
     if len(tb_data) < 1:
         return JsonResponse({'message': 'Ошибка в количестве'})
+    if date_med_exam:
+        MedicalExamination.update_date(card_pk, date_med_exam)
     result = PatientHarmfullFactor.save_card_harmful_factor(card_pk, tb_data)
     if result:
         return JsonResponse({'ok': True, 'message': 'Сохранено'})
@@ -891,6 +894,13 @@ def update_cdu(request):
 
 
 def sync_rmis(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    card.individual.sync_with_rmis()
+    return JsonResponse({"ok": True})
+
+
+def sync_ecp(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
     card.individual.sync_with_rmis()

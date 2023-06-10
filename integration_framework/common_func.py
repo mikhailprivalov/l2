@@ -55,12 +55,16 @@ def get_data_direction_with_param(direction_num):
 
 
 def direction_pdf_result(pk):
-    localclient = TC(enforce_csrf_checks=False)
-    addr = "/results/pdf"
-    params = {"pk": json.dumps([pk]), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
-    result = localclient.get(addr, params).content
+    result = direction_pdf_content(pk)
     pdf_content = base64.b64encode(result).decode('utf-8')
     return pdf_content
+
+
+def direction_pdf_content(direction_id):
+    localclient = TC(enforce_csrf_checks=False)
+    addr = "/results/pdf"
+    params = {"pk": json.dumps([direction_id]), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
+    return localclient.get(addr, params).content
 
 
 def directions_pdf_result(pks):
