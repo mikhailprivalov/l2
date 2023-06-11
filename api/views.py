@@ -1631,6 +1631,11 @@ def user_save_view(request):
             doc.save()
             if doc.email and send_password:
                 doc.reset_password()
+
+    data_doc_profile = {key: value for key, value in doc.dict_data.items()}
+    data_doc_profile["id"] = doc.pk
+
+    Log(key=doc.pk, type=120004, body=json.dumps(data_doc_profile), user=request.user.doctorprofile).save()
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
 
 
