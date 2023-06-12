@@ -200,7 +200,9 @@ def send(request):
                 dpk //= 10
             tubes(request, direction_implict_id=dpk)
             if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).exists():
-                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).order_by("pk").first().pk
+                resdict["pk"] = (
+                    directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).order_by("number").first().number
+                )
             else:
                 resdict["pk"] = False
         result["A"] = appkey
@@ -208,9 +210,9 @@ def send(request):
         direction = None
         if resdict["pk"] and app:
             if app.tube_work:
-                direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=resdict["pk"]).first()
-            elif directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
-                tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
+                direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__number=resdict["pk"]).first()
+            elif directions.TubesRegistration.objects.filter(number=resdict["pk"]).exists():
+                tubei = directions.TubesRegistration.objects.get(number=resdict["pk"])
                 direction = tubei.issledovaniya_set.first().napravleniye
             pks = []
             for key in resdict["result"].keys():
@@ -257,7 +259,7 @@ def send(request):
                                 pks.append(issled)
             slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None).save()
             result["ok"] = True
-        elif not directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+        elif not directions.TubesRegistration.objects.filter(number=resdict["pk"]).exists():
             if dpk > -1:
                 resdict["pk"] = dpk
             slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None).save()
@@ -302,7 +304,7 @@ def endpoint(request):
                     elif dw:
                         direction = directions.Napravleniya.objects.filter(pk=pk).first()
                     else:
-                        direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk).first()
+                        direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__number=pk).first()
                         by_tube = True
 
                     pks = []
@@ -333,7 +335,7 @@ def endpoint(request):
                                         issleds = []
                                         iss_q = directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, time_confirmation__isnull=True)
                                         for issled in iss_q:
-                                            if by_tube and not issled.tubes.filter(pk=pk).exists() and issled.tubes.all().count() > 0:
+                                            if by_tube and not issled.tubes.filter(number=pk).exists() and issled.tubes.all().count() > 0:
                                                 continue
                                             if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
@@ -2268,13 +2270,19 @@ def org_generators_add(request):
         'prependLength': int,
     }
 
-    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False, 'end': None, 'prepend_length': None})
 
     key: str = data[0]
     year: int = data[1]
     start: int = data[2]
     end: int = data[3]
     prepend_length: int = data[4]
+
+    is_simple_generator = key == 'tubeNumber'
+
+    if is_simple_generator:
+        year = -1
+        prepend_length = 0
 
     with transaction.atomic():
         directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)

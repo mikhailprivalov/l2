@@ -15,6 +15,7 @@ class Hospitals(models.Model):
     oid = models.CharField(max_length=128, blank=True, default='', help_text="Код больницы", db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие больницы', db_index=True)
     is_default = models.BooleanField(default=False, blank=True, help_text='Больница по умолчанию для пустых полей', db_index=True)
+    strict_tube_numbers = models.BooleanField(default=False, blank=True, help_text='Требовать наличия выделенного генератора номеров ёмкостей')
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес больницы")
     phones = models.CharField(max_length=128, blank=True, default='', help_text="Телефон больницы")
     ogrn = models.CharField(max_length=16, blank=True, default='', help_text="ОГРН больницы")

@@ -83,6 +83,7 @@ from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range, normalize_dots_date
 from utils.nsi_directories import NSI
+from utils.response import status_response
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
@@ -1415,10 +1416,19 @@ def external_research_create(request):
                 if not ft:
                     ft = ReleationsFT.objects.create(tube=tube)
 
-                tr = iss.tubes.create(type=ft)
-                tr.time_get = time_get
-                tr.time_recive = time_receive
-                tr.save(update_fields=['time_get', 'time_recive'])
+                with transaction.atomic():
+                    try:
+                        generator_pk = directions.TubesRegistration.get_tube_number_generator_pk(request.user.doctorprofile.get_hospital())
+                        generator = directions.NumberGenerator.objects.select_for_update().get(pk=generator_pk)
+                        number = generator.get_next_value()
+                    except directions.NoGenerator as e:
+                        return status_response(False, str(e))
+                    except directions.GeneratorValuesAreOver as e:
+                        return status_response(False, str(e))
+                    tr = iss.tubes.create(type=ft, number=number)
+                    tr.time_get = time_get
+                    tr.time_recive = time_receive
+                    tr.save(update_fields=['time_get', 'time_recive'])
 
                 tests_to_filter = defaultdict(lambda: False)
 

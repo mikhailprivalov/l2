@@ -39,7 +39,7 @@ def get_iss_direction(direction: directions.Napravleniya, analyzer: api.Analyzer
             if not tube.exists():
                 continue
             tube = tube[0]
-            researches[tube.pk].append(rel.astm_field)
+            researches[tube.number].append(rel.astm_field)
         for tpk in researches:
             n += 1
             r.append(['O', n, tpk, None, [[None, x, None, None] for x in researches[tpk]]])

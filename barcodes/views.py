@@ -4,6 +4,7 @@ from io import BytesIO
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import HttpResponse
 from reportlab.graphics.barcode import code128, eanbc
 from reportlab.lib.units import inch, mm
@@ -14,13 +15,15 @@ from reportlab.pdfgen import canvas
 
 import directory.models as directory
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya, TubesRegistration
+from directions.models import Napravleniya, Issledovaniya, TubesRegistration, NumberGenerator, NoGenerator, GeneratorValuesAreOver
 from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER, BARCODE_SIZE
 from users.models import DoctorProfile
 from laboratory.utils import strdate
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics import renderPDF
+
+from utils.response import status_response
 
 pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
 pdfmetrics.registerFont(TTFont('clacon', os.path.join(FONTS_FOLDER, 'clacon.ttf')))
@@ -68,7 +71,7 @@ def tubes(request, direction_implict_id=None):
     c = canvas.Canvas(buffer, pagesize=(pw * mm, ph * mm), bottomup=barcode_type == "std")
     c.setTitle(doctitle)
     if istubes:
-        direction_id = set([x.napravleniye_id for x in Issledovaniya.objects.filter(tubes__id__in=tubes_id)])
+        direction_id = set([x.napravleniye_id for x in Issledovaniya.objects.filter(tubes__number__in=tubes_id)])
 
     if iss_ids:
         direction_id_tmp = [*direction_id, *[i.napravleniye_id for i in Issledovaniya.objects.filter(pk__in=iss_ids)]]
@@ -122,16 +125,25 @@ def tubes(request, direction_implict_id=None):
 
                     if vrpk not in tubes_buffer.keys():
                         if not v.tubes.filter(type=rel).exists():
-                            ntube = TubesRegistration(type=rel)
-                            ntube.save()
-                            v.tubes.add(ntube)
+                            with transaction.atomic():
+                                try:
+                                    generator_pk = TubesRegistration.get_tube_number_generator_pk(request.user.doctorprofile.get_hospital())
+                                    generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
+                                    number = generator.get_next_value()
+                                except NoGenerator as e:
+                                    return status_response(False, str(e))
+                                except GeneratorValuesAreOver as e:
+                                    return status_response(False, str(e))
+                                ntube = TubesRegistration(type=rel, number=number)
+                                ntube.save()
+                                v.tubes.add(ntube)
                         else:
                             ntube = v.tubes.filter(type=rel).first()
-                        tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(), "title": ntube.type.tube.title, "short_title": ntube.type.tube.get_short_title()}
+                        tubes_buffer[vrpk] = {"pk": ntube.number, "researches": set(), "title": ntube.type.tube.title, "short_title": ntube.type.tube.get_short_title()}
                         if not istubes:
-                            tubes_id.add(ntube.pk)
+                            tubes_id.add(ntube.number)
                     else:
-                        ntube = TubesRegistration.objects.get(pk=tubes_buffer[vrpk]["pk"])
+                        ntube = TubesRegistration.objects.get(number=tubes_buffer[vrpk]["pk"])
                         v.tubes.add(ntube)
 
                     tubes_buffer[vrpk]["researches"].add(v.research.title)
@@ -155,14 +167,14 @@ def tubes(request, direction_implict_id=None):
             if has_microbiology:
                 st = f"{st}=>м.био"
             else:
-                st = f"{st}=>{','.join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)]))}".lower()
+                st = f"{st}=>{','.join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__number=tube)]))}".lower()
 
             fam = tmp2.client.individual.fio(short=True, dots=False)
             f = {}
             if has_microbiology:
                 f["napravleniye"] = d
             else:
-                f["tubes__pk"] = tube
+                f["tubes__number"] = tube
             iss = Issledovaniya.objects.filter(**f)[0]
             pr = tubes_buffer[tube_k]["short_title"] + " " + (iss.comment[:9] if not iss.localization else iss.localization.barcode)
 

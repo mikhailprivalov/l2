@@ -132,14 +132,17 @@
         @submit="saveGenerator"
       >
         <FormulateInput
+          key="key"
           name="key"
-          :options="{ deathFormNumber: 'Номер свидетельства о смерти' }"
+          :options="{ deathFormNumber: 'Номер свидетельства о смерти', tubeNumber: 'Номер ёмкости биоматериала' }"
           type="select"
           placeholder="Выберите тип генератора"
           label="Тип генератора"
           required
         />
         <FormulateInput
+          v-if="generator.key !== 'tubeNumber'"
+          key="year"
           type="number"
           name="year"
           label="Год"
@@ -148,6 +151,7 @@
           required
         />
         <FormulateInput
+          key="start"
           type="number"
           name="start"
           label="Начало (первое значение)"
@@ -155,13 +159,16 @@
           required
         />
         <FormulateInput
+          key="end"
           type="number"
           name="end"
           label="Конец (последнее значение)"
           :min="generator.start || 0"
-          required
+          :required="generator.key !== 'tubeNumber'"
         />
         <FormulateInput
+          v-if="generator.key !== 'tubeNumber'"
+          key="prependLength"
           type="number"
           name="prependLength"
           label="Количестов символов для добавления нулей в начало"
