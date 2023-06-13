@@ -34,12 +34,11 @@
             <div class="wrapper" id="research-form"></div>
         </div>
     </div>
-    <div class="modal" id="tube_directory_Modal" tabindex="-1" role="dialog" aria-labelledby="tube_directory_Modal">
+    <div class="modal" id="tube_directory_Modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                     <h4 class="modal-title" id="tube_directory_Modal">Справочник ёмкостей</h4>
                 </div>
                 <div class="modal-body">
@@ -53,13 +52,26 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="tune-modal" tabindex="-1" role="dialog" aria-labelledby="tune-modal-title">
+    <div class="modal fade" id="tune-modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" style="width: 100%;height: 100%;margin:0;padding:0;overflow: hidden">
             <div class="modal-content" style="height: auto;min-height: 100%;border-radius: 0;">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="tune-modal-title">Настройка анализа</h4>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h4 class="modal-title">Настройка анализа</h4>
+                </div>
+                <div class="modal-body" style="position: initial;"></div>
+                <div class="modal-footer" style="position: absolute;bottom: -10px;left: 0;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="tune-tube-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" style="width: 100%;height: 100%;margin:0;padding:0;overflow: hidden">
+            <div class="modal-content" style="height: auto;min-height: 100%;border-radius: 0;">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h4 class="modal-title">Настройка ёмкости исследования</h4>
                 </div>
                 <div class="modal-body" style="position: initial;"></div>
                 <div class="modal-footer" style="position: absolute;bottom: -10px;left: 0;">
@@ -418,7 +430,6 @@
     <script src="{% static 'js/jquery.clearsearch.js' %}"></script>
     <script src="{% static 'js/jquery-ui.min.js' %}"></script>
     <script>
-
         let tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
 
         let fraction_types = {
@@ -431,6 +442,22 @@
         let rdl = false;
         let refshow = false;
         let scrollto = "";
+
+        function openModalWithFrame(modalId, url) {
+            $(`#${modalId}`).modal('show');
+            $(`#${modalId} .modal-body`).html(`<iframe
+width="100%"
+style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px"
+frameborder="0"
+scrolling="yes"
+allowtransparency="true"
+src="${url}"
+></iframe>`);
+        }
+
+        function modifyTube(tubeId) {
+            openModalWithFrame('tune-tube-modal', `/ui/construct/related-tube/${tubeId}`);
+        }
 
         $(document).ready(function () {
             $(window).resize(function () {
@@ -991,7 +1018,7 @@
 
                         if (!$(".one-tube #tube-{0}".f(v.tubes[Object.keys(v.tubes)[0]].id)).length) {
                             $(row).addClass("has-tube-{0}".f(v.tubes[Object.keys(v.tubes)[0]].id));
-                            let obj = $('<div class="well tube tube-drag" id="tube-{0}"></div>'.f(v.tubes[Object.keys(v.tubes)[0]].id)).appendTo(tubes_list);
+                            let obj = $('<div class="well tube tube-drag" onclick="modifyTube({0})" id="tube-{0}"></div>'.f(v.tubes[Object.keys(v.tubes)[0]].id)).appendTo(tubes_list);
                             obj = $('<div></div>').appendTo(obj);
                             g = $('<div class="sq"></div>').appendTo(obj);
                             $('<div class="color-sq"></div>').appendTo(g).css({backgroundColor: v.tubes[Object.keys(v.tubes)[0]].color});
@@ -1004,7 +1031,7 @@
 
                     }
                     else {
-                        $(tubes_list).append('<div class="well">Ёмкости не приязаны</div>');
+                        $(tubes_list).append('<div class="well">Ёмкости не привязаны</div>');
                     }
                     g = $('<div class="btn-group research-obj"></div>').appendTo(researches_list);
                     $(g).attr("pk", v.pk);
@@ -1134,16 +1161,7 @@
         }
 
         function tune_research(id, isng) {
-            $('#tune-modal').modal('show');
-            $("#tune-modal .modal-body").html(`<iframe
-width="100%"
-style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px"
-frameborder="0"
-scrolling="yes"
-allowtransparency="true"
-src="/construct/researches/tune${isng ? '-ng' : ''}?pk=${id}"
-></iframe>`);
-            console.log("ID: {0}".f(id));
+            openModalWithFrame('tune-modal', `/construct/researches/tune${isng ? '-ng' : ''}?pk=${id}`);
         }
 
         function syncUpDown() {

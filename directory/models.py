@@ -28,6 +28,7 @@ class ReleationsFT(models.Model):
 
     tube = models.ForeignKey(Tubes, help_text='Ёмкость', db_index=True, on_delete=models.CASCADE)
     receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
+    max_researches_per_tube = models.IntegerField(default=None, blank=True, null=True, help_text="Максимальное количество исследований для пробирки")
 
     def __str__(self):
         return "%d %s" % (self.pk, self.tube.title)
