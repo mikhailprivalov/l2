@@ -117,16 +117,7 @@ class TubesRegistration(models.Model):
         if hospital.is_default:
             if not NumberGenerator.objects.filter(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True).exists():
                 max_number = TubesRegistration.objects.aggregate(Max('number'))['number__max']
-                generator = NumberGenerator.objects.create(
-                    hospital=hospital,
-                    key=NumberGenerator.TUBE_NUMBER,
-                    year=-1,
-                    is_active=True,
-                    start=1,
-                    end=None,
-                    last=max_number,
-                    prepend_length=0
-                )
+                generator = NumberGenerator.objects.create(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, year=-1, is_active=True, start=1, end=None, last=max_number, prepend_length=0)
             else:
                 generator = NumberGenerator.objects.get(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True)
         else:
