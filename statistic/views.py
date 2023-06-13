@@ -26,6 +26,7 @@ from researches.models import Tubes
 from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expertis_results_by_issledovaniya
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
+from users.sql_func import get_users_by_role
 from utils.dates import try_parse_range, normalize_date
 from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
 from . import sql_func
@@ -48,7 +49,7 @@ from .sql_func import (
     sql_get_result_by_direction,
     sql_get_documents_by_card_id,
     get_all_harmful_factors_templates,
-    get_researches_by_templates, get_confirm_extract_by_date_extract,
+    get_researches_by_templates, get_expertise_grade, get_confirm_protocol_by_date_extract,
 )
 
 from laboratory.settings import (
@@ -1157,18 +1158,21 @@ def statistic_xls(request):
         print(date_start_o, date_end_o)
         extract_researches_id = list(directory.HospitalService.objects.values_list("slave_research_id", flat=True).filter(site_type=7))
         field_id_for_extract_date = list(directory.ParaclinicInputField.objects.values_list("pk", flat=True).filter(group__research__in=extract_researches_id, title="Дата выписки"))
-        result_extract = get_confirm_extract_by_date_extract(tuple(field_id_for_extract_date)) # Найти выписки с датой выписки в периоде
+        result_extract = get_confirm_protocol_by_date_extract(tuple(field_id_for_extract_date)) # Найти выписки с датой выписки в периоде
         print(field_id_for_extract_date, "field_id_for_extract_date")
         iss_protocol_extract = [i.iss_protocol_extract for i in result_extract]
-        result_expertise_data = {}
-        for i in result_extract:
-            result_expertise_data[i.iss_protocol_extract] = {"title_research": i.main_extract_research, "direction_main_extract_dir": i.direction_main_extract_dir}
+        result_expertise_data = {i.iss_protocol_extract: {"title_research": i.main_extract_research, "direction_main_extract_dir": i.direction_main_extract_dir} for i in result_extract}
         # Найти экспертизы
+        users_has_third_level_role = get_users_by_role(("Третий уровень экспертизы",))
+        users_has_third_level_role = [i.id for i in users_has_third_level_role]
+        iss_protocol_extract = list(result_expertise_data.keys())
+        print(users_has_third_level_role)
+        if len(users_has_third_level_role) == 0:
+            users_has_third_level_role = [-1]
 
-        # Найти экспертизы у к-рых родитель в выписке 2 ур-нь значение балов
-        # Найти экспертизы у к-рых родитель в выписке 3 ур-не значение балов
-
+        result_expertise_grade = get_expertise_grade(11247, tuple(iss_protocol_extract), users_has_third_level_role)
         print(result_expertise_data)
+        print(result_expertise_grade)
 
         ws = expertise_report.expertise_base(ws)
         ws = expertise_report.expertise_data(ws)

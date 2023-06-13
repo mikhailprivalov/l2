@@ -1709,7 +1709,7 @@ def get_researches_by_templates(template_ids):
     return rows
 
 
-def get_confirm_extract_by_date_extract(id_fields):
+def get_confirm_protocol_by_date_extract(field_ids):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -1731,14 +1731,52 @@ def get_confirm_extract_by_date_extract(id_fields):
                 from directions_issledovaniya
                 where id in (select issledovaniye_id
                 FROM public.directions_paraclinicresult
-                where field_id in %(id_fields)s and
+                where field_id in %(field_ids)s and
                 value BETWEEN '2022-02-18' AND '2022-02-18') and 
                 directions_issledovaniya.time_confirmation is NOT NULL)
             """,
             params={
-                'id_fields': id_fields,
+                'field_ids': field_ids,
             },
         )
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_expertise_grade(field_id, parent_ids, users_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+              directions_paraclinicresult.issledovaniye_id as expertise_iss, 
+              directions_paraclinicresult.value as expertise_value,
+              directions_issledovaniya.doc_confirmation_id as doc_id,
+              directions_napravleniya.parent_id,
+              array_positions(%(users_id)s, directions_issledovaniya.doc_confirmation_id)
+            FROM directions_issledovaniya
+            LEFT JOIN directions_paraclinicresult
+            ON directions_paraclinicresult.issledovaniye_id=directions_issledovaniya.id
+            LEFT JOIN directions_napravleniya
+            ON directions_napravleniya.id=directions_issledovaniya.napravleniye_id
+            LEFT JOIN directory_paraclinicinputfield
+	        ON directions_paraclinicresult.field_id = directory_paraclinicinputfield.id
+            WHERE 
+            directions_issledovaniya.time_confirmation is not null
+            AND
+            directions_issledovaniya.napravleniye_id in
+            (SELECT id FROM directions_napravleniya WHERE
+            parent_id in %(parent_ids)s)
+            AND
+            directions_paraclinicresult.field_id = %(field_id)s
+            AND
+            directory_paraclinicinputfield.title = 'Общее количество баллов'
+            """,
+            params={
+                'field_id': field_id, 'parent_ids': parent_ids, 'users_id': users_id
+            },
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
