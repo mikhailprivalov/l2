@@ -1418,7 +1418,7 @@ def external_research_create(request):
 
                 with transaction.atomic():
                     try:
-                        generator_pk = directions.TubesRegistration.get_tube_number_generator_pk(request.user.doctorprofile.get_hospital())
+                        generator_pk = directions.TubesRegistration.get_tube_number_generator_pk(hospital)
                         generator = directions.NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                         number = generator.get_next_value()
                     except directions.NoGenerator as e:
