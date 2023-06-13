@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         ts = TubesRegistration.objects.filter(number__isnull=True)
-        print("Пустых номеров:", ts.count())
+        print("Пустых номеров:", ts.count())  # noqa: T001
         ts.update(number=F('id'))
         ts = TubesRegistration.objects.filter(number__isnull=True)
-        print("Пустых номеров после обновления:", ts.count())
+        print("Пустых номеров после обновления:", ts.count())  # noqa: T001
