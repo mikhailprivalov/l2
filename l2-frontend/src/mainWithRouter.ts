@@ -679,9 +679,9 @@ const router = new Router({
     {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
-      component: () => import('@/pages/ManageAnalyzers/index.vue'),
+      component: () => import('@/construct/ConstructRelatedTube.vue'),
       meta: {
-        narrowLayout: true,
+        emptyLayout: true,
         title: 'Управление ёмкостями фракций',
         groups: ['Оператор', 'Конструктор: Лабораторные исследования'],
       },

@@ -107,7 +107,8 @@ class TubesRegistration(models.Model):
     """
 
     id = models.AutoField(primary_key=True, db_index=True)
-    number = models.BigIntegerField(db_index=True, help_text='Номер ёмкости', blank=True, null=True)
+    number = models.BigIntegerField(db_index=True, help_text='Номер ёмкости', blank=True, null=True, default=None)
+    chunk_number = models.PositiveSmallIntegerField(db_index=True, blank=True, null=True, default=None, help_text='Номер разложения ёмкости на несколько')
     type = models.ForeignKey(directory.ReleationsFT, help_text='Тип ёмкости', on_delete=models.CASCADE)
     time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала', db_index=True)
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docget', help_text='Кто взял материал', on_delete=models.SET_NULL)
@@ -142,6 +143,10 @@ class TubesRegistration(models.Model):
     @property
     def time_recive_local(self):
         return localtime(self.time_recive)
+
+    @property
+    def researches_count(self):
+        return self.issledovaniya_set.all().count()
 
     def __str__(self):
         return "%d %s (%s, %s) %s" % (self.number, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)

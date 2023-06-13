@@ -1,6 +1,7 @@
-# coding=utf-8
+import math
 import os.path
 from io import BytesIO
+from typing import Optional
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
@@ -113,6 +114,7 @@ def tubes(request, direction_implict_id=None):
                         fresearches.add(absor_obj.flower.research_id)
 
         if not has_microbiology:
+            relation_researches_count = {}
             for v in tmp:
                 for val in directory.Fractions.objects.filter(research=v.research):
                     vrpk = val.relation_id
@@ -123,8 +125,17 @@ def tubes(request, direction_implict_id=None):
                             vrpk = absor.fupper.relation_id
                             rel = absor.fupper.relation
 
+                    if rel.max_researches_per_tube:
+                        actual_count = relation_researches_count.get(rel.pk, 0) + 1
+                        relation_researches_count[rel.pk] = actual_count
+                        chunk_number = math.ceil(actual_count / rel.max_researches_per_tube)
+                        vrpk = f"{vrpk}_{chunk_number}"
+                    else:
+                        chunk_number = None
+
                     if vrpk not in tubes_buffer.keys():
-                        if not v.tubes.filter(type=rel).exists():
+                        ntube: Optional[TubesRegistration] = v.tubes.filter(type=rel, chunk_number=chunk_number).first()
+                        if not ntube:
                             with transaction.atomic():
                                 try:
                                     generator_pk = TubesRegistration.get_tube_number_generator_pk(request.user.doctorprofile.get_hospital())
@@ -134,11 +145,9 @@ def tubes(request, direction_implict_id=None):
                                     return status_response(False, str(e))
                                 except GeneratorValuesAreOver as e:
                                     return status_response(False, str(e))
-                                ntube = TubesRegistration(type=rel, number=number)
+                                ntube = TubesRegistration(type=rel, number=number, chunk_number=chunk_number)
                                 ntube.save()
                                 v.tubes.add(ntube)
-                        else:
-                            ntube = v.tubes.filter(type=rel).first()
                         tubes_buffer[vrpk] = {"pk": ntube.number, "researches": set(), "title": ntube.type.tube.title, "short_title": ntube.type.tube.get_short_title()}
                         if not istubes:
                             tubes_id.add(ntube.number)

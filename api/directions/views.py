@@ -1,4 +1,5 @@
 import base64
+import math
 import os
 
 from django.core.paginator import Paginator
@@ -3376,10 +3377,12 @@ def tubes_for_get(request):
                     flowers[absor_obj.flower_id] = True
                     fresearches[absor_obj.flower.research_id] = True
 
+    relation_researches_count = {}
     for v in iss_cached:
         if data["direction"]["full_confirm"] and not v.time_confirmation:
             data["direction"]["full_confirm"] = False
-        has_rels = {x.type_id: x for x in v.tubes.all()}
+        x: TubesRegistration
+        has_rels = {x.type_id if not x.chunk_number else f"{x.type_id}_{x.chunk_number}": x for x in v.tubes.all()}
         new_tubes = []
         for val in v.research.fractions_set.all():
             vrpk = val.relation_id
@@ -3394,6 +3397,14 @@ def tubes_for_get(request):
                     vrpk = absor.fupper.relation_id
                     rel = absor.fupper.relation
 
+            if rel.max_researches_per_tube:
+                actual_count = relation_researches_count.get(rel.pk, 0) + 1
+                relation_researches_count[rel.pk] = actual_count
+                chunk_number = math.ceil(actual_count / rel.max_researches_per_tube)
+                vrpk = f"{vrpk}_{chunk_number}"
+            else:
+                chunk_number = None
+
             if vrpk not in tubes_buffer:
                 if vrpk not in has_rels:
                     with transaction.atomic():
@@ -3405,7 +3416,7 @@ def tubes_for_get(request):
                             return status_response(False, str(e))
                         except GeneratorValuesAreOver as e:
                             return status_response(False, str(e))
-                        ntube = TubesRegistration(type=rel, number=number)
+                        ntube = TubesRegistration(type=rel, number=number, chunk_number=chunk_number)
                         ntube.save()
                         has_rels[vrpk] = ntube
                         new_tubes.append(ntube)
