@@ -1707,3 +1707,38 @@ def get_researches_by_templates(template_ids):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_confirm_extract_by_date_extract(id_fields):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                directions_napravleniya.id as direction_protocol_extract, 
+                directions_napravleniya.parent_id, 
+                dd.napravleniye_id as direction_main_extract_dir,
+                rd.title as main_extract_research,
+                pd.id as iss_protocol_extract
+                FROM
+                directions_napravleniya
+                LEFT JOIN directions_issledovaniya dd on directions_napravleniya.parent_id = dd.id
+                LEFT JOIN directions_issledovaniya pd on directions_napravleniya.id = pd.napravleniye_id
+                LEFT JOIN directory_researches rd on rd.id = dd.research_id
+                
+                WHERE directions_napravleniya.id in 
+                (SELECT 
+                napravleniye_id
+                from directions_issledovaniya
+                where id in (select issledovaniye_id
+                FROM public.directions_paraclinicresult
+                where field_id in %(id_fields)s and
+                value BETWEEN '2022-02-18' AND '2022-02-18') and 
+                directions_issledovaniya.time_confirmation is NOT NULL)
+            """,
+            params={
+                'id_fields': id_fields,
+            },
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

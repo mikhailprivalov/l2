@@ -34,7 +34,7 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors, base_data
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors, base_data, expertise_report
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -48,7 +48,7 @@ from .sql_func import (
     sql_get_result_by_direction,
     sql_get_documents_by_card_id,
     get_all_harmful_factors_templates,
-    get_researches_by_templates,
+    get_researches_by_templates, get_confirm_extract_by_date_extract,
 )
 
 from laboratory.settings import (
@@ -1144,6 +1144,35 @@ def statistic_xls(request):
         researches_deatails = sql_func.statistics_details_research_by_lab(lab_podr, start_date, end_date)
         ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
         ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
+    elif tp == "statistics-hosp-expertise":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Экспертиза_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Экспертиза")
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        # expertise_researches = Researches.objects.filter(is_expertise=True)
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        print(date_start_o, date_end_o)
+        extract_researches_id = list(directory.HospitalService.objects.values_list("slave_research_id", flat=True).filter(site_type=7))
+        field_id_for_extract_date = list(directory.ParaclinicInputField.objects.values_list("pk", flat=True).filter(group__research__in=extract_researches_id, title="Дата выписки"))
+        result_extract = get_confirm_extract_by_date_extract(tuple(field_id_for_extract_date)) # Найти выписки с датой выписки в периоде
+        print(field_id_for_extract_date, "field_id_for_extract_date")
+        iss_protocol_extract = [i.iss_protocol_extract for i in result_extract]
+        result_expertise_data = {}
+        for i in result_extract:
+            result_expertise_data[i.iss_protocol_extract] = {"title_research": i.main_extract_research, "direction_main_extract_dir": i.direction_main_extract_dir}
+        # Найти экспертизы
+
+        # Найти экспертизы у к-рых родитель в выписке 2 ур-нь значение балов
+        # Найти экспертизы у к-рых родитель в выписке 3 ур-не значение балов
+
+        print(result_expertise_data)
+
+        ws = expertise_report.expertise_base(ws)
+        ws = expertise_report.expertise_data(ws)
+
     elif tp == "statistics-dispanserization":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспансеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
