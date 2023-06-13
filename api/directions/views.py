@@ -59,7 +59,9 @@ from directions.models import (
     DirectionParamsResult,
     IssledovaniyaFiles,
     IssledovaniyaResultLaborant,
-    SignatureCertificateDetails, GeneratorValuesAreOver, NoGenerator,
+    SignatureCertificateDetails,
+    GeneratorValuesAreOver,
+    NoGenerator,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
 from laboratory import settings
