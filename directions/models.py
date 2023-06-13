@@ -28,8 +28,13 @@ import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc, check_confirm_patient_research, check_create_direction_patient_by_research
 from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION, \
-    AUTO_PRINT_RESEARCH_DIRECTION
+from laboratory.settings import (
+    PERINATAL_DEATH_RESEARCH_PK,
+    DISPANSERIZATION_SERVICE_PK,
+    EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED,
+    RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
+    AUTO_PRINT_RESEARCH_DIRECTION,
+)
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
@@ -3148,7 +3153,7 @@ class NumberGenerator(models.Model):
     year = models.IntegerField(verbose_name='Год', db_index=True)
     is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
     start = models.PositiveIntegerField(verbose_name='Начало диапазона')
-    end = models.PositiveIntegerField(verbose_name='Конец диапазона', null=True)
+    end = models.PositiveIntegerField(verbose_name='Конец диапазона', null=True, blank=True)
     last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
     free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
     prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
@@ -3157,17 +3162,29 @@ class NumberGenerator(models.Model):
         return f"{self.hospital} {self.key} {self.year} {self.is_active} {self.start} — {self.end} ({self.last})"
 
     def get_min_last_value(self):
+        has_overlap = False
         min_last_value = self.last if self.last else (self.start - 1)
+        has_free_number = False
         if self.free_numbers:
+            min_last_orig = min_last_value
             min_last_value = min(min_last_value, *self.free_numbers)
-        if self.key == NumberGenerator.TUBE_NUMBER:
-            includes_generators = NumberGenerator.objects.filter(start__gte=min_last_value, end__lte=min_last_value).exclude(pk=self.pk).exclude(end__isnull=True).order_by('end')
+            has_free_number = min_last_orig != min_last_value
+        if self.key == NumberGenerator.TUBE_NUMBER and self.end is None and not has_free_number:
+            includes_generators = (
+                NumberGenerator.objects.exclude(pk=self.pk)
+                .exclude(end__isnull=True)
+                .filter(key=NumberGenerator.TUBE_NUMBER, start__lte=min_last_value + 1, end__gte=min_last_value + 1)
+                .order_by('end')
+            )
             for gen in includes_generators:
-                min_last_value = max(min_last_value, gen.end)
-        return min_last_value
+                min_last_orig = min_last_value
+                min_last_value = max(min_last_value + 1, gen.end + 1)
+                if min_last_orig + 1 != min_last_value:
+                    has_overlap = True
+        return min_last_value, has_overlap
 
     def get_next_value(self):
-        min_last_value = self.get_min_last_value()
+        min_last_value, has_overlap = self.get_min_last_value()
         if not self.last or self.last == min_last_value:
             next_value = min_last_value + 1
             if (self.end is not None or (not self.hospital.is_default)) and next_value > self.end:
@@ -3175,8 +3192,14 @@ class NumberGenerator(models.Model):
             self.last = next_value
         else:
             next_value = min_last_value
+            if has_overlap:
+                self.last = next_value
         self.free_numbers = [x for x in self.free_numbers if x != next_value]
         self.save(update_fields=['last', 'free_numbers'])
+
+        if self.key == NumberGenerator.TUBE_NUMBER and TubesRegistration.objects.filter(number=next_value).exists():
+            return self.get_next_value()
+
         return next_value
 
     def get_prepended_next_value(self):
