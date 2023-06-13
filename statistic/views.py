@@ -1153,26 +1153,20 @@ def statistic_xls(request):
         d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
         d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
         # expertise_researches = Researches.objects.filter(is_expertise=True)
-        start_date = datetime.datetime.combine(d1, datetime.time.min)
-        end_date = datetime.datetime.combine(d2, datetime.time.max)
-        print(date_start_o, date_end_o)
         extract_researches_id = list(directory.HospitalService.objects.values_list("slave_research_id", flat=True).filter(site_type=7))
         field_id_for_extract_date = list(directory.ParaclinicInputField.objects.values_list("pk", flat=True).filter(group__research__in=extract_researches_id, title="Дата выписки"))
         result_extract = get_confirm_protocol_by_date_extract(tuple(field_id_for_extract_date)) # Найти выписки с датой выписки в периоде
-        print(field_id_for_extract_date, "field_id_for_extract_date")
-        iss_protocol_extract = [i.iss_protocol_extract for i in result_extract]
         result_expertise_data = {i.iss_protocol_extract: {"title_research": i.main_extract_research, "direction_main_extract_dir": i.direction_main_extract_dir} for i in result_extract}
-        # Найти экспертизы
-        users_has_third_level_role = get_users_by_role(("Третий уровень экспертизы",))
-        users_has_third_level_role = [i.id for i in users_has_third_level_role]
         iss_protocol_extract = list(result_expertise_data.keys())
-        print(users_has_third_level_role)
-        if len(users_has_third_level_role) == 0:
-            users_has_third_level_role = [-1]
-
-        result_expertise_grade = get_expertise_grade(11247, tuple(iss_protocol_extract), users_has_third_level_role)
+        result_expertise_grade = get_expertise_grade(tuple(iss_protocol_extract)) # Результаты экспертизы
+        for i in result_expertise_grade:
+            if i.level_value and i.level_value.lower() == "третий":
+                result_expertise_data[i.parent_id]['третий'] = i.grade_value
+            elif i.level_value and i.level_value.lower() == "второй":
+                result_expertise_data[i.parent_id]['второй'] = i.grade_value
+            else:
+                result_expertise_data[i.parent_id]['без уровня'] = i.grade_value
         print(result_expertise_data)
-        print(result_expertise_grade)
 
         ws = expertise_report.expertise_base(ws)
         ws = expertise_report.expertise_data(ws)
