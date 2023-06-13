@@ -2208,7 +2208,7 @@ def directions_paraclinic_result(request):
 
                 for br in mb.get('bacteries', []):
                     if br['resultPk'] == -1:
-                        bactery = MicrobiologyResultCulture(issledovaniye=iss, culture_id=br['bacteryPk'], koe=br['koe'])
+                        bactery = MicrobiologyResultCulture(issledovaniye=iss, culture_id=br['bacteryPk'], koe=br['koe'], comments=br.get('comments', ''))
                     else:
                         bactery = MicrobiologyResultCulture.objects.get(pk=br['resultPk'])
                         bactery.culture_id = br['bacteryPk']

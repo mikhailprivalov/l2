@@ -16,7 +16,7 @@ from api.patients.views import patients_search_card
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
 from clients.utils import find_patient
-from contracts.models import PriceCategory
+from contracts.models import PriceCategory, PriceCoast
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
@@ -2992,3 +2992,14 @@ def get_value_field(request):
             for i in query_data
         ]
     return Response({"data": data})
+
+
+@api_view(['POST'])
+def get_actual_price(request):
+    request_data = json.loads(request.body)
+    type_fin = request_data.get("fin")
+    title_fin = directions.IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
+    price = title_fin.contracts.price
+    data_price = PriceCoast.objects.filter(price_name=price)
+    result = [{"title": i.research.title, "shortTtile": i.research.short_title, "coast": i.coast} for i in data_price]
+    return Response({"data": result})

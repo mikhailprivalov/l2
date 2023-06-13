@@ -159,6 +159,7 @@ class SettingManager:
                     "employee_job",
                     "send_orgs_email_results",
                     "send_patients_email_results",
+                    "docx_aggregate_laboratory_results",
                     "chats",
                     "csv_load_file",
                     "transfer_card",

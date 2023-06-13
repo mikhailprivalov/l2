@@ -247,6 +247,25 @@ class MedicalExamination(models.Model):
         else:
             MedicalExamination(card=card, company=company, date=date).save()
 
+    @staticmethod
+    def get_date(card_pk: int):
+        result = None
+        current_exam = MedicalExamination.objects.filter(card_id=card_pk).first()
+        if current_exam:
+            result = current_exam.date
+        return result
+
+    @staticmethod
+    def update_date(card_pk: int, date: str):
+        current_exam = MedicalExamination.objects.filter(card_id=card_pk).first()
+        if current_exam:
+            current_exam.date = date
+            current_exam.save()
+        elif date != "":
+            card = Card.objects.filter(pk=card_pk).first()
+            if card.work_place_db:
+                MedicalExamination.save_examination(card, card.work_place_db, date)
+
     class Meta:
         verbose_name = 'Медицинский осмотр'
         verbose_name_plural = 'Медицинские осмотры'

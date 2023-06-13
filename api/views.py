@@ -1633,6 +1633,10 @@ def user_save_view(request):
             doc.save()
             if doc.email and send_password:
                 doc.reset_password()
+
+    data_doc_profile = {key: value for key, value in doc.dict_data.items()}
+    data_doc_profile["id"] = doc.pk
+    Log(key=doc.pk, type=120004, body=json.dumps(data_doc_profile), user=request.user.doctorprofile).save()
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
 
 
@@ -3143,3 +3147,10 @@ def get_examination_list(request):
 @group_required('Конструктор: Настройка организации')
 def print_medical_examination_data(request):
     return status_response(True)
+
+
+@login_required
+def get_date_medical_examination(request):
+    request_data = json.loads(request.body)
+    current_exam = MedicalExamination.get_date(request_data["card_pk"])
+    return JsonResponse({"data": current_exam})
