@@ -27,7 +27,8 @@ from directory.models import (
     DispensaryPlan,
     Localization,
     ServiceLocation,
-    ResearchGroup, ReleationsFT,
+    ResearchGroup,
+    ReleationsFT,
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
