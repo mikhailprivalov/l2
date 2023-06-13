@@ -121,6 +121,7 @@ export default {
     modules() {
       return {
         l2_send_patients_email_results: this.$store.getters.modules.l2_send_patients_email_results,
+        l2_docx_aggregate_laboratory_results: this.$store.getters.modules.l2_docx_aggregate_laboratory_results,
       };
     },
     menuItemsFiltered() {
