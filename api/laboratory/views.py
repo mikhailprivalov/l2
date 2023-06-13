@@ -700,10 +700,18 @@ def receive_one_by_one(request):
 
     pk = re.sub("[^0-9]", "", str(request_data['q']))
     direction = request_data["workMode"] == "direction"
+    message = None
     if not direction:
         pks = [pk]
     else:
-        tubes(request, direction_implict_id=pk)
+        resp = tubes(request, direction_implict_id=pk)
+
+        content_type = resp.headers.get("content-type")
+        if content_type == 'application/json':
+            resp_json = json.loads(resp.content)
+            if isinstance(resp_json, dict) and "message" in resp_json:
+                message = resp_json["message"]
+
         pks = [
             x.number
             for x in (
@@ -774,6 +782,7 @@ def receive_one_by_one(request):
             "researches": sorted(list(set(ok_researches))),
             "invalid": invalid_objects,
             "lastN": last_n,
+            "message": message,
         }
     )
 

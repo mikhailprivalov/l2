@@ -4,6 +4,23 @@
       <h4 class="text-center">
         Настройка данных организации
       </h4>
+
+      <div
+        v-if="hasAccessToAllHospitals"
+        class="input-group treeselect-noborder-left org-selector"
+      >
+        <span class="input-group-addon">Организация</span>
+        <treeselect
+          v-model="hospitalId"
+          :multiple="false"
+          :disable-branch-nodes="true"
+          :options="hospitals"
+          placeholder="Организация не выбрана"
+          :clearable="false"
+          class="treeselect-wide"
+        />
+      </div>
+
       <FormulateForm
         v-model="org"
         @submit="save"
@@ -107,7 +124,10 @@
             :key="g.pk"
           >
             <td>{{ g.keyDisplay }}</td>
-            <td>{{ g.year }}</td>
+            <td v-if="g.key !== 'tubeNumber'">
+              {{ g.year }}
+            </td>
+            <td v-else />
             <td>
               <span
                 v-if="g.isActive"
@@ -134,7 +154,7 @@
         <FormulateInput
           key="key"
           name="key"
-          :options="{ deathFormNumber: 'Номер свидетельства о смерти', tubeNumber: 'Номер ёмкости биоматериала' }"
+          :options="availableGenerators"
           type="select"
           placeholder="Выберите тип генератора"
           label="Тип генератора"
@@ -183,7 +203,8 @@
         />
 
         <div class="journal-warning">
-          Существующие генераторы такого же типа и с тем же годом будут деактивированы.<br>
+          Существующие генераторы такого же
+          типа {{ generator.key !== 'tubeNumber' ? 'и с тем же годом ' : '' }}будут деактивированы.<br>
           Изменения будут записаны в журнал.
         </div>
       </FormulateForm>
@@ -195,35 +216,45 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import moment from 'moment';
+import Treeselect from '@riophae/vue-treeselect';
+
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import * as actions from '@/store/action-types';
 
-const newGenerator = () => ({
-  key: 'deathFormNumber',
-  year: moment().year(),
-  start: '',
-  end: '',
-  prependLength: 8,
-});
-
 @Component({
+  components: { Treeselect },
   data() {
     return {
+      hospitalId: null,
+      hospitals: [],
       org: {},
       loading: false,
       generators: [],
-      generator: newGenerator(),
+      generator: {},
     };
   },
-  async mounted() {
-    await this.$store.dispatch(actions.INC_LOADING);
-    const { org } = await this.$api('/current-org');
-    this.org = org;
-    await this.loadGenerators();
-    await this.$store.dispatch(actions.DEC_LOADING);
+  watch: {
+    hospitalId() {
+      if (this.hospitalId !== null) {
+        this.loadOrgData();
+      }
+    },
+    userHospital: {
+      immediate: true,
+      handler() {
+        if (this.hospitalId === null) {
+          this.hospitalId = this.userHospital;
+        }
+      },
+    },
   },
 })
 export default class ConstructOrg extends Vue {
+  hospitalId: number | null;
+
+  hospitals: any[];
+
   org: any;
 
   generators: any[];
@@ -232,22 +263,73 @@ export default class ConstructOrg extends Vue {
 
   loading: boolean;
 
+  get availableGenerators() {
+    const generators: Record<string, string> = {};
+
+    if (!this.disableDeathCert) {
+      generators.deathFormNumber = 'Номер свидетельства о смерти';
+    }
+
+    generators.tubeNumber = 'Номер ёмкости биоматериала';
+
+    return generators;
+  }
+
   get system() {
     return this.$systemTitle();
+  }
+
+  get userData() {
+    return this.$store.getters.user_data;
+  }
+
+  get userHospital() {
+    return this.userData.hospital;
+  }
+
+  get hasAccessToAllHospitals() {
+    return (this.userData.groups || []).includes('Конструктор: Настройка всех организаций');
+  }
+
+  get disableDeathCert() {
+    return this.$store.getters.modules.l2_disable_death_cert;
   }
 
   async save() {
     this.loading = true;
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await this.$api('/current-org-update', this.org);
+    const { ok, message } = await this.$api('organization-data-update', this.org);
     if (ok) {
-      this.$root.$emit('msg', 'ok', 'Изменения сохранены');
+      this.$ok('Изменения сохранены');
       await this.$store.dispatch(actions.GET_USER_DATA);
+      await this.loadHospitals();
     } else {
-      this.$root.$emit('msg', 'error', message);
+      this.$error(message);
     }
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loading = false;
+  }
+
+  async loadHospitals() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { hospitals } = await this.$api('hospitals', { strictMode: true });
+
+    this.hospitals = hospitals;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadOrgData() {
+    await this.$store.dispatch(actions.INC_LOADING);
+
+    if (this.hospitals.length === 0) {
+      await this.loadHospitals();
+      this.generator = this.newGenerator(this.disableDeathCert ? 'tubeNumber' : 'deathFormNumber');
+    }
+
+    const { org } = await this.$api('organization-data', this, 'hospitalId');
+    this.org = org;
+    await this.loadGenerators();
+    await this.$store.dispatch(actions.DEC_LOADING);
   }
 
   get numberGeneratorEnabled() {
@@ -257,7 +339,7 @@ export default class ConstructOrg extends Vue {
   async loadGenerators() {
     await this.$store.dispatch(actions.INC_LOADING);
     if (this.numberGeneratorEnabled) {
-      const { rows } = await this.$api('/org-generators');
+      const { rows } = await this.$api('org-generators', this, 'hospitalId');
       this.generators = rows;
     }
     await this.$store.dispatch(actions.DEC_LOADING);
@@ -266,11 +348,29 @@ export default class ConstructOrg extends Vue {
   async saveGenerator() {
     this.loading = true;
     await this.$store.dispatch(actions.INC_LOADING);
-    await this.$api('/org-generators-add', this.generator);
-    this.generator = newGenerator();
+    const { ok, message } = await this.$api('org-generators-add', {
+      hospitalId: this.hospitalId,
+      ...this.generator,
+    });
+    if (!ok) {
+      this.$error(message || 'Ошибка');
+    } else {
+      this.generator = this.newGenerator(this.generator.key);
+    }
     await this.loadGenerators();
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loading = false;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  newGenerator(key) {
+    return {
+      key,
+      year: moment().year(),
+      start: '',
+      end: '',
+      prependLength: 8,
+    };
   }
 }
 </script>
@@ -296,5 +396,9 @@ export default class ConstructOrg extends Vue {
   padding: 10px;
   background-color: rgba(0, 0, 0, 8%);
   border-radius: 4px;
+}
+
+.org-selector {
+  margin-bottom: 15px;
 }
 </style>

@@ -10,7 +10,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-8"
+    VERSION = f"{laboratory.VERSION}-9"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -162,6 +162,7 @@ class SettingManager:
                     "chats",
                     "csv_load_file",
                     "transfer_card",
+                    "disable_death_cert",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

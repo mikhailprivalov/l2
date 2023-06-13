@@ -3137,6 +3137,10 @@ class GeneratorValuesAreOver(Exception):
     pass
 
 
+class GeneratorOverlap(Exception):
+    pass
+
+
 class NumberGenerator(models.Model):
     DEATH_FORM_NUMBER = 'deathFormNumber'
     PERINATAL_DEATH_FORM_NUMBER = 'deathPerinatalNumber'

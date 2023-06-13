@@ -1850,7 +1850,8 @@ def hospitals(request):
     else:
         rows = []
     default_hospital = []
-    if any_hospital or data.get('filterByNeedSendResult'):
+    strict_mode = data.get('strictMode')
+    if not strict_mode and (any_hospital or data.get('filterByNeedSendResult')):
         default_hospital.append(
             {
                 "id": -1,
@@ -1858,7 +1859,7 @@ def hospitals(request):
                 "code_tfoms": "000000",
             }
         )
-    if any_hospital and not data.get('filterByNeedSendResult'):
+    if not strict_mode and any_hospital and not data.get('filterByNeedSendResult'):
         default_hospital.append(
             {
                 "id": -2,
@@ -2093,8 +2094,16 @@ def construct_menu_data(request):
 
 
 @login_required
-def current_org(request):
+def organization_data(request):
+    request_data = json.loads(request.body)
+
     hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    hospital_pk = request_data.get('hospitalId')
+    if hospital_pk is not None and hospital_pk != hospital.pk:
+        if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+            return status_response(False, 'Доступ запрещен')
+        hospital = Hospitals.objects.get(pk=hospital_pk)
 
     org = {
         "pk": hospital.pk,
@@ -2113,11 +2122,23 @@ def current_org(request):
 
 
 @login_required
-@group_required('Конструктор: Настройка организации')
-def current_org_update(request):
-    parse_params = {'title': str, 'shortTitle': str, 'address': str, 'phones': str, 'ogrn': str, 'currentManager': str, 'licenseData': str, 'www': str, 'email': str, 'okpo': str}
+@group_required('Конструктор: Настройка организации', 'Конструктор: Настройка всех организаций')
+def organization_data_update(request):
+    parse_params = {
+        'title': str,
+        'shortTitle': str,
+        'address': str,
+        'phones': str,
+        'ogrn': str,
+        'currentManager': str,
+        'licenseData': str,
+        'www': str,
+        'email': str,
+        'okpo': str,
+        'pk': int,
+    }
 
-    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False, 'pk': None})
 
     title: str = data[0].strip()
     short_title: str = data[1].strip()
@@ -2129,11 +2150,16 @@ def current_org_update(request):
     www: str = data[7].strip()
     email: str = data[8].strip()
     okpo: str = data[9].strip()
+    hospital_pk: Optional[int] = data[10]
 
     if not title:
         return status_response(False, 'Название не может быть пустым')
 
     hospital: Hospitals = request.user.doctorprofile.get_hospital()
+    if hospital_pk is not None and hospital_pk != hospital.pk:
+        if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+            return status_response(False, 'Доступ запрещен')
+        hospital = Hospitals.objects.get(pk=hospital_pk)
 
     old_data = {
         "title": hospital.title,
@@ -2236,6 +2262,14 @@ def unlimit_period_statistic_groups(request):
 def org_generators(request):
     hospital: Hospitals = request.user.doctorprofile.get_hospital()
 
+    request_data = json.loads(request.body)
+    hospital_pk = request_data.get('hospitalId')
+
+    if hospital_pk is not None and hospital_pk != hospital.pk:
+        if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+            return status_response(False, 'Доступ запрещен', data={'rows': []})
+        hospital = Hospitals.objects.get(pk=hospital_pk)
+
     rows = []
 
     g: directions.NumberGenerator
@@ -2258,50 +2292,87 @@ def org_generators(request):
 
 
 @login_required
-@group_required('Конструктор: Настройка организации')
+@group_required('Конструктор: Настройка организации', 'Конструктор: Настройка всех организаций')
 def org_generators_add(request):
-    hospital: Hospitals = request.user.doctorprofile.get_hospital()
-
     parse_params = {
         'key': str,
         'year': int,
         'start': int,
         'end': int,
         'prependLength': int,
+        'hospitalId': int,
     }
 
-    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False, 'end': None, 'prepend_length': None})
+    data = data_parse(request.body, parse_params, {'end': None, 'prependLength': None, 'hospitalId': None, 'year': None})
 
     key: str = data[0]
-    year: int = data[1]
+    year: Optional[int] = data[1]
     start: int = data[2]
-    end: int = data[3]
-    prepend_length: int = data[4]
+    end: Optional[int] = data[3]
+    prepend_length: Optional[int] = data[4]
+    hospital_pk: Optional[int] = data[5]
+
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    if hospital_pk is not None and hospital_pk != hospital.pk:
+        if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+            return status_response(False, 'Доступ запрещен')
+        hospital = Hospitals.objects.get(pk=hospital_pk)
+
+    if hospital.is_default:
+        return status_response(False, 'Такой генератор создать невозможно')
 
     is_simple_generator = key == 'tubeNumber'
 
     if is_simple_generator:
         year = -1
         prepend_length = 0
+    else:
+        if year is None:
+            return status_response(False, 'Год не может быть пустым')
+        if prepend_length is None:
+            return status_response(False, 'prepend_length не может быть пустым')
+        if end is None:
+            return status_response(False, 'end не может быть пустым')
 
-    with transaction.atomic():
-        directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
-        directions.NumberGenerator.objects.create(hospital=hospital, key=key, year=year, start=start, end=end, prepend_length=prepend_length, is_active=True)
+    try:
+        with transaction.atomic():
+            if is_simple_generator:
+                directions.NumberGenerator.objects.filter(hospital=hospital, key=key).update(is_active=False)
+            else:
+                directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
 
-        Log.log(
-            hospital.pk,
-            110000,
-            request.user.doctorprofile,
-            {
-                "key": key,
-                "year": year,
-                "start": start,
-                "end": end,
-                "prepend_length": prepend_length,
-            },
-        )
+            if is_simple_generator:
+                if (
+                    directions.NumberGenerator.objects.filter(key=key)
+                    .filter(Q(start__lte=start, end__lte=end, end__gte=start) | Q(start__gte=start, start__lte=end, end__gte=end) | Q(start__gte=start, end__lte=end))
+                    .exists()
+                ):
+                    raise directions.GeneratorOverlap('Уже существуют генераторы, включающие указанные интервалы')
 
-    return status_response(True)
+                if directions.TubesRegistration.objects.filter(number__gte=start, number__lte=end).exists():
+                    raise directions.GeneratorOverlap('Указанный интервал пересекается с уже существующими номерами ёмкостей')
+
+            directions.NumberGenerator.objects.create(hospital=hospital, key=key, year=year, start=start, end=end, prepend_length=prepend_length, is_active=True)
+
+            Log.log(
+                hospital.pk,
+                110000,
+                request.user.doctorprofile,
+                {
+                    "key": key,
+                    "year": year,
+                    "start": start,
+                    "end": end,
+                    "prepend_length": prepend_length,
+                },
+            )
+
+        return status_response(True)
+    except directions.GeneratorOverlap as e:
+        return status_response(False, str(e))
+
+    return status_response(False)
 
 
 def current_time(request):
