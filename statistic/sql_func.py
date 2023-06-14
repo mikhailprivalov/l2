@@ -1796,4 +1796,3 @@ def get_expertise_grade(parent_ids):
 
         rows = namedtuplefetchall(cursor)
     return rows
-
