@@ -1736,7 +1736,9 @@ def get_confirm_protocol_by_date_extract(field_ids, d_s, d_e):
                 directions_issledovaniya.time_confirmation is NOT NULL)
             """,
             params={
-                'field_ids': field_ids, 'd_start': d_s, 'd_end': d_e,
+                'field_ids': field_ids,
+                'd_start': d_s,
+                'd_end': d_e,
             },
         )
 
