@@ -1756,12 +1756,10 @@ def get_expertise_grade(parent_ids):
               grade_data.grade_value,
               level_data.level_value
             FROM directions_issledovaniya
-            
             LEFT JOIN directions_napravleniya
             ON directions_napravleniya.id=directions_issledovaniya.napravleniye_id
-	        
 	        LEFT JOIN (
-                SELECT 
+                SELECT
                   issledovaniye_id as level_iss, 
                   value as level_value
                 FROM directions_paraclinicresult
