@@ -48,7 +48,9 @@ from .sql_func import (
     sql_get_result_by_direction,
     sql_get_documents_by_card_id,
     get_all_harmful_factors_templates,
-    get_researches_by_templates, get_expertise_grade, get_confirm_protocol_by_date_extract,
+    get_researches_by_templates,
+    get_expertise_grade,
+    get_confirm_protocol_by_date_extract,
 )
 
 from laboratory.settings import (
