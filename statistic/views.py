@@ -27,7 +27,7 @@ from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expert
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from users.sql_func import get_users_by_role
-from utils.dates import try_parse_range, normalize_date
+from utils.dates import try_parse_range, normalize_date, normalize_dots_date
 from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
 from . import sql_func
 from . import structure_sheet
@@ -1150,12 +1150,11 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Экспертиза")
-        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
-        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
-        # expertise_researches = Researches.objects.filter(is_expertise=True)
+        d1 = normalize_dots_date(date_start_o)
+        d2 = normalize_dots_date(date_end_o)
         extract_researches_id = list(directory.HospitalService.objects.values_list("slave_research_id", flat=True).filter(site_type=7))
         field_id_for_extract_date = list(directory.ParaclinicInputField.objects.values_list("pk", flat=True).filter(group__research__in=extract_researches_id, title="Дата выписки"))
-        result_extract = get_confirm_protocol_by_date_extract(tuple(field_id_for_extract_date)) # Найти выписки с датой выписки в периоде
+        result_extract = get_confirm_protocol_by_date_extract(tuple(field_id_for_extract_date), d1, d2) # Найти выписки с датой выписки в периоде
         result_expertise_data = {i.iss_protocol_extract: {"title_research": i.main_extract_research, "direction_main_extract_dir": i.direction_main_extract_dir} for i in result_extract}
         iss_protocol_extract = list(result_expertise_data.keys())
         result_expertise_grade = get_expertise_grade(tuple(iss_protocol_extract)) # Результаты экспертизы
@@ -1166,10 +1165,22 @@ def statistic_xls(request):
                 result_expertise_data[i.parent_id]['второй'] = i.grade_value
             else:
                 result_expertise_data[i.parent_id]['без уровня'] = i.grade_value
-        print(result_expertise_data)
+        final_result = {}
+        for i in result_expertise_data.values():
+            if not final_result.get(i["title_research"]):
+                final_result[i["title_research"]] = [i]
+            else:
+                final_result[i["title_research"]].append(i)
 
-        ws = expertise_report.expertise_base(ws)
-        ws = expertise_report.expertise_data(ws)
+        max_count_extract = 0
+
+        for i in final_result.values():
+            if len(i) > max_count_extract:
+                max_count = len(i)
+        count_hosp_profile_research = len(final_result.keys())
+
+        # ws = expertise_report.expertise_base(ws)
+        ws = expertise_report.expertise_data(ws, count_hosp_profile_research, max_count_extract, final_result)
 
     elif tp == "statistics-dispanserization":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспансеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)

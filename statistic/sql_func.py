@@ -1709,7 +1709,7 @@ def get_researches_by_templates(template_ids):
     return rows
 
 
-def get_confirm_protocol_by_date_extract(field_ids):
+def get_confirm_protocol_by_date_extract(field_ids, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -1732,11 +1732,11 @@ def get_confirm_protocol_by_date_extract(field_ids):
                 where id in (select issledovaniye_id
                 FROM public.directions_paraclinicresult
                 where field_id in %(field_ids)s and
-                value BETWEEN '2021-01-18' AND '2022-02-18') and 
+                value BETWEEN %(d_start)s AND %(d_end)s) and 
                 directions_issledovaniya.time_confirmation is NOT NULL)
             """,
             params={
-                'field_ids': field_ids,
+                'field_ids': field_ids, 'd_start': d_s, 'd_end': d_e,
             },
         )
 
