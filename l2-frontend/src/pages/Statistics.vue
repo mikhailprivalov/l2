@@ -523,6 +523,12 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-dispanserization&date-start=<date-start>&date-end=<date-end>',
       },
+      expertise: {
+        groups: ['Статистика-экспертиза'],
+        title: 'Экспертиза стационара',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-hosp-expertise&date-start=<date-start>&date-end=<date-end>',
+      },
     },
   },
   prof: {

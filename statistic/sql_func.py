@@ -1707,3 +1707,92 @@ def get_researches_by_templates(template_ids):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_confirm_protocol_by_date_extract(field_ids, d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                directions_napravleniya.id as direction_protocol_extract, 
+                directions_napravleniya.parent_id, 
+                dd.napravleniye_id as direction_main_extract_dir,
+                rd.title as main_extract_research,
+                pd.id as iss_protocol_extract
+                FROM
+                directions_napravleniya
+                LEFT JOIN directions_issledovaniya dd on directions_napravleniya.parent_id = dd.id
+                LEFT JOIN directions_issledovaniya pd on directions_napravleniya.id = pd.napravleniye_id
+                LEFT JOIN directory_researches rd on rd.id = dd.research_id
+                
+                WHERE directions_napravleniya.id in 
+                (SELECT 
+                napravleniye_id
+                from directions_issledovaniya
+                where id in (select issledovaniye_id
+                FROM public.directions_paraclinicresult
+                where field_id in %(field_ids)s and
+                value BETWEEN %(d_start)s AND %(d_end)s) and 
+                directions_issledovaniya.time_confirmation is NOT NULL)
+            """,
+            params={
+                'field_ids': field_ids,
+                'd_start': d_s,
+                'd_end': d_e,
+            },
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_expertise_grade(parent_ids):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+              grade_data.grade_iss as grade_expertise_iss, 
+              level_data.level_iss as level_data_iss, 
+              directions_issledovaniya.doc_confirmation_id as doc_id,
+              directions_napravleniya.parent_id,
+              grade_data.grade_value,
+              level_data.level_value
+            FROM directions_issledovaniya
+            LEFT JOIN directions_napravleniya
+            ON directions_napravleniya.id=directions_issledovaniya.napravleniye_id
+            LEFT JOIN (
+                SELECT
+                  issledovaniye_id as level_iss, 
+                  value as level_value
+                FROM directions_paraclinicresult
+                LEFT JOIN directory_paraclinicinputfield
+                ON directions_paraclinicresult.field_id = directory_paraclinicinputfield.id
+                WHERE 
+                directory_paraclinicinputfield.title = 'Уровень экспертизы'
+                ) as level_data
+            ON directions_issledovaniya.id=level_data.level_iss
+            
+            LEFT JOIN (
+                SELECT 
+                  issledovaniye_id as grade_iss, 
+                  value as grade_value
+                FROM directions_paraclinicresult
+                LEFT JOIN directory_paraclinicinputfield
+                ON directions_paraclinicresult.field_id = directory_paraclinicinputfield.id
+                WHERE 
+                directory_paraclinicinputfield.title = 'Общее количество баллов'
+                ) as grade_data
+            ON directions_issledovaniya.id=grade_data.grade_iss
+            
+            WHERE 
+            directions_issledovaniya.time_confirmation is not null
+            AND
+            directions_issledovaniya.napravleniye_id in
+            (SELECT id FROM directions_napravleniya WHERE
+            parent_id in %(parent_ids)s)
+            """,
+            params={'parent_ids': parent_ids},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
