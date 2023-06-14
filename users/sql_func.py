@@ -16,9 +16,7 @@ def get_users_by_role(groups_title):
             WHERE
             auth_user_groups.group_id in (SELECT id from auth_group where name in %(groups_title)s))
             """,
-            params={
-                'groups_title': groups_title
-            },
+            params={'groups_title': groups_title},
         )
         rows = namedtuplefetchall(cursor)
     return rows
