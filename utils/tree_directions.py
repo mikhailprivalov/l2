@@ -258,10 +258,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             LEFT JOIN t_research ON r.research_id = t_research.research_iddir
             LEFT JOIN t_hospital_service ON r.research_id = t_hospital_service.slave_research_id
             WHERE 
-            CASE when %(hosp_is_assignments)s = TRUE THEN
-            is_paraclinic = true or is_doc_refferal = true or is_gistology = true or is_citology = true or (is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE 
-                and is_citology = FALSE and is_gistology = FALSE and site_type is NULL AND is_slave_hospital = FALSE)
-            when %(hosp_site_type)s > -1 THEN 
+            CASE when %(hosp_site_type)s > -1 THEN 
             site_type = %(hosp_site_type)s
             when %(hosp_is_paraclinic)s = TRUE THEN
             is_paraclinic = true and site_type is NULL

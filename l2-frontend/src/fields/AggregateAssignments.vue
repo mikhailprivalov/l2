@@ -85,9 +85,7 @@ const pageSizeChange = (size: number) => {
 };
 const assignments = ref([]);
 watch(props.researches, () => {
-  assignments.value = props.researches.filter((research) => {
-    return research;
-  });
+  assignments.value = props.researches.filter((research) => research);
 });
 
 </script>
