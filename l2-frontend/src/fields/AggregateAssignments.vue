@@ -3,17 +3,17 @@
     <div>
       <VeTable
         :columns="columns"
-        :table-data="researches"
+        :table-data="assignments"
       />
       <div
-        v-show="researches.length === 0"
+        v-show="assignments.length === 0"
         class="empty-list"
       >
         Нет записей
       </div>
       <div class="flex-space-between">
         <VePagination
-          :total="researches.length"
+          :total="assignments.length"
           :page-index="page"
           :page-size="pageSize"
           :page-size-option="pageSizeOption"
@@ -38,22 +38,24 @@
 
 <script setup lang="ts">
 import {
-  ref, watch,
+  onMounted, ref,
 } from 'vue';
 import {
   VeLocale,
   VePagination,
   VeTable,
 } from 'vue-easytable';
-import 'vue-easytable/libs/theme-default/index.css';
 
+import 'vue-easytable/libs/theme-default/index.css';
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import { useStore } from '@/store';
 import ruRu from '@/locales/ve';
 
 VeLocale.use(ruRu);
 
 const props = defineProps<{
   direction: number;
-  researches: [];
 }>();
 
 const columns = ref([
@@ -73,7 +75,7 @@ const columns = ref([
     field: 'fioConfirmant', key: 'fioConfirmant', title: 'Фамилия подтвердившего', align: 'center', width: 200,
   },
 ]);
-
+const store = useStore();
 const pageSize = ref(100);
 const page = ref(1);
 const pageSizeOption = ref([30, 50, 100, 300]);
@@ -83,10 +85,15 @@ const pageNumberChange = (number: number) => {
 const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
+
+const getAssignments = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const data = api('stationar/get-assignments', { history_id: props.direction });
+  await store.dispatch(actions.DEC_LOADING);
+};
+
 const assignments = ref([]);
-watch(props.researches, () => {
-  assignments.value = props.researches.filter((research) => research);
-});
+onMounted(getAssignments);
 
 </script>
 

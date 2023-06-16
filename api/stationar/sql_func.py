@@ -206,3 +206,30 @@ def get_result_temperature_list(iss_pk_list, research_pk, titles_field):
         )
         row = cursor.fetchall()
     return row
+
+
+def get_assignments_by_history(history_id: int):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT public.directions_napravleniya.parent_id as parent_napravlenie_id, public.directions_napravleniya.id as narpavlenie_id, 
+            public.users_doctorprofile.fio as doctor_who_assigned, public.directions_issledovaniya.id as issledovanie_id, (SELECT fio FROM public.users_doctorprofile WHERE 
+            public.users_doctorprofile.id = public.directions_issledovaniya.doc_confirmation_id) as doctor_who_confrim, public.directions_issledovaniya.time_confirmation, 
+            public.directory_researches.id as reseach_id, public.directory_researches.title as research_title
+
+            FROM public.directions_issledovaniya
+            INNER JOIN public.directions_napravleniya
+              ON public.directions_issledovaniya.napravleniye_id = public.directions_napravleniya.id
+            INNER JOIN public.directory_researches
+              ON public.directions_issledovaniya.research_id = public.directory_researches.id
+            INNER JOIN public.users_doctorprofile
+              ON public.directions_napravleniya.doc_id = public.users_doctorprofile.id
+            
+            WHERE public.directions_napravleniya.parent_id = %(history_id)s
+            AND (is_paraclinic = true OR is_doc_refferal = true OR is_microbiology = true OR is_citology = true OR is_gistology = true OR 
+                 (is_paraclinic = False AND is_doc_refferal = False AND is_microbiology = False AND is_citology = False AND is_gistology = False 
+                  AND is_slave_hospital = False))
+                  """,
+            params={"history_id": history_id})
+        rows = cursor.fetchall()
+    return rows

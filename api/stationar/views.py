@@ -4,6 +4,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
+from api.stationar.sql_func import get_assignments_by_history
 from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
@@ -14,6 +15,7 @@ from django.db.models import Q
 
 from pharmacotherapy.models import ProcedureList
 from podrazdeleniya.models import Podrazdeleniya
+from results.sql_func import get_not_confirm_direction
 from slog.models import Log
 from utils.xh import get_hospitals_podrazdeleniya
 
@@ -284,3 +286,16 @@ def change_department(request):
             "to": dep_to,
         }
     )
+
+
+@login_required
+@group_required("Врач стационара")
+def get_assignments(request):
+    request_data = json.loads(request.body)
+    history_id = request_data["history_id"]
+    results = get_assignments_by_history(history_id)
+    all_directions_id = [i[1] for i in results]
+    not_confirm_directions = get_not_confirm_direction(all_directions_id)
+    not_confirm_directions_list = [i[0] for i in not_confirm_directions]
+    confirm_directions = list(set(all_directions_id) - set(not_confirm_directions_list))
+    return JsonResponse({"data": results})

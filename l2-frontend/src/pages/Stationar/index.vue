@@ -435,7 +435,7 @@
                   href="#"
                   class="btn btn-blue-nb"
                   @click.prevent="print_results_docx(opened_form_pk)"
-                ><i class="fa-solid fa-file-word"/></a>
+                ><i class="fa-solid fa-file-word" /></a>
               </template>
               <div v-frag>
                 <a
@@ -736,7 +736,6 @@
           <AggregateAssignments
             v-if="opened_list_key === 'pharmacotherapy'"
             :direction="direction"
-            :researches="list_directions"
           />
         </div>
       </div>
