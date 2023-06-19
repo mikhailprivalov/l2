@@ -29,6 +29,8 @@ class PriceName(models.Model):
     date_end = models.DateField(help_text="Дата окончания действия документа", blank=True, null=True)
     research = models.ManyToManyField(directory.Researches, through='PriceCoast', help_text="Услуга-Прайс", blank=True)
     company = models.ForeignKey('contracts.Company', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
+    is_hospital_price = models.BooleanField(default=False, help_text='Прайс для медорганзиаций', db_index=True)
+    hospital = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{}".format(self.title)

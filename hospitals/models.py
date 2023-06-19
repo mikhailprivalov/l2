@@ -34,6 +34,8 @@ class Hospitals(models.Model):
     legal_auth_doc_id = models.CharField(max_length=9, default="", blank=True, verbose_name="Код для кто заверил")
     oktmo = models.CharField(max_length=8, default="", blank=True, verbose_name="ОКТМО")
     need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
+    is_purpose_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
+    has_price = models.BooleanField(default=False, blank=True, help_text='Прайс для назначивших МО', db_index=True)
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
