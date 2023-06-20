@@ -66,20 +66,20 @@ const columns = ref([
     field: 'research_title', key: 'research_title', title: 'Медицинское вмешательство', align: 'left',
   },
   {
-    field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
+    field: 'create_date', key: 'create_date', title: 'Дата и время назначения', align: 'center', width: 150,
   },
   {
-    field: 'who_assigned', key: 'who_assigned', title: 'Подпись назначившего', align: 'center', width: 200,
+    field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,
   },
   {
-    field: 'time_confirmation', key: 'time_confirmation', title: 'Дата подтверждения', align: 'center', width: 150,
+    field: 'time_confirmation', key: 'time_confirmation', title: 'Дата и время подтверждения', align: 'center', width: 150,
   },
   {
-    field: 'who_confirm', key: 'who_confirm', title: 'Фамилия подтвердившего', align: 'center', width: 200,
+    field: 'who_confirm', key: 'who_confirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
   },
 ]);
 const store = useStore();
-const pageSize = ref(100);
+const pageSize = ref(30);
 const page = ref(1);
 const pageSizeOption = ref([30, 50, 100, 300]);
 const pageNumberChange = (number: number) => {
