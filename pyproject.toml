@@ -9,7 +9,7 @@ skip-string-normalization = true
 
 [tool.poetry]
 name = "l2"
-version = "2023.6.141049+ba2891"
+version = "2023.6.200522+cc10bd"
 description = ""
 authors = ["Mikhail Privalov <n5250@ya.ru>"]
 license = "MIT"
@@ -74,7 +74,7 @@ transliterate = "1.10.2"
 imgkit = "1.2.3"
 astm = {git = "https://github.com/moodpulse/python-astm.git", rev = "v0.6"}
 psycopg2-binary = "^2.9.4"
-boto3 = "^1.26.116"
+boto3 = "^1.26.156"
 prompt-toolkit = "^3.0.36"
 pdf2docx = "^0.5.6"
 pyotp = "^2.8.0"
