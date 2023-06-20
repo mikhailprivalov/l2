@@ -60,19 +60,22 @@ const props = defineProps<{
 
 const columns = ref([
   {
-    field: 'research', key: 'research', title: 'Медицинское вмешательство', align: 'center',
+    field: 'direction_id', key: 'direction_id', title: '№ напр.', width: 100,
   },
   {
-    field: 'assignedDate', key: 'dateAssigned', title: 'Дата назначения', align: 'center', width: 100,
+    field: 'research_title', key: 'research_title', title: 'Медицинское вмешательство', align: 'left',
   },
   {
-    field: 'signatureCreator', key: 'signatureCreator', title: 'Подпись назначившего', align: 'center', width: 100,
+    field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
   },
   {
-    field: 'confirmationDate', key: 'confirmationDate', title: 'Дата подтверждения', align: 'center', width: 100,
+    field: 'who_assigned', key: 'who_assigned', title: 'Подпись назначившего', align: 'center', width: 200,
   },
   {
-    field: 'fioConfirmant', key: 'fioConfirmant', title: 'Фамилия подтвердившего', align: 'center', width: 200,
+    field: 'time_confirmation', key: 'time_confirmation', title: 'Дата подтверждения', align: 'center', width: 150,
+  },
+  {
+    field: 'who_confirm', key: 'who_confirm', title: 'Фамилия подтвердившего', align: 'center', width: 200,
   },
 ]);
 const store = useStore();
@@ -85,14 +88,15 @@ const pageNumberChange = (number: number) => {
 const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
+const assignments = ref([]);
 
 const getAssignments = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const data = api('stationar/get-assignments', { history_id: props.direction });
+  const results = await api('stationar/get-assignments', { history_id: props.direction });
   await store.dispatch(actions.DEC_LOADING);
+  assignments.value = results.data;
 };
 
-const assignments = ref([]);
 onMounted(getAssignments);
 
 </script>
