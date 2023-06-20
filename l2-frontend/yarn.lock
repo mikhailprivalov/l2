@@ -8933,10 +8933,10 @@ vue-demi@>=0.14.0:
   resolved "https://registry.yarnpkg.com/vue-demi/-/vue-demi-0.14.0.tgz#dcfd9a9cf9bb62ada1582ec9042372cf67ca6190"
   integrity sha512-gt58r2ogsNQeVoQ3EhoUAvUsH9xviydl0dWJj7dabBC/2L4uBId7ujtCwDRD0JhkGsV1i0CtfLAeyYKBht9oWg==
 
-vue-easytable@^2.26.0:
-  version "2.26.0"
-  resolved "https://registry.yarnpkg.com/vue-easytable/-/vue-easytable-2.26.0.tgz#f28c423904a8b248b1f2ee9b36a42715198c3eb9"
-  integrity sha512-RP7ETDCph+kT25zCRRP5h3LGSXx7fVXgZdnaCRDOTdiW9gu8ZSxKMo70M0h7ZFz192ZOYlqIHhDmrphM+aKe9Q==
+vue-easytable@^2.27.1:
+  version "2.27.1"
+  resolved "https://registry.yarnpkg.com/vue-easytable/-/vue-easytable-2.27.1.tgz#dbf4a3f0fe925bf5d7ce6d5cc90b0d3585afaed0"
+  integrity sha512-Rs2cqaPYamH8zXQo/f90AyM/ROGMsB5Njb74GpooWacAKEXbHU0wXYvEjSBZ7CcS6TVqliA/ZbgVqOoA/o9bHQ==
   dependencies:
     lodash "^4.17.20"
     resize-observer-polyfill "^1.5.1"
