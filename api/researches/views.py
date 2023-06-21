@@ -28,6 +28,7 @@ from directory.models import (
     Localization,
     ServiceLocation,
     ResearchGroup,
+    ReleationsFT,
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
@@ -1040,3 +1041,53 @@ def group_as_json(request):
     response['Content-Disposition'] = f"attachment; filename*=utf-8''group-{quote(f'{group.title}')}.json"
 
     return response
+
+
+@login_required
+@group_required('Оператор', 'Конструктор: Лабораторные исследования')
+def tube_related_data(request):
+    request_data = json.loads(request.body)
+    pk = request_data['id']
+
+    relation = ReleationsFT.objects.get(pk=pk)
+    tube = relation.tube
+
+    researches_dict = {}
+    for fr in Fractions.objects.filter(relation=relation):
+        if fr.research_id not in researches_dict:
+            researches_dict[fr.research_id] = {
+                "order": fr.research.sort_weight,
+                "title": fr.research.get_title(),
+            }
+
+    researches = list(researches_dict.values())
+    researches.sort(key=lambda x: x['order'])
+    researches = [r['title'] for r in researches]
+
+    return JsonResponse(
+        {
+            "maxResearchesPerTube": str(relation.max_researches_per_tube or ''),
+            "researches": researches,
+            "title": tube.title,
+            "color": tube.color,
+        }
+    )
+
+
+@login_required
+@group_required('Оператор', 'Конструктор: Лабораторные исследования')
+def tube_related_data_update(request):
+    request_data = json.loads(request.body)
+    pk = request_data['id']
+    max_researches_per_tube = str(request_data['maxResearchesPerTube'])
+
+    relation = ReleationsFT.objects.get(pk=pk)
+
+    if max_researches_per_tube.isdigit():
+        relation.max_researches_per_tube = int(max_researches_per_tube)
+    else:
+        relation.max_researches_per_tube = None
+
+    relation.save()
+
+    return status_response(True)

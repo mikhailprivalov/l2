@@ -1,4 +1,5 @@
 import base64
+import math
 import os
 
 from django.core.paginator import Paginator
@@ -60,9 +61,11 @@ from directions.models import (
     IssledovaniyaFiles,
     IssledovaniyaResultLaborant,
     SignatureCertificateDetails,
+    GeneratorValuesAreOver,
+    NoGenerator,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
-from laboratory import settings, VERSION
+from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE, REMD_ONLY_RESEARCH, REMD_EXCLUDE_RESEARCH, SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE, DICOM_SERVERS
@@ -418,7 +421,7 @@ def directions_history(request):
     result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent, for_slave_hosp)
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
-    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id
+    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id, tube_number
     researches_pks = []
     researches_titles = ''
 
@@ -640,7 +643,7 @@ def hosp_set_parent(request):
     result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent, for_slave_hosp)
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
-    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid
+    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, tube_number
     res = {"directions": []}
 
     for i in result_sql:
@@ -785,7 +788,7 @@ def directions_results(request):
 
             result["results"] = collections.OrderedDict()
             isses = []
-            for issledovaniye in iss_list.order_by("tubes__id", "research__sort_weight"):
+            for issledovaniye in iss_list.order_by("tubes__number", "research__sort_weight"):
                 if issledovaniye.pk in isses:
                     continue
                 isses.append(issledovaniye.pk)
@@ -3374,30 +3377,49 @@ def tubes_for_get(request):
                     flowers[absor_obj.flower_id] = True
                     fresearches[absor_obj.flower.research_id] = True
 
+    relation_researches_count = {}
     for v in iss_cached:
-        if data["direction"]["full_confirm"] and not i.time_confirmation:
+        if data["direction"]["full_confirm"] and not v.time_confirmation:
             data["direction"]["full_confirm"] = False
-        has_rels = {x.type_id: x for x in v.tubes.all()}
+        x: TubesRegistration
+        has_rels = {x.type_id if not x.chunk_number else f"{x.type_id}_{x.chunk_number}": x for x in v.tubes.all()}
         new_tubes = []
         for val in v.research.fractions_set.all():
             vrpk = val.relation_id
             rel = val.relation
 
-            if vrpk not in has_rels and i.time_confirmation:
+            if vrpk not in has_rels and v.time_confirmation:
                 continue
 
-            if val.research_id in fresearches and val.pk in flowers and not i.time_confirmation:
+            if val.research_id in fresearches and val.pk in flowers and not v.time_confirmation:
                 absor = val.flower.all().first()
                 if absor.fupper_id in fuppers:
                     vrpk = absor.fupper.relation_id
                     rel = absor.fupper.relation
 
+            if rel.max_researches_per_tube:
+                actual_count = relation_researches_count.get(rel.pk, 0) + 1
+                relation_researches_count[rel.pk] = actual_count
+                chunk_number = math.ceil(actual_count / rel.max_researches_per_tube)
+                vrpk = f"{vrpk}_{chunk_number}"
+            else:
+                chunk_number = None
+
             if vrpk not in tubes_buffer:
                 if vrpk not in has_rels:
-                    ntube = TubesRegistration(type=rel)
-                    ntube.save()
-                    has_rels[vrpk] = ntube
-                    new_tubes.append(ntube)
+                    with transaction.atomic():
+                        try:
+                            generator_pk = TubesRegistration.get_tube_number_generator_pk(request.user.doctorprofile.get_hospital())
+                            generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
+                            number = generator.get_next_value()
+                        except NoGenerator as e:
+                            return status_response(False, str(e))
+                        except GeneratorValuesAreOver as e:
+                            return status_response(False, str(e))
+                        ntube = TubesRegistration(type=rel, number=number, chunk_number=chunk_number)
+                        ntube.save()
+                        has_rels[vrpk] = ntube
+                        new_tubes.append(ntube)
                 else:
                     ntube = has_rels[vrpk]
                 tubes_buffer[vrpk] = {"researches": set(), "labs": set(), "tube": ntube}
@@ -3427,23 +3449,23 @@ def tubes_for_get(request):
         if lab not in data["tubes"]:
             data["tubes"][lab] = {}
 
-        if tube.pk not in data["tubes"][lab]:
+        if tube.number not in data["tubes"][lab]:
             tube_title = tube.type.tube.title
             tube_color = tube.type.tube.color
 
             status = tube.getstatus()
 
-            data["tubes"][lab][tube.pk] = {
+            data["tubes"][lab][tube.number] = {
                 "researches": list(v["researches"]),
                 "status": status,
                 "checked": True,
                 "color": tube_color,
                 "title": tube_title,
-                "id": tube.pk,
+                "id": tube.number,
                 "barcode": barcode,
             }
 
-            data['details'][tube.pk] = tube.get_details()
+            data['details'][tube.number] = tube.get_details()
 
             if not data["direction"]["has_not_completed"] and not status:
                 data["direction"]["has_not_completed"] = True
@@ -3469,7 +3491,7 @@ def tubes_register_get(request):
     get_details = {}
 
     for pk in pks:
-        val = TubesRegistration.objects.get(id=pk)
+        val = TubesRegistration.objects.get(number=pk)
         if not val.doc_get and not val.time_get:
             val.set_get(request.user.doctorprofile)
         get_details[pk] = val.get_details()
@@ -3491,11 +3513,11 @@ def tubes_for_confirm(request):
     for n in naps:
         for i in Issledovaniya.objects.filter(napravleniye=n):
             for t in i.tubes.filter(doc_get__isnull=True):
-                tmprows[t.pk] = {
+                tmprows[t.number] = {
                     "direction": n.pk,
                     "patient": n.client.individual.fio(short=True, dots=True),
                     "title": t.type.tube.title,
-                    "pk": t.pk,
+                    "pk": t.number,
                     "color": t.type.tube.color,
                     "checked": True,
                 }
@@ -3516,14 +3538,14 @@ def tubes_get_history(request):
     tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('-time_get').exclude(time_get__lt=datetime.now().date())
 
     if pks:
-        tubes = tubes.filter(pk__in=pks)
+        tubes = tubes.filter(number__in=pks)
 
     for v in tubes:
-        iss = Issledovaniya.objects.filter(tubes__pk=v.pk)
+        iss = Issledovaniya.objects.filter(tubes__number=v.number)
 
         res["rows"].append(
             {
-                "pk": v.pk,
+                "pk": v.number,
                 "direction": iss[0].napravleniye_id,
                 "title": v.type.tube.title,
                 "color": v.type.tube.color,
@@ -3565,29 +3587,14 @@ def gen_number(request):
         if field.value:
             return status_response(True, 'Значение уже было сгенерировано', {'number': field.value})
 
-        next_value = None
-
-        min_last_value = gen.last if gen.last else (gen.start - 1)
-
-        if gen.free_numbers:
-            min_last_value = min(min_last_value, *gen.free_numbers)
-
-        if not gen.last or gen.last == min_last_value:
-            next_value = min_last_value + 1
-            if next_value > gen.end:
-                return status_response(False, 'Значения генератора закончились')
-            gen.last = next_value
-        else:
-            next_value = min_last_value
-
-        gen.free_numbers = [x for x in gen.free_numbers if x != next_value]
-
-        gen.save(update_fields=['last', 'free_numbers'])
+        try:
+            number = gen.get_prepended_next_value()
+        except GeneratorValuesAreOver as e:
+            return status_response(False, str(e))
 
         total_free_numbers = len([x for x in gen.free_numbers if x <= gen.last]) + (gen.end - gen.last)
         total_numbers = (gen.end - gen.start) + 1
 
-        number = str(next_value).zfill(gen.prepend_length)
         field.value = number
         field.save()
         return status_response(True, None, {'number': number, 'totalFreeNumbers': total_free_numbers, 'totalNumbers': total_numbers})
@@ -4185,10 +4192,10 @@ def direction_history(request):
         for lg in Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011, 60022, 60023, 60024, 60025)):
             data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
         for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dr).distinct():
-            d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
+            d = {"type": "Ёмкость №%s" % tube.number, "events": []}
             if tube.time_get is not None:
                 d["events"].append([["title", strdatetime(tube.time_get) + " Забор"], ["Заборщик", get_userdata(tube.doc_get)]])
-            for lg in Log.objects.filter(key=str(tube.pk), type__in=(4000, 12, 11)).distinct():
+            for lg in Log.objects.filter(key=str(tube.number), type__in=(4000, 12, 11)).distinct():
                 tdata = [["Приёмщик", get_userdata(lg.user)], ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
                 if lg.body and lg.body != "":
                     tdata.append(["json_data", lg.body])

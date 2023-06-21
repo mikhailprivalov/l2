@@ -132,14 +132,14 @@ def ready(request):
 
     for tube in tlist.distinct().prefetch_related('issledovaniya_set__napravleniye').select_related('type', 'type__tube'):
         direction = None
-        if tube.pk not in tubes:
+        if tube.number not in tubes:
             if not direction:
                 direction = tube.issledovaniya_set.first().napravleniye
             if tube.time_recive.date() not in dates_cache:
                 dates_cache[tube.time_recive.date()] = dateformat.format(tube.time_recive, 'd.m.y')
-            tubes.add(tube.pk)
+            tubes.add(tube.number)
             dicttube = {
-                "pk": tube.pk,
+                "pk": tube.number,
                 "direction": direction.pk,
                 "date": dates_cache[tube.time_recive.date()],
                 "tube": {"title": tube.type.tube.title, "color": tube.type.tube.color},
@@ -185,7 +185,7 @@ def search(request):
             pk //= 10
             t = "direction"
         if t == "tube":
-            iss = Issledovaniya.objects.filter(tubes__id=pk)
+            iss = Issledovaniya.objects.filter(tubes__number=pk)
             if iss.count() != 0:
                 direction = iss.first().napravleniye
             iss = iss.filter(research__podrazdeleniye__pk=laboratory_pk)
@@ -216,7 +216,7 @@ def search(request):
                 cnt = 0
                 researches_chk = []
                 for issledovaniye in (
-                    iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight")
+                    iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__number", "research__sort_weight")
                     .prefetch_related('tubes', 'result_set')
                     .select_related('research', 'doc_save')
                 ):
@@ -227,9 +227,9 @@ def search(request):
 
                         tubes_list = issledovaniye.tubes.exclude(doc_recive__isnull=True).all()
 
-                        not_received_tubes_list = [str(x.pk) for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
+                        not_received_tubes_list = [str(x.number) for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("number")]
 
-                        not_received_why = [x.notice for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk") if x.notice]
+                        not_received_why = [x.notice for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("number") if x.notice]
 
                         saved = True
                         confirmed = True
@@ -260,7 +260,7 @@ def search(request):
                                 all_confirmed = False
                         if all_saved and not issledovaniye.time_save and not issledovaniye.deferred:
                             all_saved = False
-                        tb = ','.join(str(v.pk) for v in tubes_list)
+                        tb = ','.join(str(v.number) for v in tubes_list)
 
                         if tb not in groups.keys():
                             cnt += 1
@@ -277,7 +277,7 @@ def search(request):
                                 "status_key": str(saved) + str(confirmed) + str(issledovaniye.deferred and not confirmed),
                                 "not_received_tubes": ", ".join(not_received_tubes_list),
                                 "not_received_why": ", ".join(not_received_why),
-                                "tubes": [{"pk": x.pk, "title": x.type.tube.title, "color": x.type.tube.color} for x in tubes_list],
+                                "tubes": [{"pk": x.number, "title": x.type.tube.title, "color": x.type.tube.color} for x in tubes_list],
                                 "template": str(issledovaniye.research.template),
                                 "deff": issledovaniye.deferred and not confirmed,
                                 "doc_save_fio": doc_save_fio,
@@ -700,12 +700,20 @@ def receive_one_by_one(request):
 
     pk = re.sub("[^0-9]", "", str(request_data['q']))
     direction = request_data["workMode"] == "direction"
+    message = None
     if not direction:
         pks = [pk]
     else:
-        tubes(request, direction_implict_id=pk)
+        resp = tubes(request, direction_implict_id=pk)
+
+        content_type = resp.headers.get("content-type")
+        if content_type == 'application/json':
+            resp_json = json.loads(resp.content)
+            if isinstance(resp_json, dict) and "message" in resp_json:
+                message = resp_json["message"]
+
         pks = [
-            x.pk
+            x.number
             for x in (
                 TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
                 .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
@@ -717,8 +725,8 @@ def receive_one_by_one(request):
     invalid_objects = []
     last_n = None
     for p in pks:
-        if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
-            tube = TubesRegistration.objects.get(pk=p)
+        if TubesRegistration.objects.filter(number=p).exists() and Issledovaniya.objects.filter(tubes__number=p).exists():
+            tube = TubesRegistration.objects.get(number=p)
             podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in tube.issledovaniya_set.all()])))
             if lab_pk < 0 or tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
                 tube.clear_notice(request.user.doctorprofile)
@@ -735,7 +743,7 @@ def receive_one_by_one(request):
                     }
                 )
 
-                ok_researches.extend([x.research.title for x in Issledovaniya.objects.filter(tubes__id=p)])
+                ok_researches.extend([x.research.title for x in Issledovaniya.objects.filter(tubes__number=p)])
             else:
                 invalid_objects.append(f"Пробирка {p} для другой лаборатории: {', '.join(podrs)}")
         else:
@@ -774,6 +782,7 @@ def receive_one_by_one(request):
             "researches": sorted(list(set(ok_researches))),
             "invalid": invalid_objects,
             "lastN": last_n,
+            "message": message,
         }
     )
 
@@ -816,12 +825,12 @@ def receive_history(request):
         podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in row.issledovaniya_set.all()])))
         result["rows"].append(
             {
-                "pk": row.pk,
+                "pk": row.number,
                 "n": row.daynum or 0,
                 "type": str(row.type.tube),
                 "color": row.type.tube.color,
                 "labs": podrs,
-                "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)],
+                "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__number=row.number)],
             }
         )
     return JsonResponse(result)

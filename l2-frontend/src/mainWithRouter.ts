@@ -677,6 +677,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/related-tube/:id',
+      name: 'construct-related-tube',
+      component: () => import('@/construct/ConstructRelatedTube.vue'),
+      meta: {
+        emptyLayout: true,
+        title: 'Управление ёмкостями фракций',
+        groups: ['Оператор', 'Конструктор: Лабораторные исследования'],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

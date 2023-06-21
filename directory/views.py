@@ -107,7 +107,6 @@ def directory_researches(request):
                         "title": fraction.relation.tube.title,
                         "num": fraction.sort_weight,
                     }
-            # return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
             return_result["researches"].append(resdict)
         return_result["researches"] = sorted(return_result["researches"], key=lambda d: d["pk"])
     return JsonResponse(return_result)
