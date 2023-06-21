@@ -19,7 +19,7 @@ from api.procedure_list.views import get_procedure_by_dir
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from laboratory.settings import FONTS_FOLDER
-from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list
+from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list, get_assignments
 from reportlab.lib import colors
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.shapes import Drawing
@@ -470,6 +470,92 @@ def form_02(request_data):
         objs.append(Spacer(1, 15 * mm))
         start = end
         end += slice_count
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_03(request_data):
+    """
+    Лист назначений
+    """
+
+    direction_id = json.loads(request_data["hosp_pk"])
+    ind_card = Napravleniya.objects.get(pk=direction_id)
+    patient_data = ind_card.client.get_data_individual()
+    assignments = get_assignments(direction_id)
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=7 * mm, topMargin=10 * mm, bottomMargin=10 * mm, title="Лист назначений"
+    )
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    tableTitle = deepcopy(style)
+    tableTitle.fontName = "PTAstraSerifBold"
+    tableTitle.alignment = TA_LEFT
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    objs = []
+    objs.append(Paragraph('Лист назначений', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(f'История болезни №{direction_id}', style=styleCenter))
+    objs.append(Spacer(1, 5 * mm))
+
+    table_data = [
+        [
+            Paragraph('Медицинское вмешательство', tableTitle),
+            Paragraph('Дата назначения', tableTitle),
+            Paragraph('Подпись лечащего врача (врача-специалиста), сделавшего назначение', tableTitle),
+            Paragraph('Дата и время исполнения назначения', tableTitle),
+            Paragraph('Фамилия, имя, отчество (при наличии) и подпись медицинского работника, ответственного за исполнение назначения', tableTitle),
+        ],
+    ]
+    assignments_data = [
+        [
+            Paragraph(f'{" ".join(i["research_title"])}', style),
+            Paragraph(f'{i["create_date"]}', styleCenter),
+            Paragraph(f'{i["who_assigned"]}', styleCenter),
+            Paragraph(f'{i["time_confirmation"]}', styleCenter),
+            Paragraph(f'{i["who_confirm"]}', styleCenter)
+        ] for i in assignments]
+
+    table_data.extend(assignments_data)
+
+    columns_width = [None, 40 * mm, 43 * mm, 35 * mm, 40 * mm]
+
+    tbl = Table(table_data,  repeatRows=1, colWidths=columns_width, hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                ('TOPPADDING', (0, 0), (-1, -1), 1 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    objs.append(tbl)
 
     doc.build(objs)
     pdf = buffer.getvalue()

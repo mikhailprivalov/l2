@@ -6,7 +6,8 @@ from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
-from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research, get_result_temperature_list
+from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research, get_result_temperature_list, \
+    get_assignments_by_history
 from api.dicom import search_dicom_study
 from utils.dates import normalize_date
 from anytree import Node, RenderTree
@@ -561,3 +562,44 @@ def get_date_time_tl(dict_data):
 
 def force_to_number(val):
     return float(''.join(c for c in val if c.isdigit() or c == '.') or 0)
+
+
+def get_assignments(direction_id: int):
+    if direction_id is None:
+        return []
+    results = []
+    issledovanie_id = Issledovaniya.objects.filter(napravleniye_id=direction_id).first().pk
+    assignments = get_assignments_by_history(issledovanie_id)
+    prev_directions_id = -1
+    for i in assignments:
+        if prev_directions_id != i.napravlenie_id:
+            who_assigned = i.who_assigned.split(" ")
+            family_assigned = who_assigned[0]
+            name_assigned = who_assigned[1][0]
+            patronymic_assigned = ""
+            if len(who_assigned) == 3:
+                patronymic_assigned = who_assigned[2][0]
+            tmp_res = {
+                "direction_id": i.napravlenie_id,
+                "research_id": [i.research_id],
+                "research_title": [f"{i.research_title}; "],
+                "create_date": i.data_sozdaniya.strftime("%d.%m.%Y"),
+                "who_assigned": f"{family_assigned} {name_assigned}.{patronymic_assigned}.",
+                "time_confirmation": "",
+                "who_confirm": "",
+            }
+            if i.total_confirmed:
+                who_confirm = i.who_confirm.split(" ")
+                family_confirm = who_confirm[0]
+                name_confirm = who_confirm[1][0]
+                patronymic_confirm = ""
+                if len(who_confirm) == 3:
+                    patronymic_confirm = who_confirm[2][0]
+                tmp_res["time_confirmation"] = i.time_confirmation.strftime("%d.%m.%Y %H:%M")
+                tmp_res["who_confirm"] = f"{family_confirm} {name_confirm}.{patronymic_confirm}."
+            results.append(tmp_res)
+        else:
+            results[-1]["research_id"].append(i.research_id)
+            results[-1]["research_title"].append(f"{i.research_title}; ")
+        prev_directions_id = i.napravlenie_id
+    return results

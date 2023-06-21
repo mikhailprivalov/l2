@@ -4,8 +4,8 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from api.stationar.sql_func import get_assignments_by_history
-from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data
+from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data, \
+    get_assignments
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -290,42 +290,8 @@ def change_department(request):
 
 @login_required
 @group_required("Врач стационара")
-def get_assignments(request):
+def aggregate_assignments(request):
     request_data = json.loads(request.body)
-    results = []
-    history_id = request_data["history_id"]
-    assignments = get_assignments_by_history(history_id)
-    prev_directions_id = -1
-    for i in assignments:
-        if prev_directions_id != i.napravlenie_id:
-            who_assigned = i.who_assigned.split(" ")
-            family_assigned = who_assigned[0]
-            name_assigned = who_assigned[1][0]
-            patronymic_assigned = None
-            if len(who_assigned) == 3:
-                patronymic_assigned = who_assigned[2][0]
-            tmp_res = {
-                "direction_id": i.napravlenie_id,
-                "research_id": [i.research_id],
-                "research_title": [f"{i.research_title}; "],
-                "create_date": i.data_sozdaniya.strftime("%d.%m.%Y %H:%M"),
-                "who_assigned": f"{family_assigned} {name_assigned}.{patronymic_assigned}.",
-                "time_confirmation": None,
-                "who_confirm": None
-            }
-            if i.total_confirmed:
-                who_confirm = i.who_confirm.split(" ")
-                family_confirm = who_confirm[0]
-                name_confirm = who_confirm[1][0]
-                patronymic_confirm = None,
-                if len(who_confirm) == 3:
-                    patronymic_confirm = who_confirm[2][0]
-                tmp_res["time_confirmation"] = i.time_confirmation.strftime("%d.%m.%Y %H:%M")
-                tmp_res["who_confirm"] = f"{family_confirm} {name_confirm}.{patronymic_confirm}."
-            results.append(tmp_res)
-        else:
-            results[-1]["research_id"].append(i.research_id)
-            results[-1]["research_title"].append(f"{i.research_title}; ")
-        prev_directions_id = i.napravlenie_id
-
+    direction_id = request_data["direction_id"]
+    results = get_assignments(direction_id)
     return JsonResponse({"data": results})

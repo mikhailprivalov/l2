@@ -1,5 +1,17 @@
 <template>
   <div>
+    <div class="print-div">
+      <div class="button">
+        <button
+          v-tippy
+          title="печать"
+          class="btn last btn-blue-nb"
+          @click="printForm"
+        >
+          печать
+        </button>
+      </div>
+    </div>
     <div>
       <VeTable
         :columns="columns"
@@ -20,17 +32,6 @@
           @on-page-number-change="pageNumberChange"
           @on-page-size-change="pageSizeChange"
         />
-        <div class="print-div">
-          <div class="button">
-            <button
-              v-tippy
-              title="печать"
-              class="btn last btn-blue-nb nbr"
-            >
-              печать
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -66,7 +67,7 @@ const columns = ref([
     field: 'research_title', key: 'research_title', title: 'Медицинское вмешательство', align: 'left',
   },
   {
-    field: 'create_date', key: 'create_date', title: 'Дата и время назначения', align: 'center', width: 150,
+    field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
   },
   {
     field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,
@@ -92,9 +93,13 @@ const assignments = ref([]);
 
 const getAssignments = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const results = await api('stationar/get-assignments', { history_id: props.direction });
+  const results = await api('stationar/get-assignments', { direction_id: props.direction });
   await store.dispatch(actions.DEC_LOADING);
   assignments.value = results.data;
+};
+
+const printForm = () => {
+  window.open(`/forms/pdf?type=107.03&&hosp_pk=${props.direction}`);
 };
 
 onMounted(getAssignments);
@@ -111,7 +116,8 @@ onMounted(getAssignments);
   justify-content: space-between;
 }
 .print-div {
-  width: 100px;
+  width: 75px;
+  margin-bottom: 5px;
 }
 .button {
   width: 100%;
@@ -123,6 +129,6 @@ onMounted(getAssignments);
 .btn {
   align-self: stretch;
   flex: 1;
-  padding: 7px 0;
+  padding: 6px 0;
 }
 </style>
