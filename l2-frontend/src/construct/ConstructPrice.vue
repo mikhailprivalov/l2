@@ -3,6 +3,14 @@
     <h4>
       Прайс
     </h4>
+    <div class="radio-button-object">
+      <RadioField
+        v-model="searchTypesObject"
+        :variants="typesObject"
+        full-width
+        @modified="filteredPriceObject"
+      />
+    </div>
     <Treeselect
       v-model="selectedPrice"
       :options="prices.data"
@@ -299,10 +307,13 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
+import RadioField from '@/fields/RadioField.vue';
 
 export default {
   name: 'ConstructPrice',
-  components: { VueTippyTd, Treeselect, LoadFile },
+  components: {
+    RadioField, VueTippyTd, Treeselect, LoadFile,
+  },
   data() {
     return {
       prices: {},
@@ -317,6 +328,11 @@ export default {
       researchList: {},
       search: '',
       coastResearches: [],
+      searchTypesObject: 'Профосмотры',
+      typesObject: [
+        'Субподряд',
+        'Профосмотры',
+      ],
     };
   },
   computed: {
@@ -376,7 +392,10 @@ export default {
       };
     },
     async getPrices() {
-      this.prices = await this.$api('/get-prices');
+      this.prices = await this.$api('/get-prices', { searchTypesObject: this.searchTypesObject });
+    },
+    filteredPriceObject() {
+      this.getPrices();
     },
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
@@ -440,7 +459,7 @@ export default {
     },
     async loadCompaniesAsyncSearch({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
-        const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
+        const { data } = await this.$api(`/companies-find?query=${searchQuery}&subType=${this.searchTypesObject}`);
         callback(
           null,
           data.map(d => ({ id: `${d.id}`, label: `${d.title}` })),
@@ -516,6 +535,15 @@ export default {
 </script>
 
 <style scoped>
+.radio-button-object {
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 2%;
+  margin-bottom: 2%;
+  alignment: center;
+}
+
 ::v-deep .form-control {
   border: none;
   padding: 6px 6px;

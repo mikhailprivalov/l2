@@ -5,6 +5,7 @@ from django.db import models
 from appconf.manager import SettingManager
 from clients.models import Card
 from directory.models import Researches
+from hospitals.sql_func import search_hospitals
 from laboratory.settings import EMAIL_HOST_USER
 
 
@@ -90,6 +91,13 @@ class Hospitals(models.Model):
 
     def __str__(self):
         return f"{self.short_title} – {self.code_tfoms}"
+
+    @staticmethod
+    def search_hospital(query):
+        if not query:
+            return []
+        hospital_query = search_hospitals(hospital_title=query)
+        return [{"id": d.id, "title": d.title} for d in hospital_query]
 
     class Meta:
         verbose_name = 'Больница'

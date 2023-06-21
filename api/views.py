@@ -988,7 +988,11 @@ def mkb10_dict(request, raw_response=False):
 
 def companies_find(request):
     q = (request.GET.get("query", '') or '').strip()
-    companies_data = Company.search_company(q)
+    type_company = (request.GET.get("subType", '') or '').strip()
+    if type_company == "Субподряд":
+        companies_data = Hospitals.search_hospital(q)
+    else:
+        companies_data = Company.search_company(q)
     return JsonResponse({"data": companies_data})
 
 
@@ -2433,7 +2437,11 @@ def statistic_params_search(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def get_prices(request):
-    prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.all().order_by('title')]
+    request_data = json.loads(request.body)
+    if request_data.get("searchTypesObject") == "Профосмотры":
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(is_hospital_price=False).order_by('title')]
+    else:
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(is_hospital_price=True).order_by('title')]
     return JsonResponse({"data": prices})
 
 
