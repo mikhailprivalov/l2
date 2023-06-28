@@ -163,6 +163,8 @@ class SettingManager:
                     "chats",
                     "csv_load_file",
                     "transfer_card",
+                    "price_customer",
+                    "price_externel_performer"
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

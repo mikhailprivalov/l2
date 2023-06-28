@@ -329,11 +329,7 @@ export default {
       search: '',
       coastResearches: [],
       searchTypesObject: 'Работодатель',
-      typesObject: [
-        'Заказчик',
-        'Внешний исполнитель',
-        'Работодатель',
-      ],
+      typesObject: [],
     };
   },
   computed: {
@@ -352,6 +348,12 @@ export default {
     },
     priceDataIsFilled() {
       return !(!this.priceData.title || !this.priceData.start || !this.priceData.end || !this.priceData.company);
+    },
+    l2_price_customer() {
+      return this.$store.getters.modules.l2_price_customer;
+    },
+    l2_price_externel_performer() {
+      return this.$store.getters.modules.l2_price_externel_performer;
     },
   },
   watch: {
@@ -374,6 +376,13 @@ export default {
   mounted() {
     this.getPrices();
     this.getResearchList();
+    if (this.l2_price_customer) {
+      this.typesObject.push('Заказчик');
+    }
+    if (this.l2_price_externel_performer) {
+      this.typesObject.push('Внешний исполнитель');
+    }
+    this.typesObject.push('Работодатель');
   },
   methods: {
     showModal() {
