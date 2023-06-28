@@ -51,9 +51,14 @@ class PriceName(models.Model):
     def as_json(price):
         if price.company:
             company_title = price.company.title
+            company_id = price.company_id
+        elif price.hospital:
+            company_title = price.hospital.title
+            company_id = price.hospital_id
         else:
             company_title = ""
-        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": price.company_id, "companyTitle": company_title}
+            company_id = ""
+        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": company_id, "companyTitle": company_title}
         return json_data
 
 

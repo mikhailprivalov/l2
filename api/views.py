@@ -989,7 +989,7 @@ def mkb10_dict(request, raw_response=False):
 def companies_find(request):
     q = (request.GET.get("query", '') or '').strip()
     type_company = (request.GET.get("subType", '') or '').strip()
-    if type_company == "Субподряд" or type_company == "Внешний исполнитель":
+    if type_company == "Заказчик" or type_company == "Внешний исполнитель":
         companies_data = Hospitals.search_hospital(q)
     else:
         companies_data = Company.search_company(q)
