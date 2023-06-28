@@ -281,7 +281,26 @@ class Researches(models.Model):
     uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
     auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
-    plan_purpose_performing_organization = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    plan_external_performing_organization = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+
+    @staticmethod
+    def save_plan_performer(tb_data):
+        research = Researches.objects.all()
+        for r in research:
+            r.plan_external_performing_organization = None
+            r.save()
+
+        for t_b in tb_data:
+            research = Researches.objects.filter(pk=t_b['researchId']).first()
+            if research:
+                research.plan_external_performing_organization_id = t_b['planExternalPerformerId']
+                research.save()
+        return True
+
+    @staticmethod
+    def get_plan_performer():
+        plan_performer = Researches.objects.filter(plan_external_performing_organization__isnull=False).order_by("title")
+        return [{"researchId": p.id, "planExternalPerformerId": p.plan_external_performing_organization_id} for p in plan_performer]
 
     @staticmethod
     def filter_type(t):

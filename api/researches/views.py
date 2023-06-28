@@ -1040,3 +1040,19 @@ def group_as_json(request):
     response['Content-Disposition'] = f"attachment; filename*=utf-8''group-{quote(f'{group.title}')}.json"
 
     return response
+
+
+def research_performer_save(request):
+    request_data = json.loads(request.body)
+    tb_data = request_data.get('tb_data', '')
+    if len(tb_data) < 1:
+        return JsonResponse({'message': 'Ошибка в количестве'})
+    result = DResearches.save_plan_performer(tb_data)
+    if result:
+        return JsonResponse({'ok': True, 'message': 'Сохранено'})
+    return JsonResponse({'ok': False, 'message': 'ошибка'})
+
+
+def get_research_performer(request):
+    rows = DResearches.get_plan_performer()
+    return JsonResponse(rows, safe=False)

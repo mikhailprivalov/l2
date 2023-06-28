@@ -102,6 +102,8 @@
           <th>Лаборатория</th>
           <th>Исследования</th>
           <th>Ш/к</th>
+          <th>Брак</th>
+          <th>Описание брак</th>
         </tr>
       </thead>
       <tbody>
@@ -130,6 +132,22 @@
             ><i
               class="fa fa-barcode"
             /></a>
+          </td>
+          <td class="text-center cl-td">
+            <label>
+              <input
+                v-model="r.is_defect"
+                type="checkbox"
+              >
+            </label>
+          </td>
+          <td class="text-center cl-td">
+            <label>
+              <input
+                v-model="r.defect_text"
+                type="text"
+              >
+            </label>
           </td>
         </tr>
         <tr v-if="receiveHistory.length === 0">

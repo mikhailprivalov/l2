@@ -328,10 +328,11 @@ export default {
       researchList: {},
       search: '',
       coastResearches: [],
-      searchTypesObject: 'Профосмотры',
+      searchTypesObject: 'Работодатель',
       typesObject: [
-        'Субподряд',
-        'Профосмотры',
+        'Заказчик',
+        'Внешний исполнитель',
+        'Работодатель',
       ],
     };
   },
@@ -396,6 +397,7 @@ export default {
     },
     filteredPriceObject() {
       this.getPrices();
+      this.selectedPrice = null;
     },
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
@@ -413,6 +415,7 @@ export default {
           start: this.priceData.start,
           end: this.priceData.end,
           company: this.priceData.company,
+          typePrice: this.searchTypesObject,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -429,6 +432,7 @@ export default {
           start: this.priceData.start,
           end: this.priceData.end,
           company: this.priceData.company,
+          typePrice: this.searchTypesObject,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {

@@ -35,7 +35,7 @@ class Hospitals(models.Model):
     legal_auth_doc_id = models.CharField(max_length=9, default="", blank=True, verbose_name="Код для кто заверил")
     oktmo = models.CharField(max_length=8, default="", blank=True, verbose_name="ОКТМО")
     need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
-    is_purpose_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
+    is_external_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
     has_price = models.BooleanField(default=False, blank=True, help_text='Прайс для назначивших МО', db_index=True)
 
     @staticmethod
@@ -98,6 +98,12 @@ class Hospitals(models.Model):
             return []
         hospital_query = search_hospitals(hospital_title=query)
         return [{"id": d.id, "title": d.title} for d in hospital_query]
+
+    @staticmethod
+    def get_is_external_performing_organization():
+        hosp = Hospitals.objects.filter(hide=False, is_external_performing_organization=True)
+        return [{"id": h.id, "label": h.title} for h in hosp]
+
 
     class Meta:
         verbose_name = 'Больница'

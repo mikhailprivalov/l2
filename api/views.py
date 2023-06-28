@@ -989,7 +989,7 @@ def mkb10_dict(request, raw_response=False):
 def companies_find(request):
     q = (request.GET.get("query", '') or '').strip()
     type_company = (request.GET.get("subType", '') or '').strip()
-    if type_company == "Субподряд":
+    if type_company == "Субподряд" or type_company == "Внешний исполнитель":
         companies_data = Hospitals.search_hospital(q)
     else:
         companies_data = Company.search_company(q)
@@ -2085,6 +2085,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
         {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
+        {"url": "/ui/construct/route-perform-service", "title": "Маршрут исследований", "access": ["Конструктор: Маршрут исследований"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2438,10 +2439,14 @@ def statistic_params_search(request):
 @group_required('Конструктор: Настройка организации')
 def get_prices(request):
     request_data = json.loads(request.body)
-    if request_data.get("searchTypesObject") == "Профосмотры":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(is_hospital_price=False).order_by('title')]
-    else:
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(is_hospital_price=True).order_by('title')]
+    prices = None
+    if request_data.get("searchTypesObject") == "Работодатель":
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=False, external_performer=False).order_by('title')]
+    elif request_data.get("searchTypesObject") == "Заказчик":
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=True).order_by('title')]
+    elif request_data.get("searchTypesObject") == "Внешний исполнитель":
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(external_performer=True).order_by('title')]
+
     return JsonResponse({"data": prices})
 
 
@@ -2458,21 +2463,36 @@ def get_price_data(request):
 @group_required('Конструктор: Настройка организации')
 def update_price(request):
     request_data = json.loads(request.body)
+    print(request_data)
+    current_price = None
     if request_data["id"] == -1:
-        current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
-        current_price.save()
-        Log.log(
-            current_price.pk,
-            130007,
-            request.user.doctorprofile,
-            current_price.as_json(current_price),
-        )
+        if request_data.get("typePrice") == "Работодатель":
+            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
+        elif request_data.get("typePrice") == "Заказчик":
+            hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
+            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True)
+        elif request_data.get("typePrice") == "Внешний исполнитель":
+            hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
+            print(hospital)
+            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True)
+        if current_price:
+            current_price.save()
+            Log.log(
+                current_price.pk,
+                130007,
+                request.user.doctorprofile,
+                current_price.as_json(current_price),
+            )
     else:
         current_price = PriceName.objects.get(pk=request_data["id"])
         current_price.title = request_data["title"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
-        current_price.company_id = request_data["company"]
+        if request_data.get("typePrice") == "Профосмотр":
+            current_price.company_id = request_data["company"]
+        else:
+            hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
+            current_price.hospital = hospital
         current_price.save()
         Log.log(
             current_price.pk,
