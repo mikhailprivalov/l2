@@ -104,7 +104,6 @@ class Hospitals(models.Model):
         hosp = Hospitals.objects.filter(hide=False, is_external_performing_organization=True)
         return [{"id": h.id, "label": h.title} for h in hosp]
 
-
     class Meta:
         verbose_name = 'Больница'
         verbose_name_plural = 'Больницы'
