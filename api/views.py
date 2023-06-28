@@ -2463,7 +2463,6 @@ def get_price_data(request):
 @group_required('Конструктор: Настройка организации')
 def update_price(request):
     request_data = json.loads(request.body)
-    print(request_data)
     current_price = None
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":
@@ -2473,7 +2472,6 @@ def update_price(request):
             current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True)
         elif request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
-            print(hospital)
             current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True)
         if current_price:
             current_price.save()
