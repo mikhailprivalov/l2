@@ -46,6 +46,7 @@ def fractions(request):
         {
             "fractions": fractions_list,
             "title": research.get_title(),
+            "actualPeriod": research.actual_period_result
         }
     )
 
@@ -76,6 +77,9 @@ def save_fsli(request):
         if nu != f.unit_id:
             f.unit_id = nu
             f.save(update_fields=['unit'])
+    research = Researches.objects.filter(pk=request_data['pk']).first()
+    research.actual_period_result = int(request_data['actualPeriod'])
+    research.save()
 
     return JsonResponse({"ok": True})
 
