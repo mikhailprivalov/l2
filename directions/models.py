@@ -477,7 +477,6 @@ class Napravleniya(models.Model):
     emdr_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД РЭМД', db_index=True)
     email_with_results_sent = models.BooleanField(verbose_name='Результаты отправлены на почту', blank=True, default=False, db_index=True)
     celery_send_task_ids = ArrayField(models.CharField(max_length=64), default=list, blank=True, db_index=True)
-    planned_confirmation_date = models.DateField(help_text='Планируемая дата подтверждения', db_index=True, null=True, blank=True)
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()

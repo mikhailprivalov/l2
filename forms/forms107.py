@@ -484,19 +484,20 @@ def form_03(request_data):
 
     direction_id = json.loads(request_data["hosp_pk"])
     ind_card = Napravleniya.objects.get(pk=direction_id)
+    patient_card = ind_card.client.pk
     patient_data = ind_card.client.get_data_individual()
     assignments = get_assignments(direction_id)
-    if sys.platform == 'win32':
-        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    if sys.platform == "win32":
+        locale.setlocale(locale.LC_ALL, "rus_rus")
     else:
-        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+        locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
 
-    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
-    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont("PTAstraSerifBold", os.path.join(FONTS_FOLDER, "PTAstraSerif-Bold.ttf")))
+    pdfmetrics.registerFont(TTFont("PTAstraSerifReg", os.path.join(FONTS_FOLDER, "PTAstraSerif-Regular.ttf")))
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=7 * mm, topMargin=20 * mm, bottomMargin=10 * mm, title="Лист назначений"
+        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=7 * mm, topMargin=40 * mm, bottomMargin=10 * mm, title="Лист назначений"
     )
 
     styleSheet = getSampleStyleSheet()
@@ -504,11 +505,15 @@ def form_03(request_data):
     style.fontName = "PTAstraSerifReg"
     style.fontSize = 12
     style.alignment = TA_JUSTIFY
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
     tableTitle = deepcopy(style)
     tableTitle.fontName = "PTAstraSerifBold"
     tableTitle.alignment = TA_LEFT
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
+    styleCenterBold = deepcopy(styleCenter)
+    styleCenterBold.fontName = "PTAstraSerifBold"
     styleHeader = deepcopy(style)
     styleHeader.fontName = "PTAstraSerifBold"
     styleHeader.fontSize = 14
@@ -519,11 +524,11 @@ def form_03(request_data):
 
     table_data = [
         [
-            Paragraph('Медицинское вмешательство', tableTitle),
-            Paragraph('Дата назначения', tableTitle),
-            Paragraph('Подпись лечащего врача (врача-специалиста), сделавшего назначение', tableTitle),
-            Paragraph('Дата и время исполнения назначения', tableTitle),
-            Paragraph('Фамилия, имя, отчество (при наличии) и подпись медицинского работника, ответственного за исполнение назначения', tableTitle),
+            Paragraph("Медицинское вмешательство", tableTitle),
+            Paragraph("Дата назначения", tableTitle),
+            Paragraph("Подпись лечащего врача (врача-специалиста), сделавшего назначение", tableTitle),
+            Paragraph("Дата и время исполнения назначения", tableTitle),
+            Paragraph("Фамилия, имя, отчество (при наличии) и подпись медицинского работника, ответственного за исполнение назначения", tableTitle),
         ],
     ]
     assignments_data = [
@@ -543,10 +548,10 @@ def form_03(request_data):
     tbl.setStyle(
         TableStyle(
             [
-                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
-                ('TOPPADDING', (0, 0), (-1, -1), 1 * mm),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3 * mm),
+                ("TOPPADDING", (0, 0), (-1, -1), 1 * mm),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ]
         )
     )
@@ -555,20 +560,36 @@ def form_03(request_data):
 
     def first_pages(canvas, doc):
         canvas.saveState()
-        canvas.setFont('PTAstraSerifBold', 14)
-        canvas.drawString(135 * mm, 200 * mm, 'Лист назначений')
-        canvas.setFont('PTAstraSerifReg', 12)
-        canvas.drawString(135 * mm, 195 * mm, f'История болезни №{direction_id}')
+        table_data = [
+            [
+                Paragraph("Лист назначений", styleHeader),
+            ],
+            [
+                Paragraph(f"История болезни №{direction_id}", styleCenterBold),
+            ],
+        ]
+        tbl = Table(table_data, colWidths=100 * mm, hAlign='CENTER')
+        tbl.wrapOn(canvas, 105 * mm, 195 * mm)
+        tbl.drawOn(canvas, 105 * mm, 195 * mm)
+        canvas.setFont("PTAstraSerifBold", 12)
+        canvas.drawString(17 * mm, 185 * mm, "Фамилия, имя, отчество (при наличии):")
+        canvas.setFont("PTAstraSerifReg", 12)
+        canvas.drawString(95 * mm, 185 * mm, f"{patient_data['fio']}")
+        canvas.setFont("PTAstraSerifBold", 12)
+        canvas.drawString(17 * mm, 180 * mm, "Дата рождения:")
+        canvas.setFont("PTAstraSerifReg", 12)
+        canvas.drawString(48 * mm, 180 * mm, f"{patient_data['born']}")
+        canvas.setFont("PTAstraSerifBold", 12)
+        canvas.drawString(68 * mm, 180 * mm, "г. № медицинской карты:")
+        canvas.setFont("PTAstraSerifReg", 12)
+        canvas.drawString(118 * mm, 180 * mm, f"{patient_card}")
+        canvas.setFont("PTAstraSerifBold", 12)
+        canvas.drawString(17 * mm, 175 * mm, "Диагноз (основное заболевание): ")
         canvas.restoreState()
 
 
     def later_pages(canvas, doc):
-        canvas.saveState()
-        canvas.setFont('PTAstraSerifBold', 14)
-        canvas.drawString(135 * mm, 200 * mm, 'Лист назначений')
-        canvas.setFont('PTAstraSerifReg', 12)
-        canvas.drawString(135 * mm, 195 * mm, f'История болезни №{direction_id}')
-        canvas.restoreState()
+        first_pages(canvas, doc)
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
