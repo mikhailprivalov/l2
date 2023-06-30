@@ -568,7 +568,7 @@ def get_assignments(direction_id: int):
     if direction_id is None:
         return []
     results = []
-    issledovanie_id = Issledovaniya.objects.filter(napravleniye_id=direction_id).first().pk
+    issledovanie_id = Issledovaniya.objects.get(napravleniye_id=direction_id).pk
     assignments = get_assignments_by_history(issledovanie_id)
     prev_directions_id = -1
     for i in assignments:
