@@ -6,8 +6,16 @@ from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
-from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research, get_result_temperature_list, \
-    get_assignments_by_history
+from .sql_func import (
+    get_research,
+    get_iss,
+    get_distinct_research,
+    get_distinct_fraction,
+    get_result_fraction,
+    get_result_text_research,
+    get_result_temperature_list,
+    get_assignments_by_history,
+)
 from api.dicom import search_dicom_study
 from utils.dates import normalize_date
 from anytree import Node, RenderTree

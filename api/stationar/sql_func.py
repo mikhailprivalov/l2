@@ -235,6 +235,7 @@ def get_assignments_by_history(history_id: int):
                   
             ORDER BY public.directions_napravleniya.data_sozdaniya
                   """,
-            params={"history_id": history_id})
+            params={"history_id": history_id},
+        )
         rows = namedtuplefetchall(cursor)
     return rows

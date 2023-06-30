@@ -496,9 +496,7 @@ def form_03(request_data):
     pdfmetrics.registerFont(TTFont("PTAstraSerifReg", os.path.join(FONTS_FOLDER, "PTAstraSerif-Regular.ttf")))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=7 * mm, topMargin=40 * mm, bottomMargin=10 * mm, title="Лист назначений"
-    )
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=7 * mm, topMargin=40 * mm, bottomMargin=10 * mm, title="Лист назначений")
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -537,8 +535,10 @@ def form_03(request_data):
             Paragraph(f'{i["create_date"]}', styleCenter),
             Paragraph(f'{i["who_assigned"]}', styleCenter),
             Paragraph(f'{i["time_confirmation"]}', styleCenter),
-            Paragraph(f'{i["who_confirm"]}', styleCenter)
-        ] for i in assignments]
+            Paragraph(f'{i["who_confirm"]}', styleCenter),
+        ]
+        for i in assignments
+    ]
 
     table_data.extend(assignments_data)
 
@@ -586,7 +586,6 @@ def form_03(request_data):
         canvas.setFont("PTAstraSerifBold", 12)
         canvas.drawString(17 * mm, 175 * mm, "Диагноз (основное заболевание): ")
         canvas.restoreState()
-
 
     def later_pages(canvas, doc):
         first_pages(canvas, doc)
