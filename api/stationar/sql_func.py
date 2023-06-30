@@ -224,9 +224,9 @@ def get_assignments_by_history(history_id: int):
               ON public.directions_issledovaniya.research_id = public.directory_researches.id
             INNER JOIN public.users_doctorprofile
               ON public.directions_napravleniya.doc_id = public.users_doctorprofile.id
-			LEFT JOIN (SELECT id, fio FROM public.users_doctorprofile) as doc_list
-			  ON public.directions_issledovaniya.doc_confirmation_id = doc_list.id
-			
+            LEFT JOIN (SELECT id, fio FROM public.users_doctorprofile) as doc_list
+              ON public.directions_issledovaniya.doc_confirmation_id = doc_list.id
+              
             WHERE public.directions_napravleniya.parent_id = %(history_id)s
             AND (is_paraclinic = true OR is_doc_refferal = true OR is_microbiology = true OR is_citology = true OR is_gistology = true OR 
                  (is_paraclinic = False AND is_doc_refferal = False AND is_microbiology = False AND is_citology = False AND is_gistology = False 
