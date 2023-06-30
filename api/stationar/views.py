@@ -15,7 +15,6 @@ from django.db.models import Q
 
 from pharmacotherapy.models import ProcedureList
 from podrazdeleniya.models import Podrazdeleniya
-from results.sql_func import get_not_confirm_direction
 from slog.models import Log
 from utils.xh import get_hospitals_podrazdeleniya
 
