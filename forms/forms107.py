@@ -565,7 +565,7 @@ def form_03(request_data):
                 Paragraph("Лист назначений", styleHeader),
             ],
             [
-                Paragraph(f"История болезни №{direction_id}", styleCenterBold),
+                Paragraph(f"История болезни № {direction_id}", styleCenterBold),
             ],
         ]
         tbl = Table(table_data, colWidths=100 * mm, hAlign='CENTER')

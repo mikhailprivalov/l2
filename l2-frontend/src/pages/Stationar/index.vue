@@ -730,11 +730,11 @@
             :directions="every ? tree.map((d) => d.direction) : [direction]"
           />
           <AggregatePharmacotherapy
-            v-if="opened_list_key === 'pharmacotherapy'"
+            v-if="opened_list_key === 'assignments'"
             :direction="direction"
           />
           <AggregateAssignments
-            v-if="opened_list_key === 'pharmacotherapy'"
+            v-if="opened_list_key === 'assignments'"
             :direction="direction"
           />
         </div>
