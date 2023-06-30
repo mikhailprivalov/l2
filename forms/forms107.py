@@ -381,11 +381,11 @@ def form_02(request_data):
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 2 * mm),
-        Paragraph(f'<font fontname="PTAstraSerifBold" size=13>ПРОЦЕДУРНЫЙ ЛИСТ {space_symbol * 3} № {num_dir}</font> ', styleCenter),
+        Paragraph(f'<font fontname="PTAstraSerifBold" size=13>ПРОЦЕДУРНЫЙ ЛИСТ {space_symbol*3} № {num_dir}</font> ', styleCenter),
     ]
 
     objs.extend(title_page)
-    objs.append(Paragraph(f'{patient_data["fio"]}  {space_symbol * 150} Палата______', style))
+    objs.append(Paragraph(f'{patient_data["fio"]}  {space_symbol*150} Палата______', style))
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('V - выполнено, Х - не выполнено, О - отменено', styleT))
     objs.append(Spacer(1, 1 * mm))
