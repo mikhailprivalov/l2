@@ -381,11 +381,11 @@ def form_02(request_data):
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 2 * mm),
-        Paragraph(f'<font fontname="PTAstraSerifBold" size=13>ПРОЦЕДУРНЫЙ ЛИСТ {space_symbol*3} № {num_dir}</font> ', styleCenter),
+        Paragraph(f'<font fontname="PTAstraSerifBold" size=13>ПРОЦЕДУРНЫЙ ЛИСТ {space_symbol * 3} № {num_dir}</font> ', styleCenter),
     ]
 
     objs.extend(title_page)
-    objs.append(Paragraph(f'{patient_data["fio"]}  {space_symbol*150} Палата______', style))
+    objs.append(Paragraph(f'{patient_data["fio"]}  {space_symbol * 150} Палата______', style))
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('V - выполнено, Х - не выполнено, О - отменено', styleT))
     objs.append(Spacer(1, 1 * mm))
@@ -496,7 +496,7 @@ def form_03(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=7 * mm, topMargin=10 * mm, bottomMargin=10 * mm, title="Лист назначений"
+        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=7 * mm, topMargin=20 * mm, bottomMargin=10 * mm, title="Лист назначений"
     )
 
     styleSheet = getSampleStyleSheet()
@@ -516,10 +516,6 @@ def form_03(request_data):
     styleHeader.alignment = TA_CENTER
 
     objs = []
-    objs.append(Paragraph('Лист назначений', style=styleHeader))
-    objs.append(Spacer(1, 5 * mm))
-    objs.append(Paragraph(f'История болезни №{direction_id}', style=styleCenter))
-    objs.append(Spacer(1, 5 * mm))
 
     table_data = [
         [
@@ -543,7 +539,7 @@ def form_03(request_data):
 
     columns_width = [None, 40 * mm, 43 * mm, 35 * mm, 40 * mm]
 
-    tbl = Table(table_data,  repeatRows=1, colWidths=columns_width, hAlign='LEFT')
+    tbl = Table(table_data, repeatRows=1, colWidths=columns_width, hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
@@ -557,7 +553,24 @@ def form_03(request_data):
 
     objs.append(tbl)
 
-    doc.build(objs)
+    def first_pages(canvas, doc):
+        canvas.saveState()
+        canvas.setFont('PTAstraSerifBold', 14)
+        canvas.drawString(135 * mm, 200 * mm, 'Лист назначений')
+        canvas.setFont('PTAstraSerifReg', 12)
+        canvas.drawString(135 * mm, 195 * mm, f'История болезни №{direction_id}')
+        canvas.restoreState()
+
+
+    def later_pages(canvas, doc):
+        canvas.saveState()
+        canvas.setFont('PTAstraSerifBold', 14)
+        canvas.drawString(135 * mm, 200 * mm, 'Лист назначений')
+        canvas.setFont('PTAstraSerifReg', 12)
+        canvas.drawString(135 * mm, 195 * mm, f'История болезни №{direction_id}')
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
