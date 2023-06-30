@@ -184,7 +184,7 @@ def hosp_tree_direction(iss):
     return row
 
 
-def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology, hosp_is_assignments):
+def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology):
     """
     парам: услуга
     Вернуть стуркутру в след порядке:
@@ -299,7 +299,6 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
                 'hosp_level': hosp_level,
                 'hosp_is_all': hosp_is_all,
                 'hosp_morfology': hosp_morfology,
-                'hosp_is_assignments': hosp_is_assignments,
                 'tz': TIME_ZONE,
             },
         )
