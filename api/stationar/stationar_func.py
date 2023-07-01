@@ -583,7 +583,7 @@ def get_assignments(direction_id: int):
             family_assigned = who_assigned[0]
             name_assigned = who_assigned[1][0]
             patronymic_assigned = ""
-            if len(who_assigned) == 3:
+            if len(who_assigned) > 2:
                 patronymic_assigned = who_assigned[2][0]
             tmp_res = {
                 "direction_id": i.napravlenie_id,
@@ -599,7 +599,7 @@ def get_assignments(direction_id: int):
                 family_confirm = who_confirm[0]
                 name_confirm = who_confirm[1][0]
                 patronymic_confirm = ""
-                if len(who_confirm) == 3:
+                if len(who_confirm) > 2:
                     patronymic_confirm = who_confirm[2][0]
                 tmp_res["time_confirmation"] = i.time_confirmation.strftime("%d.%m.%Y %H:%M")
                 tmp_res["who_confirm"] = f"{family_confirm} {name_confirm}.{patronymic_confirm}."
