@@ -1537,7 +1537,7 @@ export default {
         operator_enter_param: field.operator_enter_param ?? false,
         not_edit: field.not_edit ?? false,
         required: field.required ?? false,
-        visibility: field.visibility ?? false,
+        visibility: field.visibility ?? '',
         sign_organization: field.sign_organization ?? false,
         controlParam: field.controlParam ?? '',
         attached: field.attached ?? '',
