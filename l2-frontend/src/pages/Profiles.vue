@@ -650,7 +650,7 @@
               class="col-xs-2"
             >
               <button
-                :disabled="!valid"
+                :disabled="!valid || resource_researches.length === 0 || current_resource_title.length === 0"
                 class="btn btn-blue-nb"
                 @click="save_resource"
               >
@@ -1074,13 +1074,17 @@ export default {
     },
     async save_resource() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await this.$api('schedule/save-resource', {
+      const { ok, message } = await this.$api('schedule/save-resource', {
         pk: this.user.doc_pk,
         resource_researches: this.resource_researches,
         res_pk: this.current_resource_pk,
         res_title: this.current_resource_title,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', message);
+        this.current_resource_title = '';
+      }
     },
     change_setup_forbidden() {
       this.setup_forbidden = !this.setup_forbidden;

@@ -1272,10 +1272,13 @@ class Napravleniya(models.Model):
         ofname_id = ofname_id or -1
         ofname = None
         auto_print_direction_research = []
-
+        control_actual_research_period = SettingManager.get("control_actual_research_period", default='false', default_type='b')
+        doctor_control_actual_research = False
         if client_id and researches:  # если client_id получен и исследования получены
             if ofname_id > -1:
                 ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
+            if control_actual_research_period and not doc_current.has_group("Безлимитное назначение услуг"):
+                doctor_control_actual_research = True
 
             no_attach = False
             conflict_list = []
@@ -1283,7 +1286,6 @@ class Napravleniya(models.Model):
             limit_research_to_assign = {}
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
-
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
                     if finsource and finsource.title.lower() != "платно" and limit_researches_by_period and limit_researches_by_period.get(vv, None):
@@ -1335,6 +1337,16 @@ class Napravleniya(models.Model):
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
+                    filter = {
+                        "napravleniye__client__id": client_id,
+                        "research__pk": v,
+                    }
+                    last_iss = Issledovaniya.objects.filter(**filter, time_confirmation__isnull=False).order_by("-time_confirmation").first()
+                    if doctor_control_actual_research and research.actual_period_result > 0:
+                        delta = current_time() - last_iss.time_confirmation
+                        if delta.days <= research.actual_period_result:
+                            result["messageLimit"] = f" {result.get('messageLimit', '')} \n Срок действия {research.title} - {research.actual_period_result} дн."
+                            continue
                     if hospital_department_override == -1 and research.is_hospital:
                         if research.podrazdeleniye is None:
                             result["message"] = "Не указано отделение"

@@ -282,6 +282,7 @@ class Researches(models.Model):
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
     auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
     plan_external_performing_organization = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    actual_period_result = models.SmallIntegerField(default=0, blank=True, help_text="Актуальность услуги в днях (для запрета)")
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -301,6 +302,7 @@ class Researches(models.Model):
     def get_plan_performer():
         plan_performer = Researches.objects.filter(plan_external_performing_organization__isnull=False).order_by("title")
         return [{"researchId": p.id, "planExternalPerformerId": p.plan_external_performing_organization_id} for p in plan_performer]
+    actual_period_result = models.SmallIntegerField(default=0, blank=True, help_text="Актуальность услуги в днях (для запрета)")
 
     @staticmethod
     def filter_type(t):
