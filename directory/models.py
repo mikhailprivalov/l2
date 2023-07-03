@@ -302,7 +302,6 @@ class Researches(models.Model):
     def get_plan_performer():
         plan_performer = Researches.objects.filter(plan_external_performing_organization__isnull=False).order_by("title")
         return [{"researchId": p.id, "planExternalPerformerId": p.plan_external_performing_organization_id} for p in plan_performer]
-    actual_period_result = models.SmallIntegerField(default=0, blank=True, help_text="Актуальность услуги в днях (для запрета)")
 
     @staticmethod
     def filter_type(t):
