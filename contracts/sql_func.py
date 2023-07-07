@@ -44,3 +44,18 @@ def get_examination_data(company_id, date_start, date_end):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_research_coast_by_prce(price_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT price_name_id, research_id, coast
+        FROM contracts_pricecoast
+        WHERE contracts_pricecoast.price_name_id in %(price_id)s
+        
+        """,
+            params={"price_id": price_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
