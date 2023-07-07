@@ -1862,7 +1862,9 @@ def statistic_xls(request):
             price_companies[coast.price_name_id][coast.research_id] = float(coast.coast)
 
         result = {}
+        print("data", data)
         for d in data:
+            print("d", d)
             coast = None
             coast_price_research = None
             if d.company_id:
@@ -1890,16 +1892,20 @@ def statistic_xls(request):
             else:
                 tmp_doctor_researches = result[d.doc_confirmation_id]["researches"]
                 if not tmp_doctor_researches.get(d.research_id):
-                    tmp_doctor_researches[d.research_id]["companies"] = {
-                                                             d.company_id: {
-                                                                 "coasts": {coast: 1}
-                                                             }
-                                                         }
+                    tmp_doctor_researches[d.research_id] = {
+                        "companies": {
+                            d.company_id: {
+                                "coasts": {coast: 1}
+                            },
+                            "research_title": d.research_title
+                        }
+                    }
+                    result[d.doc_confirmation_id]["researches"] = tmp_doctor_researches.copy()
                 else:
                     tmp_research = tmp_doctor_researches.get(d.research_id)
                     if not tmp_research["companies"].get(d.company_id):
                         tmp_research["companies"][d.company_id] = {"coasts": {coast: 1}}
-                        tmp_doctor_researches[d.research_id] = tmp_research.copy()
+                        tmp_doctor_researches[d.research_id] = tmp_research["companies"].copy()
                     else:
                         coasts = tmp_research["companies"][d.company_id]["coasts"]
                         if not coasts.get(coast):
@@ -1910,12 +1916,10 @@ def statistic_xls(request):
                             coast_data += 1
                             coasts[coast] = coast_data
                             tmp_research["companies"][d.company_id]["coasts"] = coasts.copy()
+                    tmp_doctor_researches[d.research_id] = tmp_research.copy()
+                    result[d.doc_confirmation_id]["researches"] = tmp_doctor_researches.copy()
 
-
-        print(companies_price)
-        print(price_companies)
-
-
+        print(result)
 
     wb.save(response)
     return response

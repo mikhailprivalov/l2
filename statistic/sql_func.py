@@ -818,8 +818,7 @@ def statistics_registry_profit(d_s, d_e, fin_source_pk):
                 WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
                         AND (
                             directions_issledovaniya.fin_source_id=%(fin_source_pk)s or 
-                            directions_napravleniya.istochnik_f_id=%(fin_source_pk)s or 
-                            directions_napravleniya.istochnik_f_id is NULL
+                            directions_napravleniya.istochnik_f_id=%(fin_source_pk)s
                         ) 
                 ORDER BY
                     directions_issledovaniya.doc_confirmation_id,
