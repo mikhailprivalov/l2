@@ -813,8 +813,8 @@ def receive_history(request):
                     "labs": ['Гистология'],
                     "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye_id=n.pk)],
                     'isDirection': True,
-                    'defect_text': "",
-                    'is_defect': False,
+                    'defect_text': n.defect_text,
+                    'is_defect': n.is_defect,
                 }
             )
 
@@ -828,8 +828,8 @@ def receive_history(request):
                 "color": row.type.tube.color,
                 "labs": podrs,
                 "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)],
-                'defect_text': "",
-                'is_defect': False,
+                'defect_text': row.defect_text,
+                'is_defect': row.is_defect,
             }
         )
     return JsonResponse(result)
@@ -840,5 +840,11 @@ def receive_history(request):
 def save_defect_tube(request):
     request_data = json.loads(request.body)
     print(request_data)
-    result = {"rows": []}
-    return JsonResponse(result)
+    data_row = request_data.get('row')
+    print(data_row)
+    t = TubesRegistration.objects.filter(pk=int(data_row['pk'])).first()
+    t.is_defect = data_row['is_defect']
+    t.defect_text = data_row['defect_text']
+    t.save()
+    message = {"ok": "ok"}
+    return JsonResponse(message)

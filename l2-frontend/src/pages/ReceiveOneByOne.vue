@@ -316,7 +316,8 @@ export default class ReceiveOneByOne extends Vue {
 
   async saveDefect(row) {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows } = await this.$api('/laboratory/save-defect-tube', { row });
+    await this.$api('/laboratory/save-defect-tube', { row });
+    this.loadHistory();
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -325,8 +326,6 @@ export default class ReceiveOneByOne extends Vue {
     if (!row.is_defect) {
       // eslint-disable-next-line no-param-reassign
       row.defect_text = '';
-      this.saveDefect(row);
-      this.loadHistory();
     }
   }
 
