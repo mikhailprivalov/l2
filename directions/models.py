@@ -1365,6 +1365,9 @@ class Napravleniya(models.Model):
                     if v in only_lab_researches and external_organization != "NONE":
                         dir_group = dir_group_onlylab
 
+                    if research.plan_external_performing_organization:
+                        dir_group = research.plan_external_performing_organization_id + 900000
+
                     research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
                     if research_data_params:
                         dir_group = -1
