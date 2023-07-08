@@ -430,7 +430,6 @@ class Researches(models.Model):
             result = self.podrazdeleniye.title if self.podrazdeleniye else ""
         return result
 
-
     def get_title(self):
         return self.short_title or self.title
 
