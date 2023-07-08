@@ -839,9 +839,7 @@ def receive_history(request):
 @group_required("Получатель биоматериала")
 def save_defect_tube(request):
     request_data = json.loads(request.body)
-    print(request_data)
     data_row = request_data.get('row')
-    print(data_row)
     t = TubesRegistration.objects.filter(pk=int(data_row['pk'])).first()
     t.is_defect = data_row['is_defect']
     t.defect_text = data_row['defect_text']
