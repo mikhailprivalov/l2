@@ -813,11 +813,13 @@ def receive_history(request):
                     "labs": ['Гистология'],
                     "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye_id=n.pk)],
                     'isDirection': True,
+                    'defect_text': "",
+                    'is_defect': False,
                 }
             )
 
     for row in t.order_by("-daynum").distinct():
-        podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in row.issledovaniya_set.all()])))
+        podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
         result["rows"].append(
             {
                 "pk": row.pk,
@@ -826,6 +828,17 @@ def receive_history(request):
                 "color": row.type.tube.color,
                 "labs": podrs,
                 "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)],
+                'defect_text': "",
+                'is_defect': False,
             }
         )
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def save_defect_tube(request):
+    request_data = json.loads(request.body)
+    print(request_data)
+    result = {"rows": []}
     return JsonResponse(result)

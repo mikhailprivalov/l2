@@ -421,6 +421,16 @@ class Researches(models.Model):
             return self.microbiology_tube.title if self.microbiology_tube else ''
         return self.podrazdeleniye.title if self.podrazdeleniye else ""
 
+    def get_podrazdeleniye_title_recieve_recieve(self):
+        if self.plan_external_performing_organization:
+            result = self.plan_external_performing_organization.short_title
+        elif self.is_microbiology:
+            result = self.microbiology_tube.title if self.microbiology_tube else ''
+        else:
+            result = self.podrazdeleniye.title if self.podrazdeleniye else ""
+        return result
+
+
     def get_title(self):
         return self.short_title or self.title
 
@@ -431,6 +441,7 @@ class Researches(models.Model):
         if self.get_title() == self.title:
             return self.title
         return f'{self.title} – {self.short_title}'
+
 
     class Meta:
         verbose_name = 'Вид исследования'

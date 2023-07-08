@@ -138,16 +138,34 @@
               <input
                 v-model="r.is_defect"
                 type="checkbox"
+                @change="changeRow(r)"
+                @keypress="changeRow(r)"
+                @input="changeRow(r)"
               >
             </label>
           </td>
           <td class="text-center cl-td">
-            <label>
+            <div class="input-group">
               <input
+                ref="q"
                 v-model="r.defect_text"
                 type="text"
+                class="form-control"
+                spellcheck="false"
+                maxlength="12"
+                :readonly="!r.is_defect"
+                @keypress.enter="saveDefect"
               >
-            </label>
+              <span class="input-group-btn">
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="saveDefect(r)"
+                >
+                  Сохранить
+                </button>
+              </span>
+            </div>
           </td>
         </tr>
         <tr v-if="receiveHistory.length === 0">
@@ -294,6 +312,22 @@ export default class ReceiveOneByOne extends Vue {
     await this.$store.dispatch(actions.DEC_LOADING);
     await this.loadHistory();
     this.q = '';
+  }
+
+  async saveDefect(row) {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { rows } = await this.$api('/laboratory/save-defect-tube', { row });
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  changeRow(row) {
+    if (!row.is_defect) {
+      // eslint-disable-next-line no-param-reassign
+      row.defect_text = '';
+      this.saveDefect(row);
+      this.loadHistory();
+    }
   }
 
   async loadHistory() {
