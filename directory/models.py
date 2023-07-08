@@ -442,7 +442,6 @@ class Researches(models.Model):
             return self.title
         return f'{self.title} – {self.short_title}'
 
-
     class Meta:
         verbose_name = 'Вид исследования'
         verbose_name_plural = 'Виды исследований'
