@@ -3175,7 +3175,7 @@ class NumberGenerator(models.Model):
     year = models.IntegerField(verbose_name='Год', db_index=True)
     is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
     start = models.PositiveIntegerField(verbose_name='Начало диапазона')
-    end = models.PositiveIntegerField(verbose_name='Конец диапазона', null=True, blank=True)
+    end = models.PositiveIntegerField(verbose_name='Конец диапазона', null=True, blank=True, default=None)
     last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
     free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
     prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
