@@ -35,6 +35,7 @@ class Hospitals(models.Model):
     legal_auth_doc_id = models.CharField(max_length=9, default="", blank=True, verbose_name="Код для кто заверил")
     oktmo = models.CharField(max_length=8, default="", blank=True, verbose_name="ОКТМО")
     need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
+    orders_ftp_server_url = models.CharField(max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории с заказами (ftp://user:password@host.example.com/path)')
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
