@@ -111,7 +111,6 @@ class Hospitals(models.Model):
 
 
 class HospitalsGroup(models.Model):
-
     REQUIREMENT_MONITORING_HOSP = 'REQUIREMENT_MONITORING_HOSP'
     REGION_HOSP = 'REGION_HOSP'
     CHILD_HOSP = 'CHILD_HOSP'

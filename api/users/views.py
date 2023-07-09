@@ -45,7 +45,7 @@ def auth(request):
                     'orgId': user.doctorprofile.get_hospital_full_id(),
                     'orgTitle': user.doctorprofile.get_hospital_title(),
                     'userId': user.doctorprofile.pk,
-                }
+                },
             )
 
         return status_response(False, message="Ваш аккаунт отключен")
