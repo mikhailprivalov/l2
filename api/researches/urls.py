@@ -34,4 +34,6 @@ urlpatterns = [
     path('group-as-json', views.group_as_json),
     path('tube-related-data', views.tube_related_data),
     path('tube-related-data/update', views.tube_related_data_update),
+    path('research-performer-save', views.research_performer_save),
+    path('get-research-performer', views.get_research_performer),
 ]

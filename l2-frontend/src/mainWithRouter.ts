@@ -172,6 +172,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/route-perform-service',
+      name: 'construct_route_perform_service',
+      component: () => import('@/construct/ConstructRoutePerformService.vue'),
+      meta: {
+        title: 'Маршрут исследований',
+        groups: ['Конструктор: Маршрут исследований'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),

@@ -117,6 +117,8 @@ class TubesRegistration(models.Model):
     barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер ёмкости', db_index=True)
     notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания', db_index=True)
     daynum = models.IntegerField(default=0, blank=True, null=True, help_text='Номер принятия ёмкости среди дня в лаборатории')
+    is_defect = models.BooleanField(default=False, blank=True, verbose_name='Дефект')
+    defect_text = models.CharField(max_length=50, default="", blank=True, help_text='Замечания')
 
     @staticmethod
     def get_tube_number_generator_pk(hospital: Hospitals):
@@ -1307,10 +1309,13 @@ class Napravleniya(models.Model):
         ofname_id = ofname_id or -1
         ofname = None
         auto_print_direction_research = []
-
+        control_actual_research_period = SettingManager.get("control_actual_research_period", default='false', default_type='b')
+        doctor_control_actual_research = False
         if client_id and researches:  # если client_id получен и исследования получены
             if ofname_id > -1:
                 ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
+            if control_actual_research_period and not doc_current.has_group("Безлимитное назначение услуг"):
+                doctor_control_actual_research = True
 
             no_attach = False
             conflict_list = []
@@ -1318,7 +1323,6 @@ class Napravleniya(models.Model):
             limit_research_to_assign = {}
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
-
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
                     if finsource and finsource.title.lower() != "платно" and limit_researches_by_period and limit_researches_by_period.get(vv, None):
@@ -1370,6 +1374,16 @@ class Napravleniya(models.Model):
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
+                    filter = {
+                        "napravleniye__client__id": client_id,
+                        "research__pk": v,
+                    }
+                    last_iss = Issledovaniya.objects.filter(**filter, time_confirmation__isnull=False).order_by("-time_confirmation").first()
+                    if doctor_control_actual_research and research.actual_period_result > 0:
+                        delta = current_time() - last_iss.time_confirmation
+                        if delta.days <= research.actual_period_result:
+                            result["messageLimit"] = f" {result.get('messageLimit', '')} \n Срок действия {research.title} - {research.actual_period_result} дн."
+                            continue
                     if hospital_department_override == -1 and research.is_hospital:
                         if research.podrazdeleniye is None:
                             result["message"] = "Не указано отделение"
@@ -1387,6 +1401,9 @@ class Napravleniya(models.Model):
 
                     if v in only_lab_researches and external_organization != "NONE":
                         dir_group = dir_group_onlylab
+
+                    if research.plan_external_performing_organization:
+                        dir_group = research.plan_external_performing_organization_id + 900000
 
                     research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
                     if research_data_params:

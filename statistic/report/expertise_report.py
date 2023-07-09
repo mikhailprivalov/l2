@@ -37,7 +37,10 @@ def expertise_data(ws1, final_result):
             ws1.cell(row=step, column=column).value = i.get("direction_main_extract_dir", "-")
             ws1.cell(row=step, column=column).style = style_border1
             column += 1
-            ws1.cell(row=step, column=column).value = float(i.get("второй", "0"))
+            second_result = float(i.get("второй", "0"))
+            if second_result == 0:
+                second_result = float(i.get("без уровня", "0"))
+            ws1.cell(row=step, column=column).value = second_result
             ws1.cell(row=step, column=column).style = style_border1
             ws1.cell(row=step, column=column).fill = second_fill
             column += 1

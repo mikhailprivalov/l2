@@ -42,12 +42,7 @@ def fractions(request):
                 "fsli": f.get_fsli_code(),
             }
         )
-    return JsonResponse(
-        {
-            "fractions": fractions_list,
-            "title": research.get_title(),
-        }
-    )
+    return JsonResponse({"fractions": fractions_list, "title": research.get_title(), "actualPeriod": research.actual_period_result})
 
 
 @login_required
@@ -76,6 +71,9 @@ def save_fsli(request):
         if nu != f.unit_id:
             f.unit_id = nu
             f.save(update_fields=['unit'])
+    research = Researches.objects.filter(pk=request_data['pk']).first()
+    research.actual_period_result = int(request_data['actualPeriod'])
+    research.save()
 
     return JsonResponse({"ok": True})
 
@@ -818,11 +816,13 @@ def receive_history(request):
                     "labs": ['Гистология'],
                     "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye_id=n.pk)],
                     'isDirection': True,
+                    'defect_text': n.defect_text,
+                    'is_defect': n.is_defect,
                 }
             )
 
     for row in t.order_by("-daynum").distinct():
-        podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in row.issledovaniya_set.all()])))
+        podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
         result["rows"].append(
             {
                 "pk": row.number,
@@ -831,6 +831,21 @@ def receive_history(request):
                 "color": row.type.tube.color,
                 "labs": podrs,
                 "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__number=row.number)],
+                'defect_text': row.defect_text,
+                'is_defect': row.is_defect,
             }
         )
     return JsonResponse(result)
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def save_defect_tube(request):
+    request_data = json.loads(request.body)
+    data_row = request_data.get('row')
+    t = TubesRegistration.objects.filter(pk=int(data_row['pk'])).first()
+    t.is_defect = data_row['is_defect']
+    t.defect_text = data_row['defect_text']
+    t.save()
+    message = {"ok": "ok"}
+    return JsonResponse(message)

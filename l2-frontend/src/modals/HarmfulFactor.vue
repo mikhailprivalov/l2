@@ -418,6 +418,7 @@ export default {
   margin-left: 10px;
   margin-right: 10px;
 }
+
 .add-row-div {
   justify-content: flex-end;
   height: 35px;

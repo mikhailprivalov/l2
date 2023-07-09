@@ -138,7 +138,6 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
 
 
 def users_by_group(title_groups, hosp_id):
-
     with connection.cursor() as cursor:
         cursor.execute(
             """

@@ -5,6 +5,7 @@ from django.db import models
 from appconf.manager import SettingManager
 from clients.models import Card
 from directory.models import Researches
+from hospitals.sql_func import search_hospitals
 from laboratory.settings import EMAIL_HOST_USER
 
 
@@ -35,6 +36,8 @@ class Hospitals(models.Model):
     legal_auth_doc_id = models.CharField(max_length=9, default="", blank=True, verbose_name="Код для кто заверил")
     oktmo = models.CharField(max_length=8, default="", blank=True, verbose_name="ОКТМО")
     need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
+    is_external_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
+    has_price = models.BooleanField(default=False, blank=True, help_text='Прайс для назначивших МО', db_index=True)
     orders_ftp_server_url = models.CharField(max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории с заказами (ftp://user:password@host.example.com/path)')
 
     @staticmethod
@@ -91,13 +94,24 @@ class Hospitals(models.Model):
     def __str__(self):
         return f"{self.short_title} – {self.code_tfoms}"
 
+    @staticmethod
+    def search_hospital(query):
+        if not query:
+            return []
+        hospital_query = search_hospitals(hospital_title=query)
+        return [{"id": d.id, "title": d.title} for d in hospital_query]
+
+    @staticmethod
+    def get_is_external_performing_organization():
+        hosp = Hospitals.objects.filter(hide=False, is_external_performing_organization=True)
+        return [{"id": h.id, "label": h.title} for h in hosp]
+
     class Meta:
         verbose_name = 'Больница'
         verbose_name_plural = 'Больницы'
 
 
 class HospitalsGroup(models.Model):
-
     REQUIREMENT_MONITORING_HOSP = 'REQUIREMENT_MONITORING_HOSP'
     REGION_HOSP = 'REGION_HOSP'
     CHILD_HOSP = 'CHILD_HOSP'
