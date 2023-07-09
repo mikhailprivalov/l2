@@ -586,7 +586,7 @@ def result_print(request):
             iss_list = direction.issledovaniya_set.all()
             result_style = styleSheet["BodyText"] if no_units_and_ref else stl
             pks = []
-            for iss in iss_list.order_by("research__direction_id", "research__pk", "tubes__id", "research__sort_weight"):
+            for iss in iss_list.order_by("research__direction_id", "research__pk", "tubes__number", "research__sort_weight"):
                 if iss.pk in pks:
                     continue
                 pks.append(iss.pk)
@@ -1518,7 +1518,7 @@ def result_journal_table_print(request):
     )
     patients = {}
     researches_pks = set()
-    for iss in iss_list.order_by("napravleniye__client__individual__family").order_by("research__direction_id", "research__pk", "tubes__id", "research__sort_weight"):
+    for iss in iss_list.order_by("napravleniye__client__individual__family").order_by("research__direction_id", "research__pk", "tubes__number", "research__sort_weight"):
         d = iss.napravleniye
         otd = d.doc.podrazdeleniye
         k = "%d_%s" % (otd.pk, iss.napravleniye.fin_title)

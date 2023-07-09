@@ -120,7 +120,7 @@ def gen_pdf_execlist(request):
                         + str(inobj.issledovaniya_set.first().napravleniye_id)
                         + "<br/>"
                         + "№ ёмкости: "
-                        + str(inobj.pk)
+                        + str(inobj.number)
                         + "<br/>"
                         + Truncator(inobj.issledovaniya_set.first().napravleniye.doc.podrazdeleniye.title).chars(19)
                         + "<br/><br/>"
@@ -846,15 +846,19 @@ def print_history(request):
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
     tubes = []
     if not filter:
-        tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(time_get__lt=datetime.now().date())
+        tubes = list(TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(time_get__lt=datetime.now().date()))
     else:
         for v in filterArray:
-            tubes.append(TubesRegistration.objects.get(pk=v))
+            tubes.append(TubesRegistration.objects.get(number=v))
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     for v in tubes:  # Перебор пробирок
-        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
+        iss = Issledovaniya.objects.filter(tubes__number=v.number)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = v.doc_get.podrazdeleniye.title + "@" + str(iss[0].research.get_podrazdeleniye().title)
+        podr = iss[0].research.get_podrazdeleniye()
+        podr_title = podr.title if podr else ""
+        doc_podr = v.doc_get and v.doc_get.podrazdeleniye
+        doc_podr_title = doc_podr.title if doc_podr else ""
+        k = doc_podr_title + "@" + podr_title
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
         if k not in labs.keys():  # Добавление списка в словарь если по ключу k нет ничего в словаре labs
@@ -865,12 +869,12 @@ def print_history(request):
                     "type": v.type.tube.title,
                     "researches": value,
                     "client-type": iss[0].napravleniye.client.base.short_title,
-                    "lab_title": iss[0].research.get_podrazdeleniye().title,
+                    "lab_title": podr_title,
                     "time": strtime(v.time_get),
                     "dir_id": iss[0].napravleniye_id,
-                    "podr": v.doc_get.podrazdeleniye.title,
+                    "podr": doc_podr_title,
                     "reciver": None,
-                    "tube_id": str(v.id),
+                    "tube_id": str(v.number),
                     "history_num": iss[0].napravleniye.history_num,
                     "fio": iss[0].napravleniye.client.individual.fio(short=True, dots=True),
                 }

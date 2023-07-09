@@ -4,6 +4,8 @@ import collections
 import logging
 import uuid
 
+from django.db.models import Max
+
 from api.sql_func import dispensarization_research
 from cda.integration import get_required_signatures
 import datetime
@@ -26,8 +28,13 @@ import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc, check_confirm_patient_research, check_create_direction_patient_by_research
 from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION, \
-    AUTO_PRINT_RESEARCH_DIRECTION
+from laboratory.settings import (
+    PERINATAL_DEATH_RESEARCH_PK,
+    DISPANSERIZATION_SERVICE_PK,
+    EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED,
+    RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
+    AUTO_PRINT_RESEARCH_DIRECTION,
+)
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
@@ -90,12 +97,18 @@ class CustomResearchOrdering(models.Model):
         verbose_name_plural = 'Пользовательские сортировки исследований'
 
 
+class NoGenerator(Exception):
+    pass
+
+
 class TubesRegistration(models.Model):
     """
     Таблица с пробирками для исследований
     """
 
     id = models.AutoField(primary_key=True, db_index=True)
+    number = models.BigIntegerField(db_index=True, help_text='Номер ёмкости', blank=True, null=True, default=None)
+    chunk_number = models.PositiveSmallIntegerField(db_index=True, blank=True, null=True, default=None, help_text='Номер разложения ёмкости на несколько')
     type = models.ForeignKey(directory.ReleationsFT, help_text='Тип ёмкости', on_delete=models.CASCADE)
     time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала', db_index=True)
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docget', help_text='Кто взял материал', on_delete=models.SET_NULL)
@@ -107,6 +120,24 @@ class TubesRegistration(models.Model):
     is_defect = models.BooleanField(default=False, blank=True, verbose_name='Дефект')
     defect_text = models.CharField(max_length=50, default="", blank=True, help_text='Замечания')
 
+    @staticmethod
+    def get_tube_number_generator_pk(hospital: Hospitals):
+        if hospital.is_default:
+            if not NumberGenerator.objects.filter(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True).exists():
+                max_number = TubesRegistration.objects.aggregate(Max('number'))['number__max']
+                generator = NumberGenerator.objects.create(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, year=-1, is_active=True, start=1, end=None, last=max_number, prepend_length=0)
+            else:
+                generator = NumberGenerator.objects.get(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True)
+        else:
+            generator = NumberGenerator.objects.filter(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True).first()
+            if not generator:
+                if hospital.strict_tube_numbers:
+                    raise NoGenerator("Generator not found for hospital %s" % hospital.safe_short_title)
+                else:
+                    def_hospital = Hospitals.get_default_hospital()
+                    return TubesRegistration.get_tube_number_generator_pk(def_hospital)
+        return generator.pk
+
     @property
     def time_get_local(self):
         return localtime(self.time_get)
@@ -115,8 +146,12 @@ class TubesRegistration(models.Model):
     def time_recive_local(self):
         return localtime(self.time_recive)
 
+    @property
+    def researches_count(self):
+        return self.issledovaniya_set.all().count()
+
     def __str__(self):
-        return "%d %s (%s, %s) %s" % (self.pk, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
+        return "%d %s (%s, %s) %s" % (self.number, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
 
     def day_num(self, doc, num):
         if not self.getstatus():
@@ -143,9 +178,9 @@ class TubesRegistration(models.Model):
 
         self.time_get = timezone.now()
         self.doc_get = doc_get
-        self.barcode = self.pk
+        self.barcode = str(self.number)
         self.save()
-        slog.Log(key=str(self.pk), type=9, body="", user=doc_get).save()
+        slog.Log(key=str(self.number), type=9, body="", user=doc_get).save()
 
     def getstatus(self, one_by_one=False):
         """
@@ -168,7 +203,7 @@ class TubesRegistration(models.Model):
         self.time_recive = timezone.now()
         self.doc_recive = doc_r
         self.save()
-        slog.Log(key=str(self.pk), user=doc_r, type=11, body=json.dumps({"Замечание не приёма": self.notice}) if self.notice != "" else "").save()
+        slog.Log(key=str(self.number), user=doc_r, type=11, body=json.dumps({"Замечание не приёма": self.notice}) if self.notice != "" else "").save()
 
     def set_notice(self, doc_r, notice):
         """
@@ -183,7 +218,7 @@ class TubesRegistration(models.Model):
             self.time_recive = None
         self.notice = notice
         self.save()
-        slog.Log(key=str(self.pk), user=doc_r, type=12, body=json.dumps({"Замечание не приёма": self.notice})).save()
+        slog.Log(key=str(self.number), user=doc_r, type=12, body=json.dumps({"Замечание не приёма": self.notice})).save()
 
     def clear_notice(self, doc_r):
         old_notice = self.notice
@@ -191,7 +226,7 @@ class TubesRegistration(models.Model):
             return
         self.notice = ""
         self.save()
-        slog.Log(key=str(self.pk), user=doc_r, type=4000, body=json.dumps({"Удалённое замечание": old_notice})).save()
+        slog.Log(key=str(self.number), user=doc_r, type=4000, body=json.dumps({"Удалённое замечание": old_notice})).save()
 
     def rstatus(self, check_not=False):
         """
@@ -209,7 +244,7 @@ class TubesRegistration(models.Model):
         """
         if self.barcode and self.barcode.isnumeric():
             return self.barcode
-        return self.id
+        return self.number
 
     def get_details(self):
         if not self.time_get or not self.doc_get:
@@ -3116,13 +3151,23 @@ class DirectionsHistory(models.Model):
         return directions
 
 
+class GeneratorValuesAreOver(Exception):
+    pass
+
+
+class GeneratorOverlap(Exception):
+    pass
+
+
 class NumberGenerator(models.Model):
     DEATH_FORM_NUMBER = 'deathFormNumber'
     PERINATAL_DEATH_FORM_NUMBER = 'deathPerinatalNumber'
+    TUBE_NUMBER = 'tubeNumber'
 
     KEYS = (
         (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
         (PERINATAL_DEATH_FORM_NUMBER, 'Номер свидетельства о перинатальной смерти'),
+        (TUBE_NUMBER, 'Номер ёмкости биоматериала'),
     )
 
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
@@ -3130,13 +3175,59 @@ class NumberGenerator(models.Model):
     year = models.IntegerField(verbose_name='Год', db_index=True)
     is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
     start = models.PositiveIntegerField(verbose_name='Начало диапазона')
-    end = models.PositiveIntegerField(verbose_name='Конец диапазона')
+    end = models.PositiveIntegerField(verbose_name='Конец диапазона', null=True, blank=True)
     last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
     free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
     prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
 
     def __str__(self):
         return f"{self.hospital} {self.key} {self.year} {self.is_active} {self.start} — {self.end} ({self.last})"
+
+    def get_min_last_value(self):
+        has_overlap = False
+        min_last_value = self.last if self.last else (self.start - 1)
+        has_free_number = False
+        if self.free_numbers:
+            min_last_orig = min_last_value
+            min_last_value = min(min_last_value, *self.free_numbers)
+            has_free_number = min_last_orig != min_last_value
+        if self.key == NumberGenerator.TUBE_NUMBER and self.end is None and not has_free_number:
+            includes_generators = (
+                NumberGenerator.objects.exclude(pk=self.pk)
+                .exclude(end__isnull=True)
+                .filter(key=NumberGenerator.TUBE_NUMBER, start__lte=min_last_value + 1, end__gte=min_last_value + 1)
+                .order_by('end')
+            )
+            for gen in includes_generators:
+                min_last_orig = min_last_value
+                min_last_value = max(min_last_value + 1, gen.end + 1)
+                if min_last_orig + 1 != min_last_value:
+                    has_overlap = True
+        return min_last_value, has_overlap
+
+    def get_next_value(self):
+        min_last_value, has_overlap = self.get_min_last_value()
+        if not self.last or self.last == min_last_value:
+            next_value = min_last_value + 1
+            if (self.end is not None or (not self.hospital.is_default)) and next_value > self.end:
+                raise GeneratorValuesAreOver('Значения генератора закончились')
+            self.last = next_value
+        else:
+            next_value = min_last_value
+            if has_overlap:
+                self.last = next_value
+        self.free_numbers = [x for x in self.free_numbers if x != next_value]
+        self.save(update_fields=['last', 'free_numbers'])
+
+        if self.key == NumberGenerator.TUBE_NUMBER and TubesRegistration.objects.filter(number=next_value).exists():
+            return self.get_next_value()
+
+        return next_value
+
+    def get_prepended_next_value(self):
+        next_value = self.get_next_value()
+        next_value = str(next_value).zfill(self.prepend_length)
+        return next_value
 
     class Meta:
         verbose_name = 'Диапазон номеров'

@@ -305,7 +305,7 @@ export default class ReceiveOneByOne extends Vue {
       this.workMode = 'direction';
     }
     const {
-      ok, researches, invalid, lastN,
+      ok, researches, invalid, lastN, message,
     } = await this.$api(
       '/laboratory/receive-one-by-one',
       this,
@@ -313,7 +313,10 @@ export default class ReceiveOneByOne extends Vue {
       { q },
     );
     for (const msg of invalid) {
-      this.$root.$emit('msg', 'error', msg);
+      this.$error(msg);
+    }
+    if (message) {
+      this.$error(message);
     }
     this.lastN = lastN;
     this.lastResearches = researches;
