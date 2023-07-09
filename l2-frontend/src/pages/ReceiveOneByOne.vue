@@ -87,23 +87,25 @@
     </h5>
     <table class="table table-bordered table-responsive table-condensed">
       <colgroup>
-        <col width="110">
-        <col width="200">
-        <col width="150">
+        <col width="87">
+        <col width="245">
+        <col width="92">
         <col width="180">
         <col>
         <col width="50">
+        <col width="50">
+        <col width="195">
       </colgroup>
       <thead>
         <tr>
-          <th>№ принятия</th>
+          <th>№ приёма</th>
           <th>Тип емкости</th>
           <th>№ емкости</th>
           <th>Лаборатория</th>
           <th>Исследования</th>
           <th>Ш/к</th>
           <th>Брак</th>
-          <th>Описание брак</th>
+          <th>Описание брака</th>
         </tr>
       </thead>
       <tbody>
@@ -121,7 +123,13 @@
           <td>
             {{ r.pk }}
           </td>
-          <td>{{ r.labs.join('; ') }}</td>
+          <td
+            v-tippy
+            class="lab-cell"
+            :title="r.labs.join('; ')"
+          >
+            {{ r.labs.join('; ') }}
+          </td>
           <td>{{ r.researches.join('; ') }}</td>
           <td>
             <a
@@ -133,7 +141,7 @@
               class="fa fa-barcode"
             /></a>
           </td>
-          <td class="text-center cl-td">
+          <td class="text-center x-cell">
             <label>
               <input
                 v-model="r.is_defect"
@@ -147,29 +155,31 @@
           <td class="text-center cl-td">
             <div class="input-group">
               <input
-                ref="q"
+                :id="rId(r, 'defect')"
                 v-model="r.defect_text"
                 type="text"
                 class="form-control"
                 spellcheck="false"
                 maxlength="12"
                 :readonly="!r.is_defect"
-                @keypress.enter="saveDefect"
+                @keypress.enter="saveDefect(r)"
               >
               <span class="input-group-btn">
                 <button
+                  v-tippy
                   class="btn btn-blue-nb"
                   type="button"
+                  title="Сохранить"
                   @click="saveDefect(r)"
                 >
-                  Сохранить
+                  <i class="fa fa-save" />
                 </button>
               </span>
             </div>
           </td>
         </tr>
         <tr v-if="receiveHistory.length === 0">
-          <td colspan="6">
+          <td colspan="8">
             нет данных
           </td>
         </tr>
@@ -319,6 +329,7 @@ export default class ReceiveOneByOne extends Vue {
     await this.$api('/laboratory/save-defect-tube', { row });
     this.loadHistory();
     await this.$store.dispatch(actions.DEC_LOADING);
+    this.focus();
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -326,7 +337,15 @@ export default class ReceiveOneByOne extends Vue {
     if (!row.is_defect) {
       // eslint-disable-next-line no-param-reassign
       row.defect_text = '';
+    } else {
+      const $input = window.$(`#${this.rId(row, 'defect')}`);
+      $input.focus();
     }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  rId(row, suffix) {
+    return `row-${row.pk}-${suffix}`;
   }
 
   async loadHistory() {
@@ -397,5 +416,12 @@ export default class ReceiveOneByOne extends Vue {
 .btn-bc {
   padding: 2px;
   width: 100%;
+}
+
+.lab-cell {
+  white-space: nowrap;
+  max-width: 180px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 </style>

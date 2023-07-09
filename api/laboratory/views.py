@@ -42,13 +42,7 @@ def fractions(request):
                 "fsli": f.get_fsli_code(),
             }
         )
-    return JsonResponse(
-        {
-            "fractions": fractions_list,
-            "title": research.get_title(),
-            "actualPeriod": research.actual_period_result
-        }
-    )
+    return JsonResponse({"fractions": fractions_list, "title": research.get_title(), "actualPeriod": research.actual_period_result})
 
 
 @login_required

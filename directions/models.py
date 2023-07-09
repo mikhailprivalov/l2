@@ -104,7 +104,7 @@ class TubesRegistration(models.Model):
     barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер ёмкости', db_index=True)
     notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания', db_index=True)
     daynum = models.IntegerField(default=0, blank=True, null=True, help_text='Номер принятия ёмкости среди дня в лаборатории')
-    is_defect = models.BooleanField(default=False, verbose_name='Дефект')
+    is_defect = models.BooleanField(default=False, blank=True, verbose_name='Дефект')
     defect_text = models.CharField(max_length=50, default="", blank=True, help_text='Замечания')
 
     @property
