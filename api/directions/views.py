@@ -3381,7 +3381,7 @@ def tubes_for_get(request):
     for v in iss_cached:
         if data["direction"]["full_confirm"] and not v.time_confirmation:
             data["direction"]["full_confirm"] = False
-        x: TubesRegistration  # noqa: E842
+        x: TubesRegistration  # noqa: F842
         has_rels = {x.type_id if not x.chunk_number else f"{x.type_id}_{x.chunk_number}": x for x in v.tubes.all()}
         new_tubes = []
         for val in v.research.fractions_set.all():
