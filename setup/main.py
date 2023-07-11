@@ -362,6 +362,8 @@ def enter():
                     ).run()
                     if not go_to_next:
                         sys.exit()
+            else:
+                checkout_result = False
 
             with tempfile.TemporaryDirectory(suffix='_l2_setup') as dn:
                 fl = list(get_s3_objects(s3, cfg['name']))
