@@ -35,7 +35,8 @@ import datetime
 import calendar
 import openpyxl
 
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors, base_data, expertise_report
+from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors, base_data, expertise_report, \
+    registry_profit
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -1862,9 +1863,7 @@ def statistic_xls(request):
             price_companies[coast.price_name_id][coast.research_id] = float(coast.coast)
 
         result = {}
-        print("data", data)
         for d in data:
-            print("d", d)
             coast = None
             coast_price_research = None
             if d.company_id:
@@ -1882,8 +1881,9 @@ def statistic_xls(request):
                                                      d.research_id: {
                                                          "companies": {
                                                              d.company_id: {
-                                                                 "coasts": {coast: 1}
-                                                             }
+                                                                 "coasts": {coast: 1},
+                                                                 "company_title": d.company_title,
+                                                             },
                                                          },
                                                          "research_title": d.research_title
                                                      }
@@ -1895,16 +1895,17 @@ def statistic_xls(request):
                     tmp_doctor_researches[d.research_id] = {
                         "companies": {
                             d.company_id: {
-                                "coasts": {coast: 1}
+                                "coasts": {coast: 1},
+                                "company_title": d.company_title,
                             },
-                            "research_title": d.research_title
-                        }
+                        },
+                        "research_title": d.research_title
                     }
                     result[d.doc_confirmation_id]["researches"] = tmp_doctor_researches.copy()
                 else:
                     tmp_research = tmp_doctor_researches.get(d.research_id)
                     if not tmp_research["companies"].get(d.company_id):
-                        tmp_research["companies"][d.company_id] = {"coasts": {coast: 1}}
+                        tmp_research["companies"][d.company_id] = {"coasts": {coast: 1}, "company_title": d.company_title,}
                         tmp_doctor_researches[d.research_id] = tmp_research["companies"].copy()
                     else:
                         coasts = tmp_research["companies"][d.company_id]["coasts"]
@@ -1918,9 +1919,25 @@ def statistic_xls(request):
                             tmp_research["companies"][d.company_id]["coasts"] = coasts.copy()
                     tmp_doctor_researches[d.research_id] = tmp_research.copy()
                     result[d.doc_confirmation_id]["researches"] = tmp_doctor_researches.copy()
+        final_result = []
+        for k, v in result.items():
+            for id_research, data_research in v['researches'].items():
+                for id_company, data_company in data_research['companies'].items():
+                    if id_company != "research_title":
+                        for coats, count in data_company['coasts'].items():
+                            final_result.append(
+                                {
+                                    "fio": v.get("fio", "-"),
+                                    "position": v.get("position", "-"),
+                                    "research": data_research.get("research_title", "-"),
+                                    "company": data_company.get("company_title"),
+                                    "coast": coats,
+                                    "count": count
+                                }
+                            )
 
-        print(result)
-
+        ws = registry_profit.profit_base(ws, date_start_o, date_end_o)
+        ws = registry_profit.profit_data(ws, final_result)
     wb.save(response)
     return response
 
