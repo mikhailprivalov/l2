@@ -548,6 +548,12 @@ const STATS_CATEGORIES = {
         url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
             + 'company=<company>&research-set=<research-set>',
       },
+      registryProfit: {
+        groups: ['Статистика-реестр начислений'],
+        title: 'Реестр начислений',
+        params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-registry-profit&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>',
+      },
       typeDepartments: {
         groups: ['Статистика-профосмотры'],
         title: 'По подразделениям',
