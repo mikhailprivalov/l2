@@ -1937,7 +1937,7 @@ def statistic_xls(request):
                                     "research": data_research.get("research_title", "-"),
                                     "company": data_company.get("company_title"),
                                     "coast": coats,
-                                    "count": count
+                                    "count": count,
                                 }
                             )
 
