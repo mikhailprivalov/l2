@@ -1907,7 +1907,10 @@ def statistic_xls(request):
                 else:
                     tmp_research = tmp_doctor_researches.get(d.research_id)
                     if not tmp_research["companies"].get(d.company_id):
-                        tmp_research["companies"][d.company_id] = {"coasts": {coast: 1}, "company_title": d.company_title,}
+                        tmp_research["companies"][d.company_id] = {
+                            "coasts": {coast: 1},
+                            "company_title": d.company_title,
+                        }
                         tmp_doctor_researches[d.research_id] = tmp_research["companies"].copy()
                     else:
                         coasts = tmp_research["companies"][d.company_id]["coasts"]
