@@ -32,7 +32,6 @@ def profit_base(ws1, d1, d2):
     return ws1
 
 
-
 def profit_data(ws1, final_result):
     style_border1 = NamedStyle(name="style_border1")
     bd = Side(style='thin', color="000000")
