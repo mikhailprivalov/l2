@@ -245,7 +245,7 @@ class Researches(models.Model):
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием", db_index=True)
-    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
+    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True, db_index=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
     co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
     microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True, help_text="Пробирка для микробиологического исследования", on_delete=models.SET_NULL)

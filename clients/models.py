@@ -57,6 +57,7 @@ class Individual(models.Model):
     time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
     ecp_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в ЕЦП")
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    owner = models.ForeignKey('hospitals.Hospitals', default=None, blank=True, null=True, help_text="Организация-владелец данных", db_index=True, on_delete=models.PROTECT)
 
     def first(self):
         return self
@@ -751,6 +752,71 @@ class Individual(models.Model):
 
         return updated_data
 
+    @staticmethod
+    def import_from_simple_data(data: dict, owner):
+        family = data.get('family', '').title().strip()
+        name = data.get('name', '').title().strip()
+        patronymic = data.get('patronymic', '').title().strip()
+        sex = data.get('sex', '').lower().strip()
+        birthday = data.get('birthday', '').split(' ')[0]
+
+        i = None
+        card = None
+
+        if family and name and sex and birthday:
+            birthday = datetime.strptime(birthday, "%d.%m.%Y" if '.' in birthday else "%Y-%m-%d").date()
+
+            indv = Individual.objects.filter(
+                family=family,
+                name=name,
+                patronymic=patronymic,
+                birthday=birthday,
+                sex=sex,
+                owner=owner,
+            )
+
+            if not indv or not indv.exists():
+                i = Individual(
+                    family=family,
+                    name=name,
+                    patronymic=patronymic,
+                    birthday=birthday,
+                    sex=sex,
+                    owner=owner,
+                )
+                i.save()
+            else:
+                i = indv.first()
+                updated = []
+
+                if i.family != family:
+                    i.family = family
+                    updated.append('family')
+
+                if i.name != name:
+                    i.name = name
+                    updated.append('name')
+
+                if i.patronymic != patronymic:
+                    i.patronymic = patronymic
+                    updated.append('patronymic')
+
+                if i.sex != sex:
+                    i.sex = sex
+                    updated.append('sex')
+
+                if i.birthday != birthday:
+                    i.birthday = birthday
+                    updated.append('birthday')
+
+                if updated:
+                    i.save(update_fields=updated)
+
+        if i:
+            card = Card.add_l2_card(individual=i, force=True, owner=owner)
+
+        return card
+
     def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str, insurer_full_code=""):
         ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() > 1:
@@ -1058,6 +1124,8 @@ class Card(models.Model):
     contact_trust_health = models.CharField(max_length=400, help_text='Кому доверяю состояние здоровья', blank=True, default="")
     room_location = models.ForeignKey(Room, default=None, blank=True, null=True, help_text="Кабинет нахождения карты", db_index=True, on_delete=models.SET_NULL)
 
+    owner = models.ForeignKey('hospitals.Hospitals', default=None, blank=True, null=True, help_text="Организация-владелец карты", db_index=True, on_delete=models.PROTECT)
+
     @property
     def main_address_full(self):
         return json.dumps({'address': self.main_address, 'fias': self.main_address_fias, 'details': self.main_address_details})
@@ -1282,12 +1350,14 @@ class Card(models.Model):
         force=False,
         updated_data=None,
         snils: Union['Document', None] = None,
+        owner = None,
     ):
-        if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
+        f = {'owner': owner} if owner else {}
+        if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f).exists():
             return None
 
-        if force and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
-            c = Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True)[0]
+        if force and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f).exists():
+            c = Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f)[0]
             updated = []
 
             if address and c.main_address != address:
@@ -1329,6 +1399,7 @@ class Card(models.Model):
                 main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
                 main_address=address or ('' if not card_orig else card_orig.main_address),
                 fact_address='' if not card_orig else card_orig.fact_address,
+                **f,
             )
             c.save()
             if polis:

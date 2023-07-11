@@ -5,6 +5,7 @@ import logging
 import uuid
 
 from django.db.models import Max
+from pip._internal.cli.cmdoptions import help_
 
 from api.sql_func import dispensarization_research
 from cda.integration import get_required_signatures
@@ -399,6 +400,24 @@ class ExternalOrganization(models.Model):
         verbose_name_plural = 'Внешние организации'
 
 
+class RegisteredOrders(models.Model):
+    order_number = models.CharField(max_length=24, db_index=True, help_text='Номер заказа')
+    organization = models.ForeignKey(Hospitals, on_delete=models.PROTECT, db_index=True)
+    services = ArrayField(models.CharField(max_length=255), help_text='Услуги заказа')
+    patient_card = models.ForeignKey(Clients.Card, db_index=True, on_delete=models.PROTECT)
+    file_name = models.CharField(max_length=255, db_index=True)
+    totally_completed = models.BooleanField(default=False, db_index=True, help_text='Все исследования по заказу завершены')
+    need_check_for_results_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление результатов')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.order_number} {self.patient_card}"
+
+    class Meta:
+        verbose_name = 'Внешний заказ'
+        verbose_name_plural = 'Внешние заказы'
+
+
 class Napravleniya(models.Model):
     """
     Таблица направлений
@@ -514,6 +533,12 @@ class Napravleniya(models.Model):
     emdr_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД РЭМД', db_index=True)
     email_with_results_sent = models.BooleanField(verbose_name='Результаты отправлены на почту', blank=True, default=False, db_index=True)
     celery_send_task_ids = ArrayField(models.CharField(max_length=64), default=list, blank=True, db_index=True)
+    external_order = models.ForeignKey(RegisteredOrders, default=None, blank=True, null=True, db_index=True, on_delete=models.PROTECT, help_text='Внешний заказ')
+    need_order_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление заказа')
+    order_redirection_number = models.CharField(max_length=24, default=None, blank=True, null=True, db_index=True, help_text='Номер перенаправленного заказа')
+    external_executor_hospital = models.ForeignKey(
+        Hospitals, related_name='external_executor_hospital', default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Внешняя организация-исполнитель'
+    )
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -1006,6 +1031,7 @@ class Napravleniya(models.Model):
         external_organization="NONE",
         price_category=-1,
         hospital=-1,
+        external_order=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1042,6 +1068,7 @@ class Napravleniya(models.Model):
             parent_slave_hosp_id=parent_slave_hosp_id,
             rmis_slot_id=rmis_slot,
             hospital=doc.hospital or Hospitals.get_default_hospital(),
+            external_order=external_order,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
@@ -1226,6 +1253,7 @@ class Napravleniya(models.Model):
         hospital_department_override=-1,
         hospital_override=-1,
         price_category=-1,
+        external_order=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -1475,6 +1503,7 @@ class Napravleniya(models.Model):
                             external_organization=external_organization,
                             price_category=price_category,
                             hospital=hospital_override,
+                            external_order=external_order,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1503,6 +1532,7 @@ class Napravleniya(models.Model):
                             external_organization=external_organization,
                             price_category=price_category,
                             hospital=hospital_override,
+                            external_order=external_order,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1536,6 +1566,11 @@ class Napravleniya(models.Model):
                     issledovaniye = Issledovaniya(
                         napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany, deferred=False
                     )
+
+                    if not directions_for_researches[dir_group].need_order_redirection and research.plan_external_performing_organization:
+                        directions_for_researches[dir_group].need_order_redirection = True
+                        directions_for_researches[dir_group].external_executor_hospital = research.plan_external_performing_organization
+                        directions_for_researches[dir_group].save(update_fields=["need_order_redirection", "external_executor_hospital"])
 
                     loc = ""
                     if str(research.pk) in localizations:
@@ -1612,6 +1647,7 @@ class Napravleniya(models.Model):
                             "comments": comments,
                             "count": count,
                             "discount": discount,
+                            "external_order": external_order.order_number if external_order else None,
                         }
                     ),
                 ).save()
@@ -1723,6 +1759,18 @@ class Napravleniya(models.Model):
             self.save(update_fields=['celery_send_task_ids'])
             slog.Log.log(key=self.pk, type=180000, body={"task_id": task_id})
 
+        if self.external_order:
+            totally_confirmed_all_directions_in_order = True
+
+            for direction in Napravleniya.objects.filter(external_order=self.external_order).exclude(pk=self.pk):
+                if not direction.is_all_confirm():
+                    totally_confirmed_all_directions_in_order = False
+                    break
+
+            if self.external_order.totally_completed != totally_confirmed_all_directions_in_order:
+                self.external_order.totally_completed = totally_confirmed_all_directions_in_order
+                self.external_order.save()
+
     def post_reset_confirmation(self):
         if self.celery_send_task_ids:
             task_ids = self.celery_send_task_ids
@@ -1730,6 +1778,10 @@ class Napravleniya(models.Model):
             self.celery_send_task_ids = []
             self.save(update_fields=['celery_send_task_ids'])
             slog.Log.log(key=self.pk, type=180003, body={"task_ids": task_ids})
+        if self.external_order and self.external_order.totally_completed:
+            self.external_order.totally_completed = False
+            self.external_order.need_check_for_results_redirection = False
+            self.external_order.save()
 
     def last_time_confirm(self):
         return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
@@ -1791,11 +1843,6 @@ class Napravleniya(models.Model):
         return None if not self.doc.podrazdeleniye else self.doc.podrazdeleniye.rmis_department_title
 
     def get_attr(self):
-        """
-        Получает на входе объект Направление
-        возвращает словарь атрибутов направлению
-        :return:
-        """
         napr_data = {}
         ind_data = self.client.get_data_individual()
         napr_data['client_fio'] = ind_data['fio']
@@ -3163,11 +3210,13 @@ class NumberGenerator(models.Model):
     DEATH_FORM_NUMBER = 'deathFormNumber'
     PERINATAL_DEATH_FORM_NUMBER = 'deathPerinatalNumber'
     TUBE_NUMBER = 'tubeNumber'
+    EXTERNAL_ORDER_NUMBER = 'externalOrderNumber'
 
     KEYS = (
         (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
         (PERINATAL_DEATH_FORM_NUMBER, 'Номер свидетельства о перинатальной смерти'),
         (TUBE_NUMBER, 'Номер ёмкости биоматериала'),
+        (EXTERNAL_ORDER_NUMBER, 'Номер внешнего заказ для отправки'),
     )
 
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')

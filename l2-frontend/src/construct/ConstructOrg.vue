@@ -86,6 +86,31 @@
             />
           </div>
         </div>
+
+        <template v-if="ftp">
+          <div class="full-width">
+            <FormulateInput
+              type="text"
+              name="ordersPullFtpServerUrl"
+              label="URL для FTP директории получения заказов"
+            />
+          </div>
+          <div class="full-width">
+            <FormulateInput
+              type="checkbox"
+              name="isExternalPerformingOrganization"
+              label="Организация является внешним исполнителем"
+            />
+          </div>
+          <div class="full-width">
+            <FormulateInput
+              type="text"
+              name="ordersPushFtpServerUrl"
+              label="URL для FTP директории отправки заказов"
+            />
+          </div>
+        </template>
+
         <FormulateInput
           type="submit"
           label="Сохранить"
@@ -124,7 +149,7 @@
             :key="g.pk"
           >
             <td>{{ g.keyDisplay }}</td>
-            <td v-if="g.key !== 'tubeNumber'">
+            <td v-if="g.key !== 'tubeNumber' && g.key !== 'externalOrderNumber'">
               {{ g.year }}
             </td>
             <td v-else />
@@ -161,7 +186,7 @@
           required
         />
         <FormulateInput
-          v-if="generator.key !== 'tubeNumber'"
+          v-if="generator.key !== 'tubeNumber' && generator.key !== 'externalOrderNumber'"
           key="year"
           type="number"
           name="year"
@@ -184,10 +209,10 @@
           name="end"
           label="Конец (последнее значение)"
           :min="generator.start || 0"
-          :required="generator.key !== 'tubeNumber'"
+          :required="generator.key !== 'tubeNumber' && generator.key !== 'externalOrderNumber'"
         />
         <FormulateInput
-          v-if="generator.key !== 'tubeNumber'"
+          v-if="generator.key !== 'tubeNumber' && generator.key !== 'externalOrderNumber'"
           key="prependLength"
           type="number"
           name="prependLength"
@@ -204,7 +229,9 @@
 
         <div class="journal-warning">
           Существующие генераторы такого же
-          типа {{ generator.key !== 'tubeNumber' ? 'и с тем же годом ' : '' }}будут деактивированы.<br>
+          типа {{
+            (generator.key !== 'tubeNumber' && generator.key !== 'externalOrderNumber') ? 'и с тем же годом ' : ''
+          }}будут деактивированы.<br>
           Изменения будут записаны в журнал.
         </div>
       </FormulateForm>
@@ -272,6 +299,10 @@ export default class ConstructOrg extends Vue {
 
     generators.tubeNumber = 'Номер ёмкости биоматериала';
 
+    if (this.ftp) {
+      generators.externalOrderNumber = 'Номер внешнего заказ для отправки';
+    }
+
     return generators;
   }
 
@@ -293,6 +324,10 @@ export default class ConstructOrg extends Vue {
 
   get disableDeathCert() {
     return this.$store.getters.modules.l2_disable_death_cert;
+  }
+
+  get ftp() {
+    return this.$store.getters.modules.l2_ftp;
   }
 
   async save() {
@@ -385,6 +420,10 @@ export default class ConstructOrg extends Vue {
 
 ::v-deep .formulate-input .formulate-input-element {
   max-width: 1000px;
+}
+
+.full-width ::v-deep .formulate-input .formulate-input-element {
+  max-width: 100%;
 }
 
 .f-row {

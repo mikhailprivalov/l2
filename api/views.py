@@ -2127,6 +2127,12 @@ def organization_data(request):
         "currentManager": hospital.current_manager,
         "okpo": hospital.okpo,
     }
+
+    if SettingManager.l2('ftp'):
+        org['ordersPullFtpServerUrl'] = hospital.orders_pull_by_numbers or ''
+        org['ordersPushFtpServerUrl'] = hospital.orders_push_by_numbers or ''
+        org['isExternalPerformingOrganization'] = hospital.is_external_performing_organization
+
     return JsonResponse({"org": org})
 
 
@@ -2145,9 +2151,14 @@ def organization_data_update(request):
         'email': str,
         'okpo': str,
         'pk': int,
+        'ordersPullFtpServerUrl': str,
+        'ordersPushFtpServerUrl': str,
+        'isExternalPerformingOrganization': bool,
     }
 
-    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False, 'pk': None})
+    data = data_parse(
+        request.body, parse_params, {'screening': None, 'hide': False, 'pk': None, 'ordersPullFtpServerUrl': None, 'ordersPushFtpServerUrl': None, 'isExternalPerformingOrganization': False}
+    )
 
     title: str = data[0].strip()
     short_title: str = data[1].strip()
@@ -2160,6 +2171,9 @@ def organization_data_update(request):
     email: str = data[8].strip()
     okpo: str = data[9].strip()
     hospital_pk: Optional[int] = data[10]
+    orders_pull_by_numbers: Optional[str] = data[11] or None
+    orders_push_by_numbers: Optional[str] = data[12] or None
+    is_external_performing_organization: bool = data[13]
 
     if not title:
         return status_response(False, 'Название не может быть пустым')
@@ -2181,6 +2195,9 @@ def organization_data_update(request):
         "www": hospital.www,
         "email": hospital.email,
         "okpo": hospital.okpo,
+        "orders_pull_by_numbers": hospital.orders_pull_by_numbers,
+        "orders_push_by_numbers": hospital.orders_push_by_numbers,
+        "is_external_performing_organization": hospital.is_external_performing_organization,
     }
 
     new_data = {
@@ -2194,6 +2211,9 @@ def organization_data_update(request):
         "www": www,
         "email": email,
         "okpo": okpo,
+        "orders_pull_by_numbers": orders_pull_by_numbers,
+        "orders_push_by_numbers": orders_push_by_numbers,
+        "is_external_performing_organization": is_external_performing_organization,
     }
 
     hospital.title = title
@@ -2206,6 +2226,9 @@ def organization_data_update(request):
     hospital.www = www
     hospital.email = email
     hospital.okpo = okpo
+    hospital.orders_pull_by_numbers = orders_pull_by_numbers
+    hospital.orders_push_by_numbers = orders_push_by_numbers
+    hospital.is_external_performing_organization = is_external_performing_organization
     hospital.save()
 
     Log.log(

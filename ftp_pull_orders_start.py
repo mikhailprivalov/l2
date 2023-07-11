@@ -4,7 +4,7 @@ import django  # noqa E402
 
 django.setup()
 
-from ftp_orders.main import process_ftp_links  # noqa E402
+from ftp_orders.main import process_pull_start_orders  # noqa E402
 
 if __name__ == "__main__":
-    process_ftp_links()
+    process_pull_start_orders()

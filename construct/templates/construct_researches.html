@@ -532,22 +532,27 @@ src="${url}"
             $("<h4></h4>").html("Редактор исследования &mdash; <span id='lab_r'>...</span>").appendTo($(form));
             const row = $("<div class='row'></div>").appendTo($(form));
             const cloumn1 = $("<div class='col-md-6'></div>").appendTo($(row));
-            let group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
+            let group = $(`<div class="input-group" style='margin-bottom: 5px'></div>`).appendTo($(cloumn1));
             $('<span class="input-group-addon" style="min-width: 157px">Название (полное)</span>').appendTo($(group));
             $("<input class='form-control' id='research_title' />").appendTo($(group));
 
-            group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
+            group = $(`<div class="input-group" style='margin-bottom: 5px'></div>`).appendTo($(cloumn1));
             $('<span class="input-group-addon" style="min-width: 157px">Название (краткое)</span>').appendTo($(group));
             $("<input class='form-control' id='research_short_title' />").appendTo($(group));
 
-            group = $("<div class=\"input-group\"></div>").appendTo($(cloumn1));
+            group = $(`<div class="input-group"></div>`).appendTo($(cloumn1));
             $('<span class="input-group-addon" style="min-width: 157px">Код по НМУ</span>').appendTo($(group));
             $("<input class='form-control' value='' id='nmu' />").appendTo($(group));
 
             const cloumn3 = $("<div class='col-md-6'></div>").appendTo($(row));
-            group = $("<div class=\"input-group\"></div>").appendTo($(cloumn3));
-            $('<span class="input-group-addon">Подготовка</span>').appendTo($(group));
-            $('<textarea class="form-control" id="preparation" rows="5"></textarea>').appendTo($(group));
+
+            group = $(`<div class="input-group" style='margin-bottom: 5px'></div>`).appendTo($(cloumn3));
+            $('<span class="input-group-addon" style="min-width: 136px">Внутренний код</span>').appendTo($(group));
+            $("<input class='form-control' value='' id='internalCode' />").appendTo($(group));
+
+            group = $(`<div class="input-group"></div>`).appendTo($(cloumn3));
+            $('<span class="input-group-addon" style="min-width: 136px">Подготовка</span>').appendTo($(group));
+            $('<textarea class="form-control" id="preparation" rows="3"></textarea>').appendTo($(group));
             $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn" onclick="tune_research(' + resid + '); return false;" class="btn btn-default btn-blue2-nb"><i class="glyphicon glyphicon-cog"></i> Видимость фракций, референсы и доп. параметры</a></span>');
             $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn-ng" onclick="tune_research(' + resid + ', true); return false;" class="btn btn-default btn-blue2-nb"><i class="fa fa-wrench"></i> Коды ФСЛИ</a></span>');
             $(form).append('<span style="float: right;padding-top:15px"><a href="#" onclick="showref(); return false;" class="btn btn-default btn-blue2-nb" id="refhidden">Развернуть референсы</a><a href="#" onclick="hideref(); return false;" class="btn btn-default btn-blue2-nb" id="refshowed">Свернуть референсы</a></span>');
@@ -586,6 +591,7 @@ src="${url}"
                     $("#research_short_title").val(data.shortTitle);
                     lab_r = data.lab;
                     $("#nmu").val(data.nmu);
+                    $("#internalCode").val(data.internalCode);
                     $("#preparation").val(data.preparation);
                     fractiontubes = data.fractiontubes;
                     $("#tunebtn").removeAttr("disabled");
@@ -1116,6 +1122,7 @@ src="${url}"
                 title: $("#research_title").val().trim(),
                 shortTitle: $("#research_short_title").val().trim(),
                 nmu: $("#nmu").val(),
+                internalCode: $("#internalCode").val(),
                 preparation: $("#preparation").val().trim(),
                 fraction: lfractions
             };

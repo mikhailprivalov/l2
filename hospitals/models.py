@@ -17,6 +17,8 @@ class Hospitals(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие больницы', db_index=True)
     is_default = models.BooleanField(default=False, blank=True, help_text='Больница по умолчанию для пустых полей', db_index=True)
     strict_tube_numbers = models.BooleanField(default=False, blank=True, help_text='Требовать наличия выделенного генератора номеров ёмкостей')
+    strict_data_ownership = models.BooleanField(default=False, blank=True, help_text='Доступ к данным только с явным указанием владения')
+    strict_external_numbers = models.BooleanField(default=True, blank=True, help_text='Требовать наличия выделенного генератора номеров заказов')
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес больницы")
     phones = models.CharField(max_length=128, blank=True, default='', help_text="Телефон больницы")
     ogrn = models.CharField(max_length=16, blank=True, default='', help_text="ОГРН больницы")
@@ -38,7 +40,12 @@ class Hospitals(models.Model):
     need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
     is_external_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
     has_price = models.BooleanField(default=False, blank=True, help_text='Прайс для назначивших МО', db_index=True)
-    orders_ftp_server_url = models.CharField(max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории с заказами (ftp://user:password@host.example.com/path)')
+    orders_pull_by_numbers = models.CharField(
+        max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории получения заказов (ftp://user:password@host.example.com/path)'
+    )
+    orders_push_by_numbers = models.CharField(
+        max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории отправки заказов (ftp://user:password@host.example.com/path)'
+    )
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
