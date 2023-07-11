@@ -1,4 +1,3 @@
-import openpyxl
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 

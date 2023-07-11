@@ -130,7 +130,6 @@ def custom_monitoring_research_data(query_sql):
     result.append(tmp_result.copy())
     fields = ["Номер", "МО"]
     fields.extend(custom_fields)
-    print(result)
     return {"result": result, "custom_fields": custom_fields, "fields": fields}
 
 

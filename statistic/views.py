@@ -34,8 +34,9 @@ from . import structure_sheet
 import datetime
 import calendar
 import openpyxl
-
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors, base_data, expertise_report, \
+from .report import call_patient, swab_covid, cert_notwork, \
+    dispanserization, dispensary_data, custom_research, consolidates, \
+    commercial_offer, harmful_factors, base_data, expertise_report, \
     registry_profit
 from .sql_func import (
     attached_female_on_month,
@@ -1875,20 +1876,21 @@ def statistic_xls(request):
             if not coast:
                 coast = 0
             if not result.get(d.doc_confirmation_id):
-                result[d.doc_confirmation_id] = {"fio": f'{d.doc_family} {d.doc_name} {d.doc_patronymic}',
-                                                 "position": d.position_title,
-                                                 "researches": {
-                                                     d.research_id: {
-                                                         "companies": {
-                                                             d.company_id: {
-                                                                 "coasts": {coast: 1},
-                                                                 "company_title": d.company_title,
-                                                             },
-                                                         },
-                                                         "research_title": d.research_title
-                                                     }
-                                                     }
-                                                 }
+                result[d.doc_confirmation_id] = {
+                    "fio": f"{d.doc_family} {d.doc_name} {d.doc_patronymic}",
+                    "position": d.position_title,
+                    "researches": {
+                        d.research_id: {
+                            "companies": {
+                                d.company_id: {
+                                    "coasts": {coast: 1},
+                                    "company_title": d.company_title,
+                                },
+                            },
+                            "research_title": d.research_title,
+                        }
+                    },
+                }
             else:
                 tmp_doctor_researches = result[d.doc_confirmation_id]["researches"]
                 if not tmp_doctor_researches.get(d.research_id):
