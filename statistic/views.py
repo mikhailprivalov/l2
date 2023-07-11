@@ -1901,7 +1901,7 @@ def statistic_xls(request):
                                 "company_title": d.company_title,
                             },
                         },
-                        "research_title": d.research_title
+                        "research_title": d.research_title,
                     }
                     result[d.doc_confirmation_id]["researches"] = tmp_doctor_researches.copy()
                 else:
