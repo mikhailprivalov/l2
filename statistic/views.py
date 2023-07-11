@@ -34,10 +34,20 @@ from . import structure_sheet
 import datetime
 import calendar
 import openpyxl
-from .report import call_patient, swab_covid, cert_notwork, \
-    dispanserization, dispensary_data, custom_research, consolidates, \
-    commercial_offer, harmful_factors, base_data, expertise_report, \
-    registry_profit
+from .report import (
+    call_patient,
+    swab_covid,
+    cert_notwork,
+    dispanserization,
+    dispensary_data,
+    custom_research,
+    consolidates,
+    commercial_offer,
+    harmful_factors,
+    base_data,
+    expertise_report,
+    registry_profit,
+)
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
