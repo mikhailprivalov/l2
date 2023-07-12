@@ -2,7 +2,10 @@
   <div>
     <div class="row top-panel">
       <div class="col-xs-4">
-        <div class="card-no-hover card card-1 work-cards">
+        <div
+          class="card-no-hover card card-1 work-cards"
+          :class="hasExternalOrderExecutor && 'has-external-order-executor'"
+        >
           <RadioFieldById
             v-model="workMode"
             :variants="WORK_MODES"
@@ -63,6 +66,11 @@
       </div>
       <div class="col-xs-4">
         <h5>Исследования:</h5>
+
+        <div v-if="externalOrderOrganization">
+          Заказчик: <strong>{{ externalOrderOrganization }}</strong>
+        </div>
+
         <div class="last-researches">
           <div
             v-for="(r, i) in lastResearchesWithEmpty"
@@ -112,6 +120,7 @@
         <tr
           v-for="r in receiveHistory"
           :key="r.pk"
+          :class="r.isExternalExecutor && 'row-external'"
         >
           <td>{{ r.n }}</td>
           <td>
@@ -130,7 +139,12 @@
           >
             {{ r.labs.join('; ') }}
           </td>
-          <td>{{ r.researches.join('; ') }}</td>
+          <td>
+            <div v-if="r.externalOrderOrganization">
+              <strong>{{ r.externalOrderOrganization }}</strong>
+            </div>
+            {{ r.researches.join('; ') }}
+          </td>
           <td>
             <a
               v-if="!r.isDirection"
@@ -217,6 +231,8 @@ interface ReceiveHistory {
   color: string,
   labs: string[],
   researches: string[],
+  externalOrderOrganization: string | null,
+  isExternalExecutor: boolean,
 }
 
 @Component({
@@ -230,6 +246,8 @@ interface ReceiveHistory {
       workMode: WORK_MODES[0].id,
       WORK_MODES,
       lastResearches: [],
+      externalOrderOrganization: null,
+      hasExternalOrderExecutor: false,
       lastN: '--',
       nextN: 1,
       q: '',
@@ -270,6 +288,10 @@ export default class ReceiveOneByOne extends Vue {
 
   lastResearches: string[];
 
+  externalOrderOrganization: string | null;
+
+  hasExternalOrderExecutor: boolean;
+
   lastN: string | number;
 
   q: string;
@@ -305,7 +327,7 @@ export default class ReceiveOneByOne extends Vue {
       this.workMode = 'direction';
     }
     const {
-      ok, researches, invalid, lastN, message,
+      ok, researches, invalid, lastN, message, externalOrderOrganization, hasExternalOrderExecutor,
     } = await this.$api(
       '/laboratory/receive-one-by-one',
       this,
@@ -320,6 +342,8 @@ export default class ReceiveOneByOne extends Vue {
     }
     this.lastN = lastN;
     this.lastResearches = researches;
+    this.externalOrderOrganization = externalOrderOrganization;
+    this.hasExternalOrderExecutor = hasExternalOrderExecutor;
     this.receiveStatuses = ok;
     await this.loadNextN();
     await this.$store.dispatch(actions.DEC_LOADING);
@@ -426,5 +450,9 @@ export default class ReceiveOneByOne extends Vue {
   max-width: 180px;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+
+.row-external, .has-external-order-executor {
+  background-color: #f1efff;
 }
 </style>

@@ -1,6 +1,7 @@
 import base64
 import math
 import os
+from typing import Optional
 
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
@@ -3317,7 +3318,7 @@ def tubes_for_get(request):
         if direction_pk >= 4600000000000:
             direction_pk -= 4600000000000
             direction_pk //= 10
-        direction = (
+        direction: Napravleniya = (
             Napravleniya.objects.select_related('hospital')
             .select_related('doc')
             .select_related('doc__podrazdeleniye')
@@ -3347,13 +3348,21 @@ def tubes_for_get(request):
 
     data = {}
 
+    imported_org = None
+
+    if direction.imported_org:
+        imported_org = direction.imported_org.title
+    elif direction.external_order:
+        imported_org = direction.external_order.organization.safe_short_title
+
     data["direction"] = {
         "pk": direction.pk,
         "cancel": direction.cancel,
         "date": str(dateformat.format(direction.data_sozdaniya.date(), settings.DATE_FORMAT)),
-        "doc": {"fio": "" if not direction.doc else direction.doc.get_fio(), "otd": "" if not direction.doc else direction.doc.podrazdeleniye.title},
+        "doc": {"fio": "" if not direction.doc else direction.doc.get_fio(), "otd": "" if not direction.doc or not direction.doc.podrazdeleniye else direction.doc.podrazdeleniye.title},
         "imported_from_rmis": direction.imported_from_rmis,
-        "imported_org": "" if not direction.imported_org else direction.imported_org.title,
+        "isExternal": bool(direction.external_order),
+        "imported_org": imported_org or "",
         "full_confirm": True,
         "has_not_completed": False,
     }
@@ -3367,7 +3376,7 @@ def tubes_for_get(request):
 
     iss_cached = list(direction.issledovaniya_set.all())
 
-    for i in iss_cached:
+    for i in iss_cached if not direction.external_order else []:
         for fr in i.research.fractions_set.all():
             absor = fr.fupper.all()
             if absor.exists():
@@ -3381,6 +3390,19 @@ def tubes_for_get(request):
     for v in iss_cached:
         if data["direction"]["full_confirm"] and not v.time_confirmation:
             data["direction"]["full_confirm"] = False
+
+        if direction.external_order:
+            ntube: Optional[TubesRegistration] = v.tubes.all().first()
+            if ntube:
+                vrpk = ntube.type_id
+                if vrpk not in tubes_buffer.keys():
+                    tubes_buffer[vrpk] = {"researches": set(), "labs": set(), "tube": ntube}
+                tubes_buffer[vrpk]["researches"].add(v.research.title)
+
+                podr = v.research.get_podrazdeleniye()
+                if podr:
+                    tubes_buffer[vrpk]["labs"].add(podr.get_title())
+            continue
         x: TubesRegistration  # noqa: F842
         has_rels = {x.type_id if not x.chunk_number else f"{x.type_id}_{x.chunk_number}": x for x in v.tubes.all()}
         new_tubes = []

@@ -342,21 +342,28 @@ def enter():
                 if go_to_next:
                     ok = True
 
-            print('Checking out version', cfg['version'])
+            need_version_checkout = yes_no_dialog(
+                title='Do you want to checking out the version?',
+                text=f'{cfg["version"]}',
+            ).run()
+            if need_version_checkout:
+                print('Checking out version', cfg['version'])
 
-            proc = subprocess.Popen(f"{ROOT_DIR}/checkout_version.sh {cfg['version']}", shell=True)
-            proc.communicate()
-            exit_code = proc.wait()
-            checkout_result = exit_code == 0
+                proc = subprocess.Popen(f"{ROOT_DIR}/checkout_version.sh {cfg['version']}", shell=True)
+                proc.communicate()
+                exit_code = proc.wait()
+                checkout_result = exit_code == 0
 
-            if not checkout_result:
-                print('Version checkout error')
-                go_to_next = yes_no_dialog(
-                    title=f'Version {cfg["version"]} checkout error',
-                    text='Do you want to continue without checking out the version?\nThis may not work correctly!\nYour migrations and local_settings.py files will be replaced with setup!',
-                ).run()
-                if not go_to_next:
-                    sys.exit()
+                if not checkout_result:
+                    print('Version checkout error')
+                    go_to_next = yes_no_dialog(
+                        title=f'Version {cfg["version"]} checkout error',
+                        text='Do you want to continue without checking out the version?\nThis may not work correctly!\nYour migrations and local_settings.py files will be replaced with setup!',
+                    ).run()
+                    if not go_to_next:
+                        sys.exit()
+            else:
+                checkout_result = False
 
             with tempfile.TemporaryDirectory(suffix='_l2_setup') as dn:
                 fl = list(get_s3_objects(s3, cfg['name']))

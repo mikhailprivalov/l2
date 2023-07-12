@@ -104,7 +104,7 @@ def tubes(request, direction_implict_id=None):
                     "short_title": iss.research.microbiology_tube.get_short_title(),
                 }
                 tubes_buffer[tpk] = tubet
-            for fr in iss.research.fractions_set.all():
+            for fr in iss.research.fractions_set.all() if not tmp2.external_order else []:
                 absor = directory.Absorption.objects.filter(fupper=fr)
                 if absor.exists():
                     fuppers.add(fr.pk)
@@ -116,6 +116,15 @@ def tubes(request, direction_implict_id=None):
         if not has_microbiology:
             relation_researches_count = {}
             for v in tmp:
+                if tmp2.external_order:
+                    ntube: Optional[TubesRegistration] = v.tubes.all().first()
+                    if ntube:
+                        vrpk = ntube.type_id
+                        if vrpk not in tubes_buffer.keys():
+                            tubes_buffer[vrpk] = {"pk": ntube.number, "researches": set(), "title": ntube.type.tube.title, "short_title": ntube.type.tube.get_short_title()}
+                        tubes_buffer[vrpk]["researches"].add(v.research.title)
+                        tubes_id.add(ntube.number)
+                    continue
                 for val in directory.Fractions.objects.filter(research=v.research):
                     vrpk = val.relation_id
                     rel = val.relation
@@ -161,8 +170,8 @@ def tubes(request, direction_implict_id=None):
             if tube not in tubes_id:
                 continue
             st = ""
-            if not tmp2.imported_from_rmis:
-                otd = list(tmp2.doc.podrazdeleniye.title.split(" "))
+            if not tmp2.imported_from_rmis and not tmp2.external_order:
+                otd = list(tmp2.doc.podrazdeleniye.title.split(" ")) if tmp2.doc else []
                 if len(otd) > 1:
                     if "отделение" in otd[0].lower():
                         st = otd[1][:3] + "/о"
