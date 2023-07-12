@@ -358,7 +358,9 @@ def enter():
                     print('Version checkout error')
                     go_to_next = yes_no_dialog(
                         title=f'Version {cfg["version"]} checkout error',
-                        text='Do you want to continue without checking out the version?\nThis may not work correctly!\nYour migrations and local_settings.py files will be replaced with setup!',
+                        text='Do you want to continue without checking out the version?\n'
+                             'This may not work correctly!\n'
+                             'Your migrations and local_settings.py files will be replaced with setup!',
                     ).run()
                     if not go_to_next:
                         sys.exit()
