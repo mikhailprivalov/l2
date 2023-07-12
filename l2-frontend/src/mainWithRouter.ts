@@ -172,6 +172,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/route-perform-service',
+      name: 'construct_route_perform_service',
+      component: () => import('@/construct/ConstructRoutePerformService.vue'),
+      meta: {
+        title: 'Маршрут исследований',
+        groups: ['Конструктор: Маршрут исследований'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
@@ -674,6 +684,16 @@ const router = new Router({
         narrowLayout: true,
         title: 'Управление анализаторами',
         groups: ['Управление анализаторами'],
+      },
+    },
+    {
+      path: '/ui/construct/related-tube/:id',
+      name: 'construct-related-tube',
+      component: () => import('@/construct/ConstructRelatedTube.vue'),
+      meta: {
+        emptyLayout: true,
+        title: 'Управление ёмкостями фракций',
+        groups: ['Оператор', 'Конструктор: Лабораторные исследования'],
       },
     },
     {

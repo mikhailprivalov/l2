@@ -83,7 +83,7 @@ class Application(models.Model):
             if d:
                 t_filter = dict(issledovaniya__napravleniye__pk=p)
             else:
-                t_filter = dict(pk=p)
+                t_filter = dict(number=p)
             tubes = TubesRegistration.objects.filter(**t_filter)
             for i in Issledovaniya.objects.filter(tubes__in=tubes, time_confirmation__isnull=True):
                 r.append({"pk": ps, "iss": i})

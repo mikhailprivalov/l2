@@ -31,6 +31,7 @@ from .models import (
     IssledovaniyaResultLaborant,
     MicrobiologyResultCulture,
     MicrobiologyResultPhenotype,
+    RegisteredOrders,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -254,6 +255,22 @@ class MicrobiologyResultPhenotypeAdmin(admin.ModelAdmin):
     search_fields = ('phenotype__title',)
 
 
+class RegisteredOrdersAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
+        'patient_card',
+        'organization',
+    )
+    list_display = (
+        'organization',
+        'order_number',
+        'patient_card',
+        'services',
+        'file_name',
+        'created_at',
+    )
+    search_fields = ('order_number', 'organization')
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -278,3 +295,4 @@ admin.site.register(IssledovaniyaFiles, ResIssledovaniyaFiles)
 admin.site.register(IssledovaniyaResultLaborant, ResIssledovaniyaResultLaborant)
 admin.site.register(MicrobiologyResultCulture, MicrobiologyResultCultureAdmin)
 admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmin)
+admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)

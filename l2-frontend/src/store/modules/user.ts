@@ -13,6 +13,7 @@ const stateInitial = {
     loading: true,
     modules: {},
     groups: [],
+    hospital: null,
   },
   menu: {
     buttons: [],

@@ -1,3 +1,4 @@
+import logging
 from typing import Callable, Dict, Union
 from django.db import models
 
@@ -5,6 +6,9 @@ import simplejson
 from django.http import Http404
 
 from clients.models import Card
+
+
+logger = logging.getLogger(__name__)
 
 
 def as_model(model: models.Model):
@@ -40,7 +44,9 @@ def data_parse(data: Union[dict, str, bytes], keys_types: Dict[str, Union[Callab
                 typed_vars.append(var)
             else:
                 if key not in data and key not in default_values:
-                    raise Http404('{} not found!'.format(var))
+                    error = f'{key}: {var} not found!'
+                    logger.exception(error)
+                    raise Http404(error)
                 if var_type is None or (var is None and default_values.get(key, True) is None):
                     typed_vars.append(None)
                 elif var_type == 'str_strip':
@@ -50,5 +56,7 @@ def data_parse(data: Union[dict, str, bytes], keys_types: Dict[str, Union[Callab
                 else:
                     typed_vars.append(var_type(var))
         except TypeError or ValueError:
-            raise Http404('Cannot cast type Key: {}, Value: {}, Type: {}'.format(key, var, var_type))
+            error = f'Cannot cast type Key: {key}, Value: {var}, Type: {var_type}'
+            logger.exception(error)
+            raise Http404(error)
     return typed_vars

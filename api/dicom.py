@@ -9,6 +9,7 @@ import simplejson as json
 
 logger = logging.getLogger(__name__)
 
+
 def sum(x, y):
     return int(x) + int(y)
 

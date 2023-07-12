@@ -174,7 +174,4 @@ class ResCardMovementRoom(admin.ModelAdmin):
         'room_out',
         'room_in',
     )
-    raw_id_fields = (
-        'card',
-    )
-
+    raw_id_fields = ('card',)
