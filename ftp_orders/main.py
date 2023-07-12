@@ -333,11 +333,16 @@ class FTPConnection:
             self.log('Writing file', filename, '\n', content)
             self.write_file_as_text(filename, content)
 
-            Log.log(direction.pk, 190001, None, {
-                "org": self.hospital.safe_short_title,
-                "content": content,
-                "orderNumber": order_number,
-            })
+            Log.log(
+                direction.pk,
+                190001,
+                None,
+                {
+                    "org": self.hospital.safe_short_title,
+                    "content": content,
+                    "orderNumber": order_number,
+                },
+            )
 
 
 MAX_LOOP_TIME = 600
