@@ -40,6 +40,7 @@ class Hospitals(models.Model):
     need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
     is_external_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
     has_price = models.BooleanField(default=False, blank=True, help_text='Прайс для назначивших МО', db_index=True)
+    # добавить каталог для переноса заказа
     orders_pull_by_numbers = models.CharField(
         max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории получения заказов (ftp://user:password@host.example.com/path)'
     )
