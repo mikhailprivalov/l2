@@ -66,7 +66,7 @@ class FTPConnection:
         if color:
             message += "\033[0m"
 
-        print(message)
+        print(message)  # noqa: F201
 
     def error(self, *msg):
         self.log(*msg, color='91', level='ERROR')
@@ -103,7 +103,7 @@ class FTPConnection:
         except UnicodeDecodeError as e:
             self.error(f"UnicodeDecodeError: {e}")
             if not is_retry:
-                self.log(f"Retrying connection with encoding cp1251")
+                self.log("Retrying connection with encoding cp1251")
                 self.connect(forced=True, encoding='cp1251')
                 return self.get_file_list(is_retry=True)
             else:
@@ -269,12 +269,17 @@ class FTPConnection:
 
             self.delete_file(file)
 
-            Log.log(json.dumps(order_numbers), 190000, None, {
-                "org": self.hospital.safe_short_title,
-                "content": hl7_content,
-                "directions": directions,
-                "card": card.number_with_type(),
-            })
+            Log.log(
+                json.dumps(order_numbers),
+                190000,
+                None,
+                {
+                    "org": self.hospital.safe_short_title,
+                    "content": hl7_content,
+                    "directions": directions,
+                    "card": card.number_with_type(),
+                },
+            )
         except Exception as e:
             self.error(f"Exception: {e}")
 
@@ -358,7 +363,7 @@ def process_pull_orders():
 
     hospitals = get_hospitals_pull_orders()
 
-    print('Getting ftp links')
+    print('Getting ftp links')  # noqa: F201
     ftp_links = {x.orders_pull_by_numbers: x for x in hospitals}
 
     ftp_connections = {}
@@ -370,7 +375,7 @@ def process_pull_orders():
     time_start = time.time()
 
     while time.time() - time_start < MAX_LOOP_TIME:
-        print(f'Iterating over {len(ftp_links)} servers')
+        print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
         for ftp_url, ftp_connection in ftp_connections.items():
             processed_files_new = set()
             try:
@@ -398,7 +403,7 @@ def process_pull_orders():
 
 
 def process_pull_start_orders():
-    print('Starting pull_orders process')
+    print('Starting pull_orders process')  # noqa: F201
     while True:
         process_pull_orders()
         time.sleep(1)
@@ -412,7 +417,7 @@ def get_hospitals_push_orders():
 def process_push_orders():
     hospitals = get_hospitals_push_orders()
 
-    print('Getting ftp links')
+    print('Getting ftp links')  # noqa: F201
     ftp_links = {x.orders_push_by_numbers: x for x in hospitals}
 
     ftp_connections = {}
@@ -424,7 +429,7 @@ def process_push_orders():
     time_start = time.time()
 
     while time.time() - time_start < MAX_LOOP_TIME:
-        print(f'Iterating over {len(ftp_links)} servers')
+        print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
         for ftp_url, ftp_connection in ftp_connections.items():
             directions_to_sync = []
 
@@ -451,7 +456,7 @@ def process_push_orders():
 
 
 def process_push_orders_start():
-    print('Starting push_orders process')
+    print('Starting push_orders process')  # noqa: F201
     while True:
         process_push_orders()
         time.sleep(1)

@@ -5,7 +5,6 @@ import logging
 import uuid
 
 from django.db.models import Max
-from pip._internal.cli.cmdoptions import help_
 
 from api.sql_func import dispensarization_research
 from cda.integration import get_required_signatures

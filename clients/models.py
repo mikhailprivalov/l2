@@ -1350,7 +1350,7 @@ class Card(models.Model):
         force=False,
         updated_data=None,
         snils: Union['Document', None] = None,
-        owner = None,
+        owner=None,
     ):
         f = {'owner': owner} if owner else {}
         if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f).exists():
@@ -2009,6 +2009,9 @@ class CardMovementRoom(models.Model):
         return rooms_out_result
 
     @staticmethod
-    def get_accept_card(room_out_id, room_in_id, ):
+    def get_accept_card(
+        room_out_id,
+        room_in_id,
+    ):
         card_ids = CardMovementRoom.objects.values_list("card_id", flat=True).filter(room_in_id=room_in_id, room_out_id=room_out_id, date_received=None, doc_who_received=None)
         return Card.objects.filter(id__in=card_ids)
