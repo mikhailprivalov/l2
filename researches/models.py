@@ -23,12 +23,7 @@ class Tubes(models.Model):
         tube = Tubes.objects.filter(is_default_external_tube=True).first()
 
         if not tube:
-            tube = Tubes.objects.create(
-                color="#8C95E5",
-                title="Ёмкость",
-                short_title="ёмк",
-                is_default_external_tube=True
-            )
+            tube = Tubes.objects.create(color="#8C95E5", title="Ёмкость", short_title="ёмк", is_default_external_tube=True)
 
         return tube
 
