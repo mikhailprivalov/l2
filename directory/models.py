@@ -36,11 +36,7 @@ class ReleationsFT(models.Model):
         tube = ReleationsFT.objects.filter(is_default_external_tube=True).first()
 
         if not tube:
-            tube = ReleationsFT.objects.create(
-                tube=Tubes.get_default_external_tube(),
-                receive_in_lab=True,
-                is_default_external_tube=True
-            )
+            tube = ReleationsFT.objects.create(tube=Tubes.get_default_external_tube(), receive_in_lab=True, is_default_external_tube=True)
 
         return tube
 
