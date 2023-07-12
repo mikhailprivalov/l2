@@ -87,12 +87,33 @@
           </div>
         </div>
 
-        <template v-if="ftp">
+        <template v-if="ftp && hasAccessToAllHospitals">
+          <div class="full-width">
+            <FormulateInput
+              type="checkbox"
+              name="strictDataOwnership"
+              label="У организации доступ только к собственной картотеке"
+            />
+          </div>
           <div class="full-width">
             <FormulateInput
               type="text"
               name="ordersPullFtpServerUrl"
               label="URL для FTP директории получения заказов"
+            />
+          </div>
+          <div class="full-width">
+            <FormulateInput
+              type="checkbox"
+              name="strictTubeNumbers"
+              label="Требовать наличие интервалов/генератора номеров ёмкостей при получении заказов"
+            />
+          </div>
+          <div class="full-width">
+            <FormulateInput
+              type="text"
+              name="ordersPushFtpServerUrl"
+              label="URL для FTP директории отправки заказов"
             />
           </div>
           <div class="full-width">
@@ -104,9 +125,9 @@
           </div>
           <div class="full-width">
             <FormulateInput
-              type="text"
-              name="ordersPushFtpServerUrl"
-              label="URL для FTP директории отправки заказов"
+              type="checkbox"
+              name="strictExternalNumbers"
+              label="Требовать наличие генератора номеров ёмкостей при отправке заказов"
             />
           </div>
         </template>

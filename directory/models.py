@@ -29,6 +29,20 @@ class ReleationsFT(models.Model):
     tube = models.ForeignKey(Tubes, help_text='Ёмкость', db_index=True, on_delete=models.CASCADE)
     receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
     max_researches_per_tube = models.IntegerField(default=None, blank=True, null=True, help_text="Максимальное количество исследований для пробирки")
+    is_default_external_tube = models.BooleanField(default=False, blank=True, db_index=True)
+
+    @staticmethod
+    def get_default_external_tube():
+        tube = ReleationsFT.objects.filter(is_default_external_tube=True).first()
+
+        if not tube:
+            tube = ReleationsFT.objects.create(
+                tube=Tubes.get_default_external_tube(),
+                receive_in_lab=True,
+                is_default_external_tube=True
+            )
+
+        return tube
 
     def __str__(self):
         return "%d %s" % (self.pk, self.tube.title)

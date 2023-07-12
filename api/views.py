@@ -2128,10 +2128,13 @@ def organization_data(request):
         "okpo": hospital.okpo,
     }
 
-    if SettingManager.l2('ftp'):
+    if SettingManager.l2('ftp') and request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
         org['ordersPullFtpServerUrl'] = hospital.orders_pull_by_numbers or ''
         org['ordersPushFtpServerUrl'] = hospital.orders_push_by_numbers or ''
         org['isExternalPerformingOrganization'] = hospital.is_external_performing_organization
+        org['strictTubeNumbers'] = hospital.strict_tube_numbers
+        org['strictDataOwnership'] = hospital.strict_data_ownership
+        org['strictExternalNumbers'] = hospital.strict_external_numbers
 
     return JsonResponse({"org": org})
 
@@ -2154,10 +2157,25 @@ def organization_data_update(request):
         'ordersPullFtpServerUrl': str,
         'ordersPushFtpServerUrl': str,
         'isExternalPerformingOrganization': bool,
+        'strictTubeNumbers': bool,
+        'strictDataOwnership': bool,
+        'strictExternalNumbers': bool,
     }
 
     data = data_parse(
-        request.body, parse_params, {'screening': None, 'hide': False, 'pk': None, 'ordersPullFtpServerUrl': None, 'ordersPushFtpServerUrl': None, 'isExternalPerformingOrganization': False}
+        request.body,
+        parse_params,
+        {
+            'screening': None,
+            'hide': False,
+            'pk': None,
+            'ordersPullFtpServerUrl': None,
+            'ordersPushFtpServerUrl': None,
+            'isExternalPerformingOrganization': False,
+            'strictTubeNumbers': False,
+            'strictDataOwnership': False,
+            'strictExternalNumbers': False,
+        },
     )
 
     title: str = data[0].strip()
@@ -2174,6 +2192,9 @@ def organization_data_update(request):
     orders_pull_by_numbers: Optional[str] = data[11] or None
     orders_push_by_numbers: Optional[str] = data[12] or None
     is_external_performing_organization: bool = data[13]
+    strict_tube_numbers: bool = data[14]
+    strict_data_ownership: bool = data[15]
+    strict_external_numbers: bool = data[16]
 
     if not title:
         return status_response(False, 'Название не может быть пустым')
@@ -2183,6 +2204,8 @@ def organization_data_update(request):
         if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
             return status_response(False, 'Доступ запрещен')
         hospital = Hospitals.objects.get(pk=hospital_pk)
+
+    has_full_ftp_access = SettingManager.l2('ftp') and request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций')
 
     old_data = {
         "title": hospital.title,
@@ -2195,9 +2218,18 @@ def organization_data_update(request):
         "www": hospital.www,
         "email": hospital.email,
         "okpo": hospital.okpo,
-        "orders_pull_by_numbers": hospital.orders_pull_by_numbers,
-        "orders_push_by_numbers": hospital.orders_push_by_numbers,
-        "is_external_performing_organization": hospital.is_external_performing_organization,
+        **(
+            {
+                "orders_pull_by_numbers": hospital.orders_pull_by_numbers,
+                "orders_push_by_numbers": hospital.orders_push_by_numbers,
+                "is_external_performing_organization": hospital.is_external_performing_organization,
+                "strict_tube_numbers": hospital.strict_tube_numbers,
+                "strict_data_ownership": hospital.strict_data_ownership,
+                "strict_external_numbers": hospital.strict_external_numbers,
+            }
+            if has_full_ftp_access
+            else {}
+        ),
     }
 
     new_data = {
@@ -2211,9 +2243,18 @@ def organization_data_update(request):
         "www": www,
         "email": email,
         "okpo": okpo,
-        "orders_pull_by_numbers": orders_pull_by_numbers,
-        "orders_push_by_numbers": orders_push_by_numbers,
-        "is_external_performing_organization": is_external_performing_organization,
+        **(
+            {
+                "orders_pull_by_numbers": orders_pull_by_numbers,
+                "orders_push_by_numbers": orders_push_by_numbers,
+                "is_external_performing_organization": is_external_performing_organization,
+                "strict_tube_numbers": strict_tube_numbers,
+                "strict_data_ownership": strict_data_ownership,
+                "strict_external_numbers": strict_external_numbers,
+            }
+            if has_full_ftp_access
+            else {}
+        ),
     }
 
     hospital.title = title
@@ -2226,9 +2267,13 @@ def organization_data_update(request):
     hospital.www = www
     hospital.email = email
     hospital.okpo = okpo
-    hospital.orders_pull_by_numbers = orders_pull_by_numbers
-    hospital.orders_push_by_numbers = orders_push_by_numbers
-    hospital.is_external_performing_organization = is_external_performing_organization
+    if has_full_ftp_access:
+        hospital.orders_pull_by_numbers = orders_pull_by_numbers
+        hospital.orders_push_by_numbers = orders_push_by_numbers
+        hospital.is_external_performing_organization = is_external_performing_organization
+        hospital.strict_tube_numbers = strict_tube_numbers
+        hospital.strict_data_ownership = strict_data_ownership
+        hospital.strict_external_numbers = strict_external_numbers
     hospital.save()
 
     Log.log(
@@ -2354,7 +2399,7 @@ def org_generators_add(request):
     if hospital.is_default:
         return status_response(False, 'Такой генератор создать невозможно')
 
-    is_simple_generator = key == 'tubeNumber'
+    is_simple_generator = key == 'tubeNumber' or key == 'externalOrderNumber'
 
     if is_simple_generator:
         year = -1
@@ -2374,7 +2419,7 @@ def org_generators_add(request):
             else:
                 directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
 
-            if is_simple_generator:
+            if is_simple_generator and key != 'externalOrderNumber':
                 if (
                     directions.NumberGenerator.objects.filter(key=key)
                     .filter(Q(start__lte=start, end__lte=end, end__gte=start) | Q(start__gte=start, start__lte=end, end__gte=end) | Q(start__gte=start, end__lte=end))

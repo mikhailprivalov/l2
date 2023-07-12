@@ -1,7 +1,10 @@
+import datetime
 import ftplib
+import json
 import tempfile
 from collections import defaultdict
 from collections.abc import Iterable
+from io import BytesIO
 from urllib.parse import urlparse
 import time
 
@@ -10,9 +13,10 @@ from hl7apy import VALIDATION_LEVEL, core
 from hl7apy.parser import parse_message
 
 from clients.models import Individual
-from directions.models import Napravleniya, RegisteredOrders
+from directions.models import Napravleniya, RegisteredOrders, NumberGenerator
 from hospitals.models import Hospitals
 from directory.models import Researches
+from slog.models import Log
 from users.models import DoctorProfile
 
 
@@ -20,7 +24,15 @@ class ServiceNotFoundException(Exception):
     pass
 
 
+class InvalidOrderNumberException(Exception):
+    pass
+
+
 class FailedCreatingDirectionsException(Exception):
+    pass
+
+
+class NoValidNumberGeneratorException(Exception):
     pass
 
 
@@ -119,12 +131,19 @@ class FTPConnection:
                 self.log('Trying again with encoding cp1251')
                 return content.decode('cp1251')
 
+    def write_file_as_text(self, file, content):
+        self.log(f"Writing file {file}")
+        self.connect()
+        self.ftp.storbinary(f"STOR {file}", BytesIO(content.encode('utf-8')))
+        self.log(f"Wrote file {file}")
+
     def read_file_as_hl7(self, file):
         content = self.read_file_as_text(file)
         self.log(f"{file}\n{content}")
-        hl7_result = parse_message(content.replace("\n", "\r"), validation_level=VALIDATION_LEVEL.QUIET)
+        content = content.replace("\n", "\r")
+        hl7_result = parse_message(content, validation_level=VALIDATION_LEVEL.QUIET)
 
-        return hl7_result
+        return hl7_result, content
 
     def pull_order(self, file: str):
         if not file.endswith('.ord'):
@@ -134,7 +153,7 @@ class FTPConnection:
             self.error(f"Skipping file {file} because it already exists")
             return
 
-        hl7_result = self.read_file_as_hl7(file)
+        hl7_result, hl7_content = self.read_file_as_hl7(file)
         self.log(f"HL7 parsed")
         patient = hl7_result.ORM_O01_PATIENT[0]
         pid = patient.PID[0]
@@ -174,7 +193,14 @@ class FTPConnection:
                 self.hospital,
             )
             self.log("Card", card)
+
+            directions = {}
+            order_numbers = []
+
             with transaction.atomic():
+                hosp = Hospitals.get_default_hospital()
+                doc = DoctorProfile.get_system_profile()
+
                 services_by_order_number = {}
                 for order_number, services_codes in orders_by_numbers.items():
                     for service_code in services_codes:
@@ -185,11 +211,21 @@ class FTPConnection:
                             services_by_order_number[order_number] = []
                         services_by_order_number[order_number].append(service.pk)
 
-                for order_number, services in services_by_order_number.items():
+                for order_number_str, services in services_by_order_number.items():
+                    order_numbers.append(order_number_str)
+
+                    if not order_number_str.isdigit():
+                        raise InvalidOrderNumberException(f'Number {order_number} is not digit')
+                    order_number = int(order_number_str)
+                    if order_number <= 0:
+                        raise InvalidOrderNumberException(f'Number {order_number} need to be greater than 0')
+                    if not NumberGenerator.check_value_for_organization(self.hospital, order_number):
+                        raise InvalidOrderNumberException(f'Number {order_number} not valid. May be NumberGenerator is over or order number exists')
+
                     external_order = RegisteredOrders.objects.create(
                         order_number=order_number,
                         organization=self.hospital,
-                        services=orders_by_numbers[order_number],
+                        services=orders_by_numbers[order_number_str],
                         patient_card=card,
                         file_name=file,
                     )
@@ -199,7 +235,7 @@ class FTPConnection:
                         None,
                         "",
                         None,
-                        DoctorProfile.get_system_profile(),
+                        doc,
                         {-1: services},
                         {},
                         False,
@@ -209,23 +245,33 @@ class FTPConnection:
                         discount=0,
                         rmis_slot=None,
                         external_order=external_order,
-                        hospital_override=self.hospital.pk,
+                        hospital_override=hosp.pk if hosp else None,
                     )
 
                     if not result['r']:
                         raise FailedCreatingDirectionsException(result.get('message') or "Failed creating directions")
 
                     self.log("Created local directions:", result['list_id'])
+                    for direction in result['list_id']:
+                        directions[direction] = orders_by_numbers[order_number_str]
 
                     for direction in Napravleniya.objects.filter(pk__in=result['list_id'], need_order_redirection=True):
                         self.log("Direction", direction.pk, "marked as redirection to", direction.external_executor_hospital)
 
             self.delete_file(file)
+
+            Log.log(json.dumps(order_numbers), 190000, None, {
+                "org": self.hospital.safe_short_title,
+                "content": hl7_content,
+                "directions": directions,
+                "card": card.number_with_type(),
+            })
         except Exception as e:
             self.error(f"Exception: {e}")
 
     def push_order(self, direction: Napravleniya):
-        hl7 = core.Message("ORM_O01")
+        hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
+
         hl7.msh.msh_3 = "L2"
         hl7.msh.msh_4 = "ORDER"
         hl7.msh.msh_5 = "qLIS"
@@ -235,13 +281,51 @@ class FTPConnection:
         hl7.msh.msh_11 = "P"
 
         individual = direction.client.individual
-        hl7.add_group("ORM_O01_PATIENT")
-        hl7.ORM_O01_PATIENT.pid.pid_2 = str(direction.client.pk)
-        hl7.ORM_O01_PATIENT.pid.pid_5 = f"{individual.family}^{individual.name}^{individual.patronymic}"
-        hl7.ORM_O01_PATIENT.pid.pid_7 = individual.birthday.strftime("%Y%m%d")
-        hl7.ORM_O01_PATIENT.pid.pid_8 = individual.sex.upper()
+        patient = hl7.add_group("ORM_O01_PATIENT")
+        patient.pid.pid_2 = str(direction.client.pk)
+        patient.pid.pid_5 = f"{individual.family}^{individual.name}^{individual.patronymic}"
+        patient.pid.pid_7 = individual.birthday.strftime("%Y%m%d")
+        patient.pid.pid_8 = individual.sex.upper()
 
-        self.log(hl7.to_mllp().replace("\r", "\r\n"))
+        created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+        hl7.ORM_O01_ORDER.orc.orc_1 = "1"
+        hl7.ORM_O01_ORDER.ORC.orc_10 = created_at
+
+        ordd = hl7.ORM_O01_ORDER.add_group("ORM_O01_ORDER_DETAIL")
+
+        with transaction.atomic():
+            gen: NumberGenerator = NumberGenerator.objects.select_for_update().filter(key='externalOrderNumber', hospital=self.hospital, is_active=True).first()
+
+            if not gen and self.hospital.strict_external_numbers:
+                raise NoValidNumberGeneratorException(f"No number generator found for hospital {self.hospital}")
+
+            order_number = str(gen.get_next_value() if gen else direction.pk)
+            direction.order_redirection_number = order_number
+            direction.need_order_redirection = False
+            direction.save(update_fields=['order_redirection_number', 'need_order_redirection'])
+
+            n = 0
+            for iss in direction.issledovaniya_set.all():
+                n += 1
+                obr = ordd.add_segment("OBR")
+                obr.obr_1 = str(n)
+                obr.obr_3.value = order_number
+                obr.obr_4.obr_4_4.value = iss.research.internal_code
+                obr.obr_4.obr_4_5.value = iss.research.title.replace(" ", "_")
+                obr.obr_7.value = created_at
+
+            content = hl7.value.replace("\r", "\n")
+            filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
+
+            self.log('Writing file', filename, content)
+            self.write_file_as_text(filename, content)
+
+            Log.log(direction.pk, 190001, None, {
+                "org": self.hospital.safe_short_title,
+                "content": content,
+                "orderNumber": order_number,
+            })
 
 
 MAX_LOOP_TIME = 600

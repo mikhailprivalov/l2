@@ -122,6 +122,11 @@ class TubesRegistration(models.Model):
     defect_text = models.CharField(max_length=50, default="", blank=True, help_text='Замечания')
 
     @staticmethod
+    def make_default_external_tube(number: int):
+        external_tube = directory.ReleationsFT.get_default_external_tube()
+        return TubesRegistration.objects.create(number=number, type=external_tube)
+
+    @staticmethod
     def get_tube_number_generator_pk(hospital: Hospitals):
         if hospital.is_default:
             if not NumberGenerator.objects.filter(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True).exists():
@@ -401,7 +406,7 @@ class ExternalOrganization(models.Model):
 
 
 class RegisteredOrders(models.Model):
-    order_number = models.CharField(max_length=24, db_index=True, help_text='Номер заказа')
+    order_number = models.BigIntegerField(db_index=True, help_text='Номер заказа', blank=True, null=True, default=None)
     organization = models.ForeignKey(Hospitals, on_delete=models.PROTECT, db_index=True)
     services = ArrayField(models.CharField(max_length=255), help_text='Услуги заказа')
     patient_card = models.ForeignKey(Clients.Card, db_index=True, on_delete=models.PROTECT)
@@ -1253,7 +1258,7 @@ class Napravleniya(models.Model):
         hospital_department_override=-1,
         hospital_override=-1,
         price_category=-1,
-        external_order=None,
+        external_order: Optional[RegisteredOrders] = None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -1423,19 +1428,23 @@ class Napravleniya(models.Model):
                         result["messageLimit"] = f"{result.get('messageLimit', '')} \n {limit_research_to_assign[v]}"
                         continue
 
-                    dir_group = -1
-                    if research.direction and external_organization == "NONE":
-                        dir_group = research.direction_id
-
-                    if v in only_lab_researches and external_organization != "NONE":
-                        dir_group = dir_group_onlylab
-
-                    if research.plan_external_performing_organization:
-                        dir_group = research.plan_external_performing_organization_id + 900000
-
-                    research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
-                    if research_data_params:
+                    if external_order:
+                        dir_group = external_order.order_number
+                        research_data_params = None
+                    else:
                         dir_group = -1
+                        if research.direction and external_organization == "NONE":
+                            dir_group = research.direction_id
+
+                        if v in only_lab_researches and external_organization != "NONE":
+                            dir_group = dir_group_onlylab
+
+                        if research.plan_external_performing_organization:
+                            dir_group = research.plan_external_performing_organization_id + 900000
+
+                        research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
+                        if research_data_params:
+                            dir_group = -1
                     period_param_hour, period_param_day, period_param_month = None, None, None
                     period_param_quarter, period_param_halfyear, period_param_year, type_period = None, None, None, None
                     period_param_week_date_start, period_param_week_day_start, week_date_start_end = None, None, None
@@ -1624,10 +1633,22 @@ class Napravleniya(models.Model):
                         childrens[issledovaniye.pk][raa.reversed_type].append(raa.pk)
 
                     FrequencyOfUseResearches.inc(research, doc_current)
+
+                tube: Optional[TubesRegistration] = None
+
+                if external_order:
+                    tube = TubesRegistration.make_default_external_tube(external_order.order_number)
+
+                v: Napravleniya
                 for k, v in directions_for_researches.items():
                     if Issledovaniya.objects.filter(napravleniye=v, research__need_vich_code=True).exists():
                         v.vich_code = vich_code
                         v.save()
+
+                    if tube:
+                        for iss in Issledovaniya.objects.filter(napravleniye=v):
+                            iss.tubes.add(tube)
+
                 result["r"] = True
                 slog.Log(
                     key=json.dumps(result["list_id"]),
@@ -3277,6 +3298,21 @@ class NumberGenerator(models.Model):
         next_value = self.get_next_value()
         next_value = str(next_value).zfill(self.prepend_length)
         return next_value
+
+    @staticmethod
+    def check_value_for_organization(organization: Hospitals, value: int):
+        generator = NumberGenerator.objects.filter(
+            key=NumberGenerator.TUBE_NUMBER,
+            hospital=organization,
+            is_active=True,
+            start__lte=value,
+            end__gte=value,
+        ).first()
+
+        if not generator:
+            return not organization.strict_tube_numbers
+
+        return generator.start <= value <= generator.end and not TubesRegistration.objects.filter(number=value).exists()
 
     class Meta:
         verbose_name = 'Диапазон номеров'

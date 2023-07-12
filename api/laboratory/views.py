@@ -722,11 +722,24 @@ def receive_one_by_one(request):
     ok_researches = []
     invalid_objects = []
     last_n = None
+
+    external_order_organization = None
+    has_external_order_executor = False
+
     for p in pks:
         if TubesRegistration.objects.filter(number=p).exists() and Issledovaniya.objects.filter(tubes__number=p).exists():
             tube = TubesRegistration.objects.get(number=p)
-            podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in tube.issledovaniya_set.all()])))
-            if lab_pk < 0 or tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
+            first_iss: Issledovaniya = tube.issledovaniya_set.first()
+            if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
+                podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
+                has_external_order_executor = True
+            else:
+                podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in tube.issledovaniya_set.all()])))
+
+            if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_order:
+                external_order_organization = first_iss.napravleniye.external_order.organization.safe_short_title
+
+            if lab_pk < 0 or first_iss.research.get_podrazdeleniye() == lab:
                 tube.clear_notice(request.user.doctorprofile)
                 status = tube.day_num(request.user.doctorprofile, request_data["nextN"])
                 if status["new"]:
@@ -778,6 +791,8 @@ def receive_one_by_one(request):
         {
             "ok": ok_objects,
             "researches": sorted(list(set(ok_researches))),
+            "externalOrderOrganization": external_order_organization,
+            "hasExternalOrderExecutor": has_external_order_executor,
             "invalid": invalid_objects,
             "lastN": last_n,
             "message": message,
@@ -822,7 +837,19 @@ def receive_history(request):
             )
 
     for row in t.order_by("-daynum").distinct():
-        podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
+        first_iss: Issledovaniya = row.issledovaniya_set.first()
+        if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
+            podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
+            is_external_executor = True
+        else:
+            podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
+            is_external_executor = False
+
+        if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_order:
+            external_order_organization = first_iss.napravleniye.external_order.organization.safe_short_title
+        else:
+            external_order_organization = None
+
         result["rows"].append(
             {
                 "pk": row.number,
@@ -833,6 +860,8 @@ def receive_history(request):
                 "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__number=row.number)],
                 'defect_text': row.defect_text,
                 'is_defect': row.is_defect,
+                'isExternalExecutor': is_external_executor,
+                'externalOrderOrganization': external_order_organization,
             }
         )
     return JsonResponse(result)
