@@ -138,12 +138,16 @@ class FTPConnection:
         self.log(f"Wrote file {file}")
 
     def read_file_as_hl7(self, file):
-        content = self.read_file_as_text(file)
+        content = self.read_file_as_text(file).strip('\x0b').strip('\x0c')
         self.log(f"{file}\n{content}")
         content = content.replace("\n", "\r")
-        hl7_result = parse_message(content, validation_level=VALIDATION_LEVEL.QUIET)
+        try:
+            hl7_result = parse_message(content, validation_level=VALIDATION_LEVEL.QUIET)
 
-        return hl7_result, content
+            return hl7_result, content
+        except Exception as e:
+            self.error(f"Error parsing file {file}: {e}")
+            return None, None
 
     def pull_order(self, file: str):
         if not file.endswith('.ord'):
@@ -154,6 +158,11 @@ class FTPConnection:
             return
 
         hl7_result, hl7_content = self.read_file_as_hl7(file)
+
+        if not hl7_content or not hl7_result:
+            self.error(f"Skipping file {file} because it could not be parsed")
+            return
+
         self.log(f"HL7 parsed")
         patient = hl7_result.ORM_O01_PATIENT[0]
         pid = patient.PID[0]
@@ -287,10 +296,13 @@ class FTPConnection:
         patient.pid.pid_7 = individual.birthday.strftime("%Y%m%d")
         patient.pid.pid_8 = individual.sex.upper()
 
+        pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
+        pv.PV1.PV1_2.value = "O"
+        pv.PV1.PV1_20.value = "Наличные"
+
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
         hl7.ORM_O01_ORDER.orc.orc_1 = "1"
-        hl7.ORM_O01_ORDER.ORC.orc_10 = created_at
 
         ordd = hl7.ORM_O01_ORDER.add_group("ORM_O01_ORDER_DETAIL")
 
@@ -315,7 +327,7 @@ class FTPConnection:
                 obr.obr_4.obr_4_5.value = iss.research.title.replace(" ", "_")
                 obr.obr_7.value = created_at
 
-            content = hl7.value.replace("\r", "\n")
+            content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
 
             self.log('Writing file', filename, content)
