@@ -330,7 +330,7 @@ class FTPConnection:
             content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
 
-            self.log('Writing file', filename, content)
+            self.log('Writing file', filename, '\n', content)
             self.write_file_as_text(filename, content)
 
             Log.log(direction.pk, 190001, None, {
