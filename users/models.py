@@ -116,7 +116,7 @@ class DoctorProfile(models.Model):
             user = User.objects.create_user(uuid.uuid4().hex)
             user.is_active = True
             user.save()
-            doc = DoctorProfile(user=user, fio=f'Системный Пользователь')
+            doc = DoctorProfile(user=user, fio='Системный Пользователь')
             doc.save()
             doc.get_fio_parts()
 
