@@ -13,7 +13,7 @@ from hl7apy import VALIDATION_LEVEL, core
 from hl7apy.parser import parse_message
 
 from clients.models import Individual
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, Issledovaniya
+from directions.models import Napravleniya, RegisteredOrders, NumberGenerator
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches
