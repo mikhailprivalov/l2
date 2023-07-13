@@ -34,6 +34,7 @@ from laboratory.settings import (
     EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED,
     RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
     AUTO_PRINT_RESEARCH_DIRECTION,
+    NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL,
 )
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
@@ -543,6 +544,7 @@ class Napravleniya(models.Model):
     external_executor_hospital = models.ForeignKey(
         Hospitals, related_name='external_executor_hospital', default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Внешняя организация-исполнитель'
     )
+    time_send_hl7 = models.DateTimeField(help_text='Дата и время отправки заказа', db_index=True, blank=True, default=None, null=True)
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -1578,6 +1580,10 @@ class Napravleniya(models.Model):
                     if not directions_for_researches[dir_group].need_order_redirection and research.plan_external_performing_organization:
                         directions_for_researches[dir_group].need_order_redirection = True
                         directions_for_researches[dir_group].external_executor_hospital = research.plan_external_performing_organization
+                        directions_for_researches[dir_group].save(update_fields=["need_order_redirection", "external_executor_hospital"])
+                    elif not directions_for_researches[dir_group].need_order_redirection and NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL:
+                        directions_for_researches[dir_group].need_order_redirection = True
+                        directions_for_researches[dir_group].external_executor_hospital = Hospitals.objects.filter(is_default=True).first()
                         directions_for_researches[dir_group].save(update_fields=["need_order_redirection", "external_executor_hospital"])
 
                     loc = ""

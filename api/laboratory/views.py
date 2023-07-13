@@ -849,7 +849,6 @@ def receive_history(request):
             external_order_organization = first_iss.napravleniye.external_order.organization.safe_short_title
         else:
             external_order_organization = None
-
         result["rows"].append(
             {
                 "pk": row.number,

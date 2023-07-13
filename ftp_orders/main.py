@@ -13,9 +13,11 @@ from hl7apy import VALIDATION_LEVEL, core
 from hl7apy.parser import parse_message
 
 from clients.models import Individual
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator
+from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration
+from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches
+from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
 
@@ -312,22 +314,18 @@ class FTPConnection:
         ordd = hl7.ORM_O01_ORDER.add_group("ORM_O01_ORDER_DETAIL")
 
         with transaction.atomic():
-            gen: NumberGenerator = NumberGenerator.objects.select_for_update().filter(key='externalOrderNumber', hospital=self.hospital, is_active=True).first()
-
-            if not gen and self.hospital.strict_external_numbers:
-                raise NoValidNumberGeneratorException(f"No number generator found for hospital {self.hospital}")
-
-            order_number = str(gen.get_next_value() if gen else direction.pk)
-            direction.order_redirection_number = order_number
             direction.need_order_redirection = False
-            direction.save(update_fields=['order_redirection_number', 'need_order_redirection'])
+            direction.time_send_hl7 = current_time()
+            direction.save(update_fields=['time_send_hl7', 'need_order_redirection'])
 
             n = 0
+
             for iss in direction.issledovaniya_set.all():
                 n += 1
                 obr = ordd.add_segment("OBR")
                 obr.obr_1 = str(n)
-                obr.obr_3.value = order_number
+                tube_data = [i.tube_number for i in get_tubesregistration_id_by_iss(iss.pk)]
+                obr.obr_3.value = str(tube_data[0])
                 obr.obr_4.obr_4_4.value = iss.research.internal_code
                 obr.obr_4.obr_4_5.value = iss.research.title.replace(" ", "_")
                 obr.obr_7.value = created_at
@@ -345,7 +343,6 @@ class FTPConnection:
                 {
                     "org": self.hospital.safe_short_title,
                     "content": content,
-                    "orderNumber": order_number,
                 },
             )
 
@@ -434,7 +431,13 @@ def process_push_orders():
             directions_to_sync = []
 
             for direction in Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:10]:
-                directions_to_sync.append(direction)
+                is_recieve = False
+                for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).distinct():
+                    is_recieve = True
+                    if tube.time_recive is None:
+                        is_recieve = False
+                if is_recieve:
+                    directions_to_sync.append(direction)
 
             ftp_connection.log(f"Directions to sync: {[d.pk for d in directions_to_sync]}")
 
