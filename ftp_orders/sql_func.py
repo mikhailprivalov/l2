@@ -6,8 +6,9 @@ def get_tubesregistration_id_by_iss(iss_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT tubesregistration_id
+            SELECT dt.number as tube_number
             FROM directions_issledovaniya_tubes
+            LEFT JOIN directions_tubesregistration dt on directions_issledovaniya_tubes.tubesregistration_id = dt.id
             where issledovaniya_id = %(iss_id)s
             LIMIT 1
             """,
