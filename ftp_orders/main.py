@@ -13,7 +13,7 @@ from hl7apy import VALIDATION_LEVEL, core
 from hl7apy.parser import parse_message
 
 from clients.models import Individual
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator
+from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches
@@ -431,7 +431,13 @@ def process_push_orders():
             directions_to_sync = []
 
             for direction in Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:10]:
-                directions_to_sync.append(direction)
+                is_recieve = False
+                for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).distinct():
+                    is_recieve = True
+                    if tube.time_recive is None:
+                        is_recieve = False
+                if is_recieve:
+                    directions_to_sync.append(direction)
 
             ftp_connection.log(f"Directions to sync: {[d.pk for d in directions_to_sync]}")
 
