@@ -13,7 +13,8 @@ from hl7apy import VALIDATION_LEVEL, core
 from hl7apy.parser import parse_message
 
 from clients.models import Individual
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator
+from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, Issledovaniya
+from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches
 from slog.models import Log
@@ -323,11 +324,13 @@ class FTPConnection:
             direction.save(update_fields=['order_redirection_number', 'need_order_redirection'])
 
             n = 0
+
             for iss in direction.issledovaniya_set.all():
                 n += 1
                 obr = ordd.add_segment("OBR")
                 obr.obr_1 = str(n)
-                obr.obr_3.value = order_number
+                tube_data = [i.tubesregistration_id for i in get_tubesregistration_id_by_iss(iss.pk)]
+                obr.obr_3.value = str(tube_data[0])
                 obr.obr_4.obr_4_4.value = iss.research.internal_code
                 obr.obr_4.obr_4_5.value = iss.research.title.replace(" ", "_")
                 obr.obr_7.value = created_at
