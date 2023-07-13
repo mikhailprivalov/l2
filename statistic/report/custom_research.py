@@ -98,6 +98,7 @@ def custom_research_fill_data(ws1, result_query, row=6):
             if not is_dict:
                 ws1.cell(row=r, column=column).value = i.get(title, '')
                 ws1.cell(row=r, column=column).style = style_border1
+                r += 1
             else:
                 for i in table_data.get("rows"):
                     json_col = column
