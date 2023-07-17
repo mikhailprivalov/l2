@@ -4599,7 +4599,7 @@ def form_18(request_data):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerif"
-    style.fontSize = 11
+    style.fontSize = 9
     style.alignment = TA_JUSTIFY
 
     styleLeft = deepcopy(style)
@@ -4619,9 +4619,13 @@ def form_18(request_data):
     styleCenterMin.leading = 10
     styleCenterMin.spaceAfter = 0 * mm
 
+    styleRightMin = deepcopy(styleCenterMin)
+    styleRightMin.alignment = TA_RIGHT
+
     objs = []
     space = 3 * mm
 
+    objs.append(Paragraph('Приложение 1 к приказу №130 от 26.06.23', style=styleRightMin))
     objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО</b>', style=styleHeader))
     objs.append(Spacer(1, space))
 
@@ -4696,6 +4700,19 @@ def form_18(request_data):
             'учетом сохранения врачебной тайны;',
             style,
         )
+    )
+    objs.append(
+        Paragraph(
+            '- Я согласен(а) и разрешаю врачу/ Не согласен(на) в случае необходимости, опубликовать информацию о моем лечении в научных и образовательных целях, в сопровождении иллюстраций '
+            'и описательных текстов, при условии сохранения врачебной тайны и персональных данных; ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '- Разрешаю в случае необходимости осуществлять обмен  данными о пациенте (медицинскими данными) с другими медицинскими организациями, НИИ, медицинскими ВУЗАМИ и СУЗАми. ',
+            style,
+       )
     )
     objs.append(
         Paragraph(
