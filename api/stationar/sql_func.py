@@ -230,7 +230,7 @@ def get_assignments_by_history(history_id: int):
             WHERE public.directions_napravleniya.parent_id = %(history_id)s
             AND (is_paraclinic = true OR is_doc_refferal = true OR is_microbiology = true OR is_citology = true OR is_gistology = true OR 
                  (is_paraclinic = False AND is_doc_refferal = False AND is_microbiology = False AND is_citology = False AND is_gistology = False 
-                  AND is_slave_hospital = False))
+                  AND is_slave_hospital = False AND is_hospital = False))
             AND public.directions_napravleniya.cancel != true
                   
             ORDER BY public.directions_napravleniya.data_sozdaniya
