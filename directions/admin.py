@@ -274,9 +274,7 @@ class RegisteredOrdersAdmin(admin.ModelAdmin):
 
 class ExternalAdditionalOrderNumberAdmin(admin.ModelAdmin):
     search_fields = ('external_add_order_number',)
-    list_display = (
-        'external_add_order_number',
-    )
+    list_display = ('external_add_order_number',)
 
 
 admin.site.register(TubesRegistration)
