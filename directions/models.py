@@ -1581,8 +1581,13 @@ class Napravleniya(models.Model):
                             ext_additional_num = ExternalAdditionalOrderNumber.objects.create(external_add_order_number=external_additional_order_number)
 
                     issledovaniye = Issledovaniya(
-                        napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany,
-                        deferred=False, external_add_order_number=ext_additional_num
+                        napravleniye=directions_for_researches[dir_group],
+                        research=research,
+                        coast=research_coast,
+                        discount=research_discount,
+                        how_many=research_howmany,
+                        deferred=False,
+                        external_add_order_number=ext_additional_num,
                     )
 
                     if not directions_for_researches[dir_group].need_order_redirection and research.plan_external_performing_organization:
