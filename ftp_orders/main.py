@@ -171,7 +171,6 @@ class FTPConnection:
         orders = hl7_result.ORM_O01_ORDER[0].children[0]
 
         fio = pid.PID_5
-        card_order = pid.PID_1
         family = fio.PID_5_1.value
         name = fio.PID_5_2.value
         patronymic = fio.PID_5_3.value if hasattr(fio, 'PID_5_3') else ''
