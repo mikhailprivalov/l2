@@ -1260,6 +1260,7 @@ class Napravleniya(models.Model):
         hospital_override=-1,
         price_category=-1,
         external_order: Optional[RegisteredOrders] = None,
+        services_by_additional_order_num=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -1572,9 +1573,17 @@ class Napravleniya(models.Model):
 
                     if research_howmany == 1:
                         research_howmany = count
+                    ext_additional_num = None
+                    print(services_by_additional_order_num)
+                    if services_by_additional_order_num:
+                        external_additional_order_number = services_by_additional_order_num[research.pk]
+                        ext_additional_num = ExternalAdditionalOrderNumber.objects.filter(external_add_order_number=external_additional_order_number).first()
+                        if not ext_additional_num:
+                            ext_additional_num = ExternalAdditionalOrderNumber.objects.create(external_add_order_number=external_additional_order_number)
 
                     issledovaniye = Issledovaniya(
-                        napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany, deferred=False
+                        napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany,
+                        deferred=False, external_add_order_number=ext_additional_num
                     )
 
                     if not directions_for_researches[dir_group].need_order_redirection and research.plan_external_performing_organization:
@@ -2094,6 +2103,10 @@ class PersonContract(models.Model):
         pers_contract.save()
 
 
+class ExternalAdditionalOrderNumber(models.Model):
+    external_add_order_number = models.CharField(max_length=255, db_index=True, blank=True, null=True, default=None, help_text='Внешний номер для услуги')
+
+
 class Issledovaniya(models.Model):
     """
     Направления на исследования
@@ -2171,6 +2184,7 @@ class Issledovaniya(models.Model):
     doc_add_additional = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
+    external_add_order_number = models.ForeignKey(ExternalAdditionalOrderNumber,  blank=True, null=True, default=None, help_text="Внешний номер заказа", on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):
