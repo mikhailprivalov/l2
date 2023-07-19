@@ -161,9 +161,6 @@ class FTPConnection:
 
         hl7_result, hl7_content = self.read_file_as_hl7(file)
 
-        print("hl7_result", hl7_result)
-        print("hl7_content", hl7_content)
-
         if not hl7_content or not hl7_result:
             self.error(f"Skipping file {file} because it could not be parsed")
             return
@@ -175,7 +172,6 @@ class FTPConnection:
 
         fio = pid.PID_5
         card_order = pid.PID_1
-        print(card_order)
         family = fio.PID_5_1.value
         name = fio.PID_5_2.value
         patronymic = fio.PID_5_3.value if hasattr(fio, 'PID_5_3') else ''
@@ -189,13 +185,8 @@ class FTPConnection:
         orders_by_numbers = defaultdict(list)
         additional_order_number_by_service = defaultdict(list)
 
-        print(pid.PID_1)
         for order in orders.children:
             obr = order.children[0]
-            print(obr)
-            print(obr.OBR_3.value)
-            print(obr.OBR_2.value)
-            print(obr.OBR_4.OBR_4_4.value)
             orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
             additional_order_number_by_service[obr.OBR_4.OBR_4_4.value] = obr.OBR_2.value
 

@@ -1574,7 +1574,6 @@ class Napravleniya(models.Model):
                     if research_howmany == 1:
                         research_howmany = count
                     ext_additional_num = None
-                    print(services_by_additional_order_num)
                     if services_by_additional_order_num:
                         external_additional_order_number = services_by_additional_order_num[research.pk]
                         ext_additional_num = ExternalAdditionalOrderNumber.objects.filter(external_add_order_number=external_additional_order_number).first()
@@ -2184,7 +2183,7 @@ class Issledovaniya(models.Model):
     doc_add_additional = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
-    external_add_order_number = models.ForeignKey(ExternalAdditionalOrderNumber,  blank=True, null=True, default=None, help_text="Внешний номер заказа", on_delete=models.SET_NULL)
+    external_add_order_number = models.ForeignKey(ExternalAdditionalOrderNumber, blank=True, null=True, default=None, help_text="Внешний номер заказа", on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):
