@@ -6692,8 +6692,12 @@ def form_29(request_data):
     space = 3 * mm
 
     objs.append(Paragraph('Приложение 1 к приказу №130 от 26.06.23', style=styleRightMin))
-    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (рентгенологические, в том числе с контрастированием, эндоскопические, компьютерная '
-                          'томография) </b>', style=styleHeader))
+    objs.append(
+        Paragraph(
+            '<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (рентгенологические, в том числе с контрастированием, эндоскопические, компьютерная ' 'томография) </b>',
+            style=styleHeader,
+        )
+    )
     objs.append(Spacer(1, space))
 
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
