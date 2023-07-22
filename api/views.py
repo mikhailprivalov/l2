@@ -179,7 +179,7 @@ def send(request):
             resdict = json.loads(request.POST["result"])
             appkey = request.POST.get("key", "")
         else:
-            resdict = json.loads.safe_load(request.GET["result"])
+            resdict = json.loads(request.GET["result"])
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
