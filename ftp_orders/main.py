@@ -298,100 +298,19 @@ class FTPConnection:
             return
 
         self.log(f"HL7 parsed")
+
+        print(hl7_result)
         patient = hl7_result.ORM_O01_PATIENT[0]
         pid = patient.PID[0]
         orders = hl7_result.ORM_O01_ORDER[0].children[0]
-
         orders_by_numbers = defaultdict(list)
+        print(orders)
+        print(orders.children)
 
         for order in orders.children:
             obr = order.children[0]
             orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
 
-        orders_by_numbers = dict(orders_by_numbers)
-
-        try:
-            order = ""
-
-            directions = {}
-            order_numbers = []
-
-            with transaction.atomic():
-                hosp = Hospitals.get_default_hospital()
-                doc = DoctorProfile.get_system_profile()
-
-                services_by_order_number = {}
-                for order_number, services_codes in orders_by_numbers.items():
-                    for service_code in services_codes:
-                        service = Researches.objects.filter(hide=False, internal_code=service_code).first()
-                        if not service:
-                            raise ServiceNotFoundException(f"Service {service_code} not found")
-                        if order_number not in services_by_order_number:
-                            services_by_order_number[order_number] = []
-                        services_by_order_number[order_number].append(service.pk)
-
-                for order_number_str, services in services_by_order_number.items():
-                    order_numbers.append(order_number_str)
-
-                    if not order_number_str.isdigit():
-                        raise InvalidOrderNumberException(f'Number {order_number} is not digit')
-                    order_number = int(order_number_str)
-                    if order_number <= 0:
-                        raise InvalidOrderNumberException(f'Number {order_number} need to be greater than 0')
-                    if not NumberGenerator.check_value_for_organization(self.hospital, order_number):
-                        raise InvalidOrderNumberException(f'Number {order_number} not valid. May be NumberGenerator is over or order number exists')
-
-                    external_order = RegisteredOrders.objects.create(
-                        order_number=order_number,
-                        organization=self.hospital,
-                        services=orders_by_numbers[order_number_str],
-                        patient_card=card,
-                        file_name=file,
-                    )
-                    result = Napravleniya.gen_napravleniya_by_issledovaniya(
-                        card.pk,
-                        "",
-                        None,
-                        "",
-                        None,
-                        doc,
-                        {-1: services},
-                        {},
-                        False,
-                        {},
-                        vich_code="",
-                        count=1,
-                        discount=0,
-                        rmis_slot=None,
-                        external_order=external_order,
-                        hospital_override=hosp.pk if hosp else None,
-                    )
-
-                    if not result['r']:
-                        raise FailedCreatingDirectionsException(result.get('message') or "Failed creating directions")
-
-                    self.log("Created local directions:", result['list_id'])
-                    for direction in result['list_id']:
-                        directions[direction] = orders_by_numbers[order_number_str]
-
-                    for direction in Napravleniya.objects.filter(pk__in=result['list_id'], need_order_redirection=True):
-                        self.log("Direction", direction.pk, "marked as redirection to", direction.external_executor_hospital)
-
-            self.delete_file(file)
-
-            Log.log(
-                json.dumps(order_numbers),
-                190000,
-                None,
-                {
-                    "org": self.hospital.safe_short_title,
-                    "content": hl7_content,
-                    "directions": directions,
-                    "card": card.number_with_type(),
-                },
-            )
-        except Exception as e:
-            self.error(f"Exception: {e}")
 
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
@@ -570,4 +489,60 @@ def process_push_orders_start():
     print('Starting push_orders process')  # noqa: F201
     while True:
         process_push_orders()
+        time.sleep(1)
+
+
+def get_hospitals_pull_results():
+    hospitals = Hospitals.objects.filter(result_pull_by_numbers__isnull=False, hide=False)
+    return hospitals
+
+
+def process_pull_results():
+    processed_files_by_url = defaultdict(set)
+
+    hospitals = get_hospitals_pull_results()
+
+    print('Getting ftp links')  # noqa: F201
+    ftp_links = {x.orders_pull_by_numbers: x for x in hospitals}
+
+    ftp_connections = {}
+
+    for ftp_url in ftp_links:
+        ftp_connection = FTPConnection(ftp_url, hospital=ftp_links[ftp_url])
+        ftp_connections[ftp_url] = ftp_connection
+
+    time_start = time.time()
+
+    while time.time() - time_start < MAX_LOOP_TIME:
+        print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
+        for ftp_url, ftp_connection in ftp_connections.items():
+            processed_files_new = set()
+            try:
+                ftp_connection.connect()
+                file_list = ftp_connection.get_file_list()
+
+                for file in file_list:
+                    processed_files_new.add(file)
+
+                    if file not in processed_files_by_url[ftp_url]:
+                        ftp_connection.pull_result(file)
+
+            except ftplib.all_errors as e:
+                processed_files_new.update(processed_files_by_url[ftp_url])
+                ftp_connection.error(f"error: {e}")
+                ftp_connection.log("Disconnecting...")
+                ftp_connection.disconnect()
+
+            processed_files_by_url[ftp_url] = processed_files_new
+
+        time.sleep(5)
+
+    for _, ftp_connection in ftp_connections.items():
+        ftp_connection.disconnect()
+
+
+def process_pull_start_results():
+    print('Starting pull_orders process')  # noqa: F201
+    while True:
+        process_pull_results()
         time.sleep(1)
