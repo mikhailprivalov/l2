@@ -2130,6 +2130,7 @@ def organization_data(request):
     if SettingManager.l2('ftp') and request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
         org['ordersPullFtpServerUrl'] = hospital.orders_pull_by_numbers or ''
         org['ordersPushFtpServerUrl'] = hospital.orders_push_by_numbers or ''
+        org['resultPullFtpServerUrl'] = hospital.result_pull_by_numbers or ''
         org['isExternalPerformingOrganization'] = hospital.is_external_performing_organization
         org['strictTubeNumbers'] = hospital.strict_tube_numbers
         org['strictDataOwnership'] = hospital.strict_data_ownership
@@ -2159,6 +2160,7 @@ def organization_data_update(request):
         'strictTubeNumbers': bool,
         'strictDataOwnership': bool,
         'strictExternalNumbers': bool,
+        'resultPullFtpServerUrl': str,
     }
 
     data = data_parse(
@@ -2174,6 +2176,7 @@ def organization_data_update(request):
             'strictTubeNumbers': False,
             'strictDataOwnership': False,
             'strictExternalNumbers': False,
+            'resultPullFtpServerUrl': None,
         },
     )
 
@@ -2194,6 +2197,7 @@ def organization_data_update(request):
     strict_tube_numbers: bool = data[14]
     strict_data_ownership: bool = data[15]
     strict_external_numbers: bool = data[16]
+    result_pull_by_numbers: Optional[str] = data[17] or None
 
     if not title:
         return status_response(False, 'Название не может быть пустым')
@@ -2225,6 +2229,7 @@ def organization_data_update(request):
                 "strict_tube_numbers": hospital.strict_tube_numbers,
                 "strict_data_ownership": hospital.strict_data_ownership,
                 "strict_external_numbers": hospital.strict_external_numbers,
+                "result_pull_by_numbers": hospital.result_pull_by_numbers,
             }
             if has_full_ftp_access
             else {}
@@ -2250,6 +2255,7 @@ def organization_data_update(request):
                 "strict_tube_numbers": strict_tube_numbers,
                 "strict_data_ownership": strict_data_ownership,
                 "strict_external_numbers": strict_external_numbers,
+                "result_pull_by_numbers": hospital.result_pull_by_numbers,
             }
             if has_full_ftp_access
             else {}
@@ -2273,6 +2279,7 @@ def organization_data_update(request):
         hospital.strict_tube_numbers = strict_tube_numbers
         hospital.strict_data_ownership = strict_data_ownership
         hospital.strict_external_numbers = strict_external_numbers
+        hospital.result_pull_by_numbers = result_pull_by_numbers
     hospital.save()
 
     Log.log(

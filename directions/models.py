@@ -1413,7 +1413,7 @@ class Napravleniya(models.Model):
                         "research__pk": v,
                     }
                     last_iss = Issledovaniya.objects.filter(**filter, time_confirmation__isnull=False).order_by("-time_confirmation").first()
-                    if doctor_control_actual_research and research.actual_period_result > 0:
+                    if doctor_control_actual_research and research.actual_period_result > 0 and last_iss:
                         delta = current_time() - last_iss.time_confirmation
                         if delta.days <= research.actual_period_result:
                             result["messageLimit"] = f" {result.get('messageLimit', '')} \n Срок действия {research.title} - {research.actual_period_result} дн."

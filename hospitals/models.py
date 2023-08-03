@@ -47,6 +47,9 @@ class Hospitals(models.Model):
     orders_push_by_numbers = models.CharField(
         max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории отправки заказов (ftp://user:password@host.example.com/path)'
     )
+    result_pull_by_numbers = models.CharField(
+        max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории получения результатов (ftp://user:password@host.example.com/path)'
+    )
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

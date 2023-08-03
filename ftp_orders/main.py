@@ -285,6 +285,114 @@ class FTPConnection:
         except Exception as e:
             self.error(f"Exception: {e}")
 
+
+    def pull_result(self, file: str):
+        if not file.endswith('.ord'):
+            self.error(f"Skipping file {file} because it does not end with '.res'")
+            return
+
+        hl7_result, hl7_content = self.read_file_as_hl7(file)
+
+        if not hl7_content or not hl7_result:
+            self.error(f"Skipping file {file} because it could not be parsed")
+            return
+
+        self.log(f"HL7 parsed")
+        patient = hl7_result.ORM_O01_PATIENT[0]
+        pid = patient.PID[0]
+        orders = hl7_result.ORM_O01_ORDER[0].children[0]
+
+        orders_by_numbers = defaultdict(list)
+
+        for order in orders.children:
+            obr = order.children[0]
+            orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
+
+        orders_by_numbers = dict(orders_by_numbers)
+
+        try:
+            order = ""
+
+            directions = {}
+            order_numbers = []
+
+            with transaction.atomic():
+                hosp = Hospitals.get_default_hospital()
+                doc = DoctorProfile.get_system_profile()
+
+                services_by_order_number = {}
+                for order_number, services_codes in orders_by_numbers.items():
+                    for service_code in services_codes:
+                        service = Researches.objects.filter(hide=False, internal_code=service_code).first()
+                        if not service:
+                            raise ServiceNotFoundException(f"Service {service_code} not found")
+                        if order_number not in services_by_order_number:
+                            services_by_order_number[order_number] = []
+                        services_by_order_number[order_number].append(service.pk)
+
+                for order_number_str, services in services_by_order_number.items():
+                    order_numbers.append(order_number_str)
+
+                    if not order_number_str.isdigit():
+                        raise InvalidOrderNumberException(f'Number {order_number} is not digit')
+                    order_number = int(order_number_str)
+                    if order_number <= 0:
+                        raise InvalidOrderNumberException(f'Number {order_number} need to be greater than 0')
+                    if not NumberGenerator.check_value_for_organization(self.hospital, order_number):
+                        raise InvalidOrderNumberException(f'Number {order_number} not valid. May be NumberGenerator is over or order number exists')
+
+                    external_order = RegisteredOrders.objects.create(
+                        order_number=order_number,
+                        organization=self.hospital,
+                        services=orders_by_numbers[order_number_str],
+                        patient_card=card,
+                        file_name=file,
+                    )
+                    result = Napravleniya.gen_napravleniya_by_issledovaniya(
+                        card.pk,
+                        "",
+                        None,
+                        "",
+                        None,
+                        doc,
+                        {-1: services},
+                        {},
+                        False,
+                        {},
+                        vich_code="",
+                        count=1,
+                        discount=0,
+                        rmis_slot=None,
+                        external_order=external_order,
+                        hospital_override=hosp.pk if hosp else None,
+                    )
+
+                    if not result['r']:
+                        raise FailedCreatingDirectionsException(result.get('message') or "Failed creating directions")
+
+                    self.log("Created local directions:", result['list_id'])
+                    for direction in result['list_id']:
+                        directions[direction] = orders_by_numbers[order_number_str]
+
+                    for direction in Napravleniya.objects.filter(pk__in=result['list_id'], need_order_redirection=True):
+                        self.log("Direction", direction.pk, "marked as redirection to", direction.external_executor_hospital)
+
+            self.delete_file(file)
+
+            Log.log(
+                json.dumps(order_numbers),
+                190000,
+                None,
+                {
+                    "org": self.hospital.safe_short_title,
+                    "content": hl7_content,
+                    "directions": directions,
+                    "card": card.number_with_type(),
+                },
+            )
+        except Exception as e:
+            self.error(f"Exception: {e}")
+
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
 

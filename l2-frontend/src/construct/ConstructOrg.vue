@@ -130,6 +130,13 @@
               label="Требовать наличие генератора номеров ёмкостей при отправке заказов"
             />
           </div>
+          <div class="full-width">
+            <FormulateInput
+              type="text"
+              name="resultPullFtpServerUrl"
+              label="URL для FTP директории получения результатов"
+            />
+          </div>
         </template>
 
         <FormulateInput
