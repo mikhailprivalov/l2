@@ -287,7 +287,7 @@ class FTPConnection:
 
 
     def pull_result(self, file: str):
-        if not file.endswith('.ord'):
+        if not file.endswith('.res'):
             self.error(f"Skipping file {file} because it does not end with '.res'")
             return
 
@@ -298,18 +298,32 @@ class FTPConnection:
             return
 
         self.log(f"HL7 parsed")
+        print("hl7_result")
+        # print(hl7_result.children)
+        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.PID.PID_7.value) +
+        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.PID.PID_2.value) +
+        print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.ORU_R01_VISIT.PV1.PV1_3.value)
+        print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.ORU_R01_VISIT.PV1.PV1_3.PL_4.value)
+        print(hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR.OBR_2.OBR_2_1.value)
+        print(hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR.OBR_2.OBR_2_2.value)
+        print(hl7_result.obr.obr_2.value)
 
-        print(hl7_result)
-        patient = hl7_result.ORM_O01_PATIENT[0]
-        pid = patient.PID[0]
-        orders = hl7_result.ORM_O01_ORDER[0].children[0]
-        orders_by_numbers = defaultdict(list)
-        print(orders)
-        print(orders.children)
+        obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
+        for obx in obxes:
+            print(obx.OBX.obx_1.value)
+            print(obx.OBX.obx_2.value)
+            print(obx.OBX.obx_3.obx_3_2.value, obx.OBX.obx_5.value)
+        # print(obxes[0].OBX.value)
+        # print(obxes[1].OBX.value)
 
-        for order in orders.children:
-            obr = order.children[0]
-            orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
+        # orders_by_numbers = defaultdict(list)
+        # print("orders",
+        # orders)
+        # print("children", orders.children)
+
+        # for order in orders.children:
+        #     obr = order.children[0]
+        #     orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
 
 
     def push_order(self, direction: Napravleniya):
@@ -501,9 +515,10 @@ def process_pull_results():
     processed_files_by_url = defaultdict(set)
 
     hospitals = get_hospitals_pull_results()
+    print(hospitals)
 
     print('Getting ftp links')  # noqa: F201
-    ftp_links = {x.orders_pull_by_numbers: x for x in hospitals}
+    ftp_links = {x.result_pull_by_numbers: x for x in hospitals}
 
     ftp_connections = {}
 
