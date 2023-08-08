@@ -445,6 +445,9 @@
 
         function openModalWithFrame(modalId, url) {
             $(`#${modalId}`).modal('show');
+            $(`#${modalId}`).on("hidden.bs.modal", function () {
+                location.reload();
+            });
             $(`#${modalId} .modal-body`).html(`<iframe
 width="100%"
 style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px"
