@@ -1057,7 +1057,8 @@ def tube_related_data(request):
             "id": x.pk,
             "label": x.title,
             "color": x.color,
-        } for x in Tubes.objects.all().order_by('title')
+        }
+        for x in Tubes.objects.all().order_by('title')
     ]
 
     researches_dict = {}
