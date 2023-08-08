@@ -31,7 +31,6 @@ from django.db.utils import IntegrityError
 from utils.data_verification import as_model, data_parse
 
 import simplejson as json
-import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
@@ -177,10 +176,10 @@ def send(request):
     result = {"ok": False}
     try:
         if request.method == "POST":
-            resdict = yaml.safe_load(request.POST["result"])
+            resdict = json.loads(request.POST["result"])
             appkey = request.POST.get("key", "")
         else:
-            resdict = yaml.safe_load(request.GET["result"])
+            resdict = json.loads(request.GET["result"])
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()

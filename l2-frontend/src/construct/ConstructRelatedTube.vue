@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import {
   computed, getCurrentInstance, ref, watch,
 } from 'vue';
@@ -21,24 +23,32 @@ const apiParams = computed(() => ({
   },
 }));
 
+type Tube = {color: string, title: string, pk: number};
+
 interface ApiType {
   maxResearchesPerTube: number,
   researches: string[],
-  title: string,
-  color: string,
+  tubes: Tube[],
+  type: number | null,
 }
 
 const defaultData = (): ApiType => ({
   maxResearchesPerTube: null,
   researches: [],
-  title: '',
-  color: '',
+  tubes: [],
+  type: null,
 });
 
 const {
   data,
   status,
 } = useApi<ApiType>(apiParams, { defaultData });
+
+const selectedTubeTypeId = ref(data.value.type);
+
+watch(() => data.value.type, () => {
+  selectedTubeTypeId.value = data.value.type;
+});
 
 const maxResearchesPerTube = ref(data.value.maxResearchesPerTube);
 
@@ -53,6 +63,7 @@ const save = async () => {
   await api('researches/tube-related-data/update', {
     id: tubeRelatedId.value,
     maxResearchesPerTube: maxResearchesPerTube.value,
+    type: selectedTubeTypeId.value,
   });
   await store.dispatch(actions.DEC_LOADING);
   root.$ok('Сохранено');
@@ -64,10 +75,24 @@ const save = async () => {
     <Spinner v-if="status !== ApiStatus.SUCCESS" />
     <div v-else>
       <div :class="$style.tube">
-        <ColorTitled
-          :color="data.color"
-          :title="`${data.title} (${tubeRelatedId})`"
-        />
+        <Treeselect
+          v-model="selectedTubeTypeId"
+          :options="data.tubes"
+          :multiple="false"
+        >
+          <template #value-label="{ node }">
+            <ColorTitled
+              :color="node.raw?.color || '#fff'"
+              :title="node.raw?.label || '-'"
+            />
+          </template>
+          <template #option-label="{ node }">
+            <ColorTitled
+              :color="node.raw?.color || '#fff'"
+              :title="node.raw?.label || '-'"
+            />
+          </template>
+        </Treeselect>
       </div>
       <div>
         <strong>Исследования:</strong>
