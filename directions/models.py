@@ -1577,9 +1577,9 @@ class Napravleniya(models.Model):
                     ext_additional_num = None
                     if services_by_additional_order_num:
                         external_additional_order_number = services_by_additional_order_num[research.pk]
-                        ext_additional_num = ExternalAdditionalOrderNumber.objects.filter(external_add_order_number=external_additional_order_number).first()
+                        ext_additional_num = ExternalAdditionalOrder.objects.filter(external_add_order=external_additional_order_number).first()
                         if not ext_additional_num:
-                            ext_additional_num = ExternalAdditionalOrderNumber.objects.create(external_add_order_number=external_additional_order_number)
+                            ext_additional_num = ExternalAdditionalOrder.objects.create(external_add_order=external_additional_order_number)
 
                     issledovaniye = Issledovaniya(
                         napravleniye=directions_for_researches[dir_group],
@@ -1588,7 +1588,7 @@ class Napravleniya(models.Model):
                         discount=research_discount,
                         how_many=research_howmany,
                         deferred=False,
-                        external_add_order_number=ext_additional_num,
+                        external_add_order=ext_additional_num,
                     )
 
                     if not directions_for_researches[dir_group].need_order_redirection and research.plan_external_performing_organization:
