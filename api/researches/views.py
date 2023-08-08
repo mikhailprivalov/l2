@@ -1052,6 +1052,15 @@ def tube_related_data(request):
     relation = ReleationsFT.objects.get(pk=pk)
     tube = relation.tube
 
+    tubes = [
+        {
+            "id": x.pk,
+            "label": x.title,
+            "color": x.color,
+        }
+        for x in Tubes.objects.all().order_by('title')
+    ]
+
     researches_dict = {}
     for fr in Fractions.objects.filter(relation=relation):
         if fr.research_id not in researches_dict:
@@ -1068,8 +1077,8 @@ def tube_related_data(request):
         {
             "maxResearchesPerTube": str(relation.max_researches_per_tube or ''),
             "researches": researches,
-            "title": tube.title,
-            "color": tube.color,
+            "tubes": tubes,
+            "type": tube.pk,
         }
     )
 
@@ -1079,6 +1088,7 @@ def tube_related_data(request):
 def tube_related_data_update(request):
     request_data = json.loads(request.body)
     pk = request_data['id']
+    tube_type = request_data['type']
     max_researches_per_tube = str(request_data['maxResearchesPerTube'])
 
     relation = ReleationsFT.objects.get(pk=pk)
@@ -1087,6 +1097,9 @@ def tube_related_data_update(request):
         relation.max_researches_per_tube = int(max_researches_per_tube)
     else:
         relation.max_researches_per_tube = None
+
+    if tube_type and str(tube_type).isdigit():
+        relation.tube_id = tube_type
 
     relation.save()
 
