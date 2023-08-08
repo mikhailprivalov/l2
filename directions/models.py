@@ -2189,7 +2189,7 @@ class Issledovaniya(models.Model):
     doc_add_additional = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
-    external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний номер заказа", on_delete=models.SET_NULL)
+    external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):
