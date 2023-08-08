@@ -32,7 +32,7 @@ from .models import (
     MicrobiologyResultCulture,
     MicrobiologyResultPhenotype,
     RegisteredOrders,
-    ExternalAdditionalOrderNumber,
+    ExternalAdditionalOrder,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -272,11 +272,9 @@ class RegisteredOrdersAdmin(admin.ModelAdmin):
     search_fields = ('order_number', 'organization')
 
 
-class ExternalAdditionalOrderNumberAdmin(admin.ModelAdmin):
-    search_fields = ('external_add_order_number',)
-    list_display = (
-        'external_add_order_number',
-    )
+class ExternalAdditionalOrderAdmin(admin.ModelAdmin):
+    search_fields = ('external_add_order',)
+    list_display = ('external_add_order',)
 
 
 admin.site.register(TubesRegistration)
@@ -304,4 +302,4 @@ admin.site.register(IssledovaniyaResultLaborant, ResIssledovaniyaResultLaborant)
 admin.site.register(MicrobiologyResultCulture, MicrobiologyResultCultureAdmin)
 admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmin)
 admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)
-admin.site.register(ExternalAdditionalOrderNumber, ExternalAdditionalOrderNumberAdmin)
+admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
