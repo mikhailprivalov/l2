@@ -104,8 +104,23 @@ class DoctorProfile(models.Model):
     cabinet = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Кабинет приема")
     max_age_patient_registration = models.SmallIntegerField(help_text='Ограничения возраста записи указать в месяцах', default=-1)
     available_quotas_time = models.TextField(default='', blank=True, help_text='Доступная запись для подразделений по времени {"id-подразделения": "10:00-15:00"}')
+    is_system_user = models.BooleanField(default=False, blank=True)
 
     room_access = models.ManyToManyField('podrazdeleniya.Room', blank=True, help_text='Доступ к кабинетам')
+
+    @staticmethod
+    def get_system_profile():
+        doc = DoctorProfile.objects.filter(is_system_user=True).first()
+
+        if not doc:
+            user = User.objects.create_user(uuid.uuid4().hex)
+            user.is_active = True
+            user.save()
+            doc = DoctorProfile(user=user, fio='Системный Пользователь')
+            doc.save()
+            doc.get_fio_parts()
+
+        return doc
 
     @property
     def notify_queue_key_base(self):

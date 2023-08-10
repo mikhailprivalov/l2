@@ -523,6 +523,12 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-dispanserization&date-start=<date-start>&date-end=<date-end>',
       },
+      expertise: {
+        groups: ['Статистика-экспертиза'],
+        title: 'Экспертиза стационара',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-hosp-expertise&date-start=<date-start>&date-end=<date-end>',
+      },
     },
   },
   prof: {
@@ -541,6 +547,12 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.RESEARCH_SETS, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
             + 'company=<company>&research-set=<research-set>',
+      },
+      registryProfit: {
+        groups: ['Статистика-реестр начислений'],
+        title: 'Реестр начислений',
+        params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-registry-profit&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>',
       },
       typeDepartments: {
         groups: ['Статистика-профосмотры'],

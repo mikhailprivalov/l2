@@ -13,9 +13,19 @@ class Tubes(models.Model):
     color = models.CharField(max_length=7)  # Цвет в CSS формате (#1122FF)
     title = models.CharField(max_length=255)  # Название
     short_title = models.CharField(max_length=6, default="", blank=True)
+    is_default_external_tube = models.BooleanField(default=False, blank=True, db_index=True)
 
     def __str__(self):
         return self.title
+
+    @staticmethod
+    def get_default_external_tube():
+        tube = Tubes.objects.filter(is_default_external_tube=True).first()
+
+        if not tube:
+            tube = Tubes.objects.create(color="#8C95E5", title="Ёмкость", short_title="ёмк", is_default_external_tube=True)
+
+        return tube
 
     def get_short_title(self):
         pr = self.short_title

@@ -159,6 +159,10 @@ def consolidate_research_sets_base(ws1, d1, d2, fin_source, head_data, company_t
         ws1.column_dimensions[get_column_letter(step)].width = k[1]
         ws1.cell(row=row, column=step).style = style_border
         ws1.cell(row=row + 1, column=step).style = style_border
+
+    ws1.cell(row=row, column=step + 1).value = "Итого по человеку"
+    ws1.cell(row=row, column=step + 1).style = style_border
+    ws1.cell(row=row + 1, column=step + 1).style = style_border
     return (
         ws1,
         start_column_research,
@@ -195,13 +199,15 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
             ws1.cell(row=row, column=3).value = last_patient_card
             ws1.cell(row=row, column=4).value = last_patient_fio
             column = start_research_column
+            row_sum = 0
             if start_row == 0:
                 start_row = row
             for k in current_patient_researh_data.values():
                 ws1.cell(row=row, column=column).value = k
                 current_sum_columns[column] = f'=SUM({get_column_letter(column)}{start_row}:{get_column_letter(column)}{row})'
+                row_sum = f'{row_sum} + {get_column_letter(column)}{price_row}*{get_column_letter(column)}{row}'
                 column += 1
-
+            ws1.cell(row=row, column=column).value = f"={row_sum}"
             current_patient_researh_data = deepcopy(def_value_data)
 
         current_patient_researh_data[i.research_id] = 1
@@ -233,12 +239,16 @@ def consolidate_research_sets_fill_data(ws1, query, def_value_data, start_resear
     ws1.cell(row=row, column=3).value = last_patient_card
     ws1.cell(row=row, column=4).value = last_patient_fio
     column = start_research_column
+    row_sum = 0
     for k in current_patient_researh_data.values():
         if start_row == 0:
             start_row = row
         ws1.cell(row=row, column=column).value = k
         current_sum_columns[column] = f'=SUM({get_column_letter(column)}{start_row}:{get_column_letter(column)}{row})'
+        row_sum = f'{row_sum} + {get_column_letter(column)}{price_row}*{get_column_letter(column)}{row}'
         column += 1
+
+    ws1.cell(row=row, column=column).value = f"={row_sum}"
 
     row += 1
     ws1.cell(row=row, column=1).value = f'Итого кол-во {current_department_title}'

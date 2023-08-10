@@ -146,7 +146,7 @@
                 />
               </div>
               <div
-                v-else-if="field.field_type === 2 && confirmed && userGroups.includes(field.deniedGroup)"
+                v-else-if="(field.field_type === 2 && confirmed) || userGroups.includes(field.deniedGroup)"
                 class="field-value"
               >
                 <input

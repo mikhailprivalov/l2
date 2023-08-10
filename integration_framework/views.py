@@ -83,6 +83,7 @@ from utils.common import values_as_structure_data
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date, try_strptime, try_parse_range, normalize_dots_date
 from utils.nsi_directories import NSI
+from utils.response import status_response
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
@@ -569,6 +570,9 @@ def make_log(request):
     pks_to_set_emdr = [x for x in keys if x] if t in (60024,) else []
     pks_to_set_emdr_fail = [x for x in keys if x] if t in (60025,) else []
 
+    pks_to_set_onkor = [x for x in keys if x] if t in (60026,) else []
+    pks_to_set_onkor_fail = [x for x in keys if x] if t in (60027,) else []
+
     with transaction.atomic():
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
@@ -610,6 +614,16 @@ def make_log(request):
             d = directions.Napravleniya.objects.get(pk=k)
             d.n3_iemk_ok = True
             d.save(update_fields=['n3_iemk_ok'])
+
+        for k in pks_to_set_onkor_fail:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+        for k in pks_to_set_onkor:
+            Log.log(key=k, type=t, body=body.get(k, {}))
+
+            d = directions.Napravleniya.objects.get(pk=k)
+            d.onkor_message_id = body[str(k)]['messageId']
+            d.save(update_fields=['onkor_message_id'])
 
         for k in pks_to_set_emdr_fail:
             Log.log(key=k, type=t, body=body.get(k, {}))
@@ -1415,10 +1429,19 @@ def external_research_create(request):
                 if not ft:
                     ft = ReleationsFT.objects.create(tube=tube)
 
-                tr = iss.tubes.create(type=ft)
-                tr.time_get = time_get
-                tr.time_recive = time_receive
-                tr.save(update_fields=['time_get', 'time_recive'])
+                with transaction.atomic():
+                    try:
+                        generator_pk = directions.TubesRegistration.get_tube_number_generator_pk(hospital)
+                        generator = directions.NumberGenerator.objects.select_for_update().get(pk=generator_pk)
+                        number = generator.get_next_value()
+                    except directions.NoGenerator as e:
+                        return status_response(False, str(e))
+                    except directions.GeneratorValuesAreOver as e:
+                        return status_response(False, str(e))
+                    tr = iss.tubes.create(type=ft, number=number)
+                    tr.time_get = time_get
+                    tr.time_recive = time_receive
+                    tr.save(update_fields=['time_get', 'time_recive'])
 
                 tests_to_filter = defaultdict(lambda: False)
 

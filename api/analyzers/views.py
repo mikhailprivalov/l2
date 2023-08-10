@@ -8,13 +8,7 @@ from django.http import JsonResponse
 
 
 def all_analyzers(request):
-    analyzers = [
-        {
-            "label": analyzer.title,
-            "pk": analyzer.id
-        }
-        for analyzer in Analyzer.objects.all().exclude(service_name=None).exclude(port=None).order_by('title', 'id')
-    ]
+    analyzers = [{"label": analyzer.title, "pk": analyzer.id} for analyzer in Analyzer.objects.all().exclude(service_name=None).exclude(port=None).order_by('title', 'id')]
     return JsonResponse({"data": analyzers})
 
 
@@ -37,19 +31,10 @@ def manage_profile_analyzer(request):
     current_user = request.user.doctorprofile.pk
     su = request.user.is_superuser
     if su:
-        filter_analyzer = [
-            {
-                "label": g.title,
-                "pk": g.pk
-            }
-            for g in Analyzer.objects.all().exclude(service_name=None).exclude(port=None).order_by('title', 'pk')
-        ]
+        filter_analyzer = [{"label": g.title, "pk": g.pk} for g in Analyzer.objects.all().exclude(service_name=None).exclude(port=None).order_by('title', 'pk')]
     else:
         filter_analyzer = [
-            {
-                "label": g.analyzer.title,
-                "pk": g.analyzer_id
-            }
+            {"label": g.analyzer.title, "pk": g.analyzer_id}
             for g in ManageDoctorProfileAnalyzer.objects.filter(doctor_profile_id=current_user).exclude(analyzer__service_name=None).exclude(analyzer__port=None).order_by('analyzer', 'id')
         ]
     return JsonResponse({"data": filter_analyzer})

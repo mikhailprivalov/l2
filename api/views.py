@@ -31,7 +31,6 @@ from django.db.utils import IntegrityError
 from utils.data_verification import as_model, data_parse
 
 import simplejson as json
-import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
@@ -177,10 +176,10 @@ def send(request):
     result = {"ok": False}
     try:
         if request.method == "POST":
-            resdict = yaml.safe_load(request.POST["result"])
+            resdict = json.loads(request.POST["result"])
             appkey = request.POST.get("key", "")
         else:
-            resdict = yaml.safe_load(request.GET["result"])
+            resdict = json.loads(request.GET["result"])
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
@@ -200,7 +199,9 @@ def send(request):
                 dpk //= 10
             tubes(request, direction_implict_id=dpk)
             if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).exists():
-                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).order_by("pk").first().pk
+                resdict["pk"] = (
+                    directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).order_by("number").first().number
+                )
             else:
                 resdict["pk"] = False
         result["A"] = appkey
@@ -208,9 +209,9 @@ def send(request):
         direction = None
         if resdict["pk"] and app:
             if app.tube_work:
-                direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=resdict["pk"]).first()
-            elif directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
-                tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
+                direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__number=resdict["pk"]).first()
+            elif directions.TubesRegistration.objects.filter(number=resdict["pk"]).exists():
+                tubei = directions.TubesRegistration.objects.get(number=resdict["pk"])
                 direction = tubei.issledovaniya_set.first().napravleniye
             pks = []
             for key in resdict["result"].keys():
@@ -257,7 +258,7 @@ def send(request):
                                 pks.append(issled)
             slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None).save()
             result["ok"] = True
-        elif not directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+        elif not directions.TubesRegistration.objects.filter(number=resdict["pk"]).exists():
             if dpk > -1:
                 resdict["pk"] = dpk
             slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None).save()
@@ -302,7 +303,7 @@ def endpoint(request):
                     elif dw:
                         direction = directions.Napravleniya.objects.filter(pk=pk).first()
                     else:
-                        direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk).first()
+                        direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__number=pk).first()
                         by_tube = True
 
                     pks = []
@@ -333,7 +334,7 @@ def endpoint(request):
                                         issleds = []
                                         iss_q = directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, time_confirmation__isnull=True)
                                         for issled in iss_q:
-                                            if by_tube and not issled.tubes.filter(pk=pk).exists() and issled.tubes.all().count() > 0:
+                                            if by_tube and not issled.tubes.filter(number=pk).exists() and issled.tubes.all().count() > 0:
                                                 continue
                                             if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
@@ -988,7 +989,11 @@ def mkb10_dict(request, raw_response=False):
 
 def companies_find(request):
     q = (request.GET.get("query", '') or '').strip()
-    companies_data = Company.search_company(q)
+    type_company = (request.GET.get("subType", '') or '').strip()
+    if type_company == "Заказчик" or type_company == "Внешний исполнитель":
+        companies_data = Hospitals.search_hospital(q)
+    else:
+        companies_data = Company.search_company(q)
     return JsonResponse({"data": companies_data})
 
 
@@ -1631,6 +1636,10 @@ def user_save_view(request):
             doc.save()
             if doc.email and send_password:
                 doc.reset_password()
+
+    data_doc_profile = {key: value for key, value in doc.dict_data.items()}
+    data_doc_profile["id"] = doc.pk
+    Log(key=doc.pk, type=120004, body=json.dumps(data_doc_profile), user=request.user.doctorprofile).save()
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
 
 
@@ -1848,7 +1857,8 @@ def hospitals(request):
     else:
         rows = []
     default_hospital = []
-    if any_hospital or data.get('filterByNeedSendResult'):
+    strict_mode = data.get('strictMode')
+    if not strict_mode and (any_hospital or data.get('filterByNeedSendResult')):
         default_hospital.append(
             {
                 "id": -1,
@@ -1856,7 +1866,7 @@ def hospitals(request):
                 "code_tfoms": "000000",
             }
         )
-    if any_hospital and not data.get('filterByNeedSendResult'):
+    if not strict_mode and any_hospital and not data.get('filterByNeedSendResult'):
         default_hospital.append(
             {
                 "id": -2,
@@ -2077,6 +2087,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/harmful-factor", "title": "Факторы вредности", "access": ["Конструктор: Факторы вредности"], "module": None},
         {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
+        {"url": "/ui/construct/route-perform-service", "title": "Маршрут исследований", "access": ["Конструктор: Маршрут исследований"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2091,8 +2102,16 @@ def construct_menu_data(request):
 
 
 @login_required
-def current_org(request):
+def organization_data(request):
+    request_data = json.loads(request.body)
+
     hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    hospital_pk = request_data.get('hospitalId')
+    if hospital_pk is not None and hospital_pk != hospital.pk:
+        if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+            return status_response(False, 'Доступ запрещен')
+        hospital = Hospitals.objects.get(pk=hospital_pk)
 
     org = {
         "pk": hospital.pk,
@@ -2107,15 +2126,56 @@ def current_org(request):
         "currentManager": hospital.current_manager,
         "okpo": hospital.okpo,
     }
+
+    if SettingManager.l2('ftp') and request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+        org['ordersPullFtpServerUrl'] = hospital.orders_pull_by_numbers or ''
+        org['ordersPushFtpServerUrl'] = hospital.orders_push_by_numbers or ''
+        org['isExternalPerformingOrganization'] = hospital.is_external_performing_organization
+        org['strictTubeNumbers'] = hospital.strict_tube_numbers
+        org['strictDataOwnership'] = hospital.strict_data_ownership
+        org['strictExternalNumbers'] = hospital.strict_external_numbers
+
     return JsonResponse({"org": org})
 
 
 @login_required
-@group_required('Конструктор: Настройка организации')
-def current_org_update(request):
-    parse_params = {'title': str, 'shortTitle': str, 'address': str, 'phones': str, 'ogrn': str, 'currentManager': str, 'licenseData': str, 'www': str, 'email': str, 'okpo': str}
+@group_required('Конструктор: Настройка организации', 'Конструктор: Настройка всех организаций')
+def organization_data_update(request):
+    parse_params = {
+        'title': str,
+        'shortTitle': str,
+        'address': str,
+        'phones': str,
+        'ogrn': str,
+        'currentManager': str,
+        'licenseData': str,
+        'www': str,
+        'email': str,
+        'okpo': str,
+        'pk': int,
+        'ordersPullFtpServerUrl': str,
+        'ordersPushFtpServerUrl': str,
+        'isExternalPerformingOrganization': bool,
+        'strictTubeNumbers': bool,
+        'strictDataOwnership': bool,
+        'strictExternalNumbers': bool,
+    }
 
-    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+    data = data_parse(
+        request.body,
+        parse_params,
+        {
+            'screening': None,
+            'hide': False,
+            'pk': None,
+            'ordersPullFtpServerUrl': None,
+            'ordersPushFtpServerUrl': None,
+            'isExternalPerformingOrganization': False,
+            'strictTubeNumbers': False,
+            'strictDataOwnership': False,
+            'strictExternalNumbers': False,
+        },
+    )
 
     title: str = data[0].strip()
     short_title: str = data[1].strip()
@@ -2127,11 +2187,24 @@ def current_org_update(request):
     www: str = data[7].strip()
     email: str = data[8].strip()
     okpo: str = data[9].strip()
+    hospital_pk: Optional[int] = data[10]
+    orders_pull_by_numbers: Optional[str] = data[11] or None
+    orders_push_by_numbers: Optional[str] = data[12] or None
+    is_external_performing_organization: bool = data[13]
+    strict_tube_numbers: bool = data[14]
+    strict_data_ownership: bool = data[15]
+    strict_external_numbers: bool = data[16]
 
     if not title:
         return status_response(False, 'Название не может быть пустым')
 
     hospital: Hospitals = request.user.doctorprofile.get_hospital()
+    if hospital_pk is not None and hospital_pk != hospital.pk:
+        if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+            return status_response(False, 'Доступ запрещен')
+        hospital = Hospitals.objects.get(pk=hospital_pk)
+
+    has_full_ftp_access = SettingManager.l2('ftp') and request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций')
 
     old_data = {
         "title": hospital.title,
@@ -2144,6 +2217,18 @@ def current_org_update(request):
         "www": hospital.www,
         "email": hospital.email,
         "okpo": hospital.okpo,
+        **(
+            {
+                "orders_pull_by_numbers": hospital.orders_pull_by_numbers,
+                "orders_push_by_numbers": hospital.orders_push_by_numbers,
+                "is_external_performing_organization": hospital.is_external_performing_organization,
+                "strict_tube_numbers": hospital.strict_tube_numbers,
+                "strict_data_ownership": hospital.strict_data_ownership,
+                "strict_external_numbers": hospital.strict_external_numbers,
+            }
+            if has_full_ftp_access
+            else {}
+        ),
     }
 
     new_data = {
@@ -2157,6 +2242,18 @@ def current_org_update(request):
         "www": www,
         "email": email,
         "okpo": okpo,
+        **(
+            {
+                "orders_pull_by_numbers": orders_pull_by_numbers,
+                "orders_push_by_numbers": orders_push_by_numbers,
+                "is_external_performing_organization": is_external_performing_organization,
+                "strict_tube_numbers": strict_tube_numbers,
+                "strict_data_ownership": strict_data_ownership,
+                "strict_external_numbers": strict_external_numbers,
+            }
+            if has_full_ftp_access
+            else {}
+        ),
     }
 
     hospital.title = title
@@ -2169,6 +2266,13 @@ def current_org_update(request):
     hospital.www = www
     hospital.email = email
     hospital.okpo = okpo
+    if has_full_ftp_access:
+        hospital.orders_pull_by_numbers = orders_pull_by_numbers
+        hospital.orders_push_by_numbers = orders_push_by_numbers
+        hospital.is_external_performing_organization = is_external_performing_organization
+        hospital.strict_tube_numbers = strict_tube_numbers
+        hospital.strict_data_ownership = strict_data_ownership
+        hospital.strict_external_numbers = strict_external_numbers
     hospital.save()
 
     Log.log(
@@ -2234,6 +2338,14 @@ def unlimit_period_statistic_groups(request):
 def org_generators(request):
     hospital: Hospitals = request.user.doctorprofile.get_hospital()
 
+    request_data = json.loads(request.body)
+    hospital_pk = request_data.get('hospitalId')
+
+    if hospital_pk is not None and hospital_pk != hospital.pk:
+        if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+            return status_response(False, 'Доступ запрещен', data={'rows': []})
+        hospital = Hospitals.objects.get(pk=hospital_pk)
+
     rows = []
 
     g: directions.NumberGenerator
@@ -2256,44 +2368,87 @@ def org_generators(request):
 
 
 @login_required
-@group_required('Конструктор: Настройка организации')
+@group_required('Конструктор: Настройка организации', 'Конструктор: Настройка всех организаций')
 def org_generators_add(request):
-    hospital: Hospitals = request.user.doctorprofile.get_hospital()
-
     parse_params = {
         'key': str,
         'year': int,
         'start': int,
         'end': int,
         'prependLength': int,
+        'hospitalId': int,
     }
 
-    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+    data = data_parse(request.body, parse_params, {'end': None, 'prependLength': None, 'hospitalId': None, 'year': None})
 
     key: str = data[0]
-    year: int = data[1]
+    year: Optional[int] = data[1]
     start: int = data[2]
-    end: int = data[3]
-    prepend_length: int = data[4]
+    end: Optional[int] = data[3]
+    prepend_length: Optional[int] = data[4]
+    hospital_pk: Optional[int] = data[5]
 
-    with transaction.atomic():
-        directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
-        directions.NumberGenerator.objects.create(hospital=hospital, key=key, year=year, start=start, end=end, prepend_length=prepend_length, is_active=True)
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
 
-        Log.log(
-            hospital.pk,
-            110000,
-            request.user.doctorprofile,
-            {
-                "key": key,
-                "year": year,
-                "start": start,
-                "end": end,
-                "prepend_length": prepend_length,
-            },
-        )
+    if hospital_pk is not None and hospital_pk != hospital.pk:
+        if not request.user.doctorprofile.has_group('Конструктор: Настройка всех организаций'):
+            return status_response(False, 'Доступ запрещен')
+        hospital = Hospitals.objects.get(pk=hospital_pk)
 
-    return status_response(True)
+    if hospital.is_default:
+        return status_response(False, 'Такой генератор создать невозможно')
+
+    is_simple_generator = key == 'tubeNumber' or key == 'externalOrderNumber'
+
+    if is_simple_generator:
+        year = -1
+        prepend_length = 0
+    else:
+        if year is None:
+            return status_response(False, 'Год не может быть пустым')
+        if prepend_length is None:
+            return status_response(False, 'prepend_length не может быть пустым')
+        if end is None:
+            return status_response(False, 'end не может быть пустым')
+
+    try:
+        with transaction.atomic():
+            if is_simple_generator:
+                directions.NumberGenerator.objects.filter(hospital=hospital, key=key).update(is_active=False)
+            else:
+                directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
+
+            if is_simple_generator and key != 'externalOrderNumber':
+                if (
+                    directions.NumberGenerator.objects.filter(key=key)
+                    .filter(Q(start__lte=start, end__lte=end, end__gte=start) | Q(start__gte=start, start__lte=end, end__gte=end) | Q(start__gte=start, end__lte=end))
+                    .exists()
+                ):
+                    raise directions.GeneratorOverlap('Уже существуют генераторы, включающие указанные интервалы')
+
+                if directions.TubesRegistration.objects.filter(number__gte=start, number__lte=end).exists():
+                    raise directions.GeneratorOverlap('Указанный интервал пересекается с уже существующими номерами ёмкостей')
+
+            directions.NumberGenerator.objects.create(hospital=hospital, key=key, year=year, start=start, end=end, prepend_length=prepend_length, is_active=True)
+
+            Log.log(
+                hospital.pk,
+                110000,
+                request.user.doctorprofile,
+                {
+                    "key": key,
+                    "year": year,
+                    "start": start,
+                    "end": end,
+                    "prepend_length": prepend_length,
+                },
+            )
+
+        return status_response(True)
+    except directions.GeneratorOverlap as e:
+        return status_response(False, str(e))
+
+    return status_response(False)
 
 
 def current_time(request):
@@ -2429,7 +2584,15 @@ def statistic_params_search(request):
 @login_required
 @group_required('Конструктор: Настройка организации')
 def get_prices(request):
-    prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.all().order_by('title')]
+    request_data = json.loads(request.body)
+    prices = None
+    if request_data.get("searchTypesObject") == "Работодатель":
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=False, external_performer=False).order_by('title')]
+    elif request_data.get("searchTypesObject") == "Заказчик":
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=True).order_by('title')]
+    elif request_data.get("searchTypesObject") == "Внешний исполнитель":
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(external_performer=True).order_by('title')]
+
     return JsonResponse({"data": prices})
 
 
@@ -2446,21 +2609,34 @@ def get_price_data(request):
 @group_required('Конструктор: Настройка организации')
 def update_price(request):
     request_data = json.loads(request.body)
+    current_price = None
     if request_data["id"] == -1:
-        current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
-        current_price.save()
-        Log.log(
-            current_price.pk,
-            130007,
-            request.user.doctorprofile,
-            current_price.as_json(current_price),
-        )
+        if request_data.get("typePrice") == "Работодатель":
+            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
+        elif request_data.get("typePrice") == "Заказчик":
+            hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
+            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True)
+        elif request_data.get("typePrice") == "Внешний исполнитель":
+            hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
+            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True)
+        if current_price:
+            current_price.save()
+            Log.log(
+                current_price.pk,
+                130007,
+                request.user.doctorprofile,
+                current_price.as_json(current_price),
+            )
     else:
         current_price = PriceName.objects.get(pk=request_data["id"])
         current_price.title = request_data["title"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
-        current_price.company_id = request_data["company"]
+        if request_data.get("typePrice") == "Профосмотр":
+            current_price.company_id = request_data["company"]
+        else:
+            hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
+            current_price.hospital = hospital
         current_price.save()
         Log.log(
             current_price.pk,

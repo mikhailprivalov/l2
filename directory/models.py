@@ -28,6 +28,17 @@ class ReleationsFT(models.Model):
 
     tube = models.ForeignKey(Tubes, help_text='Ёмкость', db_index=True, on_delete=models.CASCADE)
     receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
+    max_researches_per_tube = models.IntegerField(default=None, blank=True, null=True, help_text="Максимальное количество исследований для пробирки")
+    is_default_external_tube = models.BooleanField(default=False, blank=True, db_index=True)
+
+    @staticmethod
+    def get_default_external_tube():
+        tube = ReleationsFT.objects.filter(is_default_external_tube=True).first()
+
+        if not tube:
+            tube = ReleationsFT.objects.create(tube=Tubes.get_default_external_tube(), receive_in_lab=True, is_default_external_tube=True)
+
+        return tube
 
     def __str__(self):
         return "%d %s" % (self.pk, self.tube.title)
@@ -244,7 +255,7 @@ class Researches(models.Model):
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием", db_index=True)
-    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
+    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True, db_index=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
     co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
     microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True, help_text="Пробирка для микробиологического исследования", on_delete=models.SET_NULL)
@@ -281,6 +292,27 @@ class Researches(models.Model):
     uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
     auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
+    plan_external_performing_organization = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    actual_period_result = models.SmallIntegerField(default=0, blank=True, help_text="Актуальность услуги в днях (для запрета)")
+
+    @staticmethod
+    def save_plan_performer(tb_data):
+        research = Researches.objects.all()
+        for r in research:
+            r.plan_external_performing_organization = None
+            r.save()
+
+        for t_b in tb_data:
+            research = Researches.objects.filter(pk=t_b['researchId']).first()
+            if research:
+                research.plan_external_performing_organization_id = t_b['planExternalPerformerId']
+                research.save()
+        return True
+
+    @staticmethod
+    def get_plan_performer():
+        plan_performer = Researches.objects.filter(plan_external_performing_organization__isnull=False).order_by("title")
+        return [{"researchId": p.id, "planExternalPerformerId": p.plan_external_performing_organization_id} for p in plan_performer]
 
     @staticmethod
     def filter_type(t):
@@ -400,6 +432,15 @@ class Researches(models.Model):
             return self.microbiology_tube.title if self.microbiology_tube else ''
         return self.podrazdeleniye.title if self.podrazdeleniye else ""
 
+    def get_podrazdeleniye_title_recieve_recieve(self):
+        if self.plan_external_performing_organization:
+            result = self.plan_external_performing_organization.short_title
+        elif self.is_microbiology:
+            result = self.microbiology_tube.title if self.microbiology_tube else ''
+        else:
+            result = self.podrazdeleniye.title if self.podrazdeleniye else ""
+        return result
+
     def get_title(self):
         return self.short_title or self.title
 
@@ -433,7 +474,7 @@ class HospitalService(models.Model):
         (1, 'Дневник'),
         (2, 'ВК'),
         (3, 'Операция'),
-        (4, 'Фармакотерапия'),
+        (4, 'Назначения'),
         (5, 'Физиотерапия'),
         (6, 'Эпикриз'),
         (7, 'Выписка'),
@@ -446,7 +487,7 @@ class HospitalService(models.Model):
         'diaries': 1,
         'vc': 2,
         'operation': 3,
-        'pharmacotherapy': 4,
+        'assignments': 4,
         'physiotherapy': 5,
         'epicrisis': 6,
         'extracts': 7,
@@ -459,7 +500,7 @@ class HospitalService(models.Model):
         1: 'diaries',
         2: 'vc',
         3: 'operation',
-        4: 'pharmacotherapy',
+        4: 'assignments',
         5: 'physiotherapy',
         6: 'epicrisis',
         7: 'extracts',

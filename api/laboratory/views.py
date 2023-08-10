@@ -42,12 +42,7 @@ def fractions(request):
                 "fsli": f.get_fsli_code(),
             }
         )
-    return JsonResponse(
-        {
-            "fractions": fractions_list,
-            "title": research.get_title(),
-        }
-    )
+    return JsonResponse({"fractions": fractions_list, "title": research.get_title(), "actualPeriod": research.actual_period_result})
 
 
 @login_required
@@ -76,6 +71,9 @@ def save_fsli(request):
         if nu != f.unit_id:
             f.unit_id = nu
             f.save(update_fields=['unit'])
+    research = Researches.objects.filter(pk=request_data['pk']).first()
+    research.actual_period_result = int(request_data['actualPeriod'])
+    research.save()
 
     return JsonResponse({"ok": True})
 
@@ -132,14 +130,14 @@ def ready(request):
 
     for tube in tlist.distinct().prefetch_related('issledovaniya_set__napravleniye').select_related('type', 'type__tube'):
         direction = None
-        if tube.pk not in tubes:
+        if tube.number not in tubes:
             if not direction:
                 direction = tube.issledovaniya_set.first().napravleniye
             if tube.time_recive.date() not in dates_cache:
                 dates_cache[tube.time_recive.date()] = dateformat.format(tube.time_recive, 'd.m.y')
-            tubes.add(tube.pk)
+            tubes.add(tube.number)
             dicttube = {
-                "pk": tube.pk,
+                "pk": tube.number,
                 "direction": direction.pk,
                 "date": dates_cache[tube.time_recive.date()],
                 "tube": {"title": tube.type.tube.title, "color": tube.type.tube.color},
@@ -185,7 +183,7 @@ def search(request):
             pk //= 10
             t = "direction"
         if t == "tube":
-            iss = Issledovaniya.objects.filter(tubes__id=pk)
+            iss = Issledovaniya.objects.filter(tubes__number=pk)
             if iss.count() != 0:
                 direction = iss.first().napravleniye
             iss = iss.filter(research__podrazdeleniye__pk=laboratory_pk)
@@ -216,7 +214,7 @@ def search(request):
                 cnt = 0
                 researches_chk = []
                 for issledovaniye in (
-                    iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight")
+                    iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__number", "research__sort_weight")
                     .prefetch_related('tubes', 'result_set')
                     .select_related('research', 'doc_save')
                 ):
@@ -227,9 +225,9 @@ def search(request):
 
                         tubes_list = issledovaniye.tubes.exclude(doc_recive__isnull=True).all()
 
-                        not_received_tubes_list = [str(x.pk) for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
+                        not_received_tubes_list = [str(x.number) for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("number")]
 
-                        not_received_why = [x.notice for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk") if x.notice]
+                        not_received_why = [x.notice for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("number") if x.notice]
 
                         saved = True
                         confirmed = True
@@ -260,7 +258,7 @@ def search(request):
                                 all_confirmed = False
                         if all_saved and not issledovaniye.time_save and not issledovaniye.deferred:
                             all_saved = False
-                        tb = ','.join(str(v.pk) for v in tubes_list)
+                        tb = ','.join(str(v.number) for v in tubes_list)
 
                         if tb not in groups.keys():
                             cnt += 1
@@ -277,7 +275,7 @@ def search(request):
                                 "status_key": str(saved) + str(confirmed) + str(issledovaniye.deferred and not confirmed),
                                 "not_received_tubes": ", ".join(not_received_tubes_list),
                                 "not_received_why": ", ".join(not_received_why),
-                                "tubes": [{"pk": x.pk, "title": x.type.tube.title, "color": x.type.tube.color} for x in tubes_list],
+                                "tubes": [{"pk": x.number, "title": x.type.tube.title, "color": x.type.tube.color} for x in tubes_list],
                                 "template": str(issledovaniye.research.template),
                                 "deff": issledovaniye.deferred and not confirmed,
                                 "doc_save_fio": doc_save_fio,
@@ -700,12 +698,20 @@ def receive_one_by_one(request):
 
     pk = re.sub("[^0-9]", "", str(request_data['q']))
     direction = request_data["workMode"] == "direction"
+    message = None
     if not direction:
         pks = [pk]
     else:
-        tubes(request, direction_implict_id=pk)
+        resp = tubes(request, direction_implict_id=pk)
+
+        content_type = resp.headers.get("content-type")
+        if content_type == 'application/json':
+            resp_json = json.loads(resp.content)
+            if isinstance(resp_json, dict) and "message" in resp_json:
+                message = resp_json["message"]
+
         pks = [
-            x.pk
+            x.number
             for x in (
                 TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
                 .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
@@ -716,11 +722,24 @@ def receive_one_by_one(request):
     ok_researches = []
     invalid_objects = []
     last_n = None
+
+    external_order_organization = None
+    has_external_order_executor = False
+
     for p in pks:
-        if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
-            tube = TubesRegistration.objects.get(pk=p)
-            podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in tube.issledovaniya_set.all()])))
-            if lab_pk < 0 or tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
+        if TubesRegistration.objects.filter(number=p).exists() and Issledovaniya.objects.filter(tubes__number=p).exists():
+            tube = TubesRegistration.objects.get(number=p)
+            first_iss: Issledovaniya = tube.issledovaniya_set.first()
+            if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
+                podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
+                has_external_order_executor = True
+            else:
+                podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in tube.issledovaniya_set.all()])))
+
+            if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_order:
+                external_order_organization = first_iss.napravleniye.external_order.organization.safe_short_title
+
+            if lab_pk < 0 or first_iss.research.get_podrazdeleniye() == lab:
                 tube.clear_notice(request.user.doctorprofile)
                 status = tube.day_num(request.user.doctorprofile, request_data["nextN"])
                 if status["new"]:
@@ -735,7 +754,7 @@ def receive_one_by_one(request):
                     }
                 )
 
-                ok_researches.extend([x.research.title for x in Issledovaniya.objects.filter(tubes__id=p)])
+                ok_researches.extend([x.research.title for x in Issledovaniya.objects.filter(tubes__number=p)])
             else:
                 invalid_objects.append(f"Пробирка {p} для другой лаборатории: {', '.join(podrs)}")
         else:
@@ -772,8 +791,11 @@ def receive_one_by_one(request):
         {
             "ok": ok_objects,
             "researches": sorted(list(set(ok_researches))),
+            "externalOrderOrganization": external_order_organization,
+            "hasExternalOrderExecutor": has_external_order_executor,
             "invalid": invalid_objects,
             "lastN": last_n,
+            "message": message,
         }
     )
 
@@ -809,19 +831,49 @@ def receive_history(request):
                     "labs": ['Гистология'],
                     "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye_id=n.pk)],
                     'isDirection': True,
+                    'defect_text': n.defect_text,
+                    'is_defect': n.is_defect,
                 }
             )
 
     for row in t.order_by("-daynum").distinct():
-        podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in row.issledovaniya_set.all()])))
+        first_iss: Issledovaniya = row.issledovaniya_set.first()
+        if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
+            podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
+            is_external_executor = True
+        else:
+            podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
+            is_external_executor = False
+
+        if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_order:
+            external_order_organization = first_iss.napravleniye.external_order.organization.safe_short_title
+        else:
+            external_order_organization = None
         result["rows"].append(
             {
-                "pk": row.pk,
+                "pk": row.number,
                 "n": row.daynum or 0,
                 "type": str(row.type.tube),
                 "color": row.type.tube.color,
                 "labs": podrs,
-                "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)],
+                "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__number=row.number)],
+                'defect_text': row.defect_text,
+                'is_defect': row.is_defect,
+                'isExternalExecutor': is_external_executor,
+                'externalOrderOrganization': external_order_organization,
             }
         )
     return JsonResponse(result)
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def save_defect_tube(request):
+    request_data = json.loads(request.body)
+    data_row = request_data.get('row')
+    t = TubesRegistration.objects.filter(pk=int(data_row['pk'])).first()
+    t.is_defect = data_row['is_defect']
+    t.defect_text = data_row['defect_text']
+    t.save()
+    message = {"ok": "ok"}
+    return JsonResponse(message)

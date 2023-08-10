@@ -29,6 +29,9 @@ class PriceName(models.Model):
     date_end = models.DateField(help_text="Дата окончания действия документа", blank=True, null=True)
     research = models.ManyToManyField(directory.Researches, through='PriceCoast', help_text="Услуга-Прайс", blank=True)
     company = models.ForeignKey('contracts.Company', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
+    hospital = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    external_performer = models.BooleanField(default=False, blank=True, help_text='Прайс внешний исполнитель', db_index=True)
+    subcontract = models.BooleanField(default=False, blank=True, help_text='Прайс субподряд', db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -48,9 +51,14 @@ class PriceName(models.Model):
     def as_json(price):
         if price.company:
             company_title = price.company.title
+            company_id = price.company_id
+        elif price.hospital:
+            company_title = price.hospital.title
+            company_id = price.hospital_id
         else:
             company_title = ""
-        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": price.company_id, "companyTitle": company_title}
+            company_id = ""
+        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": company_id, "companyTitle": company_title}
         return json_data
 
 

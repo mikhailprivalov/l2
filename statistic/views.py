@@ -17,6 +17,7 @@ from api.directions.sql_func import get_lab_podr
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from contracts.models import PriceName, PriceCoast, Company
+from contracts.sql_func import get_research_coast_by_prce
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
 from hospitals.models import Hospitals
@@ -26,15 +27,27 @@ from researches.models import Tubes
 from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expertis_results_by_issledovaniya
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
-from utils.dates import try_parse_range, normalize_date
+from utils.dates import try_parse_range, normalize_date, normalize_dots_date
 from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
 from . import sql_func
 from . import structure_sheet
 import datetime
 import calendar
 import openpyxl
-
-from .report import call_patient, swab_covid, cert_notwork, dispanserization, dispensary_data, custom_research, consolidates, commercial_offer, harmful_factors, base_data
+from .report import (
+    call_patient,
+    swab_covid,
+    cert_notwork,
+    dispanserization,
+    dispensary_data,
+    custom_research,
+    consolidates,
+    commercial_offer,
+    harmful_factors,
+    base_data,
+    expertise_report,
+    registry_profit,
+)
 from .sql_func import (
     attached_female_on_month,
     screening_plan_for_month_all_patient,
@@ -49,6 +62,8 @@ from .sql_func import (
     sql_get_documents_by_card_id,
     get_all_harmful_factors_templates,
     get_researches_by_templates,
+    get_expertise_grade,
+    get_confirm_protocol_by_date_extract,
 )
 
 from laboratory.settings import (
@@ -796,8 +811,12 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
-            result = custom_research.custom_research_data(researches_sql)
-            ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
+            if Researches.objects.filter(pk=research_id).first().is_monitoring:
+                result = custom_research.custom_monitoring_research_data(researches_sql)
+                ws = custom_research.custom_monitorimg_research_base(ws, d1, d2, result, research_title[0])
+            else:
+                result = custom_research.custom_research_data(researches_sql)
+                ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
             ws = custom_research.custom_research_fill_data(ws, result)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
@@ -1144,6 +1163,33 @@ def statistic_xls(request):
         researches_deatails = sql_func.statistics_details_research_by_lab(lab_podr, start_date, end_date)
         ws = structure_sheet.statistic_research_by_details_lab_base(ws, d1, d2, "Детали по лаборатории")
         ws = structure_sheet.statistic_research_by_details_lab_data(ws, researches_deatails)
+    elif tp == "statistics-hosp-expertise":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Экспертиза_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Экспертиза")
+        d1 = normalize_dots_date(date_start_o)
+        d2 = normalize_dots_date(date_end_o)
+        extract_researches_id = list(directory.HospitalService.objects.values_list("slave_research_id", flat=True).filter(site_type=7))
+        field_id_for_extract_date = list(directory.ParaclinicInputField.objects.values_list("pk", flat=True).filter(group__research__in=extract_researches_id, title="Дата выписки"))
+        result_extract = get_confirm_protocol_by_date_extract(tuple(field_id_for_extract_date), d1, d2)  # Найти выписки с датой выписки в периоде
+        result_expertise_data = {i.iss_protocol_extract: {"title_research": i.main_extract_research, "direction_main_extract_dir": i.direction_main_extract_dir} for i in result_extract}
+        iss_protocol_extract = list(result_expertise_data.keys())
+        result_expertise_grade = get_expertise_grade(tuple(iss_protocol_extract))  # Результаты экспертизы
+        for i in result_expertise_grade:
+            if i.level_value and i.level_value.lower() == "третий":
+                result_expertise_data[i.parent_id]['третий'] = i.grade_value
+            elif i.level_value and i.level_value.lower() == "второй":
+                result_expertise_data[i.parent_id]['второй'] = i.grade_value
+            else:
+                result_expertise_data[i.parent_id]['без уровня'] = i.grade_value
+        final_result = {}
+        for i in result_expertise_data.values():
+            if not final_result.get(i["title_research"]):
+                final_result[i["title_research"]] = [i]
+            else:
+                final_result[i["title_research"]].append(i)
+        ws = expertise_report.expertise_data(ws, final_result)
     elif tp == "statistics-dispanserization":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Диспансеризация_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
@@ -1803,6 +1849,110 @@ def statistic_xls(request):
             ws = consolidates.consolidate_fill_data_doctors_by_type_department_detail_patient(ws, query_doctors, ws_and_finish_order[1])
         else:
             ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
+    elif tp == "statistics-registry-profit":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Реестр")
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        type_fin = int(request_data.get("fin", -1))
+        data = sql_func.statistics_registry_profit(start_date, end_date, type_fin)
+        companies_id = set([int(i.company_id) for i in data if i.company_id is not None])
+        companies_price = {}
+        price_companies = {}
+        for company_id in list(companies_id):
+            price = get_price_company(company_id, start_date, end_date)
+            if price:
+                companies_price[company_id] = price.id
+                price_companies[price.id] = {"company_id": company_id}
+        coast_research_price = get_research_coast_by_prce(tuple(price_companies.keys()))
+
+        for coast in coast_research_price:
+            price_companies[coast.price_name_id][coast.research_id] = float(coast.coast)
+
+        result = {}
+        for d in data:
+            coast = None
+            coast_price_research = None
+            if d.company_id:
+                id_price = companies_price.get(d.company_id)
+                if id_price:
+                    coast_price_research = price_companies.get(id_price)
+                if coast_price_research:
+                    coast = coast_price_research.get(d.research_id)
+            if not coast:
+                coast = 0
+            if not result.get(d.doc_confirmation_id):
+                result[d.doc_confirmation_id] = {
+                    "fio": f"{d.doc_family} {d.doc_name} {d.doc_patronymic}",
+                    "position": d.position_title,
+                    "researches": {
+                        d.research_id: {
+                            "companies": {
+                                d.company_id: {
+                                    "coasts": {coast: 1},
+                                    "company_title": d.company_title,
+                                },
+                            },
+                            "research_title": d.research_title,
+                        }
+                    },
+                }
+            else:
+                tmp_doctor_researches = result[d.doc_confirmation_id]["researches"]
+                if not tmp_doctor_researches.get(d.research_id):
+                    tmp_doctor_researches[d.research_id] = {
+                        "companies": {
+                            d.company_id: {
+                                "coasts": {coast: 1},
+                                "company_title": d.company_title,
+                            },
+                        },
+                        "research_title": d.research_title,
+                    }
+                    result[d.doc_confirmation_id]["researches"] = tmp_doctor_researches.copy()
+                else:
+                    tmp_research = tmp_doctor_researches.get(d.research_id)
+                    if not tmp_research["companies"].get(d.company_id):
+                        tmp_research["companies"][d.company_id] = {
+                            "coasts": {coast: 1},
+                            "company_title": d.company_title,
+                        }
+                        tmp_doctor_researches[d.research_id] = tmp_research["companies"].copy()
+                    else:
+                        coasts = tmp_research["companies"][d.company_id]["coasts"]
+                        if not coasts.get(coast):
+                            coasts[coast] = 1
+                            tmp_research["companies"][d.company_id]["coasts"] = coasts.copy()
+                        else:
+                            coast_data = coasts.get(coast)
+                            coast_data += 1
+                            coasts[coast] = coast_data
+                            tmp_research["companies"][d.company_id]["coasts"] = coasts.copy()
+                    tmp_doctor_researches[d.research_id] = tmp_research.copy()
+                    result[d.doc_confirmation_id]["researches"] = tmp_doctor_researches.copy()
+        final_result = []
+        for k, v in result.items():
+            for id_research, data_research in v['researches'].items():
+                for id_company, data_company in data_research['companies'].items():
+                    if id_company != "research_title":
+                        for coats, count in data_company['coasts'].items():
+                            final_result.append(
+                                {
+                                    "fio": v.get("fio", "-"),
+                                    "position": v.get("position", "-"),
+                                    "research": data_research.get("research_title", "-"),
+                                    "company": data_company.get("company_title"),
+                                    "coast": coats,
+                                    "count": count,
+                                }
+                            )
+
+        ws = registry_profit.profit_base(ws, date_start_o, date_end_o)
+        ws = registry_profit.profit_data(ws, final_result)
     wb.save(response)
     return response
 

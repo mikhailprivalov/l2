@@ -101,7 +101,8 @@ def get_covid_to_json(researches, d_s, d_e):
                     doc_oms.doc_number as oms_number,
                     doc_passport.serial as passport_serial,
                     doc_passport.doc_number as passport_number,
-                    doc_snils.doc_number as snils_number
+                    doc_snils.doc_number as snils_number,
+                    tube_number
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya 
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -114,12 +115,13 @@ def get_covid_to_json(researches, d_s, d_e):
                 LEFT JOIN directory_fractions
                 ON directions_result.fraction_id=directory_fractions.id
                 LEFT JOIN (
-                SELECT issledovaniya_id,
-                tubesregistration_id,
-                to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'YYYY-MM-DD') AS get_tubes
-                FROM directions_issledovaniya_tubes
-                LEFT JOIN directions_tubesregistration
-                ON directions_tubesregistration.id = directions_issledovaniya_tubes.tubesregistration_id
+                    SELECT issledovaniya_id,
+                    tubesregistration_id,
+                    to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'YYYY-MM-DD') AS get_tubes,
+                    "number" as tube_number
+                    FROM directions_issledovaniya_tubes
+                    LEFT JOIN directions_tubesregistration
+                    ON directions_tubesregistration.id = directions_issledovaniya_tubes.tubesregistration_id
                 ) as tubes
                 ON tubes.issledovaniya_id = directions_issledovaniya.id
                 LEFT JOIN (

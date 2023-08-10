@@ -726,7 +726,7 @@ def hosp_extract_get_data(hosp_last_num):
     date_value, time_value = '', ''
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb, additional_data_ill = '', '', '', '', '', '', '', ''
     days_count, result_hospital, manager_depart, room_num, transfer_to = '', '', '', '', ''
-    ln_data, ln_vk_data = '', ''
+    ln_data, ln_vk_data, external_reason_mkb = '', '', ''
 
     if list_values:
         for i in list_values:
