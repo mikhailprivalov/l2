@@ -114,16 +114,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     params_columns.append({"x": -4.5 * mm, "y": -170 * mm, "width": 135.5 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
 
     text = []
-    opinion = [
-        [
-            Paragraph(f'Кабинет неотложной травматологии и ортопедии <br/> {hospital_name} <br/> {hospital_address}', style_left_bold),
-            Paragraph(f'КАРТА №{direction.pk}', style_center_bold),
-        ],
+    header_org = Paragraph(f'Кабинет неотложной травматологии и ортопедии <br/> {hospital_name} <br/> {hospital_address}', style_left_bold)
+    header_table_data = [
+       header_org,
+       Paragraph(f'КАРТА №{direction.pk}', style_center_bold)
     ]
-    tbl = Table(opinion, colWidths=[50 * mm, 86 * mm], hAlign='LEFT')
-    table_style = [('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('RIGHTPADDING', (1, 0), (1, 0), 50 * mm)]
-    tbl.setStyle(table_style)
-    text.append(tbl)
+    text.append(create_header_table(header_table_data))
     text.append(Spacer(1, 3 * mm))
     text.append(Paragraph('Обратившегося за антирабической помощью', style_header))
     text.append(Spacer(1, space))
@@ -269,6 +265,28 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     text.append(tbl)
     text.append(Spacer(1, space))
     params_columns.append({"x": -4.5 * mm, "y": -170 * mm, "width": 135.5 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
+
+    text = []
+    header_table_data = [
+        header_org,
+        Paragraph(f'ИЗВЕЩЕНИЕ', style_center_bold)
+    ]
+    text.append(create_header_table(header_table_data))
+    text.append(Spacer(1, space))
+    text.append(Paragraph(f'{bold_open}Владелец животного: {bold_close}{protocol_data["Владелец животного"]}', style))
+    text.append(Spacer(1, space))
+    text.append(Paragraph(f'{bold_open}Адрес владельца: {bold_close}{protocol_data["Адрес владельца"]}', style))
+    text.append(Spacer(1, space))
+    text.append(Paragraph(f'{bold_open}Вы обязаны сводить свое животное в горветлечебницу по адресу: {bold_close}{protocol_data["Адрес горветлечебницы"]}', style))
+    text.append(Spacer(1, space))
+    text.append(Paragraph(f'{bold_open}В связи с укусом ею гр.: {bold_close} {patient_data["fio"]}', style))
+    text.append(Spacer(1, space))
+    text.append(Paragraph(f'{bold_open}Проживающего по адресу: {bold_close}{patient_data["fact_address"]}', style))
+    text.append(Spacer(1, space))
+    text.append(Paragraph(f'{bold_open}Дата укуса: {bold_close} {protocol_data["5. Дата укуса, оцарапания, ослюнения"]}', style))
+    text.append(Spacer(1, space))
+    text.append(Paragraph(f'{bold_open}Врач: {bold_close}{direction.last_doc_confirm()}', style))
+    params_columns.append({"x": 145.5 * mm, "y": -170 * mm, "width": 135.5 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
     fwb.append(FrameDataCol(params_columns=params_columns))
 
     return fwb
@@ -299,6 +317,9 @@ def title_fields(iss):
         "19. Какие приняты меры к продолжению прерванных прививок",
         "20. Примечание",
         "Часы приема",
+        "Владелец животного",
+        "Адрес владельца",
+        "Адрес горветлечебницы",
     ]
 
     result = fields_result_only_title_fields(iss, title_fields, False)
@@ -309,6 +330,16 @@ def title_fields(iss):
             data[t] = ""
 
     return data
+
+
+def create_header_table(data: list):
+    table_data = [
+        data
+    ]
+    table = Table(table_data, colWidths=[50 * mm, 86 * mm], hAlign='LEFT')
+    table_style = [('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('RIGHTPADDING', (1, 0), (1, 0), 50 * mm)]
+    table.setStyle(table_style)
+    return table
 
 
 def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
