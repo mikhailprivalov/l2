@@ -13,7 +13,18 @@ class SetInstitutionTitleAdmin(admin.ModelAdmin):
     )
 
 
+class SetDocumentTypeEducationAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'level_education',
+    )
+    list_display_links = (
+        'title',
+        'level_education',
+    )
+
+
 admin.site.register(models.TypeInstitutionEducation)
 admin.site.register(models.InstitutionTitle, SetInstitutionTitleAdmin)
 admin.site.register(models.LevelEducation)
-admin.site.register(models.DocumentTypeEducation)
+admin.site.register(models.DocumentTypeEducation, SetDocumentTypeEducationAdmin )
