@@ -115,10 +115,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     text = []
     header_org = Paragraph(f'Кабинет неотложной травматологии и ортопедии <br/> {hospital_name} <br/> {hospital_address}', style_left_bold)
-    header_table_data = [
-       header_org,
-       Paragraph(f'КАРТА №{direction.pk}', style_center_bold)
-    ]
+    header_table_data = [header_org, Paragraph(f'КАРТА №{direction.pk}', style_center_bold)]
     text.append(create_header_table(header_table_data))
     text.append(Spacer(1, 3 * mm))
     text.append(Paragraph('Обратившегося за антирабической помощью', style_header))
@@ -267,10 +264,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     params_columns.append({"x": -4.5 * mm, "y": -170 * mm, "width": 135.5 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
 
     text = []
-    header_table_data = [
-        header_org,
-        Paragraph(f'ИЗВЕЩЕНИЕ', style_center_bold)
-    ]
+    header_table_data = [header_org, Paragraph(f'ИЗВЕЩЕНИЕ', style_center_bold)]
     text.append(create_header_table(header_table_data))
     text.append(Spacer(1, space))
     text.append(Paragraph(f'{bold_open}Владелец животного: {bold_close}{protocol_data["Владелец животного"]}', style))
@@ -333,9 +327,7 @@ def title_fields(iss):
 
 
 def create_header_table(data: list):
-    table_data = [
-        data
-    ]
+    table_data = [data]
     table = Table(table_data, colWidths=[50 * mm, 86 * mm], hAlign='LEFT')
     table_style = [('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('RIGHTPADDING', (1, 0), (1, 0), 50 * mm)]
     table.setStyle(table_style)
