@@ -25,12 +25,13 @@ def get_connection_params(settings_name):
     return rows
 
 
-def get_all_enrollee(connection_string):
+def get_enrollee_by_year(connection_string: str, year):
     with connect(connection_string).cursor() as cursor:
         cursor.execute(
+            f""" 
+            SELECT top(1) * FROM Абитуриенты.dbo.Все_Абитуриенты 
+            WHERE Абитуриенты.dbo.Все_Абитуриенты.Год_Набора = {year} 
             """
-            SELECT TOP(10) * FROM Абитуриенты.dbo.Все_Абитуриенты
-            """,
         )
         rows = namedtuplefetchall(cursor)
     return rows
