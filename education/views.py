@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from education.sql_func import get_connection_params, get_enrollee_by_year
+from education.sql_func import get_connection_params, get_enrollees_by_year
 
 
 def create_connection_string(settings_name: str):
@@ -12,8 +12,8 @@ def create_connection_string(settings_name: str):
     return connection_string
 
 
-def get_current_enrollee():
+def get_current_enrollees():
     connection_string = create_connection_string('MMIS')
     current_year = datetime.now().year
-    result = get_enrollee_by_year(connection_string, current_year)
+    result = get_enrollees_by_year(connection_string, current_year)
     return result
