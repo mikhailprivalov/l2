@@ -67,15 +67,6 @@ const columns = ref([
   },
 ]);
 
-const getColumns = () => {
-  await this.$store.dispatch(actions.INC_LOADING);
-  const columns = await this.$api('education/get-columns');
-  this.link_rows = resultData.rows;
-  await this.$store.dispatch(actions.DEC_LOADING);
-};
-
-onMounted(getColumns);
-
 const store = useStore();
 const pageSize = ref(30);
 const page = ref(1);
@@ -87,6 +78,16 @@ const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
 const enrollees = ref([]);
+
+const getColumns = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const data = await api('education/get-columns');
+  await store.dispatch(actions.DEC_LOADING);
+  columns.value = data.result;
+  console.log(columns);
+};
+
+onMounted(getColumns);
 
 </script>
 
