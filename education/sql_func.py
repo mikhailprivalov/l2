@@ -18,7 +18,7 @@ def get_connection_params(settings_name):
                 FROM public.dashboards_databaseconnectsettings
                 WHERE dashboards_databaseconnectsettings.title = %(name_settings)s
         """,
-            params={"name_settings": settings_name}
+            params={"name_settings": settings_name},
         )
 
         rows = namedtuplefetchall(cursor)
