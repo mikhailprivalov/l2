@@ -65,6 +65,7 @@ INSTALLED_APPS = (
     'dashboards',
     'chats.apps.ChatsConfig',
     'employees.apps.EmployeesConfig',
+    'education',
 )
 
 MIDDLEWARE = [
