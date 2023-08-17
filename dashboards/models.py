@@ -23,6 +23,8 @@ class DatabaseConnectSettings(models.Model):
     database = models.CharField(max_length=255, default="", help_text='Название базы', db_index=True)
     ip_address = models.CharField(max_length=255, default="", help_text='ip-address', db_index=True)
     port = models.CharField(max_length=5, default="", help_text='Порт', db_index=False)
+    driver = models.CharField(max_length=128, default="", help_text='Драйвер', db_index=False)
+    encrypt = models.CharField(max_length=5, default="", help_text='Шифрование', db_index=False)
 
     def __str__(self):
         return f"{self.title} - {self.database}"
