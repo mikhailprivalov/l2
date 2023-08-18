@@ -182,10 +182,12 @@ class FTPConnection:
         sex = {'m': 'м', 'f': 'ж'}.get(pid.PID_8.value.lower(), 'ж')
 
         orders_by_numbers = defaultdict(list)
+        additional_order_number_by_service = defaultdict(list)
 
         for order in orders.children:
             obr = order.children[0]
             orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
+            additional_order_number_by_service[obr.OBR_4.OBR_4_4.value] = obr.OBR_2.value
 
         orders_by_numbers = dict(orders_by_numbers)
 
@@ -213,6 +215,7 @@ class FTPConnection:
                 doc = DoctorProfile.get_system_profile()
 
                 services_by_order_number = {}
+                services_by_additional_order_num = {}
                 for order_number, services_codes in orders_by_numbers.items():
                     for service_code in services_codes:
                         service = Researches.objects.filter(hide=False, internal_code=service_code).first()
@@ -221,6 +224,7 @@ class FTPConnection:
                         if order_number not in services_by_order_number:
                             services_by_order_number[order_number] = []
                         services_by_order_number[order_number].append(service.pk)
+                        services_by_additional_order_num[service.pk] = additional_order_number_by_service.get(service_code, "")
 
                 for order_number_str, services in services_by_order_number.items():
                     order_numbers.append(order_number_str)
@@ -257,6 +261,7 @@ class FTPConnection:
                         rmis_slot=None,
                         external_order=external_order,
                         hospital_override=hosp.pk if hosp else None,
+                        services_by_additional_order_num=services_by_additional_order_num,
                     )
 
                     if not result['r']:
