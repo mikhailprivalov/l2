@@ -170,11 +170,11 @@ class FTPConnection:
         pid = patient.PID[0]
 
         pv1 = hl7_result.ORM_O01_PATIENT.ORM_O01_PATIENT_VISIT.PV1.PV1_20.value.split("^")
-        fin_source_code, fin_source_title = None, None
+        price_code, price_title = None, None
         if len(pv1) > 1:
-            fin_source_code = pv1[-1]
+            price_code = pv1[-1]
         else:
-            fin_source_title = pv1[0]
+            price_code = pv1[0]
 
         orders = hl7_result.ORM_O01_ORDER[0].children[0]
 
@@ -206,8 +206,6 @@ class FTPConnection:
         print("tel_additional", tel_additional)
         print("tel_work", tel_work)
         print("email", email)
-
-
 
         orders_by_numbers = defaultdict(list)
         additional_order_number_by_service = defaultdict(list)
@@ -289,7 +287,7 @@ class FTPConnection:
                         discount=0,
                         rmis_slot=None,
                         external_order=external_order,
-                        hospital_override=hosp.pk if hosp else None,
+                        hospital_override=self.hospital.pk,
                         services_by_additional_order_num=services_by_additional_order_num,
                     )
 

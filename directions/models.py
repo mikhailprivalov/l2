@@ -419,8 +419,8 @@ class RegisteredOrders(models.Model):
         return f"{self.order_number} {self.patient_card}"
 
     class Meta:
-        verbose_name = 'Внешний заказ'
-        verbose_name_plural = 'Внешние заказы'
+        verbose_name = 'Внешний заказ направления'
+        verbose_name_plural = 'Внешние заказы направлений'
 
 
 class Napravleniya(models.Model):
@@ -2126,8 +2126,8 @@ class ExternalAdditionalOrder(models.Model):
         return f"{self.external_add_order}"
 
     class Meta:
-        verbose_name = 'Внешний номер заказа'
-        verbose_name_plural = 'Внешние номера заказов'
+        verbose_name = 'Внешний лабораторный номер заказа'
+        verbose_name_plural = 'Внешние лабораторные номера заказов'
 
 
 class Issledovaniya(models.Model):
