@@ -3,82 +3,334 @@
     <h4 class="text-center">
       Абитуриенты
     </h4>
-    <div class="filter-div">
-      <div class="margin-div">
-        <Treeselect
-          v-model="selectedDestinations"
-          :multiple="true"
-          :options="destinations"
-          :disable-branch-nodes="true"
-          placeholder="Направление"
-        />
-      </div>
-      <div class="margin-div">
-        <Treeselect
-          v-model="selectedCompetitions"
-          :multiple="true"
-          :options="competitions"
-          :disable-branch-nodes="true"
-          placeholder="Конкурс"
-        />
-      </div>
-      <div class="margin-div">
-        <Treeselect
-          v-model="selectedCustomers"
-          :multiple="true"
-          :options="customers"
-          :disable-branch-nodes="true"
-          placeholder="Заказчик"
-        />
-      </div>
-      <div class="margin-div">
-        <Treeselect
-          v-model="selectedEnrollmentStatuses"
-          :multiple="true"
-          :options="enrollmentStatuses"
-          :disable-branch-nodes="true"
-          placeholder="Статус зачисления"
-        />
-      </div>
-      <div class="margin-div">
-        <Treeselect
-          v-model="selectedDeductionStatuses"
-          :multiple="true"
-          :options="deductionStatuses"
-          :disable-branch-nodes="true"
-        />
-      </div>
-      <div class="margin-div">
-        <Treeselect
-          v-model="selectedCommands"
-          :multiple="true"
-          :options="commands"
-          :disable-branch-nodes="true"
-        />
-      </div>
-      <div class="margin-div flex-div">
+    <div class="margin-div flex-justify">
+      <div>
         <input
-          v-model="consent"
+          id="showFilter"
+          v-model="showFilter"
           type="checkbox"
         >
-        <label>Согласие на зачисление</label>
-        <input
-          v-model="activeApplicationOnly"
-          type="checkbox"
-        >
-        <label>Только активные заявления</label>
+        <label
+          for="showFilter"
+          class="label-for-checkbox"
+        >Фильтры
+        </label>
       </div>
-      <div class="margin-div flex-div">
-        <input
-          v-model="contract"
-          type="checkbox"
-        >
-        <label>Есть договор</label>
-        <input
-          v-model="payment"
-          type="checkbox"
-        >
-        <label>Есть оплата</label>
+      <div>
+        <i class="fa fa-filter fa-times">
+          Очистить фильтры</i>
+      </div>
+    </div>
+    <div v-if="showFilter">
+      <div class="three-col-div">
+        <div class="margin-div">
+          <label>Направление</label>
+          <Treeselect
+            v-model="selectedDestinations"
+            :multiple="true"
+            :options="destinations"
+            :disable-branch-nodes="true"
+            placeholder="Выберите направление"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Конкурс</label>
+          <Treeselect
+            v-model="selectedCompetitions"
+            :multiple="true"
+            :options="competitions"
+            :disable-branch-nodes="true"
+            placeholder="Выберите конкурс"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Заказчик</label>
+          <Treeselect
+            v-model="selectedCustomers"
+            :multiple="true"
+            :options="customers"
+            :disable-branch-nodes="true"
+            placeholder="Выберите заказчика"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Статус зачисления</label>
+          <Treeselect
+            v-model="selectedEnrollmentStatuses"
+            :multiple="true"
+            :options="enrollmentStatuses"
+            :disable-branch-nodes="true"
+            placeholder="Выберите статус"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Статус отчисления</label>
+          <Treeselect
+            v-model="selectedDeductionStatuses"
+            :multiple="true"
+            :options="deductionStatuses"
+            :disable-branch-nodes="true"
+            placeholder="Выберите статус"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Приказ</label>
+          <Treeselect
+            v-model="selectedCommands"
+            :multiple="true"
+            :options="commands"
+            :disable-branch-nodes="true"
+            placeholder="Выберите приказ"
+          />
+        </div>
+        <div class="margin-div flex-div">
+          <div>
+            <input
+              id="consent"
+              v-model="consent"
+              type="checkbox"
+              class="input-checkbox"
+            >
+            <label
+              for="consent"
+              class="label-for-checkbox"
+            >Согласие на зачисление</label>
+          </div>
+          <div>
+            <input
+              id="activeApplicationOnly"
+              v-model="activeApplicationOnly"
+              type="checkbox"
+              class="input-checkbox"
+            >
+            <label
+              for="activeApplicationOnly"
+              class="label-for-checkbox"
+            >Только активные заявления</label>
+          </div>
+        </div>
+        <div class="margin-div flex-div">
+          <div>
+            <input
+              id="contract"
+              v-model="contract"
+              type="checkbox"
+              class="input-checkbox"
+            >
+            <label
+              for="contract"
+              class="label-for-checkbox"
+            >Есть договор</label>
+          </div>
+          <div>
+            <input
+              id="payment"
+              v-model="payment"
+              type="checkbox"
+              class="input-checkbox"
+            >
+            <label
+              for="payment"
+              class="label-for-checkbox"
+            >Есть оплата</label>
+          </div>
+        </div>
+      </div>
+      <div class="margin-div">
+        <label>Гражданство</label>
+        <Treeselect
+          v-model="selectedCitizenship"
+          :multiple="true"
+          :options="citizenship"
+          :disable-branch-nodes="true"
+          placeholder="Выберите конкурс"
+        />
+      </div>
+      <div class="three-col-div">
+        <div class="margin-div">
+          <label>Источник заявления</label>
+          <Treeselect
+            v-model="selectedApplicationSource"
+            :multiple="true"
+            :options="applicationSources"
+            :disable-branch-nodes="true"
+            placeholder="Выберите источник"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Статус заявлений</label>
+          <Treeselect
+            v-model="selectedApplicationStatus"
+            :multiple="true"
+            :options="applicationStatuses"
+            :disable-branch-nodes="true"
+            placeholder="Выберите статус"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Этап заявления</label>
+          <Treeselect
+            v-model="selectedApplicationStage"
+            :multiple="true"
+            :options="applicationsStages"
+            :disable-branch-nodes="true"
+            placeholder="Выберите этап"
+          />
+        </div>
+      </div>
+      <div class="three-col-div">
+        <div class="margin-div">
+          <label>Тип экзамена</label>
+          <Treeselect
+            v-model="selectedTypeExam"
+            :multiple="true"
+            :options="typesExam"
+            :disable-branch-nodes="true"
+            placeholder="Выберите тип"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Предмет</label>
+          <Treeselect
+            v-model="selectedSubject"
+            :multiple="true"
+            :options="subjects"
+            :disable-branch-nodes="true"
+            placeholder="Выберите предмет"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Статус экзамена</label>
+          <Treeselect
+            v-model="selectedExamStatus"
+            :multiple="true"
+            :options="examStatuses"
+            :disable-branch-nodes="true"
+            placeholder="Выберите статус"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Тип ИД</label>
+          <Treeselect
+            v-model="selectedTypeIA"
+            :multiple="true"
+            :options="typeIA"
+            :disable-branch-nodes="true"
+            placeholder="Выберите тип"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Статус ИД</label>
+          <Treeselect
+            v-model="selectedIAStatus"
+            :multiple="true"
+            :options="iAStatuses"
+            :disable-branch-nodes="true"
+            placeholder="Выберите статус"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Удовлетворительный балл</label>
+          <Treeselect
+            v-model="selectedSatisfactoryBall "
+            :multiple="true"
+            :options="satisfactoryBalls"
+            :disable-branch-nodes="true"
+            placeholder="Выберите балл"
+          />
+        </div>
+      </div>
+      <div class="three-col-div">
+        <div class="margin-div">
+          <label>Тип образования</label>
+          <Treeselect
+            v-model="selectedTypeEducation"
+            :multiple="true"
+            :options="typesEducation"
+            :disable-branch-nodes="true"
+            placeholder="Выберите тип"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Тип документа об образовании</label>
+          <Treeselect
+            v-model="selectedTypeEducationDocument"
+            :multiple="true"
+            :options="typesEducationDocument"
+            :disable-branch-nodes="true"
+            placeholder="Выберите тип"
+          />
+        </div>
+        <div class="margin-div flex-div">
+          <div class="div-checkbox">
+            <input
+              id="isHigherEducation"
+              v-model="isHigherEducation"
+              class="input-checkbox"
+              type="checkbox"
+            >
+            <label
+              for="isHigherEducation"
+              class="label-for-checkbox"
+            >Высшее</label>
+          </div>
+          <div class="div-checkbox">
+            <input
+              id="isSecondaryEducation"
+              v-model="isSecondaryEducation"
+              class="input-checkbox"
+              type="checkbox"
+            >
+            <label
+              for="isSecondaryEducation"
+              class="label-for-checkbox"
+            >Среднее</label>
+          </div>
+          <div class="div-checkbox">
+            <input
+              id="isOriginal"
+              v-model="isOriginal"
+              class="input-checkbox"
+              type="checkbox"
+            >
+            <label
+              for="isOriginal"
+              class="label-for-checkbox"
+            >Оригинал</label>
+          </div>
+        </div>
+      </div>
+      <div class="margin-div">
+        <label>Особое право</label>
+        <Treeselect
+          v-model="selectedSpecialRight"
+          :multiple="true"
+          :options="specialRights"
+          :disable-branch-nodes="true"
+          placeholder="Выберите право"
+        />
+      </div>
+      <div class="two-col-div">
+        <div class="margin-div">
+          <label>Тип инвалидности</label>
+          <Treeselect
+            v-model="selectedTypeDisability"
+            :multiple="true"
+            :options="typesDisability"
+            :disable-branch-nodes="true"
+            placeholder="Выберите тип"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Тип сироты</label>
+          <Treeselect
+            v-model="selectedTypeOrphan"
+            :multiple="true"
+            :options="typesOrphan"
+            :disable-branch-nodes="true"
+            placeholder="Выберите тип"
+          />
+        </div>
       </div>
     </div>
     <div>
@@ -115,7 +367,7 @@
 
 <script setup lang="ts">
 import {
-  onMounted, ref,
+  ref,
 } from 'vue';
 import {
   VeLocale,
@@ -126,14 +378,12 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
-// import * as actions from '@/store/action-types';
-// import api from '@/api';
-import { useStore } from '@/store';
+// import { useStore } from '@/store';
 import ruRu from '@/locales/ve';
 
 VeLocale.use(ruRu);
 
-const store = useStore();
+// const store = useStore();
 const pageSize = ref(30);
 const page = ref(1);
 const pageSizeOption = ref([30, 50, 100, 300]);
@@ -143,6 +393,8 @@ const pageNumberChange = (number: number) => {
 const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
+
+const showFilter = ref(false);
 
 const selectedDestinations = ref([]);
 const destinations = ref([
@@ -181,7 +433,63 @@ const commands = ref([
   { id: 3, label: 'Приказ 3' },
 ]);
 
-const consent = ref(Boolean);
+const consent = ref(false);
+const activeApplicationOnly = ref(false);
+const contract = ref(false);
+const payment = ref(false);
+
+const selectedCitizenship = ref([]);
+const citizenship = ref([
+  { id: 1, label: 'Россия' },
+  { id: 2, label: 'Греция' },
+  { id: 3, label: 'Китай' },
+]);
+
+const selectedApplicationSource = ref([]);
+const applicationSources = ref([
+  { id: 1, label: 'Лично' },
+  { id: 2, label: 'ЕПГУ' },
+  { id: 3, label: 'ЛК' },
+]);
+
+const selectedApplicationStatus = ref([]);
+const applicationStatuses = ref([
+  { id: 1, label: 'Статус 1' },
+  { id: 2, label: 'Статус 2' },
+  { id: 3, label: 'Статус 3' },
+]);
+const selectedApplicationStage = ref([]);
+const applicationsStages = ref([
+  { id: 1, label: 'Проверка' },
+  { id: 2, label: 'Принято' },
+  { id: 3, label: 'Отклонено' },
+]);
+
+const selectedTypeExam = ref([]);
+const typesExam = ref([]);
+const selectedSubject = ref([]);
+const subjects = ref([]);
+const selectedExamStatus = ref([]);
+const examStatuses = ref([]);
+const selectedTypeIA = ref([]);
+const typeIA = ref([]);
+const selectedIAStatus = ref([]);
+const iAStatuses = ref([]);
+const selectedSatisfactoryBall = ref([]);
+const satisfactoryBalls = ref([]);
+const selectedTypeEducation = ref([]);
+const typesEducation = ref([]);
+const selectedTypeEducationDocument = ref([]);
+const typesEducationDocument = ref([]);
+const isHigherEducation = ref(false);
+const isSecondaryEducation = ref(false);
+const isOriginal = ref(false);
+const selectedSpecialRight = ref([]);
+const specialRights = ref([]);
+const selectedTypeDisability = ref([]);
+const typesDisability = ref([]);
+const selectedTypeOrphan = ref([]);
+const typesOrphan = ref([]);
 
 const search = ref('');
 
@@ -202,15 +510,6 @@ const columns = ref([
   { field: 'status', key: 'status', title: 'Статус' },
   { field: 'create_date', key: 'create_date', title: 'Создано' },
 ]);
-// const getColumns = async () => {
-//   await store.dispatch(actions.INC_LOADING);
-//   const data = await api('education/get-columns');
-//   await store.dispatch(actions.DEC_LOADING);
-//   columns.value = data.result;
-//   console.log(columns);
-// };
-
-// onMounted(getColumns);
 
 </script>
 
@@ -224,15 +523,37 @@ const columns = ref([
   width: 85px;
   margin: 20px auto;
 }
-.filter-div {
+.three-col-div {
   display: grid;
-  grid-template-columns: auto auto auto;
-  margin-bottom: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 5px;
+}
+.two-col-div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 5px;
 }
 .margin-div {
   margin: 5px 10px;
 }
 .flex-div {
   display: flex;
+  flex-wrap: wrap;
+}
+.flex-space-between {
+  display: flex;
+  justify-content: space-between;
+}
+.input-checkbox {
+  margin: auto 0;
+  height: 20px;
+  vertical-align: middle;
+}
+.label-for-checkbox {
+  margin: auto 10px auto 0;
+}
+.div-checkbox {
+  margin: auto 0;
+  height: 0;
 }
 </style>
