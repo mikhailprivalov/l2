@@ -2094,6 +2094,17 @@ class PersonContract(models.Model):
         )
         pers_contract.save()
 
+def get_hl7_original_order_file_path(instance: 'Issledovaniya', filename):
+    return os.path.join('hl7_orig_order', str(instance.pk), str(uuid.uuid4()), filename)
+
+
+def get_hl7_finish_order_file_path(instance: 'Issledovaniya', filename):
+    return os.path.join('hl7_finish_order', str(instance.pk), str(uuid.uuid4()), filename)
+
+
+def get_hl7_result_file_path(instance: 'Issledovaniya', filename):
+    return os.path.join('hl7_result', str(instance.pk), str(uuid.uuid4()), filename)
+
 
 class Issledovaniya(models.Model):
     """
@@ -2172,6 +2183,7 @@ class Issledovaniya(models.Model):
     doc_add_additional = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
+
 
     @property
     def time_save_local(self):
@@ -2307,6 +2319,33 @@ class Issledovaniya(models.Model):
     class Meta:
         verbose_name = 'Назначение на исследование'
         verbose_name_plural = 'Назначения на исследования'
+
+
+def get_hl7_file_path(instance: 'IssledovaniyaFiles', filename):
+    return os.path.join('hl7_files', str(instance.issledovaniye.pk), str(uuid.uuid4()), filename)
+
+
+class IssledovaniyaHL7Files(models.Model):
+    HL7_ORIG_ORDER = 'hl7_orig_order'
+    HL7_FINISH_ORDER = 'hl7_finish_order'
+    HL7_ORIG_RESULT = 'hl7_orig_result'
+    FILE_TYPES = (
+        (HL7_ORIG_ORDER, HL7_ORIG_ORDER),
+        (HL7_FINISH_ORDER, HL7_FINISH_ORDER),
+        (HL7_ORIG_RESULT, HL7_ORIG_RESULT),
+    )
+
+    issledovaniye = models.ForeignKey(Issledovaniya, on_delete=models.CASCADE, db_index=True, verbose_name="Исследование")
+    file_type = models.CharField(max_length=30, db_index=True, verbose_name="Тип файла")
+    file = models.FileField(upload_to=get_direction_file_path, blank=True, null=True, default=None, verbose_name="Файл документа")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
+
+    def __str__(self) -> str:
+        return f"{self.issledovaniye} — {self.file_type} – {self.created_at}"
+
+    class Meta:
+        verbose_name = 'HL7-файл'
+        verbose_name_plural = 'HL7-файлы'
 
 
 def get_file_path(instance: 'IssledovaniyaFiles', filename):

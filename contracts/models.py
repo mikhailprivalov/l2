@@ -32,6 +32,7 @@ class PriceName(models.Model):
     hospital = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
     external_performer = models.BooleanField(default=False, blank=True, help_text='Прайс внешний исполнитель', db_index=True)
     subcontract = models.BooleanField(default=False, blank=True, help_text='Прайс субподряд', db_index=True)
+    code = models.CharField(max_length=55, unique=True, blank=True, null=True, default=None, help_text='Код прайса', db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)

@@ -2135,6 +2135,8 @@ def organization_data(request):
         org['strictTubeNumbers'] = hospital.strict_tube_numbers
         org['strictDataOwnership'] = hospital.strict_data_ownership
         org['strictExternalNumbers'] = hospital.strict_external_numbers
+        org['hl7SenderApplication'] = hospital.hl7_sender_application
+        org['hl7ReceiverAapplication'] = hospital.hl7_receiver_appplication
 
     return JsonResponse({"org": org})
 
@@ -2161,6 +2163,8 @@ def organization_data_update(request):
         'strictDataOwnership': bool,
         'strictExternalNumbers': bool,
         'resultPullFtpServerUrl': str,
+        'hl7SenderApplication': str,
+        'hl7ReceiverAapplication': str,
     }
 
     data = data_parse(
@@ -2177,6 +2181,8 @@ def organization_data_update(request):
             'strictDataOwnership': False,
             'strictExternalNumbers': False,
             'resultPullFtpServerUrl': None,
+            'hl7SenderApplication': None,
+            'hl7ReceiverAapplication': None,
         },
     )
 
@@ -2198,6 +2204,8 @@ def organization_data_update(request):
     strict_data_ownership: bool = data[15]
     strict_external_numbers: bool = data[16]
     result_pull_by_numbers: Optional[str] = data[17] or None
+    hl7_sender_application: Optional[str] = data[18] or None
+    hl7_receiver_appplication: Optional[str] = data[19] or None
 
     if not title:
         return status_response(False, 'Название не может быть пустым')
@@ -2255,7 +2263,9 @@ def organization_data_update(request):
                 "strict_tube_numbers": strict_tube_numbers,
                 "strict_data_ownership": strict_data_ownership,
                 "strict_external_numbers": strict_external_numbers,
-                "result_pull_by_numbers": hospital.result_pull_by_numbers,
+                "result_pull_by_numbers": result_pull_by_numbers,
+                "hl7_sender_application": hl7_sender_application,
+                "hl7_receiver_appplication": hl7_receiver_appplication,
             }
             if has_full_ftp_access
             else {}
@@ -2272,6 +2282,9 @@ def organization_data_update(request):
     hospital.www = www
     hospital.email = email
     hospital.okpo = okpo
+    hospital.hl7_receiver_appplication = hl7_receiver_appplication
+    hospital.hl7_sender_application = hl7_sender_application
+
     if has_full_ftp_access:
         hospital.orders_pull_by_numbers = orders_pull_by_numbers
         hospital.orders_push_by_numbers = orders_push_by_numbers
