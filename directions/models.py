@@ -2122,6 +2122,13 @@ def get_hl7_result_file_path(instance: 'Issledovaniya', filename):
 class ExternalAdditionalOrder(models.Model):
     external_add_order = models.CharField(max_length=255, db_index=True, blank=True, null=True, default=None, help_text='Внешний номер для услуги')
 
+    def __str__(self):
+        return f"{self.external_add_order}"
+
+    class Meta:
+        verbose_name = 'Внешний номер заказа'
+        verbose_name_plural = 'Внешние номера заказов'
+
 
 class Issledovaniya(models.Model):
     """
