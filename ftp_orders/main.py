@@ -14,7 +14,7 @@ from hl7apy.parser import parse_message
 
 from clients.models import Individual, CardBase
 from contracts.models import PriceName
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7Files
+from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7LinkFiles
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches
@@ -182,7 +182,10 @@ class FTPConnection:
         else:
             finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
 
+
+        print(price_symbol_code)
         price_name = PriceName.objects.filter(symbol_code=price_symbol_code).first()
+        print("price_name", price_name.pk)
 
         orders = hl7_result.ORM_O01_ORDER[0].children[0]
         patient_id_company = pid.PID_2.value
@@ -306,7 +309,16 @@ class FTPConnection:
 
                     for direction in Napravleniya.objects.filter(pk__in=result['list_id'], need_order_redirection=True):
                         self.log("Direction", direction.pk, "marked as redirection to", direction.external_executor_hospital)
-                        NapravleniyaHL7Files.objects.create(napravleniye_id=direction.pk, file=file_new, file_type="HL7_ORIG_ORDER")
+                        with tempfile.NamedTemporaryFile() as f:
+                            self.connect()
+                            self.ftp.retrbinary(f"RETR {file}", f.write)
+                            f.seek(0)
+                            content_new = f.read()
+                            path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, file)
+                            print(path_file)
+                            with open(path_file, 'wb') as fnew:
+                                fnew.write(content_new)
+                        NapravleniyaHL7LinkFiles.objects.create(napravleniye_id=direction.pk, upload_file=path_file, file_type="HL7_ORIG_ORDER", )
                         print("сохранил ф-л")
 
             self.delete_file(file)

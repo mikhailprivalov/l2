@@ -34,7 +34,7 @@ from laboratory.settings import (
     EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED,
     RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
     AUTO_PRINT_RESEARCH_DIRECTION,
-    NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL,
+    NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL, MEDIA_ROOT,
 )
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
@@ -49,7 +49,6 @@ from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
-
 
 from appconf.manager import SettingManager
 from utils.dates import normalize_dots_date
@@ -2344,11 +2343,7 @@ class Issledovaniya(models.Model):
         verbose_name_plural = 'Назначения на исследования'
 
 
-def get_hl7_file_path(instance: 'NapravleniyaHL7Files', filename):
-    return os.path.join('hl7_files', str(instance.napravleniye_id), str(uuid.uuid4()), filename)
-
-
-class NapravleniyaHL7Files(models.Model):
+class NapravleniyaHL7LinkFiles(models.Model):
     HL7_ORIG_ORDER = 'HL7_ORIG_ORDER'
     HL7_FINISH_ORDER = 'HL7_FINISH_ORDER'
     HL7_ORIG_RESULT = 'HL7_ORIG_RESULT'
@@ -2360,15 +2355,20 @@ class NapravleniyaHL7Files(models.Model):
 
     napravleniye = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направления")
     file_type = models.CharField(max_length=30, db_index=True, verbose_name="Тип файла")
-    file = models.FileField(upload_to=get_hl7_file_path, blank=True, null=True, default=None, verbose_name="Файл документа")
+    upload_file = models.FileField(blank=True, null=True, default=None, max_length=255, verbose_name="Файл документа")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
 
     def __str__(self) -> str:
         return f"{self.napravleniye} — {self.file_type} – {self.created_at}"
 
+    def create_hl7_file_path(napravleniye_id, filename):
+        os.makedirs(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id)))
+        return os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id), filename)
+
     class Meta:
         verbose_name = 'HL7-файл'
         verbose_name_plural = 'HL7-файлы'
+
 
 
 def get_file_path(instance: 'IssledovaniyaFiles', filename):
