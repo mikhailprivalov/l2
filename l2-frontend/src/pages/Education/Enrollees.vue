@@ -7,7 +7,7 @@
       <div>
         <input
           id="showFilter"
-          v-model="showFilter"
+          v-model="showFilters"
           type="checkbox"
         >
         <label
@@ -17,12 +17,19 @@
         </label>
       </div>
       <div>
-        <i class="fa fa-filter fa-times">
-          Очистить фильтры</i>
+        <i
+          id="cancelFilter"
+          class="fa fa-times"
+          @click="clearFilters"
+        />
+        <label
+          for="cancelFilter"
+          @click="clearFilters"
+        >Очистить фильтры</label>
       </div>
     </div>
-    <div v-if="showFilter">
-      <div class="three-col-div">
+    <div v-if="showFilters">
+      <div class="four-col-div">
         <div class="margin-div">
           <label>Направление</label>
           <Treeselect
@@ -83,70 +90,18 @@
             placeholder="Выберите приказ"
           />
         </div>
-        <div class="margin-div flex-div">
-          <div>
-            <input
-              id="consent"
-              v-model="consent"
-              type="checkbox"
-              class="input-checkbox"
-            >
-            <label
-              for="consent"
-              class="label-for-checkbox"
-            >Согласие на зачисление</label>
-          </div>
-          <div>
-            <input
-              id="activeApplicationOnly"
-              v-model="activeApplicationOnly"
-              type="checkbox"
-              class="input-checkbox"
-            >
-            <label
-              for="activeApplicationOnly"
-              class="label-for-checkbox"
-            >Только активные заявления</label>
-          </div>
-        </div>
-        <div class="margin-div flex-div">
-          <div>
-            <input
-              id="contract"
-              v-model="contract"
-              type="checkbox"
-              class="input-checkbox"
-            >
-            <label
-              for="contract"
-              class="label-for-checkbox"
-            >Есть договор</label>
-          </div>
-          <div>
-            <input
-              id="payment"
-              v-model="payment"
-              type="checkbox"
-              class="input-checkbox"
-            >
-            <label
-              for="payment"
-              class="label-for-checkbox"
-            >Есть оплата</label>
-          </div>
+        <div class="margin-div">
+          <label>Гражданство</label>
+          <Treeselect
+            v-model="selectedCitizenship"
+            :multiple="true"
+            :options="citizenship"
+            :disable-branch-nodes="true"
+            placeholder="Выберите конкурс"
+          />
         </div>
       </div>
-      <div class="margin-div">
-        <label>Гражданство</label>
-        <Treeselect
-          v-model="selectedCitizenship"
-          :multiple="true"
-          :options="citizenship"
-          :disable-branch-nodes="true"
-          placeholder="Выберите конкурс"
-        />
-      </div>
-      <div class="three-col-div">
+      <div class="four-col-div">
         <div class="margin-div">
           <label>Источник заявления</label>
           <Treeselect
@@ -178,7 +133,7 @@
           />
         </div>
       </div>
-      <div class="three-col-div">
+      <div class="four-col-div">
         <div class="margin-div">
           <label>Тип экзамена</label>
           <Treeselect
@@ -239,8 +194,6 @@
             placeholder="Выберите балл"
           />
         </div>
-      </div>
-      <div class="three-col-div">
         <div class="margin-div">
           <label>Тип образования</label>
           <Treeselect
@@ -260,6 +213,92 @@
             :disable-branch-nodes="true"
             placeholder="Выберите тип"
           />
+        </div>
+      </div>
+      <div class="four-col-div">
+        <div class="margin-div">
+          <label>Особое право</label>
+          <Treeselect
+            v-model="selectedSpecialRight"
+            :multiple="true"
+            :options="specialRights"
+            :disable-branch-nodes="true"
+            placeholder="Выберите право"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Тип инвалидности</label>
+          <Treeselect
+            v-model="selectedTypeDisability"
+            :multiple="true"
+            :options="typesDisability"
+            :disable-branch-nodes="true"
+            placeholder="Выберите тип"
+          />
+        </div>
+        <div class="margin-div">
+          <label>Тип сироты</label>
+          <Treeselect
+            v-model="selectedTypeOrphan"
+            :multiple="true"
+            :options="typesOrphan"
+            :disable-branch-nodes="true"
+            placeholder="Выберите тип"
+          />
+        </div>
+      </div>
+      <div class="four-col-div">
+        <div class="margin-div flex-div">
+          <div>
+            <input
+              id="consent"
+              v-model="consent"
+              type="checkbox"
+              class="input-checkbox"
+            >
+            <label
+              for="consent"
+              class="label-for-checkbox"
+            >Согласие на зачисление</label>
+          </div>
+          <div>
+            <input
+              id="activeApplicationOnly"
+              v-model="activeApplicationOnly"
+              type="checkbox"
+              class="input-checkbox"
+            >
+            <label
+              for="activeApplicationOnly"
+              class="label-for-checkbox"
+            >Только активные заявления</label>
+          </div>
+        </div>
+        <div class="margin-div flex-div">
+          <div>
+            <input
+              id="contract"
+              v-model="contract"
+              type="checkbox"
+              class="input-checkbox"
+            >
+            <label
+              for="contract"
+              class="label-for-checkbox"
+            >Есть договор</label>
+          </div>
+          <div>
+            <input
+              id="payment"
+              v-model="payment"
+              type="checkbox"
+              class="input-checkbox"
+            >
+            <label
+              for="payment"
+              class="label-for-checkbox"
+            >Есть оплата</label>
+          </div>
         </div>
         <div class="margin-div flex-div">
           <div class="div-checkbox">
@@ -300,38 +339,6 @@
           </div>
         </div>
       </div>
-      <div class="margin-div">
-        <label>Особое право</label>
-        <Treeselect
-          v-model="selectedSpecialRight"
-          :multiple="true"
-          :options="specialRights"
-          :disable-branch-nodes="true"
-          placeholder="Выберите право"
-        />
-      </div>
-      <div class="two-col-div">
-        <div class="margin-div">
-          <label>Тип инвалидности</label>
-          <Treeselect
-            v-model="selectedTypeDisability"
-            :multiple="true"
-            :options="typesDisability"
-            :disable-branch-nodes="true"
-            placeholder="Выберите тип"
-          />
-        </div>
-        <div class="margin-div">
-          <label>Тип сироты</label>
-          <Treeselect
-            v-model="selectedTypeOrphan"
-            :multiple="true"
-            :options="typesOrphan"
-            :disable-branch-nodes="true"
-            placeholder="Выберите тип"
-          />
-        </div>
-      </div>
     </div>
     <div>
       <input
@@ -343,17 +350,17 @@
     <div>
       <VeTable
         :columns="columns"
-        :table-data="enrollees"
+        :table-data="filteredEnrollees"
       />
       <div
-        v-show="enrollees.length === 0"
+        v-show="filteredEnrollees.length === 0"
         class="empty-list"
       >
         Нет записей
       </div>
       <div class="flex-space-between">
         <VePagination
-          :total="enrollees.length"
+          :total="filteredEnrollees.length"
           :page-index="page"
           :page-size="pageSize"
           :page-size-option="pageSizeOption"
@@ -367,7 +374,7 @@
 
 <script setup lang="ts">
 import {
-  ref,
+  computed, reactive, ref,
 } from 'vue';
 import {
   VeLocale,
@@ -394,7 +401,7 @@ const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
 
-const showFilter = ref(false);
+const showFilters = ref(false);
 
 const selectedDestinations = ref([]);
 const destinations = ref([
@@ -493,24 +500,104 @@ const typesOrphan = ref([]);
 
 const search = ref('');
 
-const enrollees = ref([]);
+const enrollees = reactive([
+  {
+    card: 1,
+    fio: 'Котова Аделия Ивановна',
+    application: '1-СТОМ-ОО',
+    сhemistry: 33,
+    biology: 43,
+    mathematics: 55,
+    russian_language: 33,
+    ia: 3,
+    iaPlus: 3,
+    amount: 555,
+    is_original: true,
+    status: 'Принято',
+    create_date: '12.07.2023 16:59',
+  },
+  {
+    card: 2,
+    fio: 'Котова2 Аделия2 Ивановна2',
+    application: 'ОО-СТОМ-11',
+    сhemistry: 33,
+    biology: 43,
+    mathematics: 55,
+    russian_language: 33,
+    ia: 3,
+    iaPlus: 3,
+    amount: 33,
+    is_original: false,
+    status: 'Принято',
+    create_date: '13.07.2023 16:59',
+  },
+]);
+
+const filteredEnrollees = computed(() => enrollees.filter(enrollee => {
+  const enrolleeFio = enrollee.fio.toLowerCase();
+  const searchTerm = search.value.toLowerCase();
+
+  return enrolleeFio.includes(searchTerm);
+}));
 
 const columns = ref([
   { field: 'card', key: 'card', title: 'Дело' },
   { field: 'fio', key: 'fio', title: 'ФИО' },
   { field: 'application', key: 'application', title: 'Заявление' },
-  { field: 'сhemistry', key: 'сhemistry', title: 'Хим' },
-  { field: 'biology', key: 'biology', title: 'Био' },
-  { field: 'mathematics', key: 'mathematics', title: 'Мат' },
+  { field: 'сhemistry', key: 'сhemistry', title: 'Хим.' },
+  { field: 'biology', key: 'biology', title: 'Био.' },
+  { field: 'mathematics', key: 'mathematics', title: 'Мат.' },
   { field: 'russian_language', key: 'russian_language', title: 'Рус.' },
   { field: 'ia', key: 'ia', title: 'ИД' },
-  { field: 'ia+', key: 'ia+', title: 'ИД+' },
+  { field: 'iaPlus', key: 'ia+', title: 'ИД+' },
   { field: 'amount', key: 'amount', title: 'Сумм' },
-  { field: 'is_original', key: 'is_original', title: 'Оригинал' },
+  {
+    field: 'is_original',
+    key: 'is_original',
+    title: 'Оригинал',
+    renderBodyCell: ({ row, column }) => {
+      const original = row[column.field];
+      return original ? 'Да' : 'Нет';
+    },
+  },
   { field: 'status', key: 'status', title: 'Статус' },
   { field: 'create_date', key: 'create_date', title: 'Создано' },
+  { field: 'actions', key: 'actions', title: 'Действия', renderBodyCell: ({ row, column }, h) => {
+    return h('button', {style})
+    };
+  },
 ]);
 
+const clearFilters = () => {
+  selectedDestinations.value = [];
+  selectedCompetitions.value = [];
+  selectedCustomers.value = [];
+  selectedEnrollmentStatuses.value = [];
+  selectedDeductionStatuses.value = [];
+  selectedCommands.value = [];
+  consent.value = false;
+  activeApplicationOnly.value = false;
+  contract.value = false;
+  payment.value = false;
+  selectedCitizenship.value = [];
+  selectedApplicationSource.value = [];
+  selectedApplicationStatus.value = [];
+  selectedApplicationStage.value = [];
+  selectedTypeExam.value = [];
+  selectedSubject.value = [];
+  selectedExamStatus.value = [];
+  selectedTypeIA.value = [];
+  selectedIAStatus.value = [];
+  selectedSatisfactoryBall.value = [];
+  selectedTypeEducation.value = [];
+  selectedTypeEducationDocument.value = [];
+  isHigherEducation.value = false;
+  isSecondaryEducation.value = false;
+  isOriginal.value = false;
+  selectedSpecialRight.value = [];
+  selectedTypeDisability.value = [];
+  selectedTypeOrphan.value = [];
+};
 </script>
 
 <style scoped>
@@ -523,14 +610,9 @@ const columns = ref([
   width: 85px;
   margin: 20px auto;
 }
-.three-col-div {
+.four-col-div {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-bottom: 5px;
-}
-.two-col-div {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-bottom: 5px;
 }
 .margin-div {
@@ -555,5 +637,9 @@ const columns = ref([
 .div-checkbox {
   margin: auto 0;
   height: 0;
+}
+.flex-justify {
+  display: flex;
+  justify-content: space-between;
 }
 </style>
