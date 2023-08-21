@@ -12,8 +12,9 @@ from django.db import transaction
 from hl7apy import VALIDATION_LEVEL, core
 from hl7apy.parser import parse_message
 
-from clients.models import Individual
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration
+from clients.models import Individual, CardBase
+from contracts.models import PriceName
+from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7Files
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches
@@ -170,14 +171,20 @@ class FTPConnection:
         pid = patient.PID[0]
 
         pv1 = hl7_result.ORM_O01_PATIENT.ORM_O01_PATIENT_VISIT.PV1.PV1_20.value.split("^")
-        price_code, price_title = None, None
+        print(pv1)
         if len(pv1) > 1:
-            price_code = pv1[-1]
+            price_symbol_code = pv1[-1]
         else:
-            price_code = pv1[0]
+            price_symbol_code = pv1[0]
+        base = CardBase.objects.filter(internal_type=True).first()
+        if pv1[0].lower() in ["наличные", "платно", "средства граждан"]:
+            finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title="Платно", hide=False).first()
+        else:
+            finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
+
+        price_name = PriceName.objects.filter(symbol_code=price_symbol_code).first()
 
         orders = hl7_result.ORM_O01_ORDER[0].children[0]
-
         patient_id_company = pid.PID_2.value
         print("patient_id_company", patient_id_company)
 
@@ -238,9 +245,7 @@ class FTPConnection:
             order_numbers = []
 
             with transaction.atomic():
-                hosp = Hospitals.get_default_hospital()
                 doc = DoctorProfile.get_system_profile()
-
                 services_by_order_number = {}
                 services_by_additional_order_num = {}
                 for order_number, services_codes in orders_by_numbers.items():
@@ -274,7 +279,7 @@ class FTPConnection:
                     result = Napravleniya.gen_napravleniya_by_issledovaniya(
                         card.pk,
                         "",
-                        None,
+                        finsource.pk,
                         "",
                         None,
                         doc,
@@ -289,6 +294,7 @@ class FTPConnection:
                         external_order=external_order,
                         hospital_override=self.hospital.pk,
                         services_by_additional_order_num=services_by_additional_order_num,
+                        price_name=price_name.pk,
                     )
 
                     if not result['r']:
@@ -300,6 +306,8 @@ class FTPConnection:
 
                     for direction in Napravleniya.objects.filter(pk__in=result['list_id'], need_order_redirection=True):
                         self.log("Direction", direction.pk, "marked as redirection to", direction.external_executor_hospital)
+                        NapravleniyaHL7Files.objects.create(napravleniye_id=direction.pk, file=file_new, file_type="HL7_ORIG_ORDER")
+                        print("сохранил ф-л")
 
             self.delete_file(file)
 
@@ -420,6 +428,30 @@ class FTPConnection:
             )
 
 
+    def push_tranfer_file_order(self, direction: Napravleniya, registered_orders_ids):
+        created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        directons_external_order_group = Napravleniya.objects.filter(external_order_id__in=registered_orders_ids)
+        with transaction.atomic():
+            for i in directons_external_order_group:
+                i.need_order_redirection = False
+                i.time_send_hl7 = current_time()
+                i.save(update_fields=['time_send_hl7', 'need_order_redirection'])
+            n = 0
+            filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
+            self.log('Writing file', filename, '\n', content)
+            self.write_file_as_text(filename, content)
+
+            Log.log(
+                direction.pk,
+                190001,
+                None,
+                {
+                    "org": self.hospital.safe_short_title,
+                    "content": content,
+                },
+            )
+
+
 MAX_LOOP_TIME = 600
 
 
@@ -518,7 +550,11 @@ def process_push_orders():
                 try:
                     ftp_connection.connect()
                     for direction in directions_to_sync:
-                        ftp_connection.push_order(direction)
+                        if direction.external_order and direction.need_order_redirection:
+                            registered_orders_ids = direction.external_order.get_registered_orders_by_file_name()
+                            ftp_connection.push_tranfer_file_order(direction, registered_orders_ids)
+                        else:
+                            ftp_connection.push_order(direction)
 
                 except ftplib.all_errors as e:
                     ftp_connection.error(f"error: {e}")

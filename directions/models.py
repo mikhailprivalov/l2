@@ -422,6 +422,9 @@ class RegisteredOrders(models.Model):
         verbose_name = 'Внешний заказ направления'
         verbose_name_plural = 'Внешние заказы направлений'
 
+    def get_registered_orders_by_file_name(self):
+        return RegisteredOrders.objects.values_list("id", flat=True).filter(file_name=self.file_name)
+
 
 class Napravleniya(models.Model):
     """
@@ -546,6 +549,7 @@ class Napravleniya(models.Model):
         Hospitals, related_name='external_executor_hospital', default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Внешняя организация-исполнитель'
     )
     time_send_hl7 = models.DateTimeField(help_text='Дата и время отправки заказа', db_index=True, blank=True, default=None, null=True)
+    price_name = models.ForeignKey(contracts.PriceName, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Прайс для направления')
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -1039,6 +1043,7 @@ class Napravleniya(models.Model):
         price_category=-1,
         hospital=-1,
         external_order=None,
+        price_name=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1076,6 +1081,7 @@ class Napravleniya(models.Model):
             rmis_slot_id=rmis_slot,
             hospital=doc.hospital or Hospitals.get_default_hospital(),
             external_order=external_order,
+            price_name_id=price_name,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
@@ -1262,6 +1268,7 @@ class Napravleniya(models.Model):
         price_category=-1,
         external_order: Optional[RegisteredOrders] = None,
         services_by_additional_order_num=None,
+        price_name=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -1516,6 +1523,7 @@ class Napravleniya(models.Model):
                             price_category=price_category,
                             hospital=hospital_override,
                             external_order=external_order,
+                            price_name=price_name,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1545,6 +1553,7 @@ class Napravleniya(models.Model):
                             price_category=price_category,
                             hospital=hospital_override,
                             external_order=external_order,
+                            price_name=price_name,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -2107,17 +2116,6 @@ class PersonContract(models.Model):
         )
         pers_contract.save()
 
-def get_hl7_original_order_file_path(instance: 'Issledovaniya', filename):
-    return os.path.join('hl7_orig_order', str(instance.pk), str(uuid.uuid4()), filename)
-
-
-def get_hl7_finish_order_file_path(instance: 'Issledovaniya', filename):
-    return os.path.join('hl7_finish_order', str(instance.pk), str(uuid.uuid4()), filename)
-
-
-def get_hl7_result_file_path(instance: 'Issledovaniya', filename):
-    return os.path.join('hl7_result', str(instance.pk), str(uuid.uuid4()), filename)
-
 
 class ExternalAdditionalOrder(models.Model):
     external_add_order = models.CharField(max_length=255, db_index=True, blank=True, null=True, default=None, help_text='Внешний номер для услуги')
@@ -2346,27 +2344,27 @@ class Issledovaniya(models.Model):
         verbose_name_plural = 'Назначения на исследования'
 
 
-def get_hl7_file_path(instance: 'IssledovaniyaFiles', filename):
-    return os.path.join('hl7_files', str(instance.issledovaniye.pk), str(uuid.uuid4()), filename)
+def get_hl7_file_path(instance: 'NapravleniyaHL7Files', filename):
+    return os.path.join('hl7_files', str(instance.napravleniye_id), str(uuid.uuid4()), filename)
 
 
-class IssledovaniyaHL7Files(models.Model):
-    HL7_ORIG_ORDER = 'hl7_orig_order'
-    HL7_FINISH_ORDER = 'hl7_finish_order'
-    HL7_ORIG_RESULT = 'hl7_orig_result'
+class NapravleniyaHL7Files(models.Model):
+    HL7_ORIG_ORDER = 'HL7_ORIG_ORDER'
+    HL7_FINISH_ORDER = 'HL7_FINISH_ORDER'
+    HL7_ORIG_RESULT = 'HL7_ORIG_RESULT'
     FILE_TYPES = (
         (HL7_ORIG_ORDER, HL7_ORIG_ORDER),
         (HL7_FINISH_ORDER, HL7_FINISH_ORDER),
         (HL7_ORIG_RESULT, HL7_ORIG_RESULT),
     )
 
-    issledovaniye = models.ForeignKey(Issledovaniya, on_delete=models.CASCADE, db_index=True, verbose_name="Исследование")
+    napravleniye = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направления")
     file_type = models.CharField(max_length=30, db_index=True, verbose_name="Тип файла")
-    file = models.FileField(upload_to=get_direction_file_path, blank=True, null=True, default=None, verbose_name="Файл документа")
+    file = models.FileField(upload_to=get_hl7_file_path, blank=True, null=True, default=None, verbose_name="Файл документа")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
 
     def __str__(self) -> str:
-        return f"{self.issledovaniye} — {self.file_type} – {self.created_at}"
+        return f"{self.napravleniye} — {self.file_type} – {self.created_at}"
 
     class Meta:
         verbose_name = 'HL7-файл'
