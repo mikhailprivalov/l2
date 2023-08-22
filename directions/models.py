@@ -126,6 +126,13 @@ class TubesRegistration(models.Model):
         return TubesRegistration.objects.create(number=number, type=external_tube)
 
     @staticmethod
+    def make_external_tube(number: int, research):
+        fraction = directory.Fractions.objects.filter(research=research).first()
+        external_tube = fraction.relation
+        return TubesRegistration.objects.create(number=number, type=external_tube)
+
+
+    @staticmethod
     def get_tube_number_generator_pk(hospital: Hospitals):
         if hospital.is_default:
             if not NumberGenerator.objects.filter(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True).exists():
@@ -1662,9 +1669,9 @@ class Napravleniya(models.Model):
                     FrequencyOfUseResearches.inc(research, doc_current)
 
                 tube: Optional[TubesRegistration] = None
-
                 if external_order:
-                    tube = TubesRegistration.make_default_external_tube(external_order.order_number)
+                    research = directory.Researches.objects.get(pk=res[0])
+                    tube = TubesRegistration.make_external_tube(external_order.order_number, research)
 
                 v: Napravleniya
                 for k, v in directions_for_researches.items():

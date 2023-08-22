@@ -184,10 +184,7 @@ class FTPConnection:
         else:
             finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
 
-
-        print(price_symbol_code)
         price_name = PriceName.objects.filter(symbol_code=price_symbol_code).first()
-        print("price_name", price_name.pk)
 
         orders = hl7_result.ORM_O01_ORDER[0].children[0]
         patient_id_company = pid.PID_2.value
@@ -454,7 +451,6 @@ class FTPConnection:
                     data = json.load(json_file)
                     data = data['order']
                     need_replace_field = data['needReplaceField']
-                    # content_new = hl7_file.upload_file.read()
                 mod_lines = []
                 with open(f"{hl7_file.upload_file.name}", 'r') as fp:
                     for n, line in enumerate(fp, 1):
