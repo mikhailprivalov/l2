@@ -452,8 +452,6 @@ class FTPConnection:
             file_name = file_name.split(".")[0]
             filename = f"{file_name}_{direction.pk}_{created_at}.ord"
 
-
-
             hl7_rule_file = os.path.join(BASE_DIR, 'ftp_orders', 'hl7_rule', direction.hospital.hl7_rule_file)
             if hl7_rule_file:
                 with open(hl7_rule_file) as json_file:
@@ -461,8 +459,31 @@ class FTPConnection:
                     data = data['order']
                     need_replace_field = data['needReplaceField']
                     print("need_replace_field", need_replace_field)
+                    content_new = hl7_file.upload_file.read()
+                mod_lines = []
+                with open(f"{hl7_file.upload_file.name}", 'r') as fp:
+                    for n, line in enumerate(fp, 1):
+                        line = line.rstrip('\n')
+                        line_new = line.split("|")
+                        if line_new[0] in need_replace_field.keys():
+                            field_replace = need_replace_field[line_new[0]]
+                            for fr in field_replace:
+                                if fr == "2":
+                                    line_new[int(fr)] = direction.external_executor_hospital.hl7_sender_application
+                                elif fr == "3":
+                                    line_new[int(fr)] = direction.external_executor_hospital.short_title
+                        mod_lines.append("|".join(line_new))
+                path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, f"{hl7_file.upload_file.name}_mod1")
+                with open(path_file, "w") as file:
+                    for line in mod_lines:
+                        file.write(line + '\n')
+                file.close()
 
-            self.log('Writing file', filename, '\n', content)
+            with open(path_file, "r") as file:
+                content = file.read()
+
+            self.log('Writing file', path_file, '\n', content)
+            filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
             self.write_file_as_text(filename, content)
             for k in directons_external_order_group:
                 directions_to_sync.remove(k)

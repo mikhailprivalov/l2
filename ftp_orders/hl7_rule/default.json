@@ -1,6 +1,6 @@
 {
   "order": {
-    "needReplaceField": {"MSH": ["2", "3", "4", "5"], "OBR":  ["2-2"]},
+    "needReplaceField": {"MSH": ["2", "3", "4", "5"], "OBR":  ["2-1"]},
     "MSH": {
       "2": "company_sender_application",
       "3": "company_sender",

@@ -2362,7 +2362,8 @@ class NapravleniyaHL7LinkFiles(models.Model):
         return f"{self.napravleniye} — {self.file_type} – {self.created_at}"
 
     def create_hl7_file_path(napravleniye_id, filename):
-        os.makedirs(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id)))
+        if not os.path.exists(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id))):
+            os.makedirs(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id)))
         return os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id), filename)
 
     class Meta:
