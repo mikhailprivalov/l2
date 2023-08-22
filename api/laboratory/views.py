@@ -845,6 +845,9 @@ def receive_history(request):
         first_iss: Issledovaniya = row.issledovaniya_set.first()
         if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
             podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
+            lab_titles = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
+            lab_titles = ",".join(lab_titles)
+            podrs = [f"{podrs[0]}, {lab_titles}"]
             is_external_executor = True
         else:
             podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
