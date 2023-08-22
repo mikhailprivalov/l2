@@ -1,6 +1,7 @@
 import datetime
 import ftplib
 import json
+import os
 import tempfile
 from collections import defaultdict
 from collections.abc import Iterable
@@ -18,6 +19,7 @@ from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, T
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches
+from laboratory.settings import BASE_DIR
 from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -203,7 +205,7 @@ class FTPConnection:
         sex = {'m': 'м', 'f': 'ж'}.get(pid.PID_8.value.lower(), 'ж')
 
         snils = pid.PID_19.value
-        print("snils", snils.replace("-", "").replace(" ", ""))
+        snils = snils.replace("-", "").replace(" ", "")
 
         adds_data = pid.to_er7().split("|")[13].split("~")
 
@@ -446,7 +448,20 @@ class FTPConnection:
                 i.save(update_fields=['time_send_hl7', 'need_order_redirection', 'need_order_redirection'])
             hl7_file = NapravleniyaHL7LinkFiles.objects.filter(napravleniye=direction).first()
             content = hl7_file.upload_file.read().decode('utf-8-sig')
-            filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
+            file_name = hl7_file.upload_file.name.split("/")[-1]
+            file_name = file_name.split(".")[0]
+            filename = f"{file_name}_{direction.pk}_{created_at}.ord"
+
+
+
+            hl7_rule_file = os.path.join(BASE_DIR, 'ftp_orders', 'hl7_rule', direction.hospital.hl7_rule_file)
+            if hl7_rule_file:
+                with open(hl7_rule_file) as json_file:
+                    data = json.load(json_file)
+                    data = data['order']
+                    need_replace_field = data['needReplaceField']
+                    print("need_replace_field", need_replace_field)
+
             self.log('Writing file', filename, '\n', content)
             self.write_file_as_text(filename, content)
             for k in directons_external_order_group:
