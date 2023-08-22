@@ -447,10 +447,6 @@ class FTPConnection:
                 i.time_send_hl7 = current_time()
                 i.save(update_fields=['time_send_hl7', 'need_order_redirection', 'need_order_redirection'])
             hl7_file = NapravleniyaHL7LinkFiles.objects.filter(napravleniye=direction).first()
-            content = hl7_file.upload_file.read().decode('utf-8-sig')
-            file_name = hl7_file.upload_file.name.split("/")[-1]
-            file_name = file_name.split(".")[0]
-            filename = f"{file_name}_{direction.pk}_{created_at}.ord"
 
             hl7_rule_file = os.path.join(BASE_DIR, 'ftp_orders', 'hl7_rule', direction.hospital.hl7_rule_file)
             if hl7_rule_file:
@@ -458,8 +454,7 @@ class FTPConnection:
                     data = json.load(json_file)
                     data = data['order']
                     need_replace_field = data['needReplaceField']
-                    print("need_replace_field", need_replace_field)
-                    content_new = hl7_file.upload_file.read()
+                    # content_new = hl7_file.upload_file.read()
                 mod_lines = []
                 with open(f"{hl7_file.upload_file.name}", 'r') as fp:
                     for n, line in enumerate(fp, 1):
@@ -473,18 +468,19 @@ class FTPConnection:
                                 elif fr == "3":
                                     line_new[int(fr)] = direction.external_executor_hospital.short_title
                         mod_lines.append("|".join(line_new))
-                path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, f"{hl7_file.upload_file.name}_mod1")
-                with open(path_file, "w") as file:
-                    for line in mod_lines:
-                        file.write(line + '\n')
-                file.close()
+            path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, f"{hl7_file.upload_file.name}_mod")
 
+            with open(path_file, "w") as file:
+                for line in mod_lines:
+                    file.write(line + '\n')
+            file.close()
             with open(path_file, "r") as file:
                 content = file.read()
 
             self.log('Writing file', path_file, '\n', content)
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
             self.write_file_as_text(filename, content)
+
             for k in directons_external_order_group:
                 directions_to_sync.remove(k)
 
