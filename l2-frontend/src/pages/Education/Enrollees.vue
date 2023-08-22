@@ -1,9 +1,9 @@
 <template>
   <div class="main">
-    <h4 class="text-center">
+    <h4 class="header text-center">
       Абитуриенты
     </h4>
-    <div class="margin-div flex-justify">
+    <div class="margin-div flex-div">
       <div>
         <input
           id="showFilter"
@@ -17,15 +17,16 @@
         </label>
       </div>
       <div>
-        <i
-          id="cancelFilter"
-          class="fa fa-times"
+        <button
+          class="btn last btn-blue-nb nbr"
           @click="clearFilters"
-        />
-        <label
-          for="cancelFilter"
-          @click="clearFilters"
-        >Очистить фильтры</label>
+        >
+          <i
+            v-tippy
+            title="Очистить фильтры"
+            class="fa fa-times"
+          />
+        </button>
       </div>
     </div>
     <div v-if="showFilters">
@@ -97,7 +98,7 @@
             :multiple="true"
             :options="citizenship"
             :disable-branch-nodes="true"
-            placeholder="Выберите конкурс"
+            placeholder="Выберите гражданство"
           />
         </div>
       </div>
@@ -348,58 +349,25 @@
       >
     </div>
     <div>
-      <VeTable
-        :columns="columns"
-        :table-data="filteredEnrollees"
+      <EnrolleesTable
+        :enrollees="filteredEnrollees"
       />
-      <div
-        v-show="filteredEnrollees.length === 0"
-        class="empty-list"
-      >
-        Нет записей
-      </div>
-      <div class="flex-space-between">
-        <VePagination
-          :total="filteredEnrollees.length"
-          :page-index="page"
-          :page-size="pageSize"
-          :page-size-option="pageSizeOption"
-          @on-page-number-change="pageNumberChange"
-          @on-page-size-change="pageSizeChange"
-        />
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, reactive, ref,
+  computed, ref,
 } from 'vue';
-import {
-  VeLocale,
-  VePagination,
-  VeTable,
-} from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
 // import { useStore } from '@/store';
-import ruRu from '@/locales/ve';
-
-VeLocale.use(ruRu);
+import EnrolleesTable from '@/pages/Education/EnrolleesTable.vue';
 
 // const store = useStore();
-const pageSize = ref(30);
-const page = ref(1);
-const pageSizeOption = ref([30, 50, 100, 300]);
-const pageNumberChange = (number: number) => {
-  page.value = number;
-};
-const pageSizeChange = (size: number) => {
-  pageSize.value = size;
-};
 
 const showFilters = ref(false);
 
@@ -500,7 +468,7 @@ const typesOrphan = ref([]);
 
 const search = ref('');
 
-const enrollees = reactive([
+const enrollees = ref([
   {
     card: 1,
     fio: 'Котова Аделия Ивановна',
@@ -533,40 +501,12 @@ const enrollees = reactive([
   },
 ]);
 
-const filteredEnrollees = computed(() => enrollees.filter(enrollee => {
+const filteredEnrollees = computed(() => enrollees.value.filter(enrollee => {
   const enrolleeFio = enrollee.fio.toLowerCase();
   const searchTerm = search.value.toLowerCase();
 
   return enrolleeFio.includes(searchTerm);
 }));
-
-const columns = ref([
-  { field: 'card', key: 'card', title: 'Дело' },
-  { field: 'fio', key: 'fio', title: 'ФИО' },
-  { field: 'application', key: 'application', title: 'Заявление' },
-  { field: 'сhemistry', key: 'сhemistry', title: 'Хим.' },
-  { field: 'biology', key: 'biology', title: 'Био.' },
-  { field: 'mathematics', key: 'mathematics', title: 'Мат.' },
-  { field: 'russian_language', key: 'russian_language', title: 'Рус.' },
-  { field: 'ia', key: 'ia', title: 'ИД' },
-  { field: 'iaPlus', key: 'ia+', title: 'ИД+' },
-  { field: 'amount', key: 'amount', title: 'Сумм' },
-  {
-    field: 'is_original',
-    key: 'is_original',
-    title: 'Оригинал',
-    renderBodyCell: ({ row, column }) => {
-      const original = row[column.field];
-      return original ? 'Да' : 'Нет';
-    },
-  },
-  { field: 'status', key: 'status', title: 'Статус' },
-  { field: 'create_date', key: 'create_date', title: 'Создано' },
-  { field: 'actions', key: 'actions', title: 'Действия', renderBodyCell: ({ row, column }, h) => {
-    return h('button', {style})
-    };
-  },
-]);
 
 const clearFilters = () => {
   selectedDestinations.value = [];
@@ -606,10 +546,6 @@ const clearFilters = () => {
   background-color: #ffffff;
   margin: 10px auto;
 }
-.empty-list {
-  width: 85px;
-  margin: 20px auto;
-}
 .four-col-div {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -621,10 +557,6 @@ const clearFilters = () => {
 .flex-div {
   display: flex;
   flex-wrap: wrap;
-}
-.flex-space-between {
-  display: flex;
-  justify-content: space-between;
 }
 .input-checkbox {
   margin: auto 0;
@@ -638,8 +570,7 @@ const clearFilters = () => {
   margin: auto 0;
   height: 0;
 }
-.flex-justify {
-  display: flex;
-  justify-content: space-between;
+.header {
+  margin: 10px;
 }
 </style>
