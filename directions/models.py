@@ -1669,6 +1669,7 @@ class Napravleniya(models.Model):
                     FrequencyOfUseResearches.inc(research, doc_current)
 
                 tube: Optional[TubesRegistration] = None
+
                 if external_order:
                     research = directory.Researches.objects.get(pk=res[0])
                     tube = TubesRegistration.make_external_tube(external_order.order_number, research)
