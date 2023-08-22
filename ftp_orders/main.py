@@ -223,7 +223,6 @@ class FTPConnection:
         for order in orders.children:
             obr = order.children[0]
             orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
-            print(obr.OBR_2.OBR_2_1.value)
             additional_order_number_by_service[obr.OBR_4.OBR_4_4.value] = obr.OBR_2.OBR_2_1.value
 
         orders_by_numbers = dict(orders_by_numbers)
@@ -313,13 +312,10 @@ class FTPConnection:
                             self.connect()
                             self.ftp.retrbinary(f"RETR {file}", f.write)
                             f.seek(0)
-                            content_new = f.read()
                             path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, file)
-                            print(path_file)
                             with open(path_file, 'wb') as fnew:
-                                fnew.write(content_new)
+                                fnew.write(f.read())
                         NapravleniyaHL7LinkFiles.objects.create(napravleniye_id=direction.pk, upload_file=path_file, file_type="HL7_ORIG_ORDER", )
-                        print("сохранил ф-л")
 
             self.delete_file(file)
 
@@ -440,18 +436,21 @@ class FTPConnection:
             )
 
 
-    def push_tranfer_file_order(self, direction: Napravleniya, registered_orders_ids):
+    def push_tranfer_file_order(self, direction: Napravleniya, registered_orders_ids, directions_to_sync):
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         directons_external_order_group = Napravleniya.objects.filter(external_order_id__in=registered_orders_ids)
         with transaction.atomic():
             for i in directons_external_order_group:
                 i.need_order_redirection = False
                 i.time_send_hl7 = current_time()
-                i.save(update_fields=['time_send_hl7', 'need_order_redirection'])
-            n = 0
+                i.save(update_fields=['time_send_hl7', 'need_order_redirection', 'need_order_redirection'])
+            hl7_file = NapravleniyaHL7LinkFiles.objects.filter(napravleniye=direction).first()
+            content = hl7_file.upload_file.read().decode('utf-8-sig')
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
             self.log('Writing file', filename, '\n', content)
             self.write_file_as_text(filename, content)
+            for k in directons_external_order_group:
+                directions_to_sync.remove(k)
 
             Log.log(
                 direction.pk,
@@ -546,8 +545,7 @@ def process_push_orders():
         print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
         for ftp_url, ftp_connection in ftp_connections.items():
             directions_to_sync = []
-
-            for direction in Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:10]:
+            for direction in Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:50]:
                 is_recieve = False
                 for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).distinct():
                     is_recieve = True
@@ -564,7 +562,7 @@ def process_push_orders():
                     for direction in directions_to_sync:
                         if direction.external_order and direction.need_order_redirection:
                             registered_orders_ids = direction.external_order.get_registered_orders_by_file_name()
-                            ftp_connection.push_tranfer_file_order(direction, registered_orders_ids)
+                            ftp_connection.push_tranfer_file_order(direction, registered_orders_ids, directions_to_sync)
                         else:
                             ftp_connection.push_order(direction)
 

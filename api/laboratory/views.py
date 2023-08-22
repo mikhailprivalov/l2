@@ -709,15 +709,19 @@ def receive_one_by_one(request):
             resp_json = json.loads(resp.content)
             if isinstance(resp_json, dict) and "message" in resp_json:
                 message = resp_json["message"]
+        user_groups = [str(x) for x in request.user.groups.all()]
+        if "Направления-все МО" not in user_groups:
+            pks = [
+                x.number
+                for x in (
+                    TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
+                    .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+                    .distinct()
+                )
+            ]
+        else:
+            pks = [x.number for x in (TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk).distinct())]
 
-        pks = [
-            x.number
-            for x in (
-                TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
-                .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
-                .distinct()
-            )
-        ]
     ok_objects = []
     ok_researches = []
     invalid_objects = []

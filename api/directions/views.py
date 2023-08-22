@@ -3343,7 +3343,8 @@ def tubes_for_get(request):
     except:
         return status_response(False, "Направление не найдено")
 
-    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+    user_groups = [str(x) for x in request.user.groups.all()]
+    if direction.get_hospital() != request.user.doctorprofile.get_hospital() and "Направления-все МО" not in user_groups:
         return status_response(False, "Направление для другой организации")
 
     data = {}
