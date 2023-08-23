@@ -1,3 +1,4 @@
+import base64
 import datetime
 import ftplib
 import json
@@ -11,7 +12,7 @@ import time
 
 from django.db import transaction
 from hl7apy import VALIDATION_LEVEL, core
-from hl7apy.parser import parse_message
+from hl7apy.parser import parse_message, parse_field
 
 from clients.models import Individual, CardBase
 from contracts.models import PriceName
@@ -214,6 +215,7 @@ class FTPConnection:
         print("tel_additional", tel_additional)
         print("tel_work", tel_work)
         print("email", email)
+        email_data = base64.b64encode(email).decode("latin1")
 
         orders_by_numbers = defaultdict(list)
         additional_order_number_by_service = defaultdict(list)
@@ -387,15 +389,23 @@ class FTPConnection:
         hl7.msh.msh_11 = "P"
 
         individual = direction.client.individual
+        data_indivdual = direction.client.get_data_individual()
         patient = hl7.add_group("ORM_O01_PATIENT")
         patient.pid.pid_2 = str(direction.client.pk)
         patient.pid.pid_5 = f"{individual.family}^{individual.name}^{individual.patronymic}"
         patient.pid.pid_7 = individual.birthday.strftime("%Y%m%d")
         patient.pid.pid_8 = individual.sex.upper()
+        byte_email = direction.client.email.encode('utf-8')
+        field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}~~~{base64.b64encode(byte_email).decode('UTF-8')}"
+        print(field_13)
+        patient.pid.pid_13.value = field_13
+        patient.pid.pid_19 = data_indivdual['snils']
 
         pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
         pv.PV1.PV1_2.value = "O"
         pv.PV1.PV1_20.value = "Наличные"
+        pv.PV1.PV1_44.value = direction.data_sozdaniya.strftime("%Y%m%d")
+        pv.PV1.PV1_46.value = ""
 
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
@@ -414,14 +424,19 @@ class FTPConnection:
                 n += 1
                 obr = ordd.add_segment("OBR")
                 obr.obr_1 = str(n)
+                obr.obr_2 = f"L2_{iss.pk}^{direction.hospital.hl7_sender_application}"
                 tube_data = [i.tube_number for i in get_tubesregistration_id_by_iss(iss.pk)]
                 obr.obr_3.value = str(tube_data[0])
                 obr.obr_4.obr_4_4.value = iss.research.internal_code
                 obr.obr_4.obr_4_5.value = iss.research.title.replace(" ", "_")
                 obr.obr_7.value = created_at
+                obr.obr_27.value = "^^^^^"
+                obr.obr_34.value = ""
 
             content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
+            content = content.replace("R", "~").replace("\\", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
+            print(content)
 
             self.log('Writing file', filename, '\n', content)
             self.write_file_as_text(filename, content)
