@@ -4,30 +4,18 @@
       Абитуриенты
     </h4>
     <div class="margin-div flex-div">
-      <div>
-        <input
-          id="showFilter"
-          v-model="showFilters"
-          type="checkbox"
-        >
-        <label
-          for="showFilter"
-          class="label-for-checkbox"
-        >Фильтры
-        </label>
-      </div>
-      <div>
-        <button
-          class="btn last btn-blue-nb nbr"
-          @click="clearFilters"
-        >
-          <i
-            v-tippy
-            title="Очистить фильтры"
-            class="fa fa-times"
-          />
-        </button>
-      </div>
+      <button
+        class="btn btn-blue-nb button-icon"
+        @click="showFilters = !showFilters"
+      >
+        {{ showFilters ? 'Скрыть' : 'Фильтры' }}
+      </button>
+      <button
+        class="btn btn-blue-nb button-icon"
+        @click="clearFilters"
+      >
+        Очистить
+      </button>
     </div>
     <div v-if="showFilters">
       <div class="four-col-div">
@@ -37,7 +25,6 @@
             v-model="selectedDestinations"
             :multiple="true"
             :options="destinations"
-            :disable-branch-nodes="true"
             placeholder="Выберите направление"
           />
         </div>
@@ -47,7 +34,6 @@
             v-model="selectedCompetitions"
             :multiple="true"
             :options="competitions"
-            :disable-branch-nodes="true"
             placeholder="Выберите конкурс"
           />
         </div>
@@ -55,9 +41,7 @@
           <label>Заказчик</label>
           <Treeselect
             v-model="selectedCustomers"
-            :multiple="true"
             :options="customers"
-            :disable-branch-nodes="true"
             placeholder="Выберите заказчика"
           />
         </div>
@@ -65,9 +49,7 @@
           <label>Статус зачисления</label>
           <Treeselect
             v-model="selectedEnrollmentStatuses"
-            :multiple="true"
             :options="enrollmentStatuses"
-            :disable-branch-nodes="true"
             placeholder="Выберите статус"
           />
         </div>
@@ -75,9 +57,7 @@
           <label>Статус отчисления</label>
           <Treeselect
             v-model="selectedDeductionStatuses"
-            :multiple="true"
             :options="deductionStatuses"
-            :disable-branch-nodes="true"
             placeholder="Выберите статус"
           />
         </div>
@@ -87,7 +67,6 @@
             v-model="selectedCommands"
             :multiple="true"
             :options="commands"
-            :disable-branch-nodes="true"
             placeholder="Выберите приказ"
           />
         </div>
@@ -95,9 +74,7 @@
           <label>Гражданство</label>
           <Treeselect
             v-model="selectedCitizenship"
-            :multiple="true"
             :options="citizenship"
-            :disable-branch-nodes="true"
             placeholder="Выберите гражданство"
           />
         </div>
@@ -109,7 +86,6 @@
             v-model="selectedApplicationSource"
             :multiple="true"
             :options="applicationSources"
-            :disable-branch-nodes="true"
             placeholder="Выберите источник"
           />
         </div>
@@ -119,7 +95,6 @@
             v-model="selectedApplicationStatus"
             :multiple="true"
             :options="applicationStatuses"
-            :disable-branch-nodes="true"
             placeholder="Выберите статус"
           />
         </div>
@@ -127,9 +102,7 @@
           <label>Этап заявления</label>
           <Treeselect
             v-model="selectedApplicationStage"
-            :multiple="true"
             :options="applicationsStages"
-            :disable-branch-nodes="true"
             placeholder="Выберите этап"
           />
         </div>
@@ -141,7 +114,6 @@
             v-model="selectedTypeExam"
             :multiple="true"
             :options="typesExam"
-            :disable-branch-nodes="true"
             placeholder="Выберите тип"
           />
         </div>
@@ -151,7 +123,6 @@
             v-model="selectedSubject"
             :multiple="true"
             :options="subjects"
-            :disable-branch-nodes="true"
             placeholder="Выберите предмет"
           />
         </div>
@@ -159,9 +130,7 @@
           <label>Статус экзамена</label>
           <Treeselect
             v-model="selectedExamStatus"
-            :multiple="true"
             :options="examStatuses"
-            :disable-branch-nodes="true"
             placeholder="Выберите статус"
           />
         </div>
@@ -171,7 +140,6 @@
             v-model="selectedTypeIA"
             :multiple="true"
             :options="typeIA"
-            :disable-branch-nodes="true"
             placeholder="Выберите тип"
           />
         </div>
@@ -181,7 +149,6 @@
             v-model="selectedIAStatus"
             :multiple="true"
             :options="iAStatuses"
-            :disable-branch-nodes="true"
             placeholder="Выберите статус"
           />
         </div>
@@ -189,62 +156,28 @@
           <label>Удовлетворительный балл</label>
           <Treeselect
             v-model="selectedSatisfactoryBall "
-            :multiple="true"
             :options="satisfactoryBalls"
-            :disable-branch-nodes="true"
             placeholder="Выберите балл"
           />
         </div>
         <div class="margin-div">
-          <label>Тип образования</label>
+          <label>Образование</label>
           <Treeselect
-            v-model="selectedTypeEducation"
+            v-model="selectedEducation"
             :multiple="true"
-            :options="typesEducation"
-            :disable-branch-nodes="true"
+            value-consists-of="LEAF_PRIORITY"
+            :options="education"
             placeholder="Выберите тип"
           />
         </div>
-        <div class="margin-div">
-          <label>Тип документа об образовании</label>
-          <Treeselect
-            v-model="selectedTypeEducationDocument"
-            :multiple="true"
-            :options="typesEducationDocument"
-            :disable-branch-nodes="true"
-            placeholder="Выберите тип"
-          />
-        </div>
-      </div>
-      <div class="four-col-div">
         <div class="margin-div">
           <label>Особое право</label>
           <Treeselect
             v-model="selectedSpecialRight"
             :multiple="true"
             :options="specialRights"
-            :disable-branch-nodes="true"
+            value-consists-of="LEAF_PRIORITY"
             placeholder="Выберите право"
-          />
-        </div>
-        <div class="margin-div">
-          <label>Тип инвалидности</label>
-          <Treeselect
-            v-model="selectedTypeDisability"
-            :multiple="true"
-            :options="typesDisability"
-            :disable-branch-nodes="true"
-            placeholder="Выберите тип"
-          />
-        </div>
-        <div class="margin-div">
-          <label>Тип сироты</label>
-          <Treeselect
-            v-model="selectedTypeOrphan"
-            :multiple="true"
-            :options="typesOrphan"
-            :disable-branch-nodes="true"
-            placeholder="Выберите тип"
           />
         </div>
       </div>
@@ -302,31 +235,7 @@
           </div>
         </div>
         <div class="margin-div flex-div">
-          <div class="div-checkbox">
-            <input
-              id="isHigherEducation"
-              v-model="isHigherEducation"
-              class="input-checkbox"
-              type="checkbox"
-            >
-            <label
-              for="isHigherEducation"
-              class="label-for-checkbox"
-            >Высшее</label>
-          </div>
-          <div class="div-checkbox">
-            <input
-              id="isSecondaryEducation"
-              v-model="isSecondaryEducation"
-              class="input-checkbox"
-              type="checkbox"
-            >
-            <label
-              for="isSecondaryEducation"
-              class="label-for-checkbox"
-            >Среднее</label>
-          </div>
-          <div class="div-checkbox">
+          <div>
             <input
               id="isOriginal"
               v-model="isOriginal"
@@ -364,10 +273,8 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
-// import { useStore } from '@/store';
 import EnrolleesTable from '@/pages/Education/EnrolleesTable.vue';
 
-// const store = useStore();
 
 const showFilters = ref(false);
 
@@ -452,19 +359,22 @@ const selectedIAStatus = ref([]);
 const iAStatuses = ref([]);
 const selectedSatisfactoryBall = ref([]);
 const satisfactoryBalls = ref([]);
-const selectedTypeEducation = ref([]);
-const typesEducation = ref([]);
-const selectedTypeEducationDocument = ref([]);
-const typesEducationDocument = ref([]);
-const isHigherEducation = ref(false);
-const isSecondaryEducation = ref(false);
+const selectedEducation = ref([]);
+const education = ref([
+  {
+    id: 1,
+    label: 'Среднее общее',
+    children: [{ id: 4, label: 'Аттестат школы 9 классов' },
+      { id: 5, label: 'Аттестат лицея 9 классов' }],
+  },
+  { id: 2, label: 'Среднее проф', children: [{ id: 6, label: 'диплом Колледжа' }, { id: 7, label: 'Аттестат Техникума' }] },
+  { id: 3, label: 'Высшее' }]);
 const isOriginal = ref(false);
 const selectedSpecialRight = ref([]);
-const specialRights = ref([]);
-const selectedTypeDisability = ref([]);
-const typesDisability = ref([]);
-const selectedTypeOrphan = ref([]);
-const typesOrphan = ref([]);
+const specialRights = ref([
+  { id: 1, label: 'Инвалид', children: [{ id: 2, label: 'Инвалид 1-й группы' }, { id: 3, label: 'Инвалид 2-й группы' }] },
+  { id: 4, label: 'Сирота', children: [{ id: 5, label: 'Сирота1' }, { id: 6, label: 'Сирота2' }] },
+]);
 
 const search = ref('');
 
@@ -529,18 +439,13 @@ const clearFilters = () => {
   selectedTypeIA.value = [];
   selectedIAStatus.value = [];
   selectedSatisfactoryBall.value = [];
-  selectedTypeEducation.value = [];
-  selectedTypeEducationDocument.value = [];
-  isHigherEducation.value = false;
-  isSecondaryEducation.value = false;
+  selectedEducation.value = [];
   isOriginal.value = false;
   selectedSpecialRight.value = [];
-  selectedTypeDisability.value = [];
-  selectedTypeOrphan.value = [];
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .main {
   width: 90%;
   background-color: #ffffff;
@@ -572,5 +477,18 @@ const clearFilters = () => {
 }
 .header {
   margin: 10px;
+}
+.button-icon {
+  background-color: transparent !important;
+  color: #434A54;
+  border: none !important;
+  font-weight: 700;
+}
+.button-icon:hover {
+  background-color: #434a54 !important;
+  color: #FFFFFF
+}
+.button-icon:active {
+  background-color: #37BC9B !important;
 }
 </style>

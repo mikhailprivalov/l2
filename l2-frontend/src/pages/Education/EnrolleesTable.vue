@@ -120,7 +120,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .empty-list {
   width: 85px;
   margin: 20px auto;
