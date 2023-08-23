@@ -1,4 +1,4 @@
-from clients.models import Individual, Card
+from clients.models import Individual, Card, Document, DocumentType
 
 
 def find_patient(snils, enp):
@@ -18,3 +18,4 @@ def find_patient(snils, enp):
 
     card = Card.objects.filter(individual=individual, base__internal_type=True).first()
     return card
+

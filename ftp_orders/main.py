@@ -173,7 +173,6 @@ class FTPConnection:
         pid = patient.PID[0]
 
         pv1 = hl7_result.ORM_O01_PATIENT.ORM_O01_PATIENT_VISIT.PV1.PV1_20.value.split("^")
-        print(pv1)
         if len(pv1) > 1:
             price_symbol_code = pv1[-1]
         else:
@@ -237,8 +236,11 @@ class FTPConnection:
                     "patronymic": patronymic,
                     "sex": sex,
                     "birthday": birthday,
+                    "snils": snils
                 },
                 self.hospital,
+                patient_id_company
+
             )
             self.log("Card", card)
 
