@@ -22,26 +22,26 @@
         <div class="margin-div">
           <label>Направление</label>
           <Treeselect
-            v-model="selectedDestinations"
+            v-model="selectedEducationDirection"
             :multiple="true"
-            :options="destinations"
+            :options="educationDirections"
             placeholder="Выберите направление"
           />
         </div>
         <div class="margin-div">
-          <label>Конкурс</label>
+          <label>Основание</label>
           <Treeselect
-            v-model="selectedCompetitions"
+            v-model="selectedPayForm"
             :multiple="true"
-            :options="competitions"
-            placeholder="Выберите конкурс"
+            :options="payForms"
+            placeholder="Выберите основание"
           />
         </div>
         <div class="margin-div">
           <label>Заказчик</label>
           <Treeselect
-            v-model="selectedCustomers"
-            :options="customers"
+            v-model="selectedCompany"
+            :options="companies"
             placeholder="Выберите заказчика"
           />
         </div>
@@ -83,26 +83,26 @@
         <div class="margin-div">
           <label>Источник заявления</label>
           <Treeselect
-            v-model="selectedApplicationSource"
+            v-model="selectedStatementSource"
             :multiple="true"
-            :options="applicationSources"
+            :options="statementSources"
             placeholder="Выберите источник"
           />
         </div>
         <div class="margin-div">
           <label>Статус заявлений</label>
           <Treeselect
-            v-model="selectedApplicationStatus"
+            v-model="selectedStatementStatus"
             :multiple="true"
-            :options="applicationStatuses"
+            :options="statementStatuses"
             placeholder="Выберите статус"
           />
         </div>
         <div class="margin-div">
           <label>Этап заявления</label>
           <Treeselect
-            v-model="selectedApplicationStage"
-            :options="applicationsStages"
+            v-model="selectedStatementStage"
+            :options="statementStages"
             placeholder="Выберите этап"
           />
         </div>
@@ -267,114 +267,76 @@
 
 <script setup lang="ts">
 import {
-  computed, ref,
+  computed, onMounted, ref,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
 import EnrolleesTable from '@/pages/Education/EnrolleesTable.vue';
-
+import api from '@/api';
 
 const showFilters = ref(false);
 
-const selectedDestinations = ref([]);
-const destinations = ref([
-  { id: 1, label: 'Направление 1' },
-  { id: 2, label: 'Направление 2' },
-  { id: 3, label: 'Направление 3' },
-]);
-const selectedCompetitions = ref([]);
-const competitions = ref([
-  { id: 1, label: 'Конкурс 1' },
-  { id: 2, label: 'Конкурс 2' },
-  { id: 3, label: 'Конкурс 3' },
-]);
-const selectedCustomers = ref([]);
-const customers = ref([
-  { id: 1, label: 'Заказчик 1' },
-  { id: 2, label: 'Заказчик 2' },
-  { id: 3, label: 'Заказчик 3' },
-]);
-const selectedEnrollmentStatuses = ref([]);
-const enrollmentStatuses = ref([
-  { id: 1, label: 'Статус зачисления 1' },
-  { id: 2, label: 'Статус зачисления 2' },
-  { id: 3, label: 'Статус зачисления 3' },
-]);
-const selectedDeductionStatuses = ref([]);
-const deductionStatuses = ref([
-  { id: 1, label: 'Статус отчисления 1' },
-  { id: 2, label: 'Статус отчисления 2' },
-  { id: 3, label: 'Статус отчисления 3' },
-]);
+const selectedEducationDirection = ref([]);
+const educationDirections = ref([]);
+const getEducationDirection = async () => {
+  const data = await api('/education/get-education-directions');
+  educationDirections.value = data.result;
+};
+
+const selectedPayForm = ref([]);
+const payForms = ref([]);
+const getPayForms = async () => {
+  const data = await api('/education/get-pay-forms');
+  payForms.value = data.result;
+};
+const selectedCompany = ref(null);
+const companies = ref([]);
+const getCompanies = async () => {
+  const result = await api('/get-companies');
+  companies.value = result.data;
+};
+const selectedEnrollmentStatuses = ref(null);
+const enrollmentStatuses = ref([]);
+const selectedDeductionStatuses = ref(null);
+const deductionStatuses = ref([]);
 const selectedCommands = ref([]);
-const commands = ref([
-  { id: 1, label: 'Приказ 1' },
-  { id: 2, label: 'Приказ 2' },
-  { id: 3, label: 'Приказ 3' },
-]);
+const commands = ref([]);
 
 const consent = ref(false);
 const activeApplicationOnly = ref(false);
 const contract = ref(false);
 const payment = ref(false);
 
-const selectedCitizenship = ref([]);
-const citizenship = ref([
-  { id: 1, label: 'Россия' },
-  { id: 2, label: 'Греция' },
-  { id: 3, label: 'Китай' },
-]);
+const selectedCitizenship = ref(null);
+const citizenship = ref([]);
 
-const selectedApplicationSource = ref([]);
-const applicationSources = ref([
-  { id: 1, label: 'Лично' },
-  { id: 2, label: 'ЕПГУ' },
-  { id: 3, label: 'ЛК' },
-]);
+const selectedStatementSource = ref([]);
+const statementSources = ref([]);
 
-const selectedApplicationStatus = ref([]);
-const applicationStatuses = ref([
-  { id: 1, label: 'Статус 1' },
-  { id: 2, label: 'Статус 2' },
-  { id: 3, label: 'Статус 3' },
-]);
-const selectedApplicationStage = ref([]);
-const applicationsStages = ref([
-  { id: 1, label: 'Проверка' },
-  { id: 2, label: 'Принято' },
-  { id: 3, label: 'Отклонено' },
-]);
+const selectedStatementStatus = ref([]);
+const statementStatuses = ref([]);
+const selectedStatementStage = ref(null);
+const statementStages = ref([]);
 
 const selectedTypeExam = ref([]);
 const typesExam = ref([]);
 const selectedSubject = ref([]);
 const subjects = ref([]);
-const selectedExamStatus = ref([]);
+const selectedExamStatus = ref(null);
 const examStatuses = ref([]);
 const selectedTypeIA = ref([]);
 const typeIA = ref([]);
 const selectedIAStatus = ref([]);
 const iAStatuses = ref([]);
-const selectedSatisfactoryBall = ref([]);
+const selectedSatisfactoryBall = ref(null);
 const satisfactoryBalls = ref([]);
 const selectedEducation = ref([]);
-const education = ref([
-  {
-    id: 1,
-    label: 'Среднее общее',
-    children: [{ id: 4, label: 'Аттестат школы 9 классов' },
-      { id: 5, label: 'Аттестат лицея 9 классов' }],
-  },
-  { id: 2, label: 'Среднее проф', children: [{ id: 6, label: 'диплом Колледжа' }, { id: 7, label: 'Аттестат Техникума' }] },
-  { id: 3, label: 'Высшее' }]);
+const education = ref([]);
 const isOriginal = ref(false);
 const selectedSpecialRight = ref([]);
-const specialRights = ref([
-  { id: 1, label: 'Инвалид', children: [{ id: 2, label: 'Инвалид 1-й группы' }, { id: 3, label: 'Инвалид 2-й группы' }] },
-  { id: 4, label: 'Сирота', children: [{ id: 5, label: 'Сирота1' }, { id: 6, label: 'Сирота2' }] },
-]);
+const specialRights = ref([]);
 
 const search = ref('');
 
@@ -419,30 +381,31 @@ const filteredEnrollees = computed(() => enrollees.value.filter(enrollee => {
 }));
 
 const clearFilters = () => {
-  selectedDestinations.value = [];
-  selectedCompetitions.value = [];
-  selectedCustomers.value = [];
-  selectedEnrollmentStatuses.value = [];
-  selectedDeductionStatuses.value = [];
+  selectedEducationDirection.value = [];
+  selectedCompany.value = null;
+  selectedEnrollmentStatuses.value = null;
+  selectedDeductionStatuses.value = null;
   selectedCommands.value = [];
   consent.value = false;
   activeApplicationOnly.value = false;
   contract.value = false;
   payment.value = false;
-  selectedCitizenship.value = [];
-  selectedApplicationSource.value = [];
-  selectedApplicationStatus.value = [];
-  selectedApplicationStage.value = [];
+  selectedCitizenship.value = null;
+  selectedStatementSource.value = [];
+  selectedStatementStatus.value = [];
+  selectedStatementStage.value = null;
   selectedTypeExam.value = [];
   selectedSubject.value = [];
-  selectedExamStatus.value = [];
+  selectedExamStatus.value = null;
   selectedTypeIA.value = [];
   selectedIAStatus.value = [];
-  selectedSatisfactoryBall.value = [];
+  selectedSatisfactoryBall.value = null;
   selectedEducation.value = [];
   isOriginal.value = false;
   selectedSpecialRight.value = [];
 };
+
+onMounted(getEducationDirection);
 </script>
 
 <style scoped lang="scss">
