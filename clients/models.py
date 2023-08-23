@@ -816,24 +816,11 @@ class Individual(models.Model):
                     i.save(update_fields=updated)
 
         if i:
-            doc_snils = i.add_document_snils(snils)
-            card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=doc_snils)
+            snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
+            document_snils = i.add_or_update_doc(snils_type, '', snils)
+            card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=document_snils)
 
         return card
-
-    def add_document_snils(self, snils):
-        snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
-        if not Document.objects.filter(individual=self, document_type=snils_type).exists():
-            snils_doc = Document(
-                individual=self,
-                document_type=snils_type,
-                number=snils,
-            )
-            snils_doc.save()
-        else:
-            snils_doc = Document.objects.filter(individual=self, document_type=snils_type).first()
-        return snils_doc
-
 
     def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str, insurer_full_code=""):
         ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
