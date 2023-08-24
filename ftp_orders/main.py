@@ -349,32 +349,6 @@ class FTPConnection:
             return
 
         self.log(f"HL7 parsed")
-        print("hl7_result")
-        # print(hl7_result.children)
-        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.PID.PID_7.value) +
-        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.PID.PID_2.value) +
-        print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.ORU_R01_VISIT.PV1.PV1_3.value)
-        print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.ORU_R01_VISIT.PV1.PV1_3.PL_4.value)
-        print(hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR.OBR_2.OBR_2_1.value)
-        print(hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR.OBR_2.OBR_2_2.value)
-        print(hl7_result.obr.obr_2.value)
-
-        obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
-        for obx in obxes:
-            print(obx.OBX.obx_1.value)
-            print(obx.OBX.obx_2.value)
-            print(obx.OBX.obx_3.obx_3_2.value, obx.OBX.obx_5.value)
-        # print(obxes[0].OBX.value)
-        # print(obxes[1].OBX.value)
-
-        # orders_by_numbers = defaultdict(list)
-        # print("orders",
-        # orders)
-        # print("children", orders.children)
-
-        # for order in orders.children:
-        #     obr = order.children[0]
-        #     orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
 
 
     def push_order(self, direction: Napravleniya):
