@@ -1,4 +1,4 @@
-from clients.models import Individual, Card, Document, DocumentType
+from clients.models import Individual, Card
 
 
 def find_patient(snils, enp):

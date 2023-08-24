@@ -754,7 +754,7 @@ class Individual(models.Model):
         return updated_data
 
     @staticmethod
-    def import_from_simple_data(data: dict, owner, patient_id_company):
+    def import_from_simple_data(data: dict, owner, patient_id_company, email, phone):
         family = data.get('family', '').title().strip()
         name = data.get('name', '').title().strip()
         patronymic = data.get('patronymic', '').title().strip()
@@ -1356,6 +1356,8 @@ class Card(models.Model):
         updated_data=None,
         snils: Union['Document', None] = None,
         owner=None,
+        email=email,
+        phone=phone,
     ):
         f = {'owner': owner} if owner else {}
         if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f).exists():
@@ -1404,6 +1406,8 @@ class Card(models.Model):
                 main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
                 main_address=address or ('' if not card_orig else card_orig.main_address),
                 fact_address='' if not card_orig else card_orig.fact_address,
+                phone=phone,
+                email=email,
                 **f,
             )
             c.save()

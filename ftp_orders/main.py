@@ -12,7 +12,7 @@ import time
 
 from django.db import transaction
 from hl7apy import VALIDATION_LEVEL, core
-from hl7apy.parser import parse_message, parse_field
+from hl7apy.parser import parse_message
 
 from clients.models import Individual, CardBase
 from contracts.models import PriceName
@@ -188,7 +188,6 @@ class FTPConnection:
 
         orders = hl7_result.ORM_O01_ORDER[0].children[0]
         patient_id_company = pid.PID_2.value
-        print("patient_id_company", patient_id_company)
 
         fio = pid.PID_5
         family = fio.PID_5_1.value
@@ -206,16 +205,9 @@ class FTPConnection:
 
         adds_data = pid.to_er7().split("|")[13].split("~")
 
-        tel_home = adds_data[0] if adds_data[0] else ""
-        tel_additional = adds_data[1] if adds_data[1] else ""
-        tel_work = adds_data[2] if adds_data[2] else ""
-        email = adds_data[3] if adds_data[3] else ""
-
-        print("tel_home", tel_home)
-        print("tel_additional", tel_additional)
-        print("tel_work", tel_work)
-        print("email", email)
-        email_data = base64.b64encode(email).decode("latin1")
+        phone = adds_data[0] if adds_data[0] else ""
+        email_base64 = adds_data[3] if adds_data[3] else ""
+        email = base64.b64encode(email_base64).decode("latin1")
 
         orders_by_numbers = defaultdict(list)
         additional_order_number_by_service = defaultdict(list)
@@ -238,11 +230,12 @@ class FTPConnection:
                     "patronymic": patronymic,
                     "sex": sex,
                     "birthday": birthday,
-                    "snils": snils
+                    "snils": snils,
                 },
                 self.hospital,
-                patient_id_company
-
+                patient_id_company,
+                email,
+                phone
             )
             self.log("Card", card)
 
