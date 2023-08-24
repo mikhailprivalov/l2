@@ -25,93 +25,53 @@ class SetDocumentTypeEducationAdmin(admin.ModelAdmin):
 
 
 class StatementsStageAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class StatementsStatusAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class StatementsSourceAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class ExamTypeAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class ExamStatusAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class SubjectsAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class AchievementTypeAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class AchievementStatusAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class SpecialRightsTypeAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class SpecialRightsAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 admin.site.register(models.StatementsStage, StatementsStageAdmin)
