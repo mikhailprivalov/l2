@@ -207,7 +207,6 @@ class FTPConnection:
 
         phone = adds_data[0] if adds_data[0] else ""
         email_base64_str = adds_data[3] if adds_data[3] else ""
-        print(email_base64_str)
         if email_base64_str:
             email_byte = email_base64_str.encode('utf-8')
             email_base64 = base64.b64decode(email_byte)
