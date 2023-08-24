@@ -132,7 +132,6 @@ class TubesRegistration(models.Model):
         external_tube = fraction.relation
         return TubesRegistration.objects.create(number=number, type=external_tube)
 
-
     @staticmethod
     def get_tube_number_generator_pk(hospital: Hospitals):
         if hospital.is_default:
