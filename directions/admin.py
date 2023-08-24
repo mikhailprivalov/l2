@@ -280,7 +280,12 @@ class ExternalAdditionalOrderAdmin(admin.ModelAdmin):
 
 class NapravleniyaHL7FilesAdmin(admin.ModelAdmin):
     raw_id_fields = ('napravleniye',)
-    list_display = ('napravleniye_id', 'file_type', 'upload_file', 'created_at',)
+    list_display = (
+        'napravleniye_id',
+        'file_type',
+        'upload_file',
+        'created_at',
+    )
 
 
 admin.site.register(TubesRegistration)
