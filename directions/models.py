@@ -336,6 +336,30 @@ class IstochnikiFinansirovaniya(models.Model):
         verbose_name_plural = 'Источники финансирования'
 
 
+class EducationFinanceSource(models.Model):
+    title = models.CharField(max_length=511, verbose_name='Название')
+    active = models.BooleanField(default=True, verbose_name='Статус активности')
+    base = models.ForeignKey(Clients.CardBase, verbose_name='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "{} {} (скрыт: {})".format(self.base, self.title, self.active)
+
+    @staticmethod
+    def get_finance_sources():
+        fin_source_data = EducationFinanceSource.objects.all()
+        result = [
+            {
+                "id": fin_source_data.pk,
+                "label": fin_source_data.title,
+            }
+        ]
+        return result
+
+    class Meta:
+        verbose_name = 'Образовательный источник финансирования'
+        verbose_name_plural = 'Образовательные источники финансирования'
+
+
 class Diagnoses(models.Model):
     M = (
         (0, "Диапазон"),

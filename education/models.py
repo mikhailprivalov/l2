@@ -55,3 +55,114 @@ class DocumentEducation(models.Model):
     source_original_received = models.CharField(max_length=30, blank=True, help_text="Исчтоник оригинального документа")
     date_received_original = models.DateField(help_text="Дата получения документа", blank=True, null=True)
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
+
+
+class StatementsStage(models.Model):
+    title = models.CharField(max_length=100, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Этап заявления'
+        verbose_name_plural = 'Этапы заявления'
+
+
+class StatementsStatus(models.Model):
+    title = models.CharField(max_length=100, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Статус заявления'
+        verbose_name_plural = 'Статусы заявлений'
+
+
+class StatementsSource(models.Model):
+    title = models.CharField(max_length=100, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Статус заявления'
+        verbose_name_plural = 'Статусы заявлений'
+
+
+class ExamType(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Тип экзамена'
+        verbose_name_plural = 'Типы экзаменов'
+
+
+class ExamStatus(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Статус экзамена'
+        verbose_name_plural = 'Статусы экзаменов'
+
+
+class subjects(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Предмет'
+        verbose_name_plural = 'Предметы'
+
+
+class AchievementType(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Тип достижения'
+        verbose_name_plural = 'Типы достижений'
+
+
+class AchievementStatus(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Статус достижения'
+        verbose_name_plural = 'Статусы достижений'
+
+
+class SpecialRightsType(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Тип особых прав'
+        verbose_name_plural = 'Типы особых прав'
+
+
+class SpecialRights(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Особые права'
+        verbose_name_plural = 'Особые права'
+
