@@ -57,7 +57,8 @@ export default {
           title: 'Оригинал',
           renderBodyCell: ({ row, column }) => {
             const text = row[column.field];
-            return text ? <span style="font-size: 18px;">&#9745;</span> : <span style="font-size: 25px;">&#9633;</span>;
+            return text ? <i class="fa fa-check-square" aria-hidden="true" style="color: #37BC9B;" />
+              : <i class="fa fa-square-o" aria-hidden="true" />;
           },
         },
         { field: 'status', key: 'status', title: 'Статус' },

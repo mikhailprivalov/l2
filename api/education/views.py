@@ -1,29 +1,30 @@
 from django.http import JsonResponse
 
 from laboratory.settings import (
-    EDUCATIONDIRECTIONS,
+    SPECIALTIES,
     PAYFORM,
     COMPANIES,
     ENROLLMENTSTATUSES,
     DEDUCTIONSTATUSES,
-    COMMANDS,
-    CITEZENSHIP,
+    ENROLLMENTORDERS,
+    CITIZENSHIP,
     STATEMENTSOURCES,
     STATEMENTSTATUSES,
     STATEMENTSSTAGES,
-    TYPESEXAM,
-    SUBJECTS,
+    EXAMS,
+    EXAMSUBJECTS,
     EXAMSTATUSES,
-    TYPEIA,
-    IASTATUSES,
+    ACHIEVEMENTS,
+    ACHIEVEMENTSSTATUSES,
     SATISFACTORYBALLS,
-    EDUCATION,
+    EDUCATIONS,
     SPECIALRIGHTS,
+    ENROLLEES,
 )
 
 
-def get_education_directions(request):
-    result = EDUCATIONDIRECTIONS
+def get_specialties(request):
+    result = SPECIALTIES
     return JsonResponse({"result": result})
 
 
@@ -47,54 +48,34 @@ def get_deduction_statuses(request):
     return JsonResponse({"result": result})
 
 
-def get_commands(request):
-    result = COMMANDS
+def get_enrollment_orders(request):
+    result = ENROLLMENTORDERS
     return JsonResponse({"result": result})
 
 
-def get_citezenship(request):
-    result = CITEZENSHIP
+def get_citizenship(request):
+    result = CITIZENSHIP
     return JsonResponse({"result": result})
 
 
-def get_statement_sources(request):
-    result = STATEMENTSOURCES
-    return JsonResponse({"result": result})
+def get_statement_filters(request):
+    sources = STATEMENTSOURCES
+    statuses = STATEMENTSTATUSES
+    stages = STATEMENTSSTAGES
+    return JsonResponse({"sources": sources, "statuses": statuses, "stages": stages})
 
 
-def get_statement_statuses(request):
-    result = STATEMENTSTATUSES
-    return JsonResponse({"result": result})
+def get_exams_filters(request):
+    exams = EXAMS
+    subjects = EXAMSUBJECTS
+    statuses = EXAMSTATUSES
+    return JsonResponse({"exams": exams, "subjects": subjects, "statuses": statuses})
 
 
-def get_statement_stages(request):
-    result = STATEMENTSSTAGES
-    return JsonResponse({"result": result})
-
-
-def get_exam_types(request):
-    result = TYPESEXAM
-    return JsonResponse({"result": result})
-
-
-def get_subjects(request):
-    result = SUBJECTS
-    return JsonResponse({"result": result})
-
-
-def get_exam_statuses(request):
-    result = EXAMSTATUSES
-    return JsonResponse({"result": result})
-
-
-def get_ia_types(request):
-    result = TYPEIA
-    return JsonResponse({"result": result})
-
-
-def get_ia_statuses(request):
-    result = IASTATUSES
-    return JsonResponse({"result": result})
+def get_achievements_filters(request):
+    achievements = ACHIEVEMENTS
+    statuses = ACHIEVEMENTSSTATUSES
+    return JsonResponse({"achievements": achievements, "statuses": statuses})
 
 
 def get_satisfactory_balls(request):
@@ -103,10 +84,15 @@ def get_satisfactory_balls(request):
 
 
 def get_education(request):
-    result = EDUCATION
+    result = EDUCATIONS
     return JsonResponse({"result": result})
 
 
 def get_special_rights(request):
     result = SPECIALRIGHTS
+    return JsonResponse({"result": result})
+
+
+def get_enrollees(request):
+    result = ENROLLEES
     return JsonResponse({"result": result})

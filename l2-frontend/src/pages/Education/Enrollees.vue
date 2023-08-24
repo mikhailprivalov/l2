@@ -5,10 +5,20 @@
     </h4>
     <div class="margin-div flex-div">
       <button
+        v-if="!showFilters"
         class="btn btn-blue-nb button-icon"
         @click="showFilters = !showFilters"
       >
-        {{ showFilters ? 'Скрыть' : 'Фильтры' }}
+        <i class="fa fa-filter" />
+        Показать
+      </button>
+      <button
+        v-else
+        class="btn btn-blue-nb button-icon"
+        @click="showFilters = !showFilters"
+      >
+        <i class="fa fa-filter" />
+        Скрыть
       </button>
       <button
         class="btn btn-blue-nb button-icon"
@@ -22,16 +32,16 @@
         <div class="margin-div">
           <label>Направление</label>
           <Treeselect
-            v-model="selectedEducationDirection"
+            v-model="selectedSpecialties"
             :multiple="true"
-            :options="educationDirections"
+            :options="specialties"
             placeholder="Выберите направление"
           />
         </div>
         <div class="margin-div">
           <label>Основание</label>
           <Treeselect
-            v-model="selectedPayForm"
+            v-model="selectedPayForms"
             :multiple="true"
             :options="payForms"
             placeholder="Выберите основание"
@@ -43,12 +53,13 @@
             v-model="selectedCompany"
             :options="companies"
             placeholder="Выберите заказчика"
+            :normalizer="normalizerCompany"
           />
         </div>
         <div class="margin-div">
           <label>Статус зачисления</label>
           <Treeselect
-            v-model="selectedEnrollmentStatuses"
+            v-model="selectedEnrollmentStatus"
             :options="enrollmentStatuses"
             placeholder="Выберите статус"
           />
@@ -56,7 +67,7 @@
         <div class="margin-div">
           <label>Статус отчисления</label>
           <Treeselect
-            v-model="selectedDeductionStatuses"
+            v-model="selectedDeductionStatus"
             :options="deductionStatuses"
             placeholder="Выберите статус"
           />
@@ -64,9 +75,9 @@
         <div class="margin-div">
           <label>Приказ</label>
           <Treeselect
-            v-model="selectedCommands"
+            v-model="selectedEnrollmentOrders"
             :multiple="true"
-            :options="commands"
+            :options="enrollmentOrders"
             placeholder="Выберите приказ"
           />
         </div>
@@ -83,7 +94,7 @@
         <div class="margin-div">
           <label>Источник заявления</label>
           <Treeselect
-            v-model="selectedStatementSource"
+            v-model="selectedStatementSources"
             :multiple="true"
             :options="statementSources"
             placeholder="Выберите источник"
@@ -92,7 +103,7 @@
         <div class="margin-div">
           <label>Статус заявлений</label>
           <Treeselect
-            v-model="selectedStatementStatus"
+            v-model="selectedStatementStatuses"
             :multiple="true"
             :options="statementStatuses"
             placeholder="Выберите статус"
@@ -111,18 +122,18 @@
         <div class="margin-div">
           <label>Тип экзамена</label>
           <Treeselect
-            v-model="selectedTypeExam"
+            v-model="selectedExams"
             :multiple="true"
-            :options="typesExam"
+            :options="exams"
             placeholder="Выберите тип"
           />
         </div>
         <div class="margin-div">
           <label>Предмет</label>
           <Treeselect
-            v-model="selectedSubject"
+            v-model="selectedExamSubjects"
             :multiple="true"
-            :options="subjects"
+            :options="examSubjects"
             placeholder="Выберите предмет"
           />
         </div>
@@ -137,18 +148,18 @@
         <div class="margin-div">
           <label>Тип ИД</label>
           <Treeselect
-            v-model="selectedTypeIA"
+            v-model="selectedAchievements"
             :multiple="true"
-            :options="typeIA"
+            :options="achievements"
             placeholder="Выберите тип"
           />
         </div>
         <div class="margin-div">
           <label>Статус ИД</label>
           <Treeselect
-            v-model="selectedIAStatus"
+            v-model="selectedAchievementsStatuses"
             :multiple="true"
-            :options="iAStatuses"
+            :options="achievementsStatuses"
             placeholder="Выберите статус"
           />
         </div>
@@ -163,17 +174,17 @@
         <div class="margin-div">
           <label>Образование</label>
           <Treeselect
-            v-model="selectedEducation"
+            v-model="selectedEducations"
             :multiple="true"
             value-consists-of="LEAF_PRIORITY"
-            :options="education"
+            :options="educations"
             placeholder="Выберите тип"
           />
         </div>
         <div class="margin-div">
           <label>Особое право</label>
           <Treeselect
-            v-model="selectedSpecialRight"
+            v-model="selectedSpecialRights"
             :multiple="true"
             :options="specialRights"
             value-consists-of="LEAF_PRIORITY"
@@ -278,100 +289,128 @@ import api from '@/api';
 
 const showFilters = ref(false);
 
-const selectedEducationDirection = ref([]);
-const educationDirections = ref([]);
-const getEducationDirection = async () => {
-  const data = await api('/education/get-education-directions');
-  educationDirections.value = data.result;
+const selectedSpecialties = ref([]);
+const specialties = ref([]);
+const getSpecialties = async () => {
+  const data = await api('/education/get-specialties');
+  specialties.value = data.result;
 };
 
-const selectedPayForm = ref([]);
+const selectedPayForms = ref([]);
 const payForms = ref([]);
 const getPayForms = async () => {
   const data = await api('/education/get-pay-forms');
   payForms.value = data.result;
 };
+
 const selectedCompany = ref(null);
 const companies = ref([]);
 const getCompanies = async () => {
   const result = await api('/get-companies');
   companies.value = result.data;
 };
-const selectedEnrollmentStatuses = ref(null);
+
+const normalizerCompany = (node) => ({
+  id: node.pk,
+  label: node.title,
+});
+
+const selectedEnrollmentStatus = ref(null);
 const enrollmentStatuses = ref([]);
-const selectedDeductionStatuses = ref(null);
+const getEnrollmentStatuses = async () => {
+  const data = await api('/education/get-enrollment-statuses');
+  enrollmentStatuses.value = data.result;
+};
+
+const selectedDeductionStatus = ref(null);
 const deductionStatuses = ref([]);
-const selectedCommands = ref([]);
-const commands = ref([]);
+const getDeductionStatuses = async () => {
+  const data = await api('/education/get-deduction-statuses');
+  deductionStatuses.value = data.result;
+};
+
+const selectedEnrollmentOrders = ref([]);
+const enrollmentOrders = ref([]);
+const getEnrollmentOrders = async () => {
+  const data = await api('/education/get-enrollment-orders');
+  enrollmentOrders.value = data.result;
+};
+
+const selectedCitizenship = ref(null);
+const citizenship = ref([]);
+const getCitizenship = async () => {
+  const data = await api('/education/get-citizenship');
+  citizenship.value = data.result;
+};
+
+const selectedStatementSources = ref([]);
+const statementSources = ref([]);
+const selectedStatementStatuses = ref([]);
+const statementStatuses = ref([]);
+const selectedStatementStage = ref(null);
+const statementStages = ref([]);
+const getStatementFilters = async () => {
+  const data = await api('/education/get-statement-filters');
+  statementSources.value = data.sources;
+  statementStatuses.value = data.statuses;
+  statementStages.value = data.stages;
+};
+
+const selectedExams = ref([]);
+const exams = ref([]);
+const selectedExamSubjects = ref([]);
+const examSubjects = ref([]);
+const selectedExamStatus = ref(null);
+const examStatuses = ref([]);
+const getExamsFilters = async () => {
+  const data = await api('/education/get-exams-filters');
+  exams.value = data.exams;
+  examSubjects.value = data.subjects;
+  examStatuses.value = data.statuses;
+};
+
+const selectedAchievements = ref([]);
+const achievements = ref([]);
+const selectedAchievementsStatuses = ref([]);
+const achievementsStatuses = ref([]);
+const getAchievementsFilters = async () => {
+  const data = await api('/education/get-achievements-filters');
+  achievements.value = data.achievements;
+  achievementsStatuses.value = data.statuses;
+};
+
+const selectedSatisfactoryBall = ref(null);
+const satisfactoryBalls = ref([]);
+const getSatisfactoryBalls = async () => {
+  const data = await api('/education/get-satisfactory-balls');
+  satisfactoryBalls.value = data.result;
+};
+const selectedEducations = ref([]);
+const educations = ref([]);
+const getEducations = async () => {
+  const data = await api('/education/get-educations');
+  educations.value = data.result;
+};
+const selectedSpecialRights = ref([]);
+const specialRights = ref([]);
+const getSpecialRights = async () => {
+  const data = await api('/education/get-special-rights');
+  specialRights.value = data.result;
+};
 
 const consent = ref(false);
 const activeApplicationOnly = ref(false);
 const contract = ref(false);
 const payment = ref(false);
-
-const selectedCitizenship = ref(null);
-const citizenship = ref([]);
-
-const selectedStatementSource = ref([]);
-const statementSources = ref([]);
-
-const selectedStatementStatus = ref([]);
-const statementStatuses = ref([]);
-const selectedStatementStage = ref(null);
-const statementStages = ref([]);
-
-const selectedTypeExam = ref([]);
-const typesExam = ref([]);
-const selectedSubject = ref([]);
-const subjects = ref([]);
-const selectedExamStatus = ref(null);
-const examStatuses = ref([]);
-const selectedTypeIA = ref([]);
-const typeIA = ref([]);
-const selectedIAStatus = ref([]);
-const iAStatuses = ref([]);
-const selectedSatisfactoryBall = ref(null);
-const satisfactoryBalls = ref([]);
-const selectedEducation = ref([]);
-const education = ref([]);
 const isOriginal = ref(false);
-const selectedSpecialRight = ref([]);
-const specialRights = ref([]);
 
 const search = ref('');
 
-const enrollees = ref([
-  {
-    card: 1,
-    fio: 'Котова Аделия Ивановна',
-    application: '1-СТОМ-ОО',
-    сhemistry: 33,
-    biology: 43,
-    mathematics: 55,
-    russian_language: 33,
-    ia: 3,
-    iaPlus: 3,
-    amount: 555,
-    is_original: true,
-    status: 'Принято',
-    create_date: '12.07.2023 16:59',
-  },
-  {
-    card: 2,
-    fio: 'Котова2 Аделия2 Ивановна2',
-    application: 'ОО-СТОМ-11',
-    сhemistry: 33,
-    biology: 43,
-    mathematics: 55,
-    russian_language: 33,
-    ia: 3,
-    iaPlus: 3,
-    amount: 33,
-    is_original: false,
-    status: 'Принято',
-    create_date: '13.07.2023 16:59',
-  },
-]);
+const enrollees = ref([]);
+const getEnrollees = async () => {
+  const data = await api('/education/get-enrollees');
+  enrollees.value = data.result;
+};
 
 const filteredEnrollees = computed(() => enrollees.value.filter(enrollee => {
   const enrolleeFio = enrollee.fio.toLowerCase();
@@ -381,31 +420,48 @@ const filteredEnrollees = computed(() => enrollees.value.filter(enrollee => {
 }));
 
 const clearFilters = () => {
-  selectedEducationDirection.value = [];
+  selectedSpecialties.value = [];
   selectedCompany.value = null;
-  selectedEnrollmentStatuses.value = null;
-  selectedDeductionStatuses.value = null;
-  selectedCommands.value = [];
+  selectedEnrollmentStatus.value = null;
+  selectedDeductionStatus.value = null;
+  selectedEnrollmentOrders.value = [];
   consent.value = false;
   activeApplicationOnly.value = false;
   contract.value = false;
   payment.value = false;
   selectedCitizenship.value = null;
-  selectedStatementSource.value = [];
-  selectedStatementStatus.value = [];
+  selectedStatementSources.value = [];
+  selectedStatementStatuses.value = [];
   selectedStatementStage.value = null;
-  selectedTypeExam.value = [];
-  selectedSubject.value = [];
+  selectedExams.value = [];
+  selectedExamSubjects.value = [];
   selectedExamStatus.value = null;
-  selectedTypeIA.value = [];
-  selectedIAStatus.value = [];
+  selectedAchievements.value = [];
+  selectedAchievementsStatuses.value = [];
   selectedSatisfactoryBall.value = null;
-  selectedEducation.value = [];
+  selectedEducations.value = [];
   isOriginal.value = false;
-  selectedSpecialRight.value = [];
+  selectedSpecialRights.value = [];
 };
 
-onMounted(getEducationDirection);
+onMounted(
+  () => {
+    getSpecialties();
+    getPayForms();
+    getCompanies();
+    getEnrollmentStatuses();
+    getDeductionStatuses();
+    getEnrollmentOrders();
+    getCitizenship();
+    getStatementFilters();
+    getExamsFilters();
+    getAchievementsFilters();
+    getSatisfactoryBalls();
+    getEducations();
+    getSpecialRights();
+    getEnrollees();
+  },
+);
 </script>
 
 <style scoped lang="scss">
@@ -446,6 +502,7 @@ onMounted(getEducationDirection);
   color: #434A54;
   border: none !important;
   font-weight: 700;
+  width: 110px;
 }
 .button-icon:hover {
   background-color: #434a54 !important;
