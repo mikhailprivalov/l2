@@ -1049,7 +1049,7 @@ class Napravleniya(models.Model):
         price_category=-1,
         hospital=-1,
         external_order=None,
-        price_name=None,
+        price_name_id=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1074,6 +1074,15 @@ class Napravleniya(models.Model):
         if issledovaniya is None:
             pass
         client = Clients.Card.objects.get(pk=client_id)
+        if price_name_id is None and istochnik_f.title.lower() not in ["наличные", "платно"]:
+            price_name_obj = contracts.PriceName.get_hospital_price_by_date(
+                doc.hospital_id,
+                current_time(only_date=True),
+                current_time(only_date=True),
+                True
+            )
+            price_name_id = price_name_obj.pk
+
         dir = Napravleniya(
             client=client,
             doc=doc if not for_rmis else None,
@@ -1087,7 +1096,7 @@ class Napravleniya(models.Model):
             rmis_slot_id=rmis_slot,
             hospital=doc.hospital or Hospitals.get_default_hospital(),
             external_order=external_order,
-            price_name_id=price_name,
+            price_name_id=price_name_id,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
@@ -1529,7 +1538,7 @@ class Napravleniya(models.Model):
                             price_category=price_category,
                             hospital=hospital_override,
                             external_order=external_order,
-                            price_name=price_name,
+                            price_name_id=price_name,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1559,7 +1568,7 @@ class Napravleniya(models.Model):
                             price_category=price_category,
                             hospital=hospital_override,
                             external_order=external_order,
-                            price_name=price_name,
+                            price_name_id=price_name,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)

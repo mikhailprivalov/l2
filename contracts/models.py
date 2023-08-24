@@ -44,6 +44,10 @@ class PriceName(models.Model):
     def get_company_price_by_date(company_id, date_start, date_end):
         return PriceName.objects.filter(company_id=company_id, date_start__lte=date_start, date_end__gte=date_end).first()
 
+    @staticmethod
+    def get_hospital_price_by_date(hospital_id, date_start, date_end, is_subcontract=False):
+        return PriceName.objects.filter(hospital_id=hospital_id, date_start__lte=date_start, date_end__gte=date_end, subcontract=is_subcontract).first()
+
     class Meta:
         verbose_name = 'Название прайса'
         verbose_name_plural = 'Названия прайса'
