@@ -1075,12 +1075,7 @@ class Napravleniya(models.Model):
             pass
         client = Clients.Card.objects.get(pk=client_id)
         if price_name_id is None and istochnik_f.title.lower() not in ["наличные", "платно"]:
-            price_name_obj = contracts.PriceName.get_hospital_price_by_date(
-                doc.hospital_id,
-                current_time(only_date=True),
-                current_time(only_date=True),
-                True
-            )
+            price_name_obj = contracts.PriceName.get_hospital_price_by_date(doc.hospital_id, current_time(only_date=True), current_time(only_date=True), True)
             price_name_id = price_name_obj.pk
 
         dir = Napravleniya(
