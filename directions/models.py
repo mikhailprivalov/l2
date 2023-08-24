@@ -2383,7 +2383,6 @@ class NapravleniyaHL7LinkFiles(models.Model):
         verbose_name_plural = 'HL7-файлы'
 
 
-
 def get_file_path(instance: 'IssledovaniyaFiles', filename):
     return os.path.join('issledovaniya_files', str(instance.issledovaniye.pk), str(uuid.uuid4()), filename)
 
