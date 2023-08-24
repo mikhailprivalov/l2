@@ -206,8 +206,14 @@ class FTPConnection:
         adds_data = pid.to_er7().split("|")[13].split("~")
 
         phone = adds_data[0] if adds_data[0] else ""
-        email_base64 = adds_data[3] if adds_data[3] else ""
-        email = base64.b64encode(email_base64).decode("latin1")
+        email_base64_str = adds_data[3] if adds_data[3] else ""
+        print(email_base64_str)
+        if email_base64_str:
+            email_byte = email_base64_str.encode('utf-8')
+            email_base64 = base64.b64decode(email_byte)
+            email = email_base64.decode('utf-8')
+        else:
+            email = ""
 
         orders_by_numbers = defaultdict(list)
         additional_order_number_by_service = defaultdict(list)
@@ -438,10 +444,17 @@ class FTPConnection:
                         if line_new[0] in need_replace_field.keys():
                             field_replace = need_replace_field[line_new[0]]
                             for fr in field_replace:
-                                if fr == "2":
+                                if fr == "2" and line_new[0] == "MSH":
                                     line_new[int(fr)] = direction.external_executor_hospital.hl7_sender_application
-                                elif fr == "3":
+                                elif fr == "3" and line_new[0] == "MSH":
                                     line_new[int(fr)] = direction.external_executor_hospital.short_title
+                                elif fr == "2-2" and line_new[0] == "OBR":
+                                    positions = fr.split("-")
+                                    data = line_new[int(positions[0])]
+                                    data_pos = data.split("^")
+                                    data_pos[int(positions[1]) - 1] = direction.external_executor_hospital.hl7_sender_application
+                                    data = "^".join(data_pos)
+                                    line_new[int(positions[0])] = data
                         mod_lines.append("|".join(line_new))
             path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, f"{hl7_file.upload_file.name}_mod")
 
