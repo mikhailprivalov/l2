@@ -18,4 +18,3 @@ def find_patient(snils, enp):
 
     card = Card.objects.filter(individual=individual, base__internal_type=True).first()
     return card
-
