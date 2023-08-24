@@ -746,7 +746,6 @@ def receive_one_by_one(request):
             if lab_pk < 0 or first_iss.research.get_podrazdeleniye() == lab:
                 tube.clear_notice(request.user.doctorprofile)
                 status = tube.day_num(request.user.doctorprofile, request_data["nextN"])
-                print(status)
                 if status["new"]:
                     last_n = status["n"]
 
