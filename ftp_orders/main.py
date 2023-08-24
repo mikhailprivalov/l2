@@ -329,7 +329,6 @@ class FTPConnection:
         except Exception as e:
             self.error(f"Exception: {e}")
 
-
     def pull_result(self, file: str):
         if not file.endswith('.res'):
             self.error(f"Skipping file {file} because it does not end with '.res'")
@@ -341,8 +340,7 @@ class FTPConnection:
             self.error(f"Skipping file {file} because it could not be parsed")
             return
 
-        self.log(f"HL7 parsed")
-
+        self.log("HL7 parsed")
 
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
@@ -364,7 +362,6 @@ class FTPConnection:
         patient.pid.pid_8 = individual.sex.upper()
         byte_email = direction.client.email.encode('utf-8')
         field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}~~~{base64.b64encode(byte_email).decode('UTF-8')}"
-        print(field_13)
         patient.pid.pid_13.value = field_13
         patient.pid.pid_19 = data_indivdual['snils']
 
@@ -403,7 +400,6 @@ class FTPConnection:
             content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
             content = content.replace("R", "~").replace("\\", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
-            print(content)
 
             self.log('Writing file', filename, '\n', content)
             self.write_file_as_text(filename, content)
@@ -417,7 +413,6 @@ class FTPConnection:
                     "content": content,
                 },
             )
-
 
     def push_tranfer_file_order(self, direction: Napravleniya, registered_orders_ids, directions_to_sync):
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -605,7 +600,6 @@ def process_pull_results():
     processed_files_by_url = defaultdict(set)
 
     hospitals = get_hospitals_pull_results()
-    print(hospitals)
 
     print('Getting ftp links')  # noqa: F201
     ftp_links = {x.result_pull_by_numbers: x for x in hospitals}
