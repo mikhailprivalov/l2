@@ -86,8 +86,8 @@ class StatementsSource(models.Model):
         return self.title
 
     class Meta:
-        verbose_name = 'Статус заявления'
-        verbose_name_plural = 'Статусы заявлений'
+        verbose_name = 'Источник заявления'
+        verbose_name_plural = 'Источники заявлений'
 
 
 class ExamType(models.Model):
@@ -112,7 +112,7 @@ class ExamStatus(models.Model):
         verbose_name_plural = 'Статусы экзаменов'
 
 
-class subjects(models.Model):
+class Subjects(models.Model):
     title = models.CharField(max_length=255, verbose_name='Название')
 
     def __str__(self):
@@ -165,4 +165,3 @@ class SpecialRights(models.Model):
     class Meta:
         verbose_name = 'Особые права'
         verbose_name_plural = 'Особые права'
-
