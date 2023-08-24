@@ -443,18 +443,7 @@ class FTPConnection:
                         line_new = line.split("|")
                         if line_new[0] in need_replace_field.keys():
                             field_replace = need_replace_field[line_new[0]]
-                            for fr in field_replace:
-                                if fr == "2" and line_new[0] == "MSH":
-                                    line_new[int(fr)] = direction.external_executor_hospital.hl7_sender_application
-                                elif fr == "3" and line_new[0] == "MSH":
-                                    line_new[int(fr)] = direction.external_executor_hospital.short_title
-                                elif fr == "2-2" and line_new[0] == "OBR":
-                                    positions = fr.split("-")
-                                    data = line_new[int(positions[0])]
-                                    data_pos = data.split("^")
-                                    data_pos[int(positions[1]) - 1] = direction.external_executor_hospital.hl7_sender_application
-                                    data = "^".join(data_pos)
-                                    line_new[int(positions[0])] = data
+                            line_new = check_replace_fields(field_replace, line_new, direction)
                         mod_lines.append("|".join(line_new))
             path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, f"{hl7_file.upload_file.name}_mod")
 
@@ -468,9 +457,9 @@ class FTPConnection:
             self.log('Writing file', path_file, '\n', content)
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
             self.write_file_as_text(filename, content)
-
             for k in directons_external_order_group:
-                directions_to_sync.remove(k)
+                if k in directions_to_sync:
+                    directions_to_sync.remove(k)
 
             Log.log(
                 direction.pk,
@@ -484,6 +473,22 @@ class FTPConnection:
 
 
 MAX_LOOP_TIME = 600
+
+
+def check_replace_fields(field_replace, line_new, direction):
+    for fr in field_replace:
+        if fr == "2" and line_new[0] == "MSH":
+            line_new[int(fr)] = direction.external_executor_hospital.hl7_sender_application
+        elif fr == "3" and line_new[0] == "MSH":
+            line_new[int(fr)] = direction.external_executor_hospital.short_title
+        elif fr == "2-2" and line_new[0] == "OBR":
+            positions = fr.split("-")
+            data = line_new[int(positions[0])]
+            data_pos = data.split("^")
+            data_pos[int(positions[1]) - 1] = direction.external_executor_hospital.hl7_sender_application
+            data = "^".join(data_pos)
+            line_new[int(positions[0])] = data
+    return line_new
 
 
 def get_hospitals_pull_orders():
