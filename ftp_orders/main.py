@@ -380,7 +380,7 @@ class FTPConnection:
         if direction.istochnik_f.title.lower() not in ["наличные", "платно"]:
             pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"
         else:
-            pv.PV1.PV1_20.value = f"Наличные"
+            pv.PV1.PV1_20.value = "Наличные"
         pv.PV1.PV1_44.value = direction.data_sozdaniya.strftime("%Y%m%d")
         pv.PV1.PV1_46.value = ""
 
@@ -626,7 +626,6 @@ def process_pull_results():
 
     hospitals = get_hospitals_pull_results()
 
-    print('Getting ftp links')  # noqa: F201
     ftp_links = {x.result_pull_by_numbers: x for x in hospitals}
 
     ftp_connections = {}
@@ -638,7 +637,6 @@ def process_pull_results():
     time_start = time.time()
 
     while time.time() - time_start < MAX_LOOP_TIME:
-        print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
         for ftp_url, ftp_connection in ftp_connections.items():
             processed_files_new = set()
             try:
@@ -666,7 +664,6 @@ def process_pull_results():
 
 
 def process_pull_start_results():
-    print('Starting pull_orders process')  # noqa: F201
     while True:
         process_pull_results()
         time.sleep(1)
