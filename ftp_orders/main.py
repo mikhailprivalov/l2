@@ -372,6 +372,7 @@ class FTPConnection:
 
         pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
         pv.PV1.PV1_2.value = "O"
+
         if direction.istochnik_f.title.lower() not in ["наличные", "платно"]:
             pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"
         else:
