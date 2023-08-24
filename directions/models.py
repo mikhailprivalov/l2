@@ -344,17 +344,6 @@ class EducationFinanceSource(models.Model):
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.active)
 
-    @staticmethod
-    def get_finance_sources():
-        fin_source_data = EducationFinanceSource.objects.all()
-        result = [
-            {
-                "id": fin_source_data.pk,
-                "label": fin_source_data.title,
-            }
-        ]
-        return result
-
     class Meta:
         verbose_name = 'Образовательный источник финансирования'
         verbose_name_plural = 'Образовательные источники финансирования'

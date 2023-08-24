@@ -175,3 +175,15 @@ class ResCardMovementRoom(admin.ModelAdmin):
         'room_in',
     )
     raw_id_fields = ('card',)
+
+
+class CitizenshipAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+    )
+    list_display_links = (
+        'title',
+    )
+
+
+admin.site.register(models.Citizenship, CitizenshipAdmin)

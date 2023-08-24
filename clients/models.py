@@ -1059,6 +1059,17 @@ class HarmfulFactor(models.Model):
         return json
 
 
+class Citizenship(models.Model):
+    title = models.CharField(max_length=255, help_text='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Гражданство'
+        verbose_name_plural = 'Гражданства'
+
+
 class Card(models.Model):
     AGENT_CHOICES = (
         ('mother', "Мать"),
@@ -1125,6 +1136,8 @@ class Card(models.Model):
     room_location = models.ForeignKey(Room, default=None, blank=True, null=True, help_text="Кабинет нахождения карты", db_index=True, on_delete=models.SET_NULL)
 
     owner = models.ForeignKey('hospitals.Hospitals', default=None, blank=True, null=True, help_text="Организация-владелец карты", db_index=True, on_delete=models.PROTECT)
+
+    citizenship = models.ForeignKey(Citizenship, default=None, blank=True, null=True, help_text="Гражданство", on_delete=models.PROTECT)
 
     @property
     def main_address_full(self):
