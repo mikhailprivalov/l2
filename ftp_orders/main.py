@@ -316,7 +316,11 @@ class FTPConnection:
                             path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, file)
                             with open(path_file, 'wb') as fnew:
                                 fnew.write(f.read())
-                        NapravleniyaHL7LinkFiles.objects.create(napravleniye_id=direction.pk, upload_file=path_file, file_type="HL7_ORIG_ORDER", )
+                        NapravleniyaHL7LinkFiles.objects.create(
+                            napravleniye_id=direction.pk,
+                            upload_file=path_file,
+                            file_type="HL7_ORIG_ORDER",
+                        )
 
             self.delete_file(file)
 
