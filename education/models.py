@@ -57,6 +57,17 @@ class DocumentEducation(models.Model):
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
 
 
+class FormEducation(models.Model):
+    title = models.CharField(max_length=100, verbose_name='Название')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Форма обучения'
+        verbose_name_plural = 'Формы обучения'
+
+
 class StatementsStage(models.Model):
     title = models.CharField(max_length=100, verbose_name='Название')
 
@@ -88,6 +99,22 @@ class StatementsSource(models.Model):
     class Meta:
         verbose_name = 'Источник заявления'
         verbose_name_plural = 'Источники заявлений'
+
+
+class Statements(models.Model):
+    card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
+    speciality = models.ForeignKey('users.Speciality', verbose_name='Специальность-направление', db_index=True, on_delete=models.CASCADE)
+    form = models.ForeignKey(FormEducation, verbose_name='Форма (очно, заочно и т.п)', db_index=True, on_delete=models.CASCADE)
+    source = models.ForeignKey(StatementsSource, on_delete=models.CASCADE)
+    status = models.ForeignKey(StatementsStatus, on_delete=models.CASCADE)
+    stage = models.ForeignKey(StatementsStage, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.card} - {self.speciality} - {self.form}"
+
+    class Meta:
+        verbose_name = 'Заявление'
+        verbose_name_plural = 'Заявления'
 
 
 class ExamType(models.Model):
@@ -123,6 +150,23 @@ class Subjects(models.Model):
         verbose_name_plural = 'Предметы'
 
 
+class EntranceExam(models.Model):
+    card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
+    type = models.ForeignKey(ExamType, verbose_name='тип (ВИ, ЕГЭ и т.п)', db_index=True, on_delete=models.CASCADE)
+    subjects = models.ForeignKey(Subjects, verbose_name='Предмет', db_index=True, on_delete=models.CASCADE)
+    score = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл')
+    document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
+    document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
+    status = models.ForeignKey(ExamStatus, verbose_name='Статус', db_index=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.card} - {self.type} - {self.subjects} - {self.score}"
+
+    class Meta:
+        verbose_name = 'Вступительное испытание'
+        verbose_name_plural = 'Вступительные испытания'
+
+
 class AchievementType(models.Model):
     title = models.CharField(max_length=255, verbose_name='Название')
 
@@ -145,6 +189,21 @@ class AchievementStatus(models.Model):
         verbose_name_plural = 'Статусы достижений'
 
 
+class Achievement(models.Model):
+    card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
+    type = models.ForeignKey(AchievementType, verbose_name='тип (ГТО, олимпиада)', db_index=True, on_delete=models.CASCADE)
+    status = models.ForeignKey(AchievementStatus, verbose_name='Статус', on_delete=models.CASCADE)
+    document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
+    document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
+
+    def __str__(self):
+        return f"{self.card} - {self.type.title}"
+
+    class Meta:
+        verbose_name = 'Достижение'
+        verbose_name_plural = 'Достижения'
+
+
 class SpecialRightsType(models.Model):
     title = models.CharField(max_length=255, verbose_name='Название')
 
@@ -162,6 +221,18 @@ class SpecialRights(models.Model):
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        verbose_name = 'Особые права справочник'
+        verbose_name_plural = 'Особые права справочник'
+
+
+class CardSpecialRights(models.Model):
+    card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
+    right = models.ForeignKey(SpecialRights, db_index=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.card} - {self.right.title}"
 
     class Meta:
         verbose_name = 'Особые права'
