@@ -49,8 +49,22 @@ class StatementsSourceAdmin(admin.ModelAdmin):
 
 
 class StatementsAdmin(models.ModelAdmin):
-    list_display = ('card', 'speciality', 'form', 'source', 'status', 'stage',)
-    list_display_links = ('card', 'speciality', 'form', 'source', 'status', 'stage',)
+    list_display = (
+        'card',
+        'speciality',
+        'form',
+        'source',
+        'status',
+        'stage',
+    )
+    list_display_links = (
+        'card',
+        'speciality',
+        'form',
+        'source',
+        'status',
+        'stage',
+    )
 
 
 class ExamTypeAdmin(admin.ModelAdmin):
