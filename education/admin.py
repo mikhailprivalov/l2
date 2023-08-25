@@ -24,7 +24,9 @@ class SetDocumentTypeEducationAdmin(admin.ModelAdmin):
     )
 
 
+
 admin.site.register(models.TypeInstitutionEducation)
+admin.site.register(models.LogUpdateMMIS)
 admin.site.register(models.InstitutionTitle, SetInstitutionTitleAdmin)
 admin.site.register(models.LevelEducation)
 admin.site.register(models.DocumentTypeEducation, SetDocumentTypeEducationAdmin )

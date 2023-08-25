@@ -55,3 +55,8 @@ class DocumentEducation(models.Model):
     source_original_received = models.CharField(max_length=30, blank=True, help_text="Исчтоник оригинального документа")
     date_received_original = models.DateField(help_text="Дата получения документа", blank=True, null=True)
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
+
+
+class LogUpdateMMIS(models.Model):
+    last_mmis_log_id = models.PositiveBigIntegerField(verbose_name='ID последнего лога в ММИС', blank=True, null=True)
+    last_mmis_log_time = models.DateTimeField(verbose_name='Дата последнего лога в ММИС', blank=True, null=True)
