@@ -342,7 +342,7 @@ class EducationFinanceSource(models.Model):
     base = models.ForeignKey(Clients.CardBase, verbose_name='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.base} {self.title} (скрыт: {self.active})"
+        return f"{self.base} {self.title} (активный: {self.active})"
 
     class Meta:
         verbose_name = 'Образовательный источник финансирования'
