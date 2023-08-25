@@ -178,12 +178,8 @@ class ResCardMovementRoom(admin.ModelAdmin):
 
 
 class CitizenshipAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 admin.site.register(models.Citizenship, CitizenshipAdmin)
