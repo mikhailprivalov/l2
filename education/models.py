@@ -47,7 +47,7 @@ class DocumentTypeEducation(models.Model):
 
 class DocumentEducation(models.Model):
     document_type = models.ForeignKey(DocumentTypeEducation, help_text="Вид документа", db_index=True, null=True, on_delete=models.SET_NULL)
-    serial = models.CharField(max_length=30, blank=True, null=True,  help_text="Серия")
+    serial = models.CharField(max_length=30, blank=True, null=True, help_text="Серия")
     number = models.CharField(max_length=30, blank=True, null=True, help_text="Номер")
     date_issued = models.DateField(help_text="Дата документа", blank=True, null=True)
     registration_number = models.CharField(max_length=30, blank=True, help_text="Регистрационный номер")
@@ -69,15 +69,15 @@ class FormEducation(models.Model):
 
 
 STATEMENTS_STAGE = (
-        ('main', 'Основной'),
-        ('additional', 'Дополнительный'),
-    )
+    ('main', 'Основной'),
+    ('additional', 'Дополнительный'),
+)
 
 STATEMENTS_STATUS = (
-        ('accepted', 'Принято'),
-        ('checked', 'Проверено'),
-        ('rejected', 'Отклонено'),
-    )
+    ('accepted', 'Принято'),
+    ('checked', 'Проверено'),
+    ('rejected', 'Отклонено'),
+)
 
 
 class StatementsSource(models.Model):
@@ -119,9 +119,9 @@ class ExamType(models.Model):
 
 
 EXAM_STATYS = (
-        ('not_checked', 'Не проверен'),
-        ('checked', 'Проверен'),
-    )
+    ('not_checked', 'Не проверен'),
+    ('checked', 'Проверен'),
+)
 
 
 class Subjects(models.Model):
@@ -164,10 +164,10 @@ class AchievementType(models.Model):
 
 
 ACHIEVEMENT_STATUS = (
-        ('declared', 'Заявлено'),
-        ('checked ', 'Проверено'),
-        ('rejected', 'Отклонено'),
-    )
+    ('declared', 'Заявлено'),
+    ('checked ', 'Проверено'),
+    ('rejected', 'Отклонено'),
+)
 
 
 class Achievement(models.Model):
