@@ -339,10 +339,11 @@ class IstochnikiFinansirovaniya(models.Model):
 class EducationFinanceSource(models.Model):
     title = models.CharField(max_length=511, verbose_name='Название')
     active = models.BooleanField(default=True, verbose_name='Статус активности')
-    base = models.ForeignKey(Clients.CardBase, verbose_name='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
+    start = models.DateTimeField(blank=True, null=True, verbose_name='Дата начала')
+    end = models.DateTimeField(blank=True, null=True, verbose_name='Дата конца')
 
     def __str__(self):
-        return f"{self.base} {self.title} (активный: {self.active})"
+        return f"{self.title} - активный: {self.active}) {self.start}-{self.end}"
 
     class Meta:
         verbose_name = 'Образовательный источник финансирования'

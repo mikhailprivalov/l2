@@ -58,7 +58,7 @@ class DocumentEducation(models.Model):
 
 
 class FormEducation(models.Model):
-    title = models.CharField(max_length=100, verbose_name='Название')
+    title = models.CharField(max_length=100, verbose_name='Наименование', help_text='Очная, заочная, очно-заочная')
 
     def __str__(self):
         return self.title
@@ -68,30 +68,20 @@ class FormEducation(models.Model):
         verbose_name_plural = 'Формы обучения'
 
 
-class StatementsStage(models.Model):
-    title = models.CharField(max_length=100, verbose_name='Название')
+STATEMENTS_STAGE = (
+        ('main', 'Основной'),
+        ('additional', 'Дополнительный'),
+    )
 
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Этап заявления'
-        verbose_name_plural = 'Этапы заявления'
-
-
-class StatementsStatus(models.Model):
-    title = models.CharField(max_length=100, verbose_name='Название')
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Статус заявления'
-        verbose_name_plural = 'Статусы заявлений'
+STATEMENTS_STATUS = (
+        ('accepted', 'Принято'),
+        ('checked', 'Проверено'),
+        ('rejected', 'Отклонено'),
+    )
 
 
 class StatementsSource(models.Model):
-    title = models.CharField(max_length=100, verbose_name='Название')
+    title = models.CharField(max_length=100, verbose_name='Наименование', help_text='ЕГПУ, ЛК и т.д')
 
     def __str__(self):
         return self.title
@@ -103,11 +93,11 @@ class StatementsSource(models.Model):
 
 class Statements(models.Model):
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
-    speciality = models.ForeignKey('users.Speciality', verbose_name='Специальность-направление', db_index=True, on_delete=models.CASCADE)
-    form = models.ForeignKey(FormEducation, verbose_name='Форма (очно, заочно и т.п)', db_index=True, on_delete=models.CASCADE)
+    speciality = models.ForeignKey('users.Speciality', verbose_name='Специальность-направление', help_text='Лечебное дело, Стоматология и т.д', db_index=True, on_delete=models.CASCADE)
+    form = models.ForeignKey(FormEducation, verbose_name='Форма обучения', db_index=True, on_delete=models.CASCADE)
     source = models.ForeignKey(StatementsSource, on_delete=models.CASCADE)
-    status = models.ForeignKey(StatementsStatus, on_delete=models.CASCADE)
-    stage = models.ForeignKey(StatementsStage, on_delete=models.CASCADE)
+    status = models.CharField(max_length=15, choices=STATEMENTS_STATUS, blank=True, null=True, default=STATEMENTS_STATUS[0][0], verbose_name='Статус заявления')
+    stage = models.CharField(max_length=15, choices=STATEMENTS_STAGE, blank=True, null=True, default=STATEMENTS_STAGE[0][0], verbose_name='Этап заявления')
 
     def __str__(self):
         return f"{self.card} - {self.speciality} - {self.form}"
@@ -118,7 +108,7 @@ class Statements(models.Model):
 
 
 class ExamType(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название')
+    title = models.CharField(max_length=255, verbose_name='Наименование', help_text='ЕГЭ, ВИ, ВИ СПО и т.д')
 
     def __str__(self):
         return self.title
@@ -128,19 +118,14 @@ class ExamType(models.Model):
         verbose_name_plural = 'Типы экзаменов'
 
 
-class ExamStatus(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название')
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Статус экзамена'
-        verbose_name_plural = 'Статусы экзаменов'
+EXAM_STATYS = (
+        ('not_checked', 'Не проверен'),
+        ('checked', 'Проверен'),
+    )
 
 
 class Subjects(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название')
+    title = models.CharField(max_length=255, verbose_name='Наименование', help_text='Химия/основы химии, Математика и т.д')
 
     def __str__(self):
         return self.title
@@ -152,12 +137,12 @@ class Subjects(models.Model):
 
 class EntranceExam(models.Model):
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
-    type = models.ForeignKey(ExamType, verbose_name='тип (ВИ, ЕГЭ и т.п)', db_index=True, on_delete=models.CASCADE)
+    type = models.ForeignKey(ExamType, verbose_name='Тип испытания', db_index=True, on_delete=models.CASCADE)
     subjects = models.ForeignKey(Subjects, verbose_name='Предмет', db_index=True, on_delete=models.CASCADE)
     score = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл')
     document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
-    status = models.ForeignKey(ExamStatus, verbose_name='Статус', db_index=True, on_delete=models.CASCADE)
+    status = models.CharField(max_length=15, choices=EXAM_STATYS, blank=True, null=True, default=EXAM_STATYS[0][0], verbose_name='Статус испытания')
 
     def __str__(self):
         return f"{self.card} - {self.type} - {self.subjects} - {self.score}"
@@ -168,7 +153,7 @@ class EntranceExam(models.Model):
 
 
 class AchievementType(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название')
+    title = models.CharField(max_length=255, verbose_name='Наименование', help_text='ГТО, Олимпиада')
 
     def __str__(self):
         return self.title
@@ -178,21 +163,17 @@ class AchievementType(models.Model):
         verbose_name_plural = 'Типы достижений'
 
 
-class AchievementStatus(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название')
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Статус достижения'
-        verbose_name_plural = 'Статусы достижений'
+ACHIEVEMENT_STATUS = (
+        ('declared', 'Заявлено'),
+        ('checked ', 'Проверено'),
+        ('rejected', 'Отклонено'),
+    )
 
 
 class Achievement(models.Model):
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
-    type = models.ForeignKey(AchievementType, verbose_name='тип (ГТО, олимпиада)', db_index=True, on_delete=models.CASCADE)
-    status = models.ForeignKey(AchievementStatus, verbose_name='Статус', on_delete=models.CASCADE)
+    type = models.ForeignKey(AchievementType, verbose_name='Тип достижения', db_index=True, on_delete=models.CASCADE)
+    status = models.CharField(max_length=15, choices=ACHIEVEMENT_STATUS, blank=True, null=True, default=ACHIEVEMENT_STATUS[0][0], verbose_name='Статус достижения')
     document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
 
@@ -205,7 +186,7 @@ class Achievement(models.Model):
 
 
 class SpecialRightsType(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название')
+    title = models.CharField(max_length=255, verbose_name='Наименование', help_text='Инвалид, сирота, военнослужащий')
 
     def __str__(self):
         return self.title
@@ -216,8 +197,8 @@ class SpecialRightsType(models.Model):
 
 
 class SpecialRights(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название')
-    type = models.ForeignKey(SpecialRightsType, verbose_name='тип прав, инвалид, сирота, военнослужащий и т.д', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, verbose_name='Наименование', help_text='Инвалид 1ой группы')
+    type = models.ForeignKey(SpecialRightsType, verbose_name='Тип прав', db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
