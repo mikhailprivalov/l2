@@ -1,5 +1,7 @@
 from django.db import models
 
+from utils.dates import now
+
 
 class TypeInstitutionEducation(models.Model):
     title = models.CharField(max_length=64, verbose_name='Вид учреждения - Школа, Коледж, Техникум, Институт')
@@ -98,6 +100,7 @@ class Statements(models.Model):
     source = models.ForeignKey(StatementsSource, on_delete=models.CASCADE)
     status = models.CharField(max_length=15, choices=STATEMENTS_STATUS, blank=True, null=True, default=STATEMENTS_STATUS[0][0], verbose_name='Статус заявления')
     stage = models.CharField(max_length=15, choices=STATEMENTS_STAGE, blank=True, null=True, default=STATEMENTS_STAGE[0][0], verbose_name='Этап заявления')
+    date = models.DateTimeField(verbose_name='Дата подачи заявления', default=now())
 
     def __str__(self):
         return f"{self.card} - {self.speciality} - {self.form}"
