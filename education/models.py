@@ -198,7 +198,7 @@ class SpecialRightsType(models.Model):
 
 class SpecialRights(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование', help_text='Инвалид 1ой группы')
-    type = models.ForeignKey(SpecialRightsType, verbose_name='Тип прав', db_index=True, on_delete=models.CASCADE)
+    type = models.ForeignKey(SpecialRightsType, blank=True, null=True, verbose_name='Тип прав', db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title

@@ -33,22 +33,12 @@ class FormEducationAdmin(admin.ModelAdmin):
     )
 
 
-class StatementsStageAdmin(admin.ModelAdmin):
-    list_display = ('title',)
-    list_display_links = ('title',)
-
-
-class StatementsStatusAdmin(admin.ModelAdmin):
-    list_display = ('title',)
-    list_display_links = ('title',)
-
-
 class StatementsSourceAdmin(admin.ModelAdmin):
     list_display = ('title',)
     list_display_links = ('title',)
 
 
-class StatementsAdmin(models.ModelAdmin):
+class StatementsAdmin(admin.ModelAdmin):
     list_display = (
         'card',
         'speciality',
@@ -72,11 +62,6 @@ class ExamTypeAdmin(admin.ModelAdmin):
     list_display_links = ('title',)
 
 
-class ExamStatusAdmin(admin.ModelAdmin):
-    list_display = ('title',)
-    list_display_links = ('title',)
-
-
 class SubjectsAdmin(admin.ModelAdmin):
     list_display = ('title',)
     list_display_links = ('title',)
@@ -88,11 +73,6 @@ class EntranceExamAdmin(admin.ModelAdmin):
 
 
 class AchievementTypeAdmin(admin.ModelAdmin):
-    list_display = ('title',)
-    list_display_links = ('title',)
-
-
-class AchievementStatusAdmin(admin.ModelAdmin):
     list_display = ('title',)
     list_display_links = ('title',)
 
@@ -113,21 +93,17 @@ class SpecialRightsAdmin(admin.ModelAdmin):
 
 
 class CardSpecialRightsAdmin(admin.ModelAdmin):
-    list_display = ('title', 'right')
-    list_display_links = ('title', 'right')
+    list_display = ('card', 'right')
+    list_display_links = ('card', 'right')
 
 
 admin.site.register(models.FormEducation, FormEducationAdmin)
-admin.site.register(models.StatementsStage, StatementsStageAdmin)
-admin.site.register(models.StatementsStatus, StatementsStatusAdmin)
 admin.site.register(models.StatementsSource, StatementsSourceAdmin)
 admin.site.register(models.Statements, StatementsAdmin)
 admin.site.register(models.ExamType, ExamTypeAdmin)
-admin.site.register(models.ExamStatus, ExamStatusAdmin)
 admin.site.register(models.Subjects, SubjectsAdmin)
 admin.site.register(models.EntranceExam, EntranceExamAdmin)
 admin.site.register(models.AchievementType, AchievementTypeAdmin)
-admin.site.register(models.AchievementStatus, AchievementStatusAdmin)
 admin.site.register(models.SpecialRightsType, SpecialRightsTypeAdmin)
 admin.site.register(models.SpecialRights, SpecialRightsAdmin)
 admin.site.register(models.CardSpecialRights, CardSpecialRightsAdmin)
