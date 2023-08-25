@@ -60,3 +60,10 @@ class DocumentEducation(models.Model):
 class LogUpdateMMIS(models.Model):
     last_mmis_log_id = models.PositiveBigIntegerField(verbose_name='ID последнего лога в ММИС', blank=True, null=True)
     last_mmis_log_time = models.DateTimeField(verbose_name='Дата последнего лога в ММИС', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.last_mmis_log_id}-{self.last_mmis_log_time}"
+
+    class Meta:
+        verbose_name = 'Последний лог ММИС'
+        verbose_name_plural = 'Последние логи ММИС'
