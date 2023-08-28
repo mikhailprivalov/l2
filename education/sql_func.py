@@ -25,12 +25,25 @@ def get_connection_params(settings_name):
     return rows
 
 
-def get_enrollees_by_year(connection_string: str, year: int):
+def get_enrollees_by_id(connection_string: str, ids_str: str):
     with connect(connection_string).cursor() as cursor:
         cursor.execute(
             f"""
-            SELECT Фамилия, Имя, Отчество, Дата_Рождения, Пол FROM Абитуриенты.dbo.Все_Абитуриенты 
-            WHERE Абитуриенты.dbo.Все_Абитуриенты.Год_Набора = {year} 
+            SELECT [Фамилия], [Имя], [Отчество], [Дата_Рождения], [Пол] FROM [Абитуриенты].[dbo].[Все_Абитуриенты] 
+            WHERE [Абитуриенты].[dbo].[Все_Абитуриенты].[ID] IN ({ids_str}) 
+            """
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_changes(connection_string: str, last_date_time: str):
+    with connect(connection_string).cursor() as cursor:
+        cursor.execute(
+            f"""
+           SELECT [Код], [код_абитуриента], [дата]
+           FROM [Абитуриенты].[dbo].[Логи]
+           WHERE [Абитуриенты].[dbo].[Логи].[дата] > CAST('{last_date_time}' AS datetime2) and код_абитуриента <> 0
             """
         )
         rows = namedtuplefetchall(cursor)
