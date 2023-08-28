@@ -1,19 +1,11 @@
 from django.http import JsonResponse
 
+from clients.models import Citizenship
+from directions.models import EducationFinanceSource
+from education.models import ApplicationSourceEducation, ApplicationEducation, ExamType, Subjects, AchievementType, Achievement
+from users.models import Speciality
 from laboratory.settings import (
-    SPECIALTIES,
-    PAYFORM,
-    COMPANIES,
-    ENROLLMENTSTATUSES,
-    DEDUCTIONSTATUSES,
     ENROLLMENTORDERS,
-    CITIZENSHIP,
-    STATEMENTSOURCES,
-    STATEMENTSTATUSES,
-    STATEMENTSSTAGES,
-    EXAMS,
-    EXAMSUBJECTS,
-    EXAMSTATUSES,
     ACHIEVEMENTS,
     ACHIEVEMENTSSTATUSES,
     SATISFACTORYBALLS,
@@ -24,27 +16,12 @@ from laboratory.settings import (
 
 
 def get_specialties(request):
-    result = SPECIALTIES
+    result = Speciality.get_speciality()
     return JsonResponse({"result": result})
 
 
 def get_pay_forms(request):
-    result = PAYFORM
-    return JsonResponse({"result": result})
-
-
-def get_companies(request):
-    result = COMPANIES
-    return JsonResponse({"result": result})
-
-
-def get_enrollment_statuses(request):
-    result = ENROLLMENTSTATUSES
-    return JsonResponse({"result": result})
-
-
-def get_deduction_statuses(request):
-    result = DEDUCTIONSTATUSES
+    result = EducationFinanceSource.get_sources()
     return JsonResponse({"result": result})
 
 
@@ -54,33 +31,27 @@ def get_enrollment_orders(request):
 
 
 def get_citizenship(request):
-    result = CITIZENSHIP
+    result = Citizenship.get_citizenship()
     return JsonResponse({"result": result})
 
 
-def get_statement_filters(request):
-    sources = STATEMENTSOURCES
-    statuses = STATEMENTSTATUSES
-    stages = STATEMENTSSTAGES
+def get_application_filters(request):
+    sources = ApplicationSourceEducation.get_application_source()
+    statuses = ApplicationEducation.get_application_status()
+    stages = ApplicationEducation.get_application_stage()
     return JsonResponse({"sources": sources, "statuses": statuses, "stages": stages})
 
 
 def get_exams_filters(request):
-    exams = EXAMS
-    subjects = EXAMSUBJECTS
-    statuses = EXAMSTATUSES
-    return JsonResponse({"exams": exams, "subjects": subjects, "statuses": statuses})
+    exam_types = ExamType.get_types()
+    subjects = Subjects.get_subjects()
+    return JsonResponse({"exam_types": exam_types, "subjects": subjects})
 
 
 def get_achievements_filters(request):
-    achievements = ACHIEVEMENTS
-    statuses = ACHIEVEMENTSSTATUSES
+    achievements = AchievementType.get_types()
+    statuses = Achievement.get_statuses()
     return JsonResponse({"achievements": achievements, "statuses": statuses})
-
-
-def get_satisfactory_balls(request):
-    result = SATISFACTORYBALLS
-    return JsonResponse({"result": result})
 
 
 def get_education(request):

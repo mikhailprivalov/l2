@@ -94,26 +94,26 @@
         <div class="margin-div">
           <label>Источник заявления</label>
           <Treeselect
-            v-model="selectedStatementSources"
+            v-model="selectedApplicationSources"
             :multiple="true"
-            :options="statementSources"
+            :options="applicationSources"
             placeholder="Выберите источник"
           />
         </div>
         <div class="margin-div">
           <label>Статус заявлений</label>
           <Treeselect
-            v-model="selectedStatementStatuses"
+            v-model="selectedApplicationStatuses"
             :multiple="true"
-            :options="statementStatuses"
+            :options="applicationStatuses"
             placeholder="Выберите статус"
           />
         </div>
         <div class="margin-div">
           <label>Этап заявления</label>
           <Treeselect
-            v-model="selectedStatementStage"
-            :options="statementStages"
+            v-model="selectedApplicationStage"
+            :options="applicationStages"
             placeholder="Выберите этап"
           />
         </div>
@@ -122,9 +122,9 @@
         <div class="margin-div">
           <label>Тип экзамена</label>
           <Treeselect
-            v-model="selectedExams"
+            v-model="selectedExamTypes"
             :multiple="true"
-            :options="exams"
+            :options="examTypes"
             placeholder="Выберите тип"
           />
         </div>
@@ -343,30 +343,29 @@ const getCitizenship = async () => {
   citizenship.value = data.result;
 };
 
-const selectedStatementSources = ref([]);
-const statementSources = ref([]);
-const selectedStatementStatuses = ref([]);
-const statementStatuses = ref([]);
-const selectedStatementStage = ref(null);
-const statementStages = ref([]);
+const selectedApplicationSources = ref([]);
+const applicationSources = ref([]);
+const selectedApplicationStatuses = ref([]);
+const applicationStatuses = ref([]);
+const selectedApplicationStage = ref(null);
+const applicationStages = ref([]);
 const getStatementFilters = async () => {
   const data = await api('/education/get-statement-filters');
-  statementSources.value = data.sources;
-  statementStatuses.value = data.statuses;
-  statementStages.value = data.stages;
+  applicationSources.value = data.sources;
+  applicationStatuses.value = data.statuses;
+  applicationStages.value = data.stages;
 };
 
-const selectedExams = ref([]);
-const exams = ref([]);
+const selectedExamTypes = ref([]);
+const examTypes = ref([]);
 const selectedExamSubjects = ref([]);
 const examSubjects = ref([]);
 const selectedExamStatus = ref(null);
 const examStatuses = ref([]);
 const getExamsFilters = async () => {
   const data = await api('/education/get-exams-filters');
-  exams.value = data.exams;
+  examTypes.value = data.exam_types;
   examSubjects.value = data.subjects;
-  examStatuses.value = data.statuses;
 };
 
 const selectedAchievements = ref([]);
@@ -430,10 +429,10 @@ const clearFilters = () => {
   contract.value = false;
   payment.value = false;
   selectedCitizenship.value = null;
-  selectedStatementSources.value = [];
-  selectedStatementStatuses.value = [];
-  selectedStatementStage.value = null;
-  selectedExams.value = [];
+  selectedApplicationSources.value = [];
+  selectedApplicationStatuses.value = [];
+  selectedApplicationStage.value = null;
+  selectedExamTypes.value = [];
   selectedExamSubjects.value = [];
   selectedExamStatus.value = null;
   selectedAchievements.value = [];
@@ -449,8 +448,6 @@ onMounted(
     getSpecialties();
     getPayForms();
     getCompanies();
-    getEnrollmentStatuses();
-    getDeductionStatuses();
     getEnrollmentOrders();
     getCitizenship();
     getStatementFilters();

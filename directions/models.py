@@ -348,6 +348,11 @@ class EducationFinanceSource(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def get_sources() -> list[dict]:
+        sources = [{"id": source.pk, "label": source.title} for source in EducationFinanceSource.objects.all()]
+        return sources
+
     class Meta:
         verbose_name = 'Образовательный источник финансирования'
         verbose_name_plural = 'Образовательные источники финансирования'
