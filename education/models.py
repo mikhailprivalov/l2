@@ -1,6 +1,5 @@
 from django.db import models
-
-from utils.dates import now
+from django.utils import timezone
 
 
 class TypeInstitutionEducation(models.Model):
@@ -99,7 +98,7 @@ class ApplicationEducation(models.Model):
     application_source = models.ForeignKey(ApplicationSourceEducation, verbose_name='Источник заявления', on_delete=models.CASCADE)
     application_status = models.CharField(max_length=15, choices=APPLICATION_STATUS, blank=True, null=True, default=APPLICATION_STATUS[0][0], verbose_name='Статус заявления')
     application_stage = models.CharField(max_length=15, choices=APPLICATION_STAGE, blank=True, null=True, default=APPLICATION_STAGE[0][0], verbose_name='Этап заявления')
-    date = models.DateTimeField(verbose_name='Дата подачи заявления', default=now())
+    date = models.DateTimeField(verbose_name='Дата подачи заявления', default=timezone.now)
 
     def __str__(self):
         return f"{self.card} - {self.speciality} - {self.form}"
@@ -218,3 +217,15 @@ class CardSpecialRights(models.Model):
     class Meta:
         verbose_name = 'Особые права'
         verbose_name_plural = 'Особые права'
+
+
+class LogUpdateMMIS(models.Model):
+    last_mmis_log_id = models.PositiveBigIntegerField(verbose_name='ID последнего лога в ММИС', blank=True, null=True)
+    last_mmis_log_time = models.DateTimeField(verbose_name='Дата последнего лога в ММИС', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.last_mmis_log_id}-{self.last_mmis_log_time}"
+
+    class Meta:
+        verbose_name = 'Последний лог ММИС'
+        verbose_name_plural = 'Последние логи ММИС'

@@ -33,27 +33,27 @@ class FormEducationAdmin(admin.ModelAdmin):
     )
 
 
-class StatementsSourceAdmin(admin.ModelAdmin):
+class ApplicationSourceEducationAdmin(admin.ModelAdmin):
     list_display = ('title',)
     list_display_links = ('title',)
 
 
-class StatementsAdmin(admin.ModelAdmin):
+class ApplicationEducationAdmin(admin.ModelAdmin):
     list_display = (
         'card',
         'speciality',
         'form',
-        'source',
-        'status',
-        'stage',
+        'application_source',
+        'application_status',
+        'application_stage',
     )
     list_display_links = (
         'card',
         'speciality',
         'form',
-        'source',
-        'status',
-        'stage',
+        'application_source',
+        'application_status',
+        'application_stage',
     )
 
 
@@ -98,8 +98,8 @@ class CardSpecialRightsAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.FormEducation, FormEducationAdmin)
-admin.site.register(models.StatementsSource, StatementsSourceAdmin)
-admin.site.register(models.Statements, StatementsAdmin)
+admin.site.register(models.ApplicationSourceEducation, ApplicationSourceEducationAdmin)
+admin.site.register(models.ApplicationEducation, ApplicationEducationAdmin)
 admin.site.register(models.ExamType, ExamTypeAdmin)
 admin.site.register(models.Subjects, SubjectsAdmin)
 admin.site.register(models.EntranceExam, EntranceExamAdmin)
@@ -108,6 +108,7 @@ admin.site.register(models.SpecialRightsType, SpecialRightsTypeAdmin)
 admin.site.register(models.SpecialRights, SpecialRightsAdmin)
 admin.site.register(models.CardSpecialRights, CardSpecialRightsAdmin)
 admin.site.register(models.TypeInstitutionEducation)
+admin.site.register(models.LogUpdateMMIS)
 admin.site.register(models.InstitutionTitle, SetInstitutionTitleAdmin)
 admin.site.register(models.LevelEducation)
 admin.site.register(models.DocumentTypeEducation, SetDocumentTypeEducationAdmin)
