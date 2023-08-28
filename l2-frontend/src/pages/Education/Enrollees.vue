@@ -57,22 +57,6 @@
           />
         </div>
         <div class="margin-div">
-          <label>Статус зачисления</label>
-          <Treeselect
-            v-model="selectedEnrollmentStatus"
-            :options="enrollmentStatuses"
-            placeholder="Выберите статус"
-          />
-        </div>
-        <div class="margin-div">
-          <label>Статус отчисления</label>
-          <Treeselect
-            v-model="selectedDeductionStatus"
-            :options="deductionStatuses"
-            placeholder="Выберите статус"
-          />
-        </div>
-        <div class="margin-div">
           <label>Приказ</label>
           <Treeselect
             v-model="selectedEnrollmentOrders"
@@ -89,8 +73,6 @@
             placeholder="Выберите гражданство"
           />
         </div>
-      </div>
-      <div class="four-col-div">
         <div class="margin-div">
           <label>Источник заявления</label>
           <Treeselect
@@ -138,14 +120,6 @@
           />
         </div>
         <div class="margin-div">
-          <label>Статус экзамена</label>
-          <Treeselect
-            v-model="selectedExamStatus"
-            :options="examStatuses"
-            placeholder="Выберите статус"
-          />
-        </div>
-        <div class="margin-div">
           <label>Тип ИД</label>
           <Treeselect
             v-model="selectedAchievements"
@@ -161,14 +135,6 @@
             :multiple="true"
             :options="achievementsStatuses"
             placeholder="Выберите статус"
-          />
-        </div>
-        <div class="margin-div">
-          <label>Удовлетворительный балл</label>
-          <Treeselect
-            v-model="selectedSatisfactoryBall "
-            :options="satisfactoryBalls"
-            placeholder="Выберите балл"
           />
         </div>
         <div class="margin-div">
@@ -258,6 +224,54 @@
               class="label-for-checkbox"
             >Оригинал</label>
           </div>
+          <div>
+            <input
+              id="isEnrolled"
+              v-model="isEnrolled"
+              class="input-checkbox"
+              type="checkbox"
+            >
+            <label
+              for="isEnrolled"
+              class="label-for-checkbox"
+            >Зачислен</label>
+          </div>
+          <div>
+            <input
+              id="isExpelled"
+              v-model="isExpelled"
+              class="input-checkbox"
+              type="checkbox"
+            >
+            <label
+              for="isExpelled"
+              class="label-for-checkbox"
+            >Отчислен</label>
+          </div>
+          <div>
+            <input
+              id="examChecked"
+              v-model="examChecked"
+              class="input-checkbox"
+              type="checkbox"
+            >
+            <label
+              for="examChecked"
+              class="label-for-checkbox"
+            >Экзамен проверен</label>
+          </div>
+          <div>
+            <input
+              id="isSatisfactoryScore"
+              v-model="isSatisfactoryScore"
+              class="input-checkbox"
+              type="checkbox"
+            >
+            <label
+              for="isSatisfactoryScore"
+              class="label-for-checkbox"
+            >Балл удовлетворительный</label>
+          </div>
         </div>
       </div>
     </div>
@@ -316,18 +330,9 @@ const normalizerCompany = (node) => ({
 });
 
 const selectedEnrollmentStatus = ref(null);
-const enrollmentStatuses = ref([]);
-const getEnrollmentStatuses = async () => {
-  const data = await api('/education/get-enrollment-statuses');
-  enrollmentStatuses.value = data.result;
-};
-
+const isEnrolled = ref(false);
 const selectedDeductionStatus = ref(null);
-const deductionStatuses = ref([]);
-const getDeductionStatuses = async () => {
-  const data = await api('/education/get-deduction-statuses');
-  deductionStatuses.value = data.result;
-};
+const isExpelled = ref(false);
 
 const selectedEnrollmentOrders = ref([]);
 const enrollmentOrders = ref([]);
@@ -349,7 +354,7 @@ const selectedApplicationStatuses = ref([]);
 const applicationStatuses = ref([]);
 const selectedApplicationStage = ref(null);
 const applicationStages = ref([]);
-const getStatementFilters = async () => {
+const getApplicationFilters = async () => {
   const data = await api('/education/get-statement-filters');
   applicationSources.value = data.sources;
   applicationStatuses.value = data.statuses;
@@ -361,7 +366,7 @@ const examTypes = ref([]);
 const selectedExamSubjects = ref([]);
 const examSubjects = ref([]);
 const selectedExamStatus = ref(null);
-const examStatuses = ref([]);
+const examChecked = ref(false);
 const getExamsFilters = async () => {
   const data = await api('/education/get-exams-filters');
   examTypes.value = data.exam_types;
@@ -379,11 +384,7 @@ const getAchievementsFilters = async () => {
 };
 
 const selectedSatisfactoryBall = ref(null);
-const satisfactoryBalls = ref([]);
-const getSatisfactoryBalls = async () => {
-  const data = await api('/education/get-satisfactory-balls');
-  satisfactoryBalls.value = data.result;
-};
+const isSatisfactoryScore = ref(false);
 const selectedEducations = ref([]);
 const educations = ref([]);
 const getEducations = async () => {
@@ -450,10 +451,9 @@ onMounted(
     getCompanies();
     getEnrollmentOrders();
     getCitizenship();
-    getStatementFilters();
+    getApplicationFilters();
     getExamsFilters();
     getAchievementsFilters();
-    getSatisfactoryBalls();
     getEducations();
     getSpecialRights();
     getEnrollees();

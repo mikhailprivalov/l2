@@ -2,15 +2,10 @@ from django.http import JsonResponse
 
 from clients.models import Citizenship
 from directions.models import EducationFinanceSource
-from education.models import ApplicationSourceEducation, ApplicationEducation, ExamType, Subjects, AchievementType, Achievement
+from education.models import ApplicationSourceEducation, ApplicationEducation, ExamType, Subjects, AchievementType, Achievement, DocumentTypeEducation, SpecialRights
 from users.models import Speciality
 from laboratory.settings import (
     ENROLLMENTORDERS,
-    ACHIEVEMENTS,
-    ACHIEVEMENTSSTATUSES,
-    SATISFACTORYBALLS,
-    EDUCATIONS,
-    SPECIALRIGHTS,
     ENROLLEES,
 )
 
@@ -55,12 +50,12 @@ def get_achievements_filters(request):
 
 
 def get_education(request):
-    result = EDUCATIONS
+    result = DocumentTypeEducation.get_education_documents_tree()
     return JsonResponse({"result": result})
 
 
 def get_special_rights(request):
-    result = SPECIALRIGHTS
+    result = SpecialRights.get_special_rights_tree()
     return JsonResponse({"result": result})
 
 

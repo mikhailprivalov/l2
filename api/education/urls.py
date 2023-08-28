@@ -10,7 +10,6 @@ urlpatterns = [
     path('get-statement-filters', views.get_application_filters),
     path('get-exams-filters', views.get_exams_filters),
     path('get-achievements-filters', views.get_achievements_filters),
-    path('get-satisfactory-balls', views.get_satisfactory_balls),
     path('get-educations', views.get_education),
     path('get-special-rights', views.get_special_rights),
     path('get-enrollees', views.get_enrollees),

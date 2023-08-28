@@ -47,18 +47,19 @@ class DocumentTypeEducation(models.Model):
 
     @staticmethod
     def get_education_documents_tree():
-        {"id": 1, "label": 'label'}
-        result = []
-        level_education = LevelEducation.objects.all()
-        count = ''
-        documents = DocumentTypeEducation.objects.all()
-        # for i in level_education:
-        #     count += 'a'
-        #     result.append({"id": count, "label": i.title, "children": []})
+        documents = DocumentTypeEducation.objects.all().prefetch_related('level_education')
+        doc_dict = {}
         for i in documents:
-
-
-
+            if doc_dict.get(i.level_education.title):
+                doc_dict[i.level_education.title].append({"id": i.pk, "label": i.title})
+            elif not doc_dict.get(i.level_education.title):
+                doc_dict[i.level_education.title] = [{"id": i.pk, "label": i.title}]
+        count = 0
+        result_tree = []
+        for key, value in doc_dict.items():
+            result_tree.append({"id": f'а{+count}', "label": key, "children": value})
+            count += 1
+        return result_tree
 
 
 class DocumentEducation(models.Model):
@@ -248,6 +249,22 @@ class SpecialRights(models.Model):
 
     def __str__(self):
         return self.title
+
+    @staticmethod
+    def get_special_rights_tree():
+        rights = SpecialRights.objects.all().prefetch_related('type')
+        rights_dict = {}
+        for i in rights:
+            if rights_dict.get(i.type.title):
+                rights_dict[i.type.title].append({"id": i.pk, "label": i.title})
+            elif not rights_dict.get(i.type.title):
+                rights_dict[i.type.title] = [{"id": i.pk, "label": i.title}]
+        count = 0
+        result_tree = []
+        for key, value in rights_dict.items():
+            result_tree.append({"id": f'а{+count}', "label": key, "children": value})
+            count += 1
+        return result_tree
 
     class Meta:
         verbose_name = 'Особые права справочник'
