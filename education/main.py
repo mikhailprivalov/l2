@@ -14,24 +14,30 @@ def create_connection_string(settings_name: str):
 
 
 def get_enrollees(connection_string: str, list_id: list):
-    result = get_enrollees_by_id(connection_string, list_id)
+    list_id_str = ", ".join(map(str, list_id))
+    result = get_enrollees_by_id(connection_string, list_id_str)
     return result
 
 
 def get_ids_changes_enrollees(connection_string: str):
     last_log = LogUpdateMMIS.objects.last()
     last_time_str = last_log.last_mmis_log_time.strftime('%Y-%m-%d %H:%M:%S')
+    print(last_time_str)
     changes = get_changes(connection_string, last_time_str)
-    lens_changes = len(changes)
-    if lens_changes != 0:
+    len_changes = len(changes)
+    if len_changes != 0:
+        print(len_changes)
+        print('Длинна')
         id_changed_enrollees = []
         count = 0
         for i in changes:
-            if count == (lens_changes - 1):
+            if count == (len_changes - 1) and last_log:
                 last_log.last_mmis_log_time = i.дата
                 last_log.last_mmis_log_id = i.Код
-                # last_log.save()
-            if i.код_абитуриента != 0 and i.код_абитуриента not in id_changed_enrollees:
+                last_log.save()
+            elif count == (len_changes -1) and not last_log:
+                last_log = LogUpdateMMIS(last_mmis_log_id=i.Код, last_mmis_log_time=i.дата)
+            if i.код_абитуриента not in id_changed_enrollees:
                 id_changed_enrollees.append(i.код_абитуриента)
             count += 1
         return id_changed_enrollees
@@ -49,7 +55,6 @@ def process_update_enrollees():
         if ids_changed_enrollees is None:
             print('Данных нет пока что')
         else:
-            print('мы тута')
             enrolles_data = get_enrollees(connection_string, ids_changed_enrollees)
             print(enrolles_data)
         time.sleep(10)
