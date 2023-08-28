@@ -33,6 +33,7 @@ from .models import (
     MicrobiologyResultPhenotype,
     RegisteredOrders,
     ExternalAdditionalOrder,
+    NapravleniyaHL7LinkFiles,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -277,6 +278,16 @@ class ExternalAdditionalOrderAdmin(admin.ModelAdmin):
     list_display = ('external_add_order',)
 
 
+class NapravleniyaHL7FilesAdmin(admin.ModelAdmin):
+    raw_id_fields = ('napravleniye',)
+    list_display = (
+        'napravleniye_id',
+        'file_type',
+        'upload_file',
+        'created_at',
+    )
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -296,6 +307,7 @@ admin.site.register(DashboardCharts, ResDashboardCharts)
 admin.site.register(DashboardChartFields, ResDashboardChartFields)
 admin.site.register(MonitoringSumFieldByDay)
 admin.site.register(MonitoringSumFieldTotal)
+admin.site.register(NapravleniyaHL7LinkFiles, NapravleniyaHL7FilesAdmin)
 admin.site.register(AdditionNapravleniya, ResAdditionNapravleniya)
 admin.site.register(IssledovaniyaFiles, ResIssledovaniyaFiles)
 admin.site.register(IssledovaniyaResultLaborant, ResIssledovaniyaResultLaborant)
