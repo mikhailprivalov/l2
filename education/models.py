@@ -1,6 +1,5 @@
 from django.db import models
-
-from utils.dates import now
+from django.utils import timezone
 
 
 class TypeInstitutionEducation(models.Model):
@@ -99,7 +98,7 @@ class ApplicationEducation(models.Model):
     application_source = models.ForeignKey(ApplicationSourceEducation, verbose_name='Источник заявления', on_delete=models.CASCADE)
     application_status = models.CharField(max_length=15, choices=APPLICATION_STATUS, blank=True, null=True, default=APPLICATION_STATUS[0][0], verbose_name='Статус заявления')
     application_stage = models.CharField(max_length=15, choices=APPLICATION_STAGE, blank=True, null=True, default=APPLICATION_STAGE[0][0], verbose_name='Этап заявления')
-    date = models.DateTimeField(verbose_name='Дата подачи заявления', default=now())
+    date = models.DateTimeField(verbose_name='Дата подачи заявления', default=timezone.now)
 
     def __str__(self):
         return f"{self.card} - {self.speciality} - {self.form}"
