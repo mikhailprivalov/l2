@@ -1,5 +1,6 @@
 {
   "order": {
+    "needReplaceField": {"MSH": ["2", "3", "4", "5"], "OBR":  ["2-2"]},
     "MSH": {
       "2": "company_sender_application",
       "3": "company_sender",
@@ -10,7 +11,7 @@
     "PID": {
       "2": "patient_id",
       "5": {
-        "symbol": "^",
+        "separatorSymbol": "^",
         "1": "family",
         "2":  "name",
         "3": "patronymic"
@@ -18,16 +19,16 @@
       "7": "patient_birthday",
       "8": "sex",
       "11": {
-        "symbol": "^",
+        "separatorSymbol": "^",
         "1": "city",
         "2": "street",
         "3": "house",
         "4": "flat"
       },
       "13": {
-        "symbol": "~",
+        "separatorSymbol": "~",
         "1": "tel_home",
-        "2": "tel_add",
+        "2": "tel_additional",
         "3": "tel_work",
         "4": "email_base64"
       },
@@ -36,7 +37,7 @@
     "PV1": {
       "8": "department_id",
       "20": {
-        "symbol": "^",
+        "separatorSymbol": "^",
         "1": "finsource",
         "3": "title_company",
         "4": "code_price"
@@ -46,13 +47,13 @@
     "OBR": {
       "1": "serial_number",
       "2": {
-        "symbol": "^",
+        "separatorSymbol": "^",
         "1": "lab_number_order",
         "2": "company_sender_application"
       },
       "3": "container_number",
       "4": {
-        "symbol": "^",
+        "separatorSymbol": "^",
         "4": "internal_code",
         "5": "title_research"
       },

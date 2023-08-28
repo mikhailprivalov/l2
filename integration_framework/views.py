@@ -318,10 +318,13 @@ def issledovaniye_data(request):
     pk = request.GET.get("pk")
     ignore_sample = request.GET.get("ignoreSample") == 'true'
     i = directions.Issledovaniya.objects.get(pk=pk)
-
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli='').exclude(fraction__not_send_odli=True)
-    if (not ignore_sample and not sample) or (not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic) or i.research.pk in REMD_EXCLUDE_RESEARCH:
+    if (
+        (not ignore_sample and not sample)
+        or (not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic and not i.research.is_slave_hospital)
+        or i.research.pk in REMD_EXCLUDE_RESEARCH
+    ):
         return Response(
             {"ok": False, "ignore_sample": ignore_sample, "sample": {"date": sample.time_get.date() if sample else i.time_confirmation.date()}, "results.exists": results.exists()}
         )

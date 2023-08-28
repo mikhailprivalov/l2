@@ -709,15 +709,19 @@ def receive_one_by_one(request):
             resp_json = json.loads(resp.content)
             if isinstance(resp_json, dict) and "message" in resp_json:
                 message = resp_json["message"]
+        user_groups = [str(x) for x in request.user.groups.all()]
+        if "Направления-все МО" not in user_groups:
+            pks = [
+                x.number
+                for x in (
+                    TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
+                    .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+                    .distinct()
+                )
+            ]
+        else:
+            pks = [x.number for x in (TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk).distinct())]
 
-        pks = [
-            x.number
-            for x in (
-                TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
-                .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
-                .distinct()
-            )
-        ]
     ok_objects = []
     ok_researches = []
     invalid_objects = []
@@ -840,6 +844,9 @@ def receive_history(request):
         first_iss: Issledovaniya = row.issledovaniya_set.first()
         if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
             podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
+            lab_titles = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
+            lab_titles = ",".join(lab_titles)
+            podrs = [f"{podrs[0]}, {lab_titles}"]
             is_external_executor = True
         else:
             podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))

@@ -32,6 +32,7 @@ class PriceName(models.Model):
     hospital = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
     external_performer = models.BooleanField(default=False, blank=True, help_text='Прайс внешний исполнитель', db_index=True)
     subcontract = models.BooleanField(default=False, blank=True, help_text='Прайс субподряд', db_index=True)
+    symbol_code = models.CharField(max_length=55, unique=True, blank=True, null=True, default=None, help_text='Код прайса', db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -42,6 +43,10 @@ class PriceName(models.Model):
     @staticmethod
     def get_company_price_by_date(company_id, date_start, date_end):
         return PriceName.objects.filter(company_id=company_id, date_start__lte=date_start, date_end__gte=date_end).first()
+
+    @staticmethod
+    def get_hospital_price_by_date(hospital_id, date_start, date_end, is_subcontract=False):
+        return PriceName.objects.filter(hospital_id=hospital_id, date_start__lte=date_start, date_end__gte=date_end, subcontract=is_subcontract).first()
 
     class Meta:
         verbose_name = 'Название прайса'
