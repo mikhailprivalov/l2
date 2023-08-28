@@ -1,0 +1,64 @@
+{
+  "order": {
+    "needReplaceField": {"MSH": ["2", "3", "4", "5"], "OBR":  ["2-2"]},
+    "MSH": {
+      "2": "company_sender_application",
+      "3": "company_sender",
+      "4": "company_receiver_application",
+      "5": "company_receiver",
+      "6": "time_message"
+    },
+    "PID": {
+      "2": "patient_id",
+      "5": {
+        "separatorSymbol": "^",
+        "1": "family",
+        "2":  "name",
+        "3": "patronymic"
+      },
+      "7": "patient_birthday",
+      "8": "sex",
+      "11": {
+        "separatorSymbol": "^",
+        "1": "city",
+        "2": "street",
+        "3": "house",
+        "4": "flat"
+      },
+      "13": {
+        "separatorSymbol": "~",
+        "1": "tel_home",
+        "2": "tel_additional",
+        "3": "tel_work",
+        "4": "email_base64"
+      },
+      "19": "snils"
+    },
+    "PV1": {
+      "8": "department_id",
+      "20": {
+        "separatorSymbol": "^",
+        "1": "finsource",
+        "3": "title_company",
+        "4": "code_price"
+      },
+      "44": "time_create_order_company"
+    },
+    "OBR": {
+      "1": "serial_number",
+      "2": {
+        "separatorSymbol": "^",
+        "1": "lab_number_order",
+        "2": "company_sender_application"
+      },
+      "3": "container_number",
+      "4": {
+        "separatorSymbol": "^",
+        "4": "internal_code",
+        "5": "title_research"
+      },
+      "7": "time_get_material"
+    }
+
+  }
+}

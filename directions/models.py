@@ -35,6 +35,7 @@ from laboratory.settings import (
     RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
     AUTO_PRINT_RESEARCH_DIRECTION,
     NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL,
+    MEDIA_ROOT,
 )
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
@@ -49,7 +50,6 @@ from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
-
 
 from appconf.manager import SettingManager
 from utils.dates import normalize_dots_date
@@ -124,6 +124,12 @@ class TubesRegistration(models.Model):
     @staticmethod
     def make_default_external_tube(number: int):
         external_tube = directory.ReleationsFT.get_default_external_tube()
+        return TubesRegistration.objects.create(number=number, type=external_tube)
+
+    @staticmethod
+    def make_external_tube(number: int, research):
+        fraction = directory.Fractions.objects.filter(research=research).first()
+        external_tube = fraction.relation
         return TubesRegistration.objects.create(number=number, type=external_tube)
 
     @staticmethod
@@ -430,8 +436,11 @@ class RegisteredOrders(models.Model):
         return f"{self.order_number} {self.patient_card}"
 
     class Meta:
-        verbose_name = 'Внешний заказ'
-        verbose_name_plural = 'Внешние заказы'
+        verbose_name = 'Внешний заказ направления'
+        verbose_name_plural = 'Внешние заказы направлений'
+
+    def get_registered_orders_by_file_name(self):
+        return RegisteredOrders.objects.values_list("id", flat=True).filter(file_name=self.file_name)
 
 
 class Napravleniya(models.Model):
@@ -557,6 +566,7 @@ class Napravleniya(models.Model):
         Hospitals, related_name='external_executor_hospital', default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Внешняя организация-исполнитель'
     )
     time_send_hl7 = models.DateTimeField(help_text='Дата и время отправки заказа', db_index=True, blank=True, default=None, null=True)
+    price_name = models.ForeignKey(contracts.PriceName, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Прайс для направления')
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -1050,6 +1060,7 @@ class Napravleniya(models.Model):
         price_category=-1,
         hospital=-1,
         external_order=None,
+        price_name_id=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1074,6 +1085,10 @@ class Napravleniya(models.Model):
         if issledovaniya is None:
             pass
         client = Clients.Card.objects.get(pk=client_id)
+        if price_name_id is None and istochnik_f.title.lower() in ["договор"]:
+            price_name_obj = contracts.PriceName.get_hospital_price_by_date(doc.hospital_id, current_time(only_date=True), current_time(only_date=True), True)
+            price_name_id = price_name_obj.pk
+
         dir = Napravleniya(
             client=client,
             doc=doc if not for_rmis else None,
@@ -1087,6 +1102,7 @@ class Napravleniya(models.Model):
             rmis_slot_id=rmis_slot,
             hospital=doc.hospital or Hospitals.get_default_hospital(),
             external_order=external_order,
+            price_name_id=price_name_id,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
@@ -1273,6 +1289,7 @@ class Napravleniya(models.Model):
         price_category=-1,
         external_order: Optional[RegisteredOrders] = None,
         services_by_additional_order_num=None,
+        price_name=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -1426,7 +1443,7 @@ class Napravleniya(models.Model):
                         "research__pk": v,
                     }
                     last_iss = Issledovaniya.objects.filter(**filter, time_confirmation__isnull=False).order_by("-time_confirmation").first()
-                    if doctor_control_actual_research and research.actual_period_result > 0:
+                    if doctor_control_actual_research and research.actual_period_result > 0 and last_iss:
                         delta = current_time() - last_iss.time_confirmation
                         if delta.days <= research.actual_period_result:
                             result["messageLimit"] = f" {result.get('messageLimit', '')} \n Срок действия {research.title} - {research.actual_period_result} дн."
@@ -1527,6 +1544,7 @@ class Napravleniya(models.Model):
                             price_category=price_category,
                             hospital=hospital_override,
                             external_order=external_order,
+                            price_name_id=price_name,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1556,6 +1574,7 @@ class Napravleniya(models.Model):
                             price_category=price_category,
                             hospital=hospital_override,
                             external_order=external_order,
+                            price_name_id=price_name,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1667,7 +1686,8 @@ class Napravleniya(models.Model):
                 tube: Optional[TubesRegistration] = None
 
                 if external_order:
-                    tube = TubesRegistration.make_default_external_tube(external_order.order_number)
+                    research = directory.Researches.objects.get(pk=res[0])
+                    tube = TubesRegistration.make_external_tube(external_order.order_number, research)
 
                 v: Napravleniya
                 for k, v in directions_for_researches.items():
@@ -2122,6 +2142,13 @@ class PersonContract(models.Model):
 class ExternalAdditionalOrder(models.Model):
     external_add_order = models.CharField(max_length=255, db_index=True, blank=True, null=True, default=None, help_text='Внешний номер для услуги')
 
+    def __str__(self):
+        return f"{self.external_add_order}"
+
+    class Meta:
+        verbose_name = 'Внешний лабораторный номер заказа'
+        verbose_name_plural = 'Внешние лабораторные номера заказов'
+
 
 class Issledovaniya(models.Model):
     """
@@ -2201,6 +2228,7 @@ class Issledovaniya(models.Model):
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
+
 
     @property
     def time_save_local(self):
@@ -2336,6 +2364,34 @@ class Issledovaniya(models.Model):
     class Meta:
         verbose_name = 'Назначение на исследование'
         verbose_name_plural = 'Назначения на исследования'
+
+
+class NapravleniyaHL7LinkFiles(models.Model):
+    HL7_ORIG_ORDER = 'HL7_ORIG_ORDER'
+    HL7_FINISH_ORDER = 'HL7_FINISH_ORDER'
+    HL7_ORIG_RESULT = 'HL7_ORIG_RESULT'
+    FILE_TYPES = (
+        (HL7_ORIG_ORDER, HL7_ORIG_ORDER),
+        (HL7_FINISH_ORDER, HL7_FINISH_ORDER),
+        (HL7_ORIG_RESULT, HL7_ORIG_RESULT),
+    )
+
+    napravleniye = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направления")
+    file_type = models.CharField(max_length=30, db_index=True, verbose_name="Тип файла")
+    upload_file = models.FileField(blank=True, null=True, default=None, max_length=255, verbose_name="Файл документа")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
+
+    def __str__(self) -> str:
+        return f"{self.napravleniye} — {self.file_type} – {self.created_at}"
+
+    def create_hl7_file_path(napravleniye_id, filename):
+        if not os.path.exists(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id))):
+            os.makedirs(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id)))
+        return os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id), filename)
+
+    class Meta:
+        verbose_name = 'HL7-файл'
+        verbose_name_plural = 'HL7-файлы'
 
 
 def get_file_path(instance: 'IssledovaniyaFiles', filename):

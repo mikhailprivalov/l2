@@ -58,6 +58,7 @@ class Individual(models.Model):
     ecp_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в ЕЦП")
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
     owner = models.ForeignKey('hospitals.Hospitals', default=None, blank=True, null=True, help_text="Организация-владелец данных", db_index=True, on_delete=models.PROTECT)
+    owner_patient_id = models.CharField(max_length=128, default=None, null=True, blank=True, db_index=True, help_text="Код в организации-владелеце")
 
     def first(self):
         return self
@@ -753,12 +754,13 @@ class Individual(models.Model):
         return updated_data
 
     @staticmethod
-    def import_from_simple_data(data: dict, owner):
+    def import_from_simple_data(data: dict, owner, patient_id_company, email, phone):
         family = data.get('family', '').title().strip()
         name = data.get('name', '').title().strip()
         patronymic = data.get('patronymic', '').title().strip()
         sex = data.get('sex', '').lower().strip()
         birthday = data.get('birthday', '').split(' ')[0]
+        snils = data.get('snils', '').split(' ')[0]
 
         i = None
         card = None
@@ -783,6 +785,7 @@ class Individual(models.Model):
                     birthday=birthday,
                     sex=sex,
                     owner=owner,
+                    owner_patient_id=patient_id_company,
                 )
                 i.save()
             else:
@@ -813,7 +816,9 @@ class Individual(models.Model):
                     i.save(update_fields=updated)
 
         if i:
-            card = Card.add_l2_card(individual=i, force=True, owner=owner)
+            snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
+            document_snils = i.add_or_update_doc(snils_type, '', snils)
+            card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=document_snils)
 
         return card
 
@@ -1364,6 +1369,8 @@ class Card(models.Model):
         updated_data=None,
         snils: Union['Document', None] = None,
         owner=None,
+        email=email,
+        phone=phone,
     ):
         f = {'owner': owner} if owner else {}
         if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f).exists():
@@ -1412,6 +1419,8 @@ class Card(models.Model):
                 main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
                 main_address=address or ('' if not card_orig else card_orig.main_address),
                 fact_address='' if not card_orig else card_orig.fact_address,
+                phone=phone,
+                email=email,
                 **f,
             )
             c.save()
