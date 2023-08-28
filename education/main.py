@@ -51,10 +51,11 @@ def process_update_enrollees():
             pass
         else:
             enrolles_data = get_enrollees(connection_string, ids_changed_enrollees)
+            for i in enrolles_data:
+                pass
         time.sleep(10)
 
 
 def process_start_update_enrolles():
-    print('Starting  process')  # noqa: F201
     while True:
         process_update_enrollees()
