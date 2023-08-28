@@ -342,6 +342,17 @@ class IstochnikiFinansirovaniya(models.Model):
         verbose_name_plural = 'Источники финансирования'
 
 
+class EducationFinanceSource(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Наименование образовательного источника финансирования')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Образовательный источник финансирования'
+        verbose_name_plural = 'Образовательные источники финансирования'
+
+
 class Diagnoses(models.Model):
     M = (
         (0, "Диапазон"),
