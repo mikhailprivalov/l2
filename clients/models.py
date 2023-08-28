@@ -1060,7 +1060,7 @@ class HarmfulFactor(models.Model):
 
 
 class Citizenship(models.Model):
-    title = models.CharField(max_length=255, help_text='Название')
+    title = models.CharField(max_length=255, verbose_name="Наименование гражданства", help_text='Россия, Греция')
 
     def __str__(self):
         return self.title

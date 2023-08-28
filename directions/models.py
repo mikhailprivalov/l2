@@ -337,13 +337,10 @@ class IstochnikiFinansirovaniya(models.Model):
 
 
 class EducationFinanceSource(models.Model):
-    title = models.CharField(max_length=511, verbose_name='Название')
-    active = models.BooleanField(default=True, verbose_name='Статус активности')
-    start = models.DateTimeField(blank=True, null=True, verbose_name='Дата начала')
-    end = models.DateTimeField(blank=True, null=True, verbose_name='Дата конца')
+    title = models.CharField(max_length=255, verbose_name='Наименование образовательного источника финансирования')
 
     def __str__(self):
-        return f"{self.title} - активный: {self.active}) {self.start}-{self.end}"
+        return self.title
 
     class Meta:
         verbose_name = 'Образовательный источник финансирования'
