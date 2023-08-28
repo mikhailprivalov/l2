@@ -22,12 +22,9 @@ def get_enrollees(connection_string: str, list_id: list):
 def get_ids_changes_enrollees(connection_string: str):
     last_log = LogUpdateMMIS.objects.last()
     last_time_str = last_log.last_mmis_log_time.strftime('%Y-%m-%d %H:%M:%S')
-    print(last_time_str)
     changes = get_changes(connection_string, last_time_str)
     len_changes = len(changes)
     if len_changes != 0:
-        print(len_changes)
-        print('Длинна')
         id_changed_enrollees = []
         count = 0
         for i in changes:
@@ -35,8 +32,6 @@ def get_ids_changes_enrollees(connection_string: str):
                 last_log.last_mmis_log_time = i.дата
                 last_log.last_mmis_log_id = i.Код
                 last_log.save()
-            elif count == (len_changes -1) and not last_log:
-                last_log = LogUpdateMMIS(last_mmis_log_id=i.Код, last_mmis_log_time=i.дата)
             if i.код_абитуриента not in id_changed_enrollees:
                 id_changed_enrollees.append(i.код_абитуриента)
             count += 1
@@ -53,10 +48,9 @@ def process_update_enrollees():
     while time.time() - time_start < MAX_LOOP_TIME:
         ids_changed_enrollees = get_ids_changes_enrollees(connection_string)
         if ids_changed_enrollees is None:
-            print('Данных нет пока что')
+            pass
         else:
             enrolles_data = get_enrollees(connection_string, ids_changed_enrollees)
-            print(enrolles_data)
         time.sleep(10)
 
 
