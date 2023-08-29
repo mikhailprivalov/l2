@@ -22,7 +22,10 @@ def get_enrollees(connection_string: str, list_id: list):
     list_id_str = ", ".join(map(str, list_id))
     enrollees_person_data = get_enrollees_by_id(connection_string, list_id_str)
     enrollees_grades = get_grade_entrance_exams(connection_string, list_id_str)
-    return (enrollees_person_data, enrollees_grades,)
+    return (
+        enrollees_person_data,
+        enrollees_grades,
+    )
 
 
 def get_ids_changes_enrollees(connection_string: str):
