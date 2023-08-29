@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+import api.education.sql_func as sql_func
+
 
 class TypeInstitutionEducation(models.Model):
     title = models.CharField(max_length=64, verbose_name='Вид учреждения - Школа, Коледж, Техникум, Институт')
@@ -135,6 +137,12 @@ class ApplicationEducation(models.Model):
     def get_application_stage() -> list[dict]:
         stages = [{"id": i[0], "label": i[1]} for i in ApplicationEducation.APPLICATION_STAGE]
         return stages
+
+    @staticmethod
+    def get_applications():
+        applications = []
+        applications_data = sql_func.get_applications()
+        return applications
 
     class Meta:
         verbose_name = 'Заявление'

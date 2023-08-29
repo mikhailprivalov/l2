@@ -12,5 +12,5 @@ urlpatterns = [
     path('get-achievements-filters', views.get_achievements_filters),
     path('get-educations', views.get_education),
     path('get-special-rights', views.get_special_rights),
-    path('get-enrollees', views.get_enrollees),
+    path('get-applications', views.get_applications),
 ]

@@ -5,7 +5,6 @@ from directions.models import EducationFinanceSource
 from education.models import ApplicationSourceEducation, ApplicationEducation, ExamType, Subjects, AchievementType, Achievement, DocumentTypeEducation, SpecialRights
 from users.models import Speciality
 from laboratory.settings import (
-    ENROLLMENTORDERS,
     ENROLLEES,
 )
 
@@ -21,7 +20,7 @@ def get_pay_forms(request):
 
 
 def get_enrollment_orders(request):
-    result = ENROLLMENTORDERS
+    result = []
     return JsonResponse({"result": result})
 
 
@@ -59,6 +58,6 @@ def get_special_rights(request):
     return JsonResponse({"result": result})
 
 
-def get_enrollees(request):
-    result = ENROLLEES
+def get_applications(request):
+    result = ApplicationEducation.get_applications()
     return JsonResponse({"result": result})

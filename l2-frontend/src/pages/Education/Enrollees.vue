@@ -122,9 +122,9 @@
         <div class="margin-div">
           <label>Тип ИД</label>
           <Treeselect
-            v-model="selectedAchievements"
+            v-model="selectedAchievementTypes"
             :multiple="true"
-            :options="achievements"
+            :options="achievementTypes"
             placeholder="Выберите тип"
           />
         </div>
@@ -329,9 +329,7 @@ const normalizerCompany = (node) => ({
   label: node.title,
 });
 
-const selectedEnrollmentStatus = ref(null);
 const isEnrolled = ref(false);
-const selectedDeductionStatus = ref(null);
 const isExpelled = ref(false);
 
 const selectedEnrollmentOrders = ref([]);
@@ -365,7 +363,6 @@ const selectedExamTypes = ref([]);
 const examTypes = ref([]);
 const selectedExamSubjects = ref([]);
 const examSubjects = ref([]);
-const selectedExamStatus = ref(null);
 const examChecked = ref(false);
 const getExamsFilters = async () => {
   const data = await api('/education/get-exams-filters');
@@ -373,17 +370,16 @@ const getExamsFilters = async () => {
   examSubjects.value = data.subjects;
 };
 
-const selectedAchievements = ref([]);
-const achievements = ref([]);
+const selectedAchievementTypes = ref([]);
+const achievementTypes = ref([]);
 const selectedAchievementsStatuses = ref([]);
 const achievementsStatuses = ref([]);
 const getAchievementsFilters = async () => {
   const data = await api('/education/get-achievements-filters');
-  achievements.value = data.achievements;
+  achievementTypes.value = data.achievements;
   achievementsStatuses.value = data.statuses;
 };
 
-const selectedSatisfactoryBall = ref(null);
 const isSatisfactoryScore = ref(false);
 const selectedEducations = ref([]);
 const educations = ref([]);
@@ -407,8 +403,34 @@ const isOriginal = ref(false);
 const search = ref('');
 
 const enrollees = ref([]);
+
 const getEnrollees = async () => {
-  const data = await api('/education/get-enrollees');
+  const filtersData = {
+    speciality: selectedSpecialties,
+    payForms: selectedPayForms,
+    companies: selectedCompany,
+    orders: selectedEnrollmentOrders,
+    citizenship: selectedCitizenship,
+    applicationSources: selectedApplicationSources,
+    applicationStatuses: selectedApplicationStatuses,
+    applicationStage: selectedApplicationStage,
+    examTypes: selectedExamTypes,
+    examSubjects: selectedExamTypes,
+    achievementsType: selectedAchievementTypes,
+    achievementsStatuses: selectedAchievementsStatuses,
+    educations: selectedEducations,
+    specialRights: selectedSpecialRights,
+    consent,
+    activeApplicationOnly,
+    contract,
+    payment,
+    isOriginal,
+    isEnrolled,
+    isExpelled,
+    examChecked,
+    isSatisfactoryScore,
+  };
+  const data = await api('/education/get-applications', filtersData);
   enrollees.value = data.result;
 };
 
@@ -422,8 +444,8 @@ const filteredEnrollees = computed(() => enrollees.value.filter(enrollee => {
 const clearFilters = () => {
   selectedSpecialties.value = [];
   selectedCompany.value = null;
-  selectedEnrollmentStatus.value = null;
-  selectedDeductionStatus.value = null;
+  isEnrolled.value = false;
+  isExpelled.value = false;
   selectedEnrollmentOrders.value = [];
   consent.value = false;
   activeApplicationOnly.value = false;
@@ -435,10 +457,10 @@ const clearFilters = () => {
   selectedApplicationStage.value = null;
   selectedExamTypes.value = [];
   selectedExamSubjects.value = [];
-  selectedExamStatus.value = null;
-  selectedAchievements.value = [];
+  examChecked.value = false;
+  selectedAchievementTypes.value = [];
   selectedAchievementsStatuses.value = [];
-  selectedSatisfactoryBall.value = null;
+  isSatisfactoryScore.value = false;
   selectedEducations.value = [];
   isOriginal.value = false;
   selectedSpecialRights.value = [];
