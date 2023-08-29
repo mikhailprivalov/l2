@@ -34,10 +34,7 @@ class Speciality(models.Model):
 
     @staticmethod
     def get_speciality() -> list[dict]:
-        speciality = [{
-            "id": i.pk,
-            "label": i.title
-        } for i in Speciality.objects.filter(hide=False)]
+        speciality = [{"id": i.pk, "label": i.title} for i in Speciality.objects.filter(hide=False)]
         return speciality
 
     class Meta:
