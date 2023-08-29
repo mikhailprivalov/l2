@@ -3,8 +3,7 @@ import time
 from education.models import LogUpdateMMIS
 from education.sql_func import get_connection_params, get_enrollees_by_id, get_changes, get_grade_entrance_exams
 from education.views import save_education_individual
-from laboratory import settings
-from laboratory.settings import EDUCATION_BASE_TITLE
+from laboratory.settings import EDUCATION_BASE_TITLE, TIME_ZONE
 import pytz_deprecation_shim as pytz
 
 from users.models import DoctorProfile
@@ -28,7 +27,7 @@ def get_enrollees(connection_string: str, list_id: list):
 
 def get_ids_changes_enrollees(connection_string: str):
     last_log = LogUpdateMMIS.objects.last()
-    last_time_str = last_log.last_mmis_log_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y-%m-%d %H:%M:%S')
+    last_time_str = last_log.last_mmis_log_time.astimezone(pytz.timezone(TIME_ZONE)).strftime('%Y-%m-%d %H:%M:%S')
     changes_log = get_changes(connection_string, last_time_str)
     curren_log = None
     id_changed_enrollees = []
@@ -36,7 +35,7 @@ def get_ids_changes_enrollees(connection_string: str):
         if curren_log.код_абитуриента not in id_changed_enrollees:
             id_changed_enrollees.append(curren_log.код_абитуриента)
     if curren_log:
-        last_log.last_mmis_log_time = curren_log.дата.astimezone(pytz.timezone(settings.TIME_ZONE))
+        last_log.last_mmis_log_time = curren_log.дата.astimezone(pytz.timezone(TIME_ZONE))
         last_log.last_mmis_log_id = curren_log.Код
         last_log.save()
     return id_changed_enrollees
