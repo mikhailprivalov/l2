@@ -21,22 +21,18 @@ def get_enrollees(connection_string: str, list_id: list):
 
 def get_ids_changes_enrollees(connection_string: str):
     last_log = LogUpdateMMIS.objects.last()
-    last_time_str = last_log.last_mmis_log_time.strftime('%Y-%m-%d %H:%M:%S')
-    changes = get_changes(connection_string, last_time_str)
-    len_changes = len(changes)
-    if len_changes != 0:
-        id_changed_enrollees = []
-        count = 0
-        for i in changes:
-            if count == (len_changes - 1) and last_log:
-                last_log.last_mmis_log_time = i.дата
-                last_log.last_mmis_log_id = i.Код
-                last_log.save()
-            if i.код_абитуриента not in id_changed_enrollees:
-                id_changed_enrollees.append(i.код_абитуриента)
-            count += 1
-        return id_changed_enrollees
-    return None
+    last_time_str = last_log.last_mmis_log_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime('%Y-%m-%d %H:%M:%S')
+    changes_log = get_changes(connection_string, last_time_str)
+    curren_log = None
+    id_changed_enrollees = []
+    for curren_log in changes_log:
+        if curren_log.код_абитуриента not in id_changed_enrollees:
+            id_changed_enrollees.append(curren_log.код_абитуриента)
+    if curren_log:
+        last_log.last_mmis_log_time = curren_log.дата.astimezone(pytz.timezone(settings.TIME_ZONE))
+        last_log.last_mmis_log_id = curren_log.Код
+        last_log.save()
+    return id_changed_enrollees
 
 
 MAX_LOOP_TIME = 600
