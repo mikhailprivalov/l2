@@ -32,6 +32,11 @@ class Speciality(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def get_speciality() -> list[dict]:
+        speciality = [{"id": i.pk, "label": i.title} for i in Speciality.objects.filter(hide=False)]
+        return speciality
+
     class Meta:
         verbose_name = 'Специальность'
         verbose_name_plural = 'Специальности'

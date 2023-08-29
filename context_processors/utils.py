@@ -204,6 +204,7 @@ def menu(request):
                     "module": "l2_send_orgs_email_results",
                 },
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
+                {"url": "/ui/enrollees", "title": "Абитуриенты", "nt": False, "access": ["Приемная комиссия: Абитуриенты"]},
             ]
 
             hp = SettingManager.get(key="home_page", default="false")

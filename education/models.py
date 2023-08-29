@@ -45,6 +45,22 @@ class DocumentTypeEducation(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def get_education_documents_tree():
+        documents = DocumentTypeEducation.objects.all().prefetch_related('level_education')
+        doc_dict = {}
+        for i in documents:
+            if doc_dict.get(i.level_education.title):
+                doc_dict[i.level_education.title].append({"id": i.pk, "label": i.title})
+            elif not doc_dict.get(i.level_education.title):
+                doc_dict[i.level_education.title] = [{"id": i.pk, "label": i.title}]
+        count = 0
+        result_tree = []
+        for key, value in doc_dict.items():
+            result_tree.append({"id": f'а{+count}', "label": key, "children": value})
+            count += 1
+        return result_tree
+
 
 class DocumentEducation(models.Model):
     document_type = models.ForeignKey(DocumentTypeEducation, help_text="Вид документа", db_index=True, null=True, on_delete=models.SET_NULL)
@@ -75,6 +91,11 @@ class ApplicationSourceEducation(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def get_application_source() -> list[dict]:
+        sources = [{"id": source.pk, "label": source.title} for source in ApplicationSourceEducation.objects.all()]
+        return sources
+
     class Meta:
         verbose_name = 'Источник заявления'
         verbose_name_plural = 'Источники заявлений'
@@ -99,9 +120,21 @@ class ApplicationEducation(models.Model):
     application_status = models.CharField(max_length=15, choices=APPLICATION_STATUS, blank=True, null=True, default=APPLICATION_STATUS[0][0], verbose_name='Статус заявления')
     application_stage = models.CharField(max_length=15, choices=APPLICATION_STAGE, blank=True, null=True, default=APPLICATION_STAGE[0][0], verbose_name='Этап заявления')
     date = models.DateTimeField(verbose_name='Дата подачи заявления', default=timezone.now)
+    is_enrolled = models.BooleanField(default=False, verbose_name='Зачислен')
+    is_expelled = models.BooleanField(default=False, verbose_name='Отчислен')
 
     def __str__(self):
         return f"{self.card} - {self.speciality} - {self.form}"
+
+    @staticmethod
+    def get_application_status() -> list[dict]:
+        statuses = [{"id": i[0], "label": i[1]} for i in ApplicationEducation.APPLICATION_STATUS]
+        return statuses
+
+    @staticmethod
+    def get_application_stage() -> list[dict]:
+        stages = [{"id": i[0], "label": i[1]} for i in ApplicationEducation.APPLICATION_STAGE]
+        return stages
 
     class Meta:
         verbose_name = 'Заявление'
@@ -114,6 +147,11 @@ class ExamType(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def get_types() -> list[dict]:
+        types = [{"id": type.pk, "label": type.title} for type in ExamType.objects.all()]
+        return types
+
     class Meta:
         verbose_name = 'Тип экзамена'
         verbose_name_plural = 'Типы экзаменов'
@@ -125,24 +163,24 @@ class Subjects(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def get_subjects() -> list[dict]:
+        subjects = [{"id": subject.pk, "label": subject.title} for subject in Subjects.objects.all()]
+        return subjects
+
     class Meta:
         verbose_name = 'Предмет'
         verbose_name_plural = 'Предметы'
 
 
 class EntranceExam(models.Model):
-    EXAM_STATYS = (
-        ('not_checked', 'Не проверен'),
-        ('checked', 'Проверен'),
-    )
-
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
     type = models.ForeignKey(ExamType, verbose_name='Тип испытания', db_index=True, on_delete=models.CASCADE)
     subjects = models.ForeignKey(Subjects, verbose_name='Предмет', db_index=True, on_delete=models.CASCADE)
     score = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл')
     document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
-    status = models.CharField(max_length=15, choices=EXAM_STATYS, blank=True, null=True, default=EXAM_STATYS[0][0], verbose_name='Статус испытания')
+    is_checked = models.BooleanField(default=False, verbose_name='Статус проверки экзамена')
 
     def __str__(self):
         return f"{self.card} - {self.type} - {self.subjects} - {self.score}"
@@ -157,6 +195,11 @@ class AchievementType(models.Model):
 
     def __str__(self):
         return self.title
+
+    @staticmethod
+    def get_types() -> list[dict]:
+        types = [{"id": type.pk, "label": type.title} for type in AchievementType.objects.all()]
+        return types
 
     class Meta:
         verbose_name = 'Тип достижения'
@@ -178,6 +221,11 @@ class Achievement(models.Model):
 
     def __str__(self):
         return f"{self.card} - {self.type.title}"
+
+    @staticmethod
+    def get_statuses() -> list[dict]:
+        statuses = [{"id": status[0], "label": status[1]} for status in Achievement.ACHIEVEMENT_STATUS]
+        return statuses
 
     class Meta:
         verbose_name = 'Достижение'
@@ -201,6 +249,22 @@ class SpecialRights(models.Model):
 
     def __str__(self):
         return self.title
+
+    @staticmethod
+    def get_special_rights_tree():
+        rights = SpecialRights.objects.all().prefetch_related('type')
+        rights_dict = {}
+        for i in rights:
+            if rights_dict.get(i.type.title):
+                rights_dict[i.type.title].append({"id": i.pk, "label": i.title})
+            elif not rights_dict.get(i.type.title):
+                rights_dict[i.type.title] = [{"id": i.pk, "label": i.title}]
+        count = 0
+        result_tree = []
+        for key, value in rights_dict.items():
+            result_tree.append({"id": f'а{+count}', "label": key, "children": value})
+            count += 1
+        return result_tree
 
     class Meta:
         verbose_name = 'Особые права справочник'

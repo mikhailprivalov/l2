@@ -697,6 +697,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/enrollees',
+      name: 'Enrollees',
+      component: () => import('@/pages/Education/Enrollees.vue'),
+      meta: {
+        title: 'Абитуриенты',
+        groups: ['Приемная комиссия: Абитуриенты'],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

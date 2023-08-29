@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     IstochnikiFinansirovaniya,
+    EducationFinanceSource,
     Napravleniya,
     TubesRegistration,
     Issledovaniya,
@@ -315,3 +316,4 @@ admin.site.register(MicrobiologyResultCulture, MicrobiologyResultCultureAdmin)
 admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmin)
 admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)
 admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
+admin.site.register(EducationFinanceSource)

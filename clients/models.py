@@ -1072,6 +1072,11 @@ class Citizenship(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def get_citizenship() -> list[dict]:
+        citizenship = [{"id": i.pk, "label": i.title} for i in Citizenship.objects.all()]
+        return citizenship
+
     class Meta:
         verbose_name = 'Гражданство'
         verbose_name_plural = 'Гражданства'

@@ -68,8 +68,8 @@ class SubjectsAdmin(admin.ModelAdmin):
 
 
 class EntranceExamAdmin(admin.ModelAdmin):
-    list_display = ('card', 'type', 'subjects', 'score', 'document_number', 'document_date', 'status')
-    list_display_links = ('card', 'type', 'subjects', 'score', 'document_number', 'document_date', 'status')
+    list_display = ('card', 'type', 'subjects', 'score', 'document_number', 'document_date', 'is_checked')
+    list_display_links = ('card', 'type', 'subjects', 'score', 'document_number', 'document_date', 'is_checked')
 
 
 class AchievementTypeAdmin(admin.ModelAdmin):
