@@ -754,7 +754,7 @@ class Individual(models.Model):
         return updated_data
 
     @staticmethod
-    def import_from_simple_data(data: dict, owner, patient_id_company, email, phone):
+    def import_from_simple_data(data: dict, owner, patient_id_company, email, phone, filter_patient_id_company=False):
         family = data.get('family', '').title().strip()
         name = data.get('name', '').title().strip()
         patronymic = data.get('patronymic', '').title().strip()
@@ -776,6 +776,8 @@ class Individual(models.Model):
                 sex=sex,
                 owner=owner,
             )
+            if filter_patient_id_company:
+                indv = indv.filter(owner_patient_id=patient_id_company)
 
             if not indv or not indv.exists():
                 i = Individual(
