@@ -57,15 +57,7 @@ def process_update_enrollees():
             pass
         else:
             enrollees_person_data, enrollees_grade = get_enrollees(connection_string, ids_changed_enrollees)
-            enrollees_grade_data = {
-                i.ID:
-                    {
-                        "grade": i.Оценка,
-                        "test_code": i.Код_Испытания,
-                        "discipline": i.Дисциплина
-                    }
-                for i in enrollees_grade
-            }
+            enrollees_grade_data = {i.ID: {"grade": i.Оценка, "test_code": i.Код_Испытания, "discipline": i.Дисциплина} for i in enrollees_grade}
             for i in enrollees_person_data:
                 save_education_individual(i, enrollees_grade_data.get(i.ID), user_obj_hospital)
         time.sleep(10)
