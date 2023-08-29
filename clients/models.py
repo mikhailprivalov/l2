@@ -759,7 +759,6 @@ class Individual(models.Model):
         name = data.get('name', '').title().strip()
         patronymic = data.get('patronymic', '').title().strip()
         sex = data.get('sex', '').lower().strip()
-        print(data.get('birthday', '').split(' '))
         birthday = data.get('birthday', '').split(' ')[0]
         snils = data.get('snils', '').split(' ')[0]
 
@@ -768,7 +767,6 @@ class Individual(models.Model):
 
         if family and name and sex and birthday:
             birthday = datetime.strptime(birthday, "%d.%m.%Y" if '.' in birthday else "%Y-%m-%d").date()
-            print(birthday)
 
             indv = Individual.objects.filter(
                 family=family,

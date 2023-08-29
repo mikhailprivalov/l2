@@ -21,4 +21,4 @@ def save_education_individual(person_data, person_grade, user_hospital_obj):
 
         return card
     except Exception as e:
-        print(f"Exception: {e}")
+        return f"Exception: {e}"
