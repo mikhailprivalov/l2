@@ -65,7 +65,6 @@ def process_update_enrollees():
                 for i in enrollees_grade
             }
             for i in enrollees_person_data:
-                print("-----")
                 save_education_individual(i, enrollees_grade_data.get(i.ID), user_obj_hospital)
         time.sleep(10)
 
