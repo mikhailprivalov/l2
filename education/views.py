@@ -17,7 +17,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             person_data.ID,
             "",
             "",
-            filter_mmis_id=True
+            filter_mmis_id=True,
         )
         card.phone = person_data.Мобильный if person_data.Мобильный else ""
         card.save()
