@@ -1,3 +1,5 @@
+import json
+
 from django.http import JsonResponse
 
 from clients.models import Citizenship
@@ -58,6 +60,7 @@ def get_special_rights(request):
     return JsonResponse({"result": result})
 
 
-def get_applications(request):
-    result = ApplicationEducation.get_applications()
+def get_applications_by_card(request):
+    request_data = json.loads(request.body)
+    result = ApplicationEducation.get_applications_by_card(request_data["card_pk"])
     return JsonResponse({"result": result})

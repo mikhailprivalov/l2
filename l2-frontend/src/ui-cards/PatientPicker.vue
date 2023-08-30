@@ -234,6 +234,16 @@
                   class="internal_type"
                 >
                   <button
+                    v-if="selected_card.pk && l2_education"
+                    v-tippy="{ placement: 'bottom' }"
+                    class="btn last btn-blue-nb nbr"
+                    type="button"
+                    title="Абитуриент"
+                    @click="openEnrollees"
+                  >
+                    <i class="fa-solid fa-a" />
+                  </button>
+                  <button
                     v-if="selected_card.pk && l2_vaccine"
                     v-tippy="{ placement: 'bottom' }"
                     class="btn last btn-blue-nb nbr"
@@ -629,6 +639,10 @@
       :card_data="selected_card"
       :readonly="false"
     />
+    <EnrolleesApplication
+      v-if="enrollees"
+      :card_pk="selected_card.pk"
+    />
     <AmbulatoryData
       v-if="ambulatory_data && selected_card.pk"
       :card_pk="selected_card.pk"
@@ -717,12 +731,14 @@ import * as actions from '@/store/action-types';
 import patientsPoint from '@/api/patients-point';
 import Vaccine from '@/modals/Vaccine.vue';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
+import EnrolleesApplication from '@/modals/EnrolleesApplication.vue';
 
 const tfomsRe = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
 export default {
   name: 'PatientPicker',
   components: {
+    EnrolleesApplication,
     Vaccine,
     Treeselect,
     Modal,
@@ -790,6 +806,7 @@ export default {
       harmful_factor: false,
       template_editor: false,
       vaccine: false,
+      enrollees: false,
       suggests: {
         focused: -1,
         open: false,
@@ -847,6 +864,9 @@ export default {
     },
     l2_harmful_factor() {
       return this.$store.getters.modules.l2_harmful_factor;
+    },
+    l2_education() {
+      return this.$store.getters.modules.l2_education;
     },
     force_rmis_search() {
       return Boolean(this.$store.getters.modules.l2_force_rmis_search);
@@ -1038,6 +1058,9 @@ export default {
     this.$root.$on('hide_harmful_factor', () => {
       this.harmful_factor = false;
     });
+    this.$root.$on('hide_enrollees', () => {
+      this.enrollees = false;
+    });
     this.$root.$on('hide_template_editor', () => {
       this.template_editor = false;
     });
@@ -1211,6 +1234,9 @@ export default {
     },
     open_vaccine() {
       this.vaccine = true;
+    },
+    openEnrollees() {
+      this.enrollees = true;
     },
     open_benefit() {
       this.benefit = true;

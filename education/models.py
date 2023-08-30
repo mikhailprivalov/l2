@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
-import api.education.sql_func as sql_func
+import education.sql_func as sql_func
 
 
 class TypeInstitutionEducation(models.Model):
@@ -139,9 +138,21 @@ class ApplicationEducation(models.Model):
         return stages
 
     @staticmethod
-    def get_applications():
+    def get_applications_by_card(card_pk) -> list[dict]:
         applications = []
-        applications_data = sql_func.get_applications()
+        data = sql_func.get_applications_by_card(card_pk)
+        current_application = -1
+        for i in data:
+            if current_application != i.application_pk:
+                applications.append({
+                    "pk": i.application_pk,
+                    "date": i.date.strftime('%d.%m.%Y'),
+                    "speciality": i.spec_title,
+                    "subjects": [{"title": i.subject_title, "score": i.score}]
+                })
+            else:
+                applications[-1]["subjects"].append({"title": i.subject_title, "score": i.score})
+            current_application = i.application_pk
         return applications
 
     class Meta:
