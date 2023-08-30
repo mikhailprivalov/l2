@@ -1,5 +1,5 @@
 from clients.models import Individual
-from education.models import ApplicationEducation, EducationSpeciality, EntranceExam, Subjects, ExamType
+from education.models import ApplicationEducation, EducationSpeciality, EntranceExam, Subjects, ExamType, Faculties
 
 
 def update_education_individual(person_data, user_hospital_obj, person_applications, person_grade, person_achievements):
@@ -31,6 +31,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             is_expelled = pa.get("ОтказалсяОтЗачисления")
             date = pa.get("Дата_Подачи")
             is_checked = pa.get("Проверено")
+            facultet = pa.get("Факультет")
             if application.exist():
                 application.speciality = education_speciality
                 application.personal_number = personal_number
@@ -38,6 +39,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                 application.is_expelled = is_expelled
                 application.date = date
                 application.is_checked = is_checked
+                application.facultet = Faculties.objects.filter(mmis_id=facultet).first()
             else:
                 application = ApplicationEducation(mmis_id=pa_mmis_id_application, card=card).save()
                 application.speciality = education_speciality
@@ -46,6 +48,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                 application.is_expelled = is_expelled
                 application.date = date
                 application.is_checked = is_checked
+                application.facultet = Faculties.objects.filter(mmis_id=facultet).first()
             application.save()
 
             for pg in person_grade:
