@@ -234,7 +234,6 @@ class Achievement(models.Model):
     document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
     grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
-
     def __str__(self):
         return f"{self.card} - {self.type.title}"
 
