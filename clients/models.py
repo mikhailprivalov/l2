@@ -59,6 +59,7 @@ class Individual(models.Model):
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
     owner = models.ForeignKey('hospitals.Hospitals', default=None, blank=True, null=True, help_text="Организация-владелец данных", db_index=True, on_delete=models.PROTECT)
     owner_patient_id = models.CharField(max_length=128, default=None, null=True, blank=True, db_index=True, help_text="Код в организации-владелеце")
+    mmis_id = models.CharField(max_length=128, default=None, null=True, blank=True, db_index=True, help_text="Код ММИС")
 
     def first(self):
         return self
@@ -754,7 +755,7 @@ class Individual(models.Model):
         return updated_data
 
     @staticmethod
-    def import_from_simple_data(data: dict, owner, patient_id_company, email, phone, filter_patient_id_company=False):
+    def import_from_simple_data(data: dict, owner, mmis_id, email, phone, filter_mmis_id=False):
         family = data.get('family', '').title().strip()
         name = data.get('name', '').title().strip()
         patronymic = data.get('patronymic', '').title().strip()
@@ -776,8 +777,8 @@ class Individual(models.Model):
                 sex=sex,
                 owner=owner,
             )
-            if filter_patient_id_company:
-                indv = indv.filter(owner_patient_id=patient_id_company)
+            if filter_mmis_id:
+                indv = indv.filter(mmis_id=mmis_id)
 
             if not indv or not indv.exists():
                 i = Individual(
@@ -787,7 +788,7 @@ class Individual(models.Model):
                     birthday=birthday,
                     sex=sex,
                     owner=owner,
-                    owner_patient_id=patient_id_company,
+                    mmis_id=mmis_id,
                 )
                 i.save()
             else:
