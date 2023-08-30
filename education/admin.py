@@ -92,9 +92,34 @@ class FacultiesAdmin(admin.ModelAdmin):
 
 
 class EducationSpecialityAdmin(admin.ModelAdmin):
-    list_display = ('title', 'okso', 'cipher', 'mmis_id', 'faculties_mmis_id', 'qualification_title', 'period_study', 'year_start_study', 'oo_count', 'cn_count', 'sn_count', 'total_count',)
-    list_display_links = ('title', 'okso', 'cipher', 'mmis_id', 'faculties_mmis_id', 'qualification_title', 'period_study', 'year_start_study',
-                          'oo_count', 'cn_count', 'sn_count', 'total_count',)
+    list_display = (
+        'title',
+        'okso',
+        'cipher',
+        'mmis_id',
+        'faculties_mmis_id',
+        'qualification_title',
+        'period_study',
+        'year_start_study',
+        'oo_count',
+        'cn_count',
+        'sn_count',
+        'total_count',
+    )
+    list_display_links = (
+        'title',
+        'okso',
+        'cipher',
+        'mmis_id',
+        'faculties_mmis_id',
+        'qualification_title',
+        'period_study',
+        'year_start_study',
+        'oo_count',
+        'cn_count',
+        'sn_count',
+        'total_count',
+    )
 
 
 class SubjectsAdmin(admin.ModelAdmin):
