@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 
-from education.models import Faculties, EducationSpeciality
+from education.models import EducationSpeciality
 
 
 class Command(BaseCommand):
@@ -52,6 +52,18 @@ class Command(BaseCommand):
                     starts = True
             else:
                 r = EducationSpeciality.objects.filter(mmis_id=cells[mmis_id])
+                data_sn_count = cells[sn_count]
+                data_cn_count = cells[cn_count]
+                data_oo_count = cells[oo_count]
+                data_total_count = cells[total_count]
+                if data_sn_count == "None":
+                    data_sn_count = 0
+                if data_cn_count == "None":
+                    data_cn_count = 0
+                if data_oo_count == "None":
+                    data_oo_count = 0
+                if data_total_count == "None":
+                    data_total_count = 0
                 if not r.exists():
                     EducationSpeciality(
                         mmis_id=cells[mmis_id],
@@ -62,10 +74,10 @@ class Command(BaseCommand):
                         qualification_title=cells[qualification_title],
                         period_study=cells[period_study],
                         year_start_study=cells[year_start_study],
-                        oo_count=cells[oo_count],
-                        cn_count=cells[cn_count],
-                        sn_count=cells[sn_count],
-                        total_count=cells[total_count],
+                        oo_count=data_oo_count,
+                        cn_count=data_cn_count,
+                        sn_count=data_sn_count,
+                        total_count=data_total_count
                     ).save()
                     print('сохранено', cells[title])  # noqa: T001
                 elif r.exists():
@@ -87,18 +99,29 @@ class Command(BaseCommand):
                         r.qualification_title = cells[qualification_title]
                         updated.append('qualification_title')
                     if r.oo_count != cells[oo_count]:
-                        r.oo_count = cells[oo_count]
+                        if cells[oo_count] == "None":
+                            r.oo_count = 0
+                        else:
+                            r.oo_count = cells[oo_count]
                         updated.append('oo_count')
                     if r.cn_count != cells[cn_count]:
-                        r.cn_count = cells[cn_count]
+                        if cells[cn_count] == "None":
+                            r.cn_count = 0
+                        else:
+                            r.cn_count = cells[cn_count]
                         updated.append('cn_count')
                     if r.sn_count != cells[sn_count]:
-                        r.sn_count = cells[sn_count]
+                        if cells[sn_count] == "None":
+                            r.sn_count = 0
+                        else:
+                            r.sn_count = cells[sn_count]
                         updated.append('sn_count')
                     if r.total_count != cells[total_count]:
-                        r.total_count = cells[total_count]
+                        if cells[total_count] == "None":
+                            r.total_count = 0
+                        else:
+                            r.total_count = cells[total_count]
                         updated.append('total_count')
-
                     if updated:
                         r.save(update_fields=updated)
                         print('обновлено', cells[title])  # noqa: T001

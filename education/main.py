@@ -84,12 +84,16 @@ def process_update_enrollees():
                             "Факультет": i.Факультет,
                             "Оригинал": i.Оригинал,
                             "Дата_Подачи": i.Дата_Подачи,
-                            "Зачислен": i.Зачислен
+                            "Зачислен": i.Зачислен,
+                            "ОтказалсяОтЗачисления": i.ОтказалсяОтЗачисления,
+                            "КодФормы": i.КодФормы,
+                            "Проверено": i.Проверено,
                         }
                     ]
                 else:
                     tmp_data = enrollees_application_data.get(i.ID, [])
-                    tmp_data.append({
+                    tmp_data.append(
+                        {
                             "Код_Заявления": i.Код_Заявления,
                             "Основания": i.Основания,
                             "Код_Специальности": i.Код_Специальности,
@@ -98,8 +102,12 @@ def process_update_enrollees():
                             "Факультет": i.Факультет,
                             "Оригинал": i.Оригинал,
                             "Дата_Подачи": i.Дата_Подачи,
-                            "Зачислен": i.Зачислен
-                        })
+                            "Зачислен": i.Зачислен,
+                            "ОтказалсяОтЗачисления": i.ОтказалсяОтЗачисления,
+                            "КодФормы": i.КодФормы,
+                            "Проверено": i.Проверено
+                        }
+                    )
                     enrollees_application_data[i.ID] = tmp_data.copy()
             enrollees_achievements_data = {}
             for i in enrollees_application:
@@ -114,8 +122,8 @@ def process_update_enrollees():
                 update_education_individual(
                     i,
                     user_obj_hospital,
-                    enrollees_grade_data.get(i.ID),
                     enrollees_application_data.get(i.ID),
+                    enrollees_grade_data.get(i.ID),
                     enrollees_achievements_data.get(i.ID)
                 )
         time.sleep(10)
