@@ -32,7 +32,6 @@ class Command(BaseCommand):
                 r = Faculties.objects.filter(mmis_id=cells[code])
                 if not r.exists():
                     Faculties(mmis_id=cells[code], title=cells[title],short_title=cells[short_title]).save()
-                    print('сохранено', cells[short_title])  # noqa: T001
                 elif r.exists():
                     r = r[0]
                     updated = []
@@ -44,6 +43,3 @@ class Command(BaseCommand):
                         updated.append('short_title')
                     if updated:
                         r.save(update_fields=updated)
-                        print('обновлено', cells[short_title])  # noqa: T001
-                    else:
-                        print('не обновлено', cells[short_title])  # noqa: T0

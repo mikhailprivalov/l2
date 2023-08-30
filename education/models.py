@@ -107,7 +107,7 @@ class EducationSpeciality(models.Model):
     qualification_title = models.CharField(max_length=255, blank=True, null=True, default=None, help_text='квалификация')
     period_study = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='Срок обучения')
     year_start_study = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True, help_text='год набора')
-    oo_count = models.SmallIntegerField(default=0 )
+    oo_count = models.SmallIntegerField(default=0)
     cn_count = models.SmallIntegerField(default=0)
     sn_count = models.SmallIntegerField(default=0)
     total_count = models.IntegerField(default=0)

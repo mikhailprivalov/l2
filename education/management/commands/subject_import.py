@@ -34,7 +34,6 @@ class Command(BaseCommand):
                 r = Subjects.objects.filter(mmis_id=cells[mmis_id])
                 if not r.exists():
                     Subjects(mmis_id=cells[mmis_id], title=cells[title],short_title=cells[short_title]).save()
-                    print('сохранено', cells[short_title])  # noqa: T001
                 elif r.exists():
                     r = r[0]
                     updated = []
@@ -46,6 +45,3 @@ class Command(BaseCommand):
                         updated.append('short_title')
                     if updated:
                         r.save(update_fields=updated)
-                        print('обновлено', cells[short_title])  # noqa: T001
-                    else:
-                        print('не обновлено', cells[short_title])  # noqa: T0

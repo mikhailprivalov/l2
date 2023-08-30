@@ -79,7 +79,6 @@ class Command(BaseCommand):
                         sn_count=data_sn_count,
                         total_count=data_total_count
                     ).save()
-                    print('сохранено', cells[title])  # noqa: T001
                 elif r.exists():
                     r = r[0]
                     updated = []
@@ -124,6 +123,3 @@ class Command(BaseCommand):
                         updated.append('total_count')
                     if updated:
                         r.save(update_fields=updated)
-                        print('обновлено', cells[title])  # noqa: T001
-                    else:
-                        print('не обновлено', cells[title])  # noqa: T0

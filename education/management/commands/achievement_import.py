@@ -44,7 +44,6 @@ class Command(BaseCommand):
                         grade=cells[grade],
                         year=cells[year],
                     ).save()
-                    print('сохранено', cells[short_title])  # noqa: T001
                 elif r.exists():
                     r = r[0]
                     updated = []
@@ -62,6 +61,3 @@ class Command(BaseCommand):
                         updated.append('grade')
                     if updated:
                         r.save(update_fields=updated)
-                        print('обновлено', cells[short_title])  # noqa: T001
-                    else:
-                        print('не обновлено', cells[short_title])  # noqa: T0
