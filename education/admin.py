@@ -87,8 +87,16 @@ class CardSpecialRightsAdmin(admin.ModelAdmin):
 
 
 class FacultiesAdmin(admin.ModelAdmin):
-    list_display = ('title', 'short_title', 'mmis_id',)
-    list_display_links = ('title', 'short_title', 'mmis_id',)
+    list_display = (
+        'title',
+        'short_title',
+        'mmis_id',
+    )
+    list_display_links = (
+        'title',
+        'short_title',
+        'mmis_id',
+    )
 
 
 class EducationSpecialityAdmin(admin.ModelAdmin):
