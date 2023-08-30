@@ -62,8 +62,18 @@ class EntranceExamAdmin(admin.ModelAdmin):
 
 
 class AchievementTypeAdmin(admin.ModelAdmin):
-    list_display = ('short_title', 'mmis_id', 'grade', 'year',)
-    list_display_links = ('short_title', 'mmis_id', 'grade', 'year',)
+    list_display = (
+        'short_title',
+        'mmis_id',
+        'grade',
+        'year',
+    )
+    list_display_links = (
+        'short_title',
+        'mmis_id',
+        'grade',
+        'year',
+    )
 
 
 class AchievementAdmin(admin.ModelAdmin):
