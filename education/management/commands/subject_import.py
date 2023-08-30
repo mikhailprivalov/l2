@@ -33,7 +33,7 @@ class Command(BaseCommand):
             else:
                 r = Subjects.objects.filter(mmis_id=cells[mmis_id])
                 if not r.exists():
-                    Subjects(mmis_id=cells[mmis_id], title=cells[title],short_title=cells[short_title]).save()
+                    Subjects(mmis_id=cells[mmis_id], title=cells[title], short_title=cells[short_title]).save()
                 elif r.exists():
                     r = r[0]
                     updated = []
