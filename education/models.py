@@ -122,6 +122,7 @@ class ApplicationEducation(models.Model):
     date = models.DateTimeField(verbose_name='Дата подачи заявления', default=timezone.now)
     is_enrolled = models.BooleanField(default=False, verbose_name='Зачислен')
     is_expelled = models.BooleanField(default=False, verbose_name='Отчислен')
+    code = models.IntegerField(blank=True, null=True, default=None, verbose_name='Код заявления', db_index=True)
 
     def __str__(self):
         return f"{self.card} - {self.speciality} - {self.form}"
@@ -181,6 +182,7 @@ class EntranceExam(models.Model):
     document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
     is_checked = models.BooleanField(default=False, verbose_name='Статус проверки экзамена')
+    application_education = models.ForeignKey(ApplicationEducation, blank=True, null=True, default=None, verbose_name='Заявление', db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.card} - {self.type} - {self.subjects} - {self.score}"
@@ -192,6 +194,11 @@ class EntranceExam(models.Model):
 
 class AchievementType(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование типа достижения', help_text='ГТО, Олимпиада')
+    short_title = models.CharField(max_length=255, blank=True, null=True, default=None, verbose_name='Короткое наименование', help_text='ГТО, Олимпиада')
+    mmis_code = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл')
+    grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
+    year = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Год утверждения')
+
 
     def __str__(self):
         return self.title
@@ -218,6 +225,8 @@ class Achievement(models.Model):
     status = models.CharField(max_length=15, choices=ACHIEVEMENT_STATUS, blank=True, null=True, default=ACHIEVEMENT_STATUS[0][0], verbose_name='Статус достижения')
     document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
+    grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
+
 
     def __str__(self):
         return f"{self.card} - {self.type.title}"
@@ -293,3 +302,40 @@ class LogUpdateMMIS(models.Model):
     class Meta:
         verbose_name = 'Последний лог ММИС'
         verbose_name_plural = 'Последние логи ММИС'
+
+
+class EducationSpeciality(models.Model):
+    title = models.CharField(max_length=255, help_text='Название')
+    okso = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='ОКСО')
+    cipher = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='Шифр')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
+    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    faculties_mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    qualification_title = models.CharField(max_length=255, blank=True, null=True, default=None, help_text='квалификация')
+    period_study = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='Срок обучения')
+    year_start_study = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True, help_text='год набора')
+    oo_count = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    cn_count = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    sn_count = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    total_count = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Специальность образования'
+        verbose_name_plural = 'Специальности образования'
+
+
+class Faculties(models.Model):
+    title = models.CharField(max_length=255, help_text='Название')
+    short_title = models.CharField(max_length=255, blank=True, null=True, default=None, help_text='Короткое название')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
+    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Факультет'
+        verbose_name_plural = 'Факультеты'

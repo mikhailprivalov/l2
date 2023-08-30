@@ -91,6 +91,7 @@ def get_grade_entrance_exams(connection_string: str, id_enrollee: str):
             f"""
                SELECT 
                  [ID],
+                 [Код],
                  [Код_Дисциплины], 
                  [Оценка], 
                  [Код_Испытания], 
@@ -102,6 +103,49 @@ def get_grade_entrance_exams(connection_string: str, id_enrollee: str):
                LEFT JOIN [Абитуриенты].[dbo].[АбитДисциплины] ON
                [Абитуриенты].[dbo].[АбитДисциплины].[Код] = [Абитуриенты].[dbo].[Все_Оценки].[Код_Дисциплины]
                WHERE [Абитуриенты].[dbo].[Все_Оценки].[ID] IN ({id_enrollee}) 
+               """
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_application_by_id(connection_string: str, id_enrollee: str):
+    with connect(connection_string).cursor() as cursor:
+        cursor.execute(
+            f"""
+               SELECT 
+                 [Код_Заявления],
+                 [ID], 
+                 [Основания], 
+                 [Код_Специальности], 
+                 [НомерЛД], 
+                 [Номер],
+                 [Шифр],
+                 [Факультет],
+                 [Оригинал],
+                 [Дата_Подачи],
+                 [Зачислен],
+                 [Дата_Подачи],
+               FROM [Абитуриенты].[dbo].[Все_Заявления]
+               WHERE [Абитуриенты].[dbo].[Все_Заявления].[ID] IN ({id_enrollee}) 
+               """
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_achievements_by_id(connection_string: str, id_enrollee: str):
+    with connect(connection_string).cursor() as cursor:
+        cursor.execute(
+            f"""
+               SELECT 
+                 [ID], 
+                 [Код], 
+                 [КодИД], 
+                 [ДатаИД], 
+                 [БаллИД]
+               FROM [Абитуриенты].[dbo].[Достижения]
+               WHERE [Абитуриенты].[dbo].[Достижения].[ID] IN ({id_enrollee}) 
                """
         )
         rows = namedtuplefetchall(cursor)

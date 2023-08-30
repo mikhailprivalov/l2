@@ -1,7 +1,7 @@
 from clients.models import Individual
 
 
-def save_education_individual(person_data, person_grade, user_hospital_obj):
+def update_education_individual(person_data, user_hospital_obj, person_grade, person_applications, person_achievements):
     try:
         card = Individual.import_from_simple_data(
             {
