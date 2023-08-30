@@ -235,14 +235,8 @@ class Achievement(models.Model):
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
     grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
 
-
-
+    def __str__(self):
         return f"{self.card} - {self.type.title}"
-
-    @staticmethod
-    def get_statuses() -> list[dict]:
-        statuses = [{"id": status[0], "label": status[1]} for status in Achievement.ACHIEVEMENT_STATUS]
-        return statuses
 
     class Meta:
         verbose_name = 'Достижение'
