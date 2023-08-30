@@ -98,8 +98,16 @@ class EducationSpecialityAdmin(admin.ModelAdmin):
 
 
 class SubjectsAdmin(admin.ModelAdmin):
-    list_display = ('title', 'short_title', 'mmis_id',)
-    list_display_links = ('title', 'short_title', 'mmis_id',)
+    list_display = (
+        'title',
+        'short_title',
+        'mmis_id',
+    )
+    list_display_links = (
+        'title',
+        'short_title',
+        'mmis_id',
+    )
 
 
 admin.site.register(models.ApplicationSourceEducation, ApplicationSourceEducationAdmin)
