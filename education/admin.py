@@ -57,8 +57,18 @@ class ExamTypeAdmin(admin.ModelAdmin):
 
 
 class EntranceExamAdmin(admin.ModelAdmin):
-    list_display = ('card', 'type_test', 'subjects', 'grade',)
-    list_display_links = ('card', 'type_test', 'subjects', 'grade',)
+    list_display = (
+        'card',
+        'type_test',
+        'subjects',
+        'grade',
+    )
+    list_display_links = (
+        'card',
+        'type_test',
+        'subjects',
+        'grade',
+    )
 
 
 class AchievementTypeAdmin(admin.ModelAdmin):
