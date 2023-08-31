@@ -113,15 +113,7 @@ def process_update_enrollees():
             for i in enrollees_achievements:
                 if not enrollees_achievements_data.get(i.ID):
                     enrollees_achievements_data[i.ID] = [
-                        {
-                            "КодИД": i.КодИД,
-                            "ДатаИД": i.ДатаИД,
-                            "БаллИД": i.БаллИД,
-                            "Код": i.Код,
-                            "СерияИД": i.СерияИД,
-                            "НомерИД": i.НомерИД,
-                            "ОрганизацияИД": i.ОрганизацияИД
-                        }
+                        {"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД, "ОрганизацияИД": i.ОрганизацияИД}
                     ]
                 else:
                     tmp_data = enrollees_achievements_data.get(i.ID, [])
