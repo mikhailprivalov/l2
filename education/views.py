@@ -54,7 +54,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                     is_expelled=is_expelled,
                     date=date,
                     is_checked=is_checked,
-                    facultet=facultet
+                    facultet=facultet,
                 )
                 application.save()
             result_application.append(application.pk)
