@@ -29,9 +29,9 @@ def get_citizenship(request):
 
 
 def get_application_filters(request):
-    sources = ApplicationSourceEducation.get_application_source()
-    statuses = ApplicationEducation.get_application_status()
-    stages = ApplicationEducation.get_application_stage()
+    sources = []
+    statuses = []
+    stages = []
     return JsonResponse({"sources": sources, "statuses": statuses, "stages": stages})
 
 
