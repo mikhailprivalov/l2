@@ -81,12 +81,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                     entrance_exam.save()
                 else:
                     entrance_exam = EntranceExam.objects.create(
-                        card=card,
-                        mmis_id=pg_mmis_id,
-                        grade=grade,
-                        subjects=subject,
-                        type_test=ExamType.objects.filter(mmis_id=type_test_code).first(),
-                        application_education=application
+                        card=card, mmis_id=pg_mmis_id, grade=grade, subjects=subject, type_test=ExamType.objects.filter(mmis_id=type_test_code).first(), application_education=application
                     )
                     entrance_exam.save()
                 result_exam.append(entrance_exam.pk)
