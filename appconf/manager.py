@@ -131,6 +131,7 @@ class SettingManager:
                     "direction_purpose",
                     "external_organizations",
                     "vaccine",
+                    "education",
                     "tfoms",
                     "doc_call",
                     "list_wait",

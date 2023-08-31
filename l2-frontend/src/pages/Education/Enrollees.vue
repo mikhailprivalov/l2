@@ -248,6 +248,8 @@
               class="label-for-checkbox"
             >Отчислен</label>
           </div>
+        </div>
+        <div class="margin-div flex-div">
           <div>
             <input
               id="examChecked"
@@ -404,45 +406,16 @@ const search = ref('');
 
 const enrollees = ref([]);
 
-const getEnrollees = async () => {
-  const filtersData = {
-    speciality: selectedSpecialties,
-    payForms: selectedPayForms,
-    companies: selectedCompany,
-    orders: selectedEnrollmentOrders,
-    citizenship: selectedCitizenship,
-    applicationSources: selectedApplicationSources,
-    applicationStatuses: selectedApplicationStatuses,
-    applicationStage: selectedApplicationStage,
-    examTypes: selectedExamTypes,
-    examSubjects: selectedExamTypes,
-    achievementsType: selectedAchievementTypes,
-    achievementsStatuses: selectedAchievementsStatuses,
-    educations: selectedEducations,
-    specialRights: selectedSpecialRights,
-    consent,
-    activeApplicationOnly,
-    contract,
-    payment,
-    isOriginal,
-    isEnrolled,
-    isExpelled,
-    examChecked,
-    isSatisfactoryScore,
-  };
-  const data = await api('/education/get-applications', filtersData);
-  enrollees.value = data.result;
-};
-
-const filteredEnrollees = computed(() => enrollees.value.filter(enrollee => {
-  const enrolleeFio = enrollee.fio.toLowerCase();
+const filteredEnrollees = computed(() => enrollees.value.filter(applicaiton => {
+  const applicationFio = applicaiton.fio.toLowerCase();
   const searchTerm = search.value.toLowerCase();
 
-  return enrolleeFio.includes(searchTerm);
+  return applicationFio.includes(searchTerm);
 }));
 
 const clearFilters = () => {
   selectedSpecialties.value = [];
+  selectedPayForms.value = [];
   selectedCompany.value = null;
   isEnrolled.value = false;
   isExpelled.value = false;
@@ -478,7 +451,6 @@ onMounted(
     getAchievementsFilters();
     getEducations();
     getSpecialRights();
-    getEnrollees();
   },
 );
 </script>

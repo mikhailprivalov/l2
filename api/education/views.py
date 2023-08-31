@@ -4,12 +4,11 @@ from django.http import JsonResponse
 
 from clients.models import Citizenship
 from directions.models import EducationFinanceSource
-from education.models import ApplicationSourceEducation, ApplicationEducation, ExamType, Subjects, AchievementType, Achievement, DocumentTypeEducation, SpecialRights
-from users.models import Speciality
+from education.models import ApplicationEducation, ExamType, Subjects, AchievementType, DocumentTypeEducation, SpecialRights, EducationSpeciality
 
 
 def get_specialties(request):
-    result = Speciality.get_speciality()
+    result = EducationSpeciality.get_speciality()
     return JsonResponse({"result": result})
 
 
@@ -43,7 +42,7 @@ def get_exams_filters(request):
 
 def get_achievements_filters(request):
     achievements = AchievementType.get_types()
-    statuses = Achievement.get_statuses()
+    statuses = []
     return JsonResponse({"achievements": achievements, "statuses": statuses})
 
 
