@@ -140,5 +140,3 @@ def get_all_enrollees(request):
     cards_mmis = Card.objects.filter(individual__in=individuals_mmis)
     applications_mmis = ApplicationEducation.objects.filter(card__in=cards_mmis)
     grades_mmis = EntranceExam.objects.filter(application_education__in=applications_mmis)
-
-

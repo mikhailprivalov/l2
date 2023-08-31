@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from clients.models import Citizenship
 from directions.models import EducationFinanceSource
 from education.models import ApplicationSourceEducation, ApplicationEducation, ExamType, Subjects, AchievementType, Achievement, DocumentTypeEducation, SpecialRights
+from education.views import get_all_enrollees
 from users.models import Speciality
 
 
@@ -56,5 +57,5 @@ def get_special_rights(request):
 
 
 def get_enrollees(request):
-
+    result = get_all_enrollees(request)
     return JsonResponse({"result": result})
