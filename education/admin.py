@@ -25,12 +25,8 @@ class SetDocumentTypeEducationAdmin(admin.ModelAdmin):
 
 
 class FormEducationAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class ApplicationSourceEducationAdmin(admin.ModelAdmin):
@@ -169,6 +165,7 @@ admin.site.register(models.ExamType, ExamTypeAdmin)
 admin.site.register(models.Subjects, SubjectsAdmin)
 admin.site.register(models.EntranceExam, EntranceExamAdmin)
 admin.site.register(models.AchievementType, AchievementTypeAdmin)
+admin.site.register(models.Achievement)
 admin.site.register(models.SpecialRightsType, SpecialRightsTypeAdmin)
 admin.site.register(models.SpecialRights, SpecialRightsAdmin)
 admin.site.register(models.CardSpecialRights, CardSpecialRightsAdmin)
