@@ -166,10 +166,10 @@ class ApplicationEducation(models.Model):
                     "pk": i.application_pk,
                     "date": i.date.strftime('%d.%m.%Y'),
                     "speciality": i.spec_title,
-                    "subjects": [{"title": i.subject_title, "score": i.score}]
+                    "subjects": [{"title": i.subject_title, "grade": i.grade}]
                 })
             else:
-                applications[-1]["subjects"].append({"title": i.subject_title, "score": i.score})
+                applications[-1]["subjects"].append({"title": i.subject_title, "grade": i.grade})
             current_application = i.application_pk
         return applications
 

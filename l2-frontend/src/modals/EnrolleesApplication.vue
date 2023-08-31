@@ -33,9 +33,9 @@
             v-for="subject in application.subjects"
             :key="subject.pk"
           >
-            <label>{{ subject.title }}
+            <label>{{ subject.title }}:
             </label>
-            {{ subject.score }}
+            {{ subject.grade }}
           </div>
         </div>
       </div>

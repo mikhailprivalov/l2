@@ -29,9 +29,9 @@ def get_applications_by_card(card_pk: int):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-           SELECT education_applicationeducation.id as application_pk, date, users_speciality.title as spec_title, education_subjects.title as subject_title, score FROM education_applicationeducation
+           SELECT education_applicationeducation.id as application_pk, date, users_speciality.title as spec_title, education_subjects.title as subject_title, grade FROM education_applicationeducation
            LEFT JOIN users_speciality on speciality_id = users_speciality.id
-           LEFT JOIN education_entranceexam on education_applicationeducation.card_id = education_entranceexam.card_id
+           LEFT JOIN education_entranceexam on education_applicationeducation.id = education_entranceexam.application_education_id
            LEFT JOIN education_subjects on education_entranceexam.subjects_id = education_subjects.id
            WHERE education_applicationeducation.card_id = %(card_pk)s
            ORDER BY application_pk
