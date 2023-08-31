@@ -56,5 +56,5 @@ def get_special_rights(request):
 
 
 def get_enrollees(request):
-    result = ""
+
     return JsonResponse({"result": result})

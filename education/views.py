@@ -1,4 +1,4 @@
-from clients.models import Individual
+from clients.models import Individual, Card
 from education.models import ApplicationEducation, EducationSpeciality, EntranceExam, Subjects, ExamType, Faculties, Achievement, AchievementType
 
 
@@ -133,3 +133,12 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
         }
     except Exception as e:
         return f"Exception: {e}"
+
+
+def get_all_enrollees(request):
+    individuals_mmis = Individual.objects.filter(mmis_id__isnull=False)
+    cards_mmis = Card.objects.filter(individual__in=individuals_mmis)
+    applications_mmis = ApplicationEducation.objects.filter(card__in=cards_mmis)
+    grades_mmis = EntranceExam.objects.filter(application_education__in=applications_mmis)
+
+
