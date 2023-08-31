@@ -173,5 +173,3 @@ def get_all_enrollees(request):
         })
 
     return result
-
-
