@@ -61,7 +61,8 @@ def get_columns(request):
     columns = [
         {"field": 'card', "key": 'card', "title": 'Дело'},
         {"field": 'fio', "key": 'fio', "title": 'ФИО'},
-        {"field": 'application', "key": 'application', "title": 'Заявление'},
+        {"field": 'speciality', "key": 'speciality', "title": 'Специальность'},
+        {"field": 'personal_number', "key": 'personal_number', "title": 'Номер'},
         {"field": 'сhemistry', "key": 'сhemistry', "title": 'Хим.'},
         {"field": 'biology', "key": 'biology', "title": 'Био.'},
         {"field": 'mathematics', "key": 'mathematics', "title": 'Мат.'},
