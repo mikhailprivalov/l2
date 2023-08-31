@@ -25,12 +25,8 @@ class SetDocumentTypeEducationAdmin(admin.ModelAdmin):
 
 
 class FormEducationAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 class ApplicationSourceEducationAdmin(admin.ModelAdmin):

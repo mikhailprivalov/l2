@@ -81,12 +81,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                     entrance_exam.save()
                 else:
                     entrance_exam = EntranceExam.objects.create(
-                        card=card,
-                        mmis_id=pg_mmis_id,
-                        grade=grade,
-                        subjects=subject,
-                        type_test=ExamType.objects.filter(mmis_id=type_test_code).first(),
-                        application_education=application
+                        card=card, mmis_id=pg_mmis_id, grade=grade, subjects=subject, type_test=ExamType.objects.filter(mmis_id=type_test_code).first(), application_education=application
                     )
                     entrance_exam.save()
                 result_exam.append(entrance_exam.pk)
@@ -121,16 +116,11 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                     document_serial=pach_serial,
                     document_date=pach_date,
                     grade=pach_grade,
-                    organization=pach_organization
+                    organization=pach_organization,
                 )
                 achievement_person.save()
             result_achievements.append(achievement_person.pk)
-        return {
-            "card": card,
-            "result_application": result_application,
-            "result_exam": result_exam,
-            "result_chievements": result_achievements
-        }
+        return {"card": card, "result_application": result_application, "result_exam": result_exam, "result_chievements": result_achievements}
     except Exception as e:
         return f"Exception: {e}"
 
@@ -157,21 +147,21 @@ def get_all_enrollees(request):
 
     result = []
     for i in grades_mmis:
-        result.append({
-            "card": i.card_id,
-            "fio": i.card.individual.fio(),
-            "application": f"{i.application_education.speciality} {i.application_education.personal_number}",
-            "сhemistry": "",
-            "biology": 43,
-            "mathematics": 55,
-            "russian_language": 33,
-            "achievement": "0",
-            "totalPoints": 555,
-            "is_original": i.application_education,
-            "status": i.application_education.is_checked,
-            "create_date": i.application_education.date,
-        })
+        result.append(
+            {
+                "card": i.card_id,
+                "fio": i.card.individual.fio(),
+                "application": f"{i.application_education.speciality} {i.application_education.personal_number}",
+                "сhemistry": "",
+                "biology": 43,
+                "mathematics": 55,
+                "russian_language": 33,
+                "achievement": "0",
+                "totalPoints": 555,
+                "is_original": i.application_education,
+                "status": i.application_education.is_checked,
+                "create_date": i.application_education.date,
+            }
+        )
 
     return result
-
-
