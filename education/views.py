@@ -34,6 +34,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             date = pa.get("Дата_Подачи")
             is_checked = pa.get("Проверено")
             facultet_id = pa.get("Факультет")
+            facultet = Faculties.objects.filter(mmis_id=facultet_id).first()
             if application:
                 application.speciality = education_speciality
                 application.personal_number = personal_number
@@ -41,7 +42,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                 application.is_expelled = is_expelled
                 application.date = date
                 application.is_checked = is_checked
-                application.facultet = Faculties.objects.filter(mmis_id=facultet_id).first()
+                application.facultet = facultet
                 application.save()
             else:
                 application = ApplicationEducation.objects.create(
@@ -53,7 +54,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                     is_expelled=is_expelled,
                     date=date,
                     is_checked=is_checked,
-                    facultet = Faculties.objects.filter(mmis_id=facultet_id).first()
+                    facultet=facultet
                 )
                 application.save()
             result_application.append(application.pk)
