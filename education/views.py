@@ -121,7 +121,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                     document_serial=pach_serial,
                     document_date=pach_date,
                     grade=pach_grade,
-                    organization=pach_organization
+                    organization=pach_organization,
                 )
                 achievement_person.save()
             result_achievements.append(achievement_person.pk)
