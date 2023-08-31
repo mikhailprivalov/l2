@@ -157,19 +157,21 @@ def get_all_enrollees(request):
 
     result = []
     for i in grades_mmis:
-        result.append({
-            "card": i.card_id,
-            "fio": i.card.individual.fio(),
-            "application": f"{i.application_education.speciality} {i.application_education.personal_number}",
-            "сhemistry": "",
-            "biology": 43,
-            "mathematics": 55,
-            "russian_language": 33,
-            "achievement": "0",
-            "totalPoints": 555,
-            "is_original": i.application_education,
-            "status": i.application_education.is_checked,
-            "create_date": i.application_education.date,
-        })
+        result.append(
+            {
+                "card": i.card_id,
+                "fio": i.card.individual.fio(),
+                "application": f"{i.application_education.speciality} {i.application_education.personal_number}",
+                "сhemistry": "",
+                "biology": 43,
+                "mathematics": 55,
+                "russian_language": 33,
+                "achievement": "0",
+                "totalPoints": 555,
+                "is_original": i.application_education,
+                "status": i.application_education.is_checked,
+                "create_date": i.application_education.date,
+            }
+        )
 
     return result
