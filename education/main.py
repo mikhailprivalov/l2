@@ -139,11 +139,7 @@ def process_update_enrollees():
 
             for i in enrollees_person_data:
                 result = update_education_individual(
-                    i,
-                    user_obj_hospital,
-                    enrollees_application_data.get(i.ID, []),
-                    enrollees_grade_data.get(i.ID, []),
-                    enrollees_achievements_data.get(i.ID, [])
+                    i, user_obj_hospital, enrollees_application_data.get(i.ID, []), enrollees_grade_data.get(i.ID, []), enrollees_achievements_data.get(i.ID, [])
                 )
                 print(result)
         time.sleep(10)
