@@ -125,16 +125,7 @@ def process_update_enrollees():
                     ]
                 else:
                     tmp_data = enrollees_achievements_data.get(i.ID, [])
-                    tmp_data.append(
-                        {
-                            "КодИД": i.КодИД,
-                            "ДатаИД": i.ДатаИД,
-                            "БаллИД": i.БаллИД,
-                            "Код": i.Код,
-                            "СерияИД": i.СерияИД,
-                            "НомерИД": i.НомерИД,
-                            "ОрганизацияИД": i.ОрганизацияИД
-                        })
+                    tmp_data.append({"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД, "ОрганизацияИД": i.ОрганизацияИД})
                     enrollees_achievements_data[i.ID] = tmp_data.copy()
 
             for i in enrollees_person_data:
