@@ -151,3 +151,36 @@ def get_achievements_by_id(connection_string: str, id_enrollee: str):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_dashboard_data():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            clients_card.id as card_id,
+            clients_individual.family,
+            clients_individual.patronymic,
+            education_applicationeducation.personal_number,
+            es.title as special_title,
+            exam.grade as grade,
+            exsubj.title as subject_title
+            
+            FROM clients_individual
+            LEFT JOIN clients_card ON
+            clients_card.id = clients_individual.id
+            LEFT JOIN education_applicationeducation ON
+            education_applicationeducation.card_id = clients_card.id
+            LEFT JOIN education_educationspeciality es ON 
+            education_applicationeducation.speciality_id = es.id
+            LEFT JOIN education_entranceexam exam ON 
+            exam.card_id = clients_card.id
+            LEFT JOIN education_subjects exsubj ON 
+            exsubj.id = exam.subjects_id
+            
+            WHERE clients_individual.mmis_id IS NOT NULL
+            """,
+            params={},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
