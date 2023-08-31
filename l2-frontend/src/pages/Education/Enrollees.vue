@@ -413,7 +413,7 @@ const filteredEnrollees = computed(() => enrollees.value.filter(applicaiton => {
 }));
 
 const getEnrollees = async () => {
-  const result = await api('/education/get-enrollees');
+  const result = await api('/education/get-enrollees', { speciality: selectedSpecialties.value });
   enrollees.value = result.data;
 };
 
@@ -458,6 +458,9 @@ onMounted(
     getEnrollees();
   },
 );
+watch(selectedSpecialties.value () {
+  getEnrollees();
+})
 </script>
 
 <style scoped lang="scss">
