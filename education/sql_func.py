@@ -20,7 +20,6 @@ def get_connection_params(settings_name):
         """,
             params={"name_settings": settings_name},
         )
-
         rows = namedtuplefetchall(cursor)
     return rows
 
@@ -95,13 +94,8 @@ def get_grade_entrance_exams(connection_string: str, id_enrollee: str):
                  [Код_Дисциплины], 
                  [Оценка], 
                  [Код_Испытания], 
-                 [Код_Заявления], 
-                 [Номер_Документа],
-                 [Серия_Документа],
-                 [Абитуриенты].[dbo].[АбитДисциплины].[Дисциплина]
+                 [Код_Заявления]
                FROM [Абитуриенты].[dbo].[Все_Оценки]
-               LEFT JOIN [Абитуриенты].[dbo].[АбитДисциплины] ON
-               [Абитуриенты].[dbo].[АбитДисциплины].[Код] = [Абитуриенты].[dbo].[Все_Оценки].[Код_Дисциплины]
                WHERE [Абитуриенты].[dbo].[Все_Оценки].[ID] IN ({id_enrollee}) 
                """
         )
@@ -125,12 +119,13 @@ def get_application_by_id(connection_string: str, id_enrollee: str):
                  [Оригинал],
                  [Дата_Подачи],
                  [Зачислен],
-                 [ОтказалсяОтЗачисления],
-                 [Дата_Подачи],
+                 [ОтказалсяОтЗачисления], 
                  [Проверено],
-                 [Проверено]
+                 [КодФормы]
                FROM [Абитуриенты].[dbo].[Все_Заявления]
-               WHERE [Абитуриенты].[dbo].[Все_Заявления].[ID] IN ({id_enrollee}) 
+               WHERE [Абитуриенты].[dbo].[Все_Заявления].[ID] IN ({id_enrollee}) AND
+               [Абитуриенты].[dbo].[Все_Заявления].[Удалена] = 0 AND 
+               [Абитуриенты].[dbo].[Все_Заявления].[ПричинаУдаления] = ''
                """
         )
         rows = namedtuplefetchall(cursor)
@@ -146,7 +141,10 @@ def get_achievements_by_id(connection_string: str, id_enrollee: str):
                  [Код], 
                  [КодИД], 
                  [ДатаИД], 
-                 [БаллИД]
+                 [БаллИД],
+                 [СерияИД],
+                 [НомерИД],
+                 [ОрганизацияИД]
                FROM [Абитуриенты].[dbo].[Достижения]
                WHERE [Абитуриенты].[dbo].[Достижения].[ID] IN ({id_enrollee}) 
                """

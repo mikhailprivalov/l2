@@ -65,10 +65,10 @@ def process_update_enrollees():
             enrollees_grade_data = {}
             for i in enrollees_grade:
                 if not enrollees_grade_data.get(i.ID):
-                    enrollees_grade_data[i.ID] = [{"Оценка": i.Оценка, "Код_Испытания": i.Код_Испытания, "Дисциплина": i.Дисциплина, "Код": i.Код, "Код_Заявления": i.Код_Заявления}]
+                    enrollees_grade_data[i.ID] = [{"Оценка": i.Оценка, "Код_Испытания": i.Код_Испытания, "Код": i.Код, "Код_Заявления": i.Код_Заявления, "Код_Дисциплины": i.Код_Дисциплины}]
                 else:
-                    tmp_data = enrollees_grade_data.get(i.ID, [])
-                    tmp_data.append({"Оценка": i.Оценка, "Код_Испытания": i.Код_Испытания, "Дисциплина": i.Дисциплина, "Код": i.Код, "Код_Заявления": i.Код_Заявления})
+                    tmp_data = enrollees_grade_data[i.ID]
+                    tmp_data.append({"Оценка": i.Оценка, "Код_Испытания": i.Код_Испытания, "Код": i.Код, "Код_Заявления": i.Код_Заявления, "Код_Дисциплины": i.Код_Дисциплины})
                     enrollees_grade_data[i.ID] = tmp_data.copy()
 
             enrollees_application_data = {}
@@ -110,22 +110,42 @@ def process_update_enrollees():
                     )
                     enrollees_application_data[i.ID] = tmp_data.copy()
             enrollees_achievements_data = {}
-            for i in enrollees_application:
+            for i in enrollees_achievements:
                 if not enrollees_achievements_data.get(i.ID):
-                    enrollees_achievements_data[i.ID] = [{"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД}]
+                    enrollees_achievements_data[i.ID] = [
+                        {
+                            "КодИД": i.КодИД,
+                            "ДатаИД": i.ДатаИД,
+                            "БаллИД": i.БаллИД,
+                            "Код": i.Код,
+                            "СерияИД": i.СерияИД,
+                            "НомерИД": i.НомерИД,
+                            "ОрганизацияИД": i.ОрганизацияИД
+                        }
+                    ]
                 else:
                     tmp_data = enrollees_achievements_data.get(i.ID, [])
-                    tmp_data.append({"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД})
+                    tmp_data.append(
+                        {
+                            "КодИД": i.КодИД,
+                            "ДатаИД": i.ДатаИД,
+                            "БаллИД": i.БаллИД,
+                            "Код": i.Код,
+                            "СерияИД": i.СерияИД,
+                            "НомерИД": i.НомерИД,
+                            "ОрганизацияИД": i.ОрганизацияИД
+                        })
                     enrollees_achievements_data[i.ID] = tmp_data.copy()
 
             for i in enrollees_person_data:
-                update_education_individual(
+                result = update_education_individual(
                     i,
                     user_obj_hospital,
-                    enrollees_application_data.get(i.ID),
-                    enrollees_grade_data.get(i.ID),
-                    enrollees_achievements_data.get(i.ID)
+                    enrollees_application_data.get(i.ID, []),
+                    enrollees_grade_data.get(i.ID, []),
+                    enrollees_achievements_data.get(i.ID, [])
                 )
+                print(result)
         time.sleep(10)
 
 

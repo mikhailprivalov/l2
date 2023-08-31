@@ -222,18 +222,15 @@ class AchievementType(models.Model):
 
 
 class Achievement(models.Model):
-    ACHIEVEMENT_STATUS = (
-        ('declared', 'Заявлено'),
-        ('checked ', 'Проверено'),
-        ('rejected', 'Отклонено'),
-    )
-
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
     type = models.ForeignKey(AchievementType, verbose_name='Тип достижения', db_index=True, on_delete=models.CASCADE)
-    status = models.CharField(max_length=15, choices=ACHIEVEMENT_STATUS, blank=True, null=True, default=ACHIEVEMENT_STATUS[0][0], verbose_name='Статус достижения')
-    document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
+    document_number = models.CharField(max_length=255, blank=True, null=True, default=None, verbose_name='Номер документа')
+    document_serial = models.CharField(max_length=255, blank=True, null=True, default=None, verbose_name='Серия документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
     grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
+    organization = models.CharField(max_length=300, blank=True, null=True, default=None, verbose_name='Организация')
+    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+
 
     def __str__(self):
         return f"{self.card} - {self.type.title}"
