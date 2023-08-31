@@ -181,6 +181,11 @@ class ExamType(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def get_types() -> list[dict]:
+        types = [{"id": type.pk, "label": type.title} for type in ExamType.objects.all()]
+        return types
+
     class Meta:
         verbose_name = 'Тип экзамена'
         verbose_name_plural = 'Типы экзаменов'
