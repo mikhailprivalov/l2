@@ -19,7 +19,9 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             "",
             filter_mmis_id=True,
         )
-        card.phone = person_data.Мобильный if person_data.Мобильный else ""
+        tel = person_data.Мобильный if person_data.Мобильный else ""
+        tel = tel.replace("+7", "")
+        card.phone = tel
         card.save()
         result_application = []
         step_app = 0
@@ -137,7 +139,7 @@ def get_all_enrollees(request):
         result.append(
             {
                 "card": i.card_id,
-                "fio": i.card.individual.fio(),
+                "fio": f"{i.card.individual.fio()} - {i.card.individual.mmis_id}",
                 "application": f"{i.application_education.speciality} {i.application_education.personal_number}",
                 "сhemistry": "",
                 "biology": 43,
@@ -145,7 +147,7 @@ def get_all_enrollees(request):
                 "russian_language": 33,
                 "achievement": "0",
                 "totalPoints": 555,
-                "is_original": i.application_education,
+                "is_original": True,
                 "status": i.application_education.is_checked,
                 "create_date": i.application_education.date,
             }

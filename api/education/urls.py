@@ -13,4 +13,6 @@ urlpatterns = [
     path('get-educations', views.get_education),
     path('get-special-rights', views.get_special_rights),
     path('get-applications-by-card', views.get_applications_by_card),
+    path('get-enrollees', views.get_enrollees),
+    path('get-columns', views.get_columns)
 ]

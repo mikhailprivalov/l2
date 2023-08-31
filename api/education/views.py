@@ -4,7 +4,7 @@ from django.http import JsonResponse
 
 from clients.models import Citizenship
 from directions.models import EducationFinanceSource
-from education.models import ApplicationEducation, ExamType, Subjects, AchievementType, , DocumentTypeEducation, SpecialRights, EducationSpeciality
+from education.models import ApplicationEducation, ExamType, Subjects, AchievementType, DocumentTypeEducation, SpecialRights, EducationSpeciality
 from education.views import get_all_enrollees
 
 
@@ -19,7 +19,7 @@ def get_pay_forms(request):
 
 
 def get_enrollment_orders(request):
-    result = ""
+    result = []
     return JsonResponse({"result": result})
 
 
@@ -57,8 +57,7 @@ def get_special_rights(request):
     return JsonResponse({"result": result})
 
 
-def get_enrollees(request):
-    data = get_all_enrollees(request)
+def get_columns(request):
     columns = [
         {"field": 'card', "key": 'card', "title": 'Дело'},
         {"field": 'fio', "key": 'fio', "title": 'ФИО'},
@@ -74,7 +73,12 @@ def get_enrollees(request):
         {"field": 'status', "key": 'status', "title": 'Статус'},
         {"field": 'create_date', "key": 'create_date', "title": 'Создано'},
     ]
-    return JsonResponse({"data": data, "columns": columns})
+    return JsonResponse({"result": columns})
+
+
+def get_enrollees(request):
+    data = get_all_enrollees(request)
+    return JsonResponse({"data": data})
 
 
 def get_applications_by_card(request):

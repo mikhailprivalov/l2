@@ -40,35 +40,42 @@ export default {
   props: ['enrollees'],
   data() {
     return {
-      columns: [
-        { field: 'card', key: 'card', title: 'Дело' },
-        { field: 'fio', key: 'fio', title: 'ФИО' },
-        { field: 'application', key: 'application', title: 'Заявление' },
-        { field: 'сhemistry', key: 'сhemistry', title: 'Хим.' },
-        { field: 'biology', key: 'biology', title: 'Био.' },
-        { field: 'mathematics', key: 'mathematics', title: 'Мат.' },
-        { field: 'russian_language', key: 'russian_language', title: 'Рус.' },
-        { field: 'ia', key: 'ia', title: 'ИД' },
-        { field: 'iaPlus', key: 'ia+', title: 'ИД+' },
-        { field: 'amount', key: 'amount', title: 'Сумм' },
-        {
-          field: 'is_original',
-          key: 'is_original',
-          title: 'Оригинал',
-          renderBodyCell: ({ row, column }) => {
-            const text = row[column.field];
-            return text ? <i class="fa fa-check-square" aria-hidden="true" style="color: #37BC9B;" />
-              : <i class="fa fa-square-o" aria-hidden="true" />;
-          },
-        },
-        { field: 'status', key: 'status', title: 'Статус' },
-        { field: 'create_date', key: 'create_date', title: 'Создано' },
-        {
-          field: 'actions',
-          key: 'actions',
-          title: 'Действия',
-          width: 100,
-          renderBodyCell: ({ row }) => (
+      columns: [],
+      pageSize: 30,
+      page: 1,
+      pageSizeOption: [30, 50, 100, 300],
+      basePk: -1,
+    };
+  },
+  mounted() {
+    this.getInternalBase();
+    this.getColumns();
+  },
+  methods: {
+    pageNumberChange(number) {
+      this.page = number;
+    },
+    pageSizeChange(size) {
+      this.pageSize = size;
+    },
+    async getInternalBase() {
+      const baseData = await this.$api('/bases');
+      this.basePk = baseData.bases[0].pk;
+    },
+    async getColumns() {
+      const data = await this.$api('/education/get-columns');
+      const { result } = data;
+      result[result.length - 3].renderBodyCell = ({ row, column }) => {
+        const text = row[column.field];
+        return text ? <i class="fa fa-check-square" aria-hidden="true" style="color: #37BC9B;" />
+          : <i class="fa fa-square-o" aria-hidden="true" />;
+      };
+      result.push({
+        field: 'actions',
+        key: 'actions',
+        title: 'Действия',
+        width: 100,
+        renderBodyCell: ({ row }) => (
             <div style="display: flex; justify-content: space-evenly">
               <button
                 class="btn btn-blue-nb button-icon"
@@ -92,27 +99,8 @@ export default {
                 />
               </button>
             </div>),
-        },
-      ],
-      pageSize: 30,
-      page: 1,
-      pageSizeOption: [30, 50, 100, 300],
-      basePk: -1,
-    };
-  },
-  mounted() {
-    this.getInternalBase();
-  },
-  methods: {
-    pageNumberChange(number) {
-      this.page = number;
-    },
-    pageSizeChange(size) {
-      this.pageSize = size;
-    },
-    async getInternalBase() {
-      const baseData = await this.$api('/bases');
-      this.basePk = baseData.bases[0].pk;
+      });
+      this.columns = result;
     },
     openCard(cardPk) {
       window.open(`/ui/directions?card_pk=${cardPk}&base_pk=${this.basePk}`);

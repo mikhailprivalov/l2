@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils import timezone
 import education.sql_func as sql_func
 
 

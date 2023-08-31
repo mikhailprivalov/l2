@@ -769,16 +769,17 @@ class Individual(models.Model):
         if family and name and sex and birthday:
             birthday = datetime.strptime(birthday, "%d.%m.%Y" if '.' in birthday else "%Y-%m-%d").date()
 
-            indv = Individual.objects.filter(
-                family=family,
-                name=name,
-                patronymic=patronymic,
-                birthday=birthday,
-                sex=sex,
-                owner=owner,
-            )
             if filter_mmis_id:
-                indv = indv.filter(mmis_id=mmis_id)
+                indv = Individual.objects.filter(mmis_id=mmis_id)
+            else:
+                indv = Individual.objects.filter(
+                    family=family,
+                    name=name,
+                    patronymic=patronymic,
+                    birthday=birthday,
+                    sex=sex,
+                    owner=owner,
+                )
 
             if not indv or not indv.exists():
                 i = Individual(

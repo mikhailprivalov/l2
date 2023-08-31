@@ -294,7 +294,7 @@
 
 <script setup lang="ts">
 import {
-  computed, onMounted, ref,
+  computed, onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -405,13 +405,17 @@ const isOriginal = ref(false);
 const search = ref('');
 
 const enrollees = ref([]);
-
 const filteredEnrollees = computed(() => enrollees.value.filter(applicaiton => {
   const applicationFio = applicaiton.fio.toLowerCase();
   const searchTerm = search.value.toLowerCase();
 
   return applicationFio.includes(searchTerm);
 }));
+
+const getEnrollees = async () => {
+  const result = await api('/education/get-enrollees');
+  enrollees.value = result.data;
+};
 
 const clearFilters = () => {
   selectedSpecialties.value = [];
@@ -451,6 +455,7 @@ onMounted(
     getAchievementsFilters();
     getEducations();
     getSpecialRights();
+    getEnrollees();
   },
 );
 </script>
