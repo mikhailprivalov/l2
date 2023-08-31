@@ -125,12 +125,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                 )
                 achievement_person.save()
             result_achievements.append(achievement_person.pk)
-        return {
-            "card": card,
-            "result_application": result_application,
-            "result_exam": result_exam,
-            "result_chievements": result_achievements
-        }
+        return {"card": card, "result_application": result_application, "result_exam": result_exam, "result_chievements": result_achievements}
     except Exception as e:
         return f"Exception: {e}"
 
