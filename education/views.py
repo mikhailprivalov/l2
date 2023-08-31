@@ -132,20 +132,6 @@ def get_all_enrollees(request):
     applications_mmis = ApplicationEducation.objects.filter(card__in=cards_mmis)
     grades_mmis = EntranceExam.objects.filter(application_education__in=applications_mmis)
 
-    # "card": 1,
-    # "fio": 'Котова Аделия Ивановна',
-    # "application": '1-СТОМ-ОО',
-    # "сhemistry": 33,
-    # "biology": 43,
-    # "mathematics": 55,
-    # "russian_language": 33,
-    # "achievement": 3,
-    # "achievementСhecked": 3,
-    # "totalPoints": 555,
-    # "is_original": True,
-    # "status": 'Принято',
-    # "create_date": '12.07.2023 16:59', }
-
     result = []
     for i in grades_mmis:
         result.append(
