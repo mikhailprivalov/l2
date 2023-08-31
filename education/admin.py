@@ -42,18 +42,12 @@ class ApplicationEducationAdmin(admin.ModelAdmin):
     list_display = (
         'card',
         'speciality',
-        'form',
         'application_source',
-        'application_status',
-        'application_stage',
     )
     list_display_links = (
         'card',
         'speciality',
-        'form',
         'application_source',
-        'application_status',
-        'application_stage',
     )
 
 
@@ -62,19 +56,34 @@ class ExamTypeAdmin(admin.ModelAdmin):
     list_display_links = ('title',)
 
 
-class SubjectsAdmin(admin.ModelAdmin):
-    list_display = ('title',)
-    list_display_links = ('title',)
-
-
 class EntranceExamAdmin(admin.ModelAdmin):
-    list_display = ('card', 'type', 'subjects', 'score', 'document_number', 'document_date', 'is_checked')
-    list_display_links = ('card', 'type', 'subjects', 'score', 'document_number', 'document_date', 'is_checked')
+    list_display = (
+        'card',
+        'type_test',
+        'subjects',
+        'grade',
+    )
+    list_display_links = (
+        'card',
+        'type_test',
+        'subjects',
+        'grade',
+    )
 
 
 class AchievementTypeAdmin(admin.ModelAdmin):
-    list_display = ('title',)
-    list_display_links = ('title',)
+    list_display = (
+        'short_title',
+        'mmis_id',
+        'grade',
+        'year',
+    )
+    list_display_links = (
+        'short_title',
+        'mmis_id',
+        'grade',
+        'year',
+    )
 
 
 class AchievementAdmin(admin.ModelAdmin):
@@ -97,7 +106,63 @@ class CardSpecialRightsAdmin(admin.ModelAdmin):
     list_display_links = ('card', 'right')
 
 
-admin.site.register(models.FormEducation, FormEducationAdmin)
+class FacultiesAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'short_title',
+        'mmis_id',
+    )
+    list_display_links = (
+        'title',
+        'short_title',
+        'mmis_id',
+    )
+
+
+class EducationSpecialityAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'okso',
+        'cipher',
+        'mmis_id',
+        'faculties_mmis_id',
+        'qualification_title',
+        'period_study',
+        'year_start_study',
+        'oo_count',
+        'cn_count',
+        'sn_count',
+        'total_count',
+    )
+    list_display_links = (
+        'title',
+        'okso',
+        'cipher',
+        'mmis_id',
+        'faculties_mmis_id',
+        'qualification_title',
+        'period_study',
+        'year_start_study',
+        'oo_count',
+        'cn_count',
+        'sn_count',
+        'total_count',
+    )
+
+
+class SubjectsAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'short_title',
+        'mmis_id',
+    )
+    list_display_links = (
+        'title',
+        'short_title',
+        'mmis_id',
+    )
+
+
 admin.site.register(models.ApplicationSourceEducation, ApplicationSourceEducationAdmin)
 admin.site.register(models.ApplicationEducation, ApplicationEducationAdmin)
 admin.site.register(models.ExamType, ExamTypeAdmin)
@@ -112,3 +177,5 @@ admin.site.register(models.LogUpdateMMIS)
 admin.site.register(models.InstitutionTitle, SetInstitutionTitleAdmin)
 admin.site.register(models.LevelEducation)
 admin.site.register(models.DocumentTypeEducation, SetDocumentTypeEducationAdmin)
+admin.site.register(models.Faculties, FacultiesAdmin)
+admin.site.register(models.EducationSpeciality, EducationSpecialityAdmin)

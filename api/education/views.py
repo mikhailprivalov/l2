@@ -6,9 +6,6 @@ from clients.models import Citizenship
 from directions.models import EducationFinanceSource
 from education.models import ApplicationSourceEducation, ApplicationEducation, ExamType, Subjects, AchievementType, Achievement, DocumentTypeEducation, SpecialRights
 from users.models import Speciality
-from laboratory.settings import (
-    ENROLLEES,
-)
 
 
 def get_specialties(request):
@@ -22,7 +19,7 @@ def get_pay_forms(request):
 
 
 def get_enrollment_orders(request):
-    result = []
+    result = ""
     return JsonResponse({"result": result})
 
 

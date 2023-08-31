@@ -77,6 +77,7 @@ class DocumentEducation(models.Model):
 
 class FormEducation(models.Model):
     title = models.CharField(max_length=100, verbose_name='Наименование формы обучения', help_text='Очная, заочная, очно-заочная')
+    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -92,50 +93,62 @@ class ApplicationSourceEducation(models.Model):
     def __str__(self):
         return self.title
 
-    @staticmethod
-    def get_application_source() -> list[dict]:
-        sources = [{"id": source.pk, "label": source.title} for source in ApplicationSourceEducation.objects.all()]
-        return sources
-
     class Meta:
         verbose_name = 'Источник заявления'
         verbose_name_plural = 'Источники заявлений'
 
 
-class ApplicationEducation(models.Model):
-    APPLICATION_STAGE = (
-        ('main', 'Основной'),
-        ('additional', 'Дополнительный'),
-    )
-
-    APPLICATION_STATUS = (
-        ('accepted', 'Принято'),
-        ('checked', 'Проверено'),
-        ('rejected', 'Отклонено'),
-    )
-
-    card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
-    speciality = models.ForeignKey('users.Speciality', verbose_name='Специальность-направление', help_text='Лечебное дело, Стоматология и т.д', db_index=True, on_delete=models.CASCADE)
-    form = models.ForeignKey(FormEducation, verbose_name='Форма обучения', db_index=True, on_delete=models.CASCADE)
-    application_source = models.ForeignKey(ApplicationSourceEducation, verbose_name='Источник заявления', on_delete=models.CASCADE)
-    application_status = models.CharField(max_length=15, choices=APPLICATION_STATUS, blank=True, null=True, default=APPLICATION_STATUS[0][0], verbose_name='Статус заявления')
-    application_stage = models.CharField(max_length=15, choices=APPLICATION_STAGE, blank=True, null=True, default=APPLICATION_STAGE[0][0], verbose_name='Этап заявления')
-    date = models.DateTimeField(verbose_name='Дата подачи заявления', default=timezone.now)
-    is_enrolled = models.BooleanField(default=False, verbose_name='Зачислен')
-    is_expelled = models.BooleanField(default=False, verbose_name='Отчислен')
+class EducationSpeciality(models.Model):
+    title = models.CharField(max_length=255, help_text='Название')
+    okso = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='ОКСО')
+    cipher = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='Шифр')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
+    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    faculties_mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    qualification_title = models.CharField(max_length=255, blank=True, null=True, default=None, help_text='квалификация')
+    period_study = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='Срок обучения')
+    year_start_study = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True, help_text='год набора')
+    oo_count = models.SmallIntegerField(default=0)
+    cn_count = models.SmallIntegerField(default=0)
+    sn_count = models.SmallIntegerField(default=0)
+    total_count = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.card} - {self.speciality} - {self.form}"
+        return self.title
 
-    @staticmethod
-    def get_application_status() -> list[dict]:
-        statuses = [{"id": i[0], "label": i[1]} for i in ApplicationEducation.APPLICATION_STATUS]
-        return statuses
+    class Meta:
+        verbose_name = 'Специальность образования'
+        verbose_name_plural = 'Специальности образования'
 
-    @staticmethod
-    def get_application_stage() -> list[dict]:
-        stages = [{"id": i[0], "label": i[1]} for i in ApplicationEducation.APPLICATION_STAGE]
-        return stages
+
+class Faculties(models.Model):
+    title = models.CharField(max_length=255, help_text='Название')
+    short_title = models.CharField(max_length=255, blank=True, null=True, default=None, help_text='Короткое название')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
+    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Факультет'
+        verbose_name_plural = 'Факультеты'
+
+
+class ApplicationEducation(models.Model):
+    card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
+    speciality = models.ForeignKey(EducationSpeciality, verbose_name='Специальность-направление', help_text='Лечебное дело, Стоматология и т.д', db_index=True, on_delete=models.CASCADE)
+    application_source = models.ForeignKey(ApplicationSourceEducation, blank=True, null=True, default=None, verbose_name='Источник заявления', on_delete=models.CASCADE)
+    facultet = models.ForeignKey(Faculties, blank=True, null=True, default=None, verbose_name='Факультет', on_delete=models.CASCADE)
+    is_checked = models.BooleanField(default=False, verbose_name='проверено')
+    date = models.DateTimeField(verbose_name='Дата подачи заявления', blank=True, null=True, default=None)
+    is_enrolled = models.BooleanField(default=False, verbose_name='Зачислен')
+    is_expelled = models.BooleanField(default=False, verbose_name='Отчислен')
+    mmis_id = models.IntegerField(blank=True, null=True, default=None, verbose_name='Код заявления', db_index=True)
+    personal_number = models.CharField(max_length=255, blank=True, null=True, default=None, verbose_name='Номер личного дела')
+
+    def __str__(self):
+        return f"{self.card} - {self.speciality}"
 
     @staticmethod
     def get_applications_by_card(card_pk) -> list[dict]:
@@ -162,14 +175,11 @@ class ApplicationEducation(models.Model):
 
 class ExamType(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование типа экзамена', help_text='ЕГЭ, ВИ, ВИ СПО и т.д')
+    mmis_id = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
+    hide = models.BooleanField(help_text='Скрытие', default=False)
 
     def __str__(self):
         return self.title
-
-    @staticmethod
-    def get_types() -> list[dict]:
-        types = [{"id": type.pk, "label": type.title} for type in ExamType.objects.all()]
-        return types
 
     class Meta:
         verbose_name = 'Тип экзамена'
@@ -178,6 +188,8 @@ class ExamType(models.Model):
 
 class Subjects(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование предмета', help_text='Химия/основы химии, Математика и т.д')
+    mmis_id = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
+    short_title = models.CharField(max_length=55, default="", verbose_name='Короткое наименование', help_text='Химия/основы химии, Математика и т.д')
 
     def __str__(self):
         return self.title
@@ -194,15 +206,14 @@ class Subjects(models.Model):
 
 class EntranceExam(models.Model):
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
-    type = models.ForeignKey(ExamType, verbose_name='Тип испытания', db_index=True, on_delete=models.CASCADE)
+    type_test = models.ForeignKey(ExamType, verbose_name='Тип испытания', db_index=True, on_delete=models.CASCADE)
     subjects = models.ForeignKey(Subjects, verbose_name='Предмет', db_index=True, on_delete=models.CASCADE)
-    score = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл')
-    document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
-    document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
-    is_checked = models.BooleanField(default=False, verbose_name='Статус проверки экзамена')
+    grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл')
+    application_education = models.ForeignKey(ApplicationEducation, blank=True, null=True, default=None, verbose_name='Заявление', db_index=True, on_delete=models.CASCADE)
+    mmis_id = models.IntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
 
     def __str__(self):
-        return f"{self.card} - {self.type} - {self.subjects} - {self.score}"
+        return f"{self.card} - {self.subjects}"
 
     class Meta:
         verbose_name = 'Вступительное испытание'
@@ -210,7 +221,11 @@ class EntranceExam(models.Model):
 
 
 class AchievementType(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Наименование типа достижения', help_text='ГТО, Олимпиада')
+    title = models.CharField(max_length=500, verbose_name='Наименование типа достижения', help_text='ГТО, Олимпиада')
+    short_title = models.CharField(max_length=255, blank=True, null=True, default=None, verbose_name='Короткое наименование', help_text='ГТО, Олимпиада')
+    mmis_id = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
+    grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
+    year = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Год утверждения')
 
     def __str__(self):
         return self.title
@@ -237,14 +252,10 @@ class Achievement(models.Model):
     status = models.CharField(max_length=15, choices=ACHIEVEMENT_STATUS, blank=True, null=True, default=ACHIEVEMENT_STATUS[0][0], verbose_name='Статус достижения')
     document_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
+    grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
 
     def __str__(self):
         return f"{self.card} - {self.type.title}"
-
-    @staticmethod
-    def get_statuses() -> list[dict]:
-        statuses = [{"id": status[0], "label": status[1]} for status in Achievement.ACHIEVEMENT_STATUS]
-        return statuses
 
     class Meta:
         verbose_name = 'Достижение'
