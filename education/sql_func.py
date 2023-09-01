@@ -93,7 +93,7 @@ def get_changes(connection_string: str, last_date_time: str):
             f"""
            SELECT [Код], [код_абитуриента], [дата]
            FROM [Абитуриенты].[dbo].[Логи]
-           WHERE [Абитуриенты].[dbo].[Логи].[дата] > CAST('{last_date_time}' AS datetime2) and код_абитуриента <> 0
+           WHERE [Абитуриенты].[dbo].[Логи].[дата] >= CAST('{last_date_time}' AS datetime2) and код_абитуриента <> 0
            ORDER BY [Абитуриенты].[dbo].[Логи].[дата]
             """
         )

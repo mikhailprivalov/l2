@@ -157,6 +157,16 @@
             placeholder="Выберите право"
           />
         </div>
+        <div class="margin-div">
+          <label>Год набора</label>
+          <Treeselect
+            v-model="selectedYearApplication"
+            valueFormat="object"
+            :options="yearApplication"
+            value-consists-of="LEAF_PRIORITY"
+            placeholder="Выберите год"
+          />
+        </div>
       </div>
       <div class="four-col-div">
         <div class="margin-div flex-div">
@@ -196,7 +206,7 @@
             <label
               for="contract"
               class="label-for-checkbox"
-            >Есть договор</label>
+            >Договор прикреплен</label>
           </div>
           <div>
             <input
@@ -401,6 +411,11 @@ const activeApplicationOnly = ref(false);
 const contract = ref(false);
 const payment = ref(false);
 const isOriginal = ref(false);
+const selectedYearApplication = ref(null);
+const yearApplication = ref([
+  { id: 1, label: 2022 },
+  { id: 2, label: 2023 },
+]);
 
 const search = ref('');
 
@@ -458,9 +473,9 @@ onMounted(
     getEnrollees();
   },
 );
-watch(selectedSpecialties.value () {
+watch(selectedSpecialties.value, () => {
   getEnrollees();
-})
+});
 </script>
 
 <style scoped lang="scss">
