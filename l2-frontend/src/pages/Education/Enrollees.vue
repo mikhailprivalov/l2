@@ -161,7 +161,7 @@
           <label>Год набора</label>
           <Treeselect
             v-model="selectedYearApplication"
-            valueFormat="object"
+            value-format="object"
             :options="yearApplication"
             value-consists-of="LEAF_PRIORITY"
             placeholder="Выберите год"

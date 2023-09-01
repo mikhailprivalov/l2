@@ -182,6 +182,7 @@ def get_dashboard_data():
             education_applicationeducation.personal_number as personal_number,
             education_applicationeducation.is_enrolled as is_enrolled,
             education_applicationeducation.is_expelled as is_expelled,
+            education_applicationeducation.original,
             education_applicationeducation.id as app_id,
             education_applicationeducation.date as app_data,
             exsubj.title as subj_title,
