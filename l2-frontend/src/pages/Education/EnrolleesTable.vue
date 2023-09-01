@@ -20,6 +20,10 @@
         @on-page-size-change="pageSizeChange"
       />
     </div>
+    <EnrolleesApplication
+      v-if="showInfoModal"
+      :card_pk="selectCardPk"
+    />
   </div>
 </template>
 
@@ -32,15 +36,18 @@ import {
 import 'vue-easytable/libs/theme-default/index.css';
 
 import ruRu from '@/locales/ve';
+import EnrolleesApplication from '@/modals/EnrolleesApplication.vue';
 
 VeLocale.use(ruRu);
 export default {
   name: 'EnrolleesTable',
-  components: { VeTable, VePagination },
+  components: { EnrolleesApplication, VeTable, VePagination },
   props: ['enrollees'],
   data() {
     return {
       columns: [],
+      showInfoModal: false,
+      selectCardPk: -1,
       pageSize: 30,
       page: 1,
       pageSizeOption: [30, 50, 100, 300],
@@ -50,6 +57,11 @@ export default {
   mounted() {
     this.getInternalBase();
     this.getColumns();
+  },
+  created() {
+    this.$root.$on('hide_enrollees', () => {
+      this.showInfoModal = false;
+    });
   },
   methods: {
     pageNumberChange(number) {
@@ -69,6 +81,13 @@ export default {
         const text = row[column.field];
         return text ? <i class="fa fa-check-square" aria-hidden="true" style="color: #37BC9B;" />
           : <i class="fa fa-square-o" aria-hidden="true" />;
+      };
+      result[result.length - 2].renderBodyCell = ({ row }) => {
+        const enrolled = row.is_enrolled;
+        const expelled = row.is_expelled;
+        if (enrolled) { return <p style="color: #37BC9B;">Зачислен</p>; }
+        if (expelled) { return <p style="color: red">Отчислен</p>; }
+        return '';
       };
       result.push({
         field: 'actions',
@@ -92,6 +111,7 @@ export default {
                 v-tippy
                 title="Информация"
                 class="btn btn-blue-nb button-icon"
+                on-click={() => this.openInfo(row.card)}
               >
                 <i
                   class="fa fa-info-circle"
@@ -104,6 +124,10 @@ export default {
     },
     openCard(cardPk) {
       window.open(`/ui/directions?card_pk=${cardPk}&base_pk=${this.basePk}`);
+    },
+    openInfo(cardPk) {
+      this.showInfoModal = true;
+      this.selectCardPk = cardPk;
     },
   },
 };

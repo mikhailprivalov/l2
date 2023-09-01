@@ -175,16 +175,16 @@ def get_all_enrollees(request):
         if last_app_id != i.app_id and step != 0:
             temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"]
             data_res.append(temp_result.copy())
-        elif last_app_id != i.app_id:
             temp_result = template_result.copy()
-            temp_result["card"] = i.card_id
-            temp_result["fio"] = f"{i.ind_family} {i.ind_name} {i.ind_patronymic}"
-            temp_result["applicationSpeciality"] = i.special_title
-            temp_result["applicationPersonNumber"] = i.personal_number
-            temp_result["is_original"] = i.original
-            temp_result["is_enrolled"] = i.is_enrolled
-            temp_result["is_expelled"] = i.is_expelled
-            temp_result["create_date"] = i.app_data
+        temp_result = template_result.copy()
+        temp_result["card"] = i.card_id
+        temp_result["fio"] = f"{i.ind_family} {i.ind_name} {i.ind_patronymic}"
+        temp_result["applicationSpeciality"] = i.special_title
+        temp_result["applicationPersonNumber"] = i.personal_number
+        temp_result["is_original"] = i.original
+        temp_result["is_enrolled"] = i.is_enrolled
+        temp_result["is_expelled"] = i.is_expelled
+        temp_result["create_date"] = i.app_data.strftime('%d.%m.%Y %H:%M')
         if i.subj_title.lower() in ["химия", "основы химии"]:
             temp_result["сhemistry"] = i.grade
         if i.subj_title.lower() in ["биология"]:
