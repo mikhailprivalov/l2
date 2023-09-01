@@ -121,7 +121,7 @@ def get_application_by_id(connection_string: str, id_enrollee: str):
                  [Зачислен],
                  [ОтказалсяОтЗачисления], 
                  [Проверено],
-                 [КодФормы]
+                 [КодФормы],
                FROM [Абитуриенты].[dbo].[Все_Заявления]
                WHERE [Абитуриенты].[dbo].[Все_Заявления].[ID] IN ({id_enrollee}) AND
                [Абитуриенты].[dbo].[Все_Заявления].[Удалена] = 0 AND 
@@ -158,27 +158,32 @@ def get_dashboard_data():
         cursor.execute(
             """
             SELECT
-            clients_card.id as card_id,
-            clients_individual.family,
-            clients_individual.patronymic,
-            education_applicationeducation.personal_number,
+            education_entranceexam.card_id as card_id,
+            ci.family as ind_family,
+            ci.patronymic as ind_patronymic,
+            ci.name as ind_name,
+            education_applicationeducation.personal_number as personal_number,
+            education_applicationeducation.is_enrolled as is_enrolled,
+            education_applicationeducation.is_expelled as is_expelled,
+            education_applicationeducation.id as app_id,
+            education_applicationeducation.date as app_data,
+            exsubj.title as subj_title,
+            education_entranceexam.grade,
             es.title as special_title,
-            exam.grade as grade,
             exsubj.title as subject_title
-            
-            FROM clients_individual
-            LEFT JOIN clients_card ON
-            clients_card.id = clients_individual.id
+            FROM education_entranceexam
+            LEFT JOIN clients_card cc ON
+            cc.id = education_entranceexam.card_id
+            LEFT JOIN clients_individual ci ON
+            ci.id = cc.individual_id
             LEFT JOIN education_applicationeducation ON
-            education_applicationeducation.card_id = clients_card.id
+            education_applicationeducation.id = education_entranceexam.application_education_id
             LEFT JOIN education_educationspeciality es ON 
             education_applicationeducation.speciality_id = es.id
-            LEFT JOIN education_entranceexam exam ON 
-            exam.card_id = clients_card.id
             LEFT JOIN education_subjects exsubj ON 
-            exsubj.id = exam.subjects_id
-            
-            WHERE clients_individual.mmis_id IS NOT NULL
+            education_entranceexam.subjects_id = exsubj.id
+            WHERE ci.mmis_id IS NOT NULL
+            ORDER BY education_entranceexam.card_id, education_applicationeducation.id
             """,
             params={},
         )

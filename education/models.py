@@ -139,6 +139,7 @@ class ApplicationEducation(models.Model):
     application_source = models.ForeignKey(ApplicationSourceEducation, blank=True, null=True, default=None, verbose_name='Источник заявления', on_delete=models.CASCADE)
     facultet = models.ForeignKey(Faculties, blank=True, null=True, default=None, verbose_name='Факультет', on_delete=models.CASCADE)
     is_checked = models.BooleanField(default=False, verbose_name='проверено')
+    original = models.BooleanField(default=False, verbose_name='Оригинал')
     date = models.DateTimeField(verbose_name='Дата подачи заявления', blank=True, null=True, default=None)
     is_enrolled = models.BooleanField(default=False, verbose_name='Зачислен')
     is_expelled = models.BooleanField(default=False, verbose_name='Отчислен')
