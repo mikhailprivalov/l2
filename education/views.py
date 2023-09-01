@@ -153,19 +153,19 @@ def get_all_enrollees(request):
 
     last_app_id = -1
     template_result = {"card": "",
-              "fio": "",
-              "applicationSpeciality": "",
-              "applicationPersonNumber": "",
-              "сhemistry": 0,
-              "biology": 0,
-              "mathematics": 0,
-              "russian_language": 0,
-              "achievementPoint": "",
-              "totalPoints": 0,
-              "is_original": "",
-              "status": "",
-              "create_date": ""
-              }
+                       "fio": "",
+                       "applicationSpeciality": "",
+                       "applicationPersonNumber": "",
+                       "сhemistry": 0,
+                       "biology": 0,
+                       "mathematics": 0,
+                       "russian_language": 0,
+                       "achievementPoint": "",
+                       "totalPoints": 0,
+                       "is_original": "",
+                       "status": "",
+                       "create_date": ""
+                       }
     step = 0
     data_res = []
     temp_result = template_result.copy()
