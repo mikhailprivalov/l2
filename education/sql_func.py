@@ -188,6 +188,7 @@ def get_dashboard_data():
             exsubj.title as subj_title,
             education_entranceexam.grade,
             es.title as special_title,
+            es.id as special_id,
             exsubj.title as subject_title
             FROM education_entranceexam
             LEFT JOIN clients_card cc ON

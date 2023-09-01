@@ -36,6 +36,7 @@
             :multiple="true"
             :options="specialties"
             placeholder="Выберите направление"
+            @input="getEnrollees"
           />
         </div>
         <div class="margin-div">
@@ -165,6 +166,7 @@
             :options="yearApplication"
             value-consists-of="LEAF_PRIORITY"
             placeholder="Выберите год"
+            @input="getEnrollees"
           />
         </div>
       </div>
@@ -428,7 +430,9 @@ const filteredEnrollees = computed(() => enrollees.value.filter(applicaiton => {
 }));
 
 const getEnrollees = async () => {
-  const result = await api('/education/get-enrollees');
+  const result = await api('/education/get-enrollees', {
+    filters: { specialities: selectedSpecialties, yearStudy: selectedYearApplication },
+  });
   enrollees.value = result.data;
 };
 
