@@ -36,15 +36,16 @@ class ApplicationSourceEducationAdmin(admin.ModelAdmin):
 
 class ApplicationEducationAdmin(admin.ModelAdmin):
     list_display = (
-        'card',
+        'card_id',
         'speciality',
         'application_source',
     )
     list_display_links = (
-        'card',
+        'card_id',
         'speciality',
         'application_source',
     )
+    raw_id_fields = ('card',)
 
 
 class ExamTypeAdmin(admin.ModelAdmin):

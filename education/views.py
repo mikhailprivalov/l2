@@ -1,6 +1,7 @@
-from clients.models import Individual, Card
+from clients.models import Individual
 from education.models import ApplicationEducation, EducationSpeciality, EntranceExam, Subjects, ExamType, Faculties, Achievement, AchievementType
 from education.sql_func import get_dashboard_data
+import simplejson as json
 
 
 def update_education_individual(person_data, user_hospital_obj, person_applications, person_grade, person_achievements):
@@ -133,6 +134,16 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
 
 
 def get_all_enrollees(request):
+    request_data = json.loads(request.body)
+    filters = request_data.get("filters", {})
+    specialities_pk = filters.get("specialities")
+    specialities_pk = specialities_pk.get("value")
+    year_study = filters.get("yearStudy")
+    year_study = year_study.get("value")
+    if not year_study:
+        year_study = -1
+    if year_study and year_study != -1:
+        year_study = year_study.get('label')
     data = get_dashboard_data()
     last_app_id = -1
     template_result = {"card": "",
@@ -152,12 +163,24 @@ def get_all_enrollees(request):
     step = 0
     data_res = []
     temp_result = template_result.copy()
+    start_date, end_date = None, None
+    if int(year_study) > -1:
+        start_date = f"{year_study}-01-01"
+        end_date = f"{year_study}-12-31"
     for i in data:
+        date = i.app_data.strftime('%Y-%m-%d')
+        if (int(year_study) > -1 and (date >= start_date and date <= end_date)) or start_date is None:
+            pass
+        else:
+            continue
+
+        if specialities_pk and (i.special_id not in specialities_pk):
+            continue
+
         if last_app_id != i.app_id and step != 0:
             temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"]
             data_res.append(temp_result.copy())
             temp_result = template_result.copy()
-        temp_result = template_result.copy()
         temp_result["card"] = i.card_id
         temp_result["fio"] = f"{i.ind_family} {i.ind_name} {i.ind_patronymic}"
         temp_result["applicationSpeciality"] = i.special_title
@@ -165,7 +188,7 @@ def get_all_enrollees(request):
         temp_result["is_original"] = i.original
         temp_result["is_enrolled"] = i.is_enrolled
         temp_result["is_expelled"] = i.is_expelled
-        temp_result["create_date"] = i.app_data.strftime('%d.%m.%Y %H:%M')
+        temp_result["create_date"] = date
         if i.subj_title.lower() in ["химия", "основы химии"]:
             temp_result["сhemistry"] = i.grade if i.grade else 0
         if i.subj_title.lower() in ["биология"]:
@@ -175,7 +198,7 @@ def get_all_enrollees(request):
 
         last_app_id = i.app_id
         step += 1
-    temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"]
-    data_res.append(temp_result.copy())
-    result = data_res
-    return result
+    if temp_result.get("card"):
+        temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"]
+        data_res.append(temp_result.copy())
+    return data_res
