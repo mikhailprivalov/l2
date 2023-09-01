@@ -1,5 +1,3 @@
-import datetime
-
 from clients.models import Individual
 from education.models import ApplicationEducation, EducationSpeciality, EntranceExam, Subjects, ExamType, Faculties, Achievement, AchievementType
 from education.sql_func import get_dashboard_data
