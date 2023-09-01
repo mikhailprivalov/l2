@@ -48,8 +48,8 @@ class ApplicationEducationAdmin(admin.ModelAdmin):
 
 
 class ExamTypeAdmin(admin.ModelAdmin):
-    list_display = ('title',)
-    list_display_links = ('title',)
+    list_display = ('title', 'mmis_id',)
+    list_display_links = ('title', 'mmis_id',)
 
 
 class EntranceExamAdmin(admin.ModelAdmin):
