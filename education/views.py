@@ -140,7 +140,6 @@ def get_all_enrollees(request):
     filters = request_data.get("filters", {})
     specialities_pk = filters.get("specialities")
     specialities_pk = specialities_pk.get("value")
-    print(specialities_pk)
     year_study = filters.get("yearStudy")
     year_study = year_study.get("value")
     if not year_study:
