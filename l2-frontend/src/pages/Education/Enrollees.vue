@@ -304,7 +304,7 @@
 
 <script setup lang="ts">
 import {
-  computed, onMounted, ref, watch,
+  computed, onMounted, ref,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -428,7 +428,7 @@ const filteredEnrollees = computed(() => enrollees.value.filter(applicaiton => {
 }));
 
 const getEnrollees = async () => {
-  const result = await api('/education/get-enrollees', { speciality: selectedSpecialties.value });
+  const result = await api('/education/get-enrollees');
   enrollees.value = result.data;
 };
 
@@ -473,9 +473,6 @@ onMounted(
     getEnrollees();
   },
 );
-watch(selectedSpecialties.value, () => {
-  getEnrollees();
-});
 </script>
 
 <style scoped lang="scss">

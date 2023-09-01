@@ -133,26 +133,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
 
 
 def get_all_enrollees(request):
-    individuals_mmis = Individual.objects.filter(mmis_id__isnull=False)
-    cards_mmis = Card.objects.filter(individual__in=individuals_mmis)
-    applications_mmis = ApplicationEducation.objects.filter(card__in=cards_mmis)
-    grades_mmis = EntranceExam.objects.filter(application_education__in=applications_mmis)
-
-    result = []
-    for i in grades_mmis:
-        result.append(
-            {
-                "card": i.card_id,
-                "fio": i.card.individual.fio(),
-                "application": f"{i.application_education.speciality} {i.application_education.personal_number}",
-                "totalPoints": 555,
-                "is_original": i.application_education,
-                "status": i.application_education.is_checked,
-                "create_date": i.application_education.date,
-            }
-        )
     data = get_dashboard_data()
-
     last_app_id = -1
     template_result = {"card": "",
                        "fio": "",
@@ -186,11 +167,11 @@ def get_all_enrollees(request):
         temp_result["is_expelled"] = i.is_expelled
         temp_result["create_date"] = i.app_data.strftime('%d.%m.%Y %H:%M')
         if i.subj_title.lower() in ["химия", "основы химии"]:
-            temp_result["сhemistry"] = i.grade
+            temp_result["сhemistry"] = i.grade if i.grade else 0
         if i.subj_title.lower() in ["биология"]:
-            temp_result["biology"] = i.grade
+            temp_result["biology"] = i.grade if i.grade else 0
         if i.subj_title.lower() in ["русский язык"]:
-            temp_result["russian_language"] = i.grade
+            temp_result["russian_language"] = i.grade if i.grade else 0
 
         last_app_id = i.app_id
         step += 1

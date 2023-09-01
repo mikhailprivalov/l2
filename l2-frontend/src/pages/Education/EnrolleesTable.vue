@@ -2,7 +2,7 @@
   <div>
     <VeTable
       :columns="columns"
-      :table-data="enrollees"
+      :table-data="enrolleesPagination"
     />
     <div
       v-show="enrollees.length === 0"
@@ -48,11 +48,17 @@ export default {
       columns: [],
       showInfoModal: false,
       selectCardPk: -1,
-      pageSize: 30,
+      pageSize: 100,
       page: 1,
-      pageSizeOption: [30, 50, 100, 300],
+      pageSizeOption: [100, 300, 500],
       basePk: -1,
     };
+  },
+  computed: {
+    enrolleesPagination() {
+      const { page, pageSize } = this;
+      return this.enrollees.slice((page - 1) * pageSize, page * pageSize);
+    },
   },
   mounted() {
     this.getInternalBase();
