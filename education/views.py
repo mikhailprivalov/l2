@@ -1,7 +1,10 @@
 from clients.models import Individual
 from education.models import ApplicationEducation, EducationSpeciality, EntranceExam, Subjects, ExamType, Faculties, Achievement, AchievementType
-from education.sql_func import get_dashboard_data
+from education.sql_func import get_dashboard_data, get_confirm_research_contract
 import simplejson as json
+
+from laboratory.settings import EDUCATION_REASEARCH_CONTRACT_IDS
+from laboratory.utils import current_year
 
 
 def update_education_individual(person_data, user_hospital_obj, person_applications, person_grade, person_achievements):
@@ -146,10 +149,11 @@ def get_all_enrollees(request):
     year_study = filters.get("yearStudy", {})
     year_study = year_study.get("value")
     if not year_study:
-        year_study = -1
-    if year_study and year_study != -1:
+        year_study = current_year()
+    else:
         year_study = year_study.get('label')
-    data = get_dashboard_data()
+
+    data = get_dashboard_data(year_study)
     last_app_id = -1
     template_result = {"card": "",
                        "fio": "",
@@ -163,22 +167,14 @@ def get_all_enrollees(request):
                        "totalPoints": 0,
                        "is_original": "",
                        "status": "",
-                       "create_date": ""
+                       "create_date": "",
+                       "researchContractId": None
                        }
     step = 0
     data_res = []
     temp_result = template_result.copy()
-    start_date, end_date = None, None
-    if int(year_study) > -1:
-        start_date = f"{year_study}-01-01"
-        end_date = f"{year_study}-12-31"
     for i in data:
-        date = i.app_data.strftime('%Y-%m-%d')
-        if (int(year_study) > -1 and (date >= start_date and date <= end_date)) or start_date is None:
-            pass
-        else:
-            continue
-
+        date = i.app_data.strftime('%d.%m.%Y')
         if specialities_pk and (i.special_id not in specialities_pk):
             continue
 
@@ -192,6 +188,11 @@ def get_all_enrollees(request):
         temp_result["applicationPersonNumber"] = i.personal_number
         temp_result["is_original"] = i.original
         temp_result["is_enrolled"] = i.is_enrolled
+        if i.is_enrolled and EDUCATION_REASEARCH_CONTRACT_IDS:
+            direction_num = get_confirm_research_contract(i.card_id, tuple(EDUCATION_REASEARCH_CONTRACT_IDS))
+            if direction_num:
+                res_direction = [d.napravleniye_id for d in direction_num]
+                temp_result["researchContractId"] = res_direction[0]
         temp_result["is_expelled"] = i.is_expelled
         temp_result["create_date"] = date
         if i.subj_title.lower() in ["химия", "основы химии"]:

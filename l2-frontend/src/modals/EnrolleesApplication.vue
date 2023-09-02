@@ -39,7 +39,9 @@
           </div>
         </div>
       </div>
-      <h4 class="text-center">Достижения</h4>
+      <h4 class="text-center">
+        Достижения
+      </h4>
       <div class="three-col-div">
         <div
           v-for="achievement in achievements"

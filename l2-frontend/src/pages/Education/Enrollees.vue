@@ -413,7 +413,7 @@ const activeApplicationOnly = ref(false);
 const contract = ref(false);
 const payment = ref(false);
 const isOriginal = ref(false);
-const selectedYearApplication = ref(null);
+const selectedYearApplication = ref({ id: 2, label: 2023 });
 const yearApplication = ref([
   { id: 1, label: 2022 },
   { id: 2, label: 2023 },

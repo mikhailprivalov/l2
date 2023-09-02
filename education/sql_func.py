@@ -204,10 +204,28 @@ def get_dashboard_data(application_year=datetime.datetime.now().year):
             education_applicationeducation.speciality_id = es.id
             LEFT JOIN education_subjects exsubj ON 
             education_entranceexam.subjects_id = exsubj.id
-            WHERE ci.mmis_id IS NOT NULL AND date_part('year', date) = %(application_year)s
+            WHERE ci.mmis_id IS NOT NULL AND date_part('year', education_applicationeducation.date) = %(application_year)s
             ORDER BY education_entranceexam.card_id, education_applicationeducation.id
             """,
             params={"application_year": application_year},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_confirm_research_contract(card_id, researches):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_issledovaniya.napravleniye_id
+            FROM directions_issledovaniya
+            LEFT JOIN directions_napravleniya dn ON
+            dn.id = directions_issledovaniya.napravleniye_id
+            WHERE directions_issledovaniya.research_id in %(researches)s and 
+            dn.client_id = %(card_id)s and directions_issledovaniya.time_confirmation IS NOT NULL
+            """,
+            params={"researches": researches, 'card_id': card_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows
