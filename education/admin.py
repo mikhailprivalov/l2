@@ -84,8 +84,9 @@ class AchievementTypeAdmin(admin.ModelAdmin):
 
 
 class AchievementAdmin(admin.ModelAdmin):
-    list_display = ('card', 'type', 'document_number', 'document_date', 'status')
-    list_display_links = ('card', 'type', 'document_number', 'document_date', 'status')
+    list_display = ('type', 'document_number', 'document_date', 'status')
+    list_display_links = ('type', 'document_number', 'document_date', 'status')
+    raw_id_fields = ('card',)
 
 
 class SpecialRightsTypeAdmin(admin.ModelAdmin):
