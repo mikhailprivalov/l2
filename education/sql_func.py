@@ -163,7 +163,8 @@ def get_achievements_by_id(connection_string: str, id_enrollee: str):
                  [БаллИД],
                  [СерияИД],
                  [НомерИД],
-                 [ОрганизацияИД]
+                 [ОрганизацияИД],
+                 [Код_Заявления]
                FROM [Абитуриенты].[dbo].[Достижения]
                WHERE [Абитуриенты].[dbo].[Достижения].[ID] IN ({id_enrollee}) 
                """

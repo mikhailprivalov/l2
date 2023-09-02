@@ -84,9 +84,11 @@ class AchievementTypeAdmin(admin.ModelAdmin):
 
 
 class AchievementAdmin(admin.ModelAdmin):
-    list_display = ('type', 'document_number', 'document_date', 'status')
-    list_display_links = ('type', 'document_number', 'document_date', 'status')
-    raw_id_fields = ('card',)
+    list_display = ('card', 'grade', 'application', 'application_source_pk', 'type', 'document_date',)
+    list_display_links = ('card', 'grade', 'application', 'application_source_pk', 'type', 'document_date',)
+    raw_id_fields = ('card', 'application',)
+
+    search_fields = ('card__number',)
 
 
 class SpecialRightsTypeAdmin(admin.ModelAdmin):
@@ -167,7 +169,7 @@ admin.site.register(models.ExamType, ExamTypeAdmin)
 admin.site.register(models.Subjects, SubjectsAdmin)
 admin.site.register(models.EntranceExam, EntranceExamAdmin)
 admin.site.register(models.AchievementType, AchievementTypeAdmin)
-admin.site.register(models.Achievement)
+admin.site.register(models.Achievement, AchievementAdmin)
 admin.site.register(models.SpecialRightsType, SpecialRightsTypeAdmin)
 admin.site.register(models.SpecialRights, SpecialRightsAdmin)
 admin.site.register(models.CardSpecialRights, CardSpecialRightsAdmin)
