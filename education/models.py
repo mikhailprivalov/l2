@@ -116,8 +116,10 @@ class EducationSpeciality(models.Model):
         return self.title
 
     @staticmethod
-    def get_speciality() -> list[dict]:
-        speciality = [{"id": i.pk, "label": f"{i.title} - {i.year_start_study} - {i.cipher} - {i.okso}"} for i in EducationSpeciality.objects.filter(hide=False)]
+    def get_speciality(year_start_study) -> list[dict]:
+        speciality = [
+            {"id": i.pk, "label": f"{i.title} - {i.year_start_study} - {i.cipher} - {i.okso}"} for i in EducationSpeciality.objects.filter(hide=False, year_start_study=year_start_study)
+        ]
         return speciality
 
     class Meta:
