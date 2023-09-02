@@ -117,7 +117,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                 achievement_person.grade = pach_grade
                 achievement_person.organization = pach_organization
                 achievement_person.mmis_id_application = pach_mmis_id_application
-                achievement_person.application = app_obj
+                achievement_person.application.pk = app_obj.pk
                 updated = ['type', 'document_number', 'document_serial', 'document_date', 'grade', 'organization', 'mmis_id_application', 'application']
                 achievement_person.save(update_fields=updated)
             else:

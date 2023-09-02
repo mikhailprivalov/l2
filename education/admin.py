@@ -86,7 +86,9 @@ class AchievementTypeAdmin(admin.ModelAdmin):
 class AchievementAdmin(admin.ModelAdmin):
     list_display = ('card', 'grade', 'application', 'mmis_id_application', 'type', 'document_date',)
     list_display_links = ('card', 'grade', 'application', 'mmis_id_application', 'type', 'document_date',)
-    raw_id_fields = ('card',)
+    raw_id_fields = ('card', 'application',)
+
+    search_fields = ('card__number',)
 
 
 class SpecialRightsTypeAdmin(admin.ModelAdmin):
