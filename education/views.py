@@ -105,7 +105,8 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             pach_serial = pach.get("СерияИД")
             pach_number = pach.get("НомерИД")
             pach_organization = pach.get("ОрганизацияИД")
-
+            pach_mmis_id_application = pach.get("Код_Заявления")
+            app_obj = ApplicationEducation.objects.filter(mmis_id=pach_mmis_id_application).first()
             achievement_person = Achievement.objects.filter(card=card, mmis_id=pach_mmis_id).first()
             if achievement_person:
                 achievement_person.type = achievement_type
@@ -114,6 +115,8 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                 achievement_person.document_date = pach_date
                 achievement_person.grade = pach_grade
                 achievement_person.organization = pach_organization
+                achievement_person.application_source_pk = pach_mmis_id_application
+                achievement_person.application = app_obj
                 achievement_person.save()
             else:
                 achievement_person = Achievement.objects.create(
@@ -125,6 +128,8 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                     document_date=pach_date,
                     grade=pach_grade,
                     organization=pach_organization,
+                    application_source_pk=pach_mmis_id_application,
+                    application=app_obj,
                 )
                 achievement_person.save()
             result_achievements.append(achievement_person.pk)
