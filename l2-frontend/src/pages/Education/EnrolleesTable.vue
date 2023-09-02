@@ -90,6 +90,19 @@ export default {
         return text ? <i class="fa fa-check-square" aria-hidden="true" style="color: #37BC9B;" />
           : <i class="fa fa-square-o" aria-hidden="true" />;
       };
+      result[result.length - 3].renderBodyCell = ({ row, column }) => {
+        const contract = row[column.field];
+        return contract ? <button
+          class="btn btn-blue-nb button-icon"
+          title="Договор"
+          v-tippy
+          on-click={() => this.openContract(contract)}
+        >
+          <i
+            class="fa-solid fa-folder"
+          />
+        </button> : '';
+      };
       result[result.length - 2].renderBodyCell = ({ row }) => {
         const enrolled = row.is_enrolled;
         const expelled = row.is_expelled;
@@ -137,6 +150,10 @@ export default {
       this.showInfoModal = true;
       this.selectedCardPk = cardPk;
       this.selectedFio = fio;
+    },
+    openContract(contractPk) {
+      console.log(contractPk);
+      window.open(`/ui/results/descriptive#{"pk":${contractPk}}`);
     },
   },
 };

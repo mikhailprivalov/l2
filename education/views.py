@@ -168,7 +168,7 @@ def get_all_enrollees(request):
                        "is_original": "",
                        "status": "",
                        "create_date": "",
-                       "research_contract_pk": None
+                       "researchContractId": None
                        }
     step = 0
     data_res = []
@@ -192,7 +192,7 @@ def get_all_enrollees(request):
             direction_num = get_confirm_research_contract(i.card_id, tuple(EDUCATION_REASEARCH_CONTRACT_IDS))
             if direction_num:
                 res_direction = [d.napravleniye_id for d in direction_num]
-                temp_result["research_contract_pk"] = res_direction[0]
+                temp_result["researchContractId"] = res_direction[0]
         temp_result["is_expelled"] = i.is_expelled
         temp_result["create_date"] = date
         if i.subj_title.lower() in ["химия", "основы химии"]:
