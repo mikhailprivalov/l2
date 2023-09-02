@@ -93,8 +93,8 @@ export default {
       result[result.length - 2].renderBodyCell = ({ row }) => {
         const enrolled = row.is_enrolled;
         const expelled = row.is_expelled;
-        if (enrolled) { return <p style="color: #37BC9B;">Зачислен</p>; }
         if (expelled) { return <p style="color: red">Отчислен</p>; }
+        if (enrolled) { return <p style="color: #37BC9B;">Зачислен</p>; }
         return '';
       };
       result.push({
