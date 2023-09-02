@@ -109,17 +109,15 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             app_obj = ApplicationEducation.objects.filter(mmis_id=pach_mmis_id_application).first()
             achievement_person = Achievement.objects.filter(card=card, mmis_id=pach_mmis_id).first()
             if achievement_person:
-                print(pach_mmis_id_application, app_obj)
                 achievement_person.type = achievement_type
                 achievement_person.document_number = pach_number
                 achievement_person.document_serial = pach_serial
                 achievement_person.document_date = pach_date
                 achievement_person.grade = pach_grade
                 achievement_person.organization = pach_organization
-                achievement_person.mmis_id_application = pach_mmis_id_application
-                achievement_person.application.pk = app_obj.pk
-                updated = ['type', 'document_number', 'document_serial', 'document_date', 'grade', 'organization', 'mmis_id_application', 'application']
-                achievement_person.save(update_fields=updated)
+                achievement_person.application_source_pk = pach_mmis_id_application
+                achievement_person.application = app_obj
+                achievement_person.save()
             else:
                 achievement_person = Achievement.objects.create(
                     card=card,
@@ -130,7 +128,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                     document_date=pach_date,
                     grade=pach_grade,
                     organization=pach_organization,
-                    mmis_id_application=pach_mmis_id_application,
+                    application_source_pk=pach_mmis_id_application,
                     application=app_obj,
                 )
                 achievement_person.save()

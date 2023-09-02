@@ -76,7 +76,7 @@ class DocumentEducation(models.Model):
 
 class FormEducation(models.Model):
     title = models.CharField(max_length=100, verbose_name='Наименование формы обучения', help_text='Очная, заочная, очно-заочная')
-    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    mmis_id = models.IntegerField(default=None, db_index=True, blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -102,8 +102,8 @@ class EducationSpeciality(models.Model):
     okso = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='ОКСО')
     cipher = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='Шифр')
     hide = models.BooleanField(help_text='Скрытие', default=False)
-    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
-    faculties_mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    mmis_id = models.IntegerField(default=None, db_index=True, blank=True, null=True)
+    faculties_mmis_id = models.IntegerField(default=None, db_index=True, blank=True, null=True)
     qualification_title = models.CharField(max_length=255, blank=True, null=True, default=None, help_text='квалификация')
     period_study = models.CharField(max_length=55, blank=True, null=True, default=None, help_text='Срок обучения')
     year_start_study = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True, help_text='год набора')
@@ -129,7 +129,7 @@ class Faculties(models.Model):
     title = models.CharField(max_length=255, help_text='Название')
     short_title = models.CharField(max_length=255, blank=True, null=True, default=None, help_text='Короткое название')
     hide = models.BooleanField(help_text='Скрытие', default=False)
-    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    mmis_id = models.IntegerField(default=None, db_index=True, blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -180,7 +180,7 @@ class ApplicationEducation(models.Model):
 
 class ExamType(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование типа экзамена', help_text='ЕГЭ, ВИ, ВИ СПО и т.д')
-    mmis_id = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
+    mmis_id = models.IntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
     hide = models.BooleanField(help_text='Скрытие', default=False)
 
     def __str__(self):
@@ -198,7 +198,7 @@ class ExamType(models.Model):
 
 class Subjects(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование предмета', help_text='Химия/основы химии, Математика и т.д')
-    mmis_id = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
+    mmis_id = models.IntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
     short_title = models.CharField(max_length=55, default="", verbose_name='Короткое наименование', help_text='Химия/основы химии, Математика и т.д')
 
     def __str__(self):
@@ -218,7 +218,7 @@ class EntranceExam(models.Model):
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
     type_test = models.ForeignKey(ExamType, verbose_name='Тип испытания', db_index=True, on_delete=models.CASCADE)
     subjects = models.ForeignKey(Subjects, verbose_name='Предмет', db_index=True, on_delete=models.CASCADE)
-    grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл')
+    grade = models.IntegerField(blank=True, null=True, verbose_name='Балл')
     application_education = models.ForeignKey(ApplicationEducation, blank=True, null=True, default=None, verbose_name='Заявление', db_index=True, on_delete=models.CASCADE)
     mmis_id = models.IntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
 
@@ -233,7 +233,7 @@ class EntranceExam(models.Model):
 class AchievementType(models.Model):
     title = models.CharField(max_length=500, verbose_name='Наименование типа достижения', help_text='ГТО, Олимпиада')
     short_title = models.CharField(max_length=255, blank=True, null=True, default=None, verbose_name='Короткое наименование', help_text='ГТО, Олимпиада')
-    mmis_id = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
+    mmis_id = models.IntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
     grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
     year = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Год утверждения')
 
@@ -259,8 +259,8 @@ class Achievement(models.Model):
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
     grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Балл достижения')
     organization = models.CharField(max_length=300, blank=True, null=True, default=None, verbose_name='Организация')
-    mmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
-    mmis_id_application = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True, verbose_name='ММИС_код_Заявления')
+    mmis_id = models.IntegerField(default=None, db_index=True, blank=True, null=True)
+    application_source_pk = models.IntegerField(default=None, db_index=True, blank=True, null=True, verbose_name='ММИС_код_Заявления')
 
     def __str__(self):
         return f"{self.card} - {self.type.title}"
