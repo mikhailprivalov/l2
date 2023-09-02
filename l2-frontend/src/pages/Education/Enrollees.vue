@@ -317,13 +317,6 @@ import api from '@/api';
 
 const showFilters = ref(false);
 
-const selectedSpecialties = ref([]);
-const specialties = ref([]);
-const getSpecialties = async () => {
-  const data = await api('/education/get-specialties');
-  specialties.value = data.result;
-};
-
 const selectedPayForms = ref([]);
 const payForms = ref([]);
 const getPayForms = async () => {
@@ -419,6 +412,13 @@ const yearApplication = ref([
   { id: 2, label: 2023 },
 ]);
 
+const selectedSpecialties = ref([]);
+const specialties = ref([]);
+const getSpecialties = async () => {
+  const data = await api('/education/get-specialties', { yearStartStudy: selectedYearApplication });
+  specialties.value = data.result;
+};
+
 const search = ref('');
 
 const enrollees = ref([]);
@@ -431,9 +431,10 @@ const filteredEnrollees = computed(() => enrollees.value.filter(applicaiton => {
 
 const getEnrollees = async () => {
   const result = await api('/education/get-enrollees', {
-    filters: { specialities: selectedSpecialties, yearStudy: selectedYearApplication },
+    filters: { specialities: selectedSpecialties, yearStudy: selectedYearApplication, enrolled: isEnrolled },
   });
   enrollees.value = result.data;
+  getSpecialties();
 };
 
 const clearFilters = () => {

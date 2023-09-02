@@ -148,6 +148,8 @@ def get_all_enrollees(request):
     specialities_pk = specialities_pk.get("value")
     year_study = filters.get("yearStudy", {})
     year_study = year_study.get("value")
+    enrolled = filters.get("enrolled", {})
+    enrolled = enrolled.get("value")
     if not year_study:
         year_study = current_year()
     else:
@@ -176,6 +178,8 @@ def get_all_enrollees(request):
     for i in data:
         date = i.app_data.strftime('%d.%m.%Y')
         if specialities_pk and (i.special_id not in specialities_pk):
+            continue
+        if enrolled and (not i.is_enrolled or i.is_expelled):
             continue
 
         if last_app_id != i.app_id and step != 0:

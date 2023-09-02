@@ -6,10 +6,19 @@ from clients.models import Citizenship
 from directions.models import EducationFinanceSource
 from education.models import ApplicationEducation, ExamType, Subjects, AchievementType, DocumentTypeEducation, SpecialRights, EducationSpeciality, Achievement
 from education.views import get_all_enrollees
+from laboratory.utils import current_year
 
 
 def get_specialties(request):
-    result = EducationSpeciality.get_speciality()
+    request_data = json.loads(request.body)
+    year_start_study = request_data.get('yearStartStudy')
+    if not year_start_study:
+        year_study = current_year()
+    else:
+        year_start_study = year_start_study.get('value')
+        year_start_study = year_start_study.get('label')
+
+    result = EducationSpeciality.get_speciality(year_start_study)
     return JsonResponse({"result": result})
 
 
