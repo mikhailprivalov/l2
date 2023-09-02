@@ -3,13 +3,13 @@
     ref="modal"
     margin-top
     margin-left-right="auto"
-    max-width="680px"
+    max-width="800px"
     show-footer="true"
     white-bg="true"
     width="100%"
     @close="hideModal"
   >
-    <span slot="header">Данные абитуриента</span>
+    <span slot="header">Данные абитуриента - {{ fio }} </span>
     <div
       slot="body"
       class="registry-body"
@@ -18,7 +18,7 @@
       <h4 class="text-center">
         Заявления
       </h4>
-      <div class="two-col-div">
+      <div class="three-col-div">
         <div
           v-for="application in applications"
           :key="application.pk"
@@ -37,6 +37,21 @@
             </label>
             {{ subject.grade }}
           </div>
+        </div>
+      </div>
+      <h4 class="text-center">Достижения</h4>
+      <div class="three-col-div">
+        <div
+          v-for="achievement in achievements"
+          :key="achievement.pk"
+        >
+          <label>Достижение № {{ achievement.pk }}</label> <br>
+          <label>Название:</label>
+          {{ achievement.title }} <br>
+          <label>Дата:</label>
+          {{ achievement.date }}<br>
+          <label>Балл:</label>
+          {{ achievement.grade }} <br>
         </div>
       </div>
     </div>
@@ -66,14 +81,20 @@ export default {
       type: Number,
       required: true,
     },
+    fio: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
       applications: [],
+      achievements: [],
     };
   },
   mounted() {
     this.getApplications();
+    this.getAchievements();
   },
   methods: {
     hideModal() {
@@ -84,17 +105,20 @@ export default {
     },
     async getApplications() {
       const data = await this.$api('/education/get-applications-by-card', { card_pk: this.card_pk });
-      console.log(data);
       this.applications = data.result;
+    },
+    async getAchievements() {
+      const data = await this.$api('/education/get-achievements-by-card', { card_pk: this.card_pk });
+      this.achievements = data.result;
     },
   },
 };
 </script>
 
 <style lang="scss" scoped>
-.two-col-div {
+.three-col-div {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-bottom: 5px;
 }
 .application-div {

@@ -22,7 +22,8 @@
     </div>
     <EnrolleesApplication
       v-if="showInfoModal"
-      :card_pk="selectCardPk"
+      :card_pk="selectedCardPk"
+      :fio="selectedFio"
     />
   </div>
 </template>
@@ -47,7 +48,8 @@ export default {
     return {
       columns: [],
       showInfoModal: false,
-      selectCardPk: -1,
+      selectedCardPk: -1,
+      selectedFio: '',
       pageSize: 100,
       page: 1,
       pageSizeOption: [100, 300, 500],
@@ -83,7 +85,7 @@ export default {
     async getColumns() {
       const data = await this.$api('/education/get-columns');
       const { result } = data;
-      result[result.length - 3].renderBodyCell = ({ row, column }) => {
+      result[result.length - 4].renderBodyCell = ({ row, column }) => {
         const text = row[column.field];
         return text ? <i class="fa fa-check-square" aria-hidden="true" style="color: #37BC9B;" />
           : <i class="fa fa-square-o" aria-hidden="true" />;
@@ -117,7 +119,7 @@ export default {
                 v-tippy
                 title="Информация"
                 class="btn btn-blue-nb button-icon"
-                on-click={() => this.openInfo(row.card)}
+                on-click={() => this.openInfo(row.card, row.fio)}
               >
                 <i
                   class="fa fa-info-circle"
@@ -131,9 +133,10 @@ export default {
     openCard(cardPk) {
       window.open(`/ui/directions?card_pk=${cardPk}&base_pk=${this.basePk}`);
     },
-    openInfo(cardPk) {
+    openInfo(cardPk, fio) {
       this.showInfoModal = true;
-      this.selectCardPk = cardPk;
+      this.selectedCardPk = cardPk;
+      this.selectedFio = fio;
     },
   },
 };

@@ -136,9 +136,9 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
 def get_all_enrollees(request):
     request_data = json.loads(request.body)
     filters = request_data.get("filters", {})
-    specialities_pk = filters.get("specialities")
+    specialities_pk = filters.get("specialities", {})
     specialities_pk = specialities_pk.get("value")
-    year_study = filters.get("yearStudy")
+    year_study = filters.get("yearStudy", {})
     year_study = year_study.get("value")
     if not year_study:
         year_study = -1
@@ -154,7 +154,7 @@ def get_all_enrollees(request):
                        "biology": 0,
                        "mathematics": 0,
                        "russian_language": 0,
-                       "achievementPoint": "",
+                       "achievementPoint": 0,
                        "totalPoints": 0,
                        "is_original": "",
                        "status": "",
@@ -178,7 +178,7 @@ def get_all_enrollees(request):
             continue
 
         if last_app_id != i.app_id and step != 0:
-            temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"]
+            temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
             data_res.append(temp_result.copy())
             temp_result = template_result.copy()
         temp_result["card"] = i.card_id
@@ -199,6 +199,6 @@ def get_all_enrollees(request):
         last_app_id = i.app_id
         step += 1
     if temp_result.get("card"):
-        temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"]
+        temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
         data_res.append(temp_result.copy())
     return data_res

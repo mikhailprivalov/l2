@@ -4,7 +4,7 @@ from django.http import JsonResponse
 
 from clients.models import Citizenship
 from directions.models import EducationFinanceSource
-from education.models import ApplicationEducation, ExamType, Subjects, AchievementType, DocumentTypeEducation, SpecialRights, EducationSpeciality
+from education.models import ApplicationEducation, ExamType, Subjects, AchievementType, DocumentTypeEducation, SpecialRights, EducationSpeciality, Achievement
 from education.views import get_all_enrollees
 
 
@@ -66,10 +66,11 @@ def get_columns(request):
         {"field": 'сhemistry', "key": 'сhemistry', "title": 'Хим.'},
         {"field": 'biology', "key": 'biology', "title": 'Био.'},
         {"field": 'russian_language', "key": 'russian_language', "title": 'Рус.'},
-        {"field": 'achievement', "key": 'achievement', "title": 'ИД'},
+        {"field": 'achievementPoint', "key": 'achievementPoint', "title": 'ИД'},
         {"field": 'achievementСhecked', "key": 'achievementСhecked', "title": 'ИД+'},
         {"field": 'totalPoints', "key": 'totalPoint', "title": 'Сумм'},
         {"field": 'is_original', "key": 'is_original', "title": 'Оригинал'},
+        {"field": 'contract', "key": 'contract', "title": 'Договор'},
         {"field": 'status', "key": 'status', "title": 'Статус'},
         {"field": 'create_date', "key": 'create_date', "title": 'Создано'},
     ]
@@ -84,4 +85,10 @@ def get_enrollees(request):
 def get_applications_by_card(request):
     request_data = json.loads(request.body)
     result = ApplicationEducation.get_applications_by_card(request_data["card_pk"])
+    return JsonResponse({"result": result})
+
+
+def get_achievement_by_card(request):
+    request_data = json.loads(request.body)
+    result = Achievement.get_achievement_by_card(request_data["card_pk"])
     return JsonResponse({"result": result})

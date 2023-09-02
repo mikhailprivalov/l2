@@ -642,6 +642,7 @@
     <EnrolleesApplication
       v-if="enrollees"
       :card_pk="selected_card.pk"
+      :fio="selected_card.family + ' ' + selected_card.name + ' ' + selected_card.twoname"
     />
     <AmbulatoryData
       v-if="ambulatory_data && selected_card.pk"

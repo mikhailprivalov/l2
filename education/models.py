@@ -263,6 +263,17 @@ class Achievement(models.Model):
     def __str__(self):
         return f"{self.card} - {self.type.title}"
 
+    @staticmethod
+    def get_achievement_by_card(card_pk):
+        achievements = [
+            {
+                "pk": i.pk,
+                "title": i.type.title,
+                "date": i.document_date.strftime('%d.%m.%Y %H:%M'),
+                "grade": i.grade
+            } for i in Achievement.objects.filter(card_id=card_pk).prefetch_related('type')]
+        return achievements
+
     class Meta:
         verbose_name = 'Достижение'
         verbose_name_plural = 'Достижения'

@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import connection
 from pyodbc import connect
 from utils.db import namedtuplefetchall
@@ -170,7 +172,7 @@ def get_achievements_by_id(connection_string: str, id_enrollee: str):
     return rows
 
 
-def get_dashboard_data():
+def get_dashboard_data(application_year=datetime.datetime.now().year):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -201,10 +203,10 @@ def get_dashboard_data():
             education_applicationeducation.speciality_id = es.id
             LEFT JOIN education_subjects exsubj ON 
             education_entranceexam.subjects_id = exsubj.id
-            WHERE ci.mmis_id IS NOT NULL
+            WHERE ci.mmis_id IS NOT NULL AND date_part('year', date) = %(application_year)s
             ORDER BY education_entranceexam.card_id, education_applicationeducation.id
             """,
-            params={},
+            params={"application_year": application_year},
         )
         rows = namedtuplefetchall(cursor)
     return rows
