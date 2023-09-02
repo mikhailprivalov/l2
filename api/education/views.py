@@ -13,7 +13,7 @@ def get_specialties(request):
     request_data = json.loads(request.body)
     year_start_study = request_data.get('yearStartStudy')
     if not year_start_study:
-        year_study = current_year()
+        year_start_study = current_year()
     else:
         year_start_study = year_start_study.get('value')
         year_start_study = year_start_study.get('label')
