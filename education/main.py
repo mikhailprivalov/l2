@@ -55,7 +55,7 @@ MAX_LOOP_TIME = 600
 def process_update_enrollees():
     time_start = time.time()
     connection_string = create_connection_string(EDUCATION_BASE_TITLE)
-    user_obj_hospital = DoctorProfile.objects.get(pk=1).hospital
+    user_obj_hospital = DoctorProfile.objects.first().hospital
     while time.time() - time_start < MAX_LOOP_TIME:
         ids_changed_enrollees = get_ids_changes_enrollees(connection_string)
         if not ids_changed_enrollees:

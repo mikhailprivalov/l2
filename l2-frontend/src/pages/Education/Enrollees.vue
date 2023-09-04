@@ -37,6 +37,7 @@
             :options="specialties"
             placeholder="Выберите направление"
             @input="getEnrollees"
+            class="treeselect-wide"
           />
         </div>
         <div class="margin-div">
