@@ -1,7 +1,8 @@
 import datetime
 
 from django.db import connection
-from pyodbc import connect
+#from pyodbc import connect
+from pymssql import connect
 from utils.db import namedtuplefetchall
 
 
@@ -44,7 +45,7 @@ def get_applications_by_card(card_pk: int):
 
 
 def get_enrollees_by_id(connection_string: str, ids_str: str):
-    with connect(connection_string).cursor() as cursor:
+    with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"], 'cp1252').cursor() as cursor:
         cursor.execute(
             f"""
             SELECT 
@@ -90,7 +91,7 @@ def get_enrollees_by_id(connection_string: str, ids_str: str):
 
 
 def get_changes(connection_string: str, last_date_time: str):
-    with connect(connection_string).cursor() as cursor:
+    with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"], 'cp1252').cursor() as cursor:
         cursor.execute(
             f"""
            SELECT [Код], [код_абитуриента], [дата]
@@ -100,11 +101,12 @@ def get_changes(connection_string: str, last_date_time: str):
             """
         )
         rows = namedtuplefetchall(cursor)
+        print(rows)
     return rows
 
 
-def get_grade_entrance_exams(connection_string: str, id_enrollee: str):
-    with connect(connection_string).cursor() as cursor:
+def get_grade_entrance_exams(connection_string, id_enrollee: str):
+    with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"], 'cp1252').cursor() as cursor:
         cursor.execute(
             f"""
                SELECT 
@@ -123,7 +125,7 @@ def get_grade_entrance_exams(connection_string: str, id_enrollee: str):
 
 
 def get_application_by_id(connection_string: str, id_enrollee: str):
-    with connect(connection_string).cursor() as cursor:
+    with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"], 'cp1252').cursor() as cursor:
         cursor.execute(
             f"""
                SELECT 
@@ -152,7 +154,7 @@ def get_application_by_id(connection_string: str, id_enrollee: str):
 
 
 def get_achievements_by_id(connection_string: str, id_enrollee: str):
-    with connect(connection_string).cursor() as cursor:
+    with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"], 'cp1252').cursor() as cursor:
         cursor.execute(
             f"""
                SELECT 
