@@ -2,8 +2,8 @@ import time
 
 from education.models import LogUpdateMMIS
 from education.sql_func import get_connection_params, get_enrollees_by_id, get_changes, get_grade_entrance_exams, get_application_by_id, get_achievements_by_id
-from education.views import update_education_individual
-from laboratory.settings import EDUCATION_BASE_TITLE, TIME_ZONE
+from education.views import update_education_individual, change_encoding_pymssql
+from laboratory.settings import EDUCATION_BASE_TITLE, TIME_ZONE, MMIS_CONNECT_WITH_PYODBC
 import pytz_deprecation_shim as pytz
 
 from users.models import DoctorProfile
@@ -11,15 +11,17 @@ from users.models import DoctorProfile
 
 def create_connection_string(settings_name: str):
     connection_params = get_connection_params(settings_name)[0]
-    connection_string = {"server": connection_params.ip_address, "user": connection_params.login, "password": connection_params.password, "database": connection_params.database, "charset": 'cp1251'}
-    # connection_string = (
-    #     f"DRIVER={connection_params.driver}; SERVER={connection_params.ip_address}; DATABASE={connection_params.database}; Encrypt={connection_params.encrypt}; "
-    #     f"UID={connection_params.login}; PWD={connection_params.password}"
-    # )
+    if MMIS_CONNECT_WITH_PYODBC:
+        connection_string = (
+            f"DRIVER={connection_params.driver}; SERVER={connection_params.ip_address},{connection_params.port}; DATABASE={connection_params.database}; Encrypt={connection_params.encrypt}; "
+            f"UID={connection_params.login}; PWD={connection_params.password}"
+        )
+    else:
+        connection_string = {"server": connection_params.ip_address, "user": connection_params.login, "password": connection_params.password, "database": connection_params.database}
     return connection_string
 
 
-def get_enrollees(connection_string: str, list_id: list):
+def get_enrollees(connection_string, list_id: list):
     list_id_str = ", ".join(map(str, list_id))
     enrollees_person_data = get_enrollees_by_id(connection_string, list_id_str)
     enrollees_grades = get_grade_entrance_exams(connection_string, list_id_str)
@@ -78,10 +80,10 @@ def process_update_enrollees():
                     enrollees_application_data[i.ID] = [
                         {
                             "Код_Заявления": i.Код_Заявления,
-                            "Основания": i.Основания,
+                            "Основания":  change_encoding_pymssql(i.Основания),
                             "Код_Специальности": i.Код_Специальности,
-                            "НомерЛД": i.НомерЛД,
-                            "Шифр": i.Шифр,
+                            "НомерЛД": change_encoding_pymssql(i.НомерЛД),
+                            "Шифр": change_encoding_pymssql(i.Шифр),
                             "Факультет": i.Факультет,
                             "Оригинал": i.Оригинал,
                             "Дата_Подачи": i.Дата_Подачи,
@@ -96,10 +98,10 @@ def process_update_enrollees():
                     tmp_data.append(
                         {
                             "Код_Заявления": i.Код_Заявления,
-                            "Основания": i.Основания,
+                            "Основания": change_encoding_pymssql(i.Основания),
                             "Код_Специальности": i.Код_Специальности,
-                            "НомерЛД": i.НомерЛД,
-                            "Шифр": i.Шифр,
+                            "НомерЛД": change_encoding_pymssql(i.НомерЛД),
+                            "Шифр": change_encoding_pymssql(i.Шифр),
                             "Факультет": i.Факультет,
                             "Оригинал": i.Оригинал,
                             "Дата_Подачи": i.Дата_Подачи,
@@ -114,15 +116,16 @@ def process_update_enrollees():
             for i in enrollees_achievements:
                 if not enrollees_achievements_data.get(i.ID):
                     enrollees_achievements_data[i.ID] = [
-                        {"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД, "ОрганизацияИД": i.ОрганизацияИД,
+                        {"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД,
+                         "ОрганизацияИД": change_encoding_pymssql(i.ОрганизацияИД),
                          "Код_Заявления": i.Код_Заявления}
                     ]
                 else:
                     tmp_data = enrollees_achievements_data.get(i.ID, [])
-                    tmp_data.append({"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД, "ОрганизацияИД": i.ОрганизацияИД,
+                    tmp_data.append({"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД,
+                                     "ОрганизацияИД": change_encoding_pymssql(i.ОрганизацияИД),
                                      "Код_Заявления": i.Код_Заявления})
                     enrollees_achievements_data[i.ID] = tmp_data.copy()
-
             for i in enrollees_person_data:
                 result = update_education_individual(
                     i, user_obj_hospital, enrollees_application_data.get(i.ID, []), enrollees_grade_data.get(i.ID, []), enrollees_achievements_data.get(i.ID, [])

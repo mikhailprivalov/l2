@@ -391,6 +391,7 @@ DAYS_AGO_SEARCH_RESULT = {}  # {"isLab: 90", "isInstrument: 365"}
 NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL = False
 EDUCATION_BASE_TITLE = ''
 EDUCATION_REASEARCH_CONTRACT_IDS = []
+MMIS_CONNECT_WITH_PYODBC = False
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
@@ -448,6 +449,7 @@ if ENV_SECRET_KEY:
 
 if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
+
 
 
 # db = DATABASES.get('default', {})
