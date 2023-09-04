@@ -8,11 +8,12 @@ from laboratory.utils import current_year
 
 
 def change_encoding_pymssql(text):
+    result = None
     if MMIS_CONNECT_WITH_PYODBC:
-        return text
+        result = text
     else:
         result = text.encode("latin-1").decode('cp1251')
-        return result
+    return result
 
 
 def update_education_individual(person_data, user_hospital_obj, person_applications, person_grade, person_achievements):
