@@ -17,7 +17,13 @@ def create_connection_string(settings_name: str):
             f"UID={connection_params.login}; PWD={connection_params.password}"
         )
     else:
-        connection_string = {"server": connection_params.ip_address, "port": connection_params.port, "user": connection_params.login, "password": connection_params.password, "database": connection_params.database}
+        connection_string = {
+            "server": connection_params.ip_address,
+            "port": connection_params.port,
+            "user": connection_params.login,
+            "password": connection_params.password,
+            "database": connection_params.database,
+        }
     return connection_string
 
 
@@ -80,7 +86,7 @@ def process_update_enrollees():
                     enrollees_application_data[i.ID] = [
                         {
                             "Код_Заявления": i.Код_Заявления,
-                            "Основания":  change_encoding_cp1251(i.Основания),
+                            "Основания": change_encoding_cp1251(i.Основания),
                             "Код_Специальности": i.Код_Специальности,
                             "НомерЛД": change_encoding_cp1251(i.НомерЛД),
                             "Шифр": change_encoding_cp1251(i.Шифр),
@@ -116,15 +122,31 @@ def process_update_enrollees():
             for i in enrollees_achievements:
                 if not enrollees_achievements_data.get(i.ID):
                     enrollees_achievements_data[i.ID] = [
-                        {"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД,
-                         "ОрганизацияИД": change_encoding_cp1251(i.ОрганизацияИД),
-                         "Код_Заявления": i.Код_Заявления}
+                        {
+                            "КодИД": i.КодИД,
+                            "ДатаИД": i.ДатаИД,
+                            "БаллИД": i.БаллИД,
+                            "Код": i.Код,
+                            "СерияИД": i.СерияИД,
+                            "НомерИД": i.НомерИД,
+                            "ОрганизацияИД": change_encoding_cp1251(i.ОрганизацияИД),
+                            "Код_Заявления": i.Код_Заявления,
+                        }
                     ]
                 else:
                     tmp_data = enrollees_achievements_data.get(i.ID, [])
-                    tmp_data.append({"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД,
-                                     "ОрганизацияИД": change_encoding_cp1251(i.ОрганизацияИД),
-                                     "Код_Заявления": i.Код_Заявления})
+                    tmp_data.append(
+                        {
+                            "КодИД": i.КодИД,
+                            "ДатаИД": i.ДатаИД,
+                            "БаллИД": i.БаллИД,
+                            "Код": i.Код,
+                            "СерияИД": i.СерияИД,
+                            "НомерИД": i.НомерИД,
+                            "ОрганизацияИД": change_encoding_cp1251(i.ОрганизацияИД),
+                            "Код_Заявления": i.Код_Заявления,
+                        }
+                    )
                     enrollees_achievements_data[i.ID] = tmp_data.copy()
             for i in enrollees_person_data:
                 result = update_education_individual(

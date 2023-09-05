@@ -20,7 +20,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
                 "family": change_encoding_cp1251(person_data.Фамилия),
                 "name": change_encoding_cp1251(person_data.Имя),
                 "patronymic": change_encoding_cp1251(person_data.Отчество),
-                "sex": "м" if "м" in  change_encoding_cp1251(person_data.Пол.lower()) else "ж",
+                "sex": "м" if "м" in change_encoding_cp1251(person_data.Пол.lower()) else "ж",
                 "birthday": person_data.Дата_Рождения.strftime("%d.%m.%Y"),
                 "snils": person_data.СНИЛС if person_data.СНИЛС else "",
             },
