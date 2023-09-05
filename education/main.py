@@ -2,7 +2,7 @@ import time
 
 from education.models import LogUpdateMMIS
 from education.sql_func import get_connection_params, get_enrollees_by_id, get_changes, get_grade_entrance_exams, get_application_by_id, get_achievements_by_id
-from education.views import update_education_individual, change_encoding_pymssql
+from education.views import update_education_individual, change_encoding_cp1251
 from laboratory.settings import EDUCATION_BASE_TITLE, TIME_ZONE, MMIS_CONNECT_WITH_PYODBC
 import pytz_deprecation_shim as pytz
 
@@ -80,10 +80,10 @@ def process_update_enrollees():
                     enrollees_application_data[i.ID] = [
                         {
                             "Код_Заявления": i.Код_Заявления,
-                            "Основания":  change_encoding_pymssql(i.Основания),
+                            "Основания":  change_encoding_cp1251(i.Основания),
                             "Код_Специальности": i.Код_Специальности,
-                            "НомерЛД": change_encoding_pymssql(i.НомерЛД),
-                            "Шифр": change_encoding_pymssql(i.Шифр),
+                            "НомерЛД": change_encoding_cp1251(i.НомерЛД),
+                            "Шифр": change_encoding_cp1251(i.Шифр),
                             "Факультет": i.Факультет,
                             "Оригинал": i.Оригинал,
                             "Дата_Подачи": i.Дата_Подачи,
@@ -98,10 +98,10 @@ def process_update_enrollees():
                     tmp_data.append(
                         {
                             "Код_Заявления": i.Код_Заявления,
-                            "Основания": change_encoding_pymssql(i.Основания),
+                            "Основания": change_encoding_cp1251(i.Основания),
                             "Код_Специальности": i.Код_Специальности,
-                            "НомерЛД": change_encoding_pymssql(i.НомерЛД),
-                            "Шифр": change_encoding_pymssql(i.Шифр),
+                            "НомерЛД": change_encoding_cp1251(i.НомерЛД),
+                            "Шифр": change_encoding_cp1251(i.Шифр),
                             "Факультет": i.Факультет,
                             "Оригинал": i.Оригинал,
                             "Дата_Подачи": i.Дата_Подачи,
@@ -117,13 +117,13 @@ def process_update_enrollees():
                 if not enrollees_achievements_data.get(i.ID):
                     enrollees_achievements_data[i.ID] = [
                         {"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД,
-                         "ОрганизацияИД": change_encoding_pymssql(i.ОрганизацияИД),
+                         "ОрганизацияИД": change_encoding_cp1251(i.ОрганизацияИД),
                          "Код_Заявления": i.Код_Заявления}
                     ]
                 else:
                     tmp_data = enrollees_achievements_data.get(i.ID, [])
                     tmp_data.append({"КодИД": i.КодИД, "ДатаИД": i.ДатаИД, "БаллИД": i.БаллИД, "Код": i.Код, "СерияИД": i.СерияИД, "НомерИД": i.НомерИД,
-                                     "ОрганизацияИД": change_encoding_pymssql(i.ОрганизацияИД),
+                                     "ОрганизацияИД": change_encoding_cp1251(i.ОрганизацияИД),
                                      "Код_Заявления": i.Код_Заявления})
                     enrollees_achievements_data[i.ID] = tmp_data.copy()
             for i in enrollees_person_data:

@@ -7,7 +7,7 @@ from laboratory.settings import EDUCATION_REASEARCH_CONTRACT_IDS, MMIS_CONNECT_W
 from laboratory.utils import current_year
 
 
-def change_encoding_pymssql(text):
+def change_encoding_cp1251(text):
     if not MMIS_CONNECT_WITH_PYODBC:
         text = text.encode("latin-1").decode('cp1251')
     return text
@@ -17,10 +17,10 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
     try:
         card = Individual.import_from_simple_data(
             {
-                "family": change_encoding_pymssql(person_data.Фамилия),
-                "name": change_encoding_pymssql(person_data.Имя),
-                "patronymic": change_encoding_pymssql(person_data.Отчество),
-                "sex": "м" if "м" in  change_encoding_pymssql(person_data.Пол.lower()) else "ж",
+                "family": change_encoding_cp1251(person_data.Фамилия),
+                "name": change_encoding_cp1251(person_data.Имя),
+                "patronymic": change_encoding_cp1251(person_data.Отчество),
+                "sex": "м" if "м" in  change_encoding_cp1251(person_data.Пол.lower()) else "ж",
                 "birthday": person_data.Дата_Рождения.strftime("%d.%m.%Y"),
                 "snils": person_data.СНИЛС if person_data.СНИЛС else "",
             },
