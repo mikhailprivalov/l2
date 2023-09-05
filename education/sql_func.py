@@ -51,7 +51,8 @@ def execute_sql_by_connect(query, connection_string):
     if MMIS_CONNECT_WITH_PYODBC:
         connect_as = connect(connection_string).cursor()
     else:
-        connect_as = connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"]).cursor()
+        connect_as = connect(server=connection_string["server"], port=connection_string["port"], user=connection_string["user"], password=connection_string["password"],
+                             database=connection_string["database"]).cursor()
     with connect_as as cursor:
         cursor.execute(query)
         rows = namedtuplefetchall(cursor)

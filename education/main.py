@@ -17,7 +17,7 @@ def create_connection_string(settings_name: str):
             f"UID={connection_params.login}; PWD={connection_params.password}"
         )
     else:
-        connection_string = {"server": connection_params.ip_address, "user": connection_params.login, "password": connection_params.password, "database": connection_params.database}
+        connection_string = {"server": connection_params.ip_address, "port": connection_params.port, "user": connection_params.login, "password": connection_params.password, "database": connection_params.database}
     return connection_string
 
 
