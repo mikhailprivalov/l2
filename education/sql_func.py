@@ -1,5 +1,3 @@
-import datetime
-
 from django.db import connection
 from laboratory.settings import MMIS_CONNECT_WITH_PYODBC
 
