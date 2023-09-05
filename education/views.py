@@ -8,7 +8,7 @@ from laboratory.utils import current_year
 
 
 def change_encoding_cp1251(text):
-    if not MMIS_CONNECT_WITH_PYODBC:
+    if not MMIS_CONNECT_WITH_PYODBC and text:
         text = text.encode("latin-1").decode('cp1251')
     return text
 
