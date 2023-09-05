@@ -47,6 +47,17 @@ def get_applications_by_card(card_pk: int):
     return rows
 
 
+def execute_sql_by_connect(query, connection_string):
+    if MMIS_CONNECT_WITH_PYODBC:
+        connect_as = connect(connection_string).cursor()
+    else:
+        connect_as = connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"]).cursor()
+    with connect_as as cursor:
+        cursor.execute(query)
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def get_enrollees_by_id(connection_string, ids_str: str):
     query = f"""
             SELECT 
@@ -86,15 +97,7 @@ def get_enrollees_by_id(connection_string, ids_str: str):
             FROM [Абитуриенты].[dbo].[Все_Абитуриенты] 
             WHERE [Абитуриенты].[dbo].[Все_Абитуриенты].[ID] IN ({ids_str}) 
             """
-    if MMIS_CONNECT_WITH_PYODBC:
-        with connect(connection_string).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    else:
-        with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"]).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
 def get_changes(connection_string, last_date_time: str):
@@ -104,15 +107,7 @@ def get_changes(connection_string, last_date_time: str):
            WHERE [Абитуриенты].[dbo].[Логи].[дата] >= CAST('{last_date_time}' AS datetime2) and код_абитуриента <> 0
            ORDER BY [Абитуриенты].[dbo].[Логи].[дата]
             """
-    if MMIS_CONNECT_WITH_PYODBC:
-        with connect(connection_string).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    else:
-        with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"]).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
 def get_grade_entrance_exams(connection_string, id_enrollee: str):
@@ -127,15 +122,7 @@ def get_grade_entrance_exams(connection_string, id_enrollee: str):
                FROM [Абитуриенты].[dbo].[Все_Оценки]
                WHERE [Абитуриенты].[dbo].[Все_Оценки].[ID] IN ({id_enrollee}) 
                """
-    if MMIS_CONNECT_WITH_PYODBC:
-        with connect(connection_string).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    else:
-        with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"]).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
 def get_application_by_id(connection_string, id_enrollee: str):
@@ -160,15 +147,7 @@ def get_application_by_id(connection_string, id_enrollee: str):
                [Абитуриенты].[dbo].[Все_Заявления].[Удалена] = 0 AND 
                [Абитуриенты].[dbo].[Все_Заявления].[ПричинаУдаления] = ''
                """
-    if MMIS_CONNECT_WITH_PYODBC:
-        with connect(connection_string).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    else:
-        with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"]).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
 def get_achievements_by_id(connection_string: str, id_enrollee: str):
@@ -186,15 +165,7 @@ def get_achievements_by_id(connection_string: str, id_enrollee: str):
                FROM [Абитуриенты].[dbo].[Достижения]
                WHERE [Абитуриенты].[dbo].[Достижения].[ID] IN ({id_enrollee}) 
                """
-    if MMIS_CONNECT_WITH_PYODBC:
-        with connect(connection_string).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    else:
-        with connect(connection_string["server"], connection_string["user"], connection_string["password"], connection_string["database"]).cursor() as cursor:
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
 def get_dashboard_data(application_year=datetime.datetime.now().year):
