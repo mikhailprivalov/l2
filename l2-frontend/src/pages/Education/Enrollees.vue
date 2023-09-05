@@ -294,7 +294,7 @@
       <label>Поиск</label>
       <input
         v-model="search"
-        placeholder="Введите ФИО..."
+        placeholder="Введите ФИО... "
         class="form-control"
       >
     </div>
