@@ -161,7 +161,7 @@ def get_all_enrollees(request):
     else:
         year_study = year_study.get('label')
 
-    data = get_dashboard_data(year_study)
+    data = get_dashboard_data(year_study, tuple(EDUCATION_REASEARCH_CONTRACT_IDS))
     last_app_id = -1
     template_result = {"card": "",
                        "fio": "",
@@ -199,10 +199,7 @@ def get_all_enrollees(request):
         temp_result["is_original"] = i.original
         temp_result["is_enrolled"] = i.is_enrolled
         if i.is_enrolled and EDUCATION_REASEARCH_CONTRACT_IDS:
-            direction_num = get_confirm_research_contract(i.card_id, tuple(EDUCATION_REASEARCH_CONTRACT_IDS))
-            if direction_num:
-                res_direction = [d.napravleniye_id for d in direction_num]
-                temp_result["researchContractId"] = res_direction[0]
+            temp_result["researchContractId"] = i.direction_id
         temp_result["is_expelled"] = i.is_expelled
         temp_result["create_date"] = date
         if i.subj_title.lower() in ["химия", "основы химии"]:
