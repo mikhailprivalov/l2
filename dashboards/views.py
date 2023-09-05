@@ -21,7 +21,7 @@ def exec_query(dashboard_pk, dates_param):
     metadata_charts = get_charts_dataset(dashboard_pk)
     # обход по графикам датасетов
     for md in metadata_charts:
-        if not check_server_port(md.ip_address, md.port):
+        if not check_server_port(md.ip_address, int(md.port)):
             continue
         if not data_chart.get(md.chart_id):
             data_chart[md.chart_id] = [
