@@ -171,7 +171,7 @@ def get_achievements_by_id(connection_string: str, id_enrollee: str):
     return execute_sql_by_connect(query, connection_string)
 
 
-def get_dashboard_data(application_year=datetime.datetime.now().year):
+def get_dashboard_data(application_year, researches):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -190,7 +190,8 @@ def get_dashboard_data(application_year=datetime.datetime.now().year):
             education_entranceexam.grade,
             es.title as special_title,
             es.id as special_id,
-            exsubj.title as subject_title
+            exsubj.title as subject_title,
+            pl.napravleniye_id as direction_id
             FROM education_entranceexam
             LEFT JOIN clients_card cc ON
             cc.id = education_entranceexam.card_id
@@ -202,10 +203,20 @@ def get_dashboard_data(application_year=datetime.datetime.now().year):
             education_applicationeducation.speciality_id = es.id
             LEFT JOIN education_subjects exsubj ON 
             education_entranceexam.subjects_id = exsubj.id
+            LeFT JOIN  
+                    (SELECT
+            directions_issledovaniya.napravleniye_id,
+            dn.client_id
+            FROM directions_issledovaniya
+            LEFT JOIN directions_napravleniya dn ON
+            dn.id = directions_issledovaniya.napravleniye_id
+            WHERE directions_issledovaniya.research_id in %(researches)s and directions_issledovaniya.time_confirmation IS NOT NULL
+                        ) as pl ON pl.client_id=education_entranceexam.card_id
+            
             WHERE ci.mmis_id IS NOT NULL AND date_part('year', education_applicationeducation.date) = %(application_year)s
             ORDER BY education_entranceexam.card_id, education_applicationeducation.id
             """,
-            params={"application_year": application_year},
+            params={"application_year": application_year, "researches": researches},
         )
         rows = namedtuplefetchall(cursor)
     return rows
