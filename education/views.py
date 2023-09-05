@@ -3,18 +3,24 @@ from education.models import ApplicationEducation, EducationSpeciality, Entrance
 from education.sql_func import get_dashboard_data, get_confirm_research_contract
 import simplejson as json
 
-from laboratory.settings import EDUCATION_REASEARCH_CONTRACT_IDS
+from laboratory.settings import EDUCATION_REASEARCH_CONTRACT_IDS, MMIS_CONNECT_WITH_PYODBC
 from laboratory.utils import current_year
+
+
+def change_encoding_cp1251(text):
+    if not MMIS_CONNECT_WITH_PYODBC and text:
+        text = text.encode("latin-1").decode('cp1251')
+    return text
 
 
 def update_education_individual(person_data, user_hospital_obj, person_applications, person_grade, person_achievements):
     try:
         card = Individual.import_from_simple_data(
             {
-                "family": person_data.Фамилия,
-                "name": person_data.Имя,
-                "patronymic": person_data.Отчество,
-                "sex": "м" if "м" in person_data.Пол.lower() else "ж",
+                "family": change_encoding_cp1251(person_data.Фамилия),
+                "name": change_encoding_cp1251(person_data.Имя),
+                "patronymic": change_encoding_cp1251(person_data.Отчество),
+                "sex": "м" if "м" in change_encoding_cp1251(person_data.Пол.lower()) else "ж",
                 "birthday": person_data.Дата_Рождения.strftime("%d.%m.%Y"),
                 "snils": person_data.СНИЛС if person_data.СНИЛС else "",
             },
@@ -41,7 +47,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             date = pa.get("Дата_Подачи")
             is_checked = pa.get("Проверено")
             facultet_id = pa.get("Факультет")
-            original = pa.get("Оригинал")
+            original = pa.get("Оригинал") or False
             facultet = Faculties.objects.filter(mmis_id=facultet_id).first()
             if application:
                 application.speciality = education_speciality

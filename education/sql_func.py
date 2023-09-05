@@ -1,7 +1,12 @@
 import datetime
 
 from django.db import connection
-from pyodbc import connect
+from laboratory.settings import MMIS_CONNECT_WITH_PYODBC
+
+if MMIS_CONNECT_WITH_PYODBC:
+    from pyodbc import connect
+else:
+    from pymssql import connect
 from utils.db import namedtuplefetchall
 
 
@@ -43,10 +48,21 @@ def get_applications_by_card(card_pk: int):
     return rows
 
 
-def get_enrollees_by_id(connection_string: str, ids_str: str):
-    with connect(connection_string).cursor() as cursor:
-        cursor.execute(
-            f"""
+def execute_sql_by_connect(query, connection_string):
+    if MMIS_CONNECT_WITH_PYODBC:
+        connect_as = connect(connection_string).cursor()
+    else:
+        connect_as = connect(
+            server=connection_string["server"], port=connection_string["port"], user=connection_string["user"], password=connection_string["password"], database=connection_string["database"]
+        ).cursor()
+    with connect_as as cursor:
+        cursor.execute(query)
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_enrollees_by_id(connection_string, ids_str: str):
+    query = f"""
             SELECT 
               [ID], 
               [Фамилия], 
@@ -84,29 +100,21 @@ def get_enrollees_by_id(connection_string: str, ids_str: str):
             FROM [Абитуриенты].[dbo].[Все_Абитуриенты] 
             WHERE [Абитуриенты].[dbo].[Все_Абитуриенты].[ID] IN ({ids_str}) 
             """
-        )
-        rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
-def get_changes(connection_string: str, last_date_time: str):
-    with connect(connection_string).cursor() as cursor:
-        cursor.execute(
-            f"""
+def get_changes(connection_string, last_date_time: str):
+    query = f"""
            SELECT [Код], [код_абитуриента], [дата]
            FROM [Абитуриенты].[dbo].[Логи]
            WHERE [Абитуриенты].[dbo].[Логи].[дата] >= CAST('{last_date_time}' AS datetime2) and код_абитуриента <> 0
            ORDER BY [Абитуриенты].[dbo].[Логи].[дата]
             """
-        )
-        rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
-def get_grade_entrance_exams(connection_string: str, id_enrollee: str):
-    with connect(connection_string).cursor() as cursor:
-        cursor.execute(
-            f"""
+def get_grade_entrance_exams(connection_string, id_enrollee: str):
+    query = f"""
                SELECT 
                  [ID],
                  [Код],
@@ -117,15 +125,11 @@ def get_grade_entrance_exams(connection_string: str, id_enrollee: str):
                FROM [Абитуриенты].[dbo].[Все_Оценки]
                WHERE [Абитуриенты].[dbo].[Все_Оценки].[ID] IN ({id_enrollee}) 
                """
-        )
-        rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
-def get_application_by_id(connection_string: str, id_enrollee: str):
-    with connect(connection_string).cursor() as cursor:
-        cursor.execute(
-            f"""
+def get_application_by_id(connection_string, id_enrollee: str):
+    query = f"""
                SELECT 
                  [Код_Заявления],
                  [ID], 
@@ -146,15 +150,11 @@ def get_application_by_id(connection_string: str, id_enrollee: str):
                [Абитуриенты].[dbo].[Все_Заявления].[Удалена] = 0 AND 
                [Абитуриенты].[dbo].[Все_Заявления].[ПричинаУдаления] = ''
                """
-        )
-        rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
 def get_achievements_by_id(connection_string: str, id_enrollee: str):
-    with connect(connection_string).cursor() as cursor:
-        cursor.execute(
-            f"""
+    query = f"""
                SELECT 
                  [ID], 
                  [Код], 
@@ -168,9 +168,7 @@ def get_achievements_by_id(connection_string: str, id_enrollee: str):
                FROM [Абитуриенты].[dbo].[Достижения]
                WHERE [Абитуриенты].[dbo].[Достижения].[ID] IN ({id_enrollee}) 
                """
-        )
-        rows = namedtuplefetchall(cursor)
-    return rows
+    return execute_sql_by_connect(query, connection_string)
 
 
 def get_dashboard_data(application_year=datetime.datetime.now().year):
