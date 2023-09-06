@@ -160,21 +160,22 @@ def get_all_enrollees(request):
         year_study = year_study.get('label')
     data = get_dashboard_data(year_study, tuple(EDUCATION_REASEARCH_CONTRACT_IDS))
     last_app_id = -1
-    template_result = {"card": "",
-                       "fio": "",
-                       "applicationSpeciality": "",
-                       "applicationPersonNumber": "",
-                       "сhemistry": 0,
-                       "biology": 0,
-                       "mathematics": 0,
-                       "russian_language": 0,
-                       "achievementPoint": 0,
-                       "totalPoints": 0,
-                       "is_original": "",
-                       "status": "",
-                       "create_date": "",
-                       "researchContractId": None
-                       }
+    template_result = {
+        "card": "",
+        "fio": "",
+        "applicationSpeciality": "",
+        "applicationPersonNumber": "",
+        "сhemistry": 0,
+        "biology": 0,
+        "mathematics": 0,
+        "russian_language": 0,
+        "achievementPoint": 0,
+        "totalPoints": 0,
+        "is_original": "",
+        "status": "",
+        "create_date": "",
+        "researchContractId": None,
+    }
     step = 0
     data_res = []
     temp_result = template_result.copy()

@@ -164,12 +164,7 @@ class ApplicationEducation(models.Model):
         current_application = -1
         for i in data:
             if current_application != i.application_pk:
-                applications.append({
-                    "pk": i.application_pk,
-                    "date": i.date.strftime('%d.%m.%Y'),
-                    "speciality": i.spec_title,
-                    "subjects": [{"title": i.subject_title, "grade": i.grade}]
-                })
+                applications.append({"pk": i.application_pk, "date": i.date.strftime('%d.%m.%Y'), "speciality": i.spec_title, "subjects": [{"title": i.subject_title, "grade": i.grade}]})
             else:
                 applications[-1]["subjects"].append({"title": i.subject_title, "grade": i.grade})
             current_application = i.application_pk
@@ -255,7 +250,7 @@ class AchievementType(models.Model):
 class Achievement(models.Model):
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
     type = models.ForeignKey(AchievementType, verbose_name='Тип достижения', db_index=True, on_delete=models.CASCADE)
-    application = models.ForeignKey(ApplicationEducation, default=None, db_index=True, blank=True, null=True,  verbose_name='Заявление', on_delete=models.CASCADE)
+    application = models.ForeignKey(ApplicationEducation, default=None, db_index=True, blank=True, null=True, verbose_name='Заявление', on_delete=models.CASCADE)
     document_number = models.CharField(max_length=255, blank=True, null=True, default=None, verbose_name='Номер документа')
     document_serial = models.CharField(max_length=255, blank=True, null=True, default=None, verbose_name='Серия документа')
     document_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата документа')
@@ -270,12 +265,9 @@ class Achievement(models.Model):
     @staticmethod
     def get_achievement_by_card(card_pk):
         achievements = [
-            {
-                "pk": i.pk,
-                "title": i.type.title,
-                "date": i.document_date.strftime('%d.%m.%Y %H:%M'),
-                "grade": i.grade
-            } for i in Achievement.objects.filter(card_id=card_pk).prefetch_related('type')]
+            {"pk": i.pk, "title": i.type.title, "date": i.document_date.strftime('%d.%m.%Y %H:%M'), "grade": i.grade}
+            for i in Achievement.objects.filter(card_id=card_pk).prefetch_related('type')
+        ]
         return achievements
 
     class Meta:

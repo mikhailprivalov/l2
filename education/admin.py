@@ -49,8 +49,14 @@ class ApplicationEducationAdmin(admin.ModelAdmin):
 
 
 class ExamTypeAdmin(admin.ModelAdmin):
-    list_display = ('title', 'mmis_id',)
-    list_display_links = ('title', 'mmis_id',)
+    list_display = (
+        'title',
+        'mmis_id',
+    )
+    list_display_links = (
+        'title',
+        'mmis_id',
+    )
 
 
 class EntranceExamAdmin(admin.ModelAdmin):
@@ -84,9 +90,26 @@ class AchievementTypeAdmin(admin.ModelAdmin):
 
 
 class AchievementAdmin(admin.ModelAdmin):
-    list_display = ('card', 'grade', 'application', 'application_source_pk', 'type', 'document_date',)
-    list_display_links = ('card', 'grade', 'application', 'application_source_pk', 'type', 'document_date',)
-    raw_id_fields = ('card', 'application',)
+    list_display = (
+        'card',
+        'grade',
+        'application',
+        'application_source_pk',
+        'type',
+        'document_date',
+    )
+    list_display_links = (
+        'card',
+        'grade',
+        'application',
+        'application_source_pk',
+        'type',
+        'document_date',
+    )
+    raw_id_fields = (
+        'card',
+        'application',
+    )
 
     search_fields = ('card__number',)
 
