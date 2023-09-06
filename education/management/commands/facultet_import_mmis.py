@@ -31,7 +31,7 @@ class Command(BaseCommand):
             else:
                 r = Faculties.objects.filter(mmis_id=cells[code])
                 if not r.exists():
-                    Faculties(mmis_id=cells[code], title=cells[title],short_title=cells[short_title]).save()
+                    Faculties(mmis_id=cells[code], title=cells[title], short_title=cells[short_title]).save()
                 elif r.exists():
                     r = r[0]
                     updated = []

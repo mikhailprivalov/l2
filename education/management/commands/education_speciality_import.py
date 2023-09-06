@@ -30,7 +30,16 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        mmis_id, title, okso, cipher, faculties_mmis_id, qualification_title, period_study, year_start_study = "", "", "", "", "", "", "", "",
+        mmis_id, title, okso, cipher, faculties_mmis_id, qualification_title, period_study, year_start_study = (
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+        )
         oo_count, cn_count, sn_count, total_count = "", "", "", ""
 
         for row in ws.rows:
@@ -77,7 +86,7 @@ class Command(BaseCommand):
                         oo_count=data_oo_count,
                         cn_count=data_cn_count,
                         sn_count=data_sn_count,
-                        total_count=data_total_count
+                        total_count=data_total_count,
                     ).save()
                 elif r.exists():
                     r = r[0]

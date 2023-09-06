@@ -15,5 +15,5 @@ urlpatterns = [
     path('get-applications-by-card', views.get_applications_by_card),
     path('get-enrollees', views.get_enrollees),
     path('get-columns', views.get_columns),
-    path('get-achievements-by-card', views.get_achievement_by_card)
+    path('get-achievements-by-card', views.get_achievement_by_card),
 ]

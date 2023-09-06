@@ -39,10 +39,7 @@ def get_citizenship(request):
 
 def get_application_filters(request):
     sources = []
-    statuses = [
-        {"id": 1, "label": "Зачислен"},
-        {"id": 2, "label": "Отчислен"}
-    ]
+    statuses = [{"id": 1, "label": "Зачислен"}, {"id": 2, "label": "Отчислен"}]
     stages = []
     return JsonResponse({"sources": sources, "statuses": statuses, "stages": stages})
 
