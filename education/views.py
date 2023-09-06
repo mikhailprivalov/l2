@@ -1,6 +1,6 @@
 from clients.models import Individual
 from education.models import ApplicationEducation, EducationSpeciality, EntranceExam, Subjects, ExamType, Faculties, Achievement, AchievementType
-from education.sql_func import get_dashboard_data, get_confirm_research_contract
+from education.sql_func import get_dashboard_data
 import simplejson as json
 
 from laboratory.settings import EDUCATION_REASEARCH_CONTRACT_IDS, MMIS_CONNECT_WITH_PYODBC
