@@ -36,8 +36,8 @@
             :multiple="true"
             :options="specialties"
             placeholder="Выберите направление"
-            @input="getEnrollees"
             class="treeselect-wide"
+            @input="getEnrollees"
           />
         </div>
         <div class="margin-div">
@@ -87,10 +87,10 @@
         <div class="margin-div">
           <label>Статус заявлений</label>
           <Treeselect
-            v-model="selectedApplicationStatuses"
-            :multiple="true"
+            v-model="selectedApplicationStatus"
             :options="applicationStatuses"
             placeholder="Выберите статус"
+            @input="getEnrollees"
           />
         </div>
         <div class="margin-div">
@@ -237,30 +237,6 @@
               class="label-for-checkbox"
             >Оригинал</label>
           </div>
-          <div>
-            <input
-              id="isEnrolled"
-              v-model="isEnrolled"
-              class="input-checkbox"
-              type="checkbox"
-            >
-            <label
-              for="isEnrolled"
-              class="label-for-checkbox"
-            >Зачислен</label>
-          </div>
-          <div>
-            <input
-              id="isExpelled"
-              v-model="isExpelled"
-              class="input-checkbox"
-              type="checkbox"
-            >
-            <label
-              for="isExpelled"
-              class="label-for-checkbox"
-            >Отчислен</label>
-          </div>
         </div>
         <div class="margin-div flex-div">
           <div>
@@ -357,7 +333,7 @@ const getCitizenship = async () => {
 
 const selectedApplicationSources = ref([]);
 const applicationSources = ref([]);
-const selectedApplicationStatuses = ref([]);
+const selectedApplicationStatus = ref(null);
 const applicationStatuses = ref([]);
 const selectedApplicationStage = ref(null);
 const applicationStages = ref([]);
@@ -433,7 +409,12 @@ const filteredEnrollees = computed(() => enrollees.value.filter(applicaiton => {
 
 const getEnrollees = async () => {
   const result = await api('/education/get-enrollees', {
-    filters: { specialities: selectedSpecialties, yearStudy: selectedYearApplication, enrolled: isEnrolled },
+    filters: {
+      specialities: selectedSpecialties.value,
+      yearStudy: selectedYearApplication.value,
+      enrolled: selectedApplicationStatus.value === 1,
+      expelled: selectedApplicationStatus.value === 2,
+    },
   });
   enrollees.value = result.data;
   getSpecialties();
@@ -452,7 +433,7 @@ const clearFilters = () => {
   payment.value = false;
   selectedCitizenship.value = null;
   selectedApplicationSources.value = [];
-  selectedApplicationStatuses.value = [];
+  selectedApplicationStatus.value = null;
   selectedApplicationStage.value = null;
   selectedExamTypes.value = [];
   selectedExamSubjects.value = [];

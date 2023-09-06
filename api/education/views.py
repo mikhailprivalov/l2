@@ -39,7 +39,10 @@ def get_citizenship(request):
 
 def get_application_filters(request):
     sources = []
-    statuses = []
+    statuses = [
+        {"id": 1, "label": "Зачислен"},
+        {"id": 2, "label": "Отчислен"}
+    ]
     stages = []
     return JsonResponse({"sources": sources, "statuses": statuses, "stages": stages})
 
@@ -72,7 +75,7 @@ def get_columns(request):
         {"field": 'fio', "key": 'fio', "title": 'ФИО'},
         {"field": 'applicationSpeciality', "key": 'applicationSpeciality', "title": 'Специальность'},
         {"field": 'applicationPersonNumber', "key": 'applicationPersonNumber', "title": 'Номер'},
-        {"field": 'сhemistry', "key": 'сhemistry', "title": 'Хим.'},
+        {"field": 'chemistry', "key": 'chemistry', "title": 'Хим.'},
         {"field": 'biology', "key": 'biology', "title": 'Био.'},
         {"field": 'russian_language', "key": 'russian_language', "title": 'Рус.'},
         {"field": 'achievementPoint', "key": 'achievementPoint', "title": 'ИД'},

@@ -151,16 +151,13 @@ def get_all_enrollees(request):
     request_data = json.loads(request.body)
     filters = request_data.get("filters", {})
     specialities_pk = filters.get("specialities", {})
-    specialities_pk = specialities_pk.get("value")
     year_study = filters.get("yearStudy", {})
-    year_study = year_study.get("value")
     enrolled = filters.get("enrolled", {})
-    enrolled = enrolled.get("value")
+    expelled = filters.get("expelled", {})
     if not year_study:
         year_study = current_year()
     else:
         year_study = year_study.get('label')
-
     data = get_dashboard_data(year_study, tuple(EDUCATION_REASEARCH_CONTRACT_IDS))
     last_app_id = -1
     template_result = {"card": "",
@@ -187,7 +184,8 @@ def get_all_enrollees(request):
             continue
         if enrolled and (not i.is_enrolled or i.is_expelled):
             continue
-
+        if expelled and (not i.is_expelled):
+            continue
         if last_app_id != i.app_id and step != 0:
             temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
             data_res.append(temp_result.copy())
