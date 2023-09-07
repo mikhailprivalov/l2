@@ -152,7 +152,6 @@ export default {
       this.selectedFio = fio;
     },
     openContract(contractPk) {
-      console.log(contractPk);
       window.open(`/ui/results/descriptive#{"pk":${contractPk}}`);
     },
   },
