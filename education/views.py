@@ -154,18 +154,20 @@ def get_all_enrollees(request):
     year_study = filters.get("yearStudy", {})
     enrolled = filters.get("enrolled", {})
     expelled = filters.get("expelled", {})
+    filter_individuals = filters.get("individuals", {})
     if not year_study:
         year_study = current_year()
     else:
         year_study = year_study.get('label')
     data = get_dashboard_data(year_study, tuple(EDUCATION_REASEARCH_CONTRACT_IDS))
     last_app_id = -1
+    last_card_id = -1
     template_result = {
         "card": "",
         "fio": "",
         "applicationSpeciality": "",
         "applicationPersonNumber": "",
-        "сhemistry": 0,
+        "chemistry": 0,
         "biology": 0,
         "mathematics": 0,
         "russian_language": 0,
@@ -179,6 +181,8 @@ def get_all_enrollees(request):
     step = 0
     data_res = []
     temp_result = template_result.copy()
+    tmp_person_number = ''
+    tmp_speciality = ''
     for i in data:
         date = i.app_data.strftime('%d.%m.%Y')
         if specialities_pk and (i.special_id not in specialities_pk):
@@ -187,10 +191,21 @@ def get_all_enrollees(request):
             continue
         if expelled and (not i.is_expelled):
             continue
-        if last_app_id != i.app_id and step != 0:
-            temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
-            data_res.append(temp_result.copy())
-            temp_result = template_result.copy()
+        if filter_individuals and last_app_id != i.app_id and step != 0:
+            temp_result["totalPoints"] = temp_result["chemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
+            tmp_person_number += str(temp_result["applicationPersonNumber"]) + '; '
+            tmp_speciality += temp_result["applicationSpeciality"] + '; '
+            if last_card_id != i.card_id:
+                temp_result["applicationPersonNumber"] = tmp_person_number
+                data_res.append(temp_result.copy())
+                temp_result = template_result.copy()
+                tmp_person_number = ''
+                tmp_speciality = ''
+        if not filter_individuals:
+            if last_app_id != i.app_id and step != 0:
+                temp_result["totalPoints"] = temp_result["chemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
+                data_res.append(temp_result.copy())
+                temp_result = template_result.copy()
         temp_result["card"] = i.card_id
         temp_result["fio"] = f"{i.ind_family} {i.ind_name} {i.ind_patronymic}"
         temp_result["applicationSpeciality"] = i.special_title
@@ -202,15 +217,15 @@ def get_all_enrollees(request):
         temp_result["is_expelled"] = i.is_expelled
         temp_result["create_date"] = date
         if i.subj_title.lower() in ["химия", "основы химии"]:
-            temp_result["сhemistry"] = i.grade if i.grade else 0
+            temp_result["chemistry"] = i.grade if i.grade else 0
         if i.subj_title.lower() in ["биология"]:
             temp_result["biology"] = i.grade if i.grade else 0
         if i.subj_title.lower() in ["русский язык"]:
             temp_result["russian_language"] = i.grade if i.grade else 0
-
         last_app_id = i.app_id
+        last_card_id = i.card_id
         step += 1
     if temp_result.get("card"):
-        temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
+        temp_result["totalPoints"] = temp_result["chemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
         data_res.append(temp_result.copy())
     return data_res

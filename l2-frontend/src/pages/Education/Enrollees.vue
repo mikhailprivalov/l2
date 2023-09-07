@@ -237,6 +237,19 @@
               class="label-for-checkbox"
             >Оригинал</label>
           </div>
+          <div>
+            <input
+              id="individuals"
+              v-model="individuals"
+              class="input-checkbox"
+              type="checkbox"
+              @change="getEnrollees"
+            >
+            <label
+              for="individuals"
+              class="label-for-checkbox"
+            >Физ. лица</label>
+          </div>
         </div>
         <div class="margin-div flex-div">
           <div>
@@ -314,9 +327,6 @@ const normalizerCompany = (node) => ({
   label: node.title,
 });
 
-const isEnrolled = ref(false);
-const isExpelled = ref(false);
-
 const selectedEnrollmentOrders = ref([]);
 const enrollmentOrders = ref([]);
 const getEnrollmentOrders = async () => {
@@ -384,6 +394,7 @@ const activeApplicationOnly = ref(false);
 const contract = ref(false);
 const payment = ref(false);
 const isOriginal = ref(false);
+const individuals = ref(false);
 const selectedYearApplication = ref({ id: 2, label: 2023 });
 const yearApplication = ref([
   { id: 1, label: 2022 },
@@ -414,6 +425,7 @@ const getEnrollees = async () => {
       yearStudy: selectedYearApplication.value,
       enrolled: selectedApplicationStatus.value === 1,
       expelled: selectedApplicationStatus.value === 2,
+      individuals: individuals.value,
     },
   });
   enrollees.value = result.data;
@@ -424,8 +436,6 @@ const clearFilters = () => {
   selectedSpecialties.value = [];
   selectedPayForms.value = [];
   selectedCompany.value = null;
-  isEnrolled.value = false;
-  isExpelled.value = false;
   selectedEnrollmentOrders.value = [];
   consent.value = false;
   activeApplicationOnly.value = false;
