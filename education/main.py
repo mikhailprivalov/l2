@@ -149,9 +149,7 @@ def process_update_enrollees():
                     )
                     enrollees_achievements_data[i.ID] = tmp_data.copy()
             for i in enrollees_person_data:
-                update_education_individual(
-                    i, user_obj_hospital, enrollees_application_data.get(i.ID, []), enrollees_grade_data.get(i.ID, []), enrollees_achievements_data.get(i.ID, [])
-                )
+                update_education_individual(i, user_obj_hospital, enrollees_application_data.get(i.ID, []), enrollees_grade_data.get(i.ID, []), enrollees_achievements_data.get(i.ID, []))
         time.sleep(10)
 
 
