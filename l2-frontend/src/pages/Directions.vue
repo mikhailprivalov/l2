@@ -6,10 +6,12 @@
     <div class="a">
       <PatientPicker
         v-model="selected_card"
-        directive_from_need="true"
+        :directive_from_need="l2_education ? 'false' : 'true' "
         search_results="true"
         :selected-researches="selected_researches"
         bottom_picker="true"
+        :history_n="l2_education ? 'false' : 'true'"
+        :education="l2_education"
       >
         <div
           slot="for_card"
@@ -45,7 +47,7 @@
           <!--<a href="#" @click.prevent="do_show_rmis_send_directions" v-if="selected_card.is_rmis">
             <span>Направить в другую МО</span>
           </a>-->
-          <div class="dropup">
+          <div v-if="l2_education" class="dropup">
             <button
               class="btn btn-blue-nb btn-ell dropdown-toggle"
               type="button"
@@ -329,6 +331,9 @@ export default {
     },
     l2_doc_call() {
       return this.$store.getters.modules.l2_doc_call;
+    },
+    l2_education() {
+      return this.$store.getters.modules.l2_education;
     },
     l2_only_doc_call() {
       return this.$store.getters.modules.l2_only_doc_call && this.l2_doc_call;

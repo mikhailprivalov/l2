@@ -234,7 +234,7 @@
                   class="internal_type"
                 >
                   <button
-                    v-if="selected_card.pk && l2_education"
+                    v-if="selected_card.pk && education"
                     v-tippy="{ placement: 'bottom' }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
@@ -345,7 +345,7 @@
                     <i class="fa fa-cubes" />
                   </button>
                   <button
-                    v-if="is_l2_cards && selected_card.pk"
+                    v-if="is_l2_cards && selected_card.pk && !education"
                     v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
@@ -355,7 +355,7 @@
                     <i class="fa fa-database" />
                   </button>
                   <button
-                    v-if="is_l2_cards && selected_card.pk"
+                    v-if="is_l2_cards && selected_card.pk && !education"
                     v-tippy="{ placement: 'bottom' }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
@@ -365,7 +365,7 @@
                     <i class="fa fa-user" />
                   </button>
                   <button
-                    v-if="is_l2_cards && selected_card.pk"
+                    v-if="is_l2_cards && selected_card.pk && !education"
                     v-tippy="{ placement: 'bottom', arrow: true }"
                     class="btn last btn-blue-nb nbr"
                     type="button"
@@ -775,6 +775,10 @@ export default {
       type: Array,
       required: false,
     },
+    education: {
+      type: Boolean,
+      required: false
+    }
   },
   data() {
     return {
@@ -865,9 +869,6 @@ export default {
     },
     l2_harmful_factor() {
       return this.$store.getters.modules.l2_harmful_factor;
-    },
-    l2_education() {
-      return this.$store.getters.modules.l2_education;
     },
     force_rmis_search() {
       return Boolean(this.$store.getters.modules.l2_force_rmis_search);
