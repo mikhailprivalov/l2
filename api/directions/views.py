@@ -275,6 +275,16 @@ def resend_results(request):
         direction.post_confirmation()
     return status_response(True)
 
+@login_required()
+def need_order_redirection(request):
+    request_data = json.loads(request.body)
+    ids = request_data['ids']
+    for pk in ids:
+        direction = Napravleniya.objects.get(pk=pk)
+        direction.need_order_redirection = True
+        direction.save()
+    return status_response(True)
+
 
 @login_required
 def directions_history(request):

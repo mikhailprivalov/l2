@@ -63,4 +63,5 @@ urlpatterns = [
     path('directions-by-hospital-sent', views.get_directions_by_hospital_sent),
     path('meta-info', views.meta_info),
     path('resend-results', views.resend_results),
+    path('need-order-redirection', views.need_order_redirection),
 ]

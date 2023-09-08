@@ -59,6 +59,12 @@ export default (instance: Vue): void => {
     instance.$ok('Запланирована повторная отправка результатов.\nРезультаты должны быть подтверждены полностью.\nУ пациента должен быть заполнен email и разраешена отправка.');
   });
 
+  instance.$root.$on('directions:need_order_redirection', async ids => {
+    await instance.$api('directions/need-order-redirection', { ids });
+    // eslint-disable-next-line max-len
+    instance.$ok('Запланирована повторная отправка направления исполнителю');
+  });
+
   instance.$root.$on('print:aggregate_laboratory_results', async pks => {
     window.open(`/forms/docx?type=113.02&directions=${pks}`, '_blank');
   });

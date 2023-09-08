@@ -221,7 +221,6 @@ class FTPConnection:
             obr = order.children[0]
             orders_by_numbers[obr.OBR_3.value].append(obr.OBR_4.OBR_4_4.value)
             additional_order_number_by_service[obr.OBR_4.OBR_4_4.value] = obr.OBR_2.OBR_2_1.value
-
         orders_by_numbers = dict(orders_by_numbers)
 
         self.log(family, name, patronymic, birthday, sex)

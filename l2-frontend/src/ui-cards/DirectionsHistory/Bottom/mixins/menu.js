@@ -71,6 +71,13 @@ const menuItems = [
       this.$root.$emit('print:aggregate_laboratory_results', this.checked);
     },
   },
+  {
+    title: 'Отправить внешнему исполнителю',
+    requiredModule: 'l2_need_order_redirection',
+    handler() {
+      this.$root.$emit('directions:need_order_redirection', this.checked);
+    },
+  },
 ];
 
 export default {
