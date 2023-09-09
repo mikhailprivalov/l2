@@ -47,7 +47,7 @@
           v-for="achievement in achievements"
           :key="achievement.pk"
         >
-          <label>Достижение № {{ achievement.pk }}</label> <br>
+          <label>Достижение №{{ achievement.pk }}</label> <br>
           <label>Название:</label>
           {{ achievement.title }} <br>
           <label>Дата:</label>
