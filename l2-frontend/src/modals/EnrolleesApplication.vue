@@ -24,7 +24,7 @@
           :key="application.pk"
           class="application-div"
         >
-          <label>Заявление № {{ application.pk }}</label> <br>
+          <label>Заявление №{{ application.pk }}</label> <br>
           <label>Cпециальность:</label>
           {{ application.speciality }} <br>
           <label>Дата:</label>
