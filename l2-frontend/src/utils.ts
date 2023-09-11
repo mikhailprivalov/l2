@@ -368,24 +368,7 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
   console.log(obj);
   // eslint-disable-next-line no-console
   console.log(subjectName);
-
-  if (!obj.SNILS && obj['СНИЛС']) {
-    obj.SNILS = obj['СНИЛС'];
-  }
-
-  let result = `НЕТ СНИЛС ${name}`;
-  if (obj.CN) {
-    if (obj.T && obj.SN && obj.G) {
-      let CN = obj.CN.replace('"""', '""');
-
-      if (CN.length > 1 && CN[0] === '"' && CN[CN.length - 1] === '"') {
-        CN = CN.slice(1, -1);
-      }
-      CN = CN.replace('""', '"');
-      result = `${!obj.SNILS ? 'НЕТ СНИЛС ' : ''}${obj.SN} ${obj.G}${obj.SNILS ? `, ${obj.SNILS}` : ''} — ${obj.T} — ${CN}`;
-    }
-  }
-  return result;
+  return `${obj.SN} - ${obj.G}-${obj['СНИЛС']} ${obj.T}`;
 };
 
 export const validateEmail = (email: string) => Boolean(
