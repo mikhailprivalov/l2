@@ -714,6 +714,7 @@ def statistic_xls(request):
         purposes = request_data.get("purposes", "")
         special_fields = request_data.get("special-fields", "false")
         medical_exam = request_data.get("medical-exam", "false")
+        by_create_directions = request_data.get("by-create-directions", "false")
         is_purpose = 0
         if purposes != "-1":
             purposes = tuple(purposes.split(","))
@@ -820,7 +821,11 @@ def statistic_xls(request):
             ws = custom_research.custom_research_fill_data(ws, result)
         else:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
-            researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
+            if by_create_directions != "true":
+                researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
+            else:
+                researches_sql = sql_func.statistics_research_create_directions(research_id, start_date, end_date, hospital_id)
+                print(researches_sql)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
     elif tp == "journal-get-material":
