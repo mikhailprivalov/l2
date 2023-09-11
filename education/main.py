@@ -72,7 +72,7 @@ def process_update_enrollees():
             enrollees_person_data, enrollees_grade, enrollees_application, enrollees_achievements = get_enrollees(connection_string, ids_changed_enrollees)
             enrollees_grade_data = {}
             for grade in enrollees_grade:
-                if not enrollees_grade_data.get(i.ID):
+                if not enrollees_grade_data.get(grade.ID):
                     enrollees_grade_data[grade.ID] = [{"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления,
                                                        "Код_Дисциплины": grade.Код_Дисциплины}]
                 else:
