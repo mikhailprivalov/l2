@@ -5,6 +5,8 @@ from education.sql_func import get_connection_params, get_enrollees_by_id, get_c
 from education.views import update_education_individual, change_encoding_cp1251
 from hospitals.models import Hospitals
 from laboratory.settings import EDUCATION_BASE_TITLE, TIME_ZONE, MMIS_CONNECT_WITH_PYODBC
+from pymssql import OperationalError
+from pyodbc import InterfaceError
 import pytz_deprecation_shim as pytz
 
 
@@ -28,11 +30,17 @@ def create_connection_string(settings_name: str):
 
 def get_enrollees(connection_string, list_id: list):
     list_id_str = ", ".join(map(str, list_id))
-    enrollees_person_data = get_enrollees_by_id(connection_string, list_id_str)
-    enrollees_grades = get_grade_entrance_exams(connection_string, list_id_str)
-    enrollees_application_data = get_application_by_id(connection_string, list_id_str)
-    enrollees_achievements = get_achievements_by_id(connection_string, list_id_str)
-
+    enrollees_person_data = None
+    enrollees_grades = None
+    enrollees_application_data = None
+    enrollees_achievements = None
+    try:
+        enrollees_person_data = get_enrollees_by_id(connection_string, list_id_str)
+        enrollees_grades = get_grade_entrance_exams(connection_string, list_id_str)
+        enrollees_application_data = get_application_by_id(connection_string, list_id_str)
+        enrollees_achievements = get_achievements_by_id(connection_string, list_id_str)
+    except (OperationalError, InterfaceError):
+        print('Database connection error')
     return (
         enrollees_person_data,
         enrollees_grades,
@@ -42,19 +50,22 @@ def get_enrollees(connection_string, list_id: list):
 
 
 def get_ids_changes_enrollees(connection_string: str):
-    last_log = LogUpdateMMIS.objects.last()
+    last_log: LogUpdateMMIS = LogUpdateMMIS.objects.last()
     last_time_str = last_log.last_mmis_log_time.astimezone(pytz.timezone(TIME_ZONE)).strftime('%Y-%m-%d %H:%M:%S')
-    changes_log = get_changes(connection_string, last_time_str)
-    curren_log = None
     id_changed_enrollees = []
-    for curren_log in changes_log:
-        if curren_log.код_абитуриента not in id_changed_enrollees:
-            id_changed_enrollees.append(curren_log.код_абитуриента)
-    if curren_log:
-        last_log.last_mmis_log_time = curren_log.дата.astimezone(pytz.timezone(TIME_ZONE))
-        last_log.last_mmis_log_id = curren_log.Код
-        last_log.save()
-    return id_changed_enrollees
+    try:
+        changes_log = get_changes(connection_string, last_time_str)
+    except (OperationalError, InterfaceError):
+        print('Database connection error')
+    else:
+        curren_log = None
+        for curren_log in changes_log:
+            if curren_log.код_абитуриента not in id_changed_enrollees:
+                id_changed_enrollees.append(curren_log.код_абитуриента)
+        if curren_log:
+            last_log.last_mmis_log_time = curren_log.дата.astimezone(pytz.timezone(TIME_ZONE))
+            last_log.last_mmis_log_id = curren_log.Код
+    return id_changed_enrollees, last_log
 
 
 MAX_LOOP_TIME = 600
@@ -65,7 +76,7 @@ def process_update_enrollees():
     connection_string = create_connection_string(EDUCATION_BASE_TITLE)
     user_obj_hospital = Hospitals.objects.get(is_default=True)
     while time.time() - time_start < MAX_LOOP_TIME:
-        ids_changed_enrollees = get_ids_changes_enrollees(connection_string)
+        ids_changed_enrollees, current_last_log = get_ids_changes_enrollees(connection_string)
         if not ids_changed_enrollees:
             pass
         else:
@@ -77,9 +88,9 @@ def process_update_enrollees():
                                                        "Код_Дисциплины": grade.Код_Дисциплины}]
                 else:
                     tmp_data = enrollees_grade_data[grade.ID]
-                    tmp_data.append({"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления, "Код_Дисциплины": grade.Код_Дисциплины})
+                    tmp_data.append(
+                        {"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления, "Код_Дисциплины": grade.Код_Дисциплины})
                     enrollees_grade_data[grade.ID] = tmp_data.copy()
-
             enrollees_application_data = {}
             for application in enrollees_application:
                 if not enrollees_application_data.get(application.ID):
@@ -151,6 +162,8 @@ def process_update_enrollees():
             for person_data in enrollees_person_data:
                 update_education_individual(person_data, user_obj_hospital, enrollees_application_data.get(person_data.ID, []), enrollees_grade_data.get(person_data.ID, []),
                                             enrollees_achievements_data.get(person_data.ID, []))
+            if enrollees_person_data:
+                current_last_log.save()
         time.sleep(10)
 
 
