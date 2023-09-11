@@ -25,6 +25,7 @@ class DatabaseConnectSettings(models.Model):
     port = models.CharField(max_length=5, default="", help_text='Порт', db_index=False)
     driver = models.CharField(max_length=128, default="", help_text='Драйвер', db_index=False)
     encrypt = models.CharField(max_length=5, default="", help_text='Шифрование', db_index=False)
+    is_mmis = models.BooleanField(default=False, help_text='это ММИС', db_index=True)
 
     def __str__(self):
         return f"{self.title} - {self.database}"

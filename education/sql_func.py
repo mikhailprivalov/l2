@@ -8,7 +8,7 @@ else:
 from utils.db import namedtuplefetchall
 
 
-def get_connection_params(settings_name):
+def get_connection_params():
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -21,9 +21,8 @@ def get_connection_params(settings_name):
                 dashboards_databaseconnectsettings.driver,
                 dashboards_databaseconnectsettings.encrypt
                 FROM public.dashboards_databaseconnectsettings
-                WHERE dashboards_databaseconnectsettings.title = %(name_settings)s
+                WHERE dashboards_databaseconnectsettings.is_mmis = true
         """,
-            params={"name_settings": settings_name},
         )
         rows = namedtuplefetchall(cursor)
     return rows

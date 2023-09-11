@@ -4,14 +4,14 @@ from education.models import LogUpdateMMIS
 from education.sql_func import get_connection_params, get_enrollees_by_id, get_changes, get_grade_entrance_exams, get_application_by_id, get_achievements_by_id
 from education.views import update_education_individual, change_encoding_cp1251
 from hospitals.models import Hospitals
-from laboratory.settings import EDUCATION_BASE_TITLE, TIME_ZONE, MMIS_CONNECT_WITH_PYODBC
+from laboratory.settings import TIME_ZONE, MMIS_CONNECT_WITH_PYODBC
 from pymssql import OperationalError
 from pyodbc import InterfaceError
 import pytz_deprecation_shim as pytz
 
 
-def create_connection_string(settings_name: str):
-    connection_params = get_connection_params(settings_name)[0]
+def create_connection_string():
+    connection_params = get_connection_params()[0]
     if MMIS_CONNECT_WITH_PYODBC:
         connection_string = (
             f"DRIVER={connection_params.driver}; SERVER={connection_params.ip_address},{connection_params.port}; DATABASE={connection_params.database}; Encrypt={connection_params.encrypt}; "
@@ -73,7 +73,7 @@ MAX_LOOP_TIME = 600
 
 def process_update_enrollees():
     time_start = time.time()
-    connection_string = create_connection_string(EDUCATION_BASE_TITLE)
+    connection_string = create_connection_string()
     user_obj_hospital = Hospitals.objects.get(is_default=True)
     while time.time() - time_start < MAX_LOOP_TIME:
         ids_changed_enrollees, current_last_log = get_ids_changes_enrollees(connection_string)

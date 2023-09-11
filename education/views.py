@@ -1,9 +1,10 @@
 from clients.models import Individual
+from directory.models import Researches
 from education.models import ApplicationEducation, EducationSpeciality, EntranceExam, Subjects, ExamType, Faculties, Achievement, AchievementType
 from education.sql_func import get_dashboard_data
 import simplejson as json
 
-from laboratory.settings import EDUCATION_REASEARCH_CONTRACT_IDS, MMIS_CONNECT_WITH_PYODBC
+from laboratory.settings import MMIS_CONNECT_WITH_PYODBC
 from laboratory.utils import current_year
 
 
@@ -158,7 +159,8 @@ def get_all_enrollees(request):
         year_study = current_year()
     else:
         year_study = year_study.get('label')
-    data = get_dashboard_data(year_study, tuple(EDUCATION_REASEARCH_CONTRACT_IDS))
+    research_contract_ids = Researches.objects.filter(is_contract=True).values_list('id', flat=True)
+    data = get_dashboard_data(year_study, tuple(research_contract_ids))
     last_app_id = -1
     template_result = {
         "card": "",
@@ -197,7 +199,7 @@ def get_all_enrollees(request):
         temp_result["applicationPersonNumber"] = i.personal_number
         temp_result["is_original"] = i.original
         temp_result["is_enrolled"] = i.is_enrolled
-        if i.is_enrolled and EDUCATION_REASEARCH_CONTRACT_IDS:
+        if i.is_enrolled and research_contract_ids:
             temp_result["researchContractId"] = i.direction_id
         temp_result["is_expelled"] = i.is_expelled
         temp_result["create_date"] = date
