@@ -40,7 +40,7 @@ def get_enrollees(connection_string, list_id: list):
         enrollees_application_data = get_application_by_id(connection_string, list_id_str)
         enrollees_achievements = get_achievements_by_id(connection_string, list_id_str)
     except (OperationalError, InterfaceError):
-        print('Database connection error')
+        print('Database connection error')  # noqa: F201
     return (
         enrollees_person_data,
         enrollees_grades,
@@ -56,7 +56,7 @@ def get_ids_changes_enrollees(connection_string: str):
     try:
         changes_log = get_changes(connection_string, last_time_str)
     except (OperationalError, InterfaceError):
-        print('Database connection error')
+        print('Database connection error')  # noqa: F201
     else:
         curren_log = None
         for curren_log in changes_log:
