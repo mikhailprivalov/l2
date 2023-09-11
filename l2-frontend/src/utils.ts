@@ -368,7 +368,7 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
   console.log(obj);
   // eslint-disable-next-line no-console
   console.log(subjectName);
-  return [obj.SN, obj.G, obj.SNILS, `${obj.T ? obj.T : ''}`].filter(Boolean).join(' ');
+  return [obj.SN, obj.G, obj.SNILS, obj.T].filter(Boolean).join(' ');
 };
 
 export const validateEmail = (email: string) => Boolean(
