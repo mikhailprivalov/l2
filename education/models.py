@@ -336,3 +336,19 @@ class LogUpdateMMIS(models.Model):
     class Meta:
         verbose_name = 'Последний лог ММИС'
         verbose_name_plural = 'Последние логи ММИС'
+
+
+class EducationFinanceSource(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Наименование образовательного источника финансирования')
+
+    def __str__(self):
+        return self.title
+
+    @staticmethod
+    def get_sources() -> list[dict]:
+        sources = [{"id": source.pk, "label": source.title} for source in EducationFinanceSource.objects.all()]
+        return sources
+
+    class Meta:
+        verbose_name = 'Образовательный источник финансирования'
+        verbose_name_plural = 'Образовательные источники финансирования'
