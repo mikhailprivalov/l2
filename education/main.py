@@ -84,12 +84,14 @@ def process_update_enrollees():
             enrollees_grade_data = {}
             for grade in enrollees_grade:
                 if not enrollees_grade_data.get(grade.ID):
-                    enrollees_grade_data[grade.ID] = [{"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления,
-                                                       "Код_Дисциплины": grade.Код_Дисциплины}]
+                    enrollees_grade_data[grade.ID] = [
+                        {"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления, "Код_Дисциплины": grade.Код_Дисциплины}
+                    ]
                 else:
                     tmp_data = enrollees_grade_data[grade.ID]
                     tmp_data.append(
-                        {"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления, "Код_Дисциплины": grade.Код_Дисциплины})
+                        {"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления, "Код_Дисциплины": grade.Код_Дисциплины}
+                    )
                     enrollees_grade_data[grade.ID] = tmp_data.copy()
             enrollees_application_data = {}
             for application in enrollees_application:
@@ -160,8 +162,13 @@ def process_update_enrollees():
                     )
                     enrollees_achievements_data[achievement.ID] = tmp_data.copy()
             for person_data in enrollees_person_data:
-                update_education_individual(person_data, user_obj_hospital, enrollees_application_data.get(person_data.ID, []), enrollees_grade_data.get(person_data.ID, []),
-                                            enrollees_achievements_data.get(person_data.ID, []))
+                update_education_individual(
+                    person_data,
+                    user_obj_hospital,
+                    enrollees_application_data.get(person_data.ID, []),
+                    enrollees_grade_data.get(person_data.ID, []),
+                    enrollees_achievements_data.get(person_data.ID, []),
+                )
             if enrollees_person_data:
                 current_last_log.save()
         time.sleep(10)
