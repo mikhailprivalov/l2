@@ -3,10 +3,9 @@ import time
 from education.models import LogUpdateMMIS
 from education.sql_func import get_connection_params, get_enrollees_by_id, get_changes, get_grade_entrance_exams, get_application_by_id, get_achievements_by_id
 from education.views import update_education_individual, change_encoding_cp1251
+from hospitals.models import Hospitals
 from laboratory.settings import EDUCATION_BASE_TITLE, TIME_ZONE, MMIS_CONNECT_WITH_PYODBC
 import pytz_deprecation_shim as pytz
-
-from users.models import DoctorProfile
 
 
 def create_connection_string(settings_name: str):
@@ -64,7 +63,7 @@ MAX_LOOP_TIME = 600
 def process_update_enrollees():
     time_start = time.time()
     connection_string = create_connection_string(EDUCATION_BASE_TITLE)
-    user_obj_hospital = DoctorProfile.objects.first().hospital
+    user_obj_hospital = Hospitals.objects.get(is_default=True)
     while time.time() - time_start < MAX_LOOP_TIME:
         ids_changed_enrollees = get_ids_changes_enrollees(connection_string)
         if not ids_changed_enrollees:
@@ -72,87 +71,89 @@ def process_update_enrollees():
         else:
             enrollees_person_data, enrollees_grade, enrollees_application, enrollees_achievements = get_enrollees(connection_string, ids_changed_enrollees)
             enrollees_grade_data = {}
-            for i in enrollees_grade:
+            for grade in enrollees_grade:
                 if not enrollees_grade_data.get(i.ID):
-                    enrollees_grade_data[i.ID] = [{"Оценка": i.Оценка, "Код_Испытания": i.Код_Испытания, "Код": i.Код, "Код_Заявления": i.Код_Заявления, "Код_Дисциплины": i.Код_Дисциплины}]
+                    enrollees_grade_data[grade.ID] = [{"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления,
+                                                       "Код_Дисциплины": grade.Код_Дисциплины}]
                 else:
-                    tmp_data = enrollees_grade_data[i.ID]
-                    tmp_data.append({"Оценка": i.Оценка, "Код_Испытания": i.Код_Испытания, "Код": i.Код, "Код_Заявления": i.Код_Заявления, "Код_Дисциплины": i.Код_Дисциплины})
-                    enrollees_grade_data[i.ID] = tmp_data.copy()
+                    tmp_data = enrollees_grade_data[grade.ID]
+                    tmp_data.append({"Оценка": grade.Оценка, "Код_Испытания": grade.Код_Испытания, "Код": grade.Код, "Код_Заявления": grade.Код_Заявления, "Код_Дисциплины": grade.Код_Дисциплины})
+                    enrollees_grade_data[grade.ID] = tmp_data.copy()
 
             enrollees_application_data = {}
-            for i in enrollees_application:
-                if not enrollees_application_data.get(i.ID):
-                    enrollees_application_data[i.ID] = [
+            for application in enrollees_application:
+                if not enrollees_application_data.get(application.ID):
+                    enrollees_application_data[application.ID] = [
                         {
-                            "Код_Заявления": i.Код_Заявления,
-                            "Основания": change_encoding_cp1251(i.Основания),
-                            "Код_Специальности": i.Код_Специальности,
-                            "НомерЛД": change_encoding_cp1251(i.НомерЛД),
-                            "Шифр": change_encoding_cp1251(i.Шифр),
-                            "Факультет": i.Факультет,
-                            "Оригинал": i.Оригинал,
-                            "Дата_Подачи": i.Дата_Подачи,
-                            "Зачислен": i.Зачислен,
-                            "ОтказалсяОтЗачисления": i.ОтказалсяОтЗачисления,
-                            "КодФормы": i.КодФормы,
-                            "Проверено": i.Проверено,
+                            "Код_Заявления": application.Код_Заявления,
+                            "Основания": change_encoding_cp1251(application.Основания),
+                            "Код_Специальности": application.Код_Специальности,
+                            "НомерЛД": change_encoding_cp1251(application.НомерЛД),
+                            "Шифр": change_encoding_cp1251(application.Шифр),
+                            "Факультет": application.Факультет,
+                            "Оригинал": application.Оригинал,
+                            "Дата_Подачи": application.Дата_Подачи,
+                            "Зачислен": application.Зачислен,
+                            "ОтказалсяОтЗачисления": application.ОтказалсяОтЗачисления,
+                            "КодФормы": application.КодФормы,
+                            "Проверено": application.Проверено,
                         }
                     ]
                 else:
-                    tmp_data = enrollees_application_data.get(i.ID, [])
+                    tmp_data = enrollees_application_data.get(application.ID, [])
                     tmp_data.append(
                         {
-                            "Код_Заявления": i.Код_Заявления,
-                            "Основания": change_encoding_cp1251(i.Основания),
-                            "Код_Специальности": i.Код_Специальности,
-                            "НомерЛД": change_encoding_cp1251(i.НомерЛД),
-                            "Шифр": change_encoding_cp1251(i.Шифр),
-                            "Факультет": i.Факультет,
-                            "Оригинал": i.Оригинал,
-                            "Дата_Подачи": i.Дата_Подачи,
-                            "Зачислен": i.Зачислен,
-                            "ОтказалсяОтЗачисления": i.ОтказалсяОтЗачисления,
-                            "КодФормы": i.КодФормы,
-                            "Проверено": i.Проверено,
+                            "Код_Заявления": application.Код_Заявления,
+                            "Основания": change_encoding_cp1251(application.Основания),
+                            "Код_Специальности": application.Код_Специальности,
+                            "НомерЛД": change_encoding_cp1251(application.НомерЛД),
+                            "Шифр": change_encoding_cp1251(application.Шифр),
+                            "Факультет": application.Факультет,
+                            "Оригинал": application.Оригинал,
+                            "Дата_Подачи": application.Дата_Подачи,
+                            "Зачислен": application.Зачислен,
+                            "ОтказалсяОтЗачисления": application.ОтказалсяОтЗачисления,
+                            "КодФормы": application.КодФормы,
+                            "Проверено": application.Проверено,
                         }
                     )
-                    enrollees_application_data[i.ID] = tmp_data.copy()
+                    enrollees_application_data[application.ID] = tmp_data.copy()
             enrollees_achievements_data = {}
-            for i in enrollees_achievements:
-                if not enrollees_achievements_data.get(i.ID):
-                    enrollees_achievements_data[i.ID] = [
+            for achievement in enrollees_achievements:
+                if not enrollees_achievements_data.get(achievement.ID):
+                    enrollees_achievements_data[achievement.ID] = [
                         {
-                            "КодИД": i.КодИД,
-                            "ДатаИД": i.ДатаИД,
-                            "БаллИД": i.БаллИД,
-                            "Код": i.Код,
-                            "СерияИД": i.СерияИД,
-                            "НомерИД": i.НомерИД,
-                            "ОрганизацияИД": change_encoding_cp1251(i.ОрганизацияИД),
-                            "Код_Заявления": i.Код_Заявления,
+                            "КодИД": achievement.КодИД,
+                            "ДатаИД": achievement.ДатаИД,
+                            "БаллИД": achievement.БаллИД,
+                            "Код": achievement.Код,
+                            "СерияИД": achievement.СерияИД,
+                            "НомерИД": achievement.НомерИД,
+                            "ОрганизацияИД": change_encoding_cp1251(achievement.ОрганизацияИД),
+                            "Код_Заявления": achievement.Код_Заявления,
                         }
                     ]
                 else:
-                    tmp_data = enrollees_achievements_data.get(i.ID, [])
+                    tmp_data = enrollees_achievements_data.get(achievement.ID, [])
                     tmp_data.append(
                         {
-                            "КодИД": i.КодИД,
-                            "ДатаИД": i.ДатаИД,
-                            "БаллИД": i.БаллИД,
-                            "Код": i.Код,
-                            "СерияИД": i.СерияИД,
-                            "НомерИД": i.НомерИД,
-                            "ОрганизацияИД": change_encoding_cp1251(i.ОрганизацияИД),
-                            "Код_Заявления": i.Код_Заявления,
+                            "КодИД": achievement.КодИД,
+                            "ДатаИД": achievement.ДатаИД,
+                            "БаллИД": achievement.БаллИД,
+                            "Код": achievement.Код,
+                            "СерияИД": achievement.СерияИД,
+                            "НомерИД": achievement.НомерИД,
+                            "ОрганизацияИД": change_encoding_cp1251(achievement.ОрганизацияИД),
+                            "Код_Заявления": achievement.Код_Заявления,
                         }
                     )
-                    enrollees_achievements_data[i.ID] = tmp_data.copy()
-            for i in enrollees_person_data:
-                update_education_individual(i, user_obj_hospital, enrollees_application_data.get(i.ID, []), enrollees_grade_data.get(i.ID, []), enrollees_achievements_data.get(i.ID, []))
+                    enrollees_achievements_data[achievement.ID] = tmp_data.copy()
+            for person_data in enrollees_person_data:
+                update_education_individual(person_data, user_obj_hospital, enrollees_application_data.get(person_data.ID, []), enrollees_grade_data.get(person_data.ID, []),
+                                            enrollees_achievements_data.get(person_data.ID, []))
         time.sleep(10)
 
 
-def process_start_update_enrolles():
+def process_start_update_enrollees():
     while True:
         process_update_enrollees()
