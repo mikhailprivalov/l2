@@ -349,6 +349,35 @@ class FTPConnection:
             return
 
         self.log("HL7 parsed")
+        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.ORU_R01_VISIT.PV1.PV1_3.value)
+        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.ORU_R01_VISIT.PV1.PV1_3.PL_4.value)
+        obr = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR
+        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR.OBR_2.OBR_2_2.value)
+        iss_num = obr.OBR_2.OBR_2_1.value
+        obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
+        fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "",
+                     "note_data": ""}
+        result = []
+        for obx in obxes:
+            tmp_fractions = fractions.copy()
+            if (obx.OBX.obx_3.obx_3_1.value).lower == "pdf":
+                continue
+            elif (obx.OBX.obx_3.obx_3_1.value).lower() == "jpg":
+                tmp_fractions["jpg"] = obx.OBX.obx_5.obx_5_5.value
+                result.append(tmp_fractions.copy())
+                continue
+            elif (obx.OBX.obx_3.obx_3_1.value).lower() == "image":
+                tmp_fractions["html"] = obx.OBX.obx_5.obx_5_1.value
+                result.append(tmp_fractions.copy())
+                continue
+            tmp_fractions["fsli"] = obx.OBX.obx_3.obx_3_1.value
+            tmp_fractions["title_fraction"] = obx.OBX.obx_3.obx_3_2.value
+            tmp_fractions["value"] = obx.OBX.obx_5.obx_5_1.value
+            tmp_fractions["units"] = obx.OBX.obx_6.obx_6_1.value
+            tmp_fractions["refs"] = obx.OBX.obx_7.obx_7_1.value
+            result.append(tmp_fractions.copy())
+        for i in result:
+            print(i)
 
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
