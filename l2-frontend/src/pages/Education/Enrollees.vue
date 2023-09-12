@@ -334,15 +334,12 @@ const getCitizenship = async () => {
 const selectedApplicationSources = ref([]);
 const applicationSources = ref([]);
 const selectedApplicationStatus = ref(null);
-const applicationStatuses = ref([]);
+const applicationStatuses = ref([
+  { id: 1, label: 'Зачислен' },
+  { id: 2, label: 'Отчислен' },
+]);
 const selectedApplicationStage = ref(null);
 const applicationStages = ref([]);
-const getApplicationFilters = async () => {
-  const data = await api('/education/get-statement-filters');
-  applicationSources.value = data.sources;
-  applicationStatuses.value = data.statuses;
-  applicationStages.value = data.stages;
-};
 
 const selectedExamTypes = ref([]);
 const examTypes = ref([]);
@@ -362,7 +359,6 @@ const achievementsStatuses = ref([]);
 const getAchievementsFilters = async () => {
   const data = await api('/education/get-achievements-filters');
   achievementTypes.value = data.achievements;
-  achievementsStatuses.value = data.statuses;
 };
 
 const isSatisfactoryScore = ref(false);

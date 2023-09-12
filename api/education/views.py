@@ -36,13 +36,6 @@ def get_citizenship(request):
     return JsonResponse({"result": result})
 
 
-def get_application_filters(request):
-    sources = []
-    statuses = [{"id": 1, "label": "Зачислен"}, {"id": 2, "label": "Отчислен"}]
-    stages = []
-    return JsonResponse({"sources": sources, "statuses": statuses, "stages": stages})
-
-
 def get_exams_filters(request):
     exam_types = ExamType.get_types()
     subjects = Subjects.get_subjects()
@@ -51,8 +44,7 @@ def get_exams_filters(request):
 
 def get_achievements_filters(request):
     achievements = AchievementType.get_types()
-    statuses = []
-    return JsonResponse({"achievements": achievements, "statuses": statuses})
+    return JsonResponse({"achievements": achievements})
 
 
 def get_education(request):
