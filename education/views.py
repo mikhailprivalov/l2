@@ -6,6 +6,8 @@ import simplejson as json
 
 from laboratory.settings import MMIS_CONNECT_WITH_PYODBC
 from laboratory.utils import current_year
+from slog.models import Log
+from users.models import DoctorProfile
 
 
 def change_encoding_cp1251(text):
@@ -20,7 +22,7 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             {
                 "family": change_encoding_cp1251(person_data.Фамилия),
                 "name": change_encoding_cp1251(person_data.Имя),
-                "patronymic": change_encoding_cp1251(person_data.Отчество),
+                "patronymic": change_encoding_cp1251(person_data.Отчество) if person_data.Отчество else '',
                 "sex": "м" if "м" in change_encoding_cp1251(person_data.Пол.lower()) else "ж",
                 "birthday": person_data.Дата_Рождения.strftime("%d.%m.%Y"),
                 "snils": person_data.СНИЛС if person_data.СНИЛС else "",
@@ -145,7 +147,15 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
             result_achievements.append(achievement_person.pk)
         return {"card": card, "result_application": result_application, "result_exam": result_exam, "result_chievements": result_achievements}
     except Exception as e:
-        return f"Exception: {e}"
+        system_user = DoctorProfile.objects.filter(is_system_user=True).first()
+        except_data = {"mmis_id": person_data.ID, "last_name": change_encoding_cp1251(person_data.Фамилия), "first_name": change_encoding_cp1251(person_data.Имя),
+                       "patronymic": change_encoding_cp1251(person_data.Отчество), "exception": str(e)}
+        Log.log(
+            person_data.ID,
+            200000,
+            system_user,
+            except_data
+        )
 
 
 def get_all_enrollees(request):
