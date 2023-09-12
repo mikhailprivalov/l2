@@ -4,6 +4,7 @@ from education.models import ApplicationEducation, EducationSpeciality, Entrance
 from education.sql_func import get_dashboard_data
 import simplejson as json
 
+from laboratory.local_settings import SUBJECTS_ENTRANCE_EXAM
 from laboratory.settings import MMIS_CONNECT_WITH_PYODBC
 from laboratory.utils import current_year
 from slog.models import Log
@@ -172,15 +173,12 @@ def get_all_enrollees(request):
     research_contract_ids = Researches.objects.filter(is_contract=True).values_list('id', flat=True)
     data = get_dashboard_data(year_study, tuple(research_contract_ids))
     last_app_id = -1
+    entrance_exam_synonym = Subjects.objects.filter(pk__in=SUBJECTS_ENTRANCE_EXAM).values_list('synonym', flat=True)
     template_result = {
         "card": "",
         "fio": "",
         "applicationSpeciality": "",
         "applicationPersonNumber": "",
-        "сhemistry": 0,
-        "biology": 0,
-        "mathematics": 0,
-        "russian_language": 0,
         "achievementPoint": 0,
         "totalPoints": 0,
         "is_original": "",
@@ -188,6 +186,9 @@ def get_all_enrollees(request):
         "create_date": "",
         "researchContractId": None,
     }
+    for synonym in entrance_exam_synonym:
+        template_result[synonym] = 0
+
     step = 0
     data_res = []
     temp_result = template_result.copy()
@@ -200,7 +201,7 @@ def get_all_enrollees(request):
         if expelled and (not i.is_expelled):
             continue
         if last_app_id != i.app_id and step != 0:
-            temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
+            temp_result["totalPoints"] = sum([temp_result[synonym] for synonym in entrance_exam_synonym]) + temp_result["achievementPoint"]
             data_res.append(temp_result.copy())
             temp_result = template_result.copy()
         temp_result["card"] = i.card_id
@@ -213,16 +214,11 @@ def get_all_enrollees(request):
             temp_result["researchContractId"] = i.direction_id
         temp_result["is_expelled"] = i.is_expelled
         temp_result["create_date"] = date
-        if i.subj_title.lower() in ["химия", "основы химии"]:
-            temp_result["сhemistry"] = i.grade if i.grade else 0
-        if i.subj_title.lower() in ["биология"]:
-            temp_result["biology"] = i.grade if i.grade else 0
-        if i.subj_title.lower() in ["русский язык"]:
-            temp_result["russian_language"] = i.grade if i.grade else 0
-
+        if i.subj_synonym in entrance_exam_synonym:
+            temp_result[i.subj_synonym] = i.grade if i.grade else 0
         last_app_id = i.app_id
         step += 1
     if temp_result.get("card"):
-        temp_result["totalPoints"] = temp_result["сhemistry"] + temp_result["biology"] + temp_result["russian_language"] + temp_result["achievementPoint"]
+        temp_result["totalPoints"] = sum([temp_result[synonym] for synonym in entrance_exam_synonym]) + temp_result["achievementPoint"]
         data_res.append(temp_result.copy())
     return data_res

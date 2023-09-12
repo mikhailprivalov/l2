@@ -197,6 +197,7 @@ class Subjects(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование предмета', help_text='Химия/основы химии, Математика и т.д')
     mmis_id = models.IntegerField(blank=True, null=True, db_index=True, verbose_name='mmis_id')
     short_title = models.CharField(max_length=55, default="", verbose_name='Короткое наименование', help_text='Химия/основы химии, Математика и т.д')
+    synonym = models.CharField(max_length=255, default="", verbose_name='Синоним', help_text='Химия/основы химии - chemistry')
 
     def __str__(self):
         return self.title

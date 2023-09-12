@@ -319,10 +319,6 @@ const isExpelled = ref(false);
 
 const selectedEnrollmentOrders = ref([]);
 const enrollmentOrders = ref([]);
-const getEnrollmentOrders = async () => {
-  const data = await api('/education/get-enrollment-orders');
-  enrollmentOrders.value = data.result;
-};
 
 const selectedCitizenship = ref(null);
 const citizenship = ref([]);
@@ -447,9 +443,7 @@ onMounted(
     getSpecialties();
     getPayForms();
     getCompanies();
-    getEnrollmentOrders();
     getCitizenship();
-    getApplicationFilters();
     getExamsFilters();
     getAchievementsFilters();
     getEducations();

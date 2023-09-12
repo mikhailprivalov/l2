@@ -184,7 +184,7 @@ def get_dashboard_data(application_year, researches):
             education_applicationeducation.original,
             education_applicationeducation.id as app_id,
             education_applicationeducation.date as app_data,
-            exsubj.title as subj_title,
+            exsubj.synonym as subj_synonym,
             education_entranceexam.grade,
             es.title as special_title,
             es.id as special_id,

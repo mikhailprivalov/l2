@@ -175,13 +175,17 @@ class EducationSpecialityAdmin(admin.ModelAdmin):
 
 class SubjectsAdmin(admin.ModelAdmin):
     list_display = (
+        'pk',
         'title',
         'short_title',
+        'synonym',
         'mmis_id',
     )
     list_display_links = (
+        'pk',
         'title',
         'short_title',
+        'synonym',
         'mmis_id',
     )
 

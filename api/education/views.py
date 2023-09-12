@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from clients.models import Citizenship
 from education.models import ApplicationEducation, ExamType, Subjects, AchievementType, DocumentTypeEducation, SpecialRights, EducationSpeciality, Achievement, EducationFinanceSource
 from education.views import get_all_enrollees
+from laboratory.local_settings import SUBJECTS_ENTRANCE_EXAM
 from laboratory.utils import current_year
 
 
@@ -23,11 +24,6 @@ def get_specialties(request):
 
 def get_pay_forms(request):
     result = EducationFinanceSource.get_sources()
-    return JsonResponse({"result": result})
-
-
-def get_enrollment_orders(request):
-    result = []
     return JsonResponse({"result": result})
 
 
@@ -58,14 +54,13 @@ def get_special_rights(request):
 
 
 def get_columns(request):
+    entrance_exam_data = Subjects.objects.filter(pk__in=SUBJECTS_ENTRANCE_EXAM)
+
     columns = [
         {"field": 'card', "key": 'card', "title": 'Дело'},
         {"field": 'fio', "key": 'fio', "title": 'ФИО'},
         {"field": 'applicationSpeciality', "key": 'applicationSpeciality', "title": 'Специальность'},
         {"field": 'applicationPersonNumber', "key": 'applicationPersonNumber', "title": 'Номер'},
-        {"field": 'chemistry', "key": 'chemistry', "title": 'Хим.'},
-        {"field": 'biology', "key": 'biology', "title": 'Био.'},
-        {"field": 'russian_language', "key": 'russian_language', "title": 'Рус.'},
         {"field": 'achievementPoint', "key": 'achievementPoint', "title": 'ИД'},
         {"field": 'achievementСhecked', "key": 'achievementСhecked', "title": 'ИД+'},
         {"field": 'totalPoints', "key": 'totalPoint', "title": 'Сумм'},
@@ -74,6 +69,11 @@ def get_columns(request):
         {"field": 'status', "key": 'status', "title": 'Статус'},
         {"field": 'create_date', "key": 'create_date', "title": 'Создано'},
     ]
+    step = 0
+    for i in entrance_exam_data:
+        columns.insert(4+step, {"field": i.synonym, "key": i.synonym, "title": i.short_title})
+        step += 1
+
     return JsonResponse({"result": columns})
 
 
