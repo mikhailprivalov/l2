@@ -16,10 +16,10 @@ from hl7apy.parser import parse_message
 
 from clients.models import Individual, CardBase
 from contracts.models import PriceName
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7LinkFiles
+from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7LinkFiles, Issledovaniya, Result
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
-from directory.models import Researches
+from directory.models import Researches, Fractions
 from laboratory.settings import BASE_DIR
 from laboratory.utils import current_time
 from slog.models import Log
@@ -349,11 +349,24 @@ class FTPConnection:
             return
 
         self.log("HL7 parsed")
-        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.ORU_R01_VISIT.PV1.PV1_3.value)
-        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_PATIENT.ORU_R01_VISIT.PV1.PV1_3.PL_4.value)
         obr = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR
-        # print(hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR.OBR_2.OBR_2_2.value)
-        iss_num = obr.OBR_2.OBR_2_1.value
+        external_add_order, iss_id = None, None
+        is_confirm = False
+        if "L2" not in obr.OBR_2.OBR_2_1.value:
+            external_add_order = obr.OBR_2.OBR_2_1.value
+        else:
+            iss_id = (obr.OBR_2.OBR_2_1.value).split("_")[1]
+        doctor_family_confirm = obr.OBR_32.OBR_32_2.value
+        doctor_name_confirm = obr.OBR_32.OBR_32_3.value
+        doctor_patronymic_confirm = obr.OBR_32.OBR_32_4.value
+        doctor_fio = f"{doctor_family_confirm} {doctor_name_confirm} {doctor_patronymic_confirm}"
+        print(doctor_family_confirm, doctor_name_confirm, doctor_patronymic_confirm)
+        date_time_confirm = obr.OBR_8.value
+        if obr.OBR_25.value == "F":
+            is_confirm = True
+        elif obr.OBR_25.value == "D":
+            is_confirm = False
+
         obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
         fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "",
                      "note_data": ""}
@@ -376,8 +389,44 @@ class FTPConnection:
             tmp_fractions["units"] = obx.OBX.obx_6.obx_6_1.value
             tmp_fractions["refs"] = obx.OBX.obx_7.obx_7_1.value
             result.append(tmp_fractions.copy())
-        for i in result:
-            print(i)
+
+        if external_add_order:
+            iss = Issledovaniya.objects.filter(external_add_order__external_add_order=external_add_order).first()
+        else:
+            iss = Issledovaniya.objects.filter(id=iss_id).first()
+
+        if is_confirm:
+            iss.lab_comment = ""
+            iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, '%Y%m%d%H%M%S')
+            iss.time_save = current_time()
+            iss.doc_confirmation_string = doctor_fio
+            iss.save()
+
+            for res in result:
+                fraction = Fractions.objects.filter(fsli=res["fsli"]).first()
+                if not fraction:
+                    continue
+                value = res["value"]
+                units = res["units"]
+                ref_str = res["refs"]
+                if ref_str:
+                    ref_str = ref_str.replace("\"", "'")
+                    ref_str = f'{{"Все": "{ref_str}"}}'
+                Result(
+                    issledovaniye=iss,
+                    fraction=fraction,
+                    value=value,
+                    units=units,
+                    ref_f=ref_str,
+                    ref_m=ref_str,
+                ).save()
+        else:
+            iss.lab_comment = "",
+            iss.time_confirmation = None,
+            iss.time_save = current_time()
+            iss.doc_confirmation_string = ""
+            iss.save()
+
 
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
