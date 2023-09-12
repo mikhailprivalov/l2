@@ -148,14 +148,14 @@ def update_education_individual(person_data, user_hospital_obj, person_applicati
         return {"card": card, "result_application": result_application, "result_exam": result_exam, "result_chievements": result_achievements}
     except Exception as e:
         system_user = DoctorProfile.objects.filter(is_system_user=True).first()
-        except_data = {"mmis_id": person_data.ID, "last_name": change_encoding_cp1251(person_data.Фамилия), "first_name": change_encoding_cp1251(person_data.Имя),
-                       "patronymic": change_encoding_cp1251(person_data.Отчество), "exception": str(e)}
-        Log.log(
-            person_data.ID,
-            200000,
-            system_user,
-            except_data
-        )
+        except_data = {
+            "mmis_id": person_data.ID,
+            "last_name": change_encoding_cp1251(person_data.Фамилия),
+            "first_name": change_encoding_cp1251(person_data.Имя),
+            "patronymic": change_encoding_cp1251(person_data.Отчество),
+            "exception": str(e),
+        }
+        Log.log(person_data.ID, 200000, system_user, except_data)
 
 
 def get_all_enrollees(request):
