@@ -18,43 +18,28 @@
       <h4 class="text-center">
         Заявления
       </h4>
-      <div class="three-col-div">
-        <div
-          v-for="application in applications"
-          :key="application.pk"
-          class="application-div"
-        >
-          <label>Заявление №{{ application.pk }}</label> <br>
-          <label>Cпециальность:</label>
-          {{ application.speciality }} <br>
-          <label>Дата:</label>
-          {{ application.date }}<br>
-          <div
-            v-for="subject in application.subjects"
-            :key="subject.pk"
-          >
-            <label>{{ subject.title }}:
-            </label>
-            {{ subject.grade }}
-          </div>
-        </div>
+      <VeTable
+        :columns="applicationsColumns"
+        :table-data="application"
+      />
+      <div
+        v-show="application.length === 0"
+        class="empty-list"
+      >
+        Нет записей
       </div>
       <h4 class="text-center">
         Достижения
       </h4>
-      <div class="three-col-div">
-        <div
-          v-for="achievement in achievements"
-          :key="achievement.pk"
-        >
-          <label>Достижение №{{ achievement.pk }}</label> <br>
-          <label>Название:</label>
-          {{ achievement.title }} <br>
-          <label>Дата:</label>
-          {{ achievement.date }}<br>
-          <label>Балл:</label>
-          {{ achievement.grade }} <br>
-        </div>
+      <VeTable
+        :columns="achievementsColumns"
+        :table-data="achievements"
+      />
+      <div
+        v-show="application.length === 0"
+        class="empty-list"
+      >
+        Нет записей
       </div>
     </div>
     <div slot="footer">
@@ -71,50 +56,61 @@
   </Modal>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 
+import {
+  defineEmits, defineProps, onMounted,
+  ref,
+} from 'vue';
+import {
+  VeLocale,
+  VeTable,
+} from 'vue-easytable';
+
+import 'vue-easytable/libs/theme-default/index.css';
+import ruRu from '@/locales/ve';
 import Modal from '@/ui-cards/Modal.vue';
+import api from '@/api';
 
-export default {
-  name: 'EnrolleesApplication',
-  components: { Modal },
-  props: {
-    card_pk: {
-      type: Number,
-      required: true,
-    },
-    fio: {
-      type: String,
-      required: true,
-    },
+VeLocale.use(ruRu);
+const emit = defineEmits(['hideEnrollees']);
+const props = defineProps({
+  card_pk: {
+    type: Number,
+    required: true,
   },
-  data() {
-    return {
-      applications: [],
-      achievements: [],
-    };
+  fio: {
+    type: String,
+    required: true,
   },
-  mounted() {
-    this.getApplications();
-    this.getAchievements();
-  },
-  methods: {
-    hideModal() {
-      if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none';
-      }
-      this.$root.$emit('hide_enrollees');
-    },
-    async getApplications() {
-      const data = await this.$api('/education/get-applications-by-card', { card_pk: this.card_pk });
-      this.applications = data.result;
-    },
-    async getAchievements() {
-      const data = await this.$api('/education/get-achievements-by-card', { card_pk: this.card_pk });
-      this.achievements = data.result;
-    },
-  },
+});
+const application = ref([]);
+const applicationsColumns = ref([]);
+const achievements = ref([]);
+const achievementsColumns = ref([
+  { field: 'pk', key: 'pk', title: '№' },
+  { field: 'title', key: 'title', title: 'Название' },
+  { field: 'date', key: 'date', title: 'Статус' },
+  { field: 'grade', key: 'grade', title: 'Оценка' },
+]);
+
+const hideModal = () => {
+  emit('hideEnrollees');
 };
+const getApplications = async () => {
+  const data = await api('/education/get-applications-by-card', { card_pk: props.card_pk });
+  application.value = data.applications;
+  applicationsColumns.value = data.columns;
+};
+const getAchievements = async () => {
+  const data = await api('/education/get-achievements-by-card', { card_pk: props.card_pk });
+  achievements.value = data.achievements;
+};
+
+onMounted(() => {
+  getApplications();
+  getAchievements();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -126,5 +122,9 @@ export default {
 .application-div {
   margin: 5px;
   padding: 0 5px;
+}
+.empty-list {
+  width: 85px;
+  margin: 20px auto;
 }
 </style>

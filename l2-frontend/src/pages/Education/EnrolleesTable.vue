@@ -24,6 +24,7 @@
       v-if="showInfoModal"
       :card_pk="selectedCardPk"
       :fio="selectedFio"
+      @hideEnrollees="showInfoModal = false"
     />
   </div>
 </template>
@@ -65,11 +66,6 @@ export default {
   mounted() {
     this.getInternalBase();
     this.getColumns();
-  },
-  created() {
-    this.$root.$on('hide_enrollees', () => {
-      this.showInfoModal = false;
-    });
   },
   methods: {
     pageNumberChange(number) {

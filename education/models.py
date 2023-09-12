@@ -1,5 +1,6 @@
 from django.db import models
 import education.sql_func as sql_func
+from laboratory.local_settings import SUBJECTS_ENTRANCE_EXAM
 
 
 class TypeInstitutionEducation(models.Model):
@@ -158,17 +159,35 @@ class ApplicationEducation(models.Model):
         return f"{self.card} - {self.speciality}"
 
     @staticmethod
-    def get_applications_by_card(card_pk) -> list[dict]:
+    def get_applications_by_card(card_pk):
         applications = []
         data = sql_func.get_applications_by_card(card_pk)
+        entrance_exam_data = Subjects.objects.filter(pk__in=SUBJECTS_ENTRANCE_EXAM)
         current_application = -1
+        columns = [
+            {"field": 'pk', "key": 'pk', "title": '№'},
+            {"field": 'date', "key": 'date', "title": 'Дата'},
+            {"field": 'speciality', "key": 'speciality', "title": 'Специальность'},
+        ]
+        data_applications = {
+            "pk": -1,
+            "date": '',
+            "speciality": '',
+        }
+        for i in entrance_exam_data:
+            columns.append({"field": i.synonym, "key": i.synonym, "title": i.short_title})
+            data_applications[i.synonym] = 0
+
         for i in data:
             if current_application != i.application_pk:
-                applications.append({"pk": i.application_pk, "date": i.date.strftime('%d.%m.%Y'), "speciality": i.spec_title, "subjects": [{"title": i.subject_title, "grade": i.grade}]})
-            else:
-                applications[-1]["subjects"].append({"title": i.subject_title, "grade": i.grade})
+                applications.append(data_applications)
+            data_applications["pk"] = i.application_pk
+            data_applications["date"] = i.date.strftime('%d.%m.%Y')
+            data_applications["speciality"] = i.spec_title
+            data_applications[i.subject_synonym] = i.grade if i.grade else 0
+
             current_application = i.application_pk
-        return applications
+        return applications, columns
 
     class Meta:
         verbose_name = 'Заявление'

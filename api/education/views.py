@@ -69,10 +69,8 @@ def get_columns(request):
         {"field": 'status', "key": 'status', "title": 'Статус'},
         {"field": 'create_date', "key": 'create_date', "title": 'Создано'},
     ]
-    step = 0
     for i in entrance_exam_data:
-        columns.insert(4+step, {"field": i.synonym, "key": i.synonym, "title": i.short_title})
-        step += 1
+        columns.insert(4, {"field": i.synonym, "key": i.synonym, "title": i.short_title})
 
     return JsonResponse({"result": columns})
 
@@ -84,8 +82,8 @@ def get_enrollees(request):
 
 def get_applications_by_card(request):
     request_data = json.loads(request.body)
-    result = ApplicationEducation.get_applications_by_card(request_data["card_pk"])
-    return JsonResponse({"result": result})
+    applications, columns = ApplicationEducation.get_applications_by_card(request_data["card_pk"])
+    return JsonResponse({"applications": applications, "columns": columns})
 
 
 def get_achievement_by_card(request):
