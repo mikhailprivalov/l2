@@ -71,7 +71,7 @@ def get_columns(request):
     ]
     step = 0
     for i in entrance_exam_data:
-        columns.insert(4+step, {"field": i.synonym, "key": i.synonym, "title": i.short_title})
+        columns.insert(4 + step, {"field": i.synonym, "key": i.synonym, "title": i.short_title})
         step += 1
 
     return JsonResponse({"result": columns})
