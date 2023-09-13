@@ -88,5 +88,5 @@ def get_applications_by_card(request):
 
 def get_achievement_by_card(request):
     request_data = json.loads(request.body)
-    result = Achievement.get_achievement_by_card(request_data["card_pk"])
-    return JsonResponse({"result": result})
+    achievements = Achievement.get_achievement_by_card(request_data["card_pk"])
+    return JsonResponse({"achievements": achievements})

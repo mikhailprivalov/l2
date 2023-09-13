@@ -169,24 +169,28 @@ class ApplicationEducation(models.Model):
             {"field": 'date', "key": 'date', "title": 'Дата'},
             {"field": 'speciality', "key": 'speciality', "title": 'Специальность'},
         ]
-        data_applications = {
+        template_applications = {
             "pk": -1,
             "date": '',
             "speciality": '',
         }
         for i in entrance_exam_data:
             columns.append({"field": i.synonym, "key": i.synonym, "title": i.short_title})
-            data_applications[i.synonym] = 0
+            template_applications[i.synonym] = 0
 
+        temp_applications = template_applications.copy()
         for i in data:
-            if current_application != i.application_pk:
-                applications.append(data_applications)
-            data_applications["pk"] = i.application_pk
-            data_applications["date"] = i.date.strftime('%d.%m.%Y')
-            data_applications["speciality"] = i.spec_title
-            data_applications[i.subject_synonym] = i.grade if i.grade else 0
+            if current_application != i.application_pk and current_application != -1:
+                applications.append(temp_applications)
+                temp_applications = template_applications.copy()
+            temp_applications["pk"] = i.application_pk
+            temp_applications["date"] = i.date.strftime('%d.%m.%Y')
+            temp_applications["speciality"] = i.spec_title
+            temp_applications[i.subject_synonym] = i.grade if i.grade else 0
 
             current_application = i.application_pk
+        if temp_applications.get("pk"):
+            applications.append(temp_applications)
         return applications, columns
 
     class Meta:

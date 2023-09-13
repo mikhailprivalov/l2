@@ -86,6 +86,12 @@ const props = defineProps({
 });
 const application = ref([]);
 const applicationsColumns = ref([]);
+const getApplications = async () => {
+  const data = await api('/education/get-applications-by-card', { card_pk: props.card_pk });
+  application.value = data.applications;
+  applicationsColumns.value = data.columns;
+};
+
 const achievements = ref([]);
 const achievementsColumns = ref([
   { field: 'pk', key: 'pk', title: '№' },
@@ -93,18 +99,13 @@ const achievementsColumns = ref([
   { field: 'date', key: 'date', title: 'Статус' },
   { field: 'grade', key: 'grade', title: 'Оценка' },
 ]);
-
-const hideModal = () => {
-  emit('hideEnrollees');
-};
-const getApplications = async () => {
-  const data = await api('/education/get-applications-by-card', { card_pk: props.card_pk });
-  application.value = data.applications;
-  applicationsColumns.value = data.columns;
-};
 const getAchievements = async () => {
   const data = await api('/education/get-achievements-by-card', { card_pk: props.card_pk });
   achievements.value = data.achievements;
+};
+
+const hideModal = () => {
+  emit('hideEnrollees');
 };
 
 onMounted(() => {
