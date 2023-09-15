@@ -275,6 +275,7 @@ def resend_results(request):
         direction.post_confirmation()
     return status_response(True)
 
+
 @login_required()
 def need_order_redirection(request):
     request_data = json.loads(request.body)
