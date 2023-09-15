@@ -2505,7 +2505,6 @@ def directions_by_category_result_year(request):
 @api_view(['POST'])
 def results_by_direction(request):
     request_data = json.loads(request.body)
-    print(request_data)
     if not hasattr(request.user, 'hospitals'):
         return Response({"ok": False, 'message': 'Некорректный auth токен'})
     oid_org = request_data.get(("oid") or '')
