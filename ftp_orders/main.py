@@ -419,8 +419,8 @@ class FTPConnection:
                     ref_m=ref_str,
                 ).save()
         else:
-            iss.lab_comment = "",
-            iss.time_confirmation = None,
+            iss.lab_comment = ("",)
+            iss.time_confirmation = (None,)
             iss.time_save = current_time()
             iss.doc_confirmation_string = ""
             iss.save()
