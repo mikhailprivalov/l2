@@ -424,6 +424,7 @@ class FTPConnection:
             iss.time_save = current_time()
             iss.doc_confirmation_string = ""
             iss.save()
+
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
 
