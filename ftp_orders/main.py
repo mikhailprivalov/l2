@@ -360,7 +360,6 @@ class FTPConnection:
         doctor_name_confirm = obr.OBR_32.OBR_32_3.value
         doctor_patronymic_confirm = obr.OBR_32.OBR_32_4.value
         doctor_fio = f"{doctor_family_confirm} {doctor_name_confirm} {doctor_patronymic_confirm}"
-        print(doctor_family_confirm, doctor_name_confirm, doctor_patronymic_confirm)
         date_time_confirm = obr.OBR_8.value
         if obr.OBR_25.value == "F":
             is_confirm = True
