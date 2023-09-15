@@ -367,8 +367,7 @@ class FTPConnection:
             is_confirm = False
 
         obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
-        fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "",
-                     "note_data": ""}
+        fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "", "note_data": ""}
         result = []
         for obx in obxes:
             tmp_fractions = fractions.copy()
@@ -420,13 +419,11 @@ class FTPConnection:
                     ref_m=ref_str,
                 ).save()
         else:
-            iss.lab_comment = "",
-            iss.time_confirmation = None,
+            iss.lab_comment = ("",)
+            iss.time_confirmation = (None,)
             iss.time_save = current_time()
             iss.doc_confirmation_string = ""
             iss.save()
-
-
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
 
