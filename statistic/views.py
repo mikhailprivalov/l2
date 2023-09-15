@@ -825,7 +825,6 @@ def statistic_xls(request):
                 researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id)
             else:
                 researches_sql = sql_func.statistics_research_create_directions(research_id, start_date, end_date, hospital_id)
-                print(researches_sql)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
     elif tp == "journal-get-material":
