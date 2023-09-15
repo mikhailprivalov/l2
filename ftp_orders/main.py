@@ -367,8 +367,7 @@ class FTPConnection:
             is_confirm = False
 
         obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
-        fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "",
-                     "note_data": ""}
+        fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "", "note_data": ""}
         result = []
         for obx in obxes:
             tmp_fractions = fractions.copy()
