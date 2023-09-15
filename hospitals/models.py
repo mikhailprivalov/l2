@@ -53,6 +53,7 @@ class Hospitals(models.Model):
     hl7_sender_application = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 приложение отправитель')
     hl7_receiver_appplication = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 приложение получатель')
     hl7_rule_file = models.CharField(max_length=60, null=True, blank=True, default="default.json", help_text="Название ф-ла правил HL7")
+    is_auto_transfer_hl7_file = models.BooleanField(default=False, blank=True, help_text='Автоматическая отправка файла в каталог', db_index=True)
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

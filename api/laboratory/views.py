@@ -194,7 +194,11 @@ def search(request):
             except Napravleniya.DoesNotExist:
                 direction = None
                 iss = None
-        if direction and direction.hospital and direction.hospital != doc.hospital:
+        user_groups = [str(x) for x in request.user.groups.all()]
+        contol_hosp = False
+        if "Направления-все МО" not in user_groups:
+            contol_hosp = True
+        if direction and direction.hospital and direction.hospital != doc.hospital and contol_hosp:
             direction = None
             iss = None
         mnext = False

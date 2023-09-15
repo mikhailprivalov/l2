@@ -160,6 +160,7 @@ class SettingManager:
                     "send_orgs_email_results",
                     "send_patients_email_results",
                     "docx_aggregate_laboratory_results",
+                    "need_order_redirection",
                     "chats",
                     "csv_load_file",
                     "transfer_card",

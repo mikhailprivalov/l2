@@ -123,6 +123,13 @@
           </div>
           <div class="full-width">
             <FormulateInput
+              type="checkbox"
+              name="isAutotransfer"
+              label="Автоматически пересылать"
+            />
+          </div>
+          <div class="full-width">
+            <FormulateInput
               type="text"
               name="ordersPushFtpServerUrl"
               label="URL для FTP директории отправки заказов"
