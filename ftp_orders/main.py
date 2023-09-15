@@ -654,7 +654,17 @@ def process_push_orders():
         print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
         for ftp_url, ftp_connection in ftp_connections.items():
             directions_to_sync = []
-            for direction in Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:50]:
+            directions = []
+            directions_external_executor = []
+            if ftp_connection.hospital.is_auto_transfer_hl7_file:
+                directions = Napravleniya.objects.filter(hospital=ftp_connection.hospital, need_order_redirection=True)[:50]
+            else:
+                directions_external_executor = Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:50]
+            for dir_external in directions_external_executor:
+                if dir_external not in directions:
+                    directions.append(dir_external)
+
+            for direction in directions:
                 is_recieve = False
                 for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).distinct():
                     is_recieve = True
