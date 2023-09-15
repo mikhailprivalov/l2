@@ -181,9 +181,9 @@ def get_all_enrollees(request):
         "applicationPersonNumber": "",
         "achievementPoint": 0,
         "totalPoints": 0,
-        "is_original": "",
+        "isOriginal": "",
         "status": "",
-        "create_date": "",
+        "createDate": "",
         "researchContractId": None,
     }
     for synonym in entrance_exam_synonym:
@@ -208,12 +208,12 @@ def get_all_enrollees(request):
         temp_result["fio"] = f"{i.ind_family} {i.ind_name} {i.ind_patronymic}"
         temp_result["applicationSpeciality"] = i.special_title
         temp_result["applicationPersonNumber"] = i.personal_number
-        temp_result["is_original"] = i.original
-        temp_result["is_enrolled"] = i.is_enrolled
+        temp_result["isOriginal"] = i.original
+        temp_result["isEnrolled"] = i.is_enrolled
         if i.is_enrolled and research_contract_ids:
             temp_result["researchContractId"] = i.direction_id
-        temp_result["is_expelled"] = i.is_expelled
-        temp_result["create_date"] = date
+        temp_result["isExpelled"] = i.is_expelled
+        temp_result["createDate"] = date
         if i.subj_synonym in entrance_exam_synonym:
             temp_result[i.subj_synonym] = i.grade if i.grade else 0
         last_app_id = i.app_id

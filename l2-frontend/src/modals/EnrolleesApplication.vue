@@ -115,15 +115,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.three-col-div {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-bottom: 5px;
-}
-.application-div {
-  margin: 5px;
-  padding: 0 5px;
-}
 .empty-list {
   width: 85px;
   margin: 20px auto;

@@ -82,10 +82,10 @@ def get_columns(request):
         {"field": 'achievementPoint', "key": 'achievementPoint', "title": 'ИД'},
         {"field": 'achievementСhecked', "key": 'achievementСhecked', "title": 'ИД+'},
         {"field": 'totalPoints', "key": 'totalPoint', "title": 'Сумм'},
-        {"field": 'is_original', "key": 'is_original', "title": 'Оригинал'},
+        {"field": 'isOriginal', "key": 'isOriginal', "title": 'Оригинал'},
         {"field": 'researchContractId', "key": 'researchContractId', "title": 'Договор'},
         {"field": 'status', "key": 'status', "title": 'Статус'},
-        {"field": 'create_date', "key": 'create_date', "title": 'Создано'},
+        {"field": 'createDate', "key": 'create_date', "title": 'Создано'},
     ]
     for i in entrance_exam_data:
         columns.insert(4, {"field": i.synonym, "key": i.synonym, "title": i.short_title})
