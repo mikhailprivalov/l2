@@ -1966,7 +1966,7 @@ def get_cda_data(pk):
                     "OGRN": "",
                     "OrganizationName": "",
                 },
-                "doctorsData": {
+                "employeeData": {
                     "EmployeeUUID": "",
                     "ContragentUUID": "",
                     "EmployeeSNILS": "",
@@ -1974,6 +1974,7 @@ def get_cda_data(pk):
                     "EmployeeFirstName": "",
                     "EmployeeSecondName": "",
                     "EmployeeGender": "",
+                    "EmployeeBirthday": "",
                 },
                 "pmoData": {
                     "PMOUUID": "",
