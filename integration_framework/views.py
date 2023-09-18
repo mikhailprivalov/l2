@@ -1988,9 +1988,8 @@ def get_cda_data(pk):
                     "medicalCertificate": {
                         "CertificateNumber": "",
                         "CertificateDate": "",
-                    }
-                }
-
+                    },
+                },
             },
         }
     return {}
