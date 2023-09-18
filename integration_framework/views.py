@@ -1951,6 +1951,45 @@ def get_cda_data(pk):
                     'oms': {'number': card.get_data_individual()['oms']['polis_num'], 'issueOrgName': smo_title, 'issueOrgCode': insurer_full_code, 'smoId': smo_id},
                 },
                 "organization": data["organization"],
+                "contractData": {
+                    "ContraсtUUID": "",
+                    "ContractDateStart": "",
+                    "ContractDateEnd": "",
+                    "ContragentUUID": "",
+                    "ContractNumber": "",
+                    "ResultUUID": "",
+                },
+                "contragentData": {
+                    "ContragentUUID": "",
+                    "INN": "",
+                    "KPP": "",
+                    "OGRN": "",
+                    "OrganizationName": "",
+                },
+                "doctorsData": {
+                    "EmployeeUUID": "",
+                    "ContragentUUID": "",
+                    "EmployeeSNILS": "",
+                    "EmployeeLastName": "",
+                    "EmployeeFirstName": "",
+                    "EmployeeSecondName": "",
+                    "EmployeeGender": "",
+                },
+                "pmoData": {
+                    "PMOUUID": "",
+                    "EmployeeUUID": "",
+                    "ContractUUID": "",
+                    "PMODate": "",
+                    "PMOResult": "",
+                    "RiskGroup": "",
+                    "PMORecommendations": "",
+                    "factors": ["FactorUUID", "FactorUUID"],
+                    "medicalCertificate": {
+                        "CertificateNumber": "",
+                        "CertificateDate": "",
+                    }
+                }
+
             },
         }
     return {}
