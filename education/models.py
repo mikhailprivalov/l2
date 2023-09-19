@@ -165,8 +165,8 @@ class ApplicationEducation(models.Model):
         entrance_exam_data = Subjects.objects.filter(pk__in=SUBJECTS_ENTRANCE_EXAM)
         current_application = -1
         columns = [
-            {"field": 'pk', "key": 'pk', "title": '№'},
-            {"field": 'date', "key": 'date', "title": 'Дата'},
+            {"field": 'pk', "key": 'pk', "title": '№', "width": 50},
+            {"field": 'date', "key": 'date', "title": 'Дата', "width": 50},
             {"field": 'speciality', "key": 'speciality', "title": 'Специальность'},
         ]
         template_applications = {
@@ -175,7 +175,7 @@ class ApplicationEducation(models.Model):
             "speciality": '',
         }
         for i in entrance_exam_data:
-            columns.append({"field": i.synonym, "key": i.synonym, "title": i.short_title})
+            columns.append({"field": i.synonym, "key": i.synonym, "title": i.short_title, "width": 50})
             template_applications[i.synonym] = 0
 
         temp_applications = template_applications.copy()

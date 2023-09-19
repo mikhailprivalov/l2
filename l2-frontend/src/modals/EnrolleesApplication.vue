@@ -94,10 +94,16 @@ const getApplications = async () => {
 
 const achievements = ref([]);
 const achievementsColumns = ref([
-  { field: 'pk', key: 'pk', title: '№' },
+  {
+    field: 'pk', key: 'pk', title: '№', width: 50,
+  },
   { field: 'title', key: 'title', title: 'Название' },
-  { field: 'date', key: 'date', title: 'Статус' },
-  { field: 'grade', key: 'grade', title: 'Оценка' },
+  {
+    field: 'date', key: 'date', title: 'Дата', width: 50,
+  },
+  {
+    field: 'grade', key: 'grade', title: 'Оценка', width: 50,
+  },
 ]);
 const getAchievements = async () => {
   const data = await api('/education/get-achievements-by-card', { card_pk: props.card_pk });

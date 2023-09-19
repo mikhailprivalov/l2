@@ -69,12 +69,12 @@ const getInternalBase = async () => {
   basePk.value = baseData.bases[0].pk;
 };
 const openCard = (cardPk) => {
-  window.open(`/ui/directions?card_pk=${cardPk}&base_pk=${this.basePk}`);
+  window.open(`/ui/directions?card_pk=${cardPk}&base_pk=${basePk.value}`);
 };
 const openInfo = (cardPk, fio) => {
-  this.showInfoModal = true;
-  this.selectedCardPk = cardPk;
-  this.selectedFio = fio;
+  showInfoModal.value = true;
+  selectedCardPk.value = cardPk;
+  selectedFio.value = fio;
 };
 const openContract = (contractPk) => {
   window.open(`/ui/results/descriptive#{"pk":${contractPk}}`);
@@ -132,13 +132,13 @@ const getColumns = async () => {
       h('div', { class: $style.action }, [
         h(
           'button',
-          { class: $style.transparentButton },
-          [h('i', { class: 'fa-solid fa-user-graduate', 'aria-hidden': true, on: { click: () => { openCard(row.card); } } })],
+          { class: $style.transparentButton, on: { click: () => { openCard(row.card); } } },
+          [h('i', { class: 'fa-solid fa-user-graduate', 'aria-hidden': true })],
         ),
         h(
           'button',
-          { class: $style.transparentButton },
-          [h('i', { class: 'fa fa-info-circle', 'aria-hidden': true, on: { click: () => { openInfo(row.card, row.fio); } } })],
+          { class: $style.transparentButton, on: { click: () => { openInfo(row.card, row.fio); } } },
+          [h('i', { class: 'fa fa-info-circle', 'aria-hidden': true })],
         ),
       ])
     ),
