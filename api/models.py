@@ -38,6 +38,7 @@ class Application(models.Model):
     can_access_schedule = models.BooleanField(default=False, help_text="У приложения есть доступ к расписанию")
     csv_header = models.CharField(max_length=255, blank=True, null=True, help_text="Заголовок CSV файла")
     is_background_worker = models.BooleanField(default=False)
+    unlimited_access = models.BooleanField(default=False, help_text="Доступ без ограничений")
 
     def auto_set_places(self, rel: "RelationFractionASTM", value: Union[str, float, int]) -> str:
         if rel.full_round:
