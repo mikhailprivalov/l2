@@ -2550,16 +2550,19 @@ def results_by_direction(request):
                     'internalCode': r.research_internal_code,
                     'fio': short_fio_dots(r.fio) if r.fio else r.doc_confirmation_string,
                     'confirmedAt': r.date_confirm,
-                    'fractions': []}
+                    'fractions': [],
+                }
 
-            objs_result[r.direction]['services'][r.iss_id]['fractions'].append({
-                'title': r.fraction_title,
-                'value': r.value,
-                'units': r.units,
-                'fsli': r.fraction_fsli,
-                'ref_m': r.ref_m,
-                'ref_f': r.ref_f,
-            })
+            objs_result[r.direction]['services'][r.iss_id]['fractions'].append(
+                {
+                    'title': r.fraction_title,
+                    'value': r.value,
+                    'units': r.units,
+                    'fsli': r.fraction_fsli,
+                    'ref_m': r.ref_m,
+                    'ref_f': r.ref_f,
+                }
+            )
 
     if is_paraclinic or is_doc_refferal or is_user_forms:
         results = desc_to_data(directions_data, force_all_fields=True)
