@@ -6,11 +6,11 @@
     />
     <div
       v-show="enrollees.length === 0"
-      class="empty-list"
+      :class="$style.emptyList"
     >
       Нет записей
     </div>
-    <div class="flex-space-between">
+    <div>
       <VePagination
         :total="enrollees.length"
         :page-index="page"

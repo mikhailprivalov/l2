@@ -643,6 +643,7 @@
       v-if="enrollees"
       :card_pk="selected_card.pk"
       :fio="selected_card.family + ' ' + selected_card.name + ' ' + selected_card.twoname"
+      @hideEnrollees="hideEnrollees"
     />
     <AmbulatoryData
       v-if="ambulatory_data && selected_card.pk"
@@ -1572,6 +1573,9 @@ export default {
       const rows = await this.$api('external-system/phones-transfers');
       this.phones_tranfer = rows.org_phones;
       this.extrenal_phones = rows.extrenal_phones;
+    },
+    hideEnrollees() {
+      this.enrollees = false;
     },
   },
 };
