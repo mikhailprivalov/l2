@@ -388,6 +388,7 @@ AUTO_PRINT_RESEARCH_DIRECTION = {}  # {perid_month_ago: "10", "researches": [res
 ECP_SEARCH_PATIENT = {}
 DAYS_AGO_SEARCH_RESULT = {}  # {"isLab: 90", "isInstrument: 365"}
 NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL = False
+USE_TFOMS_DISTRICT = False
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
