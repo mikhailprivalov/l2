@@ -3,7 +3,7 @@
     <h4 class="header text-center">
       Абитуриенты
     </h4>
-    <div class="margin-div flex-div">
+    <div class="margin flex">
       <button
         class="btn btn-blue-nb button-icon"
         @click="showFilters = !showFilters"
@@ -65,10 +65,6 @@ const getEnrollees = async (filters: object = {}) => {
   enrollees.value = result.data;
 };
 
-const clearFilters = () => {
-  console.log('fdf');
-};
-
 const changeFilters = (data) => {
   getEnrollees(data);
 };
@@ -85,29 +81,12 @@ onMounted(
   background-color: #ffffff;
   margin: 10px auto;
 }
-.four-col-div {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 5px;
-}
-.margin-div {
+.margin {
   margin: 5px 10px;
 }
-.flex-div {
+.flex {
   display: flex;
   flex-wrap: wrap;
-}
-.input-checkbox {
-  margin: auto 0;
-  height: 20px;
-  vertical-align: middle;
-}
-.label-for-checkbox {
-  margin: auto 10px auto 0;
-}
-.div-checkbox {
-  margin: auto 0;
-  height: 0;
 }
 .header {
   margin: 10px;
