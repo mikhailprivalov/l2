@@ -20,7 +20,7 @@ from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, T
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
-from laboratory.settings import BASE_DIR
+from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER
 from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -661,14 +661,17 @@ def process_push_orders():
                 if dir_external not in directions:
                     directions.append(dir_external)
 
-            for direction in directions:
-                is_recieve = False
-                for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).distinct():
-                    is_recieve = True
-                    if tube.time_recive is None:
-                        is_recieve = False
-                if is_recieve:
-                    directions_to_sync.append(direction)
+            if NEED_RECIEVE_TUBE_TO_PUSH_ORDER:
+                for direction in directions:
+                    is_recieve = False
+                    for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).distinct():
+                        is_recieve = True
+                        if tube.time_recive is None:
+                            is_recieve = False
+                    if is_recieve:
+                        directions_to_sync.append(direction)
+            else:
+                directions_to_sync.extend(directions)
 
             ftp_connection.log(f"Directions to sync: {[d.pk for d in directions_to_sync]}")
 
