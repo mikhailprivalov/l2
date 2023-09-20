@@ -1060,9 +1060,6 @@ export default {
     this.$root.$on('hide_harmful_factor', () => {
       this.harmful_factor = false;
     });
-    this.$root.$on('hide_enrollees', () => {
-      this.enrollees = false;
-    });
     this.$root.$on('hide_template_editor', () => {
       this.template_editor = false;
     });
