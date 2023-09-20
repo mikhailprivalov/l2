@@ -32,7 +32,8 @@ def get_applications_by_card(card_pk: int):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-           SELECT education_applicationeducation.id as application_pk, date, education_educationspeciality.title as spec_title, education_subjects.synonym as subject_synonym, grade 
+           SELECT education_applicationeducation.id as application_pk, date, education_educationspeciality.title as spec_title, education_applicationeducation.personal_number, 
+           education_subjects.synonym as subject_synonym, grade 
            FROM education_applicationeducation
            LEFT JOIN education_educationspeciality on speciality_id = education_educationspeciality.id
            LEFT JOIN education_entranceexam on education_applicationeducation.id = education_entranceexam.application_education_id

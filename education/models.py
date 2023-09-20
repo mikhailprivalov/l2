@@ -185,7 +185,7 @@ class ApplicationEducation(models.Model):
                 temp_applications = template_applications.copy()
             temp_applications["pk"] = i.application_pk
             temp_applications["date"] = i.date.strftime('%d.%m.%Y')
-            temp_applications["speciality"] = i.spec_title
+            temp_applications["speciality"] = i.spec_title + ", " + i.personal_number
             temp_applications[i.subject_synonym] = i.grade if i.grade else 0
 
             current_application = i.application_pk
