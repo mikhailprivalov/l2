@@ -1074,8 +1074,6 @@ class Napravleniya(models.Model):
         if issledovaniya is None:
             pass
         client = Clients.Card.objects.get(pk=client_id)
-        print(price_name_id)
-        print(istochnik_f)
         if price_name_id is None and istochnik_f and istochnik_f.title.lower() in ["договор"]:
             price_name_obj = contracts.PriceName.get_hospital_price_by_date(doc.hospital_id, current_time(only_date=True), current_time(only_date=True), True)
             price_name_id = price_name_obj.pk
