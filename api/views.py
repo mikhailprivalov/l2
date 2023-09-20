@@ -22,7 +22,7 @@ from laboratory.settings import (
     SEARCH_PAGE_STATISTIC_PARAMS,
     UNLIMIT_PERIOD_STATISTIC_GROUP,
     TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
-    STATISTIC_TYPE_DEPARTMENT,
+    STATISTIC_TYPE_DEPARTMENT, USE_TFOMS_DISTRICT,
 )
 from utils.response import status_response
 
@@ -1820,7 +1820,7 @@ def actual_districts(request):
 
     if card_pk is not None:
         card_hospital_id = -1
-        if SettingManager.l2('tfoms'):
+        if SettingManager.l2('tfoms') and USE_TFOMS_DISTRICT:
             card = Card.objects.get(pk=data['card_pk'])
             enp = card.individual.get_enp()
             if enp:
