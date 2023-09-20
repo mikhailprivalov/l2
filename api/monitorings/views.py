@@ -211,8 +211,6 @@ def filexlsx(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet(f'{monitoring.title}')
-        is_table = False
-
         ws = structure_sheet.monitoring_xlsx(ws, monitoring.title, table_data, date)
 
         response['Content-Disposition'] = str.translate(f"attachment; filename=\"{monitoring.title}, {date}.xlsx\"", tr)
