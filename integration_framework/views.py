@@ -3085,8 +3085,8 @@ def get_reference_books(request):
                 "id": i.fraction_id,
                 "title": i.fraction_title,
                 "fsli": i.fraction_fsli,
-                "ref_m": i.fraction_ref_m,
-                "ref_f": i.fraction_ref_f,
+                "ref_m": json.loads(i.fraction_ref_m),
+                "ref_f": json.loads(i.fraction_ref_f),
                 "unitTitle": i.unit_title,
                 "unitCode": i.unit_code,
                 "unitUcum": i.unit_ucum
