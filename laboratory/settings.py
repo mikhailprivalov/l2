@@ -389,6 +389,7 @@ ECP_SEARCH_PATIENT = {}
 DAYS_AGO_SEARCH_RESULT = {}  # {"isLab: 90", "isInstrument: 365"}
 NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL = False
 USE_TFOMS_DISTRICT = False
+NEED_RECIEVE_TUBE_TO_PUSH_ORDER = False
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
