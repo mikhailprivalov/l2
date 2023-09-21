@@ -57,4 +57,5 @@ urlpatterns = [
     path('get-direction-pk-by-emdr-id', views.get_direction_pk_by_emdr_id),
     path('get-value-field', views.get_value_field),
     path('get-actual-price', views.get_actual_price),
+    path('get-reference-books', views.get_reference_books),
 ]
