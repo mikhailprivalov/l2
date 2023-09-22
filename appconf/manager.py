@@ -199,7 +199,6 @@ class SettingManager:
         k = SettingManager.FULL_CACHE_EN_KEY
 
         cv = cache.get(k)
-        cv = False
         if cv:
             result = simplejson.loads(cv)
         else:
