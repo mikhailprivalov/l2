@@ -517,7 +517,6 @@ def departments(request):
         }
         if hasattr(request, 'plain_response') and request.plain_response:
             return data
-        print(data)
         return JsonResponse(data)
 
     if can_edit:
@@ -722,11 +721,15 @@ def current_user_info(request):
                     )
 
             for e in en:
+
                 if e < 4 or not en[e] or e == 13:
                     continue
 
                 t = e - 4
                 has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
+                if e == 16:
+                    print("has_def")
+                    print(has_def)
 
                 if has_def and e != 12:
                     d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
@@ -749,6 +752,7 @@ def current_user_info(request):
                     ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
                         {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
                     )
+
             try:
                 connections.close_all()
             except Exception as e:
@@ -762,6 +766,8 @@ def current_user_info(request):
 
         t1.join()
         t2.join()
+
+    print(ret)
 
     if hasattr(request, 'plain_response') and request.plain_response:
         return ret
