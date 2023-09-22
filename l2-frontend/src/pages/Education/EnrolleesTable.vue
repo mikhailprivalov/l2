@@ -39,6 +39,10 @@ import 'vue-easytable/libs/theme-default/index.css';
 import ruRu from '@/locales/ve';
 import EnrolleesApplication from '@/modals/EnrolleesApplication.vue';
 import api from '@/api';
+import { useStore } from "@/store";
+import * as actions from "@/store/action-types";
+
+const store = useStore();
 
 VeLocale.use(ruRu);
 const props = defineProps({
@@ -65,7 +69,9 @@ const pageSizeChange = (size) => {
   pageSize.value = size;
 };
 const getInternalBase = async () => {
+  await store.dispatch(actions.DEC_LOADING);
   const baseData = await api('/bases');
+  await store.dispatch(actions.DEC_LOADING);
   basePk.value = baseData.bases[0].pk;
 };
 const openCard = (cardPk) => {
@@ -81,7 +87,9 @@ const openContract = (contractPk) => {
 };
 
 const getColumns = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const data = await api('/education/get-columns');
+  await store.dispatch(actions.DEC_LOADING);
   const { result } = data;
   columns.value = result.map((cell) => {
     if (cell.key === 'isOriginal') {

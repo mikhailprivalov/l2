@@ -40,6 +40,10 @@ import {
 import EnrolleesTable from '@/pages/Education/EnrolleesTable.vue';
 import api from '@/api';
 import EnrolleesFilters from '@/pages/Education/EnrolleesFilters.vue';
+import { useStore } from '@/store';
+import * as actions from "@/store/action-types";
+
+const store = useStore();
 
 const showFilters = ref(false);
 
@@ -54,6 +58,7 @@ const filteredEnrollees = computed(() => enrollees.value.filter(applicaiton => {
 }));
 
 const getEnrollees = async (filters: object = {}) => {
+  await store.dispatch(actions.INC_LOADING);
   const result = await api('/education/get-enrollees', {
     filters: {
       specialities: filters ? filters.specialties : [],
@@ -62,6 +67,7 @@ const getEnrollees = async (filters: object = {}) => {
       expelled: filters ? filters.applications === 2 : false,
     },
   });
+  await store.dispatch(actions.DEC_LOADING);
   enrollees.value = result.data;
 };
 

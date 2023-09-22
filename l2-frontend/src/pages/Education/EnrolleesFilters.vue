@@ -255,20 +255,27 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
 import api from '@/api';
+import { useStore } from "@/store";
+import * as actions from "@/store/action-types";
 
+const store = useStore();
 const emit = defineEmits(['changeFilters']);
 
 const selectedPayForms = ref([]);
 const payForms = ref([]);
 const getPayForms = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const data = await api('/education/get-pay-forms');
+  await store.dispatch(actions.DEC_LOADING);
   payForms.value = data.result;
 };
 
 const selectedCompany = ref(null);
 const companies = ref([]);
 const getCompanies = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const result = await api('/get-companies');
+  await store.dispatch(actions.DEC_LOADING);
   companies.value = result.data;
 };
 
@@ -286,7 +293,9 @@ const enrollmentOrders = ref([]);
 const selectedCitizenship = ref(null);
 const citizenship = ref([]);
 const getCitizenship = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const data = await api('/education/get-citizenship');
+  await store.dispatch(actions.DEC_LOADING);
   citizenship.value = data.result;
 };
 
@@ -306,7 +315,9 @@ const selectedExamSubjects = ref([]);
 const examSubjects = ref([]);
 const examChecked = ref(false);
 const getExamsFilters = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const data = await api('/education/get-exams-filters');
+  await store.dispatch(actions.DEC_LOADING);
   examTypes.value = data.exam_types;
   examSubjects.value = data.subjects;
 };
@@ -316,7 +327,9 @@ const achievementTypes = ref([]);
 const selectedAchievementsStatuses = ref([]);
 const achievementsStatuses = ref([]);
 const getAchievementsFilters = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const data = await api('/education/get-achievements-filters');
+  await store.dispatch(actions.DEC_LOADING);
   achievementTypes.value = data.achievements;
 };
 
@@ -324,13 +337,17 @@ const isSatisfactoryScore = ref(false);
 const selectedEducations = ref([]);
 const educations = ref([]);
 const getEducations = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const data = await api('/education/get-educations');
+  await store.dispatch(actions.DEC_LOADING);
   educations.value = data.result;
 };
 const selectedSpecialRights = ref([]);
 const specialRights = ref([]);
 const getSpecialRights = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const data = await api('/education/get-special-rights');
+  await store.dispatch(actions.DEC_LOADING);
   specialRights.value = data.result;
 };
 
@@ -348,7 +365,9 @@ const yearApplication = ref([
 const selectedSpecialties = ref([]);
 const specialties = ref([]);
 const getSpecialties = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const data = await api('/education/get-specialties', { yearStartStudy: selectedYearApplication });
+  await store.dispatch(actions.DEC_LOADING);
   specialties.value = data.result;
 };
 
