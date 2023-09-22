@@ -785,7 +785,7 @@ def directive_from(request):
     data = []
     hospital = request.user.doctorprofile.hospital
     for dep in (
-        Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC), hospital__in=(hospital, None))
+        Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC, Podrazdeleniya.CASE), hospital__in=(hospital, None))
         .prefetch_related(
             Prefetch(
                 'doctorprofile_set',

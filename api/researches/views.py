@@ -361,6 +361,8 @@ def researches_by_department(request):
             q = DResearches.objects.filter(is_monitoring=True).order_by("title")
         elif department_pk == -13:
             q = DResearches.objects.filter(is_expertise=True).order_by("title")
+        elif department_pk == -16:
+            q = DResearches.objects.filter(is_case=True).order_by("title")
         else:
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
@@ -405,6 +407,7 @@ def researches_params(request):
 def researches_update(request):
     response = {"ok": False}
     request_data = json.loads(request.body)
+    print(request_data)
     pk = request_data.get("pk", -2)
     if pk > -2:
         department_pk = request_data.get("department")
@@ -455,8 +458,9 @@ def researches_update(request):
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
-        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13]
+        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -16]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
+            print("попал")
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
             if int(hospital_research_department_pk) > -1:
@@ -484,6 +488,7 @@ def researches_update(request):
                     is_application=department_pk == -11,
                     is_monitoring=department_pk == -12,
                     is_expertise=department_pk == -13,
+                    is_case=department_pk == -16,
                     is_slave_hospital=stationar_slave,
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
@@ -527,6 +532,7 @@ def researches_update(request):
                 res.is_application = department_pk == -11
                 res.is_monitoring = department_pk == -12
                 res.is_expertise = department_pk == -13
+                res.is_case = department_pk == -16
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide

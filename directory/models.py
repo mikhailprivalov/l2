@@ -82,6 +82,7 @@ class ResearchSite(models.Model):
         (4, 'Микробиология'),
         (7, 'Формы'),
         (10, 'Мониторинги'),
+        (16, 'Случаи'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -371,6 +372,7 @@ class Researches(models.Model):
             or self.is_paraclinic
             or self.is_microbiology
             or self.is_hospital
+            or self.is_case
             or self.is_citology
             or self.is_gistology
             or self.is_form
