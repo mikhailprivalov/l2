@@ -517,6 +517,7 @@ def departments(request):
         }
         if hasattr(request, 'plain_response') and request.plain_response:
             return data
+        print(data)
         return JsonResponse(data)
 
     if can_edit:

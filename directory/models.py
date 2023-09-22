@@ -243,6 +243,7 @@ class Researches(models.Model):
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
     is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
+    is_case = models.BooleanField(default=False, blank=True, help_text="Это случай", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -357,6 +358,8 @@ class Researches(models.Model):
             return -13
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
+        if self.is_case:
+            return -16
         return self.podrazdeleniye_id or -2
 
     @property

@@ -461,7 +461,7 @@
         </div>
       </template>
       <div
-        v-if="ex_dep === 7"
+        v-if="ex_dep === 7 || ex_dep === 16"
         class="department-select"
       >
         <Treeselect
@@ -480,7 +480,7 @@
           >
         </div>
       </div>
-      <template v-if="ex_dep !== 7">
+      <template v-if="ex_dep !== 7 || ex_dep !== 16">
         <div
           v-for="(group, gi) in orderBy(groups, 'order')"
           :key="gi"
@@ -1286,6 +1286,7 @@ export default {
           '-11': 13,
           '-12': 14,
           '-13': 15,
+          '-16': 16,
         }[this.department] || this.department
       );
     },

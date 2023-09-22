@@ -277,6 +277,10 @@ export default {
             d.push({ value: -8, label: '– Гистология' });
           }
         }
+
+        if (this.modules.l2_case) {
+          d.push({ value: -16, label: 'Случаи' });
+        }
       }
 
       this.departments_of_type = d;
