@@ -727,9 +727,6 @@ def current_user_info(request):
 
                 t = e - 4
                 has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
-                if e == 16:
-                    print("has_def")
-                    print(has_def)
 
                 if has_def and e != 12:
                     d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
@@ -766,8 +763,6 @@ def current_user_info(request):
 
         t1.join()
         t2.join()
-
-    print(ret)
 
     if hasattr(request, 'plain_response') and request.plain_response:
         return ret
