@@ -23,6 +23,7 @@ from laboratory.settings import (
     UNLIMIT_PERIOD_STATISTIC_GROUP,
     TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
     STATISTIC_TYPE_DEPARTMENT,
+    USE_TFOMS_DISTRICT,
 )
 from utils.response import status_response
 
@@ -1820,7 +1821,7 @@ def actual_districts(request):
 
     if card_pk is not None:
         card_hospital_id = -1
-        if SettingManager.l2('tfoms'):
+        if SettingManager.l2('tfoms') and USE_TFOMS_DISTRICT:
             card = Card.objects.get(pk=data['card_pk'])
             enp = card.individual.get_enp()
             if enp:
@@ -2137,6 +2138,7 @@ def organization_data(request):
         org['strictExternalNumbers'] = hospital.strict_external_numbers
         org['hl7SenderApplication'] = hospital.hl7_sender_application
         org['hl7ReceiverAapplication'] = hospital.hl7_receiver_appplication
+        org['isAutotransfer'] = hospital.is_auto_transfer_hl7_file
 
     return JsonResponse({"org": org})
 
@@ -2165,6 +2167,7 @@ def organization_data_update(request):
         'resultPullFtpServerUrl': str,
         'hl7SenderApplication': str,
         'hl7ReceiverAapplication': str,
+        'isAutotransfer': bool,
     }
 
     data = data_parse(
@@ -2206,6 +2209,7 @@ def organization_data_update(request):
     result_pull_by_numbers: Optional[str] = data[17] or None
     hl7_sender_application: Optional[str] = data[18] or None
     hl7_receiver_appplication: Optional[str] = data[19] or None
+    is_auto_transfer = data[20]
 
     if not title:
         return status_response(False, 'Название не может быть пустым')
@@ -2284,6 +2288,7 @@ def organization_data_update(request):
     hospital.okpo = okpo
     hospital.hl7_receiver_appplication = hl7_receiver_appplication
     hospital.hl7_sender_application = hl7_sender_application
+    hospital.is_auto_transfer_hl7_file = is_auto_transfer
 
     if has_full_ftp_access:
         hospital.orders_pull_by_numbers = orders_pull_by_numbers

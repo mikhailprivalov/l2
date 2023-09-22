@@ -1074,7 +1074,7 @@ class Napravleniya(models.Model):
         if issledovaniya is None:
             pass
         client = Clients.Card.objects.get(pk=client_id)
-        if price_name_id is None and istochnik_f.title.lower() in ["договор"]:
+        if price_name_id is None and istochnik_f and istochnik_f.title.lower() in ["договор"]:
             price_name_obj = contracts.PriceName.get_hospital_price_by_date(doc.hospital_id, current_time(only_date=True), current_time(only_date=True), True)
             price_name_id = price_name_obj.pk
 
@@ -1599,6 +1599,7 @@ class Napravleniya(models.Model):
                         ext_additional_num = ExternalAdditionalOrder.objects.filter(external_add_order=external_additional_order_number).first()
                         if not ext_additional_num:
                             ext_additional_num = ExternalAdditionalOrder.objects.create(external_add_order=external_additional_order_number)
+                            ext_additional_num.save()
 
                     issledovaniye = Issledovaniya(
                         napravleniye=directions_for_researches[dir_group],
@@ -3324,10 +3325,10 @@ class NumberGenerator(models.Model):
     key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')
     year = models.IntegerField(verbose_name='Год', db_index=True)
     is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
-    start = models.PositiveIntegerField(verbose_name='Начало диапазона')
-    end = models.PositiveIntegerField(verbose_name='Конец диапазона', null=True, blank=True, default=None)
-    last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
-    free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
+    start = models.PositiveBigIntegerField(verbose_name='Начало диапазона')
+    end = models.PositiveBigIntegerField(verbose_name='Конец диапазона', null=True, blank=True, default=None)
+    last = models.PositiveBigIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
+    free_numbers = ArrayField(models.PositiveBigIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
     prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
 
     def __str__(self):

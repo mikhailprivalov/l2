@@ -12,6 +12,7 @@ from django.utils.module_loading import import_string
 
 from api.dicom import check_dicom_study
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
+from api.models import Application
 from api.patients.views import patients_search_card
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
@@ -2505,6 +2506,8 @@ def directions_by_category_result_year(request):
 @api_view(['POST'])
 def results_by_direction(request):
     request_data = json.loads(request.body)
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
     if not hasattr(request.user, 'hospitals'):
         return Response({"ok": False, 'message': 'Некорректный auth токен'})
     oid_org = request_data.get(("oid") or '')
@@ -2518,31 +2521,51 @@ def results_by_direction(request):
     is_doc_refferal = request_data.get('isDocReferral', mode == 'docReferral')
     is_user_forms = request_data.get('isUserFroms', mode == 'forms')
     direction = request_data.get('pk')
-    directions = request_data.get('directions', [])
-    if is_lab and not directions:
-        directions = [direction]
+    external_add_order = request_data.get('externalOrder')
+    directions_data = request_data.get('directions')
+    if is_lab and not directions_data:
+        if external_add_order:
+            ext_add_order_obj = directions.ExternalAdditionalOrder.objects.filter(external_add_order=external_add_order).first()
+            iss_data = directions.Issledovaniya.objects.filter(external_add_order=ext_add_order_obj).first()
+            direction = iss_data.napravleniye_id
+        directions_data = [direction]
     else:
-        directions = [direction]
-    for d in directions:
-        direction_obj = Napravleniya.objects.filter(hospital=hospital, pk=d).first()
-        if not direction_obj:
-            return Response({"ok": False, 'message': 'Номер направления не принадлежит организации'})
+        directions_data = [direction]
+    if not token_obj.unlimited_access:
+        for d in directions_data:
+            direction_obj = Napravleniya.objects.filter(hospital=hospital, pk=d).first()
+            if not direction_obj:
+                return Response({"ok": False, 'message': 'Номер направления не принадлежит организации'})
 
     objs_result = {}
     if is_lab:
-        direction_result = get_laboratory_results_by_directions(directions)
-
+        direction_result = get_laboratory_results_by_directions(tuple(directions_data))
         for r in direction_result:
             if r.direction not in objs_result:
                 objs_result[r.direction] = {'pk': r.direction, 'confirmedAt': r.date_confirm, 'services': {}}
 
             if r.iss_id not in objs_result[r.direction]['services']:
-                objs_result[r.direction]['services'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.fio), 'confirmedAt': r.date_confirm, 'fractions': []}
+                objs_result[r.direction]['services'][r.iss_id] = {
+                    'title': r.research_title,
+                    'internalCode': r.research_internal_code,
+                    'fio': short_fio_dots(r.fio) if r.fio else r.doc_confirmation_string,
+                    'confirmedAt': r.date_confirm,
+                    'fractions': [],
+                }
 
-            objs_result[r.direction]['services'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+            objs_result[r.direction]['services'][r.iss_id]['fractions'].append(
+                {
+                    'title': r.fraction_title,
+                    'value': r.value,
+                    'units': r.units,
+                    'fsli': r.fraction_fsli,
+                    'ref_m': r.ref_m,
+                    'ref_f': r.ref_f,
+                }
+            )
 
     if is_paraclinic or is_doc_refferal or is_user_forms:
-        results = desc_to_data(directions, force_all_fields=True)
+        results = desc_to_data(directions_data, force_all_fields=True)
         for i in results:
             direction_data = i['result'][0]["date"].split(' ')
             if direction_data[1] not in objs_result:

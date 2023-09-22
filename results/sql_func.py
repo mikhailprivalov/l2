@@ -54,12 +54,17 @@ def get_laboratory_results_by_directions(list_dirs):
                 directions_issledovaniya.napravleniye_id as direction,
                 directions_issledovaniya.research_id,
                 directions_issledovaniya.doc_confirmation_id as doctor_id,
+                directions_issledovaniya.doc_confirmation_string as doc_confirmation_string,
                 directory_researches.title as research_title,
+                directory_researches.internal_code as research_internal_code,
                 directions_result.value as value,
                 directions_result.fraction_id,
                 directions_result.id as result_is,
                 directory_fractions.title as fraction_title,
+                directory_fractions.fsli as fraction_fsli,
                 directions_result.units as units,
+                directions_result.ref_m as ref_m,
+                directions_result.ref_f as ref_f,
                 users_doctorprofile.fio as fio,
                 to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
                 from directions_issledovaniya
@@ -70,7 +75,7 @@ def get_laboratory_results_by_directions(list_dirs):
                 directions_result.fraction_id=directory_fractions.id
                 LEFT JOIN users_doctorprofile ON
                 users_doctorprofile.id=directions_issledovaniya.doc_confirmation_id
-                WHERE directions_issledovaniya.napravleniye_id = ANY(ARRAY[%(num_dirs)s])
+                WHERE directions_issledovaniya.napravleniye_id in %(num_dirs)s
                 ORDER BY directions_issledovaniya.napravleniye_id
 
         """,
