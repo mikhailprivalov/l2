@@ -177,6 +177,7 @@ def get_researches(request, last_used=False):
                     "treatment": r.is_treatment,
                     "is_hospital": r.is_hospital,
                     "is_form": r.is_form,
+                    "is_case": r.is_case,
                     "is_application": r.is_application,
                     "stom": r.is_stom,
                     "need_vich_code": r.need_vich_code,
@@ -257,7 +258,6 @@ def get_researches(request, last_used=False):
             result = {"researches": deps, "cnts": cnts}
     else:
         result = json.loads(result)
-
     if hasattr(request, 'plain_response') and request.plain_response:
         return result
     return JsonResponse(result)
