@@ -143,6 +143,7 @@ class SettingManager:
                     "forms",
                     "applications",
                     "eds",
+                    "offloads",
                     "profcenter",
                     "extra_notifications",
                     "monitorings",

@@ -204,6 +204,13 @@ def menu(request):
                     "module": "l2_send_orgs_email_results",
                 },
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
+                {
+                    "url": '/ui/offloads-external-system',
+                    "title": "Выгрузка",
+                    "nt": False,
+                    "access": ["Подпись документов", "Врач параклиники", "Врач консультаций", "Врач-лаборант", "ЭЦП Медицинской организации", "Свидетельство о смерти-доступ"],
+                    "module": "l2_offloads",
+                },
             ]
 
             hp = SettingManager.get(key="home_page", default="false")

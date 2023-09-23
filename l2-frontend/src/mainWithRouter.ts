@@ -687,6 +687,23 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/offloads-external-system',
+      name: 'offloads',
+      component: () => import('@/pages/Offloads.vue'),
+      meta: {
+        title: 'Выгрузка',
+        groups: [
+          'Подпись документов',
+          'Врач параклиники',
+          'Врач консультаций',
+          'Врач-лаборант',
+          'ЭЦП Медицинской организации',
+          'Свидетельство о смерти-доступ',
+        ],
+        module: 'l2_offloads',
+      },
+    },
+    {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
       component: () => import('@/construct/ConstructRelatedTube.vue'),
