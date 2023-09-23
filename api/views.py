@@ -721,7 +721,6 @@ def current_user_info(request):
                     )
 
             for e in en:
-
                 if e < 4 or not en[e] or e == 13:
                     continue
 
