@@ -782,7 +782,7 @@ export default {
       for (const pk of this.researches) {
         if (this.$store.getters.researches_obj[pk]) {
           const res = this.$store.getters.researches_obj[pk];
-          const d = res.department_pk && !res.doc_refferal ? res.department_pk : -2;
+          const d = res.department_pk && !res.doc_refferal && !res.is_case ? res.department_pk : -2;
           if (!(d in r)) {
             r[d] = {
               pk: d,

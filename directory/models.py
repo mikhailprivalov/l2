@@ -361,7 +361,7 @@ class Researches(models.Model):
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         if self.is_case:
-            return -16
+            return -14
         return self.podrazdeleniye_id or -2
 
     @property

@@ -279,7 +279,7 @@ export default {
         }
 
         if (this.modules.l2_case) {
-          d.push({ value: -16, label: 'Случаи' });
+          d.push({ value: -14, label: 'Случаи' });
         }
       }
 
