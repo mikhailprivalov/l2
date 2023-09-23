@@ -332,7 +332,7 @@ class Researches(models.Model):
             14: dict(is_application=True),
             15: dict(is_monitoring=True),
             16: dict(is_expertise=True),
-            17: dict(is_case=True)
+            17: dict(is_case=True),
         }
         return ts.get(t + 1, {})
 
