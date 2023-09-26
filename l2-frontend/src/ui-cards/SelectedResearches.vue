@@ -151,6 +151,23 @@
               />
             </td>
           </tr>
+          <tr v-if="needChangeCase">
+            <th :class="needSelectCase && 'has-error-message'">
+              Случай пациента:
+            </th>
+            <td class="cl-td">
+              <Treeselect
+                v-model="research_case"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                class="treeselect-noborder treeselect-wide"
+                :options="patient_case"
+                :append-to-body="true"
+                placeholder="По умолчанию"
+                :clearable="false"
+              />
+            </td>
+          </tr>
           <tr v-if="direction_purpose_enabled && !hide_params">
             <th>Цель направления:</th>
             <td class="cl-td">
@@ -683,6 +700,7 @@ export default {
       hospital_department_override: -1,
       hospital_overrides: [{ id: -1, label: 'По умолчанию' }],
       hospital_override: -1,
+      research_case: -2,
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -705,6 +723,7 @@ export default {
       researches_direction_params: {},
       tableFieldsErrors: {},
       selectedCardLocal: null,
+      patient_case: [{ id: -2, label: ' Не выбрано ' }],
     };
   },
   computed: {
@@ -762,6 +781,9 @@ export default {
     },
     needShowPriceCategory() {
       return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 0 && this.show_additions;
+    },
+    needChangeCase() {
+      return this.$store.getters.modules.l2_case;
     },
     researches_departments() {
       const r = {};
@@ -833,6 +855,10 @@ export default {
         return false;
       }
 
+      if (this.needSelectCase) {
+        return false;
+      }
+
       return !this.researches.find(pk => {
         if (!this.form_params[pk]) {
           return false;
@@ -843,6 +869,9 @@ export default {
     },
     needSelectHospital() {
       return this.canChangeHospitalDirection && this.hospital_override === -1;
+    },
+    needSelectCase() {
+      return this.needChangeCase && this.research_case === -2;
     },
     need_update_object() {
       const r = [];
@@ -1133,6 +1162,7 @@ export default {
     }
     this.load_direction_params();
     this.load_stationar_deparments();
+    this.load_patient_open_case();
     this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
       this.tableFieldsErrors = {
         ...this.tableFieldsErrors,
@@ -1337,6 +1367,7 @@ export default {
       this.global_current_direction_param = -1;
       this.hospital_department_override = -1;
       this.hospital_override = -1;
+      this.research_case = -1;
       this.tableFieldsErrors = {};
     },
     clear_fin() {
@@ -1398,6 +1429,14 @@ export default {
       const { data, hospitals } = await this.$api('procedural-list/suitable-departments');
       this.hospital_department_overrides = [{ id: -1, label: 'По умолчанию' }, ...data];
       this.hospital_overrides = [{ id: -1, label: 'По умолчанию' }, ...hospitals];
+    },
+    async load_patient_open_case() {
+      const patienCases = [
+        { id: -11, label: ' Терапевт-212121' },
+        { id: -12, label: ' Травматолог -23232' },
+        { id: -13, label: ' Нвролог-4343434' },
+      ];
+      this.patient_case = [{ id: -2, label: ' Не выбрано ' }, { id: -1, label: ' Создать новый случай' }, ...patienCases];
     },
   },
 };

@@ -513,7 +513,7 @@ def departments(request):
         data = {
             "departments": deps,
             "can_edit": can_edit,
-            "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12] and en.get(x[0], True)], *more_types],
+            "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12, 16] and en.get(x[0], True)], *more_types],
         }
         if hasattr(request, 'plain_response') and request.plain_response:
             return data
@@ -2635,6 +2635,7 @@ def get_price_data(request):
 @group_required('Конструктор: Настройка организации')
 def update_price(request):
     request_data = json.loads(request.body)
+    print(request_data)
     current_price = None
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":
@@ -2658,7 +2659,7 @@ def update_price(request):
         current_price.title = request_data["title"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
-        if request_data.get("typePrice") == "Профосмотр":
+        if request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Работодатель":
             current_price.company_id = request_data["company"]
         else:
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()

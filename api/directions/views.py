@@ -310,7 +310,7 @@ def directions_history(request):
     # status: 4 - выписано пользователем, 0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
     if req_status == 4:
         user_creater = request.user.doctorprofile.pk
-    if req_status in [0, 1, 2, 3, 5]:
+    if req_status in [0, 1, 2, 3, 5, 7]:
         patient_card = pk
 
     if req_status == 5:
@@ -459,6 +459,10 @@ def directions_history(request):
             continue
         elif type_service == 'is_lab' and (i[11] or i[14] or i[15] or i[16] or i[17] or i[18] or i[19]):
             continue
+        elif req_status == 7 and not i[36]:
+            continue
+        elif i[36] and req_status != 7:
+            continue
         if i[0] != last_dir:
             status = min(status_set)
             if len(lab) > 0:
@@ -470,7 +474,7 @@ def directions_history(request):
                 if aux_researches_obj.exists():
                     aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
                     has_aux = True
-            if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
+            if (req_status == 2 and status == 2) or (req_status in [3, 4, 7] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append(
                     {
                         'pk': dir,
@@ -581,7 +585,7 @@ def directions_history(request):
         if aux_researches_obj.exists():
             aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
             has_aux = True
-    if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
+    if (req_status == 2 and status == 2) or (req_status in [3, 4, 7] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
         final_result.append(
             {
                 'pk': dir,
@@ -1442,6 +1446,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_monitoring=True)
                         | Q(research__is_expertise=True)
                         | Q(research__is_aux=True)
+                        | Q(research__is_case=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')

@@ -21,6 +21,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directory_researches.is_paraclinic,
             directory_researches.is_form,
             directory_researches.is_microbiology,
+            directory_researches.is_case,
             directory_researches.podrazdeleniye_id,
             directions_napravleniya.parent_id as dir_parent_id,
             directions_napravleniya.data_sozdaniya as dir_data_sozdaniya,
@@ -106,7 +107,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             ud.patronymic,
             directions_napravleniya.visit_date,
             directions_napravleniya.time_microbiology_receive,
-            directions_napravleniya.time_gistology_receive
+            directions_napravleniya.time_gistology_receive,
+            is_case
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
