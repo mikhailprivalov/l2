@@ -933,6 +933,7 @@ export default {
     card_pk: {
       async handler() {
         this.clear_fin();
+        const patientOpenCase = await this.$api('directions/patient-open-case', { card_pk: this.card_pk });
 
         this.selectedCardLocal = null;
         if (this.card_pk === null || this.card_pk === -1 || this.selected_card) {
@@ -940,7 +941,6 @@ export default {
         }
 
         const cardData = await this.$api(`patients/card/simple/${this.card_pk}`);
-        const patientOpenCase = await this.$api('directions/patient-open-case', { card_pk: this.selected_card });
         this.selectedCardLocal = cardData;
       },
       immediate: true,
