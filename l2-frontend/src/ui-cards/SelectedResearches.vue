@@ -940,7 +940,7 @@ export default {
         }
 
         const cardData = await this.$api(`patients/card/simple/${this.card_pk}`);
-
+        const patientOpenCase = await this.$api('directions/patient-open-case', { card_pk: this.selected_card });
         this.selectedCardLocal = cardData;
       },
       immediate: true,
@@ -1436,6 +1436,7 @@ export default {
         { id: -12, label: ' Травматолог -23232' },
         { id: -13, label: ' Нвролог-4343434' },
       ];
+      const patientOpenCase = await this.$api('directions/patient-open-case', { card_pk: this.card_pk });
       this.patient_case = [{ id: -2, label: ' Не выбрано ' }, { id: -1, label: ' Создать новый случай' }, ...patienCases];
     },
   },

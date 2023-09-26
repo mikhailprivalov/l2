@@ -92,7 +92,7 @@ from .sql_func import (
     get_patient_contract,
     get_directions_by_user,
     get_confirm_direction_by_hospital,
-    get_directions_meta_info,
+    get_directions_meta_info, get_patien_open_case_data,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -4429,3 +4429,18 @@ def meta_info(request):
         index_num = res_direction.index(i['direction'])
         sort_result[index_num] = i
     return JsonResponse({"rows": sort_result})
+
+
+@login_required
+def patient_open_case(request):
+    request_data = json.loads(request.body)
+    print("request_data")
+    print(request_data)
+    card_pk = request_data.get("card_pk", None)
+    print(card_pk)
+    if card_pk:
+        result = get_patien_open_case_data(card_pk)
+        print(result)
+    data = {"data": ""}
+    return JsonResponse(data)
+

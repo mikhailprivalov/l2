@@ -64,4 +64,5 @@ urlpatterns = [
     path('meta-info', views.meta_info),
     path('resend-results', views.resend_results),
     path('need-order-redirection', views.need_order_redirection),
+    path('patient-open-case', views.patient_open_case),
 ]
