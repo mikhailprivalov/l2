@@ -4443,6 +4443,8 @@ def patient_open_case(request):
         for o_case in open_case:
             data_case[o_case.iss_id] = ""
             child_direction = tree_direction(o_case.iss_id)
+            for child in child_direction:
+                print(child)
 
     data = {"data": ""}
     return JsonResponse(data)
