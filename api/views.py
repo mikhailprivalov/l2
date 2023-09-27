@@ -2635,7 +2635,6 @@ def get_price_data(request):
 @group_required('Конструктор: Настройка организации')
 def update_price(request):
     request_data = json.loads(request.body)
-    print(request_data)
     current_price = None
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":

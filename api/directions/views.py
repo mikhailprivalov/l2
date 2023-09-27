@@ -4435,10 +4435,7 @@ def meta_info(request):
 @login_required
 def patient_open_case(request):
     request_data = json.loads(request.body)
-    print("request_data")
-    print(request_data)
     card_pk = request_data.get("card_pk", None)
-    print(card_pk)
     data_case = {}
     if card_pk:
         open_case = get_patient_open_case_data(card_pk)

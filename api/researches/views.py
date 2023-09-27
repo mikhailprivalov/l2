@@ -407,7 +407,6 @@ def researches_params(request):
 def researches_update(request):
     response = {"ok": False}
     request_data = json.loads(request.body)
-    print(request_data)
     pk = request_data.get("pk", -2)
     if pk > -2:
         department_pk = request_data.get("department")
