@@ -4449,4 +4449,3 @@ def patient_open_case(request):
 
     data = {"data": ""}
     return JsonResponse(data)
-
