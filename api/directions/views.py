@@ -93,7 +93,8 @@ from .sql_func import (
     get_patient_contract,
     get_directions_by_user,
     get_confirm_direction_by_hospital,
-    get_directions_meta_info, get_patient_open_case_data,
+    get_directions_meta_info,
+    get_patient_open_case_data,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -4445,4 +4446,3 @@ def patient_open_case(request):
 
     data = {"data": ""}
     return JsonResponse(data)
-
