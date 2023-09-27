@@ -509,21 +509,21 @@ def get_directions_meta_info(directions):
     return rows
 
 
-def get_patien_open_case_data(card_pk):
+def get_patient_open_case_data(card_pk):
     with connection.cursor() as cursor:
         cursor.execute(
             """
                 SELECT 
+                    directions_issledovaniya.id as iss_id,
                     directions_issledovaniya.napravleniye_id,
                     directions_issledovaniya.research_id,
                     dr.title,
                     dr.is_case,
-                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as ch_time_confirm,
                     to_char(dn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create
                 FROM directions_issledovaniya
                 LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
                 LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
-                WHERE dn.client_id = %(card_pk)s and dr.is_case = true
+                WHERE dn.client_id = %(card_pk)s and dr.is_case = true and directions_issledovaniya.time_confirmation is Null
                 ORDER BY directions_issledovaniya.napravleniye_id
             """,
             params={'card_pk': card_pk, 'tz': TIME_ZONE},

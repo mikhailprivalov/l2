@@ -81,6 +81,7 @@ from users.models import DoctorProfile
 from utils.common import non_selected_visible_type, none_if_minus_1, values_from_structure_data
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
+from utils.tree_directions import tree_direction
 from utils.xh import check_float_is_valid, short_fio_dots
 from .sql_func import (
     get_history_dir,
@@ -92,7 +93,7 @@ from .sql_func import (
     get_patient_contract,
     get_directions_by_user,
     get_confirm_direction_by_hospital,
-    get_directions_meta_info, get_patien_open_case_data,
+    get_directions_meta_info, get_patient_open_case_data,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -4438,9 +4439,13 @@ def patient_open_case(request):
     print(request_data)
     card_pk = request_data.get("card_pk", None)
     print(card_pk)
+    data_case = {}
     if card_pk:
-        result = get_patien_open_case_data(card_pk)
-        print(result)
+        open_case = get_patient_open_case_data(card_pk)
+        for o_case in open_case:
+            data_case[o_case.iss_id] = ""
+            child_direction = tree_direction(o_case.iss_id)
+
     data = {"data": ""}
     return JsonResponse(data)
 

@@ -783,7 +783,7 @@ export default {
       return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 0 && this.show_additions;
     },
     needChangeCase() {
-      return this.$store.getters.modules.l2_case;
+      return this.$store.getters.modules.l2_case && this.kk !== 'stationar';
     },
     researches_departments() {
       const r = {};
@@ -871,7 +871,7 @@ export default {
       return this.canChangeHospitalDirection && this.hospital_override === -1;
     },
     needSelectCase() {
-      return this.needChangeCase && this.research_case === -2;
+      return (this.needChangeCase && this.research_case === -2);
     },
     need_update_object() {
       const r = [];
