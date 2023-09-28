@@ -110,7 +110,6 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
-        print(p)
         card_pk = p.get("card_pk")
         card = None
         if card_pk == -1:
