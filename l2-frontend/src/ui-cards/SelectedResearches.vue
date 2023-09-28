@@ -194,7 +194,7 @@
               />
             </td>
           </tr>
-          <tr v-if="!has_only_stationar && !hide_params">
+          <tr v-if="(!has_only_stationar && !hide_params) && !hide_show_count_param">
             <th>Кол-во повторений:</th>
             <td class="cl-td">
               <input
@@ -216,7 +216,7 @@
               </span>
             </td>
           </tr>
-          <tr v-else-if="!hide_params">
+          <tr v-else-if="!hide_params && has_only_stationar">
             <th>Отделение стационара</th>
             <td class="cl-td">
               <Treeselect
@@ -752,6 +752,9 @@ export default {
     direction_purpose_enabled() {
       return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar';
     },
+    hide_show_count_param() {
+      return this.$store.getters.modules.l2_hide_show_count_param;
+    },
     external_organizations_enabled() {
       return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar';
     },
@@ -783,7 +786,7 @@ export default {
       return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 0 && this.show_additions;
     },
     needChangeCase() {
-      return this.$store.getters.modules.l2_case && this.kk !== 'stationar';
+      return this.$store.getters.modules.l2_case && this.kk !== 'stationar' && this.kk !== 'cd';
     },
     researches_departments() {
       const r = {};
@@ -1356,6 +1359,7 @@ export default {
         hospital_department_override: this.hospital_department_override,
         hospital_override: this.hospital_override,
         monitoring: this.monitoring,
+        caseId: this.research_case,
       });
     },
     clear_all() {
@@ -1367,7 +1371,7 @@ export default {
       this.global_current_direction_param = -1;
       this.hospital_department_override = -1;
       this.hospital_override = -1;
-      this.research_case = -1;
+      this.research_case = -2;
       this.tableFieldsErrors = {};
     },
     clear_fin() {

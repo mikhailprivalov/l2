@@ -169,6 +169,7 @@ class SettingManager:
                     "price_externel_performer",
                     "ftp",
                     "case",
+                    "hide_show_count_param",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

@@ -500,6 +500,9 @@ class Napravleniya(models.Model):
     parent_slave_hosp = models.ForeignKey(
         'Issledovaniya', related_name='parent_slave_hosp', help_text="Из стационарного протокола", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
+    parent_case = models.ForeignKey(
+        'Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
+    )
     rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
     time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время приёма материала микробиологии')
