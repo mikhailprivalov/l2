@@ -12,6 +12,7 @@ export default [
   { url: '/forms/pdf?type=100.01&card_pk={card}', title: 'Паспорт здоровья', type: '100.01' },
   { url: '/forms/pdf?type=100.03&card_pk={card}', title: 'Титульный лист, Профосмотры', type: '100.03' },
   { url: '/forms/pdf?type=100.02&card_pk={card}', title: 'Титульный лист карты, 025/у', type: '100.02' },
+  { url: '/forms/pdf?type=100.05&card_pk={card}', title: 'Титульный лист карты, 025/у (новая)', type: '100.06' },
   {
     isGroup: true,
     title: 'Согласия',

@@ -24,6 +24,7 @@ from directory.models import DispensaryPlan, Researches
 from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER, FORM_100_08_A4_FORMAT
 from laboratory.utils import strdate
+from results.forms.flowable import FrameDataCol
 from statistics_tickets.models import VisitPurpose
 from utils.dates import normalize_date
 from utils.flowable import InteractiveListBoxField, InteractiveTextField, InteractiveListTypeMedExam
@@ -1038,6 +1039,132 @@ def form_04(request_data):
         )
     )
     objs.append(tbl)
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def form_05(request_data):
+    """
+    Новая форма 025/у - титульный лист амбулаторной карты
+    Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm,
+                            bottomMargin=6 * mm, title="Форма 025у")
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.alignment = TA_JUSTIFY
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleOrgName = deepcopy(styleBold)
+    styleOrgName.alignment = TA_LEFT
+    styleOrgName.fontSize = 10
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenterBold = deepcopy(styleCenter)
+    styleCenterBold.fontName = "PTAstraSerifBold"
+    styleCenterBold.fontSize = 10
+    styleHeader = deepcopy(styleCenterBold)
+    styleHeader.fontSize = 12
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+    styleLeftMin = deepcopy(styleLeft)
+    styleLeftMin.fontSize = 9
+
+    objs = []
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    order_data = [
+        [
+            Paragraph('Приложение № 3 <br/> к приказу Министерства здравоохранения Российской Федерации от 15 '
+                      'декабря 2014 г. № 834н', styleLeftMin)
+        ],
+        [
+            Paragraph('(в ред. Приказа Минздрава России от 09.01.2018 № 2н)', styleLeftMin)
+        ]
+    ]
+
+    order_table = Table(order_data, 60 * mm, hAlign='RIGHT')
+    order_table.setStyle(
+        TableStyle(
+            [
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    objs.append(order_table)
+
+    header_data = [
+        [
+            Paragraph('Наименование медицинской организации: <br/> <font fontname="PTAstraSerifReg" size=10>'
+                      f'{hospital_name}</font><br/>Адрес медицинской организации: <br/>'
+                      f'<font fontname="PTAstraSerifReg" size=10>{hospital_address}</font>', styleOrgName),
+            Paragraph('Медицинская документация <br/>Учетная форма № 025-1/у <br/>Утверждена приказом Минздрава России от 15 '
+                      'декабря 2014 г. № 834н', styleCenterBold),
+        ],
+    ]
+
+    header_table = Table(header_data, [200 * mm, 80 * mm], hAlign='RIGHT')
+    header_table.setStyle(
+        TableStyle(
+            [
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    objs.append(header_table)
+
+    card_num_obj = patient_data['card_num'].split(' ')
+    p_card_num = card_num_obj[0]
+
+    objs.append(Paragraph(f'ТАЛОН ПАЦИЕНТА, ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ, №{p_card_num}',
+                          styleHeader))
+
+    frame_data = []
+    frame_data.append(Paragraph('fdfsdf', style))
+    params_columns = []
+    params_columns.append({"x": 0 * mm, "y": -33 * mm, "width": 279 * mm, "height": 30 * mm, "text": frame_data,
+                           "showBoundary": 1})
+    objs.append(FrameDataCol(params_columns))
+
 
     def first_pages(canvas, document):
         canvas.saveState()
