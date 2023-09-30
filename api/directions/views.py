@@ -165,7 +165,7 @@ def directions_generate(request):
             hospital_department_override=p.get("hospital_department_override", -1),
             hospital_override=p.get("hospital_override", -1),
             price_category=p.get("priceCategory", -1),
-            case_id = p.get("caseId", -2),
+            case_id=p.get("caseId", -2),
         )
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
@@ -4447,7 +4447,7 @@ def patient_open_case(request):
             n = Napravleniya.objects.filter(parent_case_id=o_case.iss_id).first()
             iss = Issledovaniya.objects.filter(napravleniye=n).first()
             if iss:
-                title = iss.research.short_title if iss.research.short_title else  iss.research.title
+                title = iss.research.short_title if iss.research.short_title else iss.research.title
             else:
                 title = "Случай пустой"
             data_case.append({"id": o_case.iss_id, "label": f"{title} от {o_case.date_create}"})
