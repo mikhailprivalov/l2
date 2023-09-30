@@ -81,7 +81,6 @@ from users.models import DoctorProfile
 from utils.common import non_selected_visible_type, none_if_minus_1, values_from_structure_data
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
-from utils.tree_directions import tree_direction
 from utils.xh import check_float_is_valid, short_fio_dots
 from .sql_func import (
     get_history_dir,
@@ -110,9 +109,7 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
-        print(p)
         card_pk = p.get("card_pk")
-        card = None
         if card_pk == -1:
             hospital: Hospitals = request.user.doctorprofile.get_hospital()
             if hospital.client:
@@ -4455,7 +4452,5 @@ def patient_open_case(request):
                 title = "Случай пустой"
             data_case.append({"id": o_case.iss_id, "label": f"{title} от {o_case.date_create}"})
 
-
     data = {"data": data_case}
-    print(data)
     return JsonResponse(data)
