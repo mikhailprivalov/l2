@@ -936,7 +936,7 @@ export default {
     card_pk: {
       async handler() {
         this.clear_fin();
-        const patientOpenCase = await this.$api('directions/patient-open-case', { card_pk: this.card_pk });
+        this.load_patient_open_case();
 
         this.selectedCardLocal = null;
         if (this.card_pk === null || this.card_pk === -1 || this.selected_card) {
@@ -1165,7 +1165,6 @@ export default {
     }
     this.load_direction_params();
     this.load_stationar_deparments();
-    this.load_patient_open_case();
     this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
       this.tableFieldsErrors = {
         ...this.tableFieldsErrors,
@@ -1435,13 +1434,10 @@ export default {
       this.hospital_overrides = [{ id: -1, label: 'По умолчанию' }, ...hospitals];
     },
     async load_patient_open_case() {
-      const patienCases = [
-        { id: -11, label: ' Терапевт-212121' },
-        { id: -12, label: ' Травматолог -23232' },
-        { id: -13, label: ' Нвролог-4343434' },
-      ];
       const patientOpenCase = await this.$api('directions/patient-open-case', { card_pk: this.card_pk });
-      this.patient_case = [{ id: -2, label: ' Не выбрано ' }, { id: -1, label: ' Создать новый случай' }, ...patienCases];
+      this.patient_case = [
+        { id: -2, label: ' Не выбрано ' },
+        { id: -1, label: ' Создать новый случай' }, ...patientOpenCase.data];
     },
   },
 };

@@ -509,7 +509,7 @@ def get_directions_meta_info(directions):
     return rows
 
 
-def get_patient_open_case_data(card_pk):
+def get_patient_open_case_data(card_pk, start_date, end_date):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -523,10 +523,11 @@ def get_patient_open_case_data(card_pk):
                 FROM directions_issledovaniya
                 LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
                 LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
-                WHERE dn.client_id = %(card_pk)s and dr.is_case = true and directions_issledovaniya.time_confirmation is Null
+                WHERE dn.client_id = %(card_pk)s and dr.is_case = true and directions_issledovaniya.time_confirmation is Null and
+                dn.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
                 ORDER BY directions_issledovaniya.napravleniye_id
             """,
-            params={'card_pk': card_pk, 'tz': TIME_ZONE},
+            params={'card_pk': card_pk, 'tz': TIME_ZONE, 'd_start': start_date, 'd_end': end_date},
         )
         rows = namedtuplefetchall(cursor)
     return rows

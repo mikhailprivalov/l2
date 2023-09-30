@@ -168,6 +168,7 @@ def directions_generate(request):
             hospital_department_override=p.get("hospital_department_override", -1),
             hospital_override=p.get("hospital_override", -1),
             price_category=p.get("priceCategory", -1),
+            case_id = p.get("caseId", -2),
         )
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
@@ -4438,14 +4439,23 @@ def meta_info(request):
 def patient_open_case(request):
     request_data = json.loads(request.body)
     card_pk = request_data.get("card_pk", None)
-    data_case = {}
-    if card_pk:
-        open_case = get_patient_open_case_data(card_pk)
-        for o_case in open_case:
-            data_case[o_case.iss_id] = ""
-            child_direction = tree_direction(o_case.iss_id)
-            for child in child_direction:
-                print(child)
+    data_case = []
+    date_start = datetime.now() - timedelta(days=60)
+    date_end = datetime.now()
 
-    data = {"data": ""}
+    if card_pk:
+        open_case = get_patient_open_case_data(card_pk, date_start, date_end)
+        data_case = []
+        for o_case in open_case:
+            n = Napravleniya.objects.filter(parent_case_id=o_case.iss_id).first()
+            iss = Issledovaniya.objects.filter(napravleniye=n).first()
+            if iss:
+                title = iss.research.short_title if iss.research.short_title else  iss.research.title
+            else:
+                title = "Случай пустой"
+            data_case.append({"id": o_case.iss_id, "label": f"{title} от {o_case.date_create}"})
+
+
+    data = {"data": data_case}
+    print(data)
     return JsonResponse(data)
