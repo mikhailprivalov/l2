@@ -544,12 +544,13 @@ def directions_history(request):
             case_child_direction = Napravleniya.objects.values_list("pk", flat=True).filter(parent_case__id=i[2])
             case_childs = Issledovaniya.objects.filter(napravleniye_id__in=case_child_direction)
             for csh in case_childs:
-                child_researches_titles = f"{child_researches_titles} {csh.research.short_title}"
+                ch_title = csh.research.short_title if csh.research.short_title else csh.research.title
+                child_researches_titles = f"{child_researches_titles} {ch_title}"
 
         if researches_titles:
             researches_titles = f'{researches_titles} | {i[5]}'
         else:
-            researches_titles = f'{child_researches_titles} - {i[5]}'
+            researches_titles = f'{child_researches_titles} {i[5]}'
         child_researches_titles = ""
 
         status_val = 0
