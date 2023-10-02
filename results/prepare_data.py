@@ -1,4 +1,6 @@
 import pytz_deprecation_shim as pytz
+
+import hospitals.models
 from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -9,7 +11,7 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 import os.path
-from laboratory.settings import FONTS_FOLDER, TIME_ZONE
+from laboratory.settings import FONTS_FOLDER, TIME_ZONE, TITLE_RESULT_FORM_USE_COMPANY_STAMP
 from pyvirtualdisplay import Display
 import imgkit
 import sys
@@ -317,6 +319,45 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     return i
 
 
+def gen_hospital_stamp(hospital: hospitals.models.Hospitals):
+    img = ""
+    if hospital.title_stamp_customer:
+        file_jpg = hospital.get_title_stamp_customer_pdf()
+    if hospital.title_stamp_executor:
+        file_jpg = hospital.get_title_stamp_executor_pdf()
+    if file_jpg:
+        img = Image(
+            file_jpg,
+            34 * mm,
+            34 * mm,
+        )
+
+    opinion = [
+        [
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('<font size=8>(фамилия, инициалы)</font>', styleT),
+            Paragraph('', styleT),
+            Paragraph('м.п.', styleT),
+            Paragraph('', styleT),
+            Paragraph('<font size=8>(подпись)</font>', styleT),
+        ],
+    ]
+    gentbl = Table(opinion, colWidths=(62 * mm, 5 * mm, 58 * mm, 5 * mm, 15 * mm, 5 * mm, 37 * mm))
+    gentbl.setStyle(
+        TableStyle(
+            [
+                ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+                ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
+                ('LINEBELOW', (6, 0), (6, 0), 0.75, colors.black),
+                ('BOTTOMPADDING', (-1, 0), (-1, 0), -12 * mm),
+                ('LEFTPADDING', (-1, 0), (-1, 0), -4 * mm),
+            ]
+        )
+    )
+    return gentbl
+
+
 def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col_func, is_extract):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -344,68 +385,71 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
     styleTableSm = deepcopy(styleTable)
     styleTableSm.fontSize = 4
 
-    data = [
-        ["Номер:", str(direction.pk)],
-        ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
-        ["Пол:", direction.client.individual.sex],
-        ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
-    ]
-    if not direction.is_external:
-        data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
-        data += [
-            [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
-            ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
+    if not TITLE_RESULT_FORM_USE_COMPANY_STAMP:
+        data = [
+            ["Номер:", str(direction.pk)],
+            ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
+            ["Пол:", direction.client.individual.sex],
+            ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
         ]
-
-    if direction.is_external and direction.hospital:
-        data.append(["Организация:", direction.hospital.safe_short_title])
-        if direction.id_in_hospital is not None:
-            data += [["Номер в организации:", direction.id_in_hospital]]
-        else:
-            data += [["", ""]]
-        tube = TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).first()
-        if tube and (tube.time_get or tube.time_recive):
-            data += [["Забор биоматериала:", strfdatetime((tube.time_get or tube.time_recive), "%d.%m.%Y %H:%M")]]
-    elif not direction.imported_from_rmis and not is_extract and direction.doc:
-        data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.get_doc_podrazdeleniye_title())])
-    elif direction.imported_org:
-        data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
-    rows = len(data)
-
-    logo_col = logo_col_func(direction)
-
-    data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(rows)]
-    if direction.is_external:
-        colWidths = [40 * mm, doc.width - 158 - 40 * mm, 158]
-    else:
-        colWidths = [doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158]
-
-    t = Table(data, colWidths=colWidths)
-    t.setStyle(
-        TableStyle(
-            [
-                ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('VALIGN', (-1, 0), (-1, 0), 'MIDDLE'),
-                ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-                ('TOPPADDING', (0, 0), (-1, -1), 0),
-                ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
-                ('TOPPADDING', (-1, 0), (-1, -1), 0),
-                ('TOPPADDING', (-1, 5), (-1, 5), 3),
-                ('TOPPADDING', (-1, 0), (-1, 0), -7 * mm if isinstance(logo_col[0], Paragraph) else 0),
-                ('TOPPADDING', (0, 5), (1, 5), 0),
-                ('TOPPADDING', (0, 6), (1, 6), -6),
-                ('BOTTOMPADDING', (0, 5), (1, 5), 0),
-                ('LEFTPADDING', (0, 5), (1, 5), 0),
-                ('RIGHTPADDING', (0, 5), (1, 5), 0),
-                ('SPAN', (-1, 0), (-1, 4)),
-                ('SPAN', (-1, 5), (-1, -1)),
+        if not direction.is_external:
+            data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
+            data += [
+                [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
+                ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
             ]
+
+        if direction.is_external and direction.hospital:
+            data.append(["Организация:", direction.hospital.safe_short_title])
+            if direction.id_in_hospital is not None:
+                data += [["Номер в организации:", direction.id_in_hospital]]
+            else:
+                data += [["", ""]]
+            tube = TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).first()
+            if tube and (tube.time_get or tube.time_recive):
+                data += [["Забор биоматериала:", strfdatetime((tube.time_get or tube.time_recive), "%d.%m.%Y %H:%M")]]
+        elif not direction.imported_from_rmis and not is_extract and direction.doc:
+            data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.get_doc_podrazdeleniye_title())])
+        elif direction.imported_org:
+            data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
+        rows = len(data)
+
+        logo_col = logo_col_func(direction)
+
+        data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(rows)]
+        if direction.is_external:
+            colWidths = [40 * mm, doc.width - 158 - 40 * mm, 158]
+        else:
+            colWidths = [doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158]
+
+        t = Table(data, colWidths=colWidths)
+        t.setStyle(
+            TableStyle(
+                [
+                    ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('VALIGN', (-1, 0), (-1, 0), 'MIDDLE'),
+                    ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                    ('TOPPADDING', (0, 0), (-1, -1), 0),
+                    ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
+                    ('TOPPADDING', (-1, 0), (-1, -1), 0),
+                    ('TOPPADDING', (-1, 5), (-1, 5), 3),
+                    ('TOPPADDING', (-1, 0), (-1, 0), -7 * mm if isinstance(logo_col[0], Paragraph) else 0),
+                    ('TOPPADDING', (0, 5), (1, 5), 0),
+                    ('TOPPADDING', (0, 6), (1, 6), -6),
+                    ('BOTTOMPADDING', (0, 5), (1, 5), 0),
+                    ('LEFTPADDING', (0, 5), (1, 5), 0),
+                    ('RIGHTPADDING', (0, 5), (1, 5), 0),
+                    ('SPAN', (-1, 0), (-1, 4)),
+                    ('SPAN', (-1, 5), (-1, -1)),
+                ]
+            )
         )
-    )
+    else:
+
 
     return t
 
