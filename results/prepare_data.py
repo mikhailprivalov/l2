@@ -1,5 +1,6 @@
 import pytz_deprecation_shim as pytz
 
+import directions.models
 import hospitals.models
 from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
 from reportlab.pdfbase import pdfmetrics
@@ -11,7 +12,7 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 import os.path
-from laboratory.settings import FONTS_FOLDER, TIME_ZONE, TITLE_RESULT_FORM_USE_COMPANY_STAMP
+from laboratory.settings import FONTS_FOLDER, TIME_ZONE, TITLE_RESULT_FORM_USE_HOSPITAL_STAMP
 from pyvirtualdisplay import Display
 import imgkit
 import sys
@@ -319,39 +320,33 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     return i
 
 
-def gen_hospital_stamp(hospital: hospitals.models.Hospitals):
-    img = ""
-    if hospital.title_stamp_customer:
+def gen_hospital_stamp(direction: directions.models.Napravleniya):
+    img = None
+    file_jpg = None
+    hospital = direction.hospital
+    if hospital and hospital.title_stamp_customer:
         file_jpg = hospital.get_title_stamp_customer_pdf()
+    else:
+        hospital = hospitals.models.Hospitals.objects.filter(is_default=True).first()
     if hospital.title_stamp_executor:
         file_jpg = hospital.get_title_stamp_executor_pdf()
     if file_jpg:
         img = Image(
             file_jpg,
-            34 * mm,
-            34 * mm,
+            185 * mm,
+            27 * mm,
         )
 
     opinion = [
         [
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('<font size=8>(фамилия, инициалы)</font>', styleT),
-            Paragraph('', styleT),
-            Paragraph('м.п.', styleT),
-            Paragraph('', styleT),
-            Paragraph('<font size=8>(подпись)</font>', styleT),
+            img,
         ],
     ]
-    gentbl = Table(opinion, colWidths=(62 * mm, 5 * mm, 58 * mm, 5 * mm, 15 * mm, 5 * mm, 37 * mm))
+    gentbl = Table(opinion, colWidths=(210 * mm))
     gentbl.setStyle(
         TableStyle(
             [
                 ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-                ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
-                ('LINEBELOW', (6, 0), (6, 0), 0.75, colors.black),
-                ('BOTTOMPADDING', (-1, 0), (-1, 0), -12 * mm),
-                ('LEFTPADDING', (-1, 0), (-1, 0), -4 * mm),
             ]
         )
     )
@@ -385,7 +380,7 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
     styleTableSm = deepcopy(styleTable)
     styleTableSm.fontSize = 4
 
-    if not TITLE_RESULT_FORM_USE_COMPANY_STAMP:
+    if not TITLE_RESULT_FORM_USE_HOSPITAL_STAMP:
         data = [
             ["Номер:", str(direction.pk)],
             ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
@@ -449,7 +444,7 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
             )
         )
     else:
-
+        t = gen_hospital_stamp(direction)
 
     return t
 

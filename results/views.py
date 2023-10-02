@@ -679,7 +679,6 @@ def result_print(request):
                             st.add('SPAN', (0, j), (-1, j))
                             st.add('BOX', (0, j), (-1, j), 1, colors.white)
                             st.add('BOX', (0, j - 1), (-1, j - 1), 1, colors.black)
-
                         t = Table(data, colWidths=cw)
                         t.setStyle(st)
                         t.spaceBefore = 0
@@ -725,6 +724,7 @@ def result_print(request):
                             ('TOPPADDING', (0, 0), (-1, -1), 3),
                             ('RIGHTPADDING', (0, 0), (-1, -1), 2),
                             ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
+                            ('BACKGROUND', (1, 2), (1, 2), colors.HexColor(0xFF6666)),
                         ]
 
                         style_t = TableStyle(ts)
