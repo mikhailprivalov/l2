@@ -18,7 +18,7 @@ import imgkit
 import sys
 import directory.models as directory
 import collections
-from directions.models import ParaclinicResult, MicrobiologyResultCulture, TubesRegistration
+from directions.models import ParaclinicResult, MicrobiologyResultCulture, TubesRegistration, Issledovaniya
 import datetime
 from appconf.manager import SettingManager
 import simplejson as json
@@ -29,6 +29,7 @@ from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.xh import check_valid_square_brackets
 from reportlab.platypus.flowables import HRFlowable
+from laboratory.utils import strdate
 
 
 def lab_iss_to_pdf(data1):
@@ -320,7 +321,28 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     return i
 
 
-def gen_hospital_stamp(direction: directions.models.Napravleniya):
+def format_time_if_is_not_none_to_str(data_t):
+    if not data_t:
+        return ""
+    return data_t.strftime("%d.%m.%Y %H:%M")
+
+def gen_hospital_stamp(direction):
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    styleSheet = getSampleStyleSheet()
+    styleBold = styleSheet["Normal"]
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.fontSize = 10
+    styleBold.leading = 10
+    styleBold.spaceAfter = 0 * mm
+    styleBold.alignment = TA_JUSTIFY
+
+    stylePatient = deepcopy(styleBold)
+    stylePatient.fontSize = 12
+
+    styleText = deepcopy(styleBold)
+    styleText.fontName = "PTAstraSerifReg"
+
     img = None
     file_jpg = None
     hospital = direction.hospital
@@ -336,21 +358,34 @@ def gen_hospital_stamp(direction: directions.models.Napravleniya):
             185 * mm,
             27 * mm,
         )
+    individual_birthday = f'({strdate(direction.client.individual.birthday)})'
+    i = Issledovaniya.objects.filter(napravleniye=direction).first()
+    sample = TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
+    date_time_get = format_time_if_is_not_none_to_str(sample.time_get_local) if sample else ""
+    date_time_receive = format_time_if_is_not_none_to_str(sample.time_recive_local) if sample else ""
 
+    space_symbol = '&nbsp;'
     opinion = [
         [
-            img,
+            img, ''
         ],
+        [Paragraph(direction.client.individual.fio(), stylePatient), Paragraph(f"Индивидуальный номер заказа: {space_symbol * 2}{direction.pk}", stylePatient)],
+        ['', ''],
+        [Paragraph(f"Пол/Возраст: {direction.client.individual.sex} / {individual_birthday} {direction.client.individual.age_s(direction=direction)}", styleBold),
+         Paragraph(f"Дата, время взятия биоматериала: {date_time_get}", styleText)],
+        [Paragraph(f"Медкарта: {direction.client.number}", styleBold), Paragraph(f"Дата, время доставки биоматериала в КДЛ: {date_time_receive}", styleText)],
+        [Paragraph(f"Заказчик: {direction.hospital.safe_short_title}", styleBold), Paragraph(f"", styleText)]
+
     ]
-    gentbl = Table(opinion, colWidths=(210 * mm))
+    gentbl = Table(opinion, colWidths=(90 * mm, 110 * mm))
     gentbl.setStyle(
         TableStyle(
             [
                 ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), -0.5 * mm),
             ]
         )
     )
-
 
     return gentbl
 
