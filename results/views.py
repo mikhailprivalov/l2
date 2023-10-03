@@ -378,12 +378,12 @@ def result_print(request):
                 renderPDF.draw(d, canvas_mark, 20 * mm, 3 * mm)
             if QR_CODE_ANKETA and iss_research.is_extract:
                 qr_code = qr.QrCodeWidget(QR_CODE_ANKETA)
-                qr_code.barWidth = 18 * mm
-                qr_code.barHeight = 18 * mm
+                qr_code.barWidth = 16 * mm
+                qr_code.barHeight = 16 * mm
                 qr_code.qrVersion = 1
                 d = Drawing()
                 d.add(qr_code)
-                renderPDF.draw(d, canvas_mark, 10 * mm, 3 * mm)
+                renderPDF.draw(d, canvas_mark, 10 * mm, 2 * mm)
         canvas_mark.restoreState()
 
     count_pages = 0
