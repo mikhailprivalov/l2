@@ -47,7 +47,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE, GISTOLOGY_RESEARCH_PK, RESEARCHES_NOT_PRINT_FOOTERS
+from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE, GISTOLOGY_RESEARCH_PK, RESEARCHES_NOT_PRINT_FOOTERS, QR_CODE_ANKETA
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -342,7 +342,7 @@ def result_print(request):
     previous_size_form = None
     is_page_template_set = False
 
-    def mark_pages(canvas_mark, direction: Napravleniya, qr_data: Optional[str] = None, watermarks: Optional[str] = None):
+    def mark_pages(canvas_mark, direction: Napravleniya, qr_data: Optional[str] = None, watermarks: Optional[str] = None, iss_research = None):
         canvas_mark.saveState()
         canvas_mark.setFont('FreeSansBold', 8)
         if watermarks:
@@ -376,6 +376,14 @@ def result_print(request):
                 d = Drawing()
                 d.add(qr_code)
                 renderPDF.draw(d, canvas_mark, 20 * mm, 3 * mm)
+            if QR_CODE_ANKETA and iss_research.is_extract:
+                qr_code = qr.QrCodeWidget(QR_CODE_ANKETA)
+                qr_code.barWidth = 18 * mm
+                qr_code.barHeight = 18 * mm
+                qr_code.qrVersion = 1
+                d = Drawing()
+                d.add(qr_code)
+                renderPDF.draw(d, canvas_mark, 10 * mm, 3 * mm)
         canvas_mark.restoreState()
 
     count_pages = 0
@@ -466,7 +474,7 @@ def result_print(request):
             if not has_own_form_result and portion:
                 mark_pages(c, direction, qr_data, "Образец")
             elif iss.time_confirmation and iss.research.pk not in RESEARCHES_NOT_PRINT_FOOTERS:
-                mark_pages(c, direction, qr_data)
+                mark_pages(c, direction, qr_data, None, iss.research)
 
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)

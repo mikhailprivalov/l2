@@ -350,6 +350,8 @@ def gen_hospital_stamp(direction: directions.models.Napravleniya):
             ]
         )
     )
+
+
     return gentbl
 
 
