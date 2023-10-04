@@ -363,6 +363,11 @@ def gen_hospital_stamp(direction):
     sample = TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     date_time_get = format_time_if_is_not_none_to_str(sample.time_get_local) if sample else ""
     date_time_receive = format_time_if_is_not_none_to_str(sample.time_recive_local) if sample else ""
+    data_get = ""
+    data_receive = ""
+    if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == 2:
+        data_get = Paragraph(f"Дата, время взятия биоматериала: {date_time_get}", styleText)
+        data_receive = Paragraph(f"Дата, время доставки биоматериала в КДЛ: {date_time_receive}", styleText)
 
     space_symbol = '&nbsp;'
     opinion = [
@@ -372,8 +377,8 @@ def gen_hospital_stamp(direction):
         [Paragraph(direction.client.individual.fio(), stylePatient), Paragraph(f"Индивидуальный номер заказа: {space_symbol * 2}{direction.pk}", stylePatient)],
         ['', ''],
         [Paragraph(f"Пол/Возраст: {direction.client.individual.sex} / {individual_birthday} {direction.client.individual.age_s(direction=direction)}", styleBold),
-         Paragraph(f"Дата, время взятия биоматериала: {date_time_get}", styleText)],
-        [Paragraph(f"Медкарта: {direction.client.number}", styleBold), Paragraph(f"Дата, время доставки биоматериала в КДЛ: {date_time_receive}", styleText)],
+         data_get],
+        [Paragraph(f"Медкарта: {direction.client.number}", styleBold), data_receive],
         [Paragraph(f"Заказчик: {direction.hospital.safe_short_title}", styleBold), Paragraph(f"", styleText)]
 
     ]

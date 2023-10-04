@@ -17,7 +17,7 @@ from api.patients.views import patients_search_card
 from api.stationar.stationar_func import desc_to_data
 from api.views import mkb10_dict
 from clients.utils import find_patient
-from contracts.models import PriceCategory, PriceCoast
+from contracts.models import PriceCategory, PriceCoast, PriceName
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
@@ -88,7 +88,7 @@ from utils.response import status_response
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
-from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result
+from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result, check_correct_hospital_company, check_correct_hospital_company_for_price
 from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get, author_doctor
@@ -3034,11 +3034,57 @@ def get_value_field(request):
 
 
 @api_view(['POST'])
-def get_actual_price(request):
+def get_price_data(request):
     request_data = json.loads(request.body)
-    type_fin = request_data.get("fin")
-    title_fin = directions.IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
-    price = title_fin.contracts.price
-    data_price = PriceCoast.objects.filter(price_name=price)
-    result = [{"title": i.research.title, "shortTtile": i.research.short_title, "coast": i.coast} for i in data_price]
+    price_code = request_data.get("priceCode")
+    price_id = request_data.get("priceId")
+
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
+    result = []
+    if not token_obj.unlimited_access:
+        if not price_code and not price_id:
+            return {"OK": False, "message": 'priceCode или priceId должны быть переданы'}
+        check_permissions_price = check_correct_hospital_company_for_price(request, price_code, price_id)
+        if not check_permissions_price["OK"]:
+            return Response({"ok": False, 'message': check_permissions_price["message"]})
+        price = check_permissions_price["price"]
+    else:
+        price = PriceName.get_price_by_id_symbol_code(price_code, price_id)
+    if price:
+        data_price = PriceCoast.objects.filter(price_name=price)
+        result = [{"title": i.research.title, "shortTtile": i.research.short_title, "coast": i.coast} for i in data_price]
+    return Response({"data": result})
+
+
+@api_view(['POST'])
+def get_prices_by_date(request):
+    request_data = json.loads(request.body)
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
+    ogrn = request_data.get("ogrn" or '')
+    date = request_data.get("date" or '')
+    if not token_obj.unlimited_access:
+        check_permissions = check_correct_hospital_company(request, ogrn)
+        if not check_permissions["OK"]:
+            return Response({"ok": False, 'message': check_permissions["message"]})
+        hospital = check_permissions["hospital"]
+        company = check_permissions["company"]
+        is_company = check_permissions["is_company"]
+        if is_company:
+            prices = PriceName.objects.filter(company=company, date_start__lte=date, date_end__gte=date)
+        else:
+            prices = PriceName.objects.filter(hospital=hospital, date_start__lte=date, date_end__gte=date)
+    else:
+        prices = PriceName.objects.filter(date_start__lte=date, date_end__gte=date)
+
+    result = [
+        {
+            "id": i.pk,
+            "priceCode": i.symbol_code,
+            "title": i.title,
+            "dateStart": i.date_start,
+            "dateEnd": i.date_end,
+        } for i in prices]
+
     return Response({"data": result})
