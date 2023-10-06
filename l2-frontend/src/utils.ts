@@ -361,7 +361,7 @@ export const convertSubjectNameToCertObject = (subjectName: string): any => {
   return result;
 };
 
-export const convertSubjectNameToTitle = (object: any, subjectName: string | null, name: string) => {
+export const convertSubjectNameToTitle = (object: any, subjectName: string | null) => {
   const obj = object || convertSubjectNameToCertObject(subjectName);
 
   // eslint-disable-next-line no-console

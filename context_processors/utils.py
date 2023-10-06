@@ -29,7 +29,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:6'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:7'
         data = cache.get(k)
         if not data:
             pages = [
@@ -116,6 +116,13 @@ def menu(request):
                     "nt": False,
                     "access": ["Врач параклиники", "Врач консультаций", "Свидетельство о смерти-доступ"],
                     "module": "paraclinic_module",
+                },
+                {
+                    "url": "/ui/case-control",
+                    "title": "Случаи обслуживания",
+                    "nt": False,
+                    "access": ['Врач параклиники', 'Врач консультаций'],
+                    "module": "l2_case",
                 },
                 {"url": '/ui/stationar', "title": "Стационар", "nt": False, "access": ["Врач стационара", "t, ad, p"], "module": "l2_hosp"},
                 {

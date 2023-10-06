@@ -787,6 +787,13 @@ class Napravleniya(models.Model):
     def visit_date_local(self):
         return localtime(self.visit_date)
 
+    @property
+    def services(self) -> List[directory.Researches]:
+        result = []
+        for iss in self.issledovaniya_set.all().order_by('research__title'):
+            result.append(iss.research)
+        return result
+
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s, par: [%s])" % (
             self.pk,

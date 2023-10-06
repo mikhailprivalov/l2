@@ -241,6 +241,10 @@ export default (instance: Vue): void => {
     instance.$root.$emit('msg', 'error', message, timeout);
   };
 
+  Vue.prototype.$info = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'info', message, timeout);
+  };
+
   Vue.prototype.$ok = (message, timeout: number | void | null) => {
     instance.$root.$emit('msg', 'ok', message, timeout);
   };
