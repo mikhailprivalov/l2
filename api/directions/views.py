@@ -437,6 +437,7 @@ def directions_history(request):
     # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id, tube_number
     researches_pks = []
     researches_titles = ''
+    child_researches_titles = ''
 
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco, is_application, is_expertise, expertise_status, can_has_pacs = False, False, False, False, False
@@ -480,7 +481,7 @@ def directions_history(request):
                     {
                         'pk': dir,
                         'status': status,
-                        'researches': researches_titles,
+                        'researches': f"{researches_titles} {child_researches_titles}",
                         "researches_pks": researches_pks,
                         "aux_researches": aux_researches,
                         "has_aux": has_aux,
@@ -503,6 +504,7 @@ def directions_history(request):
                         'register_number': register_number,
                     }
                 )
+                child_researches_titles = ""
                 person_contract_pk = -1
                 person_contract_dirs = ""
                 planed_doctor = ""
@@ -538,10 +540,26 @@ def directions_history(request):
                 has_hosp = True
             lab = set()
 
+        if i[36] and req_status == 7:
+            case_child_direction = Napravleniya.objects.values_list("pk", flat=True).filter(parent_case__id=i[2])
+            case_childs = Issledovaniya.objects.filter(napravleniye_id__in=case_child_direction)
+            step = 0
+            for csh in case_childs:
+                ch_title = csh.research.short_title if csh.research.short_title else csh.research.title
+                if step != 0:
+                    child_researches_titles = f"{child_researches_titles}; {ch_title}"
+                else:
+                    child_researches_titles = f"{ch_title}"
+                step += 1
+
         if researches_titles:
             researches_titles = f'{researches_titles} | {i[5]}'
+        elif child_researches_titles:
+            researches_titles = f'{child_researches_titles} - {i[5]}'
         else:
             researches_titles = i[5]
+
+        child_researches_titles = ""
 
         status_val = 0
         has_descriptive = False
@@ -591,7 +609,7 @@ def directions_history(request):
             {
                 'pk': dir,
                 'status': status,
-                'researches': researches_titles,
+                'researches': f"{researches_titles} {child_researches_titles}",
                 "researches_pks": researches_pks,
                 "aux_researches": aux_researches,
                 "has_aux": has_aux,

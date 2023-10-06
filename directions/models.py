@@ -1550,7 +1550,7 @@ class Napravleniya(models.Model):
                                 external_order=external_order,
                                 price_name_id=price_name,
                             )
-                            research_case = directory.Researches.objects.filter(is_case=True).first()
+                            research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
                             issledovaniye_case = Issledovaniya(
                                 napravleniye=napravleniye_case,
                                 research=research_case,
