@@ -2,26 +2,27 @@
 import { computed, ref, watch } from 'vue';
 
 import useLoader from '@/hooks/useLoader';
+import useOn from '@/hooks/useOn';
 import { menuItems } from '@/pages/CaseControl/Sidebar/menu';
 import DisplayDirection from '@/pages/Stationar/DisplayDirection.vue';
 import api from '@/api';
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
-  (e: 'open-direction', id: number): void
-  (e: 'close-view', view: string): void
+  (e: 'input', value: number): void
+  (e: 'close-view'): void
 }>();
 const props = defineProps<{
   caseId?: number | null;
   view?: string | null;
-  selectedDirection?: number | null;
+  value?: number | null;
 }>();
 
 const loader = useLoader();
 const mainItem = computed(() => menuItems[props.view]);
 const directions = ref<any[]>([]);
 
-watch([() => props.view, () => props.caseId], async () => {
+const loadDirections = async () => {
   if (!props.caseId || !props.view) {
     return;
   }
@@ -29,9 +30,14 @@ watch([() => props.view, () => props.caseId], async () => {
   const { rows } = await api('cases/directions-by-key', { caseId: props.caseId, view: props.view });
   directions.value = rows;
   loader.dec();
-}, {
+};
+
+watch([() => props.view, () => props.caseId], loadDirections, {
   immediate: true,
 });
+
+useOn('result-saved', loadDirections);
+useOn('researches-picker:directions_createdcd', loadDirections);
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const printAll = () => {
@@ -40,7 +46,7 @@ const close = () => {
   emit('close-view');
 };
 const openDirection = (id: number) => {
-  emit('open-direction', id);
+  emit('input', id);
 };
 </script>
 
@@ -66,8 +72,8 @@ const openDirection = (id: number) => {
       v-for="d in directions"
       :key="d.pk"
       :class="[
-        Boolean(d.totalConfirmed) && $style.confirmed,
-        props.selectedDirection === d.pk && $style.active,
+        Boolean(d.confirm) && $style.confirmed,
+        props.value === d.pk && $style.active,
         $style.block,
         $style.direction,
       ]"

@@ -1292,8 +1292,16 @@ class Napravleniya(models.Model):
         services_by_additional_order_num=None,
         price_name=None,
         case_id=-2,
+        case_by_direction=False,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
+        if case_id > -1 and case_by_direction:
+            iss = Napravleniya.objects.get(pk=case_id).issledovaniya_set.all().first()
+            if iss:
+                case_id = iss.pk
+            else:
+                result["message"] = "Ошибка привязки к случаю"
+                return result
         if not Clients.Card.objects.filter(pk=client_id).exists():
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result

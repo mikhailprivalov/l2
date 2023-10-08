@@ -4,24 +4,43 @@ import { ref, watch } from 'vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import Sidebar from '@/pages/CaseControl/Sidebar/index.vue';
 import Content from '@/pages/CaseControl/Content/index.vue';
+import UrlData from '@/UrlData';
 
-const caseId = ref<number | null>(null);
-const view = ref<string | null>(null);
-const direction = ref<number | null>(null);
+let initialView = null;
+let initialDirection = null;
+let initialCase = null;
 
-watch(caseId, () => {
-  direction.value = null;
-  view.value = null;
+const storedData = UrlData.get();
+if (storedData && typeof storedData === 'object') {
+  initialView = storedData.view || null;
+  initialDirection = storedData.childrenDirection || null;
+  initialCase = storedData.pk || null;
+}
+
+const caseId = ref<number | null>(initialCase);
+const view = ref<string | null>(initialView);
+const direction = ref<number | null>(initialDirection);
+const inited = ref<boolean>(!initialCase && !initialDirection);
+
+watch(() => caseId.value, () => {
+  if (inited.value) {
+    direction.value = null;
+    view.value = null;
+  } else {
+    inited.value = true;
+  }
 });
 </script>
 
 <template>
-  <TwoSidedLayout light-right>
+  <TwoSidedLayout
+    light-right
+  >
     <template #left>
       <Sidebar
         @open-case="id => caseId = id"
         @open-view="v => view = v"
-        @open-direction="(v, d) => {view = v; direction = d;}"
+        @open-direction="({case: c, view: v, id}) => {caseId = c; view = v; direction = id;}"
       />
     </template>
     <template #right>

@@ -19,7 +19,9 @@ const onSearch = (pk?: string) => {
       UrlData.set(null);
     } else {
       notify.ok(message || 'Найдено');
-      UrlData.set({ pk: pk || q.value });
+      if (!pk) {
+        UrlData.set({ pk: pk || q.value });
+      }
       q.value = '';
     }
   });
@@ -27,9 +29,12 @@ const onSearch = (pk?: string) => {
 
 onMounted(() => {
   const storedData = UrlData.get();
-  console.log(storedData);
-  if (storedData && typeof storedData === 'object' && storedData.pk) {
-    onSearch(storedData.pk);
+  if (storedData && typeof storedData === 'object') {
+    if (storedData.childrenDirection) {
+      onSearch(storedData.childrenDirection);
+    } else if (storedData.pk) {
+      onSearch(storedData.pk);
+    }
   }
 });
 </script>

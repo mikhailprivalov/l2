@@ -1160,7 +1160,7 @@
             </div>
           </div>
           <div
-            v-if="row.children_directions && row.children_directions.length > 0"
+            v-if="!directionFormProps && row.children_directions && row.children_directions.length > 0"
             class="group"
           >
             <div class="group-title">
@@ -1607,6 +1607,8 @@
               :parent_iss="create_directions_for"
               :clear_after_gen="true"
               style="border-top: 1px solid #eaeaea; border-bottom: 1px solid #eaeaea"
+              :parent-case="caseId"
+              :case-by-direction="true"
             />
           </div>
         </div>
@@ -1863,6 +1865,16 @@ export default {
 
     next();
   },
+  props: {
+    directionIdToOpen: {
+      type: Number,
+      required: false,
+    },
+    caseId: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       pk: '',
@@ -1929,6 +1941,9 @@ export default {
     };
   },
   computed: {
+    directionFormProps() {
+      return !!this.directionIdToOpen;
+    },
     currentYear() {
       return moment(this.currentDate).format('YYYY');
     },
@@ -2190,6 +2205,10 @@ export default {
       },
     },
     navState() {
+      if (this.directionFormProps) {
+        return;
+      }
+
       if (this.inited) {
         UrlData.set(this.navState);
       }
@@ -2221,7 +2240,11 @@ export default {
     });
 
     const storedData = UrlData.get();
-    if (storedData && typeof storedData === 'object' && storedData.pk) {
+    if (this.directionFormProps) {
+      this.load_pk(this.directionIdToOpen).then(() => {
+        this.inited = true;
+      });
+    } else if (storedData && typeof storedData === 'object' && storedData.pk) {
       this.load_pk(storedData.pk).then(() => {
         this.inited = true;
       });
@@ -2243,8 +2266,8 @@ export default {
     });
 
     const urlParams = new URLSearchParams(window.location.search);
-    this.embedded = urlParams.get('embedded') === '1';
-    this.embeddedFull = urlParams.get('embeddedFull') === '1';
+    this.embedded = !!this.directionIdToOpen || urlParams.get('embedded') === '1';
+    this.embeddedFull = !!this.directionIdToOpen || urlParams.get('embeddedFull') === '1';
     window.$(window).on('beforeunload', this.unload);
 
     try {
@@ -2328,7 +2351,7 @@ export default {
       }
     },
     unload() {
-      if (!this.has_changed) {
+      if (!this.has_changed || this.directionFormProps) {
         return undefined;
       }
 
@@ -2493,6 +2516,9 @@ export default {
         });
     },
     load_history() {
+      if (this.directionFormProps) {
+        return;
+      }
       this.directions_history = [];
       this.$store.dispatch(actions.INC_LOADING);
       directionsPoint
@@ -2646,6 +2672,7 @@ export default {
             this.data.direction.amd_number = data.amd_number;
             this.reload_if_need();
             this.changed = false;
+            this.$root.$emit('result-saved');
           } else {
             this.$root.$emit('msg', 'error', data.message);
           }

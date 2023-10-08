@@ -3,6 +3,7 @@ import { ref } from 'vue';
 
 import SearchForm from '@/pages/CaseControl/Sidebar/SearchForm.vue';
 import AnamnesisView from '@/pages/CaseControl/Sidebar/AnamnesisView.vue';
+import useOn from '@/hooks/useOn';
 import useLoader from '@/hooks/useLoader';
 import useNotify from '@/hooks/useNotify';
 import api from '@/api';
@@ -26,18 +27,15 @@ const counts = ref<Record<string, number>>({});
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
   (e: 'open-case', id: number): void
-  (e: 'open-direction', view: string, id: number): void
+  (e: 'open-direction', data: {case: number, view: string, id: number}): void
   (e: 'open-view', view: string): void
 }>();
 
-const onSearch = async (q: string, onResult: (ok, message) => void) => {
+const loadData = async (q?: string) => {
   loader.inc();
-  const { ok, message, data } = await api('cases/search', { q });
-  if (!ok) {
-    onResult(false, message || `${q}: не найдено`);
-  } else {
+  const { ok, message, data } = await api('cases/search', { q: q || direction.value });
+  if (ok) {
     const { patient, tree } = data;
-    onResult(true, `Загружен случай ${data.direction}${Number(q) === data.direction ? '' : ` (поиск по направлению ${q})`}`);
     if (message) {
       notify.info(message);
     }
@@ -49,16 +47,38 @@ const onSearch = async (q: string, onResult: (ok, message) => void) => {
     openedTree.value = tree;
     counts.value = data.counts;
     originalDirection.value = data.originalDirection;
-    emit('open-case', data.direction);
-
-    if (data.originalDirection?.id) {
-      setTimeout(() => {
-        emit('open-direction', data.originalDirection.view, data.originalDirection.id);
-      }, 0);
-    }
   }
   loader.dec();
+
+  return { ok, message, data };
 };
+
+const onSearch = async (q: string, onResult: (ok, message) => void) => {
+  const { ok, message, data } = await loadData(q);
+  if (!ok) {
+    onResult(false, message || `${q}: не найдено`);
+  } else {
+    onResult(true, `Загружен случай ${direction.value}${Number(q) === direction.value ? '' : ` (поиск по направлению ${q})`}`);
+    if (message) {
+      notify.info(message);
+    }
+
+    if (data.originalDirection?.id && data.originalDirection?.open) {
+      setTimeout(() => {
+        emit('open-direction', {
+          case: data.direction,
+          view: data.originalDirection.view,
+          id: data.originalDirection.id,
+        });
+      }, 0);
+    } else {
+      emit('open-case', direction.value);
+    }
+  }
+};
+
+useOn('result-saved', loadData);
+useOn('researches-picker:directions_createdcd', loadData);
 
 const toggleCancel = async () => {
   loader.inc();
@@ -71,7 +91,11 @@ const openView = (view: string) => {
   emit('open-view', view);
 };
 const openDirection = (view: string, id: number) => {
-  emit('open-direction', view, id);
+  emit('open-direction', {
+    case: direction.value,
+    view,
+    id,
+  });
 };
 </script>
 

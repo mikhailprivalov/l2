@@ -166,6 +166,7 @@ def directions_generate(request):
             hospital_override=p.get("hospital_override", -1),
             price_category=p.get("priceCategory", -1),
             case_id=p.get("caseId", -2),
+            case_by_direction=p.get("caseByDirection", -2),
         )
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)

@@ -3,6 +3,8 @@ import { ref, watch } from 'vue';
 
 import TopBottomLayout from '@/layouts/TopBottomLayout.vue';
 import TopView from '@/pages/CaseControl/Content/TopView.vue';
+import ResultsParaclinic from '@/pages/ResultsParaclinic.vue';
+import UrlData from '@/UrlData';
 
 const props = defineProps<{
   caseId?: number | null;
@@ -18,24 +20,30 @@ const emit = defineEmits<{
 
 const openedDirection = ref<number | null>(null);
 
-watch(() => props.view, () => {
-  openedDirection.value = null;
-});
-watch(() => props.caseId, () => {
-  openedDirection.value = null;
-});
+const updateData = () => {
+  UrlData.set({ pk: props.caseId, childrenDirection: openedDirection.value, view: props.view });
+};
 
 watch(() => props.value, () => {
-  openedDirection.value = props.value;
+  const pk = props.value;
+  setTimeout(() => {
+    openedDirection.value = pk;
+  }, 10);
+}, {
+  immediate: true,
 });
 
-watch(openedDirection, () => {
+watch(() => props.view, (prevView) => {
+  if (prevView) {
+    openedDirection.value = null;
+  }
+  updateData();
+});
+
+watch(() => openedDirection.value, () => {
   emit('input', openedDirection.value);
+  updateData();
 });
-
-const openDirection = pk => {
-  openedDirection.value = pk;
-};
 </script>
 
 <template>
@@ -48,15 +56,19 @@ const openDirection = pk => {
     >
       <template #top>
         <TopView
+          v-model="openedDirection"
           :case-id="props.caseId"
           :view="props.view"
-          :selected-direction="openedDirection"
           @close-view="emit('close-view')"
-          @open-direction="openDirection"
         />
       </template>
       <template #bottom>
-        {{ openedDirection }}
+        <ResultsParaclinic
+          v-if="openedDirection"
+          :key="openedDirection"
+          :direction-id-to-open="openedDirection"
+          :case-id="props.caseId"
+        />
       </template>
     </TopBottomLayout>
   </div>

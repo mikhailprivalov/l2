@@ -684,6 +684,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    parentCase: {
+      type: Number,
+      required: false,
+    },
+    caseByDirection: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -874,7 +882,7 @@ export default {
       return this.canChangeHospitalDirection && this.hospital_override === -1;
     },
     needSelectCase() {
-      return (this.needChangeCase && this.research_case === -2);
+      return (!this.parentCase && this.needChangeCase && this.research_case === -2);
     },
     need_update_object() {
       const r = [];
@@ -1358,7 +1366,8 @@ export default {
         hospital_department_override: this.hospital_department_override,
         hospital_override: this.hospital_override,
         monitoring: this.monitoring,
-        caseId: this.research_case,
+        caseId: this.parentCase || this.research_case,
+        caseByDirection: !!this.parentCase && this.caseByDirection,
       });
     },
     clear_all() {
