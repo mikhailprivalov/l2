@@ -3,15 +3,18 @@
     <Navbar v-if="!embedded && !hideHeaderWithoutLogin && !isEmptyLayout" />
 
     <div
+      v-if="!isFullPageLayout"
       :class="[
         isNarrowLayout && 'container',
-        isFullPageLayout && 'full-page-layout',
         isEmptyLayout && 'empty-layout',
         isWideNarrowLayout && 'wide-narrow-layout',
       ]"
     >
       <router-view />
     </div>
+    <PageInnerLayout v-else>
+      <router-view />
+    </PageInnerLayout>
 
     <div
       v-if="inLoading"
@@ -66,10 +69,15 @@ import CheckBackend from '@/ui-cards/CheckBackend.vue';
 import ChatsDialogs from '@/ui-cards/Chat/ChatsDialogs.vue';
 import * as actions from '@/store/action-types';
 import notifyAudioSrc from '@/assets/notify.mp3';
+import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
 
 @Component({
   components: {
-    CheckBackend, Navbar, ChatsDialogs, ModalForm,
+    PageInnerLayout,
+    CheckBackend,
+    Navbar,
+    ChatsDialogs,
+    ModalForm,
   },
   computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated', 'editId']),
   metaInfo() {
@@ -312,14 +320,6 @@ export default class App extends Vue {
   100% {
     transform: rotate(360deg);
   }
-}
-
-.full-page-layout {
-  position: absolute;
-  top: 36px;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 
 .empty-layout {

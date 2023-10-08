@@ -84,7 +84,10 @@
             <th class="text-center">
               Дата
             </th>
-            <th v-if="active_type !== 5 && active_type !== 6">
+            <th v-if="active_type === 7">
+              № случ.
+            </th>
+            <th v-else-if="active_type !== 5 && active_type !== 6">
               № напр.
             </th>
             <th v-else-if="active_type === 5">
@@ -163,6 +166,15 @@
               <span v-else-if="!!row.has_descriptive && role_can_use_descriptive">
                 <a
                   :href="`/ui/results/descriptive#{%22pk%22:${row.pk}}`"
+                  target="_blank"
+                  class="a-under"
+                >
+                  {{ row.pk }}
+                </a>
+              </span>
+              <span v-else-if="active_type === 7">
+                <a
+                  :href="`/ui/case-control#{%22pk%22:${row.pk}}`"
                   target="_blank"
                   class="a-under"
                 >

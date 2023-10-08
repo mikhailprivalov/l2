@@ -1533,7 +1533,7 @@ def load_anamnesis(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
     history = []
-    for a in AnamnesisHistory.objects.filter(card=card).order_by('-pk'):
+    for a in AnamnesisHistory.objects.filter(card=card).order_by('-pk') if not request_data.get('skipHistory') else []:
         history.append(
             {
                 "pk": a.pk,
@@ -1549,6 +1549,9 @@ def load_anamnesis(request):
         "text": card.anamnesis_of_life,
         "history": history,
     }
+    if request_data.get('withPatient'):
+        data['patient'] = card.get_fio_w_card()
+
     return JsonResponse(data)
 
 
