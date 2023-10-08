@@ -3,14 +3,17 @@ import { computed, ref, watch } from 'vue';
 
 import useLoader from '@/hooks/useLoader';
 import useOn from '@/hooks/useOn';
+import usePrint from '@/hooks/usePrint';
 import { menuItems } from '@/pages/CaseControl/Sidebar/menu';
 import DisplayDirection from '@/pages/Stationar/DisplayDirection.vue';
 import api from '@/api';
+import ResultsViewer from '@/modals/ResultsViewer.vue';
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
   (e: 'input', value: number): void
   (e: 'close-view'): void
+  (e: 'close-direction'): void
 }>();
 const props = defineProps<{
   caseId?: number | null;
@@ -18,9 +21,20 @@ const props = defineProps<{
   value?: number | null;
 }>();
 
+type Direction = {
+  pk: number;
+  confirm: boolean;
+  date_create: boolean;
+  researches_short: string[];
+  researches: string[];
+  showResults: boolean;
+};
+
 const loader = useLoader();
+const { printResults } = usePrint();
 const mainItem = computed(() => menuItems[props.view]);
-const directions = ref<any[]>([]);
+const directions = ref<Direction[]>([]);
+const showResultsId = ref<number | null>(null);
 
 const loadDirections = async () => {
   if (!props.caseId || !props.view) {
@@ -41,12 +55,22 @@ useOn('researches-picker:directions_createdcd', loadDirections);
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const printAll = () => {
+  printResults(directions.value.map((d) => d.pk));
 };
 const close = () => {
   emit('close-view');
 };
-const openDirection = (id: number) => {
-  emit('input', id);
+const closeDirection = () => {
+  emit('close-direction');
+};
+const openDirection = (d: Direction) => {
+  if (d.showResults) {
+    showResultsId.value = d.pk;
+  } else if (props.view === 'all') {
+    printResults([d.pk]);
+  } else {
+    emit('input', d.pk);
+  }
 };
 </script>
 
@@ -77,12 +101,24 @@ const openDirection = (id: number) => {
         $style.block,
         $style.direction,
       ]"
-      @click="openDirection(d.pk)"
+      @click="openDirection(d)"
     >
       <span>
         <DisplayDirection :direction="d" />
+        <i
+          v-if="props.value === d.pk"
+          class="fa fa-times"
+          :class="$style.topRight"
+          @click="closeDirection"
+        />
       </span>
     </div>
+    <ResultsViewer
+      v-if="showResultsId"
+      :pk="showResultsId"
+      no_desc
+      @hide="showResultsId = null"
+    />
   </div>
 </template>
 
@@ -146,12 +182,12 @@ export default {
     left: 0;
   }
 
-  &:hover {
+  &:hover:not(.active) {
     z-index: 1;
     transform: translateY(-1px);
   }
 
-  &:not(.confirmed):hover {
+  &:not(.confirmed):not(.active):hover {
     box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1), 0 5px 5px rgba(0, 0, 0, 0.12);
   }
 
@@ -159,7 +195,7 @@ export default {
     border-color: #049372;
     background: linear-gradient(to bottom, #04937254 0%, #049372ba 100%);
 
-    &:hover {
+    &:hover:not(.active) {
       box-shadow: 0 7px 14px #04937254, 0 5px 5px #049372ba;
     }
   }

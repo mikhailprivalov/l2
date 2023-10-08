@@ -5,6 +5,8 @@ import TopBottomLayout from '@/layouts/TopBottomLayout.vue';
 import TopView from '@/pages/CaseControl/Content/TopView.vue';
 import ResultsParaclinic from '@/pages/ResultsParaclinic.vue';
 import UrlData from '@/UrlData';
+import AggregateLaboratory from '@/fields/AggregateLaboratory.vue';
+import AggregateDesc from '@/fields/AggregateDesc.vue';
 
 const props = defineProps<{
   caseId?: number | null;
@@ -14,8 +16,9 @@ const props = defineProps<{
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
-  (e: 'input', value: number): void
+  (e: 'input', value: number | null): void
   (e: 'close-view'): void
+  (e: 'close-direction'): void
 }>();
 
 const openedDirection = ref<number | null>(null);
@@ -60,6 +63,7 @@ watch(() => openedDirection.value, () => {
           :case-id="props.caseId"
           :view="props.view"
           @close-view="emit('close-view')"
+          @close-direction="emit('close-direction')"
         />
       </template>
       <template #bottom>
@@ -69,6 +73,24 @@ watch(() => openedDirection.value, () => {
           :direction-id-to-open="openedDirection"
           :case-id="props.caseId"
         />
+        <div
+          v-else
+          :key="`${props.caseId}_${props.view}`"
+          :class="$style.aggregate"
+        >
+          <AggregateLaboratory
+            v-if="props.view === 'laboratory'"
+            :case-direction="props.caseId"
+            disabled
+          />
+          <AggregateDesc
+            v-else-if="['paraclinical', 'consultation', 'morfology'].includes(props.view)"
+            :key="`desc_${props.caseId}_${props.view}`"
+            :case-direction="props.caseId"
+            :r_type="props.view"
+            disabled
+          />
+        </div>
       </template>
     </TopBottomLayout>
   </div>
@@ -81,5 +103,7 @@ export default {
 </script>
 
 <style module lang="scss">
-
+.aggregate {
+  padding: 10px;
+}
 </style>

@@ -14,8 +14,6 @@ def get_case_direction_tree(num_dir):
     tree_dir = tree_directions.hosp_tree_direction(num_iss)
     final_tree = {}
 
-    print(result)
-
     node_dir = Node({'order': '-1', 'direction': '', 'research_title': '', 'correct_level': True, 'color': '', 'cancel': False, 'issledovaniye': '', 'parent_iss': ''})
     for j in tree_dir:
         research_title = j[12] if j[12] else j[9]

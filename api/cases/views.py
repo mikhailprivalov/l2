@@ -4,8 +4,8 @@ from django.http import JsonResponse
 
 from api.cases.helpers import get_case_direction_tree
 from api.cases.stationar_func import (
-    get_direction_attrs,
     hosp_get_lab_iss,
+    hosp_get_text_iss,
 )
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
@@ -237,33 +237,28 @@ def directions_by_key(request):
 
     directions = directions.distinct().order_by('id')
 
-    x: Napravleniya
-    return JsonResponse({'rows': [
+    return JsonResponse(
         {
-            'pk': x.pk,
-            'confirm': x.total_confirmed,
-            'date_create': strfdatetime(x.data_sozdaniya_local, "%d.%m.%Y"),
-            'researches_short': [y.short_title for y in x.services],
-            'researches': [y.title for y in x.services],
+            'rows': [
+                {
+                    'pk': x.pk,
+                    'confirm': x.total_confirmed,
+                    'date_create': strfdatetime(x.data_sozdaniya_local, "%d.%m.%Y"),
+                    'researches_short': [y.short_title for y in x.services],
+                    'researches': [y.title for y in x.services],
+                    'showResults': x.issledovaniya_set.all().filter(research__podrazdeleniye__p_type=2).exists(),
+                }
+                for x in directions
+            ]
         }
-        for x in directions
-    ]})
-
-
-@login_required
-def aggregate_laboratory(request):
-    data = json.loads(request.body)
-    pk = data.get('caseId', -1)
-    result = hosp_get_lab_iss(pk, False)
-    return JsonResponse(result)
+    )
 
 
 @login_required
 def aggregate(request):
     data = json.loads(request.body)
-    pk = data.get('caseId', -1)
-    view = data.get("view")
-
+    pk = data.get('caseDirection', -1)
+    view = data["view"]
     directions = Napravleniya.objects.filter(parent_case__napravleniye_id=pk)
 
     if view == 'laboratory':
@@ -277,9 +272,8 @@ def aggregate(request):
 
     directions = directions.distinct().order_by('id')
 
-    return JsonResponse({'rows': [
-        {
-            'confirm': x.total_confirmed,
-        }
-        for x in directions
-    ]})
+    if view == 'laboratory':
+        result = hosp_get_lab_iss([x.pk for x in directions])
+    else:
+        result = hosp_get_text_iss([x.pk for x in directions])
+    return JsonResponse(result, safe=False)

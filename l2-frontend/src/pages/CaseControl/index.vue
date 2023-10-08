@@ -49,6 +49,7 @@ watch(() => caseId.value, () => {
         :case-id="caseId"
         :view="view"
         @close-view="view = null"
+        @close-direction="direction = null"
       />
     </template>
   </TwoSidedLayout>
