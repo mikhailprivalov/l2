@@ -1058,7 +1058,7 @@ def form_04(request_data):
 
 def form_05(request_data):
     """
-    Новая форма 025/у - титульный лист амбулаторной карты
+    Новая форма 025/у - титульный лист амбулаторной карты (Амбулаторный случай)
     Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
@@ -1085,6 +1085,7 @@ def form_05(request_data):
     style.fontName = "PTAstraSerifReg"
     style.fontSize = 11
     style.alignment = TA_JUSTIFY
+    style.leading = 4.2 * mm
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleOrgName = deepcopy(styleBold)
@@ -1104,11 +1105,9 @@ def form_05(request_data):
 
     objs = []
 
-    styleT = deepcopy(style)
-    styleT.alignment = TA_LEFT
-    styleT.fontSize = 10
-    styleT.leading = 4.5 * mm
-    styleT.face = 'PTAstraSerifReg'
+    space_symbol = '&nbsp;'
+    open_bold_tag = '<font fontname="PTAstraSerifBold">'
+    close_bold_tag = '</font>'
 
     order_data = [
         [
@@ -1159,8 +1158,39 @@ def form_05(request_data):
                           styleHeader))
 
     frame_data = []
-    frame_data.append(Paragraph('fdfsdf', style))
     params_columns = []
+    coupon_date_start = datetime.datetime.now()
+    category_benefits = '_______'
+    coupon_date_end = coupon_date_start + datetime.timedelta(days=1)
+    frame_data.append(Paragraph(f'1. Дата открытия талона: число {open_bold_tag}{coupon_date_start.day}{close_bold_tag} месяц {open_bold_tag}{coupon_date_start.month}{close_bold_tag} '
+                                f'год {open_bold_tag}{coupon_date_start.year}{close_bold_tag} 2. Код категории льготы {open_bold_tag}{category_benefits}{close_bold_tag} '
+                                f'3. Действует до {open_bold_tag}{coupon_date_end.strftime("%d.%m.%Y")}{close_bold_tag}', style))
+
+    smo = '______________'
+    frame_data.append(Paragraph(f'4. Страховой полис ОМС: серия {open_bold_tag}{patient_data["oms"]["polis_serial"]}{close_bold_tag} № {open_bold_tag}'
+                                f'{patient_data["oms"]["polis_num"]}{close_bold_tag} 5. СМО {smo} 6. СНИЛС {patient_data["snils"]}', style))
+
+    sex = ''
+    if patient_data["sex"] == 'м':
+        sex = 'муж. - 1'
+    else:
+        sex = 'жен. - 2'
+
+    frame_data.append(Paragraph(f'7. Фамилия {open_bold_tag}{patient_data["family"]}{close_bold_tag} 8. Имя {open_bold_tag}{patient_data["name"]}{close_bold_tag} 9. Отчество '
+                                f'{open_bold_tag}{patient_data["patronymic"]}{close_bold_tag} 10. Пол: {open_bold_tag}{sex}{close_bold_tag}', style))
+
+    identity_document_serial = ''
+    identity_document_number = ''
+    if patient_data["type_doc"] == 'паспорт':
+        identity_document_serial = patient_data["passport_serial"]
+        identity_document_number = patient_data["passport_num"]
+    elif patient_data["type_doc"] == 'свидетельство о рождении':
+        identity_document_serial = patient_data["bc_serial"]
+        identity_document_number = patient_data["bc_num"]
+
+    frame_data.append(Paragraph(f'11. Дата рождения: число {open_bold_tag}{patient_data["birthday"].day}{close_bold_tag} месяц {open_bold_tag}{patient_data["birthday"].month}'
+                                f'{close_bold_tag} год {open_bold_tag}{patient_data["birthday"].year}{close_bold_tag} 11.1. Документ, удостоверяющий личность: серия {open_bold_tag}'
+                                f'{identity_document_serial}{close_bold_tag} № {open_bold_tag}{identity_document_number}{close_bold_tag}', style))
     params_columns.append({"x": 0 * mm, "y": -33 * mm, "width": 279 * mm, "height": 30 * mm, "text": frame_data,
                            "showBoundary": 1})
     objs.append(FrameDataCol(params_columns))
