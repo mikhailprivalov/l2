@@ -566,6 +566,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                 -9: 'Формы',
                 -11: 'Заявления',
                 -12: 'Мониторинги',
+                -14: 'Случай',
             }[rtp]
             # if rtp == -6:
             #     has_micro = True

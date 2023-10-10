@@ -47,6 +47,7 @@ class NapravleniyaAdmin(admin.ModelAdmin):
         'parent',
         'parent_auto_gen',
         'parent_slave_hosp',
+        'parent_case',
     )
     search_fields = (
         'pk',

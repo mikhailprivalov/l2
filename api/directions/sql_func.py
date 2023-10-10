@@ -21,6 +21,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directory_researches.is_paraclinic,
             directory_researches.is_form,
             directory_researches.is_microbiology,
+            directory_researches.is_case,
             directory_researches.podrazdeleniye_id,
             directions_napravleniya.parent_id as dir_parent_id,
             directions_napravleniya.data_sozdaniya as dir_data_sozdaniya,
@@ -106,7 +107,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             ud.patronymic,
             directions_napravleniya.visit_date,
             directions_napravleniya.time_microbiology_receive,
-            directions_napravleniya.time_gistology_receive
+            directions_napravleniya.time_gistology_receive,
+            is_case
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
@@ -502,6 +504,30 @@ def get_directions_meta_info(directions):
                 ORDER BY directions_issledovaniya.napravleniye_id
             """,
             params={'directions': directions, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_patient_open_case_data(card_pk, start_date, end_date):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.id as iss_id,
+                    directions_issledovaniya.napravleniye_id,
+                    directions_issledovaniya.research_id,
+                    dr.title,
+                    dr.is_case,
+                    to_char(dn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create
+                FROM directions_issledovaniya
+                LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
+                LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
+                WHERE dn.client_id = %(card_pk)s and dr.is_case = true and directions_issledovaniya.time_confirmation is Null and
+                dn.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                ORDER BY directions_issledovaniya.napravleniye_id
+            """,
+            params={'card_pk': card_pk, 'tz': TIME_ZONE, 'd_start': start_date, 'd_end': end_date},
         )
         rows = namedtuplefetchall(cursor)
     return rows

@@ -16,6 +16,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     DIRECTIONPARAMS = 12
     APPLICATIONS = 13
     MONITORINGS = 14
+    CASE = 16
 
     TYPES = (
         (HIDDEN, "Скрыто"),
@@ -31,6 +32,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (DIRECTIONPARAMS, "Параметры для направления"),
         (APPLICATIONS, "Заявления"),
         (MONITORINGS, "Мониторинги"),
+        (CASE, "Случаи"),
     )
 
     ODII_TYPES = (

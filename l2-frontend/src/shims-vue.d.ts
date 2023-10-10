@@ -12,6 +12,7 @@ declare module '*.vue' {
       $msg: (type, message, timeout?: number | void | null, payload: any | void) => void;
       $error: (message, timeout?: number | void | null) => void;
       $ok: (message, timeout?: number | void | null) => void;
+      $info: (message, timeout?: number | void | null) => void;
     }
   }
 
