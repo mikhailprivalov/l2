@@ -1439,6 +1439,8 @@ def user_view(request):
             "sendPassword": False,
             "external_access": False,
             "date_stop_external_access": None,
+            "date_extract_employee": None,
+            "date_stop_certificate": None,
             "resource_schedule": resource_researches,
             "notControlAnketa": False,
         }
@@ -1491,6 +1493,8 @@ def user_view(request):
             "sendPassword": False,
             "external_access": doc.external_access,
             "date_stop_external_access": doc.date_stop_external_access,
+            "date_stop_certificate": doc.date_stop_certificate,
+            "date_extract_employee": doc.date_extract_employee,
             "resource_schedule": resource_researches,
             "notControlAnketa": doc.not_control_anketa,
         }
@@ -1526,8 +1530,16 @@ def user_save_view(request):
     external_access = ud.get("external_access", False)
     not_control_anketa = ud.get("notControlAnketa", False)
     date_stop_external_access = ud.get("date_stop_external_access")
+
     if date_stop_external_access == "":
         date_stop_external_access = None
+    date_extract_employee = ud.get("date_extract_employee")
+    if date_extract_employee == "":
+        date_extract_employee = None
+    date_stop_certificate = ud.get("date_stop_certificate")
+    if date_stop_certificate == "":
+        date_stop_certificate = None
+
     if position == -1:
         position = None
     if district == -1:
@@ -1628,6 +1640,8 @@ def user_save_view(request):
             doc.external_access = external_access
             doc.not_control_anketa = not_control_anketa
             doc.date_stop_external_access = date_stop_external_access
+            doc.date_extract_employee = date_extract_employee
+            doc.date_stop_certificate = date_stop_certificate
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
