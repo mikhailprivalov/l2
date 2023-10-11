@@ -101,6 +101,7 @@ urlpatterns = [
     path('transfer-document/', include('api.transfer_document.urls')),
     path('edit-forms/', include('api.edit_forms.urls')),
     path('hospitals/', include('api.hospitals.urls')),
+    path('cases/', include('api.cases.urls')),
     path('get-prices', views.get_prices),
     path('get-price-data', views.get_price_data),
     path('update-price', views.update_price),

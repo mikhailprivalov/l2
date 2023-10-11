@@ -1,7 +1,7 @@
 const titleSplitter = ' > ';
 
 export default class UrlData {
-  static set(data) {
+  static set(data: any) {
     if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
       window.history.pushState('', '/', window.location.pathname);
       return false;
@@ -32,7 +32,7 @@ export default class UrlData {
     return null;
   }
 
-  static title(newTitle) {
+  static title(newTitle: string) {
     const baseTitleSplit = window.document.title.split(titleSplitter);
     const baseTitle = baseTitleSplit.length > 1 ? baseTitleSplit[1] : baseTitleSplit[0];
     if (newTitle) {

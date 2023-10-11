@@ -93,6 +93,7 @@ from .sql_func import (
     get_directions_by_user,
     get_confirm_direction_by_hospital,
     get_directions_meta_info,
+    get_patient_open_case_data,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -109,7 +110,6 @@ def directions_generate(request):
     if request.method == "POST":
         p = json.loads(request.body)
         card_pk = p.get("card_pk")
-        card = None
         if card_pk == -1:
             hospital: Hospitals = request.user.doctorprofile.get_hospital()
             if hospital.client:
@@ -165,6 +165,8 @@ def directions_generate(request):
             hospital_department_override=p.get("hospital_department_override", -1),
             hospital_override=p.get("hospital_override", -1),
             price_category=p.get("priceCategory", -1),
+            case_id=p.get("caseId", -2),
+            case_by_direction=p.get("caseByDirection", -2),
         )
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
@@ -310,7 +312,7 @@ def directions_history(request):
     # status: 4 - выписано пользователем, 0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
     if req_status == 4:
         user_creater = request.user.doctorprofile.pk
-    if req_status in [0, 1, 2, 3, 5]:
+    if req_status in [0, 1, 2, 3, 5, 7]:
         patient_card = pk
 
     if req_status == 5:
@@ -436,6 +438,7 @@ def directions_history(request):
     # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id, tube_number
     researches_pks = []
     researches_titles = ''
+    child_researches_titles = ''
 
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco, is_application, is_expertise, expertise_status, can_has_pacs = False, False, False, False, False
@@ -459,6 +462,10 @@ def directions_history(request):
             continue
         elif type_service == 'is_lab' and (i[11] or i[14] or i[15] or i[16] or i[17] or i[18] or i[19]):
             continue
+        elif req_status == 7 and not i[36]:
+            continue
+        elif i[36] and req_status != 7:
+            continue
         if i[0] != last_dir:
             status = min(status_set)
             if len(lab) > 0:
@@ -470,12 +477,12 @@ def directions_history(request):
                 if aux_researches_obj.exists():
                     aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
                     has_aux = True
-            if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
+            if (req_status == 2 and status == 2) or (req_status in [3, 4, 7] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append(
                     {
                         'pk': dir,
                         'status': status,
-                        'researches': researches_titles,
+                        'researches': f"{researches_titles} {child_researches_titles}",
                         "researches_pks": researches_pks,
                         "aux_researches": aux_researches,
                         "has_aux": has_aux,
@@ -498,6 +505,7 @@ def directions_history(request):
                         'register_number': register_number,
                     }
                 )
+                child_researches_titles = ""
                 person_contract_pk = -1
                 person_contract_dirs = ""
                 planed_doctor = ""
@@ -533,10 +541,26 @@ def directions_history(request):
                 has_hosp = True
             lab = set()
 
+        if i[36] and req_status == 7:
+            case_child_direction = Napravleniya.objects.values_list("pk", flat=True).filter(parent_case__id=i[2])
+            case_childs = Issledovaniya.objects.filter(napravleniye_id__in=case_child_direction)
+            step = 0
+            for csh in case_childs:
+                ch_title = csh.research.short_title if csh.research.short_title else csh.research.title
+                if step != 0:
+                    child_researches_titles = f"{child_researches_titles}; {ch_title}"
+                else:
+                    child_researches_titles = f"{ch_title}"
+                step += 1
+
         if researches_titles:
             researches_titles = f'{researches_titles} | {i[5]}'
+        elif child_researches_titles:
+            researches_titles = f'{child_researches_titles} - {i[5]}'
         else:
             researches_titles = i[5]
+
+        child_researches_titles = ""
 
         status_val = 0
         has_descriptive = False
@@ -581,12 +605,12 @@ def directions_history(request):
         if aux_researches_obj.exists():
             aux_researches = [{"pk": i.aux_research.pk, "title": i.aux_research.title} for i in aux_researches_obj]
             has_aux = True
-    if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
+    if (req_status == 2 and status == 2) or (req_status in [3, 4, 7] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
         final_result.append(
             {
                 'pk': dir,
                 'status': status,
-                'researches': researches_titles,
+                'researches': f"{researches_titles} {child_researches_titles}",
                 "researches_pks": researches_pks,
                 "aux_researches": aux_researches,
                 "has_aux": has_aux,
@@ -1442,6 +1466,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_monitoring=True)
                         | Q(research__is_expertise=True)
                         | Q(research__is_aux=True)
+                        | Q(research__is_case=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
@@ -4424,3 +4449,27 @@ def meta_info(request):
         index_num = res_direction.index(i['direction'])
         sort_result[index_num] = i
     return JsonResponse({"rows": sort_result})
+
+
+@login_required
+def patient_open_case(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data.get("card_pk", None)
+    data_case = []
+    date_start = datetime.now() - timedelta(days=60)
+    date_end = datetime.now()
+
+    if card_pk:
+        open_case = get_patient_open_case_data(card_pk, date_start, date_end)
+        data_case = []
+        for o_case in open_case:
+            n = Napravleniya.objects.filter(parent_case_id=o_case.iss_id).first()
+            iss = Issledovaniya.objects.filter(napravleniye=n).first()
+            if iss:
+                title = iss.research.short_title if iss.research.short_title else iss.research.title
+            else:
+                title = "Случай пустой"
+            data_case.append({"id": o_case.iss_id, "label": f"{title} от {o_case.date_create}"})
+
+    data = {"data": data_case}
+    return JsonResponse(data)

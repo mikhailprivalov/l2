@@ -513,7 +513,7 @@ def departments(request):
         data = {
             "departments": deps,
             "can_edit": can_edit,
-            "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12] and en.get(x[0], True)], *more_types],
+            "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12, 16] and en.get(x[0], True)], *more_types],
         }
         if hasattr(request, 'plain_response') and request.plain_response:
             return data
@@ -748,6 +748,7 @@ def current_user_info(request):
                     ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
                         {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
                     )
+
             try:
                 connections.close_all()
             except Exception as e:
@@ -784,7 +785,7 @@ def directive_from(request):
     data = []
     hospital = request.user.doctorprofile.hospital
     for dep in (
-        Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC), hospital__in=(hospital, None))
+        Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC, Podrazdeleniya.CASE), hospital__in=(hospital, None))
         .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
@@ -1438,6 +1439,8 @@ def user_view(request):
             "sendPassword": False,
             "external_access": False,
             "date_stop_external_access": None,
+            "date_extract_employee": None,
+            "date_stop_certificate": None,
             "resource_schedule": resource_researches,
             "notControlAnketa": False,
         }
@@ -1490,6 +1493,8 @@ def user_view(request):
             "sendPassword": False,
             "external_access": doc.external_access,
             "date_stop_external_access": doc.date_stop_external_access,
+            "date_stop_certificate": doc.date_stop_certificate,
+            "date_extract_employee": doc.date_extract_employee,
             "resource_schedule": resource_researches,
             "notControlAnketa": doc.not_control_anketa,
         }
@@ -1525,8 +1530,16 @@ def user_save_view(request):
     external_access = ud.get("external_access", False)
     not_control_anketa = ud.get("notControlAnketa", False)
     date_stop_external_access = ud.get("date_stop_external_access")
+
     if date_stop_external_access == "":
         date_stop_external_access = None
+    date_extract_employee = ud.get("date_extract_employee")
+    if date_extract_employee == "":
+        date_extract_employee = None
+    date_stop_certificate = ud.get("date_stop_certificate")
+    if date_stop_certificate == "":
+        date_stop_certificate = None
+
     if position == -1:
         position = None
     if district == -1:
@@ -1627,6 +1640,8 @@ def user_save_view(request):
             doc.external_access = external_access
             doc.not_control_anketa = not_control_anketa
             doc.date_stop_external_access = date_stop_external_access
+            doc.date_extract_employee = date_extract_employee
+            doc.date_stop_certificate = date_stop_certificate
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
@@ -2657,7 +2672,7 @@ def update_price(request):
         current_price.title = request_data["title"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
-        if request_data.get("typePrice") == "Профосмотр":
+        if request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Работодатель":
             current_price.company_id = request_data["company"]
         else:
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
