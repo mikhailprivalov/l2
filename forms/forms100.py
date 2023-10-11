@@ -1084,7 +1084,7 @@ def form_05(request_data):
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
     style.fontSize = 11
-    style.alignment = TA_JUSTIFY
+    style.alignment = TA_LEFT
     style.leading = 4.2 * mm
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
@@ -1162,22 +1162,22 @@ def form_05(request_data):
     coupon_date_start = datetime.datetime.now()
     category_benefits = '_______'
     coupon_date_end = coupon_date_start + datetime.timedelta(days=1)
-    frame_data.append(Paragraph(f'1. Дата открытия талона: число {open_bold_tag}{coupon_date_start.day}{close_bold_tag} месяц {open_bold_tag}{coupon_date_start.month}{close_bold_tag} '
-                                f'год {open_bold_tag}{coupon_date_start.year}{close_bold_tag} 2. Код категории льготы {open_bold_tag}{category_benefits}{close_bold_tag} '
-                                f'3. Действует до {open_bold_tag}{coupon_date_end.strftime("%d.%m.%Y")}{close_bold_tag}', style))
+    frame_data.append(Paragraph(f'1. Дата открытия талона: число {coupon_date_start.day} месяц {coupon_date_start.month} '
+                                f'год {coupon_date_start.year}2. Код категории льготы {category_benefits} '
+                                f'3. Действует до {coupon_date_end.strftime("%d.%m.%Y")}', style))
 
     smo = '______________'
-    frame_data.append(Paragraph(f'4. Страховой полис ОМС: серия {open_bold_tag}{patient_data["oms"]["polis_serial"]}{close_bold_tag} № {open_bold_tag}'
-                                f'{patient_data["oms"]["polis_num"]}{close_bold_tag} 5. СМО {smo} 6. СНИЛС {patient_data["snils"]}', style))
+    frame_data.append(Paragraph(f'4. Страховой полис ОМС: серия {patient_data["oms"]["polis_serial"]} № '
+                                f'{patient_data["oms"]["polis_num"]} 5. СМО {smo} 6. СНИЛС {patient_data["snils"]}', style))
 
-    sex = ''
+    sex = 'муж. - 1, жен. - 2'
     if patient_data["sex"] == 'м':
         sex = 'муж. - 1'
     else:
         sex = 'жен. - 2'
 
-    frame_data.append(Paragraph(f'7. Фамилия {open_bold_tag}{patient_data["family"]}{close_bold_tag} 8. Имя {open_bold_tag}{patient_data["name"]}{close_bold_tag} 9. Отчество '
-                                f'{open_bold_tag}{patient_data["patronymic"]}{close_bold_tag} 10. Пол: {open_bold_tag}{sex}{close_bold_tag}', style))
+    frame_data.append(Paragraph(f'7. Фамилия {patient_data["family"]} 8. Имя {patient_data["name"]} 9. Отчество '
+                                f'{patient_data["patronymic"]} 10. Пол: {sex}', style))
 
     identity_document_serial = ''
     identity_document_number = ''
@@ -1188,13 +1188,69 @@ def form_05(request_data):
         identity_document_serial = patient_data["bc_serial"]
         identity_document_number = patient_data["bc_num"]
 
-    frame_data.append(Paragraph(f'11. Дата рождения: число {open_bold_tag}{patient_data["birthday"].day}{close_bold_tag} месяц {open_bold_tag}{patient_data["birthday"].month}'
-                                f'{close_bold_tag} год {open_bold_tag}{patient_data["birthday"].year}{close_bold_tag} 11.1. Документ, удостоверяющий личность: серия {open_bold_tag}'
-                                f'{identity_document_serial}{close_bold_tag} № {open_bold_tag}{identity_document_number}{close_bold_tag}', style))
-    params_columns.append({"x": 0 * mm, "y": -33 * mm, "width": 279 * mm, "height": 30 * mm, "text": frame_data,
-                           "showBoundary": 1})
+    frame_data.append(Paragraph(f'11. Дата рождения: число {patient_data["birthday"].day} месяц {patient_data["birthday"].month}'
+                                f' год {patient_data["birthday"].year} 11.1. Документ, удостоверяющий личность: серия '
+                                f'{identity_document_serial} № {identity_document_number}', style))
+
+    place_registration = {'subject': '_______________', 'district': '_______________', 'city': '_______________', 'settlement': '_______________', 'street': '_______________',
+                          'house': '_______________', 'apartment': '_______________', 'phone': '_______________'}
+
+    frame_data.append(Paragraph(f'12. Место регистрации: субъект Российской Федерации {place_registration["subject"]} район '
+                                f'{place_registration["district"]} город {place_registration["city"]} населенный пункт '
+                                f'{place_registration["settlement"]} улица {place_registration["street"]} дом '
+                                f'{place_registration["house"]} квартира {place_registration["apartment"]} тел. '
+                                f'{place_registration["phone"]}', style))
+
+    terrain = 'городская – 1, сельская – 2'
+    frame_data.append(Paragraph(f'13. Местность: {terrain}', style))
+
+    social_status = 'работает – 1, проходит военную службу или приравненную к ней службу – 2; пенсионер(ка) – 3, студент(ка) – 4, не работает – 5, прочие – 6'
+    frame_data.append(Paragraph(f'14. Занятость: {social_status}', style))
+
+    work_data = ''
+    frame_data.append(Paragraph(f'15. Место работы, должность (для детей: дошкольник: организован, неорганизован; школьник) {work_data}', style))
+
+    disability = 'установлена впервые – 1, повторно – 2'
+    disability_group = 'I – 1, II – 2, III – 3'
+    disability_childhood = 'да – 1, нет – 2'
+    frame_data.append(Paragraph(f'16. Инвалидность: {disability} 17. Группа инвалидности: '
+                                f'{disability_group} 18. Инвалид с детства: {disability_childhood}', style))
+
+    params_columns.append({'x': 0 * mm, 'y': -51 * mm, 'width': 279 * mm, 'height': 48 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+                           'top_padding': 2, 'showBoundary': 1})
     objs.append(FrameDataCol(params_columns))
 
+    frame_data = []
+    params_columns = []
+
+    help_type = 'первичная доврачебная медико-санитарная помощь – 1, первичная врачебная медико-санитарная помощь – 2, первичная специализированная медико-санитарная помощь – 3, паллиативная медицинская помощь – 4'
+    frame_data.append(Paragraph(f'19. Оказываемая медицинская помощь: {help_type} ', style))
+
+    visit_place = 'поликлиника – 1, на дому – 2, центр здоровья – 3, иные медицинские организации – 4, мобильная медицинская бригада - 5'
+    frame_data.append(Paragraph(f'20. Место обращения (посещения): {visit_place}', style))
+
+    visit_reason = '''по заболеваниям (коды A00 – T98) – 1, из них: в неотложной форме – 1.1; активное посещение – 1.2; диспансерное наблюдение – 1.3; с профилактической и иными целями 
+                    (коды Z00 – Z99) – 2: медицинский осмотр – 2.1; диспансеризация – 2.2; комплексное обследование – 2.3; паллиативная медицинская помощь – 2.4; патронаж – 2.5; другие 
+                     обстоятельства – 2.6'''
+    frame_data.append(Paragraph(f'21. Посещения: {visit_reason}', style))
+
+    visit_reason_two = 'по заболеванию (коды A00 – T98) – 1, с профилактической целью (коды Z00 – Z99) – 2'
+    frame_data.append(Paragraph(f'22. Обращение (цель): {visit_reason_two}', style))
+
+    visit_finished = 'да – 1; нет – 2'
+    visit_type = 'первичное – 1, повторное – 2'
+    frame_data.append(Paragraph(f'23. Обращение (законченный случай лечения): {visit_finished} 24. Обращение: {visit_type}', style))
+
+    visit_result = '''выздоровление – 1, без изменения – 2, улучшение – 3, ухудшение – 4, летальный исход – 5, дано направление:на госпитализацию – 6, из них: по экстренным показаниям – 7, 
+    в дневной стационар – 8, на обследование – 9, на консультацию – 10,на санаторно-курортное лечение – 11, на медицинскую реабилитацию - 12; отказ от прохождения медицинских обследований 
+    при диспансеризации или медицинском осмотре - 13 '''
+    frame_data.append(Paragraph(f'25. Результат обращения: {visit_result}', style))
+
+    finance_source = 'ОМС – 1; бюджета – 2; личных средств – 3; ДМС – 4; иных источников, разрешенных законодательством – 5'
+    frame_data.append(Paragraph(f'26. Оплата за счет: {finance_source}', style))
+    params_columns.append({'x': 0 * mm, 'y': -121 * mm, 'width': 279 * mm, 'height': 70 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+                           'top_padding': 2, 'showBoundary': 1})
+    objs.append(FrameDataCol(params_columns))
 
     def first_pages(canvas, document):
         canvas.saveState()
