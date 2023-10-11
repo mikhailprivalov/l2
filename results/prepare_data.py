@@ -382,7 +382,7 @@ def gen_hospital_stamp(direction):
         [Paragraph(f"Заказчик: {direction.hospital.safe_short_title}", styleBold), Paragraph(f"", styleText)]
 
     ]
-    gentbl = Table(opinion, colWidths=(90 * mm, 110 * mm))
+    gentbl = Table(opinion, colWidths=(90 * mm, 110 * mm), hAlign='LEFT')
     gentbl.setStyle(
         TableStyle(
             [

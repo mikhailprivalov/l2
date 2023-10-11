@@ -951,27 +951,22 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
     fwb.append(Spacer(1, 4 * mm))
     if interactive_text_field:
         fwb.append(InteractiveTextField())
-    tw = pw
-    no_units_and_ref = any([x.research.no_units_and_ref for x in direction.issledovaniya_set.all()])
     data = []
     tmp = [
         Paragraph('<font face="FreeSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
         Paragraph('<font face="FreeSansBold" size="8">Результат</font>', styleSheet["BodyText"]),
     ]
-    if not no_units_and_ref:
-        if direction.client.individual.sex.lower() == "м":
-            tmp.append(Paragraph('<font face="FreeSansBold" size="8">Референсные значения (М)</font>', styleSheet["BodyText"]))
-        else:
-            tmp.append(Paragraph('<font face="FreeSansBold" size="8">Референсные значения (Ж)</font>', styleSheet["BodyText"]))
-        tmp.append(Paragraph('<font face="FreeSansBold" size="8">Единицы<br/>измерения</font>', styleSheet["BodyText"]))
+
+    if direction.client.individual.sex.lower() == "м":
+        tmp.append(Paragraph('<font face="FreeSansBold" size="8">Реф. значения (М)</font>', styleSheet["BodyText"]))
+    else:
+        tmp.append(Paragraph('<font face="FreeSansBold" size="8">Реф. значения (Ж)</font>', styleSheet["BodyText"]))
+    tmp.append(Paragraph('<font face="FreeSansBold" size="8">Ед. изм.</font>', styleSheet["BodyText"]))
 
     data.append(tmp)
-    if no_units_and_ref:
-        cw = [int(tw * 0.26), int(tw * 0.482), int(tw * 0.178)]
-    else:
-        cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
-    cw = cw + [tw - sum(cw)]
-    t = Table(data, repeatRows=1, colWidths=cw)
+
+    cw = (60 * mm, 40 * mm, 45 * mm, 25 * mm)
+    t = Table(data, repeatRows=1, colWidths=cw, hAlign='LEFT')
     style_t = TableStyle(
         [
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -998,6 +993,6 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
         fwb.append(t)
 
     iss_list = direction.issledovaniya_set.all()
-    result_style = styleSheet["BodyText"] if no_units_and_ref else stl
+    result_style = stl
     pks = []
     return fwb
