@@ -47,7 +47,8 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE, GISTOLOGY_RESEARCH_PK, RESEARCHES_NOT_PRINT_FOOTERS
+from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE, GISTOLOGY_RESEARCH_PK, RESEARCHES_NOT_PRINT_FOOTERS, \
+    RESULT_LABORATORY_FORM
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -530,7 +531,11 @@ def result_print(request):
                     qr_code_param = QRCODE_OFFSET_SIZE
                 fwb.append(QrCodeSite(lk_address, qr_code_param))
         if not has_paraclinic:
-            fwb = default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, directory, show_norm, stl, print_vtype, get_r, result_normal)
+            if not RESULT_LABORATORY_FORM:
+                fwb = default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, directory, show_norm, stl, print_vtype, get_r, result_normal)
+            else:
+                laboratory_form = import_string('results.laboratory_form.' + RESULT_LABORATORY_FORM)
+                fwb = laboratory_form(fwb, interactive_text_field, pw, direction, styleSheet, directory, show_norm, stl, print_vtype, get_r, result_normal)
         else:
             iss: Issledovaniya
             for iss in direction.issledovaniya_set.all().order_by("research__pk"):
