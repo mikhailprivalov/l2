@@ -500,6 +500,9 @@ class Napravleniya(models.Model):
     parent_slave_hosp = models.ForeignKey(
         'Issledovaniya', related_name='parent_slave_hosp', help_text="Из стационарного протокола", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
+    parent_case = models.ForeignKey(
+        'Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
+    )
     rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
     time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время приёма материала микробиологии')
@@ -784,6 +787,13 @@ class Napravleniya(models.Model):
     def visit_date_local(self):
         return localtime(self.visit_date)
 
+    @property
+    def services(self) -> List[directory.Researches]:
+        result = []
+        for iss in self.issledovaniya_set.all().order_by('research__title'):
+            result.append(iss.research)
+        return result
+
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s, par: [%s])" % (
             self.pk,
@@ -1043,6 +1053,7 @@ class Napravleniya(models.Model):
         parent_id=None,
         parent_auto_gen_id=None,
         parent_slave_hosp_id=None,
+        parent_case_id=None,
         rmis_slot=None,
         direction_purpose="NONE",
         external_organization="NONE",
@@ -1088,6 +1099,7 @@ class Napravleniya(models.Model):
             parent_id=parent_id,
             parent_auto_gen_id=parent_auto_gen_id,
             parent_slave_hosp_id=parent_slave_hosp_id,
+            parent_case_id=parent_case_id,
             rmis_slot_id=rmis_slot,
             hospital=doc.hospital or Hospitals.get_default_hospital(),
             external_order=external_order,
@@ -1279,12 +1291,22 @@ class Napravleniya(models.Model):
         external_order: Optional[RegisteredOrders] = None,
         services_by_additional_order_num=None,
         price_name=None,
+        case_id=-2,
+        case_by_direction=False,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
+        if case_id > -1 and case_by_direction:
+            iss = Napravleniya.objects.get(pk=case_id).issledovaniya_set.all().first()
+            if iss:
+                case_id = iss.pk
+            else:
+                result["message"] = "Ошибка привязки к случаю"
+                return result
         if not Clients.Card.objects.filter(pk=client_id).exists():
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result
         pk_reseerches = []
+        issledovaniye_case_id = None
         for v in researches.values():
             pk_reseerches.extend(v)
         card = Clients.Card.objects.get(pk=client_id)
@@ -1512,6 +1534,41 @@ class Napravleniya(models.Model):
                             result["message"] = "Данный мониторинг уже создан"
                             return result
 
+                    if case_id > -2:
+                        if case_id == -1:
+                            napravleniye_case = Napravleniya.gen_napravleniye(
+                                client_id,
+                                doc_current if not for_rmis else None,
+                                finsource,
+                                diagnos,
+                                history_num,
+                                doc_current,
+                                ofname_id,
+                                ofname,
+                                for_rmis=for_rmis,
+                                rmis_data=rmis_data,
+                                parent_id=parent_iss,
+                                parent_auto_gen_id=parent_auto_gen,
+                                parent_slave_hosp_id=parent_slave_hosp,
+                                rmis_slot=rmis_slot,
+                                direction_purpose=direction_purpose,
+                                external_organization=external_organization,
+                                price_category=price_category,
+                                hospital=hospital_override,
+                                external_order=external_order,
+                                price_name_id=price_name,
+                            )
+                            research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
+                            issledovaniye_case = Issledovaniya(
+                                napravleniye=napravleniye_case,
+                                research=research_case,
+                                deferred=False
+                            )
+                            issledovaniye_case.save()
+                            issledovaniye_case_id = issledovaniye_case.pk
+                        elif case_id > 0:
+                            issledovaniye_case_id = case_id
+
                     if (dir_group > -1 and dir_group not in directions_for_researches.keys()) or (dir_group == dir_group_onlylab and dir_group not in directions_for_researches.keys()):
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
                             client_id,
@@ -1527,6 +1584,7 @@ class Napravleniya(models.Model):
                             parent_id=parent_iss,
                             parent_auto_gen_id=parent_auto_gen,
                             parent_slave_hosp_id=parent_slave_hosp,
+                            parent_case_id=issledovaniye_case_id,
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
@@ -1557,6 +1615,7 @@ class Napravleniya(models.Model):
                             parent_id=parent_iss,
                             parent_auto_gen_id=parent_auto_gen,
                             parent_slave_hosp_id=parent_slave_hosp,
+                            parent_case_id=issledovaniye_case_id,
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,

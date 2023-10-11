@@ -149,6 +149,7 @@ export default (instance: Vue): void => {
       hospital_override: hospitalOverride = -1,
       monitoring = false,
       priceCategory = null,
+      caseId,
     }) => {
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
@@ -194,6 +195,7 @@ export default (instance: Vue): void => {
           hospital_department_override: hospitalDepartmentOverride,
           hospital_override: hospitalOverride,
           priceCategory,
+          caseId,
         })
         .then(data => {
           instance.$store.dispatch(actions.DEC_LOADING);
@@ -237,6 +239,10 @@ export default (instance: Vue): void => {
 
   Vue.prototype.$error = (message, timeout: number | void | null) => {
     instance.$root.$emit('msg', 'error', message, timeout);
+  };
+
+  Vue.prototype.$info = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'info', message, timeout);
   };
 
   Vue.prototype.$ok = (message, timeout: number | void | null) => {

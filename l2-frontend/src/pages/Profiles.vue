@@ -732,65 +732,109 @@
               </div>
             </div>
           </div>
-          <div class="more-title">
-            Анализаторы:
-            <button
-              class="btn btn-blue-nb sidebar-btn"
-              style="font-size: 13px"
-            >
-              <i
-                v-if="setup_analyzer"
-                v-tippy="{ placement: 'bottom'}"
-                class="glyphicon glyphicon-circle-arrow-up"
-                title="Скрыть"
-                @click="change_setup_analyzer"
-              />
-              <i
-                v-else
-                v-tippy="{ placement: 'bottom' }"
-                class="glyphicon glyphicon-circle-arrow-down"
-                title="Выбрать"
-                @click="change_setup_analyzer"
-              />
-            </button>
-          </div>
           <div
-            v-if="setup_analyzer"
-            class="input-group"
-            style="width: 100%"
+            class="row left-padding-10"
           >
-            <span class="input-group-addon">Анализаторы</span>
-            <select
-              v-model="analyzers"
-              class="form-control"
-              multiple
-              style="height: 136px"
-            >
-              <option
-                v-for="l in analyzers_list"
-                :key="l.pk"
-                :value="l.pk"
+            <div class="more-title">
+              Анализаторы:
+              <button
+                class="btn btn-blue-nb sidebar-btn"
+                style="font-size: 13px"
               >
-                {{ l.label }}
-              </option>
-            </select>
+                <i
+                  v-if="setup_analyzer"
+                  v-tippy="{ placement: 'bottom'}"
+                  class="glyphicon glyphicon-circle-arrow-up"
+                  title="Скрыть"
+                  @click="change_setup_analyzer"
+                />
+                <i
+                  v-else
+                  v-tippy="{ placement: 'bottom' }"
+                  class="glyphicon glyphicon-circle-arrow-down"
+                  title="Выбрать"
+                  @click="change_setup_analyzer"
+                />
+              </button>
+            </div>
           </div>
           <div
-            class="col-xs-6 left-padding"
+            class="row left-padding-10"
           >
             <div
+              v-if="setup_analyzer"
               class="input-group"
               style="width: 100%"
             >
-              <span class="input-group-addon">Кабинеты</span>
-              <Treeselect
-                v-model="user.rooms"
-                class="treeselect-nbr treeselect-wide treeselect-34px"
-                :multiple="true"
-                :options="user.rooms_list"
-                :flatten-search-results="true"
-                placeholder="Кабинеты не указаны"
-              />
+              <span class="input-group-addon">Анализаторы</span>
+              <select
+                v-model="analyzers"
+                class="form-control"
+                multiple
+                style="height: 136px"
+              >
+                <option
+                  v-for="l in analyzers_list"
+                  :key="l.pk"
+                  :value="l.pk"
+                >
+                  {{ l.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="col-xs-6 left-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Кабинеты</span>
+                <Treeselect
+                  v-model="user.rooms"
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="true"
+                  :options="user.rooms_list"
+                  :flatten-search-results="true"
+                  placeholder="Кабинеты не указаны"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="row left-padding-10">
+            <div
+              class="col-xs-4 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Дата выписки из кадров</span>
+                <input
+                  v-model="user.date_extract_employee"
+                  class="form-control"
+                  type="date"
+                >
+              </div>
+            </div>
+            <div
+              class="col-xs-4 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Срок сертификата</span>
+                <input
+                  v-model="user.date_stop_certificate"
+                  class="form-control"
+                  type="date"
+                >
+              </div>
             </div>
           </div>
         </div>
@@ -925,6 +969,8 @@ export default {
         date_stop_external_access: '',
         resource_schedule: [],
         notControlAnketa: false,
+        date_extract_employee: '',
+        date_stop_certificate: '',
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -1441,5 +1487,8 @@ li.selected {
 }
 .right-padding {
   padding-right: 0
+}
+.left-padding-10 {
+  padding-left: 10px
 }
 </style>

@@ -120,6 +120,7 @@ const router = new Router({
       meta: {
         title: 'Управление сотрудниками',
         groups: ['Конструктор: Настройка организации'],
+        fullPageLayout: true,
       },
     },
     {
@@ -246,6 +247,18 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/case-control',
+      name: 'cases',
+      component: () => import('@/pages/CaseControl/index.vue'),
+      meta: {
+        title: 'Случаи обслуживания',
+        fullPageLayout: true,
+        showPrintQueue: true,
+        groups: ['Врач параклиники', 'Врач консультаций'],
+        module: 'l2_case',
+      },
+    },
+    {
       path: '/ui/search',
       name: 'search',
       component: () => import('@/pages/Search.vue'),
@@ -363,6 +376,7 @@ const router = new Router({
         ],
       },
     },
+    // DEPRECATED
     {
       path: '/ui/cases',
       name: 'cases',

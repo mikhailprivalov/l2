@@ -157,7 +157,7 @@ export default {
     certificatesDisplay() {
       return this.certificates.map(c => ({
         thumbprint: c.thumbprint,
-        name: convertSubjectNameToTitle(null, c.subjectName, c.name),
+        name: convertSubjectNameToTitle(null, c.subjectName),
       }));
     },
     isDocAllowedSign() {

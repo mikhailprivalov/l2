@@ -3,13 +3,16 @@
     <div :class="$style.left">
       <slot name="left" />
     </div>
-    <div :class="$style.right">
+    <div :class="[$style.right, props.lightRight && $style.light]">
       <slot name="right" />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+const props = defineProps<{
+  lightRight?: boolean;
+}>();
 </script>
 
 <style module lang="scss">
@@ -20,6 +23,10 @@
   bottom: 0;
   left: 0;
   display: flex;
+}
+
+.light {
+  background: #fff;
 }
 
 .left, .right {

@@ -46,7 +46,7 @@ export default {
           const cert = yield s1.Certificate;
           const sn = yield cert.SubjectName;
 
-          this.title = convertSubjectNameToTitle(null, sn, this.executor);
+          this.title = convertSubjectNameToTitle(null, sn);
         }).bind(this));
       });
     } catch (error) {

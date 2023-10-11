@@ -168,6 +168,8 @@ class SettingManager:
                     "price_customer",
                     "price_externel_performer",
                     "ftp",
+                    "case",
+                    "hide_show_count_param",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
@@ -214,6 +216,7 @@ class SettingManager:
                 12: SettingManager.get("directions_params", default='false', default_type='b'),
                 13: SettingManager.l2("applications"),
                 14: SettingManager.l2("monitorings"),
+                16: SettingManager.l2("case"),
             }
 
             cache.set(k, simplejson.dumps(result), 60 * 60 * 8)

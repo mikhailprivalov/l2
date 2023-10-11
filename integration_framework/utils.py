@@ -226,7 +226,7 @@ def check_title_field(data, r):
 
 
 def get_json_labortory_data(pk):
-    result_protocol = get_laboratory_results_by_directions([pk])
+    result_protocol = get_laboratory_results_by_directions(tuple([pk]))
     document = {}
     confirmed_at = ""
     date_reiceve = ""
