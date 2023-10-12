@@ -1085,7 +1085,6 @@ def form_05(request_data):
     style.fontName = "PTAstraSerifReg"
     style.fontSize = 11
     style.alignment = TA_LEFT
-    style.leading = 4.2 * mm
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleOrgName = deepcopy(styleBold)
@@ -1105,9 +1104,9 @@ def form_05(request_data):
 
     objs = []
 
-    space_symbol = '&nbsp;'
-    open_bold_tag = '<font fontname="PTAstraSerifBold">'
-    close_bold_tag = '</font>'
+    # space_symbol = '&nbsp;'
+    # open_bold_tag = '<font fontname="PTAstraSerifBold">'
+    # close_bold_tag = '</font>'
 
     order_data = [
         [
@@ -1137,7 +1136,7 @@ def form_05(request_data):
                       f'<font fontname="PTAstraSerifReg" size=10>{hospital_address}</font>', styleOrgName),
             Paragraph('Медицинская документация <br/>Учетная форма № 025-1/у <br/>Утверждена приказом Минздрава России от 15 '
                       'декабря 2014 г. № 834н', styleCenterBold),
-        ],
+        ]
     ]
 
     header_table = Table(header_data, [200 * mm, 80 * mm], hAlign='RIGHT')
@@ -1217,7 +1216,7 @@ def form_05(request_data):
                                 f'{disability_group} 18. Инвалид с детства: {disability_childhood}', style))
 
     params_columns.append({'x': 0 * mm, 'y': -51 * mm, 'width': 279 * mm, 'height': 48 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
-                           'top_padding': 2, 'showBoundary': 1})
+                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
     objs.append(FrameDataCol(params_columns))
 
     frame_data = []
@@ -1248,9 +1247,53 @@ def form_05(request_data):
 
     finance_source = 'ОМС – 1; бюджета – 2; личных средств – 3; ДМС – 4; иных источников, разрешенных законодательством – 5'
     frame_data.append(Paragraph(f'26. Оплата за счет: {finance_source}', style))
-    params_columns.append({'x': 0 * mm, 'y': -121 * mm, 'width': 279 * mm, 'height': 70 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
-                           'top_padding': 2, 'showBoundary': 1})
+
+    frame_data.append(Spacer(1, 3 * mm))
+    visit_dates = [
+        [
+            Paragraph('27. Даты посещений (число, месяц, год): ', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+        ]
+    ]
+
+    columns_widths = [40 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm]
+    visit_dates_table = Table(visit_dates, colWidths=columns_widths, hAlign='LEFT')
+    visit_dates_table.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('SPAN', (0, 0), (0, 1))
+                # ('TOPPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                # ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+
+            ]
+        )
+    )
+    frame_data.append(visit_dates_table)
+
+    params_columns.append({'x': 0 * mm, 'y': -136 * mm, 'width': 279 * mm, 'height': 85 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
     objs.append(FrameDataCol(params_columns))
+
+
+
 
     def first_pages(canvas, document):
         canvas.saveState()

@@ -84,6 +84,6 @@ class FrameDataCol(Flowable):
                 bottomPadding=params.get('bottom_padding', 0), rightPadding=params.get("right_padding", 0),
                 topPadding=params.get("top_padding", 0), showBoundary=params.get("showBoundary", 0)
             )
-            data_inframe = KeepInFrame(params["width"], params["height"], params["text"], vAlign='TOP', fakeWidth=False)
+            data_inframe = KeepInFrame(params["width"], params["height"], params["text"], vAlign='TOP', fakeWidth=params.get('fake_width', False))
             current_data_frame.addFromList([data_inframe], self.canv)
         self.canv.restoreState()
