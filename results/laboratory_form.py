@@ -989,6 +989,7 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
     styleBackgroundcolor = deepcopy(style)
     styleBackgroundcolor.backColor = HexColor(0xFF6666)
     styleBackgroundcolor.alignment = TA_CENTER
+    styleBackgroundcolor.spaceAfter = 2 * mm
 
     fwb.append(Spacer(1, 4 * mm))
     no_units_and_ref = False
@@ -1138,6 +1139,7 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
                 style_t = TableStyle(ts)
                 j = 0
 
+                result_is_norm = []
                 for f in fractions:
                     j += 1
 
@@ -1163,10 +1165,14 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
                             continue
                         if norm in ["none", "normal"]:
                             tmp.append(Paragraph('<font face="FreeSans" size="8">' + result + "</font>", result_style))
+                            result_is_norm.append(True)
                         elif norm == "maybe":
                             tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + "</font>", result_style))
+                            result_is_norm.append(True)
                         else:
-                            tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>", styleBackgroundcolor))
+                            # tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>", styleBackgroundcolor))
+                            tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + "</font>", styleBackgroundcolor))
+                            result_is_norm.append(False)
                         if not no_units_and_ref:
                             tmp.append(Paragraph('<font face="FreeSans" size="7">' + get_r(ref) + "</font>", stl))
                             tmp.append(Paragraph('<font face="FreeSans" size="7">' + f_units + "</font>", stl))
@@ -1175,11 +1181,19 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
                 for k in range(0, 4):
                     style_t.add('INNERGRID', (k, 0), (k, j), 0.1, colors.black)
                     style_t.add('BOX', (k, 0), (k, j), 0.8, colors.black)
-                    style_t.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
+
                     style_t.add('TOPPADDING', (0, 0), (0, -1), 0)
+                    style_t.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
+
+                for is_norm in result_is_norm:
+                    if not is_norm:
+                        pass
 
                 t = Table(data, colWidths=cw)
                 t.setStyle(style_t)
+
+
+
             fwb.append(t)
 
     fwb.append(Spacer(1, 3 * mm))

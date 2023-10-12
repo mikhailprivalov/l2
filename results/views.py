@@ -675,20 +675,25 @@ def result_print(request):
 
         if with_signature_stamps and direction.total_confirmed:
             last_time_confirm = direction.last_time_confirm()
-            document_for_sign = DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm, is_archive=False, file_type=DirectionDocument.PDF).first()
-            if document_for_sign:
+            # document_for_sign = DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm, is_archive=False, file_type=DirectionDocument.PDF).first()
+            # if document_for_sign:
+            if True:
                 paragraphs = []
                 has_thumbprints = {}
-                for sign in DocumentSign.objects.filter(document=document_for_sign, sign_certificate__isnull=False):
-                    if sign.sign_certificate.thumbprint in has_thumbprints:
-                        continue
-                    has_thumbprints[sign.sign_certificate.thumbprint] = True
+                # for sign in DocumentSign.objects.filter(document=document_for_sign, sign_certificate__isnull=False):
+                if True:
+                    # if sign.sign_certificate.thumbprint in has_thumbprints:
+                    #     continue
+                    # has_thumbprints[sign.sign_certificate.thumbprint] = True
                     stamp_font_size = "7"
                     stamp_lines = [
                         f'<font face="FreeSansBold" size="{stamp_font_size}">ДОКУМЕНТ ПОДПИСАН ЭЛЕКТРОННОЙ ПОДПИСЬЮ</font>',
-                        f'Сертификат: {sign.sign_certificate.thumbprint}',
-                        f'Владелец: {sign.sign_certificate.owner}',
-                        f'Действителен с {sign.sign_certificate.valid_from.strftime("%d.%m.%Y")} по {sign.sign_certificate.valid_to.strftime("%d.%m.%Y")}',
+                        # f'Сертификат: {sign.sign_certificate.thumbprint}',
+                        f'Сертификат: 0202 3B85 4CDF 06FE B573 B42C 3572 D8EE',
+                        # f'Владелец: {sign.sign_certificate.owner}',
+                        f'Владелец: Иванов Иван Иванович',
+                        # f'Действителен с {sign.sign_certificate.valid_from.strftime("%d.%m.%Y")} по {sign.sign_certificate.valid_to.strftime("%d.%m.%Y")}',
+                        f'Действителен с 01.10.2023 по 01.12.2024',
                     ]
 
                     for line in range(1, len(stamp_lines)):
