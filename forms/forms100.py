@@ -8,7 +8,7 @@ from io import BytesIO
 import pytils
 from reportlab.lib import colors
 from reportlab.lib.colors import black
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, A5, landscape, portrait
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
@@ -1083,7 +1083,7 @@ def form_05(request_data):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 11
+    style.fontSize = 12
     style.alignment = TA_LEFT
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
@@ -1097,9 +1097,9 @@ def form_05(request_data):
     styleCenterBold.fontSize = 10
     styleHeader = deepcopy(styleCenterBold)
     styleHeader.fontSize = 12
-    styleLeft = deepcopy(style)
-    styleLeft.alignment = TA_LEFT
-    styleLeftMin = deepcopy(styleLeft)
+    styleRight = deepcopy(style)
+    styleRight.alignment = TA_RIGHT
+    styleLeftMin = deepcopy(style)
     styleLeftMin.fontSize = 9
 
     objs = []
@@ -1215,7 +1215,7 @@ def form_05(request_data):
     frame_data.append(Paragraph(f'16. Инвалидность: {disability} 17. Группа инвалидности: '
                                 f'{disability_group} 18. Инвалид с детства: {disability_childhood}', style))
 
-    params_columns.append({'x': 0 * mm, 'y': -51 * mm, 'width': 279 * mm, 'height': 48 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+    params_columns.append({'x': 0 * mm, 'y': -58 * mm, 'width': 279 * mm, 'height': 55 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
                            'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
     objs.append(FrameDataCol(params_columns))
 
@@ -1272,7 +1272,7 @@ def form_05(request_data):
         ]
     ]
 
-    columns_widths = [40 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm, 33.6 * mm]
+    columns_widths = [42 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm]
     visit_dates_table = Table(visit_dates, colWidths=columns_widths, hAlign='LEFT')
     visit_dates_table.setStyle(
         TableStyle(
@@ -1280,18 +1280,168 @@ def form_05(request_data):
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('SPAN', (0, 0), (0, 1))
-                # ('TOPPADDING', (0, 0), (-1, -1), 1.5 * mm),
-                # ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-
             ]
         )
     )
     frame_data.append(visit_dates_table)
 
-    params_columns.append({'x': 0 * mm, 'y': -136 * mm, 'width': 279 * mm, 'height': 85 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+    params_columns.append({'x': 0 * mm, 'y': -135 * mm, 'width': 279 * mm, 'height': 77 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
                            'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
     objs.append(FrameDataCol(params_columns))
 
+    frame_data = []
+    params_columns = []
+    objs.append(FrameBreak())
+    objs.append(Paragraph('оборотная сторона формы № 025-1/у', style))
+
+    table_data = [
+        [
+            Paragraph('28.', styleCenter),
+            Paragraph('Диагноз предварительный', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('Код по МКБ-10', styleRight),
+            Paragraph('', style),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('29.', styleCenter),
+            Paragraph('Внешняя причина', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('Код по МКБ-10', styleRight),
+            Paragraph('', style),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('30.', styleCenter),
+            Paragraph('Врач: специальность', style),
+            Paragraph('', style),
+            Paragraph(' Ф.И.О. ', styleCenter),
+            Paragraph('', style),
+            Paragraph('Код', styleRight),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('', styleCenter),
+            Paragraph('Врач: специальность', style),
+            Paragraph('', style),
+            Paragraph(' Ф.И.О. ', styleCenter),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('Код', styleRight),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('31. ', styleCenter),
+            Paragraph('Медицинская услуга', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('Код', styleRight),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('', styleCenter),
+            Paragraph('Медицинская услуга', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('Код', styleRight),
+            Paragraph('', style),
+        ],
+    ]
+
+    columns_widths = [10 * mm, 56 * mm, 55 * mm, 17 * mm, 55 * mm, 19 * mm, 14 * mm, 55 * mm]
+    table = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
+    table.setStyle(
+        TableStyle(
+            [
+                # ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                ('SPAN', (2, 0), (4, 0)),
+                ('SPAN', (2, 1), (4, 1)),
+                ('SPAN', (4, 2), (5, 2)),
+                ('SPAN', (4, 3), (5, 3)),
+                ('SPAN', (2, 4), (5, 4)),
+                ('SPAN', (2, 5), (5, 5)),
+                ('SPAN', (5, 0), (6, 0)),
+                ('SPAN', (5, 1), (6, 1)),
+                ('RIGHTPADDING', (1, 0),(-1, -1), 2 * mm),
+                ('LINEBELOW', (2, 0), (4, 1), 0.5, colors.black),
+                ('LINEBELOW', (2, 2), (2, 3), 0.5, colors.black),
+                ('LINEBELOW', (4, 2), (5, 3), 0.5, colors.black),
+                ('LINEBELOW', (2, 4), (5, 5), 0.5, colors.black),
+                ('LINEBELOW', (7, 0), (7, -1), 0.5, colors.black),
+            ]
+        )
+    )
+    frame_data.append(table)
+
+    params_columns.append({'x': 0 * mm, 'y': -43 * mm, 'width': 279 * mm, 'height': 40 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
+    objs.append(FrameDataCol(params_columns))
+
+    frame_data = []
+    params_columns = []
+    diagnosis_data = [
+        [
+            Paragraph('32. Диагноз заключительный', style),
+            Paragraph('', style),
+            Paragraph('код по МКБ-10', styleRight),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('33. Внешняя причина', style),
+            Paragraph('', style),
+            Paragraph('код по МКБ-10', styleRight),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('34. Сопутствующие заболевания:', style),
+            Paragraph('', style),
+            Paragraph('код по МКБ-10', styleRight),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('код по МКБ-10', styleRight),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('код по МКБ-10', styleRight),
+            Paragraph('', style),
+        ],
+    ]
+
+    columns_widths = [65 * mm, 124 * mm, 32 * mm, 54 * mm]
+    diagnosis_table = Table(diagnosis_data, colWidths=columns_widths, hAlign='LEFT')
+    diagnosis_table.setStyle(
+        TableStyle(
+            [
+                # ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                ('RIGHTPADDING', (1, 0), (-1, -1), 2 * mm),
+                ('LINEBELOW', (1, 0), (1, 2), 0.5, colors.black),
+                ('LINEBELOW', (0, 3), (1, -1), 0.5, colors.black),
+                ('LINEBELOW', (3, 0), (3, -1), 0.5, colors.black),
+                # ('LINEBELOW', (4, 2), (5, 3), 0.5, colors.black),
+                # ('LINEBELOW', (2, 4), (5, 5), 0.5, colors.black),
+                # ('LINEBELOW', (7, 0), (7, -1), 0.5, colors.black),
+            ]
+        )
+    )
+    frame_data.append(diagnosis_table)
+
+    params_columns.append({'x': 0 * mm, 'y': -88 * mm, 'width': 279 * mm, 'height': 40 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
+
+    objs.append(FrameDataCol(params_columns))
 
 
 
