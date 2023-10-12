@@ -9,6 +9,13 @@ from reportlab.lib.colors import HexColor
 import simplejson as json
 from laboratory.utils import strdate, strtime
 import operator
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import os.path
+from laboratory.settings import FONTS_FOLDER
+from reportlab.lib.styles import getSampleStyleSheet
+from copy import deepcopy
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 
 
 def default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, directory, show_norm, stl, print_vtype, get_r, result_normal):
@@ -948,40 +955,70 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
 
 
 def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory, show_norm, stl, print_vtype, get_r, result_normal):
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 10
+    style.leading = 7
+    style.spaceAfter = 1 * mm
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+    styleCenterBold.borderColor = colors.black
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
     fwb.append(Spacer(1, 4 * mm))
+    no_units_and_ref = False
     if interactive_text_field:
         fwb.append(InteractiveTextField())
     data = []
     tmp = [
-        Paragraph('<font face="FreeSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
-        Paragraph('<font face="FreeSansBold" size="8">Результат</font>', styleSheet["BodyText"]),
+        Paragraph('Исследование', styleBold),
+        Paragraph('Результат', styleBold),
     ]
 
     if direction.client.individual.sex.lower() == "м":
-        tmp.append(Paragraph('<font face="FreeSansBold" size="8">Реф. значения (М)</font>', styleSheet["BodyText"]))
+        tmp.append(Paragraph('Реф. значения (М)', styleBold))
     else:
-        tmp.append(Paragraph('<font face="FreeSansBold" size="8">Реф. значения (Ж)</font>', styleSheet["BodyText"]))
-    tmp.append(Paragraph('<font face="FreeSansBold" size="8">Ед. изм.</font>', styleSheet["BodyText"]))
+        tmp.append(Paragraph('Реф. значения (Ж)', styleBold))
+    tmp.append(Paragraph('Ед. изм.', styleBold))
 
     data.append(tmp)
 
-    cw = (60 * mm, 40 * mm, 45 * mm, 25 * mm)
-    t = Table(data, repeatRows=1, colWidths=cw, hAlign='LEFT')
+    cw = (65 * mm, 40 * mm, 45 * mm, 30 * mm)
+    t = Table(data, repeatRows=1, colWidths=cw, hAlign='CENTRE')
     style_t = TableStyle(
         [
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
             ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
             ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
             ('LEFTPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('TOPPADDING', (0, 0), (-1, -1), 0.2 * mm),
             ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
         ]
     )
-    style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
-    style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
 
     t.setStyle(style_t)
     t.spaceBefore = 3 * mm
@@ -995,4 +1032,219 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
     iss_list = direction.issledovaniya_set.all()
     result_style = stl
     pks = []
+    for iss in iss_list.order_by("research__direction_id", "research__pk", "tubes__number", "research__sort_weight"):
+        if iss.pk in pks:
+            continue
+        pks.append(iss.pk)
+        data = []
+        fractions = directory.Fractions.objects.filter(research=iss.research, hide=False, render_type=0).order_by("pk").order_by("sort_weight")
+        if fractions.count() > 0:
+            if fractions.count() == 1:
+                tmp = [Paragraph('<font face="FreeSans" size="8">' + iss.research.title + "</font>", styleSheet["BodyText"])]
+                norm = "none"
+                sign = RANGE_IN
+                if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
+                    r = Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).order_by("-pk")[0]
+                    ref = r.get_ref()
+                    if show_norm:
+                        norm, sign, ref_res = r.get_is_norm(recalc=True, with_ref=True)
+                        ref = ref_res or ref
+                    result = result_normal(r.value)
+                    f_units = r.get_units()
+                else:
+                    continue
+                if not iss.time_confirmation and iss.deferred:
+                    result = "отложен"
+                f = fractions[0]
+                st = TableStyle(
+                    [
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                        ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                        ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                        ('TOPPADDING', (0, 0), (-1, -1), 3),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
+                    ]
+                )
+
+                if f.render_type == 0:
+                    if norm in ["none", "normal"]:
+                        tmp.append(Paragraph('<font face="FreeSans" size="8">' + result + "</font>", result_style))
+                    elif norm == "maybe":
+                        tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + "</font>", result_style))
+                    else:
+                        tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>", result_style))
+                    if not no_units_and_ref:
+                        tmp.append(Paragraph('<font face="FreeSans" size="7">' + get_r(ref) + "</font>", stl))
+                        tmp.append(Paragraph('<font face="FreeSans" size="7">' + f_units + "</font>", stl))
+
+                    # if iss.doc_confirmation_fio:
+                    #     if prev_conf != iss.doc_confirmation_fio:
+                    #         prev_conf = iss.doc_confirmation_fio
+                    #         prev_date_conf = ""
+                    #         tmp.append(Paragraph('<font face="FreeSans" size="7">%s</font>' % prev_conf, styleSheet["BodyText"]))
+                    #     else:
+                    #         tmp.append("")
+                    #     if prev_date_conf != strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]:
+                    #         prev_date_conf = strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]
+                    #         tmp.append(Paragraph('<font face="FreeSans" size="7">%s</font>' % prev_date_conf, styleSheet["BodyText"]))
+                    #     else:
+                    #         tmp.append("")
+                    # else:
+                    #     tmp.append("")
+                    #     tmp.append("")
+
+                    data.append(tmp)
+                elif f.render_type == 1:
+                    tmp.append("")
+                    tmp.append("")
+                    tmp.append("")
+
+                    if iss.doc_confirmation_fio:
+                        tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % iss.doc_confirmation_fio, styleSheet["BodyText"]))
+                        tmp.append(
+                            Paragraph(
+                                '<font face="FreeSansBold" size="7">%s</font>'
+                                % ("" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(iss.tubes.first().time_get)),
+                                styleSheet["BodyText"],
+                            )
+                        )
+                        tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % strdate(iss.time_confirmation), styleSheet["BodyText"]))
+                    else:
+                        tmp.append("")
+                        tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % strdate(iss.tubes.first().time_get), styleSheet["BodyText"]))
+                        tmp.append("")
+                    data.append(tmp)
+
+                    j = print_vtype(data, f, iss, 1, st, styleSheet)
+                    data.append([Paragraph('<font face="FreeSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>', styleSheet["BodyText"])])
+                    st.add('SPAN', (0, j), (-1, j))
+                    st.add('BOX', (0, j), (-1, j), 1, colors.white)
+                    st.add('BOX', (0, j - 1), (-1, j - 1), 1, colors.black)
+
+                t = Table(data, colWidths=cw)
+                t.setStyle(st)
+                t.spaceBefore = 0
+            else:
+                tmp = [
+                    Paragraph(
+                        '<font face="FreeSansBold" size="8">'
+                        + iss.research.title
+                        + '</font>'
+                        + ("" if iss.comment == "" or True else '<font face="FreeSans" size="8"><br/>Материал - ' + iss.comment + '</font>'),
+                        styleSheet["BodyText"],
+                    ),
+                    '',
+                ]
+                if not no_units_and_ref:
+                    tmp.append("")
+                    tmp.append("")
+
+                # if iss.doc_confirmation_fio:
+                #     if prev_conf != iss.doc_confirmation_fio:
+                #         prev_conf = iss.doc_confirmation_fio
+                #         prev_date_conf = ""
+                #         tmp.append(Paragraph('<font face="FreeSans" size="7">%s</font>' % prev_conf, styleSheet["BodyText"]))
+                #     else:
+                #         tmp.append("")
+                #     if prev_date_conf != strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]:
+                #         prev_date_conf = strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]
+                #         tmp.append(Paragraph('<font face="FreeSans" size="7">%s</font>' % prev_date_conf, styleSheet["BodyText"]))
+                #     else:
+                #         tmp.append("")
+                # else:
+                #     tmp.append("")
+                #     tmp.append("")
+
+                data.append(tmp)
+                ts = [
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                    ('INNERGRID', (0, 0), (-1, -1), 0.1, colors.white),
+                    ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                    ('TOPPADDING', (0, 0), (-1, -1), 3),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
+                ]
+
+                style_t = TableStyle(ts)
+                j = 0
+
+                for f in fractions:
+                    j += 1
+
+                    tmp = []
+                    if f.render_type == 0:
+                        tmp.append(Paragraph('<font face="FreeSans" size="8">' + f.title + "</font>", styleSheet["BodyText"]))
+
+                        norm = "none"
+                        sign = RANGE_IN
+                        if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and not f.print_title:
+                            r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
+                            ref = r.get_ref()
+                            if show_norm:
+                                norm, sign, ref_res = r.get_is_norm(recalc=True, with_ref=True)
+                                ref = ref_res or ref
+                            result = result_normal(r.value)
+                            f_units = r.get_units()
+                        elif f.print_title:
+                            tmp[0] = Paragraph('<font face="FreeSansBold" size="10">{}</font>'.format(f.title), styleSheet["BodyText"])
+                            data.append(tmp)
+                            continue
+                        else:
+                            continue
+                        if norm in ["none", "normal"]:
+                            tmp.append(Paragraph('<font face="FreeSans" size="8">' + result + "</font>", result_style))
+                        elif norm == "maybe":
+                            tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + "</font>", result_style))
+                        else:
+                            tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>", result_style))
+                        if not no_units_and_ref:
+                            tmp.append(Paragraph('<font face="FreeSans" size="7">' + get_r(ref) + "</font>", stl))
+                            tmp.append(Paragraph('<font face="FreeSans" size="7">' + f_units + "</font>", stl))
+                        data.append(tmp)
+
+                for k in range(0, 4):
+                    style_t.add('INNERGRID', (k, 0), (k, j), 0.1, colors.black)
+                    style_t.add('BOX', (k, 0), (k, j), 0.8, colors.black)
+                    style_t.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
+                    style_t.add('TOPPADDING', (0, 0), (0, -1), 0)
+
+                t = Table(data, colWidths=cw)
+                t.setStyle(style_t)
+            fwb.append(t)
+
+    fwb.append(Spacer(1, 3 * mm))
+    data = []
+
+
+
+    tmp = [
+        Paragraph(f"Дата, время выполнения: {strdate(iss.time_confirmation, short_year=False)} {strtime(iss.time_confirmation)[0:5]}",
+                  styleLeft),
+        Paragraph(f"Исследования выполнены: {iss.doc_confirmation_fio}", styleLeft),
+    ]
+
+    data.append(tmp)
+
+    cw = (90 * mm, 90 * mm)
+    t = Table(data, repeatRows=1, colWidths=cw, hAlign='CENTRE')
+    style_t = TableStyle(
+        [
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('LEFTPADDING', (0, 0), (-1, -1), -0.2 * mm),
+        ]
+    )
+
+    t.setStyle(style_t)
+    t.spaceBefore = 3 * mm
+    t.spaceAfter = 0
+
+    fwb.append(t)
+
     return fwb
