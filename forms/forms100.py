@@ -1249,7 +1249,7 @@ def form_05(request_data):
     frame_data.append(Paragraph(f'26. Оплата за счет: {finance_source}', style))
 
     frame_data.append(Spacer(1, 3 * mm))
-    visit_dates = [
+    table_data = [
         [
             Paragraph('27. Даты посещений (число, месяц, год): ', style),
             Paragraph('', style),
@@ -1273,8 +1273,8 @@ def form_05(request_data):
     ]
 
     columns_widths = [42 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm]
-    visit_dates_table = Table(visit_dates, colWidths=columns_widths, hAlign='LEFT')
-    visit_dates_table.setStyle(
+    tbl = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
+    tbl.setStyle(
         TableStyle(
             [
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
@@ -1283,7 +1283,7 @@ def form_05(request_data):
             ]
         )
     )
-    frame_data.append(visit_dates_table)
+    frame_data.append(tbl)
 
     params_columns.append({'x': 0 * mm, 'y': -135 * mm, 'width': 279 * mm, 'height': 77 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
                            'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
@@ -1370,7 +1370,7 @@ def form_05(request_data):
                 ('SPAN', (2, 5), (5, 5)),
                 ('SPAN', (5, 0), (6, 0)),
                 ('SPAN', (5, 1), (6, 1)),
-                ('RIGHTPADDING', (1, 0),(-1, -1), 2 * mm),
+                ('RIGHTPADDING', (1, 0), (-1, -1), 2 * mm),
                 ('LINEBELOW', (2, 0), (4, 1), 0.5, colors.black),
                 ('LINEBELOW', (2, 2), (2, 3), 0.5, colors.black),
                 ('LINEBELOW', (4, 2), (5, 3), 0.5, colors.black),
@@ -1387,7 +1387,7 @@ def form_05(request_data):
 
     frame_data = []
     params_columns = []
-    diagnosis_data = [
+    table_data = [
         [
             Paragraph('32. Диагноз заключительный', style),
             Paragraph('', style),
@@ -1421,8 +1421,8 @@ def form_05(request_data):
     ]
 
     columns_widths = [65 * mm, 124 * mm, 32 * mm, 54 * mm]
-    diagnosis_table = Table(diagnosis_data, colWidths=columns_widths, hAlign='LEFT')
-    diagnosis_table.setStyle(
+    tbl = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
+    tbl.setStyle(
         TableStyle(
             [
                 # ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
@@ -1430,20 +1430,45 @@ def form_05(request_data):
                 ('LINEBELOW', (1, 0), (1, 2), 0.5, colors.black),
                 ('LINEBELOW', (0, 3), (1, -1), 0.5, colors.black),
                 ('LINEBELOW', (3, 0), (3, -1), 0.5, colors.black),
-                # ('LINEBELOW', (4, 2), (5, 3), 0.5, colors.black),
-                # ('LINEBELOW', (2, 4), (5, 5), 0.5, colors.black),
-                # ('LINEBELOW', (7, 0), (7, -1), 0.5, colors.black),
             ]
         )
     )
-    frame_data.append(diagnosis_table)
+    frame_data.append(tbl)
 
-    params_columns.append({'x': 0 * mm, 'y': -88 * mm, 'width': 279 * mm, 'height': 40 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+    disease = 'острое (+) – 1; впервые в жизни установленное хроническое (+) – 2; ранее установленное хроническое (–) – 3'
+    frame_data.append(Paragraph(f'35. Заболевание: {disease}', style))
+
+    dispensary_observation = 'состоит – 1; взят – 2, снят – 3, из них: с выздоровлением – 4, со смертью – 5, по другим причинам – 6'
+    frame_data.append(Paragraph(f'36. Диспансерное наблюдение: {dispensary_observation}', style))
+
+    injuru_type = 'производственная – 1; транспортная – 2, из нее: ДТП – 2.1; спортивная – 3; уличная – 4; сельскохозяйственная – 5; прочая – 6'
+    frame_data.append(Paragraph(f'37. Травма: {injuru_type}', style))
+
+    params_columns.append({'x': 0 * mm, 'y': -96 * mm, 'width': 279 * mm, 'height': 48 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
                            'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
 
     objs.append(FrameDataCol(params_columns))
 
+    frame_data = []
+    params_columns = []
 
+    operation_title = '_______________________________________________________________________________'
+    operation_code = '________________________'
+    frame_data.append(Paragraph(f'38. Операция: {operation_title} Код {operation_code}', style))
+
+    anesthesia = 'общая – 1; местная – 2;'
+    operation_hardware = 'лазерной – 1; криогенной – 2; эндоскопической – 3; рентгеновской – 4;'
+    doctor_speciality = '_______________________________'
+    doctor_fio = '____________________________'
+    doctor_code = '____________________'
+    frame_data.append(Paragraph(f'39. Анестезия: {anesthesia} 40. Операция проведена с использованием аппаратуры: {operation_hardware} 41. Врач: специальность {doctor_speciality} Ф.И.О. '
+                                f'{doctor_fio} Код {doctor_code}', style))
+    frame_data.append(Paragraph(f'', style))
+
+    params_columns.append({'x': 0 * mm, 'y': -169 * mm, 'width': 279 * mm, 'height': 68 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
+
+    objs.append(FrameDataCol(params_columns))
 
     def first_pages(canvas, document):
         canvas.saveState()
