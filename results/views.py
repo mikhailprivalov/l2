@@ -48,7 +48,7 @@ from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE, GISTOLOGY_RESEARCH_PK, RESEARCHES_NOT_PRINT_FOOTERS, \
-    RESULT_LABORATORY_FORM
+    RESULT_LABORATORY_FORM, SELF_WATERMARKS
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -357,7 +357,7 @@ def result_print(request):
             canvas_mark.drawString(155 * mm, 285 * mm, '{}'.format(" НЕ ПОДТВЕРЖДЕНО "))
             canvas_mark.setFont('FreeSans', 12)
             canvas_mark.drawString(175 * mm, 281 * mm, '{}'.format("( образец )"))
-        if not watermarks and not DEATH_RESEARCH_PK and not GISTOLOGY_RESEARCH_PK:
+        if not watermarks and not DEATH_RESEARCH_PK and not GISTOLOGY_RESEARCH_PK and not SELF_WATERMARKS:
             if direction.hospital:
                 canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.safe_short_title)
             else:
@@ -378,6 +378,10 @@ def result_print(request):
                 d = Drawing()
                 d.add(qr_code)
                 renderPDF.draw(d, canvas_mark, 20 * mm, 3 * mm)
+        if SELF_WATERMARKS:
+            self_watermarks_func = import_string('results.laboratory_form.' + SELF_WATERMARKS)
+            canvas_mark = self_watermarks_func(canvas_mark)
+
         canvas_mark.restoreState()
 
     count_pages = 0
@@ -762,6 +766,8 @@ def result_print(request):
         num_card = pk[0]
 
     if len(pk) == 1 and has_own_form_result:
+        doc.build(fwb)
+    elif SELF_WATERMARKS:
         doc.build(fwb)
     elif len(pk) == 1 and not link_result and not hosp and fwb:
         doc.build(fwb, canvasmaker=PageNumCanvas)

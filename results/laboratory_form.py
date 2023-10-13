@@ -1,3 +1,4 @@
+from appconf.manager import SettingManager
 from directions.models import Result
 from refprocessor.common import RANGE_IN, RANGE_NOT_IN
 from utils.flowable import InteractiveTextField, QrCodeSite
@@ -977,6 +978,9 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
     styleLeft = deepcopy(style)
     styleLeft.alignment = TA_LEFT
 
+    styleLeftFont7 = deepcopy(style)
+    styleLeftFont7.fontSize = 7
+
     styleCenterBold = deepcopy(styleBold)
     styleCenterBold.alignment = TA_CENTER
 
@@ -987,7 +991,8 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
     styleJustified.leading = 4.5 * mm
 
     styleBackgroundcolor = deepcopy(style)
-    styleBackgroundcolor.backColor = HexColor(0xFF6666)
+    # styleBackgroundcolor.backColor = HexColor(0xFF6666)
+    styleBackgroundcolor.textColor = colors.white
     styleBackgroundcolor.alignment = TA_CENTER
     styleBackgroundcolor.spaceAfter = 2 * mm
 
@@ -1171,7 +1176,7 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
                             result_is_norm.append(True)
                         else:
                             # tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>", styleBackgroundcolor))
-                            tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + "</font>", styleBackgroundcolor))
+                            tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + "*" + "</font>", styleBackgroundcolor))
                             result_is_norm.append(False)
                         if not no_units_and_ref:
                             tmp.append(Paragraph('<font face="FreeSans" size="7">' + get_r(ref) + "</font>", stl))
@@ -1185,9 +1190,12 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
                     style_t.add('TOPPADDING', (0, 0), (0, -1), 0)
                     style_t.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
 
+                step = 0
                 for is_norm in result_is_norm:
                     if not is_norm:
-                        pass
+                        style_t.add('BACKGROUND', (1, step + 1), (1, step + 1), HexColor(0xFF6666))
+
+                    step += 1
 
                 t = Table(data, colWidths=cw)
                 t.setStyle(style_t)
@@ -1210,8 +1218,6 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
     ]
 
     data.append(tmp)
-    # if iss.api_app and iss.api_app.name:
-
 
     cw = (90 * mm, 90 * mm)
     t = Table(data, repeatRows=1, colWidths=cw, hAlign='CENTRE')
@@ -1226,7 +1232,42 @@ def lab_form_2(fwb, interactive_text_field, pw, direction, styleSheet, directory
     t.setStyle(style_t)
     t.spaceBefore = 3 * mm
     t.spaceAfter = 0
+    fwb.append(t)
+
+    data1 = []
+    tmp = [
+        Paragraph(
+            "* Референсные значения приводятся с учетом возраста, пола, фазы менструального цикла, срока беременности. "
+            "Результаты исследований не являются диагнозом, необходима консультация специалиста.",
+            styleLeftFont7),
+        Paragraph("", styleLeftFont7),
+    ]
+
+    data1.append(tmp)
+
+    cw = (150 * mm, 20 * mm)
+    t = Table(data1, repeatRows=1, colWidths=cw, hAlign='LEFT')
+    style_t = TableStyle(
+        [
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 2 * mm),
+        ]
+    )
+
+    t.setStyle(style_t)
+    t.spaceBefore = 3 * mm
+    t.spaceAfter = 0
 
     fwb.append(t)
 
+
     return fwb
+
+
+def self_watermarks_func(canvas_mark):
+    canvas_mark.line(10 * mm, 10.7 * mm, 200 * mm, 10.7 * mm)
+    canvas_mark.setFont('FreeSans', 7)
+    canvas_mark.drawString(120 * mm, 8 * mm, 'Исследования выполнены в {} {} {}'.format(SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones") ))
+    canvas_mark.drawString(15 * mm, 8 * mm, 'Дата печати: {}'.format("13.10.2023 12:15"))
+    return canvas_mark
