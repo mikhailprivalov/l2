@@ -148,11 +148,12 @@
               :data="r.ref.f"
             />
             <td v-if="labFractionComment">
-              <input
+              <textarea
                 v-model="r.comment"
-                class="form-control"
-                type="text"
-              >
+                v-autosize="r.comment"
+                class="form-control noresize"
+                :rows="(r.comment || '').split('\n').length"
+              />
             </td>
           </tr>
           <tr v-if="research.can_comment">

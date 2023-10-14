@@ -289,8 +289,16 @@ class NapravleniyaHL7FilesAdmin(admin.ModelAdmin):
     )
 
 
+class ResultAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('issledovaniye',)
+    list_display = (
+        'issledovaniye',
+        'fraction',
+    )
+
+
 admin.site.register(TubesRegistration)
-admin.site.register(Result)
+admin.site.register(Result, ResultAdmin)
 admin.site.register(FrequencyOfUseResearches)
 admin.site.register(CustomResearchOrdering)
 admin.site.register(ExternalOrganization)
