@@ -476,6 +476,7 @@ def form(request):
                 "selectedReference": selected_reference,
                 "norm": r.get_is_norm(recalc=True)[0] if r else None,
                 "value": str(r.value if r else '').replace('&lt;', '<').replace('&gt;', '>'),
+                "comment": str(r.comment if r else '').replace('&lt;', '<').replace('&gt;', '>'),
             }
         )
 
@@ -512,9 +513,11 @@ def save(request):
             created = True
 
         value = bleach.clean(r["value"], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")
+        comment = bleach.clean(r.get('comment', ''), tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>").strip()
 
-        if not created or value:
+        if not created or value or comment:
             fraction_result.value = value
+            fraction_result.comment = comment
             fraction_result.get_units(needsave=False)
             fraction_result.iteration = 1
 
