@@ -2994,6 +2994,7 @@ class Result(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
     fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования', db_index=True, on_delete=models.CASCADE)
     value = models.TextField(null=True, blank=True, help_text='Значение')
+    comment = models.TextField(null=True, blank=True, help_text='Комментарий к значению')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
     selected_reference = models.IntegerField(default=-2, blank=True, help_text="Выбранный референс")
