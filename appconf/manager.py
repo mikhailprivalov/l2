@@ -10,7 +10,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-10"
+    VERSION = f"{laboratory.VERSION}-12"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -170,6 +170,7 @@ class SettingManager:
                     "ftp",
                     "case",
                     "hide_show_count_param",
+                    "fraction_comment",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
