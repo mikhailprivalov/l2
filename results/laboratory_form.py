@@ -299,9 +299,7 @@ def default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, dir
                         % ("" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(iss.tubes.first().time_get), "" if not iss.comment else "<br/>" + iss.comment),
                         styleSheet["BodyText"],
                     ),
-                    Paragraph(
-                        '<font face="FreeSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)), styleSheet["BodyText"]
-                    ),
+                    Paragraph('<font face="FreeSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)), styleSheet["BodyText"]),
                     Paragraph('<font face="FreeSans" size="8">%s</font>' % (iss.doc_confirmation_fio or "Не подтверждено"), styleSheet["BodyText"]),
                 ]
                 data.append(tmp)
