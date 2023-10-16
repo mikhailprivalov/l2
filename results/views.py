@@ -50,9 +50,8 @@ from laboratory.decorators import logged_in_or_token
 from laboratory.settings import DEATH_RESEARCH_PK, LK_USER, SYSTEM_AS_VI, QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE, GISTOLOGY_RESEARCH_PK, RESEARCHES_NOT_PRINT_FOOTERS, \
     RESULT_LABORATORY_FORM, SELF_WATERMARKS
 from laboratory.settings import FONTS_FOLDER
-from laboratory.utils import strdate, strtime
+from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
-from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_strptime
 from utils.flowable import InteractiveTextField, QrCodeSite
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
