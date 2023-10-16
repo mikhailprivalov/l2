@@ -742,8 +742,7 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
         laboratory_analyzer = f"<br/>{' '.join(laboratory_analyzer_data)}"
 
     tmp = [
-        Paragraph(f"Дата, время выполнения: {strdate(iss.time_confirmation, short_year=False)} {strtime(iss.time_confirmation)[0:5]}{laboratory_analyzer}",
-                  styleLeft),
+        Paragraph(f"Дата, время выполнения: {strdate(iss.time_confirmation, short_year=False)} {strtime(iss.time_confirmation)[0:5]}{laboratory_analyzer}", styleLeft),
         Paragraph(f"Исследования выполнены: {iss.doc_confirmation_fio} (Врач клинической лабораторной диагностики)", styleLeft),
     ]
 
