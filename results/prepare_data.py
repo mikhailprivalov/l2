@@ -370,9 +370,7 @@ def gen_hospital_stamp(direction):
 
     space_symbol = '&nbsp;'
     opinion = [
-        [
-            img, ''
-        ],
+        [img, ''],
         [Paragraph(direction.client.individual.fio(), stylePatient), Paragraph(f"Индивидуальный номер заказа: {space_symbol * 2}{direction.pk}", stylePatient)],
         ['', ''],
         [Paragraph(f"Пол/Возраст: {direction.client.individual.sex} / {individual_birthday} {direction.client.individual.age_s(direction=direction)}", styleBold),
