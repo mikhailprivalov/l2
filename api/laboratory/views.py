@@ -820,7 +820,6 @@ def receive_history(request):
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
     lpk = request_data["currentLaboratory"]
-    print(lpk)
 
     if lpk >= 0:
         lab = Podrazdeleniya.objects.get(pk=lpk)

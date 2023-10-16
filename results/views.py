@@ -539,7 +539,6 @@ def result_print(request):
                 fwb = default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, directory, show_norm, stl, print_vtype, get_r, result_normal)
             else:
                 laboratory_form = import_string('results.laboratory_form.' + RESULT_LABORATORY_FORM)
-                print("custom")
                 fwb = laboratory_form(fwb, interactive_text_field, pw, direction, styleSheet, directory, show_norm, stl, print_vtype, get_r, result_normal)
         else:
             iss: Issledovaniya

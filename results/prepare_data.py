@@ -1,6 +1,5 @@
 import pytz_deprecation_shim as pytz
 
-import directions.models
 import hospitals.models
 from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
 from reportlab.pdfbase import pdfmetrics
@@ -379,8 +378,7 @@ def gen_hospital_stamp(direction):
         [Paragraph(f"Пол/Возраст: {direction.client.individual.sex} / {individual_birthday} {direction.client.individual.age_s(direction=direction)}", styleBold),
          data_get],
         [Paragraph(f"Медкарта: {direction.client.number}", styleBold), data_receive],
-        [Paragraph(f"Заказчик: {direction.hospital.safe_short_title}", styleBold), Paragraph(f"", styleText)]
-
+        [Paragraph(f"Заказчик: {direction.hospital.safe_short_title}", styleBold), Paragraph("", styleText)]
     ]
     gentbl = Table(opinion, colWidths=(90 * mm, 110 * mm), hAlign='LEFT')
     gentbl.setStyle(

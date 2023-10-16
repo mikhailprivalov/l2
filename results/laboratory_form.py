@@ -1,8 +1,8 @@
 from appconf.manager import SettingManager
 from directions.models import Result
 from refprocessor.common import RANGE_IN, RANGE_NOT_IN
-from utils.flowable import InteractiveTextField, QrCodeSite
-from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, BaseDocTemplate
+from utils.flowable import InteractiveTextField
+from reportlab.platypus import Spacer
 from reportlab.lib.units import mm
 from reportlab.platypus import Table, TableStyle, Paragraph
 from reportlab.lib import colors
@@ -801,6 +801,6 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
 def self_watermarks_func(canvas_mark):
     canvas_mark.line(10 * mm, 10.7 * mm, 200 * mm, 10.7 * mm)
     canvas_mark.setFont('FreeSans', 7)
-    canvas_mark.drawString(120 * mm, 8 * mm, 'Исследования выполнены в {} {} {}'.format(SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones") ))
+    canvas_mark.drawString(120 * mm, 8 * mm, 'Исследования выполнены в {} {} {}'.format(SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")))
     canvas_mark.drawString(15 * mm, 8 * mm, 'Дата печати: {}'.format("13.10.2023 12:15"))
     return canvas_mark
