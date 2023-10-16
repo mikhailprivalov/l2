@@ -768,7 +768,8 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
         Paragraph(
             "* Референсные значения приводятся с учетом возраста, пола, фазы менструального цикла, срока беременности. "
             "Результаты исследований не являются диагнозом, необходима консультация специалиста.",
-            styleLeftFont7),
+            styleLeftFont7,
+        ),
         Paragraph("", styleLeftFont7),
     ]
 
