@@ -325,6 +325,7 @@ def format_time_if_is_not_none_to_str(data_t):
         return ""
     return data_t.strftime("%d.%m.%Y %H:%M")
 
+
 def gen_hospital_stamp(direction):
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
